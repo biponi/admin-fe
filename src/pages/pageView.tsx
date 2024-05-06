@@ -9,7 +9,7 @@ import OrderPage from "./order";
 
 const PageView = () => {
   return (
-    <div className='grid h-screen w-full pl-[53px]'>
+    <div className='grid min-h-[70vh] w-full pl-0 sm:pl-[53px] sm:h-screen'>
       <Navbar />
       <Routes>
         {/* <Route path='/' element={<Dashboard />} /> */}

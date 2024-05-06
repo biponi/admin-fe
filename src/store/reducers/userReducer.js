@@ -29,8 +29,15 @@ const userSlice = createSlice({
     updateUserToken: (state, action) => {
       return { ...state, ...action.payload };
     },
+    logout: (state) => {
+      state.token = "";
+      state.user = null;
+      localStorage.setItem("token", "");
+      localStorage.setItem("refreshToken", "");
+      window.location.href = "/";
+    },
   },
 });
-export const { updateUserState, updateUserToken } = userSlice.actions;
+export const { updateUserState, updateUserToken, logout } = userSlice.actions;
 export const { actions, reducer } = userSlice;
 export default userSlice.reducer;

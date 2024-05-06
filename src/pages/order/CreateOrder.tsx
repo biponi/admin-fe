@@ -132,7 +132,7 @@ const CreateOrder = () => {
   const renderMainView = () => {
     return (
       <MainView title='Order Creation'>
-        <div className='w-full md:w-[95vw]'>
+        <div className='w-full sm:w-[95vw]'>
           <Stepper steps={orderSteps} />
           <br />
           <div className='my-2' />

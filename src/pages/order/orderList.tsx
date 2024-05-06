@@ -395,7 +395,7 @@ const OrderList = () => {
     }
   };
 
-  return <div className='w-full md:w-[95vw]'>{mainView()}</div>;
+  return <div className='w-full sm:w-[95vw]'>{mainView()}</div>;
 };
 
 export default OrderList;

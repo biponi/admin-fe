@@ -295,7 +295,7 @@ const EditProduct: React.FC<Props> = ({
   };
 
   return (
-    <div className='w-[95vw]'>
+    <div className='w-full sm:w-[95vw]'>
       <div className='mx-auto grid max-w-full flex-1 auto-rows-max gap-4'>
         <div className='flex items-center gap-4'>
           <div className='hidden items-center gap-2 md:ml-auto md:flex'>

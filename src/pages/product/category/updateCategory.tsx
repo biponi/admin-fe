@@ -95,8 +95,8 @@ const UpdateCategory: React.FC<Props> = ({
     return (
       <Card>
         <CardContent>
-          <div className='grid grid-cols-3 gap-4'>
-            <div className='col-span-2 '>
+          <div className='grid gap-4 grid-cols-1 sm:grid-cols-3'>
+            <div className='col-span-1 sm:col-span-2 '>
               <div className='grid w-full max-w-sm items-center gap-1.5 my-5'>
                 <Label htmlFor='name'>Name</Label>
                 <Input
@@ -180,7 +180,7 @@ const UpdateCategory: React.FC<Props> = ({
   return (
     <Dialog open={open} onOpenChange={(open) => handleOpenChange(open)}>
       {!!children && <DialogTrigger asChild>{children}</DialogTrigger>}
-      <DialogContent className=' w-[60vw] max-w-[80vw] '>
+      <DialogContent className=' w-[90vw] max-w-[95vw] sm:w-[60vw] sm:max-w-[80vw] '>
         <DialogHeader>
           <DialogTitle>
             {isNewCategory ? "Create a category" : "Update category"}

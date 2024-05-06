@@ -7,6 +7,7 @@ import {
 } from "../../../utils/helperFunction";
 import { useState } from "react";
 import {
+  logout,
   updateUserState,
   updateUserToken,
 } from "../../../store/reducers/userReducer";
@@ -78,8 +79,13 @@ const useLoginAuth = () => {
     }
   };
 
+  const signOut = () => {
+    dispatch(logout());
+  };
+
   return {
     login,
+    signOut,
     loading,
     refreshToken,
     fetchUserById,

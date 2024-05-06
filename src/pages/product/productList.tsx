@@ -44,6 +44,7 @@ import { useEffect, useState } from "react";
 import { Input } from "../../components/ui/input";
 import useDebounce from "../../customHook/useDebounce";
 import { useNavigate } from "react-router-dom";
+import SingleProductItemMobileView from "./components/singleProductMobileView";
 
 interface Props {
   handleEditProduct: (id: string) => void;
@@ -90,10 +91,73 @@ const ProductList: React.FC<Props> = ({ handleEditProduct }) => {
     );
   };
 
+  const renderButtonAndFilterView = () => {
+    return (
+      <>
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant='outline' size='sm' className='h-7 gap-1'>
+              <ListFilter className='h-3.5 w-3.5' />
+              <span className='sr-only sm:not-sr-only sm:whitespace-nowrap'>
+                Filter
+              </span>
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align='end'>
+            <DropdownMenuLabel>Filter by</DropdownMenuLabel>
+            <DropdownMenuSeparator />
+            <DropdownMenuCheckboxItem
+              checked={selectedCategory === "all"}
+              onClick={() => setSelectedCategory("all")}>
+              All
+            </DropdownMenuCheckboxItem>
+            {categories.map((category, index) => (
+              <DropdownMenuCheckboxItem
+                checked={selectedCategory === category?.id}
+                onClick={() => setSelectedCategory(category.id)}>
+                {category?.name}
+              </DropdownMenuCheckboxItem>
+            ))}
+          </DropdownMenuContent>
+        </DropdownMenu>
+        {/* <Button size='sm' variant='outline' className='h-7 gap-1'>
+              <File className='h-3.5 w-3.5' />
+              <span className='sr-only sm:not-sr-only sm:whitespace-nowrap'>
+                Export
+              </span>
+            </Button> */}
+        <Button
+          size='sm'
+          className='h-7 ml-2 md:ml-0 md:gap-1 '
+          onClick={() => navigate("/product/create")}>
+          <PlusCircle className='h-3.5 w-3.5' />
+          <span className='sr-only sm:not-sr-only sm:whitespace-nowrap'>
+            Add Product
+          </span>
+        </Button>
+      </>
+    );
+  };
+
+  const renderMobileProductView = (productData: IProduct, key: number) => {
+    return (
+      <SingleProductItemMobileView
+        key={key}
+        id={productData?.id}
+        image={productData?.thumbnail}
+        title={productData?.name}
+        quantity={productData?.quantity}
+        unitPrice={productData?.unitPrice}
+        handleUpdateProduct={handleEditProduct}
+        deleteExistingProduct={deleteProductData}
+      />
+    );
+  };
+
   const renderProductListView = () => {
     return (
       <Tabs defaultValue='all'>
-        <div className='flex items-center w-full'>
+        <div className='flex flex-col items-center w-[90vw] md:w-full md:flex-row'>
           <TabsList>
             <TabsTrigger value='all'>All</TabsTrigger>
             <TabsTrigger value='active'>Active</TabsTrigger>
@@ -101,61 +165,28 @@ const ProductList: React.FC<Props> = ({ handleEditProduct }) => {
             <TabsTrigger value='instock'>In Stock</TabsTrigger>
             <TabsTrigger value='outofstock'>Out of stock</TabsTrigger>
           </TabsList>
-          <div className='ml-auto flex items-center gap-2'>
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant='outline' size='sm' className='h-7 gap-1'>
-                  <ListFilter className='h-3.5 w-3.5' />
-                  <span className='sr-only sm:not-sr-only sm:whitespace-nowrap'>
-                    Filter
-                  </span>
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align='end'>
-                <DropdownMenuLabel>Filter by</DropdownMenuLabel>
-                <DropdownMenuSeparator />
-                <DropdownMenuCheckboxItem
-                  checked={selectedCategory === "all"}
-                  onClick={() => setSelectedCategory("all")}>
-                  All
-                </DropdownMenuCheckboxItem>
-                {categories.map((category, index) => (
-                  <DropdownMenuCheckboxItem
-                    checked={selectedCategory === category?.id}
-                    onClick={() => setSelectedCategory(category.id)}>
-                    {category?.name}
-                  </DropdownMenuCheckboxItem>
-                ))}
-              </DropdownMenuContent>
-            </DropdownMenu>
-            {/* <Button size='sm' variant='outline' className='h-7 gap-1'>
-              <File className='h-3.5 w-3.5' />
-              <span className='sr-only sm:not-sr-only sm:whitespace-nowrap'>
-                Export
-              </span>
-            </Button> */}
-            <Button
-              size='sm'
-              className='h-7 gap-1'
-              onClick={() => navigate("/product/create")}>
-              <PlusCircle className='h-3.5 w-3.5' />
-              <span className='sr-only sm:not-sr-only sm:whitespace-nowrap'>
-                Add Product
-              </span>
-            </Button>
+          <div className='ml-auto hidden items-center gap-2 md:flex'>
+            {renderButtonAndFilterView()}
           </div>
         </div>
 
-        <Card x-chunk='dashboard-06-chunk-0' className='mt-4'>
+        <Card
+          x-chunk='dashboard-06-chunk-0'
+          className=' mt-2  w-[90vw] md:mt-4 md:w-full'>
           <CardHeader>
-            <div className='flex w-full justify-between'>
-              <div className='mr-auto'>
-                <CardTitle>Products</CardTitle>
-                <CardDescription>
+            <div className='flex flex-col w-full justify-between md:flex-row  '>
+              <div className='md:mr-auto'>
+                <div className='flex items-center justify-between'>
+                  <CardTitle>Products</CardTitle>
+                  <div className='ml-auto md:hidden'>
+                    {renderButtonAndFilterView()}
+                  </div>
+                </div>
+                <CardDescription className='mt-2'>
                   Manage your products and view their sales performance.
                 </CardDescription>
               </div>
-              <div className='ml-auto'>
+              <div className=' mt-2 md:mt-0 md:ml-auto'>
                 <Input
                   type='text'
                   placeholder='Search'
@@ -168,7 +199,12 @@ const ProductList: React.FC<Props> = ({ handleEditProduct }) => {
           </CardHeader>
           <CardContent>
             <TabsContent value='all'>
-              <Table>
+              <ul className='grid grid-cols-2 gap-x-4 gap-y-8 md:hidden sm:grid-cols-3 sm:gap-x-6 lg:grid-cols-4 xl:gap-x-8'>
+                {products.map((product: IProduct, index: number) =>
+                  renderMobileProductView(product, index)
+                )}
+              </ul>
+              <Table className=' hidden md:table '>
                 <TableHeader>
                   <TableRow>
                     <TableHead className='hidden w-[100px] sm:table-cell'>
@@ -211,7 +247,14 @@ const ProductList: React.FC<Props> = ({ handleEditProduct }) => {
               </Table>
             </TabsContent>
             <TabsContent value='active'>
-              <Table>
+              <ul className='grid grid-cols-2 gap-x-4 gap-y-8 md:hidden sm:grid-cols-3 sm:gap-x-6 lg:grid-cols-4 xl:gap-x-8'>
+                {products
+                  .filter((product: IProduct) => product.active)
+                  .map((product: IProduct, index: number) =>
+                    renderMobileProductView(product, index)
+                  )}
+              </ul>
+              <Table className=' hidden md:table '>
                 <TableHeader>
                   <TableRow>
                     <TableHead className='hidden w-[100px] sm:table-cell'>
@@ -256,7 +299,14 @@ const ProductList: React.FC<Props> = ({ handleEditProduct }) => {
               </Table>
             </TabsContent>
             <TabsContent value='inactive'>
-              <Table>
+              <ul className='grid grid-cols-2 gap-x-4 gap-y-8 md:hidden sm:grid-cols-3 sm:gap-x-6 lg:grid-cols-4 xl:gap-x-8'>
+                {products
+                  .filter((product: IProduct) => !product.active)
+                  .map((product: IProduct, index: number) =>
+                    renderMobileProductView(product, index)
+                  )}
+              </ul>
+              <Table className=' hidden md:table '>
                 <TableHeader>
                   <TableRow>
                     <TableHead className='hidden w-[100px] sm:table-cell'>
@@ -301,7 +351,14 @@ const ProductList: React.FC<Props> = ({ handleEditProduct }) => {
               </Table>
             </TabsContent>
             <TabsContent value='instock'>
-              <Table>
+              <ul className='grid grid-cols-2 gap-x-4 gap-y-8 md:hidden sm:grid-cols-3 sm:gap-x-6 lg:grid-cols-4 xl:gap-x-8'>
+                {products
+                  .filter((product: IProduct) => product.quantity > 0)
+                  .map((product: IProduct, index: number) =>
+                    renderMobileProductView(product, index)
+                  )}
+              </ul>
+              <Table className=' hidden md:table '>
                 <TableHeader>
                   <TableRow>
                     <TableHead className='hidden w-[100px] sm:table-cell'>
@@ -346,7 +403,14 @@ const ProductList: React.FC<Props> = ({ handleEditProduct }) => {
               </Table>
             </TabsContent>
             <TabsContent value='outofstock'>
-              <Table>
+              <ul className='grid grid-cols-2 gap-x-4 gap-y-8 md:hidden sm:grid-cols-3 sm:gap-x-6 lg:grid-cols-4 xl:gap-x-8'>
+                {products
+                  .filter((product: IProduct) => product.quantity <= 0)
+                  .map((product: IProduct, index: number) =>
+                    renderMobileProductView(product, index)
+                  )}
+              </ul>
+              <Table className=' hidden md:table '>
                 <TableHeader>
                   <TableRow>
                     <TableHead className='hidden w-[100px] sm:table-cell'>
@@ -370,7 +434,7 @@ const ProductList: React.FC<Props> = ({ handleEditProduct }) => {
                 </TableHeader>
                 <TableBody>
                   {products
-                    .filter((product: IProduct) => product.quantity <= 3)
+                    .filter((product: IProduct) => product.quantity <= 0)
                     .map((product: IProduct, index: number) => (
                       <SingleItem
                         key={index}
@@ -392,7 +456,7 @@ const ProductList: React.FC<Props> = ({ handleEditProduct }) => {
             </TabsContent>
           </CardContent>
           {inputValue === "" && (
-            <CardFooter>
+            <CardFooter className='hidden md:block'>
               <div className='w-full flex justify-between items-center'>
                 <div className='text-xs text-muted-foreground'>
                   Showing{" "}

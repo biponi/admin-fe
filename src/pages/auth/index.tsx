@@ -12,13 +12,17 @@ import { Input } from "../../components/ui/input";
 import { Label } from "../../components/ui/label";
 import useLoginAuth from "./hooks/useLoginAuth";
 import { ReloadIcon } from "@radix-ui/react-icons";
+import { BiponiMainLogo } from "../../utils/contents";
 
 const SignIn = () => {
   const [username, setUserName] = useState("");
   const [password, setPassword] = useState("");
   const { login, loading } = useLoginAuth();
   return (
-    <div className='w-full h-[100vh]  flex justify-center items-center'>
+    <div className='w-full h-[100vh]  flex flex-col justify-center items-center px-5 sm:px-0'>
+      <div className='flex w-full items-center justify-center py-3 px-2'>
+        <img className=' size-20 ' src={BiponiMainLogo} alt='biponi-logo' />
+      </div>
       <Card className='w-full max-w-sm'>
         <CardHeader>
           <CardTitle className='text-2xl'>Login</CardTitle>

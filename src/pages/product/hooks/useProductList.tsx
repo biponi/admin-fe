@@ -12,7 +12,7 @@ export const useProductList = () => {
   const [currentPageNum, setCurrentPage] = useState(0);
   const [selectedCategory, setSelectedCategory] = useState("all");
   const [searchQuery, setSearchQuery] = useState("");
-  const limit = 50;
+  const limit = 100;
 
   useEffect(() => {
     if (currentPageNum === 1) return;
