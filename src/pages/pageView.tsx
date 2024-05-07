@@ -1,4 +1,4 @@
-import { Route, Routes } from "react-router-dom";
+import { Outlet, Route, Routes } from "react-router-dom";
 import Navbar from "../coreComponents/navbar";
 import ProductPage from "./product";
 import Category from "./product/category";
@@ -20,6 +20,7 @@ const PageView = () => {
         <Route path='/order' element={<OrderPage />} />
         <Route path='/order/create' element={<CreateOrder />} />
       </Routes>
+      <Outlet />
       {/* <CreateNewProduct /> */}
       {/* <Category /> */}
     </div>

@@ -1,7 +1,8 @@
+const baseHostUrl = "https://prior-express.onrender.com";
 const baseURL = "https://prior-express.onrender.com/api/v1";
 
 const config = {
-  refreshToken: () => `${baseURL}/login`,
+  refreshToken: () => `${baseHostUrl}/api/refresh-token`,
   user: {
     signup: () => `${baseURL}/user/signup`,
     login: () => `${baseURL}/user/login`,
