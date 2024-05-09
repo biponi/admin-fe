@@ -25,7 +25,12 @@ const UpdateProduct = () => {
   const isValidVariation = (variation: IVariation): boolean => {
     // Ensure required fields of the variation are valid
     const { quantity, unitPrice } = variation;
-    if (!quantity || quantity === 0 || !unitPrice || unitPrice === 0) {
+    if (
+      isNaN(Number(quantity)) ||
+      quantity < 0 ||
+      !unitPrice ||
+      unitPrice === 0
+    ) {
       return false; // Quantity and unitPrice must be non-zero and defined
     } else return true;
   };
