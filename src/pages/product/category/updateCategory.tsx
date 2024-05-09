@@ -73,7 +73,11 @@ const UpdateCategory: React.FC<Props> = ({
       //@ts-ignore
       if (!!existingCategory?.id) {
         //@ts-ignore
-        const res = await editExistingCategory(existingCategory);
+        const res = await editExistingCategory({
+          ...existingCategory,
+          //@ts-ignore
+          img: image,
+        });
         if (!!res) handleOpenChange(false);
       }
     }

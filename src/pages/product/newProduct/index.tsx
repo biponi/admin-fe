@@ -37,12 +37,12 @@ const CreateNewProduct = () => {
       };
     } else if (
       productData?.variation.length < 0 &&
-      (!productData?.quantity || productData?.unitPrice)
+      (Number(productData?.quantity) < 0 || productData?.unitPrice)
     ) {
       return {
         isValidate: false,
         message: `Enter a valid ${
-          !productData?.quantity ? "quantity" : "unit price"
+          Number(productData?.quantity) < 0 ? "quantity" : "unit price"
         } for the product`,
       };
     } else if (productData?.variation.length > 0) {
@@ -65,7 +65,6 @@ const CreateNewProduct = () => {
 
   const createNewProduct = async (productData: IProductCreateData) => {
     const validateResponse = validateProductData(productData);
-    console.log("validate: ", validateResponse);
     if (!validateResponse?.isValidate) {
       toast({
         title: "🚨 Product validation failed",
