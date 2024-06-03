@@ -67,6 +67,12 @@ const UpdateProduct = () => {
             isValidate: false,
             message: "not all variation has proper quantity or unit price",
           };
+        } else if (!v?.size && !v?.color) {
+          return {
+            isValidate: false,
+            message:
+              "Variation size and color can't be empty together, atleast choose one",
+          };
         }
       }
     }

@@ -11,6 +11,7 @@ const userSlice = createSlice({
     avatar:
       "https://res.cloudinary.com/emerging-it/image/upload/v1697993177/Growb/default-icon/fpnvpqwno80grmvstwnc.jpg",
     nid: "",
+    role: "",
     type: "default", // "admin" | "retailer" | "menu" | "ro" | "logistic" | "default"
     token: null,
     refreshToken: null,

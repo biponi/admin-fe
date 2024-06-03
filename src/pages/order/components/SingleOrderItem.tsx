@@ -2,7 +2,7 @@ import {
   CircleCheck,
   MapPin,
   MoreHorizontalIcon,
-  TimerReset,
+  TimerIcon,
   Truck,
 } from "lucide-react";
 import { Badge } from "../../../components/ui/badge";
@@ -30,7 +30,7 @@ interface Props {
   updatedAt: string;
   remaining: number;
   handleViewDetails: () => void;
-  handleUpdateOrder: (id: string) => void;
+  handleUpdateOrder: () => void;
   deleteExistingOrder: (id: string) => void;
 }
 
@@ -70,13 +70,21 @@ const SingleItem: React.FC<Props> = ({
       <TableCell className='hidden sm:table-cell'>{customerName}</TableCell>
       <TableCell className='font-medium'>{CustomerPhoneNumber}</TableCell>
       <TableCell>
-        <Badge variant='outline' className='py-1 px-3'>
+        <Badge
+          variant='outline'
+          className={`py-1 px-3 ${
+            status === "processing"
+              ? ""
+              : status === "shipped"
+              ? "bg-blue-400 text-gray-200"
+              : "bg-green-500 text-gray-200"
+          }`}>
           {status === "processing" ? (
-            <TimerReset className='w-4 h-4 mr-2' />
-          ) : status === "shipping" ? (
+            <TimerIcon className='w-4 h-4 mr-2  ' />
+          ) : status === "shipped" ? (
             <Truck className='w-4 h-4 mr-2' />
           ) : (
-            <CircleCheck className='w-4 h-4 mr-2' />
+            <CircleCheck className='w-4 h-4 mr-2 ' />
           )}
           {status.toUpperCase()}
         </Badge>
@@ -103,7 +111,7 @@ const SingleItem: React.FC<Props> = ({
           </DropdownMenuTrigger>
           <DropdownMenuContent align='end'>
             <DropdownMenuLabel>Actions</DropdownMenuLabel>
-            <DropdownMenuItem onClick={() => handleUpdateOrder(id)}>
+            <DropdownMenuItem onClick={() => handleUpdateOrder()}>
               Edit
             </DropdownMenuItem>
             <DropdownMenuItem

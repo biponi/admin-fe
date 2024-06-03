@@ -110,7 +110,9 @@ const CreateOrder = () => {
     } else if (currentStep === 1) {
       return (
         <CustomerInformation
-          handleBack={() => setCurrentStep(1)}
+          handleBack={() => {
+            setCurrentStep(1);
+          }}
           handleCustomerDataChange={handleCustomerDataChange}
         />
       );

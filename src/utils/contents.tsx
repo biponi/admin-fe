@@ -1,4 +1,4 @@
-import { BoxesIcon, Home, Package, ShoppingCart, Users2 } from "lucide-react";
+import { BoxesIcon, Home, ShirtIcon, ShoppingCart } from "lucide-react";
 import mainLogo from "../assets/Biponi.svg";
 import mainPngLogo from "../assets/Biponi-lg.png";
 export const BiponiLogo = mainLogo;
@@ -8,30 +8,28 @@ export const NavBarItems = [
     active: false,
     label: "Dashboard",
     link: "/dashboard",
+    roles: ["admin", "manager", "moderator"],
     icon: <Home className='h-5 w-5' />,
   },
   {
     active: true,
     label: "Products",
     link: "/product",
-    icon: <Package className='h-5 w-5' />,
+    roles: ["admin", "manager"],
+    icon: <ShirtIcon className='h-5 w-5' />,
   },
   {
     active: true,
     label: "Categories",
     link: "/category",
+    roles: ["admin", "manager"],
     icon: <BoxesIcon className='h-5 w-5' />,
-  },
-  {
-    active: false,
-    label: "Manufacturer",
-    link: "/manufacturer",
-    icon: <Users2 className='h-5 w-5' />,
   },
   {
     active: true,
     label: "Orders",
     link: "/order",
+    roles: ["admin", "manager", "moderator"],
     icon: <ShoppingCart className='h-5 w-5' />,
   },
 ];

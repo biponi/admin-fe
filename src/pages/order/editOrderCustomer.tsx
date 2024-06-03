@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   Card,
   CardContent,
@@ -18,6 +18,7 @@ import { Input } from "../../components/ui/input";
 import { BDDistrictList, BDDivisions } from "../../utils/contents";
 import { Textarea } from "../../components/ui/textarea";
 import { Button } from "../../components/ui/button";
+import { getLocationByFormattedString } from "../../utils/functions";
 const defaultPersonalInformation = {
   name: "",
   email: "",
@@ -30,12 +31,26 @@ const defaultShippingAddress = {
   address: "",
 };
 interface Props {
-  handleBack: () => void;
+  shipping: any;
+  customerInfo: any;
+  deliveryCharge: number;
+  totalPrice: number;
+  paid: number;
+  remaining: number;
+  discount: number;
+  handleClose: () => void;
   handleCustomerDataChange: (information: any) => void;
 }
-const CustomerInformation: React.FC<Props> = ({
+const EditCustomerInformation: React.FC<Props> = ({
+  paid,
+  totalPrice,
+  shipping,
+  remaining,
+  discount,
+  handleClose,
+  customerInfo,
+  deliveryCharge,
   handleCustomerDataChange,
-  handleBack,
 }) => {
   const [personalInfomation, setPersonalInformation] = useState(
     defaultPersonalInformation
@@ -44,8 +59,41 @@ const CustomerInformation: React.FC<Props> = ({
     defaultShippingAddress
   );
 
+  const [tp, setTp] = useState(totalPrice ?? 0);
+  const [spaid, setPaid] = useState(paid ?? 0);
+  const [sdeliveryCharge, setDeliveryCharge] = useState(deliveryCharge ?? 0);
+  const [sremaining, setRemaining] = useState(remaining ?? 0);
+  const [sdiscount, setDiscount] = useState(discount ?? 0);
+
   const [divisionQuery, setDivisionQuery] = useState("");
   const [districtQuery, setDistrictQuery] = useState("");
+
+  useEffect(() => {
+    setShippingAddress({
+      ...shippingAddress,
+      address: shipping?.address,
+      district:
+        getLocationByFormattedString(BDDistrictList, shipping.district) ?? {},
+      division:
+        getLocationByFormattedString(BDDivisions, shipping.division) ?? {},
+    });
+    //eslint-disable-next-line
+  }, [shipping]);
+
+  useEffect(() => {
+    setTp(totalPrice);
+    setPaid(paid);
+    setDeliveryCharge(deliveryCharge);
+    setRemaining(remaining);
+    setDiscount(discount);
+  }, [paid, totalPrice, deliveryCharge, remaining, discount]);
+
+  useEffect(() => {
+    setPersonalInformation({
+      ...customerInfo,
+    });
+    //eslint-disable-next-line
+  }, [customerInfo]);
 
   const handlePersonalInfomationChange = (
     e: React.ChangeEvent<HTMLInputElement>
@@ -132,6 +180,13 @@ const CustomerInformation: React.FC<Props> = ({
           <div className='grid w-full max-w-sm items-center gap-1.5 mt-2'>
             <Label htmlFor='district'>Division</Label>
             <Select
+              value={
+                //@ts-ignore
+                !!shippingAddress?.division?.id
+                  ? //@ts-ignore
+                    shippingAddress?.division?.id
+                  : ""
+              }
               onValueChange={(value: string) => {
                 handleShippingDivChange(value, "division");
               }}>
@@ -166,6 +221,14 @@ const CustomerInformation: React.FC<Props> = ({
             <div className='grid w-full max-w-sm items-center gap-1.5 mt-2'>
               <Label htmlFor='district'>Districts</Label>
               <Select
+                //@ts-ignore
+                value={
+                  //@ts-ignore
+                  !!shippingAddress?.district?.id
+                    ? //@ts-ignore
+                      shippingAddress?.district?.id
+                    : ""
+                }
                 onValueChange={(value: string) => {
                   handleShippingDivChange(value, "district");
                 }}>
@@ -218,46 +281,144 @@ const CustomerInformation: React.FC<Props> = ({
       </Card>
     );
   };
-  return (
-    <>
+
+  const renderPaymentDetails = () => {
+    return (
       <Card>
         <CardHeader>
-          <CardTitle>Customer Details</CardTitle>
+          <CardTitle>Payment Data</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className='grid grid-cols-1 sm:grid-cols-2 gap-4'>
+          <div className='grid w-full max-w-sm items-center gap-1.5'>
+            <Label htmlFor='total'>Total Price</Label>
+            <Input
+              type='number'
+              min={0}
+              id='total'
+              value={tp}
+              placeholder='Total Price'
+              disabled
+            />
+          </div>
+          <div className='grid w-full max-w-sm items-center gap-1.5 mt-2'>
+            <Label htmlFor='dc'>Delivery Charge</Label>
+            <Input
+              type='number'
+              min={0}
+              id='dc'
+              value={sdeliveryCharge}
+              onChange={(e) => {
+                setRemaining(
+                  Number(tp) +
+                    Number(e.target.value) -
+                    Number(spaid) -
+                    Number(discount)
+                );
+                setDeliveryCharge(Number(e.target.value));
+              }}
+              placeholder='Delivery Charge'
+            />
+          </div>
+          <div className='grid w-full max-w-sm items-center gap-1.5 mt-2'>
+            <Label htmlFor='discount'>Discount</Label>
+            <Input
+              type='number'
+              min={0}
+              id='discount'
+              placeholder='Discount'
+              value={sdiscount}
+              onChange={(e) => {
+                setRemaining(
+                  Number(tp) +
+                    Number(sdeliveryCharge) -
+                    Number(e.target.value) -
+                    Number(spaid)
+                );
+                setDiscount(Number(e.target.value));
+              }}
+            />
+          </div>
+          <div className='grid w-full max-w-sm items-center gap-1.5 mt-2'>
+            <Label htmlFor='paid'>Paid</Label>
+            <Input
+              type='number'
+              min={0}
+              id='paid'
+              placeholder='Paid'
+              value={spaid}
+              onChange={(e) => {
+                setRemaining(
+                  Number(tp) +
+                    Number(sdeliveryCharge) -
+                    Number(e.target.value) -
+                    Number(discount)
+                );
+                setPaid(Number(e.target.value));
+              }}
+            />
+          </div>
+          <div className='grid w-full max-w-sm items-center gap-1.5 mt-2'>
+            <Label htmlFor='remaining'>Remaining</Label>
+            <Input
+              type='number'
+              min={0}
+              id='remaining'
+              placeholder='Remaining'
+              disabled
+              value={sremaining}
+            />
+          </div>
+        </CardContent>
+      </Card>
+    );
+  };
+  return (
+    <>
+      <Card className='border-0 shadow-none p-0 h-[88vh]'>
+        <CardContent className='max-h-[80vh] overflow-y-auto p-0'>
+          <div className='grid grid-cols-1 gap-4'>
             <div>{renderCustomerPersonalInformation()}</div>
             <div>{renderCustomerShippingInformation()}</div>
+            <div>{renderPaymentDetails()}</div>
           </div>
         </CardContent>
         <CardFooter>
-          <div className='flex w-full justify-center items-center sm:w-auto sm:justify-end sm:ml-auto'>
+          <div className='flex w-full justify-center items-center py-4'>
             <Button
               className='w-full mr-2'
               variant='destructive'
               onClick={() => {
                 setPersonalInformation(defaultPersonalInformation);
                 setShippingAddress(defaultShippingAddress);
+                handleClose();
               }}>
-              Reset
-            </Button>
-            <Button
-              className='w-full mr-2'
-              variant='outline'
-              onClick={() => {
-                handleBack();
-              }}>
-              Back
+              Close
             </Button>
             <Button
               className=' w-full'
               onClick={() =>
                 handleCustomerDataChange({
                   customer: personalInfomation,
-                  shipping: shippingAddress,
+                  shipping: {
+                    address: shippingAddress?.address,
+                    //@ts-ignore
+                    district: `${shippingAddress?.district?.name ?? ""}(${
+                      //@ts-ignore
+                      shippingAddress?.district?.bn_name ?? ""
+                    })`,
+                    //@ts-ignore
+                    division: `${shippingAddress?.division?.name ?? ""}(${
+                      //@ts-ignore
+                      shippingAddress?.division?.bn_name ?? ""
+                    })`,
+                  },
+                  discount: sdiscount,
+                  remaining: sremaining,
+                  paid: spaid,
+                  deliveryCharge: sdeliveryCharge,
                 })
               }>
-              Next
+              Submit
             </Button>
           </div>
         </CardFooter>
@@ -266,4 +427,4 @@ const CustomerInformation: React.FC<Props> = ({
   );
 };
 
-export default CustomerInformation;
+export default EditCustomerInformation;

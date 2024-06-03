@@ -20,6 +20,7 @@ export interface ITransection {
   paid: number;
   remaining: number;
   discount: number;
+  deliveryCharge: number;
 }
 
 export interface IOrder {
@@ -31,6 +32,7 @@ export interface IOrder {
     phoneNumber: string;
   };
   status: string;
+  deliveryCharge: number;
   totalPrice: number;
   paid: number;
   discount: number;

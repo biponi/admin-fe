@@ -16,6 +16,7 @@ const App = () => {
   const [authSuccess, setAuthSuccess] = useState<boolean>(false);
 
   const refreshUser = async () => {
+    setIsFetchingToken(true);
     const response = await refreshToken();
     if (!response?.success) setAuthSuccess(false);
     else {
@@ -23,23 +24,32 @@ const App = () => {
       localStorage.setItem("token", response?.token);
       localStorage.setItem("refreshToken", response?.refreshToken);
     }
+    setIsFetchingToken(false);
+  };
+
+  useEffect(() => {
+    if (!!user?.id) setAuthSuccess(true);
+  }, [user]);
+
+  const fetchUserData = async (id: any) => {
+    setIsFetchingToken(true);
+    await fetchUserById(id);
+    setAuthSuccess(true);
+    setIsFetchingToken(false);
   };
 
   useEffect(() => {
     // Check if token exists and is still valid
     if (!!authToken) {
-      setIsFetchingToken(true);
       if (decodeTokenFunction(authToken)) {
         // Token is expired, initiate a refresh
         refreshUser();
       } else {
-        if (!user) {
+        if (!user?.id) {
           const { id } = decodeToken(authToken) as { id: number };
-          fetchUserById(id);
+          fetchUserData(id);
         }
-        setAuthSuccess(true);
       }
-      setIsFetchingToken(false);
     }
     //eslint-disable-next-line
   }, [authToken]);
@@ -66,11 +76,11 @@ const App = () => {
   };
 
   return (
-    <div className='App'>
-      {!!isFetchingToken && renderLoadingIcon()}
+    <div className='app'>
+      {isFetchingToken && renderLoadingIcon()}
       {!isFetchingToken && (
         <TooltipProvider>
-          <Page isAuth={authSuccess} />
+          <Page isAuth={!!authSuccess} />
         </TooltipProvider>
       )}
       <Toaster />

@@ -1,4 +1,4 @@
-import { MoreHorizontalIcon } from "lucide-react";
+import { BoxIcon, MoreHorizontalIcon } from "lucide-react";
 import { Badge } from "../../../components/ui/badge";
 import {
   DropdownMenu,
@@ -76,7 +76,16 @@ const SingleItem: React.FC<Props> = ({
       </TableCell>
       <TableCell>{categoryName}</TableCell>
       <TableCell>{unitPrice}</TableCell>
-      <TableCell className='hidden md:table-cell'>{quantity}</TableCell>
+      <TableCell className='hidden text-center md:table-cell'>
+        {quantity > 0 ? (
+          <Badge variant={"outline"}>
+            <BoxIcon className=' size-4 mr-2' />
+            {quantity}
+          </Badge>
+        ) : (
+          <Badge variant={"destructive"}>Out Of Stock</Badge>
+        )}
+      </TableCell>
       <TableCell className='hidden md:table-cell'>
         {dayjs(updatedAt).format("DD-MM-YYYY HH:mm:ss")}
       </TableCell>

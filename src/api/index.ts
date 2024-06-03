@@ -1,4 +1,5 @@
-import axios, { AxiosError } from "axios";
+import { AxiosError } from "axios";
+import axios from "./axios";
 import config from "../utils/config";
 
 interface ApiResponse<T> {
@@ -80,7 +81,7 @@ export const getUserById = async (
   try {
     const response = await axios.get<any>(config.user.getUserById(userId));
     if (response.status === 200) {
-      return { success: true, data: response.data };
+      return { success: true, data: response.data?.dataSource };
     } else {
       return {
         success: false,
@@ -280,7 +281,10 @@ export const handleApiError = (
   if (!!error && error?.response) {
     return {
       success: false,
-      error: error?.response?.data.error || "Failed to process request",
+      error:
+        error?.response?.data.error ||
+        error?.response?.data.message ||
+        "Failed to process request",
     };
   } else if (error?.request) {
     return { success: false, error: "No response received from server" };

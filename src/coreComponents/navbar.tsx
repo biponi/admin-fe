@@ -1,4 +1,4 @@
-import { LifeBuoy, PanelLeft, SquareUser, Triangle, User2 } from "lucide-react";
+import { LifeBuoy, PanelLeft, Triangle, User2 } from "lucide-react";
 
 import { Button } from "../components/ui/button";
 import {
@@ -20,10 +20,12 @@ import { Link, useNavigate } from "react-router-dom";
 import { BiponiLogo } from "../utils/contents";
 import useLoginAuth from "../pages/auth/hooks/useLoginAuth";
 import { useRef } from "react";
+import { Avatar, AvatarFallback } from "../components/ui/avatar";
+import { getInitialsWord } from "../utils/functions";
 
 const Navbar = () => {
   const sheetRef = useRef(null);
-  const { signOut } = useLoginAuth();
+  const { signOut, user } = useLoginAuth();
   const navigate = useNavigate();
   const navigateToRoute = (link: string) => {
     navigate(link);
@@ -38,7 +40,7 @@ const Navbar = () => {
         </div>
         <nav className='grid gap-1 p-2'>
           {navItems
-            .filter((nav) => nav.active)
+            .filter((nav) => nav.active && nav.roles.includes(user?.role))
             .map((item) => (
               <Tooltip>
                 <TooltipTrigger asChild>
@@ -76,13 +78,11 @@ const Navbar = () => {
             <TooltipTrigger asChild>
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button
-                    variant='ghost'
-                    size='icon'
-                    className='mt-auto rounded-lg'
-                    aria-label='Account'>
-                    <SquareUser className='size-5' />
-                  </Button>
+                  <Avatar>
+                    <AvatarFallback>
+                      {getInitialsWord(user?.name)}
+                    </AvatarFallback>
+                  </Avatar>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align='end'>
                   {/* <DropdownMenuLabel>My Account</DropdownMenuLabel>
@@ -134,7 +134,7 @@ const Navbar = () => {
                 </Button>
               </div>
               {navItems
-                .filter((nav) => nav.active)
+                .filter((nav) => nav.active && nav.roles.includes(user?.role))
                 .map((item, index) => (
                   <Link
                     key={index}

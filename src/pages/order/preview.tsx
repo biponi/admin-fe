@@ -37,9 +37,11 @@ interface Props {
   orderProducts: IOrderProduct[];
   customerInformation: { customer: any; shipping: any };
   handleCreateOrder: () => void;
+  handleBack: () => void;
 }
 
 const OrderPreview: React.FC<Props> = ({
+  handleBack,
   transection,
   orderProducts,
   handleCreateOrder,
@@ -72,8 +74,8 @@ const OrderPreview: React.FC<Props> = ({
     const distinctSizes = new Set<string>();
 
     for (const item of product.variation) {
-      distinctColors.add(item.color);
-      distinctSizes.add(item.size);
+      if (!!item.color) distinctColors.add(item.color);
+      if (!!item.size) distinctSizes.add(item.size);
     }
 
     const uniqueColors: string[] = Array.from(distinctColors) ?? []; // Convert Set to array
@@ -167,6 +169,17 @@ const OrderPreview: React.FC<Props> = ({
             Discount -
           </span>
           <Input type='number' disabled={true} value={transection.discount} />
+        </div>
+        <div className='my-4 bg-gray-300 h-[1px]' />
+        <div className='grid grid-cols-5 items-center justify-between'>
+          <span className=' text-sm text-gray-900 font-bold col-span-4'>
+            Delivery Charge -
+          </span>
+          <Input
+            type='number'
+            disabled={true}
+            value={transection.deliveryCharge}
+          />
         </div>
         <div className='my-4 bg-gray-300 h-[1px]' />
         <div className='grid grid-cols-5 items-center justify-between'>
@@ -305,10 +318,9 @@ const OrderPreview: React.FC<Props> = ({
                 variant={"outline"}
                 className='mx-2'
                 onClick={() => {
-                  //   setorderProducts([]);
-                  //   setTransection(defaultTransaction);
+                  handleBack();
                 }}>
-                Cancel
+                Back
               </Button>
               <Button
                 disabled={!orderProducts || orderProducts.length < 1}

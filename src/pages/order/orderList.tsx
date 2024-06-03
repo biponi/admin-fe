@@ -1,4 +1,10 @@
-import { ChevronLeft, ChevronRight, Copy } from "lucide-react";
+import {
+  CheckCircleIcon,
+  ChevronLeft,
+  ChevronRight,
+  TimerReset,
+  TruckIcon,
+} from "lucide-react";
 import { Button } from "../../components/ui/button";
 import { Tabs, TabsContent } from "../../components/ui/tabs";
 import dayjs from "dayjs";
@@ -28,31 +34,49 @@ import { IOrder } from "./interface";
 import { useNavigate } from "react-router-dom";
 import { Progress } from "../../components/ui/progress";
 import { Separator } from "../../components/ui/separator";
+import EditCustomerInformation from "./editOrderCustomer";
+import {
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetHeader,
+  SheetTitle,
+} from "../../components/ui/sheet";
+import useOrder from "./hooks/useOrder";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "../../components/ui/tooltip";
+
+import CustomAlertDialog from "../../coreComponents/OptionModal";
+import useLoginAuth from "../auth/hooks/useLoginAuth";
 
 const OrderList = () => {
   const {
     limit,
+    refresh,
     orderFetching,
     orders,
     currentPageNum,
     totalPages,
     analytics,
     totalOrders,
-    getAnalytics,
     setSearchQuery,
     updateCurrentPage,
     deleteOrderData,
   } = useOrderList();
 
+  const { user } = useLoginAuth();
+
+  const { editOrderData, updateOrderStatus } = useOrder();
+
   const [inputValue, setInputValue] = useState<string>("");
+  const [isEditDialogOpen, setEditDialogOpen] = useState<boolean>(false);
   const [selectedOrder, setSelectedOrder] = useState<IOrder | null>(null);
 
   const debounceHandler = useDebounce(inputValue, 500);
-
-  useEffect(() => {
-    getAnalytics();
-    //eslint-disable-next-line
-  }, []);
 
   useEffect(() => {
     if (!!orders && orders.length > 0) setSelectedOrder(orders[0]);
@@ -79,6 +103,7 @@ const OrderList = () => {
   const renderProductListView = () => {
     return (
       <Tabs defaultValue='all'>
+        {drawerDialog()}
         <div className='flex items-center w-full'>
           <div className='grid gap-4 sm:grid-cols-4 md:grid-cols-4 lg:grid-cols-2 xl:grid-cols-4'>
             <Card x-chunk='dashboard-05-chunk-0'>
@@ -95,54 +120,60 @@ const OrderList = () => {
                 </Button>
               </CardFooter>
             </Card>
-            <Card x-chunk='dashboard-05-chunk-1'>
-              <CardHeader className='pb-2'>
-                <CardDescription>This Month Completed Orders</CardDescription>
-                <CardTitle className='text-4xl'>
-                  {analytics.totalCompletedOrders}
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className='text-xs text-muted-foreground'>
-                  last 30 days
-                </div>
-              </CardContent>
-              <CardFooter>
-                <Progress value={25} aria-label='25% increase' />
-              </CardFooter>
-            </Card>
-            <Card x-chunk='dashboard-05-chunk-2'>
-              <CardHeader className='pb-2'>
-                <CardDescription>Total Paid</CardDescription>
-                <CardTitle className='text-4xl'>
-                  {analytics.totalPaid}
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className='text-xs text-muted-foreground'>
-                  last 30 days
-                </div>
-              </CardContent>
-              <CardFooter>
-                <Progress value={12} aria-label='12% increase' />
-              </CardFooter>
-            </Card>
-            <Card x-chunk='dashboard-05-chunk-2'>
-              <CardHeader className='pb-2'>
-                <CardDescription>Total Price Of Order</CardDescription>
-                <CardTitle className='text-4xl'>
-                  {analytics.totalPrice}
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className='text-xs text-muted-foreground'>
-                  last 30 days
-                </div>
-              </CardContent>
-              <CardFooter>
-                <Progress value={12} aria-label='12% increase' />
-              </CardFooter>
-            </Card>
+            {user?.role === "admin" && (
+              <Card x-chunk='dashboard-05-chunk-1'>
+                <CardHeader className='pb-2'>
+                  <CardDescription>This Month Completed Orders</CardDescription>
+                  <CardTitle className='text-4xl'>
+                    {analytics.totalCompletedOrders}
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className='text-xs text-muted-foreground'>
+                    last 30 days
+                  </div>
+                </CardContent>
+                <CardFooter>
+                  <Progress value={25} aria-label='25% increase' />
+                </CardFooter>
+              </Card>
+            )}
+            {user?.role === "admin" && (
+              <Card x-chunk='dashboard-05-chunk-2'>
+                <CardHeader className='pb-2'>
+                  <CardDescription>Total Paid</CardDescription>
+                  <CardTitle className='text-4xl'>
+                    {analytics.totalPaid}
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className='text-xs text-muted-foreground'>
+                    last 30 days
+                  </div>
+                </CardContent>
+                <CardFooter>
+                  <Progress value={12} aria-label='12% increase' />
+                </CardFooter>
+              </Card>
+            )}
+            {user?.role === "admin" && (
+              <Card x-chunk='dashboard-05-chunk-2'>
+                <CardHeader className='pb-2'>
+                  <CardDescription>Total Price Of Order</CardDescription>
+                  <CardTitle className='text-4xl'>
+                    {analytics.totalPrice}
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className='text-xs text-muted-foreground'>
+                    last 30 days
+                  </div>
+                </CardContent>
+                <CardFooter>
+                  <Progress value={12} aria-label='12% increase' />
+                </CardFooter>
+              </Card>
+            )}
           </div>
           {/* <div className='ml-auto flex items-center gap-2'>
             <Button
@@ -217,9 +248,10 @@ const OrderList = () => {
                           remaining={order?.remaining}
                           customerName={order?.customer?.name}
                           CustomerPhoneNumber={order?.customer?.phoneNumber}
-                          handleUpdateOrder={(id: string) =>
-                            console.log("order id:", id)
-                          }
+                          handleUpdateOrder={() => {
+                            setSelectedOrder(order);
+                            setEditDialogOpen(true);
+                          }}
                           handleViewDetails={() => {
                             setSelectedOrder(order);
                           }}
@@ -283,13 +315,91 @@ const OrderList = () => {
           <div className='grid gap-0.5'>
             <CardTitle className='group flex items-center gap-2 text-lg'>
               Order {selectedOrder?.id}
-              <Button
-                size='icon'
-                variant='outline'
-                className='h-6 w-6 opacity-0 transition-opacity group-hover:opacity-100'>
-                <Copy className='h-3 w-3' />
-                <span className='sr-only'>Copy Order ID</span>
-              </Button>
+              {selectedOrder?.status === "processing" && (
+                <CustomAlertDialog
+                  title='Order Status Change'
+                  description='Are You Sure Change the status to SHIPPED???'
+                  cancelButtonText='NO'
+                  submitButtonText='YES'
+                  onSubmit={() => {
+                    updateOrderStatus(`${selectedOrder?.id}`, "shipped", () =>
+                      refresh()
+                    );
+                  }}>
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger>
+                        <Button
+                          size='icon'
+                          variant='outline'
+                          className='h-6 w-6 '>
+                          <TruckIcon className='h-3 w-3' />
+                          <span className='sr-only'>Copy Order ID</span>
+                        </Button>
+                      </TooltipTrigger>
+                      <TooltipContent>Change Status to shipped</TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+                </CustomAlertDialog>
+              )}
+              {selectedOrder?.status === "shipped" && (
+                <CustomAlertDialog
+                  title='Order Status Change'
+                  description='Are You Sure Change the status to Complete???'
+                  cancelButtonText='NO'
+                  submitButtonText='YES'
+                  onSubmit={() => {
+                    updateOrderStatus(`${selectedOrder?.id}`, "completed", () =>
+                      refresh()
+                    );
+                  }}>
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger>
+                        <Button
+                          size='icon'
+                          variant='outline'
+                          className='h-6 w-6 '>
+                          <CheckCircleIcon className='h-3 w-3' />
+                          <span className='sr-only'>Copy Order ID</span>
+                        </Button>
+                      </TooltipTrigger>
+                      <TooltipContent>Complete the order</TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+                </CustomAlertDialog>
+              )}
+              {selectedOrder?.status !== "processing" && (
+                <CustomAlertDialog
+                  title='Order Status Change'
+                  description='Are You Sure Change the status to Processing??? Use for return or other'
+                  cancelButtonText='NO'
+                  submitButtonText='YES'
+                  onSubmit={() => {
+                    updateOrderStatus(
+                      `${selectedOrder?.id}`,
+                      "processing",
+                      () => refresh()
+                    );
+                  }}>
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger>
+                        <Button
+                          size='icon'
+                          variant='outline'
+                          className='h-6 w-6 '>
+                          <TimerReset className='h-3 w-3' />
+                          <span className='sr-only'>Copy Order ID</span>
+                        </Button>
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        Reset the order to processing
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+                </CustomAlertDialog>
+              )}
             </CardTitle>
             <CardDescription>
               Date:{" "}
@@ -338,7 +448,7 @@ const OrderList = () => {
             </ul>
           </div>
           <Separator className='my-2' />
-          <div className='grid grid-cols-2 gap-4'>
+          <div className='grid grid-cols-1 gap-4'>
             <div className='grid gap-3'>
               <div className='font-semibold'>Shipping Information</div>
               <address className='grid gap-0.5 not-italic text-muted-foreground'>
@@ -382,6 +492,43 @@ const OrderList = () => {
           </div>
         </CardFooter>
       </Card>
+    );
+  };
+
+  const drawerDialog = () => {
+    return (
+      <Sheet
+        open={isEditDialogOpen}
+        onOpenChange={(val) => setEditDialogOpen(val)}>
+        <SheetContent>
+          <SheetHeader>
+            <SheetTitle>Edit Order</SheetTitle>
+            <SheetDescription className='text-red-400'>
+              This action cannot be undone.
+            </SheetDescription>
+          </SheetHeader>
+          <br />
+          <EditCustomerInformation
+            customerInfo={selectedOrder?.customer}
+            shipping={selectedOrder?.shipping}
+            deliveryCharge={selectedOrder?.deliveryCharge ?? 0}
+            totalPrice={selectedOrder?.totalPrice ?? 0}
+            paid={selectedOrder?.paid ?? 0}
+            remaining={selectedOrder?.remaining ?? 0}
+            discount={selectedOrder?.discount ?? 0}
+            handleClose={() => setEditDialogOpen(false)}
+            handleCustomerDataChange={(data) => {
+              editOrderData(
+                { ...data, id: selectedOrder?.id },
+                (success: boolean) => {
+                  if (success) refresh();
+                  setEditDialogOpen(false);
+                }
+              );
+            }}
+          />
+        </SheetContent>
+      </Sheet>
     );
   };
 

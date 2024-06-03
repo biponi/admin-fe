@@ -6,9 +6,11 @@ import {
   searchOrders,
   deleteOrder,
 } from "../../../api/order";
+import useLoginAuth from "../../auth/hooks/useLoginAuth";
 
 export const useOrderList = () => {
   const { toast } = useToast();
+  const { user } = useLoginAuth();
   const [orderFetching, setOrderFetching] = useState(false);
   const [orders, setOrders] = useState([]);
   const [totalOrders, setTotalOrders] = useState(0);
@@ -34,8 +36,7 @@ export const useOrderList = () => {
     //eslint-disable-next-line
   }, [searchQuery]);
 
-  const getOrderList = async () => {
-    setOrderFetching(true);
+  const refresh = async () => {
     const response = await getOrders(limit, currentPageNum);
     if (response?.success && !!response?.data) {
       const { totalOrders, totalPages, currentPage, orders } = response?.data;
@@ -51,6 +52,12 @@ export const useOrderList = () => {
         description: response?.error,
       });
     }
+    user?.role === "admin" && getAnalytics();
+  };
+
+  const getOrderList = async () => {
+    setOrderFetching(true);
+    refresh();
     setOrderFetching(false);
   };
 
@@ -102,6 +109,7 @@ export const useOrderList = () => {
   return {
     limit,
     orders,
+    refresh,
     analytics,
     totalPages,
     totalOrders,

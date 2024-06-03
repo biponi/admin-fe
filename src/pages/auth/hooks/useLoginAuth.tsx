@@ -99,6 +99,7 @@ const useLoginAuth = () => {
           avatar: userStore?.avatar,
           nid: userStore?.nid,
           role_id: userStore?.role_id,
+          role: userStore?.role,
           created_at: userStore?.created_at,
         }
       : null,

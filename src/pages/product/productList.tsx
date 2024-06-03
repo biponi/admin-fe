@@ -226,7 +226,7 @@ const ProductList: React.FC<Props> = ({ handleEditProduct }) => {
                     </TableHead>
                   </TableRow>
                 </TableHeader>
-                <TableBody>
+                <TableBody className=' max-h-[70vh] overflow-y-auto '>
                   {products.map((product: IProduct, index: number) => (
                     <SingleItem
                       key={index}
@@ -276,7 +276,7 @@ const ProductList: React.FC<Props> = ({ handleEditProduct }) => {
                     </TableHead>
                   </TableRow>
                 </TableHeader>
-                <TableBody>
+                <TableBody className=' max-h-[70vh] overflow-y-auto '>
                   {products
                     .filter((product: IProduct) => product.active)
                     .map((product: IProduct, index: number) => (
@@ -328,7 +328,7 @@ const ProductList: React.FC<Props> = ({ handleEditProduct }) => {
                     </TableHead>
                   </TableRow>
                 </TableHeader>
-                <TableBody>
+                <TableBody className=' max-h-[70vh] overflow-y-auto '>
                   {products
                     .filter((product: IProduct) => !product.active)
                     .map((product: IProduct, index: number) => (
@@ -380,7 +380,7 @@ const ProductList: React.FC<Props> = ({ handleEditProduct }) => {
                     </TableHead>
                   </TableRow>
                 </TableHeader>
-                <TableBody>
+                <TableBody className=' max-h-[70vh] overflow-y-auto '>
                   {products
                     .filter((product: IProduct) => product.quantity > 3)
                     .map((product: IProduct, index: number) => (
@@ -432,7 +432,7 @@ const ProductList: React.FC<Props> = ({ handleEditProduct }) => {
                     </TableHead>
                   </TableRow>
                 </TableHeader>
-                <TableBody>
+                <TableBody className=' max-h-[70vh] overflow-y-auto '>
                   {products
                     .filter((product: IProduct) => product.quantity <= 0)
                     .map((product: IProduct, index: number) => (

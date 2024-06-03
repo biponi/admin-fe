@@ -1,11 +1,11 @@
-const baseHostUrl = "https://prior-express.onrender.com";
-const baseURL = "https://prior-express.onrender.com/api/v1";
+const baseURL = `/api/v1`;
 
 const config = {
-  refreshToken: () => `${baseHostUrl}/api/refresh-token`,
+  refreshToken: () => `/api/refresh-token`,
   user: {
     signup: () => `${baseURL}/user/signup`,
     login: () => `${baseURL}/user/login`,
+    allUsers: () => `${baseURL}/user/all`,
     getUserById: (userId: number) => `${baseURL}/user/by/${userId}`,
   },
   product: {
@@ -23,7 +23,8 @@ const config = {
     createOrder: () => `${baseURL}/order/prior/create`,
     getOrderAnalytics: () => `${baseURL}/order/prior/analytics`,
     getOrders: () => `${baseURL}/order/prior/all`,
-    editOrder: () => `${baseURL}/order/edit`,
+    editOrder: () => `${baseURL}/order/prior/edit`,
+    updateOrderStatus: () => `${baseURL}/order/prior/updateStatus`,
     deleteOrder: (id: string) => `${baseURL}/order/prior/delete/${id}`,
     searchOrder: () => `${baseURL}/order/prior/search`,
   },

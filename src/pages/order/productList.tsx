@@ -42,6 +42,7 @@ const defaultTransaction = {
   paid: 0.0,
   remaining: 0.0,
   discount: 0.0,
+  deliveryCharge: 100.0,
 };
 
 interface Props {
@@ -72,7 +73,8 @@ const OrderProductList: React.FC<Props> = ({ handleProductDataSubmit }) => {
         ...transection,
         totalPrice,
         remaining:
-          totalPrice -
+          totalPrice +
+          Number(transection.deliveryCharge) -
           (Number(transection.paid) || 0 + Number(transection.discount) || 0),
       });
     }
@@ -263,8 +265,8 @@ const OrderProductList: React.FC<Props> = ({ handleProductDataSubmit }) => {
     const distinctSizes = new Set<string>();
 
     for (const item of product.variation) {
-      distinctColors.add(item.color);
-      distinctSizes.add(item.size);
+      if (!!item.color) distinctColors.add(item.color);
+      if (!!item.size) distinctSizes.add(item.size);
     }
 
     const uniqueColors: string[] = Array.from(distinctColors) ?? []; // Convert Set to array
@@ -387,9 +389,7 @@ const OrderProductList: React.FC<Props> = ({ handleProductDataSubmit }) => {
     return (
       <div className='w-full'>
         <div className='flex items-center justify-between'>
-          <span className=' text-sm text-gray-900 font-bold'>
-            Total price -
-          </span>
+          <span className=' text-sm text-gray-900 font-bold'>Total price</span>
           <span className=' text-sm text-gray-900 font-bold ml-auto'>
             {transection.totalPrice}
           </span>
@@ -397,7 +397,7 @@ const OrderProductList: React.FC<Props> = ({ handleProductDataSubmit }) => {
         <div className='my-4 bg-gray-300 h-[1px]' />
         <div className='grid grid-cols-5 items-center justify-between'>
           <span className=' text-sm text-gray-900 font-bold col-span-4'>
-            Discount -
+            {"Discount (-)"}
           </span>
           <Input
             type='number'
@@ -420,8 +420,35 @@ const OrderProductList: React.FC<Props> = ({ handleProductDataSubmit }) => {
         </div>
         <div className='my-4 bg-gray-300 h-[1px]' />
         <div className='grid grid-cols-5 items-center justify-between'>
+          <span className=' text-sm text-gray-900 font-bold col-span-4'>
+            {"Delivery Charge (+)"}
+          </span>
+          <Input
+            type='number'
+            min={0}
+            disabled={transection.totalPrice < 1}
+            value={transection.deliveryCharge}
+            onChange={(e) => {
+              const deliveryCharge = Number(e.target.value);
+              if (transection.totalPrice >= 0) {
+                setTransection({
+                  ...transection,
+                  deliveryCharge,
+                  remaining: Math.max(
+                    transection.totalPrice +
+                      deliveryCharge -
+                      (transection.paid + transection.discount),
+                    0
+                  ),
+                });
+              }
+            }}
+          />
+        </div>
+        <div className='my-4 bg-gray-300 h-[1px]' />
+        <div className='grid grid-cols-5 items-center justify-between'>
           <span className='text-sm text-gray-900 font-bold col-span-4'>
-            Paid -
+            {"Paid (-)"}
           </span>
           <Input
             type='number'
@@ -446,7 +473,7 @@ const OrderProductList: React.FC<Props> = ({ handleProductDataSubmit }) => {
         </div>
         <div className='my-4 bg-gray-300 h-[1px]' />
         <div className='flex items-center justify-between'>
-          <span className=' text-sm text-gray-900 font-bold'>Reamaining -</span>
+          <span className=' text-sm text-gray-900 font-bold'>Reamaining =</span>
           <span className=' text-sm text-gray-900 font-bold ml-auto'>
             {transection.remaining}
           </span>
