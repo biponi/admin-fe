@@ -12,8 +12,12 @@ export const buildFormDataFromObject = (data: any): FormData => {
 
   // Helper function to append nested arrays to FormData
   const appendArrayValues = (key: string, arr: any[]) => {
+    console.log(`${key}:`, arr);
     arr.forEach((item, index) => {
-      if (typeof item === "object") {
+      if (item instanceof File) {
+        // Append the file directly without stringifying
+        formData.append(key, item);
+      } else if (typeof item === "object") {
         // Convert object to JSON string and append with indexed key
         formData.append(`${key}[${index}]`, JSON.stringify(item));
       } else {

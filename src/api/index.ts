@@ -101,7 +101,12 @@ export const createProduct = async (
   try {
     const response = await axios.post<any>(
       config.product.createProduct(),
-      productData
+      productData,
+      {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+      }
     );
     if (response.status === 200) {
       return { success: true, data: response.data };
@@ -147,7 +152,12 @@ export const editProduct = async (
   try {
     const response = await axios.put<any>(
       config.product.editProduct(),
-      productData
+      productData,
+      {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+      }
     );
     if (response.status === 200) {
       return { success: true, data: response.data.data };

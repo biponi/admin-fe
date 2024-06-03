@@ -46,7 +46,9 @@ const defaultVariation = {
   title: "",
   sku: "",
   quantity: 0,
+  images: [],
   unitPrice: 0,
+  removeImageIndexes: [],
 };
 
 interface Props {
@@ -74,6 +76,7 @@ const EditProduct: React.FC<Props> = ({
   }, [productData]);
 
   const fileRef = useRef(null);
+  const fileRef2 = useRef(null);
   const dialogBtn = useRef(null);
   const updateDialogBtn = useRef(null);
 
@@ -570,6 +573,7 @@ const EditProduct: React.FC<Props> = ({
                         className='hidden'
                         ref={fileRef}
                         name='thumbnail'
+                        accept='.png, .jpg, .jpeg'
                         onChange={(e) => {
                           //@ts-ignore
                           const file = e.target.files[0];
@@ -619,6 +623,70 @@ const EditProduct: React.FC<Props> = ({
                     }
                     width='200'
                   />
+                </div>
+                <div className='grid grid-cols-3 gap-2 mt-2'>
+                  {formData?.images.map((imgData, index) => (
+                    <button
+                      key={index}
+                      onDoubleClick={() => {
+                        const images = formData.images.splice(index, 1);
+                        updateFormData({
+                          ...formData,
+                          images: [...images],
+                          removeImageIndexes: [
+                            ...(formData?.removeImageIndexes ?? []),
+                            index,
+                          ],
+                        });
+                      }}>
+                      <img
+                        alt='Product_image2'
+                        className='aspect-square w-full rounded-md object-cover'
+                        height='84'
+                        src={
+                          !!imgData
+                            ? typeof imgData === "string"
+                              ? imgData
+                              : URL.createObjectURL(imgData)
+                            : PlaceHolderImage
+                        }
+                        width='84'
+                      />
+                    </button>
+                  ))}
+
+                  <Input
+                    id='picture'
+                    type='file'
+                    className='hidden'
+                    ref={fileRef2}
+                    name='images'
+                    accept='.png, .jpg, .jpeg'
+                    onChange={(e) => {
+                      //@ts-ignore
+                      const file = e.target.files[0];
+                      if (!formData?.images) formData.images = [];
+                      //@ts-ignore
+                      formData.images.push(file);
+                      updateFormData({
+                        ...formData,
+                        images: formData.images,
+                      });
+                    }}
+                  />
+                  {formData?.images?.length < 3 && (
+                    <button
+                      className='flex aspect-square w-full items-center justify-center rounded-md border border-dashed'
+                      onClick={() => {
+                        if (!!fileRef2) {
+                          //@ts-ignore
+                          fileRef2.current.click();
+                        }
+                      }}>
+                      <Upload className='h-4 w-4 text-muted-foreground' />
+                      <span className='sr-only'>Upload</span>
+                    </button>
+                  )}
                 </div>
               </CardContent>
             </Card>

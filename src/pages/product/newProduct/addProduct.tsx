@@ -51,6 +51,7 @@ const defaultValue = {
   variation: [],
   sku: "",
   categoryId: "",
+  images: [],
 };
 
 const defaultVariation = {
@@ -77,6 +78,7 @@ const AddProduct: React.FC<Props> = ({ createProduct, categories }) => {
   const navigate = useNavigate();
 
   const fileRef = useRef(null);
+  const fileRef2 = useRef(null);
   const dialogBtn = useRef(null);
 
   // Handle form field changes
@@ -573,6 +575,7 @@ const AddProduct: React.FC<Props> = ({ createProduct, categories }) => {
                         className='hidden'
                         ref={fileRef}
                         name='thumbnail'
+                        accept='.png, .jpg, .jpeg'
                         onChange={(e) => {
                           //@ts-ignore
                           const file = e.target.files[0];
@@ -620,6 +623,61 @@ const AddProduct: React.FC<Props> = ({ createProduct, categories }) => {
                     }
                     width='200'
                   />
+                </div>
+                <div className='grid grid-cols-3 gap-2 mt-2'>
+                  {formData?.images.map((imgData, index) => (
+                    <button
+                      key={index}
+                      onDoubleClick={() => {
+                        const images = formData.images.splice(index, 1);
+                        updateFormData({
+                          ...formData,
+                          images: [...images],
+                        });
+                      }}>
+                      <img
+                        alt='Product_image2'
+                        className='aspect-square w-full rounded-md object-cover'
+                        height='84'
+                        src={
+                          !!imgData
+                            ? URL.createObjectURL(imgData)
+                            : PlaceHolderImage
+                        }
+                        width='84'
+                      />
+                    </button>
+                  ))}
+
+                  <Input
+                    id='picture'
+                    type='file'
+                    className='hidden'
+                    ref={fileRef2}
+                    name='thumbnail'
+                    accept='.png, .jpg, .jpeg'
+                    onChange={(e) => {
+                      //@ts-ignore
+                      const file = e.target.files[0];
+                      updateFormData({
+                        ...formData,
+                        images: [...formData?.images, file],
+                      });
+                    }}
+                  />
+                  {formData?.images?.length < 3 && (
+                    <button
+                      className='flex aspect-square w-full items-center justify-center rounded-md border border-dashed'
+                      onClick={() => {
+                        if (!!fileRef2) {
+                          //@ts-ignore
+                          fileRef2.current.click();
+                        }
+                      }}>
+                      <Upload className='h-4 w-4 text-muted-foreground' />
+                      <span className='sr-only'>Upload</span>
+                    </button>
+                  )}
                 </div>
               </CardContent>
             </Card>

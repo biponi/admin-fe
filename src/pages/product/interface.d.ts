@@ -49,6 +49,7 @@ export interface IProductCreateData {
   variation: IVariation[]; // Assuming variation can be an array of any type
   sku: string;
   categoryId: string;
+  images: File[] | [];
 }
 
 export interface IProductUpdateData {
@@ -64,6 +65,8 @@ export interface IProductUpdateData {
   variation: IVariation[]; // Assuming variation can be an array of any type
   sku: string;
   categoryId: string;
+  images: File[] | [];
+  removeImageIndexes?: number[];
 }
 
 export interface ICategory {
