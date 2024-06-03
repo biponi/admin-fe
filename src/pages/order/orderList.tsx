@@ -438,6 +438,11 @@ const OrderList = () => {
               </li>
 
               <li className='flex items-center justify-between'>
+                <span className='text-muted-foreground'>Delivery Charge</span>
+                <span>{selectedOrder?.deliveryCharge}</span>
+              </li>
+
+              <li className='flex items-center justify-between'>
                 <span className='text-muted-foreground'>Paid</span>
                 <span>{selectedOrder?.paid}</span>
               </li>
