@@ -106,20 +106,22 @@ const OrderList = () => {
         {drawerDialog()}
         <div className='flex items-center w-full'>
           <div className='grid gap-4 sm:grid-cols-4 md:grid-cols-4 lg:grid-cols-2 xl:grid-cols-4'>
-            <Card x-chunk='dashboard-05-chunk-0'>
-              <CardHeader className='pb-3'>
-                <CardTitle>Your Orders</CardTitle>
-                <CardDescription className='max-w-lg text-balance leading-relaxed'>
-                  Introducing Our Dynamic Orders Dashboard for Seamless
-                  Management and Insightful Analysis.
-                </CardDescription>
-              </CardHeader>
-              <CardFooter>
-                <Button onClick={() => navigate("/order/create")}>
-                  Create New Order
-                </Button>
-              </CardFooter>
-            </Card>
+            {user?.role === "admin" && (
+              <Card x-chunk='dashboard-05-chunk-0'>
+                <CardHeader className='pb-3'>
+                  <CardTitle>Your Orders</CardTitle>
+                  <CardDescription className='max-w-lg text-balance leading-relaxed'>
+                    Introducing Our Dynamic Orders Dashboard for Seamless
+                    Management and Insightful Analysis.
+                  </CardDescription>
+                </CardHeader>
+                <CardFooter>
+                  <Button onClick={() => navigate("/order/create")}>
+                    Create New Order
+                  </Button>
+                </CardFooter>
+              </Card>
+            )}
             {user?.role === "admin" && (
               <Card x-chunk='dashboard-05-chunk-1'>
                 <CardHeader className='pb-2'>
@@ -198,7 +200,7 @@ const OrderList = () => {
                       Manage your orders and view your sales performance.
                     </CardDescription>
                   </div>
-                  <div className='ml-auto'>
+                  <div className='ml-auto grid grid-cols-2 gap-4 sm:flex sm:justify-between sm:items-center'>
                     <Input
                       type='text'
                       placeholder='Search'
@@ -206,6 +208,11 @@ const OrderList = () => {
                         setInputValue(event.target.value);
                       }}
                     />
+                    {user?.role !== "admin" && (
+                      <Button onClick={() => navigate("/order/create")}>
+                        Create New Order
+                      </Button>
+                    )}
                   </div>
                 </div>
               </CardHeader>
