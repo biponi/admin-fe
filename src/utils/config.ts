@@ -25,6 +25,7 @@ const config = {
     getOrders: () => `${baseURL}/order/prior/all`,
     editOrder: () => `${baseURL}/order/prior/edit`,
     updateOrderStatus: () => `${baseURL}/order/prior/updateStatus`,
+     orderBulkAction: () => `${baseURL}/order/prior/bulk-update`,
     deleteOrder: (id: string) => `${baseURL}/order/prior/delete/${id}`,
     searchOrder: () => `${baseURL}/order/prior/search`,
   },

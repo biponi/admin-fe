@@ -160,3 +160,28 @@ export const updateOrderStatusData = async (
     return handleApiError(error);
   }
 };
+
+
+
+export const orderBulkAction = async (
+  orderIds: number[],
+  actionType: string
+): Promise<ApiResponse<any>> => {
+  try {
+    const response = await axios.post<any>(config.order.orderBulkAction(), {
+      orderIds,
+      actionType,
+    });
+    if (response.status === 200) {
+      return { success: true, data: response.data?.message };
+    } else {
+      return {
+        success: false,
+        error: response.data.error || "Failed to update order",
+      };
+    }
+  } catch (error: any) {
+    console.error("Error deleting order:", error.message);
+    return handleApiError(error);
+  }
+};

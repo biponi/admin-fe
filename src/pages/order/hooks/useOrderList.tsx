@@ -5,6 +5,7 @@ import {
   getOrderAnalysis,
   searchOrders,
   deleteOrder,
+  orderBulkAction,
 } from "../../../api/order";
 import useLoginAuth from "../../auth/hooks/useLoginAuth";
 
@@ -22,6 +23,7 @@ export const useOrderList = () => {
     totalPrice: 0,
     totalPaid: 0,
   });
+  const [bulkOrders, setBulkOrders] = useState<number[]>([]);
   const limit = 50;
 
   useEffect(() => {
@@ -106,19 +108,48 @@ export const useOrderList = () => {
     setCurrentPage(currentPageNum + increaseBy);
   };
 
+  const performOrderBulkUpdate = async (actionType: string) => {
+    if (!bulkOrders || bulkOrders?.length < 1) {
+      toast({
+        variant: "destructive",
+        title: "No Order Selected",
+      });
+      return;
+    }
+    const response = await orderBulkAction([...bulkOrders], actionType);
+    if (response?.success) {
+      toast({
+        variant: "default",
+        title: "Bulk Action Success",
+        description: response?.data,
+      });
+      setCurrentPage(0);
+      setBulkOrders([]);
+    } else {
+      toast({
+        variant: "destructive",
+        title: "Bulk Action Failed",
+        description: response?.error,
+      });
+    }
+  };
+
   return {
     limit,
     orders,
     refresh,
     analytics,
+    bulkOrders,
     totalPages,
     totalOrders,
     getOrderList,
     getAnalytics,
+    setBulkOrders,
     currentPageNum,
     setSearchQuery,
     orderFetching,
     deleteOrderData,
     updateCurrentPage,
+    performOrderBulkUpdate,
   };
 };

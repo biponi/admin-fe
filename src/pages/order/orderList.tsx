@@ -3,6 +3,7 @@ import {
   ChevronLeft,
   ChevronRight,
   TimerReset,
+  Trash2,
   TruckIcon,
 } from "lucide-react";
 import { Button } from "../../components/ui/button";
@@ -52,6 +53,16 @@ import {
 
 import CustomAlertDialog from "../../coreComponents/OptionModal";
 import useLoginAuth from "../auth/hooks/useLoginAuth";
+import { generateInvoice } from "../../utils/invoiceGenerator";
+import {
+  Drawer,
+  DrawerClose,
+  DrawerContent,
+  DrawerDescription,
+  DrawerFooter,
+  DrawerHeader,
+  DrawerTitle,
+} from "../../components/ui/drawer";
 
 const OrderList = () => {
   const {
@@ -62,10 +73,13 @@ const OrderList = () => {
     currentPageNum,
     totalPages,
     analytics,
+    bulkOrders,
     totalOrders,
+    setBulkOrders,
     setSearchQuery,
     updateCurrentPage,
     deleteOrderData,
+    performOrderBulkUpdate,
   } = useOrderList();
 
   const { user } = useLoginAuth();
@@ -73,6 +87,7 @@ const OrderList = () => {
   const { editOrderData, updateOrderStatus } = useOrder();
 
   const [inputValue, setInputValue] = useState<string>("");
+  const [bulkAction, setBulkAction] = useState<string>("");
   const [isEditDialogOpen, setEditDialogOpen] = useState<boolean>(false);
   const [selectedOrder, setSelectedOrder] = useState<IOrder | null>(null);
 
@@ -89,12 +104,16 @@ const OrderList = () => {
 
   const navigate = useNavigate();
 
+  const handleGenerateInvoice = async () => {
+    if (!!selectedOrder) await generateInvoice(selectedOrder);
+  };
+
   const renderEmptyView = () => {
     return (
       <EmptyView
-        title='You have no orders'
-        description='You can start selling as soon as you add a product.'
-        buttonText='Create Order'
+        title="You have no orders"
+        description="You can start selling as soon as you add a product."
+        buttonText="Create Order"
         handleButtonClick={() => navigate("/order/create")}
       />
     );
@@ -102,15 +121,15 @@ const OrderList = () => {
 
   const renderProductListView = () => {
     return (
-      <Tabs defaultValue='all'>
+      <Tabs defaultValue="all">
         {drawerDialog()}
-        <div className='flex items-center w-full'>
-          <div className='grid gap-4 sm:grid-cols-4 md:grid-cols-4 lg:grid-cols-2 xl:grid-cols-4'>
+        <div className="flex items-center w-full">
+          <div className="grid gap-4 sm:grid-cols-4 md:grid-cols-4 lg:grid-cols-2 xl:grid-cols-4">
             {user?.role === "admin" && (
-              <Card x-chunk='dashboard-05-chunk-0'>
-                <CardHeader className='pb-3'>
+              <Card x-chunk="dashboard-05-chunk-0">
+                <CardHeader className="pb-3">
                   <CardTitle>Your Orders</CardTitle>
-                  <CardDescription className='max-w-lg text-balance leading-relaxed'>
+                  <CardDescription className="max-w-lg text-balance leading-relaxed">
                     Introducing Our Dynamic Orders Dashboard for Seamless
                     Management and Insightful Analysis.
                   </CardDescription>
@@ -123,56 +142,56 @@ const OrderList = () => {
               </Card>
             )}
             {user?.role === "admin" && (
-              <Card x-chunk='dashboard-05-chunk-1'>
-                <CardHeader className='pb-2'>
+              <Card x-chunk="dashboard-05-chunk-1">
+                <CardHeader className="pb-2">
                   <CardDescription>This Month Completed Orders</CardDescription>
-                  <CardTitle className='text-4xl'>
+                  <CardTitle className="text-4xl">
                     {analytics.totalCompletedOrders}
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className='text-xs text-muted-foreground'>
+                  <div className="text-xs text-muted-foreground">
                     last 30 days
                   </div>
                 </CardContent>
                 <CardFooter>
-                  <Progress value={25} aria-label='25% increase' />
+                  <Progress value={25} aria-label="25% increase" />
                 </CardFooter>
               </Card>
             )}
             {user?.role === "admin" && (
-              <Card x-chunk='dashboard-05-chunk-2'>
-                <CardHeader className='pb-2'>
+              <Card x-chunk="dashboard-05-chunk-2">
+                <CardHeader className="pb-2">
                   <CardDescription>Total Paid</CardDescription>
-                  <CardTitle className='text-4xl'>
+                  <CardTitle className="text-4xl">
                     {analytics.totalPaid}
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className='text-xs text-muted-foreground'>
+                  <div className="text-xs text-muted-foreground">
                     last 30 days
                   </div>
                 </CardContent>
                 <CardFooter>
-                  <Progress value={12} aria-label='12% increase' />
+                  <Progress value={12} aria-label="12% increase" />
                 </CardFooter>
               </Card>
             )}
             {user?.role === "admin" && (
-              <Card x-chunk='dashboard-05-chunk-2'>
-                <CardHeader className='pb-2'>
+              <Card x-chunk="dashboard-05-chunk-2">
+                <CardHeader className="pb-2">
                   <CardDescription>Total Price Of Order</CardDescription>
-                  <CardTitle className='text-4xl'>
+                  <CardTitle className="text-4xl">
                     {analytics.totalPrice}
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className='text-xs text-muted-foreground'>
+                  <div className="text-xs text-muted-foreground">
                     last 30 days
                   </div>
                 </CardContent>
                 <CardFooter>
-                  <Progress value={12} aria-label='12% increase' />
+                  <Progress value={12} aria-label="12% increase" />
                 </CardFooter>
               </Card>
             )}
@@ -189,21 +208,21 @@ const OrderList = () => {
             </Button>
           </div> */}
         </div>
-        <div className='grid grid-1 md:grid-cols-3 md:gap-4'>
-          <div className='md:col-span-2'>
-            <Card x-chunk='dashboard-06-chunk-0' className='mt-4'>
+        <div className="grid grid-1 md:grid-cols-3 md:gap-4">
+          <div className="md:col-span-2">
+            <Card x-chunk="dashboard-06-chunk-0" className="mt-4">
               <CardHeader>
-                <div className='flex w-full justify-between'>
-                  <div className='mr-auto'>
+                <div className="flex w-full justify-between">
+                  <div className="mr-auto">
                     <CardTitle>Order</CardTitle>
                     <CardDescription>
                       Manage your orders and view your sales performance.
                     </CardDescription>
                   </div>
-                  <div className='ml-auto grid grid-cols-2 gap-4 sm:flex sm:justify-between sm:items-center'>
+                  <div className="ml-auto grid grid-cols-2 gap-4 sm:flex sm:justify-between sm:items-center">
                     <Input
-                      type='text'
-                      placeholder='Search'
+                      type="text"
+                      placeholder="Search"
                       onChange={(event) => {
                         setInputValue(event.target.value);
                       }}
@@ -217,11 +236,25 @@ const OrderList = () => {
                 </div>
               </CardHeader>
               <CardContent>
-                <TabsContent value='all'>
+                <TabsContent value="all">
                   <Table>
                     <TableHeader>
                       <TableRow>
-                        <TableHead className='hidden w-[100px] sm:table-cell'>
+                        <TableHead>
+                          <input
+                            className="border-gray-200 rounded-lg text-primary"
+                            type="checkbox"
+                            onChange={(event) => {
+                              const check = event?.target?.checked;
+                              setBulkOrders(
+                                check
+                                  ? orders?.map((order: IOrder) => order?.id)
+                                  : []
+                              );
+                            }}
+                          />
+                        </TableHead>
+                        <TableHead className="hidden w-[100px] sm:table-cell">
                           ID
                         </TableHead>
                         <TableHead>Customer Name</TableHead>
@@ -229,51 +262,60 @@ const OrderList = () => {
                         <TableHead>Status</TableHead>
                         <TableHead>District</TableHead>
                         <TableHead>Price</TableHead>
-                        <TableHead className='hidden md:table-cell'>
+                        <TableHead className="hidden md:table-cell">
                           Paid
                         </TableHead>
-                        <TableHead className='hidden md:table-cell'>
+                        <TableHead className="hidden md:table-cell">
                           Remaining
                         </TableHead>
-                        <TableHead className='hidden '>
+                        <TableHead className="hidden ">
                           Last Updated at
                         </TableHead>
                         <TableHead>
-                          <span className='sr-only'>Actions</span>
+                          <span className="sr-only">Actions</span>
                         </TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {orders.map((order: IOrder, index: number) => (
-                        <SingleItem
-                          key={index}
-                          id={`${order?.id}`}
-                          paid={order?.paid}
-                          status={order?.status}
-                          district={order?.shipping.district}
-                          totalPrice={order?.totalPrice ?? 0}
-                          remaining={order?.remaining}
-                          customerName={order?.customer?.name}
-                          CustomerPhoneNumber={order?.customer?.phoneNumber}
-                          handleUpdateOrder={() => {
-                            setSelectedOrder(order);
-                            setEditDialogOpen(true);
-                          }}
-                          handleViewDetails={() => {
-                            setSelectedOrder(order);
-                          }}
-                          deleteExistingOrder={deleteOrderData}
-                          updatedAt={order?.timestamps?.updatedAt}
-                        />
-                      ))}
+                      {!!orders &&
+                        orders.map((order: IOrder, index: number) => (
+                          <SingleItem
+                            key={index}
+                            id={`${order?.id}`}
+                            paid={order?.paid}
+                            status={order?.status}
+                            isBulkAdded={bulkOrders.includes(order?.id)}
+                            handleBulkCheck={(val: boolean) => {
+                              val
+                                ? setBulkOrders([...bulkOrders, order?.id])
+                                : setBulkOrders(
+                                    bulkOrders.filter((b) => b !== order?.id)
+                                  );
+                            }}
+                            district={order?.shipping.district}
+                            totalPrice={order?.totalPrice ?? 0}
+                            remaining={order?.remaining}
+                            customerName={order?.customer?.name}
+                            CustomerPhoneNumber={order?.customer?.phoneNumber}
+                            handleUpdateOrder={() => {
+                              setSelectedOrder(order);
+                              setEditDialogOpen(true);
+                            }}
+                            handleViewDetails={() => {
+                              setSelectedOrder(order);
+                            }}
+                            deleteExistingOrder={deleteOrderData}
+                            updatedAt={order?.timestamps?.updatedAt}
+                          />
+                        ))}
                     </TableBody>
                   </Table>
                 </TabsContent>
               </CardContent>
               {inputValue === "" && (
                 <CardFooter>
-                  <div className='w-full flex justify-between items-center'>
-                    <div className='text-xs text-muted-foreground'>
+                  <div className="w-full flex justify-between items-center">
+                    <div className="text-xs text-muted-foreground">
                       Showing{" "}
                       <strong>{`${
                         (Number(currentPageNum) - 1) * limit + 1
@@ -283,25 +325,27 @@ const OrderList = () => {
                       )}`}</strong>{" "}
                       of <strong>{totalOrders}</strong> orders
                     </div>
-                    <div className='flex gap-2 items-center'>
+                    <div className="flex gap-2 items-center">
                       <Button
                         disabled={currentPageNum < 2}
-                        variant='outline'
-                        size='icon'
-                        className='h-7 w-7'
-                        onClick={() => updateCurrentPage(-1)}>
-                        <ChevronLeft className='h-4 w-4' />
-                        <span className='sr-only'>Back</span>
+                        variant="outline"
+                        size="icon"
+                        className="h-7 w-7"
+                        onClick={() => updateCurrentPage(-1)}
+                      >
+                        <ChevronLeft className="h-4 w-4" />
+                        <span className="sr-only">Back</span>
                       </Button>
 
                       <Button
                         disabled={currentPageNum >= totalPages}
-                        variant='outline'
-                        size='icon'
-                        className='h-7 w-7'
-                        onClick={() => updateCurrentPage(1)}>
-                        <ChevronRight className='h-4 w-4' />
-                        <span className='sr-only'>Next</span>
+                        variant="outline"
+                        size="icon"
+                        className="h-7 w-7"
+                        onClick={() => updateCurrentPage(1)}
+                      >
+                        <ChevronRight className="h-4 w-4" />
+                        <span className="sr-only">Next</span>
                       </Button>
                     </div>
                   </div>
@@ -309,7 +353,12 @@ const OrderList = () => {
               )}
             </Card>
           </div>
-          <div className='mt-4'>{renderOrderDetailsPanel()}</div>
+          {(!bulkOrders || bulkOrders?.length < 1) && (
+            <div className="mt-4">{renderOrderDetailsPanel()}</div>
+          )}
+          {!!bulkOrders && bulkOrders.length > 0 && (
+            <div className="mt-4">{renderBulkActionPanel()}</div>
+          )}
         </div>
       </Tabs>
     );
@@ -317,31 +366,33 @@ const OrderList = () => {
 
   const renderOrderDetailsPanel = () => {
     return (
-      <Card className='overflow-hidden' x-chunk='dashboard-05-chunk-4'>
-        <CardHeader className='flex flex-row items-start bg-muted/50'>
-          <div className='grid gap-0.5'>
-            <CardTitle className='group flex items-center gap-2 text-lg'>
+      <Card className="overflow-hidden" x-chunk="dashboard-05-chunk-4">
+        <CardHeader className="flex flex-row items-start bg-muted/50">
+          <div className="grid gap-0.5">
+            <CardTitle className="group flex items-center gap-2 text-lg w-full">
               Order {selectedOrder?.id}
               {selectedOrder?.status === "processing" && (
                 <CustomAlertDialog
-                  title='Order Status Change'
-                  description='Are You Sure Change the status to SHIPPED???'
-                  cancelButtonText='NO'
-                  submitButtonText='YES'
+                  title="Order Status Change"
+                  description="Are You Sure Change the status to SHIPPED???"
+                  cancelButtonText="NO"
+                  submitButtonText="YES"
                   onSubmit={() => {
                     updateOrderStatus(`${selectedOrder?.id}`, "shipped", () =>
                       refresh()
                     );
-                  }}>
+                  }}
+                >
                   <TooltipProvider>
                     <Tooltip>
                       <TooltipTrigger>
                         <Button
-                          size='icon'
-                          variant='outline'
-                          className='h-6 w-6 '>
-                          <TruckIcon className='h-3 w-3' />
-                          <span className='sr-only'>Copy Order ID</span>
+                          size="icon"
+                          variant="outline"
+                          className="h-6 w-6 "
+                        >
+                          <TruckIcon className="h-3 w-3" />
+                          <span className="sr-only">Copy Order ID</span>
                         </Button>
                       </TooltipTrigger>
                       <TooltipContent>Change Status to shipped</TooltipContent>
@@ -351,24 +402,26 @@ const OrderList = () => {
               )}
               {selectedOrder?.status === "shipped" && (
                 <CustomAlertDialog
-                  title='Order Status Change'
-                  description='Are You Sure Change the status to Complete???'
-                  cancelButtonText='NO'
-                  submitButtonText='YES'
+                  title="Order Status Change"
+                  description="Are You Sure Change the status to Complete???"
+                  cancelButtonText="NO"
+                  submitButtonText="YES"
                   onSubmit={() => {
                     updateOrderStatus(`${selectedOrder?.id}`, "completed", () =>
                       refresh()
                     );
-                  }}>
+                  }}
+                >
                   <TooltipProvider>
                     <Tooltip>
                       <TooltipTrigger>
                         <Button
-                          size='icon'
-                          variant='outline'
-                          className='h-6 w-6 '>
-                          <CheckCircleIcon className='h-3 w-3' />
-                          <span className='sr-only'>Copy Order ID</span>
+                          size="icon"
+                          variant="outline"
+                          className="h-6 w-6 "
+                        >
+                          <CheckCircleIcon className="h-3 w-3" />
+                          <span className="sr-only">Copy Order ID</span>
                         </Button>
                       </TooltipTrigger>
                       <TooltipContent>Complete the order</TooltipContent>
@@ -378,26 +431,28 @@ const OrderList = () => {
               )}
               {selectedOrder?.status !== "processing" && (
                 <CustomAlertDialog
-                  title='Order Status Change'
-                  description='Are You Sure Change the status to Processing??? Use for return or other'
-                  cancelButtonText='NO'
-                  submitButtonText='YES'
+                  title="Order Status Change"
+                  description="Are You Sure Change the status to Processing??? Use for return or other"
+                  cancelButtonText="NO"
+                  submitButtonText="YES"
                   onSubmit={() => {
                     updateOrderStatus(
                       `${selectedOrder?.id}`,
                       "processing",
                       () => refresh()
                     );
-                  }}>
+                  }}
+                >
                   <TooltipProvider>
                     <Tooltip>
                       <TooltipTrigger>
                         <Button
-                          size='icon'
-                          variant='outline'
-                          className='h-6 w-6 '>
-                          <TimerReset className='h-3 w-3' />
-                          <span className='sr-only'>Copy Order ID</span>
+                          size="icon"
+                          variant="outline"
+                          className="h-6 w-6 "
+                        >
+                          <TimerReset className="h-3 w-3" />
+                          <span className="sr-only">Copy Order ID</span>
                         </Button>
                       </TooltipTrigger>
                       <TooltipContent>
@@ -407,6 +462,17 @@ const OrderList = () => {
                   </TooltipProvider>
                 </CustomAlertDialog>
               )}
+              <div className="ml-auto">
+                {" "}
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="float-right ml-auto"
+                  onClick={() => handleGenerateInvoice()}
+                >
+                  Invoice
+                </Button>
+              </div>
             </CardTitle>
             <CardDescription>
               Date:{" "}
@@ -415,7 +481,7 @@ const OrderList = () => {
               )}
             </CardDescription>
           </div>
-          <div className='ml-auto flex items-center gap-1'>
+          <div className="ml-auto flex items-center gap-1">
             {/* <Button size='sm' variant='outline' className='h-8 gap-1'>
               <Truck className='h-3.5 w-3.5' />
               <span className='lg:sr-only xl:not-sr-only xl:whitespace-nowrap'>
@@ -424,79 +490,79 @@ const OrderList = () => {
             </Button> */}
           </div>
         </CardHeader>
-        <CardContent className='p-6 text-sm'>
-          <div className='grid gap-3'>
-            <div className='font-semibold'>Order Details</div>
-            <ul className='grid gap-3'>
+        <CardContent className="p-6 text-sm">
+          <div className="grid gap-3">
+            <div className="font-semibold">Order Details</div>
+            <ul className="grid gap-3">
               {selectedOrder?.products.map((product, index) => (
-                <li key={index} className='flex items-center justify-between'>
-                  <span className='text-muted-foreground'>
+                <li key={index} className="flex items-center justify-between">
+                  <span className="text-muted-foreground">
                     {product?.name} x <span>{product?.quantity}</span>
                   </span>
                   <span>{product?.totalPrice}</span>
                 </li>
               ))}
             </ul>
-            <Separator className='my-2' />
-            <ul className='grid gap-3'>
-              <li className='flex items-center justify-between'>
-                <span className='text-muted-foreground'>Subtotal</span>
+            <Separator className="my-2" />
+            <ul className="grid gap-3">
+              <li className="flex items-center justify-between">
+                <span className="text-muted-foreground">Subtotal</span>
                 <span>{selectedOrder?.totalPrice}</span>
               </li>
 
-              <li className='flex items-center justify-between'>
-                <span className='text-muted-foreground'>Delivery Charge</span>
+              <li className="flex items-center justify-between">
+                <span className="text-muted-foreground">Delivery Charge</span>
                 <span>{selectedOrder?.deliveryCharge}</span>
               </li>
 
-              <li className='flex items-center justify-between'>
-                <span className='text-muted-foreground'>Paid</span>
+              <li className="flex items-center justify-between">
+                <span className="text-muted-foreground">Paid</span>
                 <span>{selectedOrder?.paid}</span>
               </li>
-              <li className='flex items-center justify-between font-semibold'>
-                <span className='text-muted-foreground'>Remaining</span>
+              <li className="flex items-center justify-between font-semibold">
+                <span className="text-muted-foreground">Remaining</span>
                 <span>{selectedOrder?.remaining}</span>
               </li>
             </ul>
           </div>
-          <Separator className='my-2' />
-          <div className='grid grid-cols-1 gap-4'>
-            <div className='grid gap-3'>
-              <div className='font-semibold'>Shipping Information</div>
-              <address className='grid gap-0.5 not-italic text-muted-foreground'>
+          <Separator className="my-2" />
+          <div className="grid grid-cols-1 gap-4">
+            <div className="grid gap-3">
+              <div className="font-semibold">Shipping Information</div>
+              <address className="grid gap-0.5 not-italic text-muted-foreground">
                 <span>{selectedOrder?.shipping.division}, </span>
                 <span>{selectedOrder?.shipping.district}</span>
                 <span>{selectedOrder?.shipping.address}</span>
               </address>
             </div>
           </div>
-          <Separator className='my-2' />
-          <div className='grid gap-3'>
-            <div className='font-semibold'>Customer Information</div>
-            <dl className='grid gap-3'>
-              <div className='flex items-center justify-between'>
-                <dt className='text-muted-foreground'>Customer</dt>
+          <Separator className="my-2" />
+          <div className="grid gap-3">
+            <div className="font-semibold">Customer Information</div>
+            <dl className="grid gap-3">
+              <div className="flex items-center justify-between">
+                <dt className="text-muted-foreground">Customer</dt>
                 <dd>{selectedOrder?.customer.name}</dd>
               </div>
-              <div className='flex items-center justify-between'>
-                <dt className='text-muted-foreground'>Email</dt>
+              <div className="flex items-center justify-between">
+                <dt className="text-muted-foreground">Email</dt>
                 <dd>
-                  <a href='mailto:'>{selectedOrder?.customer.email}</a>
+                  <a href="mailto:">{selectedOrder?.customer.email}</a>
                 </dd>
               </div>
-              <div className='flex items-center justify-between'>
-                <dt className='text-muted-foreground'>Phone</dt>
+              <div className="flex items-center justify-between">
+                <dt className="text-muted-foreground">Phone</dt>
                 <dd>
-                  <a href='tel:'>{selectedOrder?.customer.phoneNumber}</a>
+                  <a href="tel:">{selectedOrder?.customer.phoneNumber}</a>
                 </dd>
               </div>
             </dl>
           </div>
         </CardContent>
-        <CardFooter className='flex flex-row items-center border-t bg-muted/50 px-6 py-3'>
-          <div className='text-xs text-muted-foreground'>
+        <CardFooter className="flex flex-row items-center border-t bg-muted/50 px-6 py-3">
+          <div className="text-xs text-muted-foreground">
             Updated{" "}
-            <time dateTime='2023-11-23'>
+            <time dateTime="2023-11-23">
               {dayjs(selectedOrder?.timestamps.updatedAt).format(
                 "MMMM D, YYYY"
               )}
@@ -507,15 +573,85 @@ const OrderList = () => {
     );
   };
 
+  const renderBulkActionPanel = () => {
+    return (
+      <Card className="overflow-hidden" x-chunk="dashboard-05-chunk-4">
+        <CardHeader className="flex flex-row items-start bg-muted/50">
+          <div className="grid gap-0.5">
+            <CardTitle className="group flex items-center gap-2 text-lg w-full">
+              Bulk Action
+            </CardTitle>
+          </div>
+          <div className="ml-auto flex items-center gap-1">
+            {/* <Button size='sm' variant='outline' className='h-8 gap-1'>
+              <Truck className='h-3.5 w-3.5' />
+              <span className='lg:sr-only xl:not-sr-only xl:whitespace-nowrap'>
+                Track Order
+              </span>
+            </Button> */}
+          </div>
+        </CardHeader>
+        <CardContent className="p-6 text-sm">
+          <div className="flex flex-col justify-center items-center gap-4">
+            <div className="w-full grid grid-cols-3 gap-2">
+              {" "}
+              <Button
+                variant="default"
+                className="w-full bg-blue-700"
+                onClick={() => setBulkAction("shipped")}
+              >
+                {" "}
+                <TruckIcon className="size-5 text-white mr-2" />
+                Shipped
+              </Button>
+              <Button
+                variant="default"
+                className="w-full bg-green-700"
+                onClick={() => setBulkAction("complete")}
+              >
+                {" "}
+                <CheckCircleIcon className="size-5 text-white mr-2" />
+                Complete
+              </Button>
+              <Button
+                variant="default"
+                className="w-full"
+                onClick={() => setBulkAction("processing")}
+              >
+                {" "}
+                <TimerReset className="size-5 text-white mr-2" />
+                Processing
+              </Button>
+            </div>
+            <Button
+              variant="destructive"
+              className="w-full"
+              onClick={() => setBulkAction("delete")}
+            >
+              {" "}
+              <Trash2 className="size-5 text-white mr-2" /> Delete
+            </Button>
+          </div>
+        </CardContent>
+        <CardFooter className="flex flex-row items-center border-t bg-muted/50 px-6 py-3">
+          <div className="text-xs text-muted-foreground">
+            {bulkOrders?.length} of {orders?.length} selected
+          </div>
+        </CardFooter>
+      </Card>
+    );
+  };
+
   const drawerDialog = () => {
     return (
       <Sheet
         open={isEditDialogOpen}
-        onOpenChange={(val) => setEditDialogOpen(val)}>
+        onOpenChange={(val) => setEditDialogOpen(val)}
+      >
         <SheetContent>
           <SheetHeader>
             <SheetTitle>Edit Order</SheetTitle>
-            <SheetDescription className='text-red-400'>
+            <SheetDescription className="text-red-400">
               This action cannot be undone.
             </SheetDescription>
           </SheetHeader>
@@ -544,6 +680,45 @@ const OrderList = () => {
     );
   };
 
+  const renderBulkActionDrawer = () => {
+    return (
+      <Drawer
+        open={
+          !!bulkOrders &&
+          bulkOrders?.length > 0 &&
+          ["shipped", "complete", "processing", "delete"].includes(bulkAction)
+        }
+      >
+        <DrawerContent className="p-20">
+          <DrawerHeader className="mx-auto">
+            <DrawerTitle>Are you absolutely sure?</DrawerTitle>
+            <DrawerDescription>This action cannot be undone.</DrawerDescription>
+          </DrawerHeader>
+          <DrawerFooter className="container">
+            <div className="flex justify-center items-center gap-6">
+              <DrawerClose>
+                <Button
+                  variant="destructive"
+                  onClick={() => {
+                    performOrderBulkUpdate(bulkAction);
+                    setBulkAction("");
+                  }}
+                >
+                  I'm Sure
+                </Button>
+              </DrawerClose>
+              <DrawerClose>
+                <Button variant="outline" onClick={() => setBulkAction("")}>
+                  Cancel
+                </Button>
+              </DrawerClose>
+            </div>
+          </DrawerFooter>
+        </DrawerContent>
+      </Drawer>
+    );
+  };
+
   const mainView = () => {
     if (orderFetching) {
       return <DefaultLoading />;
@@ -554,7 +729,12 @@ const OrderList = () => {
     }
   };
 
-  return <div className='w-full sm:w-[95vw]'>{mainView()}</div>;
+  return (
+    <div className="w-full sm:w-[95vw]">
+      {mainView()}
+      {renderBulkActionDrawer()}
+    </div>
+  );
 };
 
 export default OrderList;
