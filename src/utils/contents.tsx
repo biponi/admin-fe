@@ -9,29 +9,42 @@ export const NavBarItems = [
     label: "Dashboard",
     link: "/dashboard",
     roles: ["admin", "manager", "moderator"],
-    icon: <Home className='h-5 w-5' />,
+    icon: <Home className="h-5 w-5" />,
   },
   {
     active: true,
     label: "Products",
     link: "/product",
     roles: ["admin", "manager"],
-    icon: <ShirtIcon className='h-5 w-5' />,
+    icon: <ShirtIcon className="h-5 w-5" />,
   },
   {
     active: true,
     label: "Categories",
     link: "/category",
     roles: ["admin", "manager"],
-    icon: <BoxesIcon className='h-5 w-5' />,
+    icon: <BoxesIcon className="h-5 w-5" />,
   },
   {
     active: true,
     label: "Orders",
     link: "/order",
     roles: ["admin", "manager", "moderator"],
-    icon: <ShoppingCart className='h-5 w-5' />,
+    icon: <ShoppingCart className="h-5 w-5" />,
   },
+];
+
+export const COLORS = [
+  "#FF5733", // Vibrant Orange
+  "#33FF57", // Bright Green
+  "#3357FF", // Vivid Blue
+  "#F333FF", // Purple
+  "#FFC300", // Golden Yellow
+  "#FF6F61", // Coral
+  "#8E44AD", // Amethyst
+  "#2ECC71", // Emerald Green
+  "#E74C3C", // Red
+  "#3498DB", // Light Blue
 ];
 
 export const BDDistrictList = [

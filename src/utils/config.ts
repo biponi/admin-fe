@@ -2,6 +2,7 @@ const baseURL = `/api/v1`;
 
 const config = {
   refreshToken: () => `/api/refresh-token`,
+  dashboard:{getDashboardAnalysis:()=>`${baseURL}/dashboard/analysis`,getDashboardAnalysisData:()=>`${baseURL}/dashboard/analysis_v2`,},
   user: {
     signup: () => `${baseURL}/user/signup`,
     login: () => `${baseURL}/user/login`,

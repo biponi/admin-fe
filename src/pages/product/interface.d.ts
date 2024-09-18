@@ -75,6 +75,7 @@ export interface ICategory {
   discount: number;
   active: boolean;
   img: string;
+  description:string;
   totalProducts: number;
 }
 
@@ -82,6 +83,7 @@ export interface ICreateCategory {
   name: string;
   discount: number;
   active: boolean;
+  description:string;
   img: string | File;
 }
 

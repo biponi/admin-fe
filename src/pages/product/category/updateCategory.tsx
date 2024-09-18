@@ -36,6 +36,7 @@ interface Props {
 const defaultCategory = {
   name: "",
   img: "",
+  description: "",
   discount: 0.0,
   active: true,
 };
@@ -56,6 +57,10 @@ const UpdateCategory: React.FC<Props> = ({
   >(null);
 
   useEffect(() => {
+    return setImage(null);
+  }, []);
+
+  useEffect(() => {
     if (!!category) {
       setExistingCategory(category);
     }
@@ -65,7 +70,9 @@ const UpdateCategory: React.FC<Props> = ({
     if (isNewCategory) {
       if (!!existingCategory) {
         const res = await createCategory(
-          !!image ? { ...existingCategory, img: image } : existingCategory
+          !!image && image !== null
+            ? { ...existingCategory, img: image }
+            : existingCategory
         );
         if (!!res) handleOpenChange(false);
       }
@@ -74,9 +81,10 @@ const UpdateCategory: React.FC<Props> = ({
       if (!!existingCategory?.id) {
         //@ts-ignore
         const res = await editExistingCategory({
-          ...existingCategory,
           //@ts-ignore
-          img: image,
+          ...(!!image && image !== null
+            ? { ...existingCategory, img: image }
+            : existingCategory),
         });
         if (!!res) handleOpenChange(false);
       }
@@ -99,31 +107,41 @@ const UpdateCategory: React.FC<Props> = ({
     return (
       <Card>
         <CardContent>
-          <div className='grid gap-4 grid-cols-1 sm:grid-cols-3'>
-            <div className='col-span-1 sm:col-span-2 '>
-              <div className='grid w-full max-w-sm items-center gap-1.5 my-5'>
-                <Label htmlFor='name'>Name</Label>
+          <div className="grid gap-4 grid-cols-1 sm:grid-cols-3">
+            <div className="col-span-1 sm:col-span-2 ">
+              <div className="grid w-full max-w-sm items-center gap-1.5 my-5">
+                <Label htmlFor="name">Name</Label>
                 <Input
-                  type='text'
-                  name='name'
+                  type="text"
+                  name="name"
                   onChange={handleChange}
-                  placeholder='Enter a name'
+                  placeholder="Enter a name"
                   value={existingCategory?.name ?? ""}
                 />
               </div>
-              <div className='grid w-full max-w-sm items-center gap-1.5 my-5'>
-                <Label htmlFor='discount'>Discount</Label>
+              <div className="grid w-full max-w-sm items-center gap-1.5 my-5">
+                <Label htmlFor="discount">Description</Label>
                 <Input
-                  type='number'
-                  name='discount'
-                  placeholder='0.00'
+                  type="text"
+                  name="description"
+                  placeholder="Enter a description"
+                  onChange={handleChange}
+                  value={existingCategory?.description ?? ""}
+                />
+              </div>
+              <div className="grid w-full max-w-sm items-center gap-1.5 my-5">
+                <Label htmlFor="discount">Discount</Label>
+                <Input
+                  type="number"
+                  name="discount"
+                  placeholder="0.00"
                   onChange={handleChange}
                   value={existingCategory?.discount ?? ""}
                 />
               </div>
-              <div className='flex items-center space-x-2 my-2'>
+              <div className="flex items-center space-x-2 my-2">
                 <Switch
-                  id='airplane-mode'
+                  id="airplane-mode"
                   checked={existingCategory?.active ?? false}
                   onCheckedChange={(value) => {
                     if (!!existingCategory) {
@@ -134,13 +152,13 @@ const UpdateCategory: React.FC<Props> = ({
                     }
                   }}
                 />
-                <Label htmlFor='airplane-mode'>Activate</Label>
+                <Label htmlFor="airplane-mode">Activate</Label>
               </div>
-              <div className='grid w-full max-w-sm items-center gap-1.5 my-5'>
-                <Label htmlFor='picture'>Picture</Label>
+              <div className="grid w-full max-w-sm items-center gap-1.5 my-5">
+                <Label htmlFor="picture">Picture</Label>
                 <Input
-                  id='picture'
-                  type='file'
+                  id="picture"
+                  type="file"
                   onChange={(e) => {
                     //@ts-ignore
                     const file = e.target.files[0];
@@ -149,17 +167,17 @@ const UpdateCategory: React.FC<Props> = ({
                 />
               </div>
             </div>
-            <div className='w-full mt-5'>
+            <div className="w-full mt-5">
               <Card>
                 <CardHeader>
                   <CardTitle>Category Image</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className='grid gap-2'>
+                  <div className="grid gap-2">
                     <img
-                      alt='Product_image'
-                      className='aspect-square w-full rounded-md object-fill'
-                      height='200'
+                      alt="Product_image"
+                      className="aspect-square w-full rounded-md object-fill"
+                      height="200"
                       src={
                         !!existingCategory &&
                         !!existingCategory?.img &&
@@ -169,7 +187,7 @@ const UpdateCategory: React.FC<Props> = ({
                           ? URL.createObjectURL(image)
                           : PlaceHolderImage
                       }
-                      width='200'
+                      width="200"
                     />
                   </div>
                 </CardContent>
@@ -184,7 +202,7 @@ const UpdateCategory: React.FC<Props> = ({
   return (
     <Dialog open={open} onOpenChange={(open) => handleOpenChange(open)}>
       {!!children && <DialogTrigger asChild>{children}</DialogTrigger>}
-      <DialogContent className=' w-[90vw] max-w-[95vw] sm:w-[60vw] sm:max-w-[80vw] '>
+      <DialogContent className=" w-[90vw] max-w-[95vw] sm:w-[60vw] sm:max-w-[80vw] ">
         <DialogHeader>
           <DialogTitle>
             {isNewCategory ? "Create a category" : "Update category"}
@@ -199,7 +217,8 @@ const UpdateCategory: React.FC<Props> = ({
         <DialogFooter>
           <Button
             disabled={!!!existingCategory || loading}
-            onClick={() => handleSubmit()}>
+            onClick={() => handleSubmit()}
+          >
             {isNewCategory ? "Create" : "Update"}
           </Button>
         </DialogFooter>
