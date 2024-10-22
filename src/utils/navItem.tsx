@@ -1,4 +1,4 @@
-import { Home, Package, Package2, ShoppingCart, User2 } from "lucide-react";
+import { Home, Package2, Shirt, ShoppingCart, User2, Zap } from "lucide-react";
 
 export const navItems = [
   {
@@ -16,7 +16,7 @@ export const navItems = [
     roles: ["admin", "manager", "moderator"],
   },
   {
-    icon: <Package className="w-5 h-5" />,
+    icon: <Shirt className="w-5 h-5" />,
     title: "Products",
     link: "/products",
     active: true,
@@ -26,6 +26,13 @@ export const navItems = [
     icon: <Package2 className="w-5 h-5" />,
     title: "Category",
     link: "/category",
+    active: true,
+    roles: ["admin", "manager"],
+  },
+  {
+    icon: <Zap className="w-5 h-5" />,
+    title: "Campaign",
+    link: "/campaign",
     active: true,
     roles: ["admin", "manager"],
   },

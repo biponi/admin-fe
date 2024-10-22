@@ -1,5 +1,6 @@
 import {
   CircleCheck,
+  CircleMinusIcon,
   MapPin,
   MoreHorizontalIcon,
   TimerIcon,
@@ -21,6 +22,7 @@ import CustomAlertDialog from "../../../coreComponents/OptionModal";
 
 interface Props {
   id: string;
+  orderNumber: number;
   customerName: string;
   CustomerPhoneNumber: string;
   status: string;
@@ -38,6 +40,7 @@ interface Props {
 
 const SingleItem: React.FC<Props> = ({
   id,
+  orderNumber,
   customerName,
   CustomerPhoneNumber,
   status,
@@ -81,17 +84,21 @@ const SingleItem: React.FC<Props> = ({
           }}
         />
       </TableCell>
-      <TableCell className="hidden sm:table-cell">{id}</TableCell>
+      <TableCell className="hidden sm:table-cell">{orderNumber}</TableCell>
       <TableCell className="hidden sm:table-cell">{customerName}</TableCell>
       <TableCell className="font-medium">{CustomerPhoneNumber}</TableCell>
       <TableCell>
         <Badge
-          variant="outline"
+          variant={
+            ["cancel", "delete"].includes(status) ? "destructive" : "outline"
+          }
           className={`py-1 px-3 ${
             status === "processing"
               ? ""
               : status === "shipped"
               ? "bg-blue-400 text-gray-200"
+              : ["cancel", "delete"].includes(status)
+              ? ""
               : "bg-green-500 text-gray-200"
           }`}
         >
@@ -99,6 +106,8 @@ const SingleItem: React.FC<Props> = ({
             <TimerIcon className="w-4 h-4 mr-2  " />
           ) : status === "shipped" ? (
             <Truck className="w-4 h-4 mr-2" />
+          ) : ["cancel", "delete"].includes(status) ? (
+            <CircleMinusIcon className="w-4 h-4 mr-2" />
           ) : (
             <CircleCheck className="w-4 h-4 mr-2 " />
           )}

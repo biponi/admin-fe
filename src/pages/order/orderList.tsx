@@ -2,6 +2,7 @@ import {
   CheckCircleIcon,
   ChevronLeft,
   ChevronRight,
+  MinusCircleIcon,
   TimerReset,
   Trash2,
   TruckIcon,
@@ -255,7 +256,7 @@ const OrderList = () => {
                           />
                         </TableHead>
                         <TableHead className="hidden w-[100px] sm:table-cell">
-                          ID
+                          NO.
                         </TableHead>
                         <TableHead>Customer Name</TableHead>
                         <TableHead>Phone Number</TableHead>
@@ -281,6 +282,7 @@ const OrderList = () => {
                         orders.map((order: IOrder, index: number) => (
                           <SingleItem
                             key={index}
+                            orderNumber={order?.orderNumber}
                             id={`${order?.id}`}
                             paid={order?.paid}
                             status={order?.status}
@@ -370,7 +372,7 @@ const OrderList = () => {
         <CardHeader className="flex flex-row items-start bg-muted/50">
           <div className="grid gap-0.5">
             <CardTitle className="group flex items-center gap-2 text-lg w-full">
-              Order {selectedOrder?.id}
+              Order #{selectedOrder?.orderNumber}
               {selectedOrder?.status === "processing" && (
                 <CustomAlertDialog
                   title="Order Status Change"
@@ -475,6 +477,9 @@ const OrderList = () => {
               </div>
             </CardTitle>
             <CardDescription>
+              <span className="text-sm font-medium text-gray-500 block mt-2 mb-1">
+                Track Id: {selectedOrder?.id}
+              </span>
               Date:{" "}
               {dayjs(selectedOrder?.timestamps.createdAt).format(
                 "MMMM D, YYYY"
@@ -623,14 +628,24 @@ const OrderList = () => {
                 Processing
               </Button>
             </div>
-            <Button
-              variant="destructive"
-              className="w-full"
-              onClick={() => setBulkAction("delete")}
-            >
-              {" "}
-              <Trash2 className="size-5 text-white mr-2" /> Delete
-            </Button>
+            <div className="w-full grid grid-cols-2 gap-4">
+              <Button
+                variant="outline"
+                className="w-full"
+                onClick={() => setBulkAction("cancel")}
+              >
+                {" "}
+                <MinusCircleIcon className="size-5 text-red-600 mr-2" /> Cancel
+              </Button>
+              <Button
+                variant="destructive"
+                className="w-full"
+                onClick={() => setBulkAction("delete")}
+              >
+                {" "}
+                <Trash2 className="size-5 text-white mr-2" /> Delete
+              </Button>
+            </div>
           </div>
         </CardContent>
         <CardFooter className="flex flex-row items-center border-t bg-muted/50 px-6 py-3">
@@ -686,7 +701,9 @@ const OrderList = () => {
         open={
           !!bulkOrders &&
           bulkOrders?.length > 0 &&
-          ["shipped", "complete", "processing", "delete"].includes(bulkAction)
+          ["shipped", "complete", "processing", "delete", "cancel"].includes(
+            bulkAction
+          )
         }
       >
         <DrawerContent className="p-20">

@@ -9,6 +9,9 @@ import OrderPage from "./order";
 // import ProtectedRoute from "../ProtectedRoute";
 import AccessDeniedPage from "../Unauthorize";
 import DashboardPage from "./dashboard";
+import CreateCampaignForm from "./campaign/components/createCampaign";
+import CampaignList from "./campaign/campaignList";
+import UpdateCampaignForm from "./campaign/components/updateCampaign";
 
 const PageView = () => {
   return (
@@ -22,6 +25,9 @@ const PageView = () => {
         <Route path="/category" element={<Category />} />
         <Route path="/order" element={<OrderPage />} />
         <Route path="/order/create" element={<CreateOrder />} />
+        <Route path="/campaign/create" element={<CreateCampaignForm />} />
+        <Route path="/campaign/update/:id" element={<UpdateCampaignForm />} />
+        <Route path="/campaign" element={<CampaignList />} />
         <Route path="/" element={<DashboardPage />} />
         <Route path="/unauthorize" element={<AccessDeniedPage />} />
       </Routes>

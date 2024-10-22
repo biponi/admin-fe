@@ -44,6 +44,7 @@ export interface IProductCreateData {
   unitPrice: number;
   manufactureId: string;
   discount: number;
+  discountType:string;
   description: string;
   thumbnail: File | null;
   variation: IVariation[]; // Assuming variation can be an array of any type
@@ -60,6 +61,7 @@ export interface IProductUpdateData {
   unitPrice: number;
   manufactureId: string;
   discount: number;
+  discountType:string;
   description: string;
   thumbnail: string | File | null;
   variation: IVariation[]; // Assuming variation can be an array of any type

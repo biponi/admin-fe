@@ -53,6 +53,13 @@ const config = {
     editCategory: (id: string) => `${baseURL}/category/update/${id}`,
     deleteCategory: (id: string) => `${baseURL}/category/delete/${id}`,
   },
+  campaign:{
+    createCampaign:() => `${baseURL}/campaign/create`,
+    getAllCampaign:() => `${baseURL}/campaign`,
+    editCampaign:(id:string) => `${baseURL}/campaign/update/${id}`,
+    getCampaignById:(id:string) => `${baseURL}/campaign/by/${id}`,
+    deleteCampaign:(id:string) => `${baseURL}/campaign/remove/${id}`,
+  }
 };
 
 export default config;
