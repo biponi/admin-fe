@@ -431,7 +431,7 @@ export const generateInvoice = (
 
   // Add your copyright text to every page
   const copyrightText =
-    "© +8801700534317 prior.retailshop.info.bd@gmail.com http://www.priorbd.com H-29, R-1/C, Nikunja-2, Dhaka-1229";
+    "© +8801700534317 prior.retailshop.info.bd@gmail.com http://www.priorbd.com Shop 134, Genetic Plaza, Dhanmondi-27, Dhaka";
 
   // Add a footer with the copyright text on every page
   const totalPages = doc.internal.pages?.length - 1;
