@@ -41,7 +41,8 @@ const SelectProductForCampaign: React.FC<Props> = ({
   >([]);
 
   useEffect(() => {
-    setSelectedProducts(productList);
+    if (!!productList && productList?.length > 0)
+      setSelectedProducts(productList);
   }, [productList]);
 
   useEffect(() => {
@@ -163,7 +164,6 @@ const SelectProductForCampaign: React.FC<Props> = ({
     product: IProduct | ICampaingProducts,
     index: number
   ) => {
-    console.log("pr: ", product);
     return (
       <TableRow key={`${product?.id}-${index}`}>
         <TableCell className="hidden sm:inline-block">
