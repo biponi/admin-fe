@@ -73,7 +73,7 @@ const SingleItem: React.FC<Props> = ({
     );
   };
   return (
-    <TableRow onClick={() => handleViewDetails()}>
+    <TableRow onClick={() => handleViewDetails()} className="hover:bg-zinc-300">
       <TableCell className="hidden sm:table-cell">
         <input
           className="border-gray-200 rounded-lg text-primary"

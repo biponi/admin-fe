@@ -1,7 +1,9 @@
 import {
+  Check,
   CheckCircleIcon,
   ChevronLeft,
   ChevronRight,
+  Clipboard,
   MinusCircleIcon,
   TimerReset,
   Trash2,
@@ -87,6 +89,7 @@ const OrderList = () => {
 
   const { editOrderData, updateOrderStatus } = useOrder();
 
+  const [isCopied, setIsCopied] = useState(false);
   const [inputValue, setInputValue] = useState<string>("");
   const [bulkAction, setBulkAction] = useState<string>("");
   const [isEditDialogOpen, setEditDialogOpen] = useState<boolean>(false);
@@ -102,6 +105,15 @@ const OrderList = () => {
     setSearchQuery(inputValue);
     //eslint-disable-next-line
   }, [debounceHandler]);
+
+  const handleCopy = () => {
+    if (!selectedOrder) return;
+    const trackUrl = `https://priorbd.com/order/${selectedOrder?.id}`;
+    navigator.clipboard.writeText(trackUrl).then(() => {
+      setIsCopied(true);
+      setTimeout(() => setIsCopied(false), 2000); // Hide "Copied!" after 2 seconds
+    });
+  };
 
   const navigate = useNavigate();
 
@@ -479,6 +491,25 @@ const OrderList = () => {
             <CardDescription>
               <span className="text-sm font-medium text-gray-500 block mt-2 mb-1">
                 Track Id: {selectedOrder?.id}
+                <button
+                  onClick={handleCopy}
+                  className="ml-2 relative inline-flex items-center"
+                  title="Copy URL"
+                >
+                  {isCopied ? (
+                    <Check size={18} className="text-green-500" />
+                  ) : (
+                    <Clipboard
+                      size={18}
+                      className="text-gray-500 hover:text-gray-700"
+                    />
+                  )}
+                  {isCopied && (
+                    <span className="absolute -top-3 left-5 bg-green-100 text-green-700 text-xs font-medium px-2 py-1 rounded">
+                      Copied!
+                    </span>
+                  )}
+                </button>
               </span>
               Date:{" "}
               {dayjs(selectedOrder?.timestamps.createdAt).format(
