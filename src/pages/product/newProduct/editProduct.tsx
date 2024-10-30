@@ -458,6 +458,7 @@ const EditProduct: React.FC<Props> = ({
                   <div className="grid gap-3">
                     <Label htmlFor="discount-type">Discount Type</Label>
                     <Select
+                      value={formData?.discountType}
                       onValueChange={(value) => {
                         updateFormData({
                           ...formData,

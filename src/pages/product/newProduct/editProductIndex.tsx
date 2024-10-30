@@ -96,7 +96,6 @@ const UpdateProduct = () => {
 
   const updateProduct = async (productData: IProductUpdateData) => {
     const validateResponse = validateProductData(productData);
-    console.log("validate: ", validateResponse);
     if (!validateResponse?.isValidate) {
       toast({
         title: "🚨 Product validation failed",
@@ -128,16 +127,17 @@ const UpdateProduct = () => {
   };
   const mainView = () => {
     if (loading) {
-      return <DefaultLoading title='Updating product' />;
+      return <DefaultLoading title="Updating product" />;
     } else if (productData !== null) {
       return (
         <>
           <Button
-            className='block sm:hidden sm:mr-auto '
+            className="block sm:hidden sm:mr-auto "
             size={"icon"}
             variant={"ghost"}
-            onClick={() => navigate("/products")}>
-            <ArrowLeft className=' size-5 ' />
+            onClick={() => navigate("/products")}
+          >
+            <ArrowLeft className=" size-5 " />
           </Button>
           <EditProduct
             productData={productData}
@@ -149,7 +149,7 @@ const UpdateProduct = () => {
     } else return <></>;
   };
   return (
-    <MainView title='Add New Product'>
+    <MainView title="Add New Product">
       <>{mainView()}</>
     </MainView>
   );
