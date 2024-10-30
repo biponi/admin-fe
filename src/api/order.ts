@@ -32,6 +32,29 @@ export const createOrder = async (
   }
 };
 
+
+export const updateOrderProductData = async (
+  orderData: any
+): Promise<ApiResponse<any>> => {
+  try {
+    const response = await axios.patch<any>(
+      config.order.updateOrderProduct(),
+      orderData
+    );
+    if (response.status === 200) {
+      return { success: true, data: response.data.data };
+    } else {
+      return {
+        success: false,
+        error: response.data.error || "Failed to create product",
+      };
+    }
+  } catch (error: any) {
+    console.error("Error creating product:", error.message);
+    return handleApiError(error);
+  }
+};
+
 // Function to search for products
 export const getOrders = async (
   limit = 20,

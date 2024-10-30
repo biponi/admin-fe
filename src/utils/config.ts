@@ -14,6 +14,7 @@ const config = {
     updateProduct: () => `${baseURL}/product/update`,
     editProduct: () => `${baseURL}/product/edit`,
     searchProduct: () => `${baseURL}/product/search`,
+    multiProducts: () => `${baseURL}/product/multi`,
     deleteProduct: (id: string) => `${baseURL}/product/delete/${id}`,
     getProductByManufecturer: (manuId: number) =>
       `${baseURL}/product/manufecture/${manuId}`,
@@ -22,6 +23,7 @@ const config = {
   },
   order: {
     createOrder: () => `${baseURL}/order/prior/create`,
+    updateOrderProduct: () => `${baseURL}/order/prior/update/product`,
     getOrderAnalytics: () => `${baseURL}/order/prior/analytics`,
     getOrders: () => `${baseURL}/order/prior/all`,
     editOrder: () => `${baseURL}/order/prior/edit`,

@@ -66,16 +66,21 @@ const OrderProductList: React.FC<Props> = ({ handleProductDataSubmit }) => {
   useEffect(() => {
     if (!!selectedProducts) {
       let totalPrice = 0;
+      let discount = transection?.discount;
       selectedProducts.forEach((product) => {
         totalPrice = Number(totalPrice) + Number(product.totalPrice);
+        discount = Number(discount) + Number(product.discount);
       });
+      const deliveryCharge = transection?.deliveryCharge;
       setTransection({
         ...transection,
         totalPrice,
+        discount,
+        deliveryCharge,
         remaining:
           totalPrice +
-          Number(transection.deliveryCharge) -
-          (Number(transection.paid) || 0 + Number(transection.discount) || 0),
+          Number(deliveryCharge) -
+          (Number(transection.paid) || 0 + Number(discount) || 0),
       });
     }
     //eslint-disable-next-line
@@ -123,16 +128,17 @@ const OrderProductList: React.FC<Props> = ({ handleProductDataSubmit }) => {
       <Table>
         <TableHeader>
           <TableRow>
-            <TableHead className='hidden sm:inline-block'>#</TableHead>
-            <TableHead className='hidden sm:w-[100px] sm:inline-block'>
+            <TableHead className="hidden sm:inline-block">#</TableHead>
+            <TableHead className="hidden sm:w-[100px] sm:inline-block">
               Image
             </TableHead>
-            <TableHead className='hidden sm:truncate sm:inline-block'>
+            <TableHead className="hidden sm:truncate sm:inline-block">
               Name
             </TableHead>
             <TableHead>SKU</TableHead>
             <TableHead>Quantity</TableHead>
-            <TableHead className='text-right'>Action</TableHead>
+            <TableHead>Unit Price</TableHead>
+            <TableHead className="text-right">Action</TableHead>
           </TableRow>
         </TableHeader>
         {(!products || products.length === 0) && (
@@ -154,37 +160,38 @@ const OrderProductList: React.FC<Props> = ({ handleProductDataSubmit }) => {
                 )
                 .map((product: IProduct, index: number) => (
                   <TableRow key={product?.id}>
-                    <TableCell className='hidden sm:inline-block'>
+                    <TableCell className="hidden sm:inline-block">
                       {Number(index) + 1}
                     </TableCell>
-                    <TableCell className='hidden sm:w-[100px] sm:inline-block'>
+                    <TableCell className="hidden sm:w-[100px] sm:inline-block">
                       <img
-                        alt='img'
-                        className='aspect-square rounded-md object-cover'
-                        height='64'
+                        alt="img"
+                        className="aspect-square rounded-md object-cover"
+                        height="64"
                         src={
                           !!product?.thumbnail
                             ? product.thumbnail
                             : PlaceHolderImage
                         }
-                        width='64'
+                        width="64"
                       />
                     </TableCell>
-                    <TableCell className='hidden sm:inline-block sm:truncate'>
+                    <TableCell className="hidden sm:inline-block sm:truncate">
                       {product?.name}
                     </TableCell>
                     <TableCell>{product?.sku}</TableCell>
-                    <TableCell className='w-[10px] sm:w-[20px] sm:truncate'>
+                    <TableCell className="w-[10px] sm:w-[20px] sm:truncate">
                       {product?.quantity}
                     </TableCell>
-                    <TableCell className='flex justify-end items-center'>
+                    <TableCell>{product?.unitPrice}</TableCell>
+                    <TableCell className="flex justify-end items-center">
                       {product?.quantity > 0 && product?.active ? (
                         <Button onClick={() => handleSelect(product)}>
                           Select
                         </Button>
                       ) : (
-                        <Badge>
-                          {product?.active ? "Inactive" : "Out Of Stock"}
+                        <Badge variant={"destructive"}>
+                          {!product?.active ? "Inactive" : "Out Of Stock"}
                         </Badge>
                       )}
                     </TableCell>
@@ -244,8 +251,9 @@ const OrderProductList: React.FC<Props> = ({ handleProductDataSubmit }) => {
         onValueChange={(value: string) =>
           //@ts-ignore
           handleVariantChange(value, type.toLowerCase())
-        }>
-        <SelectTrigger className='w-[80px]'>
+        }
+      >
+        <SelectTrigger className="w-[80px]">
           <SelectValue placeholder={`Select a ${type}`} />
         </SelectTrigger>
         <SelectContent>
@@ -263,24 +271,24 @@ const OrderProductList: React.FC<Props> = ({ handleProductDataSubmit }) => {
   const renderSelectedProduct = (product: IOrderProduct, index: number) => {
     const distinctColors = new Set<string>(); // Use Set for efficient storage of unique values
     const distinctSizes = new Set<string>();
-
-    for (const item of product.variation) {
-      if (!!item.color) distinctColors.add(item.color);
-      if (!!item.size) distinctSizes.add(item.size);
-    }
+    if (!!product?.variation)
+      for (const item of product.variation) {
+        if (!!item.color) distinctColors.add(item.color);
+        if (!!item.size) distinctSizes.add(item.size);
+      }
 
     const uniqueColors: string[] = Array.from(distinctColors) ?? []; // Convert Set to array
     const uniqueSizes: string[] = Array.from(distinctSizes) ?? [];
     return (
       <TableRow key={`${product?.id}-${index}`}>
-        <TableCell className='hidden sm:inline-block'>
+        <TableCell className="hidden sm:inline-block">
           {
             <img
-              alt='img'
-              className='aspect-square rounded-md object-cover'
-              height='64'
+              alt="img"
+              className="aspect-square rounded-md object-cover"
+              height="64"
               src={!!product?.thumbnail ? product.thumbnail : PlaceHolderImage}
-              width='64'
+              width="64"
             />
           }
         </TableCell>
@@ -311,7 +319,7 @@ const OrderProductList: React.FC<Props> = ({ handleProductDataSubmit }) => {
         </TableCell>
         <TableCell>
           <Input
-            type='number'
+            type="number"
             value={product?.selectedQuantity}
             onChange={(e) => {
               const num = Number(e.target.value);
@@ -333,15 +341,15 @@ const OrderProductList: React.FC<Props> = ({ handleProductDataSubmit }) => {
             }}
           />
         </TableCell>
-        <TableCell className='hidden sm:inline-block'>
+        <TableCell className="hidden sm:inline-block">
           {product?.totalPrice}
         </TableCell>
         <TableCell>
           <Trash
-            className='text-red-500 w-4 h-4'
+            className="text-red-500 w-4 h-4 cursor-pointer"
             onClick={() =>
               setSelectedProducts(
-                index === 0 ? [] : selectedProducts.splice(index, 1)
+                selectedProducts.filter((sp) => sp?.id !== product?.id)
               )
             }
           />
@@ -352,19 +360,19 @@ const OrderProductList: React.FC<Props> = ({ handleProductDataSubmit }) => {
 
   const renderSelectedProductList = () => {
     return (
-      <Table className='max-h-[50vh] overflow-y-auto'>
+      <Table className="max-h-[50vh] overflow-y-auto">
         <TableHeader>
           <TableRow>
-            <TableHead className='hidden sm:inline-block'>Image</TableHead>
+            <TableHead className="hidden sm:inline-block">Image</TableHead>
             <TableHead>Name</TableHead>
             <TableHead>Color</TableHead>
             <TableHead>Size</TableHead>
             <TableHead>quantity</TableHead>
-            <TableHead className='hidden sm:inline-block'>
+            <TableHead className="hidden sm:inline-block">
               Total Price
             </TableHead>
-            <TableHead className='text-right'>
-              <Trash className='w-5 h-5' />
+            <TableHead className="text-right">
+              <Trash className="w-5 h-5" />
             </TableHead>
           </TableRow>
         </TableHeader>
@@ -372,7 +380,7 @@ const OrderProductList: React.FC<Props> = ({ handleProductDataSubmit }) => {
           {(!selectedProducts || selectedProducts.length < 1) && (
             <TableRow>
               <TableCell colSpan={7}>
-                <EmptyProductCard text='Please select a product' />
+                <EmptyProductCard text="Please select a product" />
               </TableCell>
             </TableRow>
           )}
@@ -387,20 +395,20 @@ const OrderProductList: React.FC<Props> = ({ handleProductDataSubmit }) => {
 
   const renderTransectionData = () => {
     return (
-      <div className='w-full'>
-        <div className='flex items-center justify-between'>
-          <span className=' text-sm text-gray-900 font-bold'>Total price</span>
-          <span className=' text-sm text-gray-900 font-bold ml-auto'>
+      <div className="w-full">
+        <div className="flex items-center justify-between">
+          <span className=" text-sm text-gray-900 font-bold">Total price</span>
+          <span className=" text-sm text-gray-900 font-bold ml-auto">
             {transection.totalPrice}
           </span>
         </div>
-        <div className='my-4 bg-gray-300 h-[1px]' />
-        <div className='grid grid-cols-5 items-center justify-between'>
-          <span className=' text-sm text-gray-900 font-bold col-span-4'>
+        <div className="my-4 bg-gray-300 h-[1px]" />
+        <div className="grid grid-cols-5 items-center justify-between">
+          <span className=" text-sm text-gray-900 font-bold col-span-4">
             {"Discount (-)"}
           </span>
           <Input
-            type='number'
+            type="number"
             disabled={transection.totalPrice < 1}
             value={transection.discount}
             onChange={(e) => {
@@ -418,13 +426,13 @@ const OrderProductList: React.FC<Props> = ({ handleProductDataSubmit }) => {
             }}
           />
         </div>
-        <div className='my-4 bg-gray-300 h-[1px]' />
-        <div className='grid grid-cols-5 items-center justify-between'>
-          <span className=' text-sm text-gray-900 font-bold col-span-4'>
+        <div className="my-4 bg-gray-300 h-[1px]" />
+        <div className="grid grid-cols-5 items-center justify-between">
+          <span className=" text-sm text-gray-900 font-bold col-span-4">
             {"Delivery Charge (+)"}
           </span>
           <Input
-            type='number'
+            type="number"
             min={0}
             disabled={transection.totalPrice < 1}
             value={transection.deliveryCharge}
@@ -445,13 +453,13 @@ const OrderProductList: React.FC<Props> = ({ handleProductDataSubmit }) => {
             }}
           />
         </div>
-        <div className='my-4 bg-gray-300 h-[1px]' />
-        <div className='grid grid-cols-5 items-center justify-between'>
-          <span className='text-sm text-gray-900 font-bold col-span-4'>
+        <div className="my-4 bg-gray-300 h-[1px]" />
+        <div className="grid grid-cols-5 items-center justify-between">
+          <span className="text-sm text-gray-900 font-bold col-span-4">
             {"Paid (-)"}
           </span>
           <Input
-            type='number'
+            type="number"
             value={transection.paid}
             disabled={transection.totalPrice < 1}
             onChange={(e) => {
@@ -471,10 +479,10 @@ const OrderProductList: React.FC<Props> = ({ handleProductDataSubmit }) => {
             }}
           />
         </div>
-        <div className='my-4 bg-gray-300 h-[1px]' />
-        <div className='flex items-center justify-between'>
-          <span className=' text-sm text-gray-900 font-bold'>Reamaining =</span>
-          <span className=' text-sm text-gray-900 font-bold ml-auto'>
+        <div className="my-4 bg-gray-300 h-[1px]" />
+        <div className="flex items-center justify-between">
+          <span className=" text-sm text-gray-900 font-bold">Reamaining =</span>
+          <span className=" text-sm text-gray-900 font-bold ml-auto">
             {transection.remaining}
           </span>
         </div>
@@ -483,16 +491,16 @@ const OrderProductList: React.FC<Props> = ({ handleProductDataSubmit }) => {
   };
 
   return (
-    <div className='w-full grid grid-cols-1 sm:grid-cols-6 gap-2'>
-      <div className=' col-span-1 sm:col-span-4'>
-        <Card className='my-2'>
+    <div className="w-full grid grid-cols-1 sm:grid-cols-6 gap-2">
+      <div className=" col-span-1 sm:col-span-3">
+        <Card className="my-2">
           <CardHeader>
             <CardTitle>Product Information</CardTitle>
             <CardDescription>
-              <div className='w-full'>
+              <div className="w-full">
                 <Input
-                  type='text'
-                  placeholder='Search'
+                  type="text"
+                  placeholder="Search"
                   value={query}
                   onChange={(event) => {
                     setQuery(event.target.value);
@@ -504,34 +512,36 @@ const OrderProductList: React.FC<Props> = ({ handleProductDataSubmit }) => {
           <CardContent>{renderProductList()}</CardContent>
         </Card>
       </div>
-      <div className='col-span-1 sm:col-span-2 my-2'>
+      <div className="col-span-1 sm:col-span-3 my-2">
         <Card>
           <CardHeader>
             <CardTitle>Selected Product Information</CardTitle>
           </CardHeader>
           <CardContent>{renderSelectedProductList()}</CardContent>
         </Card>
-        <Card className='my-2'>
+        <Card className="my-2">
           <CardHeader>
             <CardTitle>Amount</CardTitle>
           </CardHeader>
           <CardContent>{renderTransectionData()}</CardContent>
           <CardFooter>
-            <div className='flex justify-end items-center ml-auto'>
+            <div className="flex justify-end items-center ml-auto">
               <Button
                 variant={"outline"}
-                className='mx-2'
+                className="mx-2"
                 onClick={() => {
                   setSelectedProducts([]);
                   setTransection(defaultTransaction);
-                }}>
+                }}
+              >
                 Cancel
               </Button>
               <Button
                 disabled={!selectedProducts || selectedProducts.length < 1}
                 onClick={() => {
                   handleProductDataSubmit(selectedProducts, transection);
-                }}>
+                }}
+              >
                 Next
               </Button>
             </div>

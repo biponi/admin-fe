@@ -54,7 +54,7 @@ const OrderPreview: React.FC<Props> = ({
   ) => {
     return (
       <Select value={selected} disabled>
-        <SelectTrigger className='w-[80px]'>
+        <SelectTrigger className="w-[80px]">
           <SelectValue placeholder={`Select a ${type}`} />
         </SelectTrigger>
         <SelectContent>
@@ -73,23 +73,24 @@ const OrderPreview: React.FC<Props> = ({
     const distinctColors = new Set<string>(); // Use Set for efficient storage of unique values
     const distinctSizes = new Set<string>();
 
-    for (const item of product.variation) {
-      if (!!item.color) distinctColors.add(item.color);
-      if (!!item.size) distinctSizes.add(item.size);
-    }
+    if (!!product?.variation)
+      for (const item of product.variation) {
+        if (!!item.color) distinctColors.add(item.color);
+        if (!!item.size) distinctSizes.add(item.size);
+      }
 
     const uniqueColors: string[] = Array.from(distinctColors) ?? []; // Convert Set to array
     const uniqueSizes: string[] = Array.from(distinctSizes) ?? [];
     return (
       <TableRow key={`${product?.id}-${index}`}>
-        <TableCell className='hidden sm:block'>
+        <TableCell className="hidden sm:block">
           {
             <img
-              alt='img'
-              className='aspect-square rounded-md object-cover'
-              height='64'
+              alt="img"
+              className="aspect-square rounded-md object-cover"
+              height="64"
               src={!!product?.thumbnail ? product.thumbnail : PlaceHolderImage}
-              width='64'
+              width="64"
             />
           }
         </TableCell>
@@ -117,29 +118,29 @@ const OrderPreview: React.FC<Props> = ({
             : "N/A"}
         </TableCell>
         <TableCell>{product?.selectedQuantity}</TableCell>
-        <TableCell className='hidden sm:block'>{product?.totalPrice}</TableCell>
+        <TableCell className="hidden sm:block">{product?.totalPrice}</TableCell>
       </TableRow>
     );
   };
 
   const renderSelectedProductList = () => {
     return (
-      <Table className='max-h-[50vh] overflow-y-auto'>
+      <Table className="max-h-[50vh] overflow-y-auto">
         <TableHeader>
           <TableRow>
-            <TableHead className='hidden sm:block'>Image</TableHead>
+            <TableHead className="hidden sm:block">Image</TableHead>
             <TableHead>Name</TableHead>
             <TableHead>Color</TableHead>
             <TableHead>Size</TableHead>
             <TableHead>quantity</TableHead>
-            <TableHead className='hidden sm:block'>Total Price</TableHead>
+            <TableHead className="hidden sm:block">Total Price</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
           {(!orderProducts || orderProducts.length < 1) && (
             <TableRow>
               <TableCell colSpan={7}>
-                <EmptyProductCard text='Please select a product' />
+                <EmptyProductCard text="Please select a product" />
               </TableCell>
             </TableRow>
           )}
@@ -154,44 +155,44 @@ const OrderPreview: React.FC<Props> = ({
 
   const renderTransectionData = () => {
     return (
-      <div className='w-full'>
-        <div className='flex items-center justify-between'>
-          <span className=' text-sm text-gray-900 font-bold'>
+      <div className="w-full">
+        <div className="flex items-center justify-between">
+          <span className=" text-sm text-gray-900 font-bold">
             Total price -
           </span>
-          <span className=' text-sm text-gray-900 font-bold ml-auto'>
+          <span className=" text-sm text-gray-900 font-bold ml-auto">
             {transection.totalPrice}
           </span>
         </div>
-        <div className='my-4 bg-gray-300 h-[1px]' />
-        <div className='grid grid-cols-5 items-center justify-between'>
-          <span className=' text-sm text-gray-900 font-bold col-span-4'>
+        <div className="my-4 bg-gray-300 h-[1px]" />
+        <div className="grid grid-cols-5 items-center justify-between">
+          <span className=" text-sm text-gray-900 font-bold col-span-4">
             Discount -
           </span>
-          <Input type='number' disabled={true} value={transection.discount} />
+          <Input type="number" disabled={true} value={transection.discount} />
         </div>
-        <div className='my-4 bg-gray-300 h-[1px]' />
-        <div className='grid grid-cols-5 items-center justify-between'>
-          <span className=' text-sm text-gray-900 font-bold col-span-4'>
+        <div className="my-4 bg-gray-300 h-[1px]" />
+        <div className="grid grid-cols-5 items-center justify-between">
+          <span className=" text-sm text-gray-900 font-bold col-span-4">
             Delivery Charge -
           </span>
           <Input
-            type='number'
+            type="number"
             disabled={true}
             value={transection.deliveryCharge}
           />
         </div>
-        <div className='my-4 bg-gray-300 h-[1px]' />
-        <div className='grid grid-cols-5 items-center justify-between'>
-          <span className='text-sm text-gray-900 font-bold col-span-4'>
+        <div className="my-4 bg-gray-300 h-[1px]" />
+        <div className="grid grid-cols-5 items-center justify-between">
+          <span className="text-sm text-gray-900 font-bold col-span-4">
             Paid -
           </span>
-          <Input type='number' value={transection.paid} disabled={true} />
+          <Input type="number" value={transection.paid} disabled={true} />
         </div>
-        <div className='my-4 bg-gray-300 h-[1px]' />
-        <div className='flex items-center justify-between'>
-          <span className=' text-sm text-gray-900 font-bold'>Reamaining -</span>
-          <span className=' text-sm text-gray-900 font-bold ml-auto'>
+        <div className="my-4 bg-gray-300 h-[1px]" />
+        <div className="flex items-center justify-between">
+          <span className=" text-sm text-gray-900 font-bold">Reamaining -</span>
+          <span className=" text-sm text-gray-900 font-bold ml-auto">
             {transection.remaining}
           </span>
         </div>
@@ -206,35 +207,35 @@ const OrderPreview: React.FC<Props> = ({
           <CardTitle>Customer Information</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className='grid w-full max-w-sm items-center gap-1.5 mt-2'>
-            <Label htmlFor='name'>Customer name</Label>
+          <div className="grid w-full max-w-sm items-center gap-1.5 mt-2">
+            <Label htmlFor="name">Customer name</Label>
             <Input
-              type='text'
-              id='name'
-              name='name'
-              placeholder='Name'
+              type="text"
+              id="name"
+              name="name"
+              placeholder="Name"
               value={customerInformation.customer.name}
               disabled
             />
           </div>
-          <div className='grid w-full max-w-sm items-center gap-1.5 mt-2'>
-            <Label htmlFor='email'>Email</Label>
+          <div className="grid w-full max-w-sm items-center gap-1.5 mt-2">
+            <Label htmlFor="email">Email</Label>
             <Input
-              type='email'
-              id='email'
-              name='email'
-              placeholder='Email'
+              type="email"
+              id="email"
+              name="email"
+              placeholder="Email"
               value={customerInformation.customer.email}
               disabled
             />
           </div>
-          <div className='grid w-full max-w-sm items-center gap-1.5 mt-2'>
-            <Label htmlFor='phone-number'>Phone Number</Label>
+          <div className="grid w-full max-w-sm items-center gap-1.5 mt-2">
+            <Label htmlFor="phone-number">Phone Number</Label>
             <Input
-              type='text'
-              id='phone-number'
-              name='phoneNumber'
-              placeholder='017XXXXXXXXXXX'
+              type="text"
+              id="phone-number"
+              name="phoneNumber"
+              placeholder="017XXXXXXXXXXX"
               value={customerInformation.customer.phoneNumber}
               disabled
             />
@@ -250,27 +251,28 @@ const OrderPreview: React.FC<Props> = ({
           <CardTitle>Shipping Information</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className='grid w-full max-w-sm items-center gap-1.5 mt-2'>
-            <Label htmlFor='district'>Division</Label>
-            <span className='text-base font-semibold text-gray-900'>
+          <div className="grid w-full max-w-sm items-center gap-1.5 mt-2">
+            <Label htmlFor="district">Division</Label>
+            <span className="text-base font-semibold text-gray-900">
               {customerInformation.shipping.division.name}
             </span>
           </div>
 
-          <div className='grid w-full max-w-sm items-center gap-1.5 mt-2'>
-            <Label htmlFor='district'>Districts</Label>
-            <span className='text-base font-semibold text-gray-900'>
+          <div className="grid w-full max-w-sm items-center gap-1.5 mt-2">
+            <Label htmlFor="district">Districts</Label>
+            <span className="text-base font-semibold text-gray-900">
               {customerInformation.shipping.district.name}
             </span>
           </div>
-          <div className='grid w-full max-w-sm items-center gap-1.5 mt-2'>
-            <Label htmlFor='address'>Address</Label>
+          <div className="grid w-full max-w-sm items-center gap-1.5 mt-2">
+            <Label htmlFor="address">Address</Label>
             <Textarea
-              id='address'
-              name='address'
-              placeholder='Enter Full Address'
+              id="address"
+              name="address"
+              placeholder="Enter Full Address"
               value={customerInformation.shipping.address}
-              disabled></Textarea>
+              disabled
+            ></Textarea>
           </div>
         </CardContent>
       </Card>
@@ -284,7 +286,7 @@ const OrderPreview: React.FC<Props> = ({
             <CardTitle>Customer Details</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className='grid grid-cols-1 sm:grid-cols-2 gap-4'>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>{renderCustomerPersonalInformation()}</div>
               <div>{renderCustomerShippingInformation()}</div>
             </div>
@@ -295,38 +297,40 @@ const OrderPreview: React.FC<Props> = ({
   };
 
   return (
-    <div className='w-full grid grid-cols-1 sm:grid-cols-6 gap-2'>
-      <div className=' col-span-1 sm:col-span-4'>
+    <div className="w-full grid grid-cols-1 sm:grid-cols-6 gap-2">
+      <div className=" col-span-1 sm:col-span-4">
         {/* customer information */}
         {renderCustomerinforamtionPreview()}
       </div>
-      <div className='col-span-1 sm:col-span-2 my-2'>
+      <div className="col-span-1 sm:col-span-2 my-2">
         <Card>
           <CardHeader>
             <CardTitle>Selected Product Information</CardTitle>
           </CardHeader>
           <CardContent>{renderSelectedProductList()}</CardContent>
         </Card>
-        <Card className='my-2'>
+        <Card className="my-2">
           <CardHeader>
             <CardTitle>Amount</CardTitle>
           </CardHeader>
           <CardContent>{renderTransectionData()}</CardContent>
           <CardFooter>
-            <div className='flex justify-end items-center ml-auto'>
+            <div className="flex justify-end items-center ml-auto">
               <Button
                 variant={"outline"}
-                className='mx-2'
+                className="mx-2"
                 onClick={() => {
                   handleBack();
-                }}>
+                }}
+              >
                 Back
               </Button>
               <Button
                 disabled={!orderProducts || orderProducts.length < 1}
                 onClick={() => {
                   handleCreateOrder();
-                }}>
+                }}
+              >
                 Create Order
               </Button>
             </div>

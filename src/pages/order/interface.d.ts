@@ -54,6 +54,7 @@ export interface IOrder {
     address: string;
   };
   products: {
+    id?:string;
     productId: string;
     name: string;
     thumbnail: string;

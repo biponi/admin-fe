@@ -195,6 +195,30 @@ export const searchProducts = async (
   }
 };
 
+// Function to get product by list of ids
+export const getProductsById = async (
+  idList: string[]
+): Promise<ApiResponse<any>> => {
+  try {
+    const response = await axios.get<any>(config.product.multiProducts(), {
+      params: {
+        ids:idList.join(",")
+      },
+    });
+    if (response.status === 200) {
+      return { success: true, data: response.data.data };
+    } else {
+      return {
+        success: false,
+        error: response.data.error || "Failed to fetch products",
+      };
+    }
+  } catch (error: any) {
+    console.error("Error searching products:", error.message);
+    return handleApiError(error);
+  }
+};
+
 // Function to delete a product
 export const deleteProduct = async (
   productId: string

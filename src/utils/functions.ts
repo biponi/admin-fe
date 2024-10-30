@@ -84,3 +84,14 @@ export const getLocationByFormattedString = (
     (location) => location.name === name && location.bn_name === bn_name
   );
 };
+
+
+export const ArraysMatch = (array1:any[], array2:any[]) => {
+  if (array1.length !== array2.length) return false;
+
+  // Sort both arrays and compare each element
+  const sortedArray1 = array1.slice().sort();
+  const sortedArray2 = array2.slice().sort();
+
+  return sortedArray1.every((value, index) => value === sortedArray2[index]);
+};

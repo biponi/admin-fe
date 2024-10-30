@@ -7,6 +7,9 @@ export interface IProduct {
   unitPrice: number;
   manufactureId: string;
   discount: number;
+  updatedPrice: number;
+  dicountType: string;
+  hasDiscount: boolean;
   description: string;
   thumbnail: string;
   productCode: string;
@@ -27,7 +30,7 @@ export interface IOrderProduct extends IProduct {
 }
 
 export interface IVariation {
-  id: number;
+  id: string;
   size: string;
   color: string;
   name: string;

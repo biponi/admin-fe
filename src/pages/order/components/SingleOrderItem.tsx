@@ -34,6 +34,7 @@ interface Props {
   isBulkAdded: boolean;
   handleViewDetails: () => void;
   handleUpdateOrder: () => void;
+  handleModifyProduct: () => void;
   handleBulkCheck: (val: boolean) => void;
   deleteExistingOrder: (id: string) => void;
 }
@@ -53,6 +54,7 @@ const SingleItem: React.FC<Props> = ({
   handleBulkCheck,
   handleViewDetails,
   handleUpdateOrder,
+  handleModifyProduct,
   deleteExistingOrder,
 }) => {
   const dialogBtn = useRef(null);
@@ -85,7 +87,7 @@ const SingleItem: React.FC<Props> = ({
         />
       </TableCell>
       <TableCell className="hidden sm:table-cell">{orderNumber}</TableCell>
-      <TableCell className="hidden sm:table-cell">{customerName}</TableCell>
+      <TableCell>{customerName}</TableCell>
       <TableCell className="font-medium">{CustomerPhoneNumber}</TableCell>
       <TableCell>
         <Badge
@@ -114,14 +116,14 @@ const SingleItem: React.FC<Props> = ({
           {status.toUpperCase()}
         </Badge>
       </TableCell>
-      <TableCell>
+      <TableCell className="hidden md:table-cell">
         <Badge variant="outline" className="py-1 px-3">
           <MapPin className="w-4 h-4 mr-2" />
           {district}
         </Badge>
       </TableCell>
       <TableCell>{totalPrice}</TableCell>
-      <TableCell>{paid}</TableCell>
+      <TableCell className="hidden md:table-cell">{paid}</TableCell>
       <TableCell className="hidden md:table-cell">{remaining}</TableCell>
       <TableCell className="hidden ">
         {dayjs(updatedAt).format("DD-MM-YYYY HH:mm:ss")}
@@ -136,8 +138,12 @@ const SingleItem: React.FC<Props> = ({
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
             <DropdownMenuLabel>Actions</DropdownMenuLabel>
+
             <DropdownMenuItem onClick={() => handleUpdateOrder()}>
               Edit
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => handleModifyProduct()}>
+              Modify Product
             </DropdownMenuItem>
             <DropdownMenuItem
               onClick={() => {

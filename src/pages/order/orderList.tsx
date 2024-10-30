@@ -66,6 +66,7 @@ import {
   DrawerHeader,
   DrawerTitle,
 } from "../../components/ui/drawer";
+import UpdateProductData from "./updateProductData";
 
 const OrderList = () => {
   const {
@@ -78,6 +79,7 @@ const OrderList = () => {
     analytics,
     bulkOrders,
     totalOrders,
+    getOrderList,
     setBulkOrders,
     setSearchQuery,
     updateCurrentPage,
@@ -94,6 +96,7 @@ const OrderList = () => {
   const [bulkAction, setBulkAction] = useState<string>("");
   const [isEditDialogOpen, setEditDialogOpen] = useState<boolean>(false);
   const [selectedOrder, setSelectedOrder] = useState<IOrder | null>(null);
+  const [modifyDialogOpen, setModifyDialogOpen] = useState<boolean>(false);
 
   const debounceHandler = useDebounce(inputValue, 500);
 
@@ -273,7 +276,9 @@ const OrderList = () => {
                         <TableHead>Customer Name</TableHead>
                         <TableHead>Phone Number</TableHead>
                         <TableHead>Status</TableHead>
-                        <TableHead>District</TableHead>
+                        <TableHead className="hidden md:table-cell">
+                          District
+                        </TableHead>
                         <TableHead>Price</TableHead>
                         <TableHead className="hidden md:table-cell">
                           Paid
@@ -314,6 +319,10 @@ const OrderList = () => {
                             handleUpdateOrder={() => {
                               setSelectedOrder(order);
                               setEditDialogOpen(true);
+                            }}
+                            handleModifyProduct={() => {
+                              setSelectedOrder(order);
+                              setModifyDialogOpen(true);
                             }}
                             handleViewDetails={() => {
                               setSelectedOrder(order);
@@ -770,6 +779,17 @@ const OrderList = () => {
   const mainView = () => {
     if (orderFetching) {
       return <DefaultLoading />;
+    } else if (modifyDialogOpen && !!selectedOrder) {
+      return (
+        <UpdateProductData
+          order={selectedOrder}
+          handleBack={() => {
+            setModifyDialogOpen(false);
+            setSelectedOrder(null);
+            getOrderList();
+          }}
+        />
+      );
     } else if (inputValue !== "" || (!!orders && orders.length > 0)) {
       return renderProductListView();
     } else {

@@ -1,11 +1,21 @@
-import { searchProducts } from "../../../api";
+import { getProductsById, searchProducts } from "../../../api";
 import { updateOrder, updateOrderStatusData } from "../../../api/order";
 import { toast } from "../../../components/ui/use-toast";
+import { IProduct } from "../../product/interface";
 import { IOrder } from "../interface";
 
 const useOrder = () => {
   const getProductByQuery = async (query: string) => {
     const response = await searchProducts(query);
+    if (response?.success) {
+      return response?.data;
+    } else return [];
+  };
+
+  const getProductsByIdList = async (order: IOrder): Promise<IProduct[]> => {
+    const response = await getProductsById(
+      order?.products?.map((p) => `${p?.id ?? ""}`)
+    );
     if (response?.success) {
       return response?.data;
     } else return [];
@@ -61,7 +71,12 @@ const useOrder = () => {
     }
   };
 
-  return { editOrderData, updateOrderStatus, getProductByQuery };
+  return {
+    editOrderData,
+    updateOrderStatus,
+    getProductByQuery,
+    getProductsByIdList,
+  };
 };
 
 export default useOrder;
