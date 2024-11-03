@@ -418,7 +418,9 @@ const OrderProductList: React.FC<Props> = ({ handleProductDataSubmit }) => {
                   ...transection,
                   discount,
                   remaining: Math.max(
-                    transection.totalPrice - (transection.paid + discount),
+                    transection.totalPrice +
+                      transection?.deliveryCharge -
+                      (transection.paid + discount),
                     0
                   ),
                 });
@@ -471,7 +473,9 @@ const OrderProductList: React.FC<Props> = ({ handleProductDataSubmit }) => {
                   ...transection,
                   paid,
                   remaining: Math.max(
-                    transection.totalPrice - (paid + transection.discount),
+                    transection.totalPrice +
+                      transection?.deliveryCharge -
+                      (paid + transection.discount),
                     0
                   ),
                 });

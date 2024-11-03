@@ -67,7 +67,7 @@ export const useOrderList = () => {
     const response = await searchOrders(searchQuery);
     if (response?.success) {
       //@ts-ignore
-      setOrders(response.data.products);
+      setOrders(response.data.orders);
       //@ts-ignore
       setTotalPages(response.data.totalOrders);
       //@ts-ignore

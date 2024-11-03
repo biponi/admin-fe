@@ -123,6 +123,13 @@ const UpdateOrderProductList: React.FC<Props> = ({
   useEffect(() => {
     if (!!order) {
       getSelectedProductList();
+      setTransection({
+        totalPrice: order?.totalPrice,
+        discount: order?.discount,
+        deliveryCharge: order?.deliveryCharge,
+        remaining: order?.remaining,
+        paid: order?.paid,
+      });
     }
     //eslint-disable-next-line
   }, [order]);
@@ -130,7 +137,7 @@ const UpdateOrderProductList: React.FC<Props> = ({
   useEffect(() => {
     if (!!selectedProducts) {
       let totalPrice = 0;
-      let discount = transection?.discount;
+      let discount = 0;
       selectedProducts.forEach((product) => {
         totalPrice = Number(totalPrice) + Number(product.totalPrice);
         discount = Number(discount) + Number(product.discount);
@@ -365,7 +372,7 @@ const UpdateOrderProductList: React.FC<Props> = ({
             : product.name}
         </TableCell>
         <TableCell>
-          {product?.hasVariation
+          {!!product?.hasVariation
             ? renderVariantMenu(
                 "color",
                 index,
@@ -375,7 +382,7 @@ const UpdateOrderProductList: React.FC<Props> = ({
             : "N/A"}
         </TableCell>
         <TableCell>
-          {product?.hasVariation
+          {!!product?.hasVariation
             ? renderVariantMenu(
                 "size",
                 index,
@@ -397,13 +404,15 @@ const UpdateOrderProductList: React.FC<Props> = ({
                     ? product?.selectedVariant?.quantity ?? 0
                     : product?.quantity)
               ) {
+                selectedProducts[index].discount =
+                  num * (product?.discount / product?.selectedQuantity);
                 selectedProducts[index].selectedQuantity = num;
                 selectedProducts[index].totalPrice =
                   num *
                   (product?.hasVariation
                     ? product?.selectedVariant?.unitPrice ?? 0
                     : product?.unitPrice);
-                selectedProducts[index].discount = num * product?.discount;
+
                 setSelectedProducts([...selectedProducts]);
               }
             }}
@@ -477,7 +486,7 @@ const UpdateOrderProductList: React.FC<Props> = ({
           </span>
           <Input
             type="number"
-            disabled={transection.totalPrice < 1}
+            disabled
             value={transection.discount}
             onChange={(e) => {
               const discount = Number(e.target.value);
@@ -486,7 +495,9 @@ const UpdateOrderProductList: React.FC<Props> = ({
                   ...transection,
                   discount,
                   remaining: Math.max(
-                    transection.totalPrice - (transection.paid + discount),
+                    transection.totalPrice +
+                      transection?.deliveryCharge -
+                      (transection.paid + discount),
                     0
                   ),
                 });
@@ -539,7 +550,8 @@ const UpdateOrderProductList: React.FC<Props> = ({
                   ...transection,
                   paid,
                   remaining: Math.max(
-                    transection.totalPrice - (paid + transection.discount),
+                    (transection.totalPrice, transection.deliveryCharge) -
+                      (paid + transection.discount),
                     0
                   ),
                 });

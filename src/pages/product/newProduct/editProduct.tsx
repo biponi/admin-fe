@@ -83,15 +83,26 @@ const EditProduct: React.FC<Props> = ({
   // Handle form field changes
   //@ts-ignore
   const handleChange = (e) => {
+    e.preventDefault();
+
     const { name, value } = e.target;
+
+    // Validate numeric input for unit price field
+    if (name === "unitPrice" && !/^\d*\.?\d*$/.test(value)) {
+      return; // Exit if input is not a valid number format
+    }
+
+    // Update form data with parsed numeric value if applicable
     updateFormData({
       ...formData,
-      [name]: value,
+      [name]: name === "unitPrice" ? parseFloat(value) : value,
     });
+
+    // Trigger additional actions based on the field
     if (name === "sku") {
       onSkuChange(value);
     } else if (name === "unitPrice" && isSameUnitPrice) {
-      onUnitPriceChange(value);
+      onUnitPriceChange(parseFloat(value));
     }
   };
 
@@ -111,6 +122,7 @@ const EditProduct: React.FC<Props> = ({
     if (!!formData.variation && formData.variation.length > 0) {
       updateFormData({
         ...formData,
+        unitPrice: value,
         variation: formData.variation.map((variation: IVariation) => {
           return { ...variation, unitPrice: value };
         }),
@@ -420,11 +432,10 @@ const EditProduct: React.FC<Props> = ({
                     <Input
                       id="product-unit-price"
                       name="unitPrice"
-                      type="number"
+                      type="text" // Allows editable input
                       className="w-full"
-                      value={formData?.unitPrice}
-                      defaultValue="0.00"
-                      onChange={handleChange}
+                      value={formData?.unitPrice || ""} // Ensure a default empty string to prevent uncontrolled behavior
+                      onChange={handleChange} // Directly pass handleChange
                       disabled={!isSameUnitPrice}
                     />
                   </div>
