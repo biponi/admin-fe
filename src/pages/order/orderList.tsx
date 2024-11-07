@@ -253,86 +253,89 @@ const OrderList = () => {
               </CardHeader>
               <CardContent>
                 <TabsContent value="all">
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>
-                          <input
-                            className="border-gray-200 rounded-lg text-primary"
-                            type="checkbox"
-                            onChange={(event) => {
-                              const check = event?.target?.checked;
-                              setBulkOrders(
-                                check
-                                  ? orders?.map((order: IOrder) => order?.id)
-                                  : []
-                              );
-                            }}
-                          />
-                        </TableHead>
-                        <TableHead className="hidden w-[100px] sm:table-cell">
-                          NO.
-                        </TableHead>
-                        <TableHead>Customer Name</TableHead>
-                        <TableHead>Phone Number</TableHead>
-                        <TableHead>Status</TableHead>
-                        <TableHead className="hidden md:table-cell">
-                          District
-                        </TableHead>
-                        <TableHead>Price</TableHead>
-                        <TableHead className="hidden md:table-cell">
-                          Paid
-                        </TableHead>
-                        <TableHead className="hidden md:table-cell">
-                          Remaining
-                        </TableHead>
-                        <TableHead className="hidden ">
-                          Last Updated at
-                        </TableHead>
-                        <TableHead>
-                          <span className="sr-only">Actions</span>
-                        </TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {!!orders &&
-                        orders.map((order: IOrder, index: number) => (
-                          <SingleItem
-                            key={index}
-                            orderNumber={order?.orderNumber}
-                            id={`${order?.id}`}
-                            paid={order?.paid}
-                            status={order?.status}
-                            isBulkAdded={bulkOrders.includes(order?.id)}
-                            handleBulkCheck={(val: boolean) => {
-                              val
-                                ? setBulkOrders([...bulkOrders, order?.id])
-                                : setBulkOrders(
-                                    bulkOrders.filter((b) => b !== order?.id)
-                                  );
-                            }}
-                            district={order?.shipping.district}
-                            totalPrice={order?.totalPrice ?? 0}
-                            remaining={order?.remaining}
-                            customerName={order?.customer?.name}
-                            CustomerPhoneNumber={order?.customer?.phoneNumber}
-                            handleUpdateOrder={() => {
-                              setSelectedOrder(order);
-                              setEditDialogOpen(true);
-                            }}
-                            handleModifyProduct={() => {
-                              setSelectedOrder(order);
-                              setModifyDialogOpen(true);
-                            }}
-                            handleViewDetails={() => {
-                              setSelectedOrder(order);
-                            }}
-                            deleteExistingOrder={deleteOrderData}
-                            updatedAt={order?.timestamps?.updatedAt}
-                          />
-                        ))}
-                    </TableBody>
-                  </Table>
+                  <div className="max-h-[50vh] overflow-y-auto">
+                    <Table>
+                      <TableHeader className=" sticky  ">
+                        <TableRow>
+                          <TableHead>
+                            <input
+                              className="border-gray-200 rounded-lg text-primary"
+                              type="checkbox"
+                              onChange={(event) => {
+                                const check = event?.target?.checked;
+                                setBulkOrders(
+                                  check
+                                    ? orders?.map((order: IOrder) => order?.id)
+                                    : []
+                                );
+                              }}
+                            />
+                          </TableHead>
+                          <TableHead className="hidden w-[100px] sm:table-cell">
+                            NO.
+                          </TableHead>
+                          <TableHead>Customer Name</TableHead>
+                          <TableHead>Phone Number</TableHead>
+                          <TableHead>Status</TableHead>
+                          <TableHead className="hidden md:table-cell">
+                            District
+                          </TableHead>
+                          <TableHead>Price</TableHead>
+                          <TableHead className="hidden md:table-cell">
+                            Paid
+                          </TableHead>
+                          <TableHead className="hidden md:table-cell">
+                            Remaining
+                          </TableHead>
+                          <TableHead className="hidden ">
+                            Last Updated at
+                          </TableHead>
+                          <TableHead>
+                            <span className="sr-only">Actions</span>
+                          </TableHead>
+                        </TableRow>
+                      </TableHeader>
+
+                      <TableBody>
+                        {!!orders &&
+                          orders.map((order: IOrder, index: number) => (
+                            <SingleItem
+                              key={index}
+                              orderNumber={order?.orderNumber}
+                              id={`${order?.id}`}
+                              paid={order?.paid}
+                              status={order?.status}
+                              isBulkAdded={bulkOrders.includes(order?.id)}
+                              handleBulkCheck={(val: boolean) => {
+                                val
+                                  ? setBulkOrders([...bulkOrders, order?.id])
+                                  : setBulkOrders(
+                                      bulkOrders.filter((b) => b !== order?.id)
+                                    );
+                              }}
+                              district={order?.shipping.district}
+                              totalPrice={order?.totalPrice ?? 0}
+                              remaining={order?.remaining}
+                              customerName={order?.customer?.name}
+                              CustomerPhoneNumber={order?.customer?.phoneNumber}
+                              handleUpdateOrder={() => {
+                                setSelectedOrder(order);
+                                setEditDialogOpen(true);
+                              }}
+                              handleModifyProduct={() => {
+                                setSelectedOrder(order);
+                                setModifyDialogOpen(true);
+                              }}
+                              handleViewDetails={() => {
+                                setSelectedOrder(order);
+                              }}
+                              deleteExistingOrder={deleteOrderData}
+                              updatedAt={order?.timestamps?.updatedAt}
+                            />
+                          ))}
+                      </TableBody>
+                    </Table>
+                  </div>
                 </TabsContent>
               </CardContent>
               {inputValue === "" && (

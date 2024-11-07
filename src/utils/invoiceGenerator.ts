@@ -185,7 +185,7 @@ export const generateInvoice = (order: IOrder) => {
     yPosition += 5;
   });
 
-  doc.text(`Payment Method: ${order?.payment && order.payment.length > 0 ? order.payment[0].paymentType : 'Cash On Delivery'}`, 15, 95);
+  doc.text(`Payment Method: ${order?.payment && order.payment.length > 0 ? order.payment[0].paymentType : 'Cash On Delivery'}`, 15, yPosition+10);
 
   // Shipping Information
   doc.setFontSize(12);
@@ -230,7 +230,7 @@ export const generateInvoice = (order: IOrder) => {
   ];
 
   autoTable(doc, {
-    startY: 100,
+    startY: yPosition+15,
     head: [columns],
     body: [...data, ...summaryRows],
     theme: "grid",
