@@ -25,8 +25,8 @@ const UpdateProductData: React.FC<IProps> = ({ order, handleBack }) => {
       return newOp;
     });
     const orderData = {
-      ...order,
-      ...transectionData,
+      orderId: order?.id,
+      transectionData,
       products,
     };
     const response = await updateOrderProductData(orderData);

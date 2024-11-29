@@ -35,6 +35,7 @@ interface Props {
   handleViewDetails: () => void;
   handleUpdateOrder: () => void;
   handleModifyProduct: () => void;
+  handleReturnProducts: () => void;
   handleBulkCheck: (val: boolean) => void;
   deleteExistingOrder: (id: string) => void;
 }
@@ -56,6 +57,7 @@ const SingleItem: React.FC<Props> = ({
   handleUpdateOrder,
   handleModifyProduct,
   deleteExistingOrder,
+  handleReturnProducts,
 }) => {
   const dialogBtn = useRef(null);
 
@@ -108,7 +110,7 @@ const SingleItem: React.FC<Props> = ({
             <TimerIcon className="w-4 h-4 mr-2  " />
           ) : status === "shipped" ? (
             <Truck className="w-4 h-4 mr-2" />
-          ) : ["cancel", "delete"].includes(status) ? (
+          ) : ["cancel", "delete", "fail", "failed"].includes(status) ? (
             <CircleMinusIcon className="w-4 h-4 mr-2" />
           ) : (
             <CircleCheck className="w-4 h-4 mr-2 " />
@@ -142,9 +144,16 @@ const SingleItem: React.FC<Props> = ({
             <DropdownMenuItem onClick={() => handleUpdateOrder()}>
               Edit
             </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => handleModifyProduct()}>
-              Modify Product
-            </DropdownMenuItem>
+            {status.includes("processing") && (
+              <DropdownMenuItem onClick={() => handleModifyProduct()}>
+                Modify Product
+              </DropdownMenuItem>
+            )}
+            {status.includes("shipped") && (
+              <DropdownMenuItem onClick={() => handleReturnProducts()}>
+                Return Product
+              </DropdownMenuItem>
+            )}
             <DropdownMenuItem
               onClick={() => {
                 //@ts-ignore

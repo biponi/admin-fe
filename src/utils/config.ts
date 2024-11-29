@@ -31,6 +31,7 @@ const config = {
      orderBulkAction: () => `${baseURL}/order/prior/bulk-update`,
     deleteOrder: (id: string) => `${baseURL}/order/prior/delete/${id}`,
     searchOrder: () => `${baseURL}/order/prior/search`,
+    returnProducts:() =>`${baseURL}/order/prior/return-product`
   },
   transaction: {
     create: () => `${baseURL}/transection/create`,

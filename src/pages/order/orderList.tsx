@@ -10,7 +10,12 @@ import {
   TruckIcon,
 } from "lucide-react";
 import { Button } from "../../components/ui/button";
-import { Tabs, TabsContent } from "../../components/ui/tabs";
+import {
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
+} from "../../components/ui/tabs";
 import dayjs from "dayjs";
 import {
   Card,
@@ -67,6 +72,14 @@ import {
   DrawerTitle,
 } from "../../components/ui/drawer";
 import UpdateProductData from "./updateProductData";
+import { Badge } from "../../components/ui/badge";
+import AdjustReturnProduct from "./orderReturn";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "../../components/ui/dialog";
 
 const OrderList = () => {
   const {
@@ -84,6 +97,8 @@ const OrderList = () => {
     setSearchQuery,
     updateCurrentPage,
     deleteOrderData,
+    selectedStatus,
+    setSelectedStatus,
     performOrderBulkUpdate,
   } = useOrderList();
 
@@ -94,6 +109,7 @@ const OrderList = () => {
   const [isCopied, setIsCopied] = useState(false);
   const [inputValue, setInputValue] = useState<string>("");
   const [bulkAction, setBulkAction] = useState<string>("");
+  const [isReturnProduct, setIsReturnProduct] = useState<boolean>(false);
   const [isEditDialogOpen, setEditDialogOpen] = useState<boolean>(false);
   const [selectedOrder, setSelectedOrder] = useState<IOrder | null>(null);
   const [modifyDialogOpen, setModifyDialogOpen] = useState<boolean>(false);
@@ -132,6 +148,25 @@ const OrderList = () => {
         buttonText="Create Order"
         handleButtonClick={() => navigate("/order/create")}
       />
+    );
+  };
+
+  const renderStatusTabsView = () => {
+    return (
+      <div className="mt-2">
+        <Tabs
+          value={selectedStatus}
+          onValueChange={(value: string) => setSelectedStatus(value)}
+        >
+          <TabsList>
+            <TabsTrigger value="processing">Processing</TabsTrigger>
+            <TabsTrigger value="shipped">Shipped</TabsTrigger>
+            <TabsTrigger value="completed">Completed</TabsTrigger>
+            <TabsTrigger value="cancel">Cancelled</TabsTrigger>
+            <TabsTrigger value="return">Return</TabsTrigger>
+          </TabsList>
+        </Tabs>
+      </div>
     );
   };
 
@@ -224,6 +259,7 @@ const OrderList = () => {
             </Button>
           </div> */}
         </div>
+        {renderStatusTabsView()}
         <div className="grid grid-1 md:grid-cols-3 md:gap-4">
           <div className="md:col-span-2">
             <Card x-chunk="dashboard-06-chunk-0" className="mt-4">
@@ -324,7 +360,14 @@ const OrderList = () => {
                               }}
                               handleModifyProduct={() => {
                                 setSelectedOrder(order);
-                                setModifyDialogOpen(true);
+                                setTimeout(
+                                  () => setModifyDialogOpen(true),
+                                  1000
+                                );
+                              }}
+                              handleReturnProducts={() => {
+                                setSelectedOrder(order);
+                                setIsReturnProduct(true);
                               }}
                               handleViewDetails={() => {
                                 setSelectedOrder(order);
@@ -397,108 +440,118 @@ const OrderList = () => {
           <div className="grid gap-0.5">
             <CardTitle className="group flex items-center gap-2 text-lg w-full">
               Order #{selectedOrder?.orderNumber}
-              {selectedOrder?.status === "processing" && (
-                <CustomAlertDialog
-                  title="Order Status Change"
-                  description="Are You Sure Change the status to SHIPPED???"
-                  cancelButtonText="NO"
-                  submitButtonText="YES"
-                  onSubmit={() => {
-                    updateOrderStatus(`${selectedOrder?.id}`, "shipped", () =>
-                      refresh()
-                    );
-                  }}
-                >
-                  <TooltipProvider>
-                    <Tooltip>
-                      <TooltipTrigger>
-                        <Button
-                          size="icon"
-                          variant="outline"
-                          className="h-6 w-6 "
-                        >
-                          <TruckIcon className="h-3 w-3" />
-                          <span className="sr-only">Copy Order ID</span>
-                        </Button>
-                      </TooltipTrigger>
-                      <TooltipContent>Change Status to shipped</TooltipContent>
-                    </Tooltip>
-                  </TooltipProvider>
-                </CustomAlertDialog>
+              {!selectedOrder?.status.includes("return") && (
+                <>
+                  {selectedOrder?.status === "processing" && (
+                    <CustomAlertDialog
+                      title="Order Status Change"
+                      description="Are You Sure Change the status to SHIPPED???"
+                      cancelButtonText="NO"
+                      submitButtonText="YES"
+                      onSubmit={() => {
+                        updateOrderStatus(
+                          `${selectedOrder?.id}`,
+                          "shipped",
+                          () => refresh()
+                        );
+                      }}
+                    >
+                      <TooltipProvider>
+                        <Tooltip>
+                          <TooltipTrigger>
+                            <Button
+                              size="icon"
+                              variant="outline"
+                              className="h-6 w-6 "
+                            >
+                              <TruckIcon className="h-3 w-3" />
+                              <span className="sr-only">Copy Order ID</span>
+                            </Button>
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            Change Status to shipped
+                          </TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
+                    </CustomAlertDialog>
+                  )}
+                  {selectedOrder?.status === "shipped" && (
+                    <CustomAlertDialog
+                      title="Order Status Change"
+                      description="Are You Sure Change the status to Complete???"
+                      cancelButtonText="NO"
+                      submitButtonText="YES"
+                      onSubmit={() => {
+                        updateOrderStatus(
+                          `${selectedOrder?.id}`,
+                          "completed",
+                          () => refresh()
+                        );
+                      }}
+                    >
+                      <TooltipProvider>
+                        <Tooltip>
+                          <TooltipTrigger>
+                            <Button
+                              size="icon"
+                              variant="outline"
+                              className="h-6 w-6 "
+                            >
+                              <CheckCircleIcon className="h-3 w-3" />
+                              <span className="sr-only">Copy Order ID</span>
+                            </Button>
+                          </TooltipTrigger>
+                          <TooltipContent>Complete the order</TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
+                    </CustomAlertDialog>
+                  )}
+                  {selectedOrder?.status !== "processing" && (
+                    <CustomAlertDialog
+                      title="Order Status Change"
+                      description="Are You Sure Change the status to Processing??? Use for return or other"
+                      cancelButtonText="NO"
+                      submitButtonText="YES"
+                      onSubmit={() => {
+                        updateOrderStatus(
+                          `${selectedOrder?.id}`,
+                          "processing",
+                          () => refresh()
+                        );
+                      }}
+                    >
+                      <TooltipProvider>
+                        <Tooltip>
+                          <TooltipTrigger>
+                            <Button
+                              size="icon"
+                              variant="outline"
+                              className="h-6 w-6 "
+                            >
+                              <TimerReset className="h-3 w-3" />
+                              <span className="sr-only">Copy Order ID</span>
+                            </Button>
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            Reset the order to processing
+                          </TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
+                    </CustomAlertDialog>
+                  )}
+                  <div className="ml-auto">
+                    {" "}
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="float-right ml-auto"
+                      onClick={() => handleGenerateInvoice()}
+                    >
+                      Invoice
+                    </Button>
+                  </div>
+                </>
               )}
-              {selectedOrder?.status === "shipped" && (
-                <CustomAlertDialog
-                  title="Order Status Change"
-                  description="Are You Sure Change the status to Complete???"
-                  cancelButtonText="NO"
-                  submitButtonText="YES"
-                  onSubmit={() => {
-                    updateOrderStatus(`${selectedOrder?.id}`, "completed", () =>
-                      refresh()
-                    );
-                  }}
-                >
-                  <TooltipProvider>
-                    <Tooltip>
-                      <TooltipTrigger>
-                        <Button
-                          size="icon"
-                          variant="outline"
-                          className="h-6 w-6 "
-                        >
-                          <CheckCircleIcon className="h-3 w-3" />
-                          <span className="sr-only">Copy Order ID</span>
-                        </Button>
-                      </TooltipTrigger>
-                      <TooltipContent>Complete the order</TooltipContent>
-                    </Tooltip>
-                  </TooltipProvider>
-                </CustomAlertDialog>
-              )}
-              {selectedOrder?.status !== "processing" && (
-                <CustomAlertDialog
-                  title="Order Status Change"
-                  description="Are You Sure Change the status to Processing??? Use for return or other"
-                  cancelButtonText="NO"
-                  submitButtonText="YES"
-                  onSubmit={() => {
-                    updateOrderStatus(
-                      `${selectedOrder?.id}`,
-                      "processing",
-                      () => refresh()
-                    );
-                  }}
-                >
-                  <TooltipProvider>
-                    <Tooltip>
-                      <TooltipTrigger>
-                        <Button
-                          size="icon"
-                          variant="outline"
-                          className="h-6 w-6 "
-                        >
-                          <TimerReset className="h-3 w-3" />
-                          <span className="sr-only">Copy Order ID</span>
-                        </Button>
-                      </TooltipTrigger>
-                      <TooltipContent>
-                        Reset the order to processing
-                      </TooltipContent>
-                    </Tooltip>
-                  </TooltipProvider>
-                </CustomAlertDialog>
-              )}
-              <div className="ml-auto">
-                {" "}
-                <Button
-                  size="sm"
-                  variant="outline"
-                  className="float-right ml-auto"
-                  onClick={() => handleGenerateInvoice()}
-                >
-                  Invoice
-                </Button>
-              </div>
             </CardTitle>
             <CardDescription>
               <span className="text-sm font-medium text-gray-500 block mt-2 mb-1">
@@ -544,9 +597,18 @@ const OrderList = () => {
             <ul className="grid gap-3">
               {selectedOrder?.products.map((product, index) => (
                 <li key={index} className="flex items-center justify-between">
-                  <span className="text-muted-foreground">
-                    {product?.name} x <span>{product?.quantity}</span>
-                  </span>
+                  <Badge variant={"default"} className="bg-gray-600">
+                    {product?.name}{" "}
+                    {product?.hasVariation
+                      ? `(${`${product?.variation.color}${
+                          !!product?.variation?.color &&
+                          !!product?.variation?.size
+                            ? " - "
+                            : ""
+                        }${product?.variation?.size}`})`
+                      : ""}{" "}
+                    x <span>{product?.quantity}</span>
+                  </Badge>
                   <span>{product?.totalPrice}</span>
                 </li>
               ))}
@@ -779,6 +841,28 @@ const OrderList = () => {
     );
   };
 
+  const returnModal = () => {
+    return (
+      <Dialog
+        open={isReturnProduct && !!selectedOrder}
+        onOpenChange={(open) => setIsReturnProduct(open)}
+      >
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle>Return Product</DialogTitle>
+          </DialogHeader>
+          <div className="w-auto">
+            <AdjustReturnProduct
+              // @ts-ignore
+              order={selectedOrder}
+              handleClose={() => setIsReturnProduct(false)}
+            />
+          </div>
+        </DialogContent>
+      </Dialog>
+    );
+  };
+
   const mainView = () => {
     if (orderFetching) {
       return <DefaultLoading />;
@@ -793,7 +877,11 @@ const OrderList = () => {
           }}
         />
       );
-    } else if (inputValue !== "" || (!!orders && orders.length > 0)) {
+    } else if (
+      inputValue !== "" ||
+      selectedStatus !== "processing" ||
+      (!!orders && orders.length > 0)
+    ) {
       return renderProductListView();
     } else {
       return renderEmptyView();
@@ -804,6 +892,7 @@ const OrderList = () => {
     <div className="w-full sm:w-[95vw]">
       {mainView()}
       {renderBulkActionDrawer()}
+      {returnModal()}
     </div>
   );
 };

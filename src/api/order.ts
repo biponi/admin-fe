@@ -58,11 +58,12 @@ export const updateOrderProductData = async (
 // Function to search for products
 export const getOrders = async (
   limit = 20,
-  page = 1
+  page = 1,
+  status='processing'
 ): Promise<ApiResponse<any>> => {
   try {
     const response = await axios.get<any>(config.order.getOrders(), {
-      params: { limit, page },
+      params: { limit, page,status },
     });
     if (response.status === 200) {
       return { success: true, data: response.data?.data };
@@ -81,13 +82,15 @@ export const getOrders = async (
 // Function to search for products
 export const searchOrders = async (
   query: string,
+  status:string = 'processing',
   limit = 50,
-  page = 1
+  page = 1,
 ): Promise<ApiResponse<any>> => {
   try {
     const response = await axios.post<any>(config.order.searchOrder(), {
       params: { limit, page },
       query,
+      status
     });
     if (response.status === 200) {
       return { success: true, data: response.data?.data };

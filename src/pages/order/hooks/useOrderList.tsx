@@ -14,6 +14,7 @@ export const useOrderList = () => {
   const { user } = useLoginAuth();
   const [orderFetching, setOrderFetching] = useState(false);
   const [orders, setOrders] = useState([]);
+  const [selectedStatus, setSelectedStatus] = useState<string>("processing");
   const [totalOrders, setTotalOrders] = useState(0);
   const [totalPages, setTotalPages] = useState(0);
   const [currentPageNum, setCurrentPage] = useState(0);
@@ -36,10 +37,10 @@ export const useOrderList = () => {
     if (searchQuery === "") setCurrentPage(0);
     else searchOrderByQuery();
     //eslint-disable-next-line
-  }, [searchQuery]);
+  }, [searchQuery, selectedStatus]);
 
   const refresh = async () => {
-    const response = await getOrders(limit, currentPageNum);
+    const response = await getOrders(limit, currentPageNum, selectedStatus);
     if (response?.success && !!response?.data) {
       const { totalOrders, totalPages, currentPage, orders } = response?.data;
       setTotalPages(totalPages);
@@ -64,7 +65,7 @@ export const useOrderList = () => {
   };
 
   const searchOrderByQuery = async () => {
-    const response = await searchOrders(searchQuery);
+    const response = await searchOrders(searchQuery, selectedStatus);
     if (response?.success) {
       //@ts-ignore
       setOrders(response.data.orders);
@@ -148,7 +149,9 @@ export const useOrderList = () => {
     currentPageNum,
     setSearchQuery,
     orderFetching,
+    selectedStatus,
     deleteOrderData,
+    setSelectedStatus,
     updateCurrentPage,
     performOrderBulkUpdate,
   };
