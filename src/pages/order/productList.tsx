@@ -344,7 +344,7 @@ const OrderProductList: React.FC<Props> = ({ handleProductDataSubmit }) => {
             className="text-red-500 w-4 h-4 cursor-pointer"
             onClick={() =>
               setSelectedProducts(
-                selectedProducts.filter((sp) => sp?.id !== product?.id)
+                selectedProducts.filter((_, i) => i !== index)
               )
             }
           />
