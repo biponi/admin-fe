@@ -538,7 +538,7 @@ const UpdateOrderProductList: React.FC<Props> = ({
             disabled={transection.totalPrice < 1}
             onChange={(e) => {
               const paid = Number(e.target.value);
-              if (transection.totalPrice >= paid) {
+              if (transection.totalPrice + transection.deliveryCharge >= paid) {
                 transection.remaining = transection.totalPrice - paid;
                 transection.paid = paid;
                 setTransection({
