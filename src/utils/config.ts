@@ -31,7 +31,8 @@ const config = {
      orderBulkAction: () => `${baseURL}/order/prior/bulk-update`,
     deleteOrder: (id: string) => `${baseURL}/order/prior/delete/${id}`,
     searchOrder: () => `${baseURL}/order/prior/search`,
-    returnProducts:() =>`${baseURL}/order/prior/return-product`
+    returnProducts:() =>`${baseURL}/order/prior/return-product`,
+     getMultiOrderByIds: () => `${baseURL}/order/prior/by/ids`,
   },
   transaction: {
     create: () => `${baseURL}/transection/create`,

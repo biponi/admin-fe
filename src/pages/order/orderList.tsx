@@ -4,10 +4,12 @@ import {
   ChevronLeft,
   ChevronRight,
   Clipboard,
+  File,
   MinusCircleIcon,
   TimerReset,
   Trash2,
   TruckIcon,
+  View,
 } from "lucide-react";
 import { Button } from "../../components/ui/button";
 import {
@@ -48,6 +50,7 @@ import {
   Sheet,
   SheetContent,
   SheetDescription,
+  SheetFooter,
   SheetHeader,
   SheetTitle,
 } from "../../components/ui/sheet";
@@ -61,7 +64,10 @@ import {
 
 import CustomAlertDialog from "../../coreComponents/OptionModal";
 import useLoginAuth from "../auth/hooks/useLoginAuth";
-import { generateInvoice } from "../../utils/invoiceGenerator";
+import {
+  generateInvoice,
+  generateMultipleInvoicesAndDownloadZip,
+} from "../../utils/invoiceGenerator";
 import {
   Drawer,
   DrawerClose,
@@ -109,6 +115,7 @@ const OrderList = () => {
   const [isCopied, setIsCopied] = useState(false);
   const [inputValue, setInputValue] = useState<string>("");
   const [bulkAction, setBulkAction] = useState<string>("");
+  const [showDetails, setShowDetails] = useState<any>(null);
   const [isReturnProduct, setIsReturnProduct] = useState<boolean>(false);
   const [isEditDialogOpen, setEditDialogOpen] = useState<boolean>(false);
   const [selectedOrder, setSelectedOrder] = useState<IOrder | null>(null);
@@ -261,7 +268,15 @@ const OrderList = () => {
         </div>
         {renderStatusTabsView()}
         <div className="grid grid-1 md:grid-cols-3 md:gap-4">
-          <div className="md:col-span-2">
+          <div
+            className={` ${
+              !selectedStatus.includes("return") &&
+              !!bulkOrders &&
+              bulkOrders.length > 0
+                ? "md:col-span-2"
+                : "md:col-span-3"
+            }`}
+          >
             <Card x-chunk="dashboard-06-chunk-0" className="mt-4">
               <CardHeader>
                 <div className="flex w-full justify-between">
@@ -293,20 +308,24 @@ const OrderList = () => {
                     <Table>
                       <TableHeader className=" sticky  ">
                         <TableRow>
-                          <TableHead>
-                            <input
-                              className="border-gray-200 rounded-lg text-primary"
-                              type="checkbox"
-                              onChange={(event) => {
-                                const check = event?.target?.checked;
-                                setBulkOrders(
-                                  check
-                                    ? orders?.map((order: IOrder) => order?.id)
-                                    : []
-                                );
-                              }}
-                            />
-                          </TableHead>
+                          {!selectedStatus.includes("return") && (
+                            <TableHead>
+                              <input
+                                className="border-gray-200 rounded-lg text-primary"
+                                type="checkbox"
+                                onChange={(event) => {
+                                  const check = event?.target?.checked;
+                                  setBulkOrders(
+                                    check
+                                      ? orders?.map(
+                                          (order: IOrder) => order?.id
+                                        )
+                                      : []
+                                  );
+                                }}
+                              />
+                            </TableHead>
+                          )}
                           <TableHead className="hidden w-[100px] sm:table-cell">
                             NO.
                           </TableHead>
@@ -325,6 +344,9 @@ const OrderList = () => {
                           </TableHead>
                           <TableHead className="hidden ">
                             Last Updated at
+                          </TableHead>
+                          <TableHead>
+                            <View />
                           </TableHead>
                           <TableHead>
                             <span className="sr-only">Actions</span>
@@ -370,7 +392,7 @@ const OrderList = () => {
                                 setIsReturnProduct(true);
                               }}
                               handleViewDetails={() => {
-                                setSelectedOrder(order);
+                                setShowDetails(order);
                               }}
                               deleteExistingOrder={deleteOrderData}
                               updatedAt={order?.timestamps?.updatedAt}
@@ -422,12 +444,12 @@ const OrderList = () => {
               )}
             </Card>
           </div>
-          {(!bulkOrders || bulkOrders?.length < 1) && (
-            <div className="mt-4">{renderOrderDetailsPanel()}</div>
-          )}
-          {!!bulkOrders && bulkOrders.length > 0 && (
-            <div className="mt-4">{renderBulkActionPanel()}</div>
-          )}
+          {renderOrderDetailsPanel()}
+          {!selectedStatus.includes("return") &&
+            !!bulkOrders &&
+            bulkOrders.length > 0 && (
+              <div className="mt-4">{renderBulkActionPanel()}</div>
+            )}
         </div>
       </Tabs>
     );
@@ -435,251 +457,257 @@ const OrderList = () => {
 
   const renderOrderDetailsPanel = () => {
     return (
-      <Card className="overflow-hidden" x-chunk="dashboard-05-chunk-4">
-        <CardHeader className="flex flex-row items-start bg-muted/50">
-          <div className="grid gap-0.5">
-            <CardTitle className="group flex items-center gap-2 text-lg w-full">
-              Order #{selectedOrder?.orderNumber}
-              {!selectedOrder?.status.includes("return") && (
-                <>
-                  {selectedOrder?.status === "processing" && (
-                    <CustomAlertDialog
-                      title="Order Status Change"
-                      description="Are You Sure Change the status to SHIPPED???"
-                      cancelButtonText="NO"
-                      submitButtonText="YES"
-                      onSubmit={() => {
-                        updateOrderStatus(
-                          `${selectedOrder?.id}`,
-                          "shipped",
-                          () => refresh()
-                        );
-                      }}
-                    >
-                      <TooltipProvider>
-                        <Tooltip>
-                          <TooltipTrigger>
-                            <Button
-                              size="icon"
-                              variant="outline"
-                              className="h-6 w-6 "
-                            >
-                              <TruckIcon className="h-3 w-3" />
-                              <span className="sr-only">Copy Order ID</span>
-                            </Button>
-                          </TooltipTrigger>
-                          <TooltipContent>
-                            Change Status to shipped
-                          </TooltipContent>
-                        </Tooltip>
-                      </TooltipProvider>
-                    </CustomAlertDialog>
-                  )}
-                  {selectedOrder?.status === "shipped" && (
-                    <CustomAlertDialog
-                      title="Order Status Change"
-                      description="Are You Sure Change the status to Complete???"
-                      cancelButtonText="NO"
-                      submitButtonText="YES"
-                      onSubmit={() => {
-                        updateOrderStatus(
-                          `${selectedOrder?.id}`,
-                          "completed",
-                          () => refresh()
-                        );
-                      }}
-                    >
-                      <TooltipProvider>
-                        <Tooltip>
-                          <TooltipTrigger>
-                            <Button
-                              size="icon"
-                              variant="outline"
-                              className="h-6 w-6 "
-                            >
-                              <CheckCircleIcon className="h-3 w-3" />
-                              <span className="sr-only">Copy Order ID</span>
-                            </Button>
-                          </TooltipTrigger>
-                          <TooltipContent>Complete the order</TooltipContent>
-                        </Tooltip>
-                      </TooltipProvider>
-                    </CustomAlertDialog>
-                  )}
-                  {selectedOrder?.status !== "processing" && (
-                    <CustomAlertDialog
-                      title="Order Status Change"
-                      description="Are You Sure Change the status to Processing??? Use for return or other"
-                      cancelButtonText="NO"
-                      submitButtonText="YES"
-                      onSubmit={() => {
-                        updateOrderStatus(
-                          `${selectedOrder?.id}`,
-                          "processing",
-                          () => refresh()
-                        );
-                      }}
-                    >
-                      <TooltipProvider>
-                        <Tooltip>
-                          <TooltipTrigger>
-                            <Button
-                              size="icon"
-                              variant="outline"
-                              className="h-6 w-6 "
-                            >
-                              <TimerReset className="h-3 w-3" />
-                              <span className="sr-only">Copy Order ID</span>
-                            </Button>
-                          </TooltipTrigger>
-                          <TooltipContent>
-                            Reset the order to processing
-                          </TooltipContent>
-                        </Tooltip>
-                      </TooltipProvider>
-                    </CustomAlertDialog>
-                  )}
-                  <div className="ml-auto">
-                    {" "}
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      className="float-right ml-auto"
-                      onClick={() => handleGenerateInvoice()}
-                    >
-                      Invoice
-                    </Button>
-                  </div>
-                </>
-              )}
-            </CardTitle>
-            <CardDescription>
-              <span className="text-sm font-medium text-gray-500 block mt-2 mb-1">
-                Track Id: {selectedOrder?.id}
-                <button
-                  onClick={handleCopy}
-                  className="ml-2 relative inline-flex items-center"
-                  title="Copy URL"
-                >
-                  {isCopied ? (
-                    <Check size={18} className="text-green-500" />
-                  ) : (
-                    <Clipboard
-                      size={18}
-                      className="text-gray-500 hover:text-gray-700"
-                    />
-                  )}
-                  {isCopied && (
-                    <span className="absolute -top-3 left-5 bg-green-100 text-green-700 text-xs font-medium px-2 py-1 rounded">
-                      Copied!
-                    </span>
-                  )}
-                </button>
-              </span>
-              Date:{" "}
-              {dayjs(selectedOrder?.timestamps.createdAt).format(
-                "MMMM D, YYYY"
-              )}
-            </CardDescription>
-          </div>
-          <div className="ml-auto flex items-center gap-1">
-            {/* <Button size='sm' variant='outline' className='h-8 gap-1'>
+      <Sheet
+        open={showDetails}
+        onOpenChange={(value: boolean) => setShowDetails(!value && null)}
+        x-chunk="dashboard-05-chunk-4"
+      >
+        <SheetContent className="px-4 pb-2 pt-10">
+          <SheetHeader className="flex flex-row items-start ">
+            <div className="grid gap-0.5 pb-9">
+              <SheetTitle className="group flex items-center gap-2 text-lg w-full">
+                Order #{selectedOrder?.orderNumber}
+                {!selectedOrder?.status.includes("return") && (
+                  <>
+                    {selectedOrder?.status === "processing" && (
+                      <CustomAlertDialog
+                        title="Order Status Change"
+                        description="Are You Sure Change the status to SHIPPED???"
+                        cancelButtonText="NO"
+                        submitButtonText="YES"
+                        onSubmit={() => {
+                          updateOrderStatus(
+                            `${selectedOrder?.id}`,
+                            "shipped",
+                            () => refresh()
+                          );
+                        }}
+                      >
+                        <TooltipProvider>
+                          <Tooltip>
+                            <TooltipTrigger>
+                              <Button
+                                size="icon"
+                                variant="outline"
+                                className="h-6 w-6 "
+                              >
+                                <TruckIcon className="h-3 w-3" />
+                                <span className="sr-only">Copy Order ID</span>
+                              </Button>
+                            </TooltipTrigger>
+                            <TooltipContent>
+                              Change Status to shipped
+                            </TooltipContent>
+                          </Tooltip>
+                        </TooltipProvider>
+                      </CustomAlertDialog>
+                    )}
+                    {selectedOrder?.status === "shipped" && (
+                      <CustomAlertDialog
+                        title="Order Status Change"
+                        description="Are You Sure Change the status to Complete???"
+                        cancelButtonText="NO"
+                        submitButtonText="YES"
+                        onSubmit={() => {
+                          updateOrderStatus(
+                            `${selectedOrder?.id}`,
+                            "completed",
+                            () => refresh()
+                          );
+                        }}
+                      >
+                        <TooltipProvider>
+                          <Tooltip>
+                            <TooltipTrigger>
+                              <Button
+                                size="icon"
+                                variant="outline"
+                                className="h-6 w-6 "
+                              >
+                                <CheckCircleIcon className="h-3 w-3" />
+                                <span className="sr-only">Copy Order ID</span>
+                              </Button>
+                            </TooltipTrigger>
+                            <TooltipContent>Complete the order</TooltipContent>
+                          </Tooltip>
+                        </TooltipProvider>
+                      </CustomAlertDialog>
+                    )}
+                    {selectedOrder?.status !== "processing" && (
+                      <CustomAlertDialog
+                        title="Order Status Change"
+                        description="Are You Sure Change the status to Processing??? Use for return or other"
+                        cancelButtonText="NO"
+                        submitButtonText="YES"
+                        onSubmit={() => {
+                          updateOrderStatus(
+                            `${selectedOrder?.id}`,
+                            "processing",
+                            () => refresh()
+                          );
+                        }}
+                      >
+                        <TooltipProvider>
+                          <Tooltip>
+                            <TooltipTrigger>
+                              <Button
+                                size="icon"
+                                variant="outline"
+                                className="h-6 w-6 "
+                              >
+                                <TimerReset className="h-3 w-3" />
+                                <span className="sr-only">Copy Order ID</span>
+                              </Button>
+                            </TooltipTrigger>
+                            <TooltipContent>
+                              Reset the order to processing
+                            </TooltipContent>
+                          </Tooltip>
+                        </TooltipProvider>
+                      </CustomAlertDialog>
+                    )}
+                    <div className="ml-auto">
+                      {" "}
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="float-right ml-auto"
+                        onClick={() => handleGenerateInvoice()}
+                      >
+                        Invoice
+                      </Button>
+                    </div>
+                  </>
+                )}
+              </SheetTitle>
+              <SheetDescription>
+                <span className="text-sm font-medium text-gray-500 block mt-2 mb-1">
+                  Track Id: {selectedOrder?.id}
+                  <button
+                    onClick={handleCopy}
+                    className="ml-2 relative inline-flex items-center"
+                    title="Copy URL"
+                  >
+                    {isCopied ? (
+                      <Check size={18} className="text-green-500" />
+                    ) : (
+                      <Clipboard
+                        size={18}
+                        className="text-gray-500 hover:text-gray-700"
+                      />
+                    )}
+                    {isCopied && (
+                      <span className="absolute -top-3 left-5 bg-green-100 text-green-700 text-xs font-medium px-2 py-1 rounded">
+                        Copied!
+                      </span>
+                    )}
+                  </button>
+                </span>
+                Date:{" "}
+                {dayjs(selectedOrder?.timestamps.createdAt).format(
+                  "MMMM D, YYYY"
+                )}
+              </SheetDescription>
+            </div>
+            <div className="ml-auto flex items-center gap-1">
+              {/* <Button size='sm' variant='outline' className='h-8 gap-1'>
               <Truck className='h-3.5 w-3.5' />
               <span className='lg:sr-only xl:not-sr-only xl:whitespace-nowrap'>
                 Track Order
               </span>
             </Button> */}
-          </div>
-        </CardHeader>
-        <CardContent className="p-6 text-sm">
-          <div className="grid gap-3">
-            <div className="font-semibold">Order Details</div>
-            <ul className="grid gap-3">
-              {selectedOrder?.products.map((product, index) => (
-                <li key={index} className="flex items-center justify-between">
-                  <Badge variant={"default"} className="bg-gray-600">
-                    {product?.name}{" "}
-                    {product?.hasVariation
-                      ? `(${`${product?.variation.color}${
-                          !!product?.variation?.color &&
-                          !!product?.variation?.size
-                            ? " - "
-                            : ""
-                        }${product?.variation?.size}`})`
-                      : ""}{" "}
-                    x <span>{product?.quantity}</span>
-                  </Badge>
-                  <span>{product?.totalPrice}</span>
-                </li>
-              ))}
-            </ul>
-            <Separator className="my-2" />
-            <ul className="grid gap-3">
-              <li className="flex items-center justify-between">
-                <span className="text-muted-foreground">Subtotal</span>
-                <span>{selectedOrder?.totalPrice}</span>
-              </li>
-
-              <li className="flex items-center justify-between">
-                <span className="text-muted-foreground">Delivery Charge</span>
-                <span>{selectedOrder?.deliveryCharge}</span>
-              </li>
-
-              <li className="flex items-center justify-between">
-                <span className="text-muted-foreground">Paid</span>
-                <span>{selectedOrder?.paid}</span>
-              </li>
-              <li className="flex items-center justify-between font-semibold">
-                <span className="text-muted-foreground">Remaining</span>
-                <span>{selectedOrder?.remaining}</span>
-              </li>
-            </ul>
-          </div>
-          <Separator className="my-2" />
-          <div className="grid grid-cols-1 gap-4">
+            </div>
+          </SheetHeader>
+          <div className=" text-sm ">
             <div className="grid gap-3">
-              <div className="font-semibold">Shipping Information</div>
-              <address className="grid gap-0.5 not-italic text-muted-foreground">
-                <span>{selectedOrder?.shipping.division}, </span>
-                <span>{selectedOrder?.shipping.district}</span>
-                <span>{selectedOrder?.shipping.address}</span>
-              </address>
+              <div className="font-semibold">Order Details</div>
+              <ul className="grid gap-3">
+                {selectedOrder?.products.map((product, index) => (
+                  <li key={index} className="flex items-center justify-between">
+                    <Badge variant={"default"} className="bg-gray-600">
+                      {product?.name}{" "}
+                      {product?.hasVariation
+                        ? `(${`${product?.variation.color}${
+                            !!product?.variation?.color &&
+                            !!product?.variation?.size
+                              ? " - "
+                              : ""
+                          }${product?.variation?.size}`})`
+                        : ""}{" "}
+                      x <span>{product?.quantity}</span>
+                    </Badge>
+                    <span>{product?.totalPrice}</span>
+                  </li>
+                ))}
+              </ul>
+              <Separator className="my-2" />
+              <ul className="grid gap-3">
+                <li className="flex items-center justify-between">
+                  <span className="text-gray-700">Subtotal</span>
+                  <span>{selectedOrder?.totalPrice}</span>
+                </li>
+
+                <li className="flex items-center justify-between">
+                  <span className="text-gray-700">Delivery Charge</span>
+                  <span>{selectedOrder?.deliveryCharge}</span>
+                </li>
+
+                <li className="flex items-center justify-between">
+                  <span className="text-gray-700">Paid</span>
+                  <span>{selectedOrder?.paid}</span>
+                </li>
+                <li className="flex items-center justify-between font-semibold">
+                  <span className="text-gray-700">Remaining</span>
+                  <span>{selectedOrder?.remaining}</span>
+                </li>
+              </ul>
+            </div>
+            <Separator className="my-2" />
+            <div className="grid grid-cols-1 gap-4">
+              <div className="grid gap-3">
+                <div className="font-semibold">Shipping Information</div>
+                <address className="grid gap-0.5 not-italic text-gray-700">
+                  <span>{selectedOrder?.shipping.division}, </span>
+                  <span>{selectedOrder?.shipping.district}</span>
+                  <span>{selectedOrder?.shipping.address}</span>
+                </address>
+              </div>
+            </div>
+            <Separator className="my-2" />
+            <div className="grid gap-3">
+              <div className="font-semibold">Customer Information</div>
+              <dl className="grid gap-3">
+                <div className="flex items-center justify-between">
+                  <dt className="text-gray-700">Customer</dt>
+                  <dd>{selectedOrder?.customer.name}</dd>
+                </div>
+                <div className="flex items-center justify-between">
+                  <dt className="text-gray-700">Email</dt>
+                  <dd>
+                    <a href="mailto:">{selectedOrder?.customer.email}</a>
+                  </dd>
+                </div>
+                <div className="flex items-center justify-between">
+                  <dt className="text-gray-700">Phone</dt>
+                  <dd>
+                    <a href="tel:">{selectedOrder?.customer.phoneNumber}</a>
+                  </dd>
+                </div>
+              </dl>
             </div>
           </div>
-          <Separator className="my-2" />
-          <div className="grid gap-3">
-            <div className="font-semibold">Customer Information</div>
-            <dl className="grid gap-3">
-              <div className="flex items-center justify-between">
-                <dt className="text-muted-foreground">Customer</dt>
-                <dd>{selectedOrder?.customer.name}</dd>
-              </div>
-              <div className="flex items-center justify-between">
-                <dt className="text-muted-foreground">Email</dt>
-                <dd>
-                  <a href="mailto:">{selectedOrder?.customer.email}</a>
-                </dd>
-              </div>
-              <div className="flex items-center justify-between">
-                <dt className="text-muted-foreground">Phone</dt>
-                <dd>
-                  <a href="tel:">{selectedOrder?.customer.phoneNumber}</a>
-                </dd>
-              </div>
-            </dl>
-          </div>
-        </CardContent>
-        <CardFooter className="flex flex-row items-center border-t bg-muted/50 px-6 py-3">
-          <div className="text-xs text-muted-foreground">
-            Updated{" "}
-            <time dateTime="2023-11-23">
-              {dayjs(selectedOrder?.timestamps.updatedAt).format(
-                "MMMM D, YYYY"
-              )}
-            </time>
-          </div>
-        </CardFooter>
-      </Card>
+          <SheetFooter className="flex flex-row items-center border-t py-3">
+            <div className="text-xs text-gray-700">
+              Updated{" "}
+              <time dateTime="2023-11-23">
+                {dayjs(selectedOrder?.timestamps.updatedAt).format(
+                  "MMMM D, YYYY"
+                )}
+              </time>
+            </div>
+          </SheetFooter>
+        </SheetContent>
+      </Sheet>
     );
   };
 
@@ -703,6 +731,18 @@ const OrderList = () => {
         </CardHeader>
         <CardContent className="p-6 text-sm">
           <div className="flex flex-col justify-center items-center gap-4">
+            <div className="w-full grid grid-cols-1 gap-4">
+              <Button
+                variant="secondary"
+                className="w-full"
+                onClick={() => {
+                  generateMultipleInvoicesAndDownloadZip(bulkOrders);
+                }}
+              >
+                {" "}
+                <File className="size-5 text-gray-900 mr-2" /> Generate Invoices
+              </Button>
+            </div>
             <div className="w-full grid grid-cols-3 gap-2">
               {" "}
               <Button

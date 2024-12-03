@@ -77,17 +77,19 @@ const SingleItem: React.FC<Props> = ({
     );
   };
   return (
-    <TableRow onClick={() => handleViewDetails()} className="hover:bg-zinc-300">
-      <TableCell className="hidden sm:table-cell">
-        <input
-          className="border-gray-200 rounded-lg text-primary"
-          type="checkbox"
-          checked={isBulkAdded}
-          onChange={(e) => {
-            handleBulkCheck(!isBulkAdded);
-          }}
-        />
-      </TableCell>
+    <TableRow className="hover:bg-zinc-300">
+      {!status.includes("return") && (
+        <TableCell className="hidden sm:table-cell">
+          <input
+            className="border-gray-200 rounded-lg text-primary"
+            type="checkbox"
+            checked={isBulkAdded}
+            onChange={(e) => {
+              handleBulkCheck(!isBulkAdded);
+            }}
+          />
+        </TableCell>
+      )}
       <TableCell className="hidden sm:table-cell">{orderNumber}</TableCell>
       <TableCell>{customerName}</TableCell>
       <TableCell className="font-medium">{CustomerPhoneNumber}</TableCell>
@@ -129,6 +131,12 @@ const SingleItem: React.FC<Props> = ({
       <TableCell className="hidden md:table-cell">{remaining}</TableCell>
       <TableCell className="hidden ">
         {dayjs(updatedAt).format("DD-MM-YYYY HH:mm:ss")}
+      </TableCell>
+      <TableCell
+        className=" cursor-pointer"
+        onClick={() => handleViewDetails()}
+      >
+        <u className=" cursor-pointer">Details</u>
       </TableCell>
       <TableCell>
         <DropdownMenu>

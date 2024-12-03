@@ -1,6 +1,10 @@
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import { IOrder } from "../pages/order/interface";
+import JSZip from "jszip";
+import { saveAs } from "file-saver";
+import axiosInstance from "../api/axios";
+import config from "./config";
 
 
 
@@ -129,8 +133,8 @@ const wrappedAddress =(text:string)=> doc.splitTextToSize(
   doc.save(`PurchaseOrder-${order?.orderNumber}.pdf`);
 };
 
-export const generateInvoice = (order: IOrder) => {
-  const doc = new jsPDF();
+const generateInvoiceBlob=(order:IOrder)=>{
+   const doc = new jsPDF();
 
 
   // Sample data setup
@@ -273,7 +277,55 @@ for (let i = 1; i <= totalPages; i++) {
   // Add page numbers aligned to the right
   doc.text(`${i}/${totalPages}`, 190, doc.internal.pageSize.height - 10);
 }
+return doc;
+}
 
+export const generateInvoice = (order: IOrder) => {
+ 
+  const doc = generateInvoiceBlob(order);
   // Save the PDF
   doc.save(`invoice-${order.orderNumber}.pdf`);
+};
+
+
+const generateInvoiceBlobPromise = (order: IOrder): Promise<Blob> => {
+  return new Promise((resolve) => {
+    const doc = generateInvoiceBlob(order)
+    const pdfBlob = doc.output("blob");
+    resolve(pdfBlob);
+  });
+};
+
+const getOrdersById= async (ids:number[])=>{
+ try{
+   const response = await axiosInstance.get(config.order.getMultiOrderByIds(),{
+    params:{
+      ids:ids.join(",")
+    }
+  });
+
+  if(response?.status<300){
+    return [...response?.data?.data];
+  }
+ }catch(exception){
+  console.error("orders fetching error:",exception);
+  return [];
+ }
+  
+}
+
+
+export const generateMultipleInvoicesAndDownloadZip = async (orderIds: number[]) => {
+  const zip = new  JSZip();
+  const orders = await getOrdersById(orderIds) ?? [];
+  for (const order of orders) {
+    const pdfBlob = await generateInvoiceBlobPromise(order);
+    zip.file(`invoice-${order.orderNumber}.pdf`, pdfBlob); // Add each PDF to the ZIP
+  }
+
+  // Generate the ZIP file
+  const zipBlob = await zip.generateAsync({ type: "blob" });
+
+  // Trigger download
+  saveAs(zipBlob, "invoices.zip");
 };

@@ -226,50 +226,45 @@ const UpdateOrderProductList: React.FC<Props> = ({
         {!!products && products.length > 0 && (
           <TableBody>
             {!!products &&
-              products
-                .filter(
-                  (obj1) =>
-                    !selectedProducts.some((obj2) => obj1.id === obj2.id)
-                )
-                .map((product: IProduct, index: number) => (
-                  <TableRow key={product?.id}>
-                    <TableCell className="hidden sm:inline-block">
-                      {Number(index) + 1}
-                    </TableCell>
-                    <TableCell className="hidden sm:w-[100px] sm:inline-block">
-                      <img
-                        alt="img"
-                        className="aspect-square rounded-md object-cover"
-                        height="64"
-                        src={
-                          !!product?.thumbnail
-                            ? product.thumbnail
-                            : PlaceHolderImage
-                        }
-                        width="64"
-                      />
-                    </TableCell>
-                    <TableCell className="hidden sm:inline-block sm:truncate">
-                      {product?.name}
-                    </TableCell>
-                    <TableCell>{product?.sku}</TableCell>
-                    <TableCell className="w-[30px] sm:w-[20px] sm:truncate">
-                      {product?.quantity}
-                    </TableCell>
-                    <TableCell>{product?.unitPrice}</TableCell>
-                    <TableCell className="flex justify-end items-center">
-                      {product?.quantity > 0 && product?.active ? (
-                        <Button onClick={() => handleSelect(product)}>
-                          Select
-                        </Button>
-                      ) : (
-                        <Badge variant={"destructive"}>
-                          {!product?.active ? "Inactive" : "Out Of Stock"}
-                        </Badge>
-                      )}
-                    </TableCell>
-                  </TableRow>
-                ))}
+              products.map((product: IProduct, index: number) => (
+                <TableRow key={product?.id}>
+                  <TableCell className="hidden sm:inline-block">
+                    {Number(index) + 1}
+                  </TableCell>
+                  <TableCell className="hidden sm:w-[100px] sm:inline-block">
+                    <img
+                      alt="img"
+                      className="aspect-square rounded-md object-cover"
+                      height="64"
+                      src={
+                        !!product?.thumbnail
+                          ? product.thumbnail
+                          : PlaceHolderImage
+                      }
+                      width="64"
+                    />
+                  </TableCell>
+                  <TableCell className="hidden sm:inline-block sm:truncate">
+                    {product?.name}
+                  </TableCell>
+                  <TableCell>{product?.sku}</TableCell>
+                  <TableCell className="w-[30px] sm:w-[20px] sm:truncate">
+                    {product?.quantity}
+                  </TableCell>
+                  <TableCell>{product?.unitPrice}</TableCell>
+                  <TableCell className="flex justify-end items-center">
+                    {product?.quantity > 0 && product?.active ? (
+                      <Button onClick={() => handleSelect(product)}>
+                        Select
+                      </Button>
+                    ) : (
+                      <Badge variant={"destructive"}>
+                        {!product?.active ? "Inactive" : "Out Of Stock"}
+                      </Badge>
+                    )}
+                  </TableCell>
+                </TableRow>
+              ))}
           </TableBody>
         )}
       </Table>

@@ -153,50 +153,45 @@ const OrderProductList: React.FC<Props> = ({ handleProductDataSubmit }) => {
         {!!products && products.length > 0 && (
           <TableBody>
             {!!products &&
-              products
-                .filter(
-                  (obj1) =>
-                    !selectedProducts.some((obj2) => obj1.id === obj2.id)
-                )
-                .map((product: IProduct, index: number) => (
-                  <TableRow key={product?.id}>
-                    <TableCell className="hidden sm:inline-block">
-                      {Number(index) + 1}
-                    </TableCell>
-                    <TableCell className="hidden sm:w-[100px] sm:inline-block">
-                      <img
-                        alt="img"
-                        className="aspect-square rounded-md object-cover"
-                        height="64"
-                        src={
-                          !!product?.thumbnail
-                            ? product.thumbnail
-                            : PlaceHolderImage
-                        }
-                        width="64"
-                      />
-                    </TableCell>
-                    <TableCell className="hidden sm:inline-block sm:truncate">
-                      {product?.name}
-                    </TableCell>
-                    <TableCell>{product?.sku}</TableCell>
-                    <TableCell className="w-[10px] sm:w-[20px] sm:truncate">
-                      {product?.quantity}
-                    </TableCell>
-                    <TableCell>{product?.unitPrice}</TableCell>
-                    <TableCell className="flex justify-end items-center">
-                      {product?.quantity > 0 && product?.active ? (
-                        <Button onClick={() => handleSelect(product)}>
-                          Select
-                        </Button>
-                      ) : (
-                        <Badge variant={"destructive"}>
-                          {!product?.active ? "Inactive" : "Out Of Stock"}
-                        </Badge>
-                      )}
-                    </TableCell>
-                  </TableRow>
-                ))}
+              products.map((product: IProduct, index: number) => (
+                <TableRow key={product?.id}>
+                  <TableCell className="hidden sm:inline-block">
+                    {Number(index) + 1}
+                  </TableCell>
+                  <TableCell className="hidden sm:w-[100px] sm:inline-block">
+                    <img
+                      alt="img"
+                      className="aspect-square rounded-md object-cover"
+                      height="64"
+                      src={
+                        !!product?.thumbnail
+                          ? product.thumbnail
+                          : PlaceHolderImage
+                      }
+                      width="64"
+                    />
+                  </TableCell>
+                  <TableCell className="hidden sm:inline-block sm:truncate">
+                    {product?.name}
+                  </TableCell>
+                  <TableCell>{product?.sku}</TableCell>
+                  <TableCell className="w-[10px] sm:w-[20px] sm:truncate">
+                    {product?.quantity}
+                  </TableCell>
+                  <TableCell>{product?.unitPrice}</TableCell>
+                  <TableCell className="flex justify-end items-center">
+                    {product?.quantity > 0 && product?.active ? (
+                      <Button onClick={() => handleSelect(product)}>
+                        Select
+                      </Button>
+                    ) : (
+                      <Badge variant={"destructive"}>
+                        {!product?.active ? "Inactive" : "Out Of Stock"}
+                      </Badge>
+                    )}
+                  </TableCell>
+                </TableRow>
+              ))}
           </TableBody>
         )}
       </Table>
@@ -466,7 +461,7 @@ const OrderProductList: React.FC<Props> = ({ handleProductDataSubmit }) => {
             disabled={transection.totalPrice < 1}
             onChange={(e) => {
               const paid = Number(e.target.value);
-              if (transection.totalPrice >= paid) {
+              if (transection.totalPrice + transection.deliveryCharge >= paid) {
                 transection.remaining = transection.totalPrice - paid;
                 transection.paid = paid;
                 setTransection({
