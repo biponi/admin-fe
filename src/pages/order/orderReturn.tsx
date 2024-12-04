@@ -122,7 +122,7 @@ const AdjustReturnProduct: React.FC<AdjustReturnProductProps> = ({
                   const val = parseInt(e.target.value, 10);
                   if (val <= product?.quantity) {
                     handleProductSelection(
-                      product.productId,
+                      product?.id ?? "",
                       product.hasVariation ? product.variation.id : null,
                       parseInt(e.target.value, 10)
                     );

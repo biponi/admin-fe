@@ -277,172 +277,179 @@ const OrderList = () => {
                 : "md:col-span-3"
             }`}
           >
-            <Card x-chunk="dashboard-06-chunk-0" className="mt-4">
-              <CardHeader>
-                <div className="flex w-full justify-between">
-                  <div className="mr-auto">
-                    <CardTitle>Order</CardTitle>
-                    <CardDescription>
-                      Manage your orders and view your sales performance.
-                    </CardDescription>
+            {(!orders || orders.length < 1) && renderEmptyView()}
+            {!!orders && orders.length > 0 && (
+              <Card x-chunk="dashboard-06-chunk-0" className="mt-4">
+                <CardHeader>
+                  <div className="flex w-full justify-between">
+                    <div className="mr-auto">
+                      <CardTitle>Order</CardTitle>
+                      <CardDescription>
+                        Manage your orders and view your sales performance.
+                      </CardDescription>
+                    </div>
+                    <div className="ml-auto grid grid-cols-2 gap-4 sm:flex sm:justify-between sm:items-center">
+                      <Input
+                        type="text"
+                        placeholder="Search"
+                        onChange={(event) => {
+                          setInputValue(event.target.value);
+                        }}
+                      />
+                      {user?.role !== "admin" && (
+                        <Button onClick={() => navigate("/order/create")}>
+                          Create New Order
+                        </Button>
+                      )}
+                    </div>
                   </div>
-                  <div className="ml-auto grid grid-cols-2 gap-4 sm:flex sm:justify-between sm:items-center">
-                    <Input
-                      type="text"
-                      placeholder="Search"
-                      onChange={(event) => {
-                        setInputValue(event.target.value);
-                      }}
-                    />
-                    {user?.role !== "admin" && (
-                      <Button onClick={() => navigate("/order/create")}>
-                        Create New Order
-                      </Button>
-                    )}
-                  </div>
-                </div>
-              </CardHeader>
-              <CardContent>
-                <TabsContent value="all">
-                  <div className="max-h-[50vh] overflow-y-auto">
-                    <Table>
-                      <TableHeader className=" sticky  ">
-                        <TableRow>
-                          {!selectedStatus.includes("return") && (
+                </CardHeader>
+                <CardContent>
+                  <TabsContent value="all">
+                    <div className="max-h-[50vh] overflow-y-auto">
+                      <Table>
+                        <TableHeader className=" sticky  ">
+                          <TableRow>
+                            {!selectedStatus.includes("return") && (
+                              <TableHead>
+                                <input
+                                  className="border-gray-200 rounded-lg text-primary"
+                                  type="checkbox"
+                                  onChange={(event) => {
+                                    const check = event?.target?.checked;
+                                    setBulkOrders(
+                                      check
+                                        ? orders?.map(
+                                            (order: IOrder) => order?.id
+                                          )
+                                        : []
+                                    );
+                                  }}
+                                />
+                              </TableHead>
+                            )}
+                            <TableHead className="hidden w-[100px] sm:table-cell">
+                              NO.
+                            </TableHead>
+                            <TableHead>Customer Name</TableHead>
+                            <TableHead>Phone Number</TableHead>
+                            <TableHead>Status</TableHead>
+                            <TableHead className="hidden md:table-cell">
+                              District
+                            </TableHead>
+                            <TableHead>Price</TableHead>
+                            <TableHead className="hidden md:table-cell">
+                              Paid
+                            </TableHead>
+                            <TableHead className="hidden md:table-cell">
+                              Remaining
+                            </TableHead>
+                            <TableHead className="hidden ">
+                              Last Updated at
+                            </TableHead>
                             <TableHead>
-                              <input
-                                className="border-gray-200 rounded-lg text-primary"
-                                type="checkbox"
-                                onChange={(event) => {
-                                  const check = event?.target?.checked;
-                                  setBulkOrders(
-                                    check
-                                      ? orders?.map(
-                                          (order: IOrder) => order?.id
+                              <View />
+                            </TableHead>
+                            <TableHead>
+                              <span className="sr-only">Actions</span>
+                            </TableHead>
+                          </TableRow>
+                        </TableHeader>
+
+                        <TableBody>
+                          {!!orders &&
+                            orders.map((order: IOrder, index: number) => (
+                              <SingleItem
+                                key={index}
+                                orderNumber={order?.orderNumber}
+                                id={`${order?.id}`}
+                                paid={order?.paid}
+                                status={order?.status}
+                                isBulkAdded={bulkOrders.includes(order?.id)}
+                                handleBulkCheck={(val: boolean) => {
+                                  val
+                                    ? setBulkOrders([...bulkOrders, order?.id])
+                                    : setBulkOrders(
+                                        bulkOrders.filter(
+                                          (b) => b !== order?.id
                                         )
-                                      : []
+                                      );
+                                }}
+                                district={order?.shipping.district}
+                                totalPrice={order?.totalPrice ?? 0}
+                                remaining={order?.remaining}
+                                customerName={order?.customer?.name}
+                                CustomerPhoneNumber={
+                                  order?.customer?.phoneNumber
+                                }
+                                handleUpdateOrder={() => {
+                                  setSelectedOrder(order);
+                                  setEditDialogOpen(true);
+                                }}
+                                handleModifyProduct={() => {
+                                  setSelectedOrder(order);
+                                  setTimeout(
+                                    () => setModifyDialogOpen(true),
+                                    1000
                                   );
                                 }}
+                                handleReturnProducts={() => {
+                                  setSelectedOrder(order);
+                                  setIsReturnProduct(true);
+                                }}
+                                handleViewDetails={() => {
+                                  setShowDetails(order);
+                                }}
+                                deleteExistingOrder={deleteOrderData}
+                                updatedAt={order?.timestamps?.updatedAt}
                               />
-                            </TableHead>
-                          )}
-                          <TableHead className="hidden w-[100px] sm:table-cell">
-                            NO.
-                          </TableHead>
-                          <TableHead>Customer Name</TableHead>
-                          <TableHead>Phone Number</TableHead>
-                          <TableHead>Status</TableHead>
-                          <TableHead className="hidden md:table-cell">
-                            District
-                          </TableHead>
-                          <TableHead>Price</TableHead>
-                          <TableHead className="hidden md:table-cell">
-                            Paid
-                          </TableHead>
-                          <TableHead className="hidden md:table-cell">
-                            Remaining
-                          </TableHead>
-                          <TableHead className="hidden ">
-                            Last Updated at
-                          </TableHead>
-                          <TableHead>
-                            <View />
-                          </TableHead>
-                          <TableHead>
-                            <span className="sr-only">Actions</span>
-                          </TableHead>
-                        </TableRow>
-                      </TableHeader>
-
-                      <TableBody>
-                        {!!orders &&
-                          orders.map((order: IOrder, index: number) => (
-                            <SingleItem
-                              key={index}
-                              orderNumber={order?.orderNumber}
-                              id={`${order?.id}`}
-                              paid={order?.paid}
-                              status={order?.status}
-                              isBulkAdded={bulkOrders.includes(order?.id)}
-                              handleBulkCheck={(val: boolean) => {
-                                val
-                                  ? setBulkOrders([...bulkOrders, order?.id])
-                                  : setBulkOrders(
-                                      bulkOrders.filter((b) => b !== order?.id)
-                                    );
-                              }}
-                              district={order?.shipping.district}
-                              totalPrice={order?.totalPrice ?? 0}
-                              remaining={order?.remaining}
-                              customerName={order?.customer?.name}
-                              CustomerPhoneNumber={order?.customer?.phoneNumber}
-                              handleUpdateOrder={() => {
-                                setSelectedOrder(order);
-                                setEditDialogOpen(true);
-                              }}
-                              handleModifyProduct={() => {
-                                setSelectedOrder(order);
-                                setTimeout(
-                                  () => setModifyDialogOpen(true),
-                                  1000
-                                );
-                              }}
-                              handleReturnProducts={() => {
-                                setSelectedOrder(order);
-                                setIsReturnProduct(true);
-                              }}
-                              handleViewDetails={() => {
-                                setShowDetails(order);
-                              }}
-                              deleteExistingOrder={deleteOrderData}
-                              updatedAt={order?.timestamps?.updatedAt}
-                            />
-                          ))}
-                      </TableBody>
-                    </Table>
-                  </div>
-                </TabsContent>
-              </CardContent>
-              {inputValue === "" && (
-                <CardFooter>
-                  <div className="w-full flex justify-between items-center">
-                    <div className="text-xs text-muted-foreground">
-                      Showing{" "}
-                      <strong>{`${
-                        (Number(currentPageNum) - 1) * limit + 1
-                      }-${Math.min(
-                        Number(currentPageNum) * limit,
-                        totalOrders
-                      )}`}</strong>{" "}
-                      of <strong>{totalOrders}</strong> orders
+                            ))}
+                        </TableBody>
+                      </Table>
                     </div>
-                    <div className="flex gap-2 items-center">
-                      <Button
-                        disabled={currentPageNum < 2}
-                        variant="outline"
-                        size="icon"
-                        className="h-7 w-7"
-                        onClick={() => updateCurrentPage(-1)}
-                      >
-                        <ChevronLeft className="h-4 w-4" />
-                        <span className="sr-only">Back</span>
-                      </Button>
+                  </TabsContent>
+                </CardContent>
+                {inputValue === "" && (
+                  <CardFooter>
+                    <div className="w-full flex justify-between items-center">
+                      <div className="text-xs text-muted-foreground">
+                        Showing{" "}
+                        <strong>{`${
+                          (Number(currentPageNum) - 1) * limit + 1
+                        }-${Math.min(
+                          Number(currentPageNum) * limit,
+                          totalOrders
+                        )}`}</strong>{" "}
+                        of <strong>{totalOrders}</strong> orders
+                      </div>
+                      <div className="flex gap-2 items-center">
+                        <Button
+                          disabled={currentPageNum < 2}
+                          variant="outline"
+                          size="icon"
+                          className="h-7 w-7"
+                          onClick={() => updateCurrentPage(-1)}
+                        >
+                          <ChevronLeft className="h-4 w-4" />
+                          <span className="sr-only">Back</span>
+                        </Button>
 
-                      <Button
-                        disabled={currentPageNum >= totalPages}
-                        variant="outline"
-                        size="icon"
-                        className="h-7 w-7"
-                        onClick={() => updateCurrentPage(1)}
-                      >
-                        <ChevronRight className="h-4 w-4" />
-                        <span className="sr-only">Next</span>
-                      </Button>
+                        <Button
+                          disabled={currentPageNum >= totalPages}
+                          variant="outline"
+                          size="icon"
+                          className="h-7 w-7"
+                          onClick={() => updateCurrentPage(1)}
+                        >
+                          <ChevronRight className="h-4 w-4" />
+                          <span className="sr-only">Next</span>
+                        </Button>
+                      </div>
                     </div>
-                  </div>
-                </CardFooter>
-              )}
-            </Card>
+                  </CardFooter>
+                )}
+              </Card>
+            )}
           </div>
           {renderOrderDetailsPanel()}
           {!selectedStatus.includes("return") &&
@@ -917,14 +924,8 @@ const OrderList = () => {
           }}
         />
       );
-    } else if (
-      inputValue !== "" ||
-      selectedStatus !== "processing" ||
-      (!!orders && orders.length > 0)
-    ) {
-      return renderProductListView();
     } else {
-      return renderEmptyView();
+      return renderProductListView();
     }
   };
 

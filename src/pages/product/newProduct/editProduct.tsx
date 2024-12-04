@@ -702,7 +702,9 @@ const EditProduct: React.FC<Props> = ({
                     <button
                       key={index}
                       onDoubleClick={() => {
-                        const images = formData.images.splice(index, 1);
+                        const images = formData.images.filter(
+                          (_, i) => i !== index
+                        );
                         updateFormData({
                           ...formData,
                           images: [...images],
