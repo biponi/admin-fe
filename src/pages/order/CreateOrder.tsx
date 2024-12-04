@@ -18,6 +18,7 @@ const steps = [
 
 const CreateOrder = () => {
   const navigate = useNavigate();
+  const [notes, setNotes] = useState("");
   const [orderSteps, setOrderSteps] = useState(steps);
   const [currentStep, setCurrentStep] = useState(0);
   const [orderProducts, setOrderProduct] = useState([]);
@@ -85,6 +86,7 @@ const CreateOrder = () => {
       },
       transectionData,
       products,
+      notes,
     };
     const response = await createOrder(orderData);
     if (response.success) {
@@ -117,6 +119,8 @@ const CreateOrder = () => {
     } else {
       return (
         <OrderPreview
+          notes={notes}
+          setNotes={(value: string) => setNotes(value)}
           //@ts-ignore
           customerInformation={customerInformation}
           orderProducts={orderProducts}
@@ -133,11 +137,11 @@ const CreateOrder = () => {
 
   const renderMainView = () => {
     return (
-      <MainView title='Order Creation'>
-        <div className='w-full sm:w-[95vw]'>
+      <MainView title="Order Creation">
+        <div className="w-full sm:w-[95vw]">
           <Stepper steps={orderSteps} />
           <br />
-          <div className='my-2' />
+          <div className="my-2" />
           {renderContentView()}
         </div>
       </MainView>

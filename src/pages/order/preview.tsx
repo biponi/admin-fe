@@ -33,14 +33,18 @@ import { Textarea } from "../../components/ui/textarea";
 import { Label } from "../../components/ui/label";
 
 interface Props {
+  notes: string;
   transection: ITransection;
   orderProducts: IOrderProduct[];
   customerInformation: { customer: any; shipping: any };
   handleCreateOrder: () => void;
   handleBack: () => void;
+  setNotes: (value: string) => void;
 }
 
 const OrderPreview: React.FC<Props> = ({
+  notes,
+  setNotes,
   handleBack,
   transection,
   orderProducts,
@@ -289,6 +293,15 @@ const OrderPreview: React.FC<Props> = ({
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>{renderCustomerPersonalInformation()}</div>
               <div>{renderCustomerShippingInformation()}</div>
+            </div>
+            <div className="w-full mt-6">
+              <Textarea
+                className="w-full"
+                rows={5}
+                value={notes}
+                onChange={(e: any) => setNotes(e.target.value)}
+                placeholder="Write a note..."
+              />
             </div>
           </CardContent>
         </Card>

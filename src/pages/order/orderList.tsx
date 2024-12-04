@@ -670,6 +670,17 @@ const OrderList = () => {
               </ul>
             </div>
             <Separator className="my-2" />
+            {!!selectedOrder?.notes && (
+              <div className="grid grid-cols-1 gap-4">
+                <div className="grid gap-3">
+                  <div className="font-semibold">Notes</div>
+                  <address className="grid gap-0.5 not-italic text-gray-700">
+                    <span>{selectedOrder?.notes ?? ""} </span>
+                  </address>
+                </div>
+              </div>
+            )}
+            <Separator className="my-2" />
             <div className="grid grid-cols-1 gap-4">
               <div className="grid gap-3">
                 <div className="font-semibold">Shipping Information</div>
@@ -824,6 +835,7 @@ const OrderList = () => {
           </SheetHeader>
           <br />
           <EditCustomerInformation
+            notes={selectedOrder?.notes ?? ""}
             customerInfo={selectedOrder?.customer}
             shipping={selectedOrder?.shipping}
             deliveryCharge={selectedOrder?.deliveryCharge ?? 0}

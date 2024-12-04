@@ -31,6 +31,7 @@ export interface IOrder {
     email?: string; // Optional email field
     phoneNumber: string;
   };
+  notes?:string;
   status: string;
   deliveryCharge: number;
   totalPrice: number;
