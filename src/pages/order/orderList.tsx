@@ -388,10 +388,7 @@ const OrderList = () => {
                                 }}
                                 handleModifyProduct={() => {
                                   setSelectedOrder(order);
-                                  setTimeout(
-                                    () => setModifyDialogOpen(true),
-                                    1000
-                                  );
+                                  setModifyDialogOpen(true);
                                 }}
                                 handleReturnProducts={() => {
                                   setSelectedOrder(order);
