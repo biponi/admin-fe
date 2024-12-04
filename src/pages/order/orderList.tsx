@@ -914,7 +914,10 @@ const OrderList = () => {
             <AdjustReturnProduct
               // @ts-ignore
               order={selectedOrder}
-              handleClose={() => setIsReturnProduct(false)}
+              handleClose={() => {
+                refresh();
+                setIsReturnProduct(false);
+              }}
             />
           </div>
         </DialogContent>
