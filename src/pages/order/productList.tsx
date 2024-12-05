@@ -66,7 +66,7 @@ const OrderProductList: React.FC<Props> = ({ handleProductDataSubmit }) => {
   useEffect(() => {
     if (!!selectedProducts) {
       let totalPrice = 0;
-      let discount = transection?.discount;
+      let discount = 0;
       selectedProducts.forEach((product) => {
         totalPrice = Number(totalPrice) + Number(product.totalPrice);
         discount = Number(discount) + Number(product.discount);

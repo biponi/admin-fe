@@ -191,6 +191,16 @@ const generateInvoiceBlob=(order:IOrder)=>{
 
   doc.text(`Payment Method: ${order?.payment && order.payment.length > 0 ? order.payment[0].paymentType : 'Cash On Delivery'}`, 15, yPosition+10);
 
+  yPosition = yPosition+20;
+  if(!!order?.notes){
+    const csNoteLines = doc.splitTextToSize(order?.notes, 120);
+    csNoteLines.forEach((line:string,index:number)=>{
+      doc.text(`${index===0?"***":""}${line}`, 15, yPosition);
+      yPosition+=5;
+    })
+    
+  }
+
   // Shipping Information
   doc.setFontSize(12);
   doc.setTextColor(0, 100, 0); // Dark green for titles
@@ -234,7 +244,7 @@ const generateInvoiceBlob=(order:IOrder)=>{
   ];
 
   autoTable(doc, {
-    startY: yPosition+15,
+    startY: yPosition,
     head: [columns],
     body: [...data, ...summaryRows],
     theme: "grid",

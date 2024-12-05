@@ -115,7 +115,7 @@ const OrderList = () => {
   const [isCopied, setIsCopied] = useState(false);
   const [inputValue, setInputValue] = useState<string>("");
   const [bulkAction, setBulkAction] = useState<string>("");
-  const [showDetails, setShowDetails] = useState<any>(null);
+  const [showDetails, setShowDetails] = useState<boolean>(false);
   const [isReturnProduct, setIsReturnProduct] = useState<boolean>(false);
   const [isEditDialogOpen, setEditDialogOpen] = useState<boolean>(false);
   const [selectedOrder, setSelectedOrder] = useState<IOrder | null>(null);
@@ -395,7 +395,8 @@ const OrderList = () => {
                                   setIsReturnProduct(true);
                                 }}
                                 handleViewDetails={() => {
-                                  setShowDetails(order);
+                                  setShowDetails(true);
+                                  setSelectedOrder(order);
                                 }}
                                 deleteExistingOrder={deleteOrderData}
                                 updatedAt={order?.timestamps?.updatedAt}
@@ -463,7 +464,7 @@ const OrderList = () => {
     return (
       <Sheet
         open={showDetails}
-        onOpenChange={(value: boolean) => setShowDetails(!value && null)}
+        onOpenChange={(value: boolean) => setShowDetails(value)}
         x-chunk="dashboard-05-chunk-4"
       >
         <SheetContent className="px-4 pb-2 pt-10">
@@ -654,6 +655,11 @@ const OrderList = () => {
                 <li className="flex items-center justify-between">
                   <span className="text-gray-700">Delivery Charge</span>
                   <span>{selectedOrder?.deliveryCharge}</span>
+                </li>
+
+                <li className="flex items-center justify-between">
+                  <span className="text-gray-700">Discount</span>
+                  <span>{selectedOrder?.discount}</span>
                 </li>
 
                 <li className="flex items-center justify-between">
