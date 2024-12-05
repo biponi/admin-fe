@@ -1,6 +1,6 @@
 {
   "name": "prior-admin-fe",
-  "version": "0.2.6",
+  "version": "0.2.7",
   "private": true,
   "dependencies": {
     "@hookform/resolvers": "^3.3.4",
@@ -75,6 +75,7 @@
     "recharts": "^2.12.7",
     "sass": "^1.71.1",
     "sonner": "^1.4.41",
+    "sweetalert2": "^11.14.5",
     "tailwind-merge": "^2.2.2",
     "tailwindcss": "^3.4.1",
     "tailwindcss-animate": "^1.0.7",

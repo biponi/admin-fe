@@ -18,16 +18,7 @@ import {
   TableRow,
 } from "../../components/ui/table";
 
-import {
-  Select,
-  SelectContent,
-  SelectGroup,
-  SelectItem,
-  SelectLabel,
-  SelectTrigger,
-  SelectValue,
-} from "../../components/ui/select";
-import { IOrderProduct, IProduct, IVariation } from "../product/interface";
+import { IOrderProduct, IProduct } from "../product/interface";
 import PlaceHolderImage from "../../assets/placeholder.svg";
 import { Button } from "../../components/ui/button";
 import { Badge } from "../../components/ui/badge";
@@ -36,6 +27,8 @@ import { Input } from "../../components/ui/input";
 import { Trash } from "lucide-react";
 import EmptyProductCard from "../../common/EmptyProductCard";
 import { ITransection } from "./interface";
+import SelectDemo from "./components/SelectDemo";
+import { Variation } from "./data/types";
 
 const defaultTransaction = {
   totalPrice: 0.0,
@@ -199,32 +192,13 @@ const OrderProductList: React.FC<Props> = ({ handleProductDataSubmit }) => {
   };
 
   const renderVariantMenu = (
-    type: string,
+    type: "color" | "size",
     index: number,
-    list: string[],
-    selected: string
+    list: string[]
   ) => {
-    const handleVariantChange = (value: string, vType: "color" | "size") => {
-      const selectedProduct = selectedProducts[index];
-
-      if (!selectedProduct || !selectedProduct.selectedVariant) {
-        return;
-      }
-
-      const rType = vType === "color" ? "size" : "color";
-      const selectedRev = selectedProduct.selectedVariant[rType] ?? "";
-
-      const filteredVariants = selectedProduct.variation.filter(
-        (variant: IVariation) => {
-          return (
-            variant[vType] === value &&
-            (variant[rType] === selectedRev || variant.quantity > 0)
-          );
-        }
-      );
-
-      if (filteredVariants.length > 0) {
-        const selectedVariant = filteredVariants[0];
+    const handleVariantChange = (variant: Variation) => {
+      if (!!variant) {
+        const selectedVariant = variant;
         selectedProduct.selectedVariant = selectedVariant;
         selectedProduct.selectedQuantity = Math.min(
           selectedProduct.selectedQuantity,
@@ -240,26 +214,19 @@ const OrderProductList: React.FC<Props> = ({ handleProductDataSubmit }) => {
         });
       }
     };
+    const selectedProduct = selectedProducts[index];
+    const selectedVariant = selectedProducts[index]?.selectedVariant ?? null;
     return (
-      <Select
-        value={selected}
-        onValueChange={(value: string) =>
-          //@ts-ignore
-          handleVariantChange(value, type.toLowerCase())
-        }
-      >
-        <SelectTrigger className="w-[80px]">
-          <SelectValue placeholder={`Select a ${type}`} />
-        </SelectTrigger>
-        <SelectContent>
-          <SelectGroup>
-            <SelectLabel>{type.toUpperCase()}</SelectLabel>
-            {list.map((v) => (
-              <SelectItem value={v}>{v.toUpperCase()}</SelectItem>
-            ))}
-          </SelectGroup>
-        </SelectContent>
-      </Select>
+      <SelectDemo
+        type={type}
+        list={list}
+        selectedProduct={selectedProduct}
+        selectedVariant={selectedVariant}
+        selected={!!selectedVariant ? selectedVariant[`${type}`] ?? "" : ""}
+        onVariantChange={(variant: Variation) => {
+          handleVariantChange(variant);
+        }}
+      />
     );
   };
 
@@ -294,22 +261,12 @@ const OrderProductList: React.FC<Props> = ({ handleProductDataSubmit }) => {
         </TableCell>
         <TableCell>
           {product?.hasVariation
-            ? renderVariantMenu(
-                "color",
-                index,
-                uniqueColors,
-                product.selectedVariant?.color ?? ""
-              )
+            ? renderVariantMenu("color", index, uniqueColors)
             : "N/A"}
         </TableCell>
         <TableCell>
           {product?.hasVariation
-            ? renderVariantMenu(
-                "size",
-                index,
-                uniqueSizes,
-                product.selectedVariant?.size ?? ""
-              )
+            ? renderVariantMenu("size", index, uniqueSizes)
             : "N/A"}
         </TableCell>
         <TableCell>
