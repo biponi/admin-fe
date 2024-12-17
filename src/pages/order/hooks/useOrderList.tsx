@@ -14,7 +14,7 @@ export const useOrderList = () => {
   const { user } = useLoginAuth();
   const [orderFetching, setOrderFetching] = useState(false);
   const [orders, setOrders] = useState([]);
-  const [selectedStatus, setSelectedStatus] = useState<string>("processing");
+  const [selectedStatus, setSelectedStatus] = useState<string>("");
   const [totalOrders, setTotalOrders] = useState(0);
   const [totalPages, setTotalPages] = useState(0);
   const [currentPageNum, setCurrentPage] = useState(0);

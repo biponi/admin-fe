@@ -166,6 +166,7 @@ const OrderList = () => {
           onValueChange={(value: string) => setSelectedStatus(value)}
         >
           <TabsList>
+            <TabsTrigger value="">All</TabsTrigger>
             <TabsTrigger value="processing">Processing</TabsTrigger>
             <TabsTrigger value="shipped">Shipped</TabsTrigger>
             <TabsTrigger value="completed">Completed</TabsTrigger>
