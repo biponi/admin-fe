@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react";
 import { Routes, Route, Navigate } from "react-router-dom";
 import { decodeToken } from "react-jwt";
-import { ToastContainer } from "react-toastify";
 import { Toaster } from "react-hot-toast";
 
 // Import components
@@ -22,6 +21,8 @@ import SignIn from "./pages/auth";
 // Hooks
 import useLoginAuth from "./pages/auth/hooks/useLoginAuth";
 import { TooltipProvider } from "./components/ui/tooltip";
+import PurchaseOrders from "./pages/purchaseOrder/purchaseOrders";
+import CreatePurchaseOrder from "./pages/purchaseOrder/CreatePurchaseOrder";
 
 // Protected Route Component
 const ProtectedRoute = ({
@@ -104,7 +105,7 @@ const App = () => {
           {/* Protected Routes */}
           {isAuth ? (
             <>
-              <Route path="/" element={<DashboardPage />} />
+              <Route path="/" element={<Navigate to="/dashboard" replace />} />
               <Route path="/products" element={<ProductPage />} />
               <Route path="/product/update/:id" element={<UpdateProduct />} />
               <Route path="/product/create" element={<CreateNewProduct />} />
@@ -127,6 +128,22 @@ const App = () => {
                   </ProtectedRoute>
                 }
               />
+              <Route
+                path="/purchase-order/list"
+                element={
+                  <ProtectedRoute roles={["admin", "manager"]}>
+                    <PurchaseOrders />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/purchase-order/create"
+                element={
+                  <ProtectedRoute roles={["admin", "manager"]}>
+                    <CreatePurchaseOrder />
+                  </ProtectedRoute>
+                }
+              />
             </>
           ) : (
             <Route path="*" element={<Navigate to="/login" replace />} />
@@ -134,7 +151,6 @@ const App = () => {
         </Routes>
       </div>
       <Toaster />
-      <ToastContainer pauseOnFocusLoss={false} pauseOnHover={false} />
     </TooltipProvider>
   );
 };

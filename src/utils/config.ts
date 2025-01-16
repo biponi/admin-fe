@@ -63,6 +63,13 @@ const config = {
     editCampaign:(id:string) => `${baseURL}/campaign/update/${id}`,
     getCampaignById:(id:string) => `${baseURL}/campaign/by/${id}`,
     deleteCampaign:(id:string) => `${baseURL}/campaign/remove/${id}`,
+  },
+  purchaseOrder:{
+    purchaseList:()=>`${baseURL}/purchase-order/all`,
+    purchaseSearch:()=>`${baseURL}/purchase-order/search`,
+    createPurchaseOrder:()=>`${baseURL}/purchase-order/create`,
+    deletePurchaseOrder:(id:string)=>`${baseURL}/purchase-order/delete/${id}`,
+    restorePurchaseOrder:(id:string)=>`${baseURL}/purchase-order/restore/${id}`,
   }
 };
 

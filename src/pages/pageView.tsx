@@ -12,6 +12,9 @@ import DashboardPage from "./dashboard";
 import CreateCampaignForm from "./campaign/components/createCampaign";
 import CampaignList from "./campaign/campaignList";
 import UpdateCampaignForm from "./campaign/components/updateCampaign";
+import ListPurchaseOrders from "./purchaseOrder/ListPurchaseOrderList";
+import CreatePurchaseOrder from "./purchaseOrder/CreatePurchaseOrder";
+import PurchaseOrders from "./purchaseOrder/purchaseOrders";
 
 const PageView = () => {
   return (
@@ -30,6 +33,11 @@ const PageView = () => {
         <Route path="/campaign" element={<CampaignList />} />
         <Route path="/" element={<DashboardPage />} />
         <Route path="/unauthorize" element={<AccessDeniedPage />} />
+        <Route path="/purchase-order/list" element={<PurchaseOrders />} />
+        <Route
+          path="/purchase-order/create"
+          element={<CreatePurchaseOrder />}
+        />
       </Routes>
       {/* <ProtectedRoute roles={["admin", "manager"]}></ProtectedRoute> */}
       {/* <ProtectedRoute roles={["admin", "manager", "moderator"]}>

@@ -34,7 +34,7 @@ import MainView from "../../coreComponents/mainView";
 import { Card, CardContent, CardHeader } from "../../components/ui/card";
 import { Input } from "../../components/ui/input";
 import { useNavigate } from "react-router-dom";
-import { toast } from "react-toastify";
+import { toast } from "react-hot-toast";
 const DATE_FORMAT = "DD/MM/YYYY HH:mm";
 
 const CampaignList = () => {
