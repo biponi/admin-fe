@@ -9,17 +9,21 @@ import { Input } from "../../components/ui/input";
 import { Button } from "../../components/ui/button";
 import { Table } from "../../components/ui/table";
 import useDebounce from "../../customHook/useDebounce";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "../../components/ui/popover";
+
 import { Badge } from "../../components/ui/badge";
-import { Bird, CircleX, Trash } from "lucide-react";
+import { Bird, CircleX, Disc3, Trash } from "lucide-react";
 import { toast } from "react-hot-toast";
 import { SkeletonCard } from "../../coreComponents/sekeleton";
 import MainView from "../../coreComponents/mainView";
 import axios from "axios";
+import {
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetHeader,
+  SheetTitle,
+} from "../../components/ui/sheet";
+import { Separator } from "../../components/ui/separator";
 
 const CreatePurchaseOrder: React.FC = () => {
   const [products, setProducts] = useState<ProductSearchResponse[]>([]);
@@ -28,15 +32,36 @@ const CreatePurchaseOrder: React.FC = () => {
     ProductSearchResponse[]
   >([]);
   const [loading, setLoading] = useState(false);
+  const [openSheet, setOpenSheet] = useState(false);
+  const [searching, setSearching] = useState(false);
 
   const handleSearch = () => {
-    searchProducts(searchQuery).then(setProducts);
+    if (!searchQuery || searchQuery === "") {
+      setProducts([]);
+      return;
+    }
+    setSearching(true);
+    searchProducts(searchQuery)
+      .then((res) => {
+        setProducts([...res]);
+        setSearching(false);
+      })
+      .catch((error) => {
+        if (axios.isAxiosError(error) && error.response) {
+          console.error("API error:", error?.response?.data?.message); // Logs "Product with ID 123 not found."
+          toast.error(error?.response?.data?.message);
+        } else {
+          toast.error("Something went wrong. Please try again later.");
+        }
+        setSearching(false);
+      });
   };
 
   const debounce = useDebounce(searchQuery, 500);
 
   useEffect(() => {
     if (!!searchQuery) handleSearch();
+    else setProducts([]);
     //eslint-disable-next-line
   }, [debounce]);
 
@@ -117,18 +142,16 @@ const CreatePurchaseOrder: React.FC = () => {
     }
   };
 
-  const renderMainCreateView = () => {
+  const renderProductSheet = () => {
     return (
-      <div className="p-6">
-        <h1 className="text-2xl font-bold mb-4">Create Purchase Order</h1>
-
-        {/* Search Products */}
-        <div className="mb-4">
-          <Popover
-            open={!!searchQuery}
-            onOpenChange={(open) => !open && setProducts([])}
-          >
-            <PopoverTrigger asChild>
+      <Sheet open={openSheet} onOpenChange={(sta) => setOpenSheet(sta)}>
+        <SheetContent className="w-[40vw]">
+          <SheetHeader>
+            <SheetTitle>Products</SheetTitle>
+            <Separator />
+            <SheetDescription>
+              <p> Search products and add them to the purchase order.</p>
+              <br />
               <div className="p-2 rounded w-full flex items-center">
                 <Input
                   placeholder="Search products by name, SKU, or ID"
@@ -150,32 +173,43 @@ const CreatePurchaseOrder: React.FC = () => {
                   </Button>
                 )}
               </div>
-            </PopoverTrigger>
-            <PopoverContent className="w-[90vh] left-0">
-              <div className="p-2 border-b border-gray-300 font-bold">
-                Products
+            </SheetDescription>
+          </SheetHeader>
+          {searching && (
+            <div className="flex justify-center items-center p-10">
+              <div className="flex items-center">
+                Searching Please Wait...{" "}
+                <Disc3 className="w-5 h-5 ml-2 animate-spin" />
               </div>
-              <div className="max-h-[30vh] overflow-y-auto">
-                {products.length > 0 ? (
-                  <ul className="space-y-2">
-                    {products.map((result) => (
-                      <li
-                        key={result.id}
-                        className="cursor-pointer p-2 hover:bg-gray-100 flex justify-start items-center"
-                        onClick={() => {
-                          handleAddProduct(result);
-                        }}
-                      >
-                        {!!result.image && (
-                          <img
-                            alt="Product"
-                            src={result?.image}
-                            className=" w-8 h-8 rounded mr-2"
-                          />
-                        )}
-                        {result.name}
+            </div>
+          )}
+          {!searching && (
+            <div className="max-h-[70vh] overflow-y-auto">
+              {!!products && products.length > 0 ? (
+                <div className="grid grid-cols-1 gap-2 p-2">
+                  {products.map((result, index) => (
+                    <div
+                      key={index}
+                      className="cursor-pointer p-4 rounded border border-gray-50 hover:bg-gray-100 shadow "
+                      onClick={() => {
+                        handleAddProduct(result);
+                      }}
+                    >
+                      <div className="flex justify-between items-center w-full">
+                        <div className="flex justify-start items-center gap-2">
+                          {!!result.image && (
+                            <img
+                              alt="Product"
+                              src={result?.image}
+                              className=" w-8 h-8 rounded mr-2"
+                            />
+                          )}
+                          <span className="text-base font-bold text-gray-950">
+                            {result.name}
+                          </span>
+                        </div>
                         {!!result.variant && (
-                          <Badge variant={"outline"} className="ml-2">
+                          <Badge variant={"outline"} className="ml-auto">
                             {`${result?.variant.color}${
                               !!result?.variant?.color &&
                               !!result?.variant?.size
@@ -184,32 +218,49 @@ const CreatePurchaseOrder: React.FC = () => {
                             }${result?.variant?.size}`}
                           </Badge>
                         )}
-                      </li>
-                    ))}
-                  </ul>
-                ) : (
-                  <p className="text-sm text-gray-500">No results found.</p>
-                )}
-              </div>
-              <div className="p-2 border-t border-gray-300 flex justify-end items-center">
-                <Button
-                  variant="destructive"
-                  onClick={() => {
-                    setProducts([]);
-                    setSearchQuery("");
-                  }}
-                >
-                  Clear
-                </Button>
-              </div>
-            </PopoverContent>
-          </Popover>
-        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="w-full p-10 flex justify-center items-center">
+                  <Bird className="w-12 h-12 mx-auto mb-4" />
+                  <p className="text-lg">No Product Found</p>
+                </div>
+              )}
+            </div>
+          )}
+        </SheetContent>
+      </Sheet>
+    );
+  };
+
+  const renderMainCreateView = () => {
+    return (
+      <div className="p-6">
+        <h1 className="text-2xl font-bold mb-4">Create Purchase Order</h1>
+
+        {/* Search Products */}
+        {renderProductSheet()}
 
         {/* Selected Products */}
         <div className="w-full flex justify-between items-center">
           <h2 className="text-xl font-semibold">Selected Products</h2>
-          <Button onClick={handleCreateOrder}>Create Purchase Order</Button>
+          <div className="flex justify-between items-center">
+            <Button
+              variant={"outline"}
+              onClick={() => setOpenSheet(true)}
+              className="mr-2"
+            >
+              Add Product
+            </Button>
+            <Button
+              disabled={!searchProducts || selectedProducts.length < 1}
+              onClick={handleCreateOrder}
+            >
+              Create Purchase Order
+            </Button>
+          </div>
         </div>
         <br />
         <Table>
@@ -219,13 +270,14 @@ const CreatePurchaseOrder: React.FC = () => {
               <th className="p-4">Name</th>
               <th>Variant</th>
               <th>Quantity</th>
+              <th>Unit Price</th>
               <th>Action</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-200 border border-gray-200">
             {!!selectedProducts && selectedProducts?.length === 0 && (
               <tr>
-                <td colSpan={5}>
+                <td colSpan={6}>
                   <div className="w-full p-16 flex justify-center items-center bg-gray-100">
                     <div className="text-center">
                       <Bird className="w-12 h-12 mx-auto mb-4" />
@@ -286,6 +338,20 @@ const CreatePurchaseOrder: React.FC = () => {
                         +
                       </Button>
                     </div>
+                  </td>
+                  <td>
+                    <Input
+                      id="stock-3"
+                      name="quantity"
+                      onChange={(e) => {
+                        const value = e.target.value;
+                        selectedProducts[index].unitPrice = value;
+                        setSelectedProducts([...selectedProducts]);
+                      }}
+                      type="number"
+                      value={product?.unitPrice}
+                      defaultValue={product?.unitPrice}
+                    />
                   </td>
                   <td className="text-center">
                     <Trash

@@ -16,6 +16,7 @@ export interface PurchaseOrder {
   products: Array<{title:string; productId: string; quantity: number; variantId?: string }>;
   totalAmount: number;
   createdAt: string;
+  purchaseNumber:number;
 }
 
 
@@ -30,7 +31,7 @@ export type ProductSearchResponse = {
   id: string;
   name: string;
   sku: string;
-  unitPrice: number;
+  unitPrice: number | string;
   quantity: number;
   image?: string;
   variant: {

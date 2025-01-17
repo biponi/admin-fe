@@ -22,8 +22,10 @@ import {
   AlertDialogTrigger,
 } from "../../components/ui/alert-dialog";
 import axios from "axios";
+import { useNavigate } from "react-router-dom";
 
 const ListPurchaseOrders: React.FC = () => {
+  const naviagate = useNavigate();
   const [purchaseOrders, setPurchaseOrders] = useState<PurchaseOrder[]>([]);
 
   useEffect(() => {
@@ -71,9 +73,7 @@ const ListPurchaseOrders: React.FC = () => {
     <div className="p-6 w-[90vw]">
       <div className="flex justify-between items-center w-full mb-4">
         <h1 className="text-2xl font-bold mb-4">Purchase Orders</h1>
-        <Button
-          onClick={() => (window.location.href = "/purchase-order/create")}
-        >
+        <Button onClick={() => naviagate("/purchase-order/create")}>
           Create Purchase Order
         </Button>
       </div>
@@ -91,7 +91,7 @@ const ListPurchaseOrders: React.FC = () => {
           <thead className="bg-gray-200">
             <tr>
               <th className="text-lg border border-gray-300 p-2">ID</th>
-              <th className="text-lg border border-gray-300 p-2">Titles</th>
+              <th className="text-lg border border-gray-300 p-2">Products</th>
               <th className="text-lg border border-gray-300 p-2">
                 Total Amount
               </th>
@@ -102,7 +102,9 @@ const ListPurchaseOrders: React.FC = () => {
           <tbody>
             {purchaseOrders.map((order) => (
               <tr key={order?.id} className="border border-gray-300">
-                <td className="border border-gray-300 p-2">{order?.id}</td>
+                <td className="border border-gray-300 p-2">
+                  {order?.purchaseNumber}
+                </td>
                 <td className="border border-gray-300 p-2">
                   <div className="flex flex-wrap gap-1">
                     {order.products.map((product) => (

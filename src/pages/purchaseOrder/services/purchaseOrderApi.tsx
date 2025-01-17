@@ -21,8 +21,10 @@ export const createPurchaseOrder = async (
   products: ProductSearchResponse[]
 ): Promise<void> => {
   const orderProducts = products.map((p) => ({
+    sku: p.sku,
     productId: p.id,
     quantity: p.quantity,
+    unitPrice: p.unitPrice,
     variantId: p.variant?.id,
   }));
 
