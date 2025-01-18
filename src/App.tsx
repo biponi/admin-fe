@@ -12,7 +12,7 @@ import UpdateProduct from "./pages/product/newProduct/editProductIndex";
 import CreateOrder from "./pages/order/CreateOrder";
 import OrderPage from "./pages/order";
 import AccessDeniedPage from "./Unauthorize";
-import DashboardPage from "./pages/dashboard";
+import DashboardPage from "./pages/dashboardV2";
 import CreateCampaignForm from "./pages/campaign/components/createCampaign";
 import CampaignList from "./pages/campaign/campaignList";
 import UpdateCampaignForm from "./pages/campaign/components/updateCampaign";
