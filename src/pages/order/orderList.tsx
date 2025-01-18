@@ -37,13 +37,11 @@ import {
 import { useOrderList } from "./hooks/useOrderList";
 import SingleItem from "./components/SingleOrderItem";
 import EmptyView from "../../coreComponents/emptyView";
-import DefaultLoading from "../../coreComponents/defaultLoading";
 import { useEffect, useState } from "react";
 import { Input } from "../../components/ui/input";
 import useDebounce from "../../customHook/useDebounce";
 import { IOrder } from "./interface";
 import { useNavigate } from "react-router-dom";
-import { Progress } from "../../components/ui/progress";
 import { Separator } from "../../components/ui/separator";
 import EditCustomerInformation from "./editOrderCustomer";
 import {
@@ -86,16 +84,26 @@ import {
   DialogHeader,
   DialogTitle,
 } from "../../components/ui/dialog";
+import {
+  Select,
+  SelectContent,
+  SelectGroup,
+  SelectItem,
+  SelectLabel,
+  SelectTrigger,
+  SelectValue,
+} from "../../components/ui/select";
+import { SkeletonCard } from "../../coreComponents/sekeleton";
 
 const OrderList = () => {
   const {
     limit,
     refresh,
+    setLimit,
     orderFetching,
     orders,
     currentPageNum,
     totalPages,
-    analytics,
     bulkOrders,
     totalOrders,
     getOrderList,
@@ -182,92 +190,13 @@ const OrderList = () => {
     return (
       <Tabs defaultValue="all">
         {drawerDialog()}
-        <div className="flex items-center w-full">
-          <div className="grid gap-4 sm:grid-cols-4 md:grid-cols-4 lg:grid-cols-2 xl:grid-cols-4">
-            {user?.role === "admin" && (
-              <Card x-chunk="dashboard-05-chunk-0">
-                <CardHeader className="pb-3">
-                  <CardTitle>Your Orders</CardTitle>
-                  <CardDescription className="max-w-lg text-balance leading-relaxed">
-                    Introducing Our Dynamic Orders Dashboard for Seamless
-                    Management and Insightful Analysis.
-                  </CardDescription>
-                </CardHeader>
-                <CardFooter>
-                  <Button onClick={() => navigate("/order/create")}>
-                    Create New Order
-                  </Button>
-                </CardFooter>
-              </Card>
-            )}
-            {user?.role === "admin" && (
-              <Card x-chunk="dashboard-05-chunk-1">
-                <CardHeader className="pb-2">
-                  <CardDescription>This Month Completed Orders</CardDescription>
-                  <CardTitle className="text-4xl">
-                    {analytics.totalCompletedOrders}
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="text-xs text-muted-foreground">
-                    last 30 days
-                  </div>
-                </CardContent>
-                <CardFooter>
-                  <Progress value={25} aria-label="25% increase" />
-                </CardFooter>
-              </Card>
-            )}
-            {user?.role === "admin" && (
-              <Card x-chunk="dashboard-05-chunk-2">
-                <CardHeader className="pb-2">
-                  <CardDescription>Total Paid</CardDescription>
-                  <CardTitle className="text-4xl">
-                    {analytics.totalPaid}
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="text-xs text-muted-foreground">
-                    last 30 days
-                  </div>
-                </CardContent>
-                <CardFooter>
-                  <Progress value={12} aria-label="12% increase" />
-                </CardFooter>
-              </Card>
-            )}
-            {user?.role === "admin" && (
-              <Card x-chunk="dashboard-05-chunk-2">
-                <CardHeader className="pb-2">
-                  <CardDescription>Total Price Of Order</CardDescription>
-                  <CardTitle className="text-4xl">
-                    {analytics.totalPrice}
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="text-xs text-muted-foreground">
-                    last 30 days
-                  </div>
-                </CardContent>
-                <CardFooter>
-                  <Progress value={12} aria-label="12% increase" />
-                </CardFooter>
-              </Card>
-            )}
-          </div>
-          {/* <div className='ml-auto flex items-center gap-2'>
-            <Button
-              size='sm'
-              className='h-7 gap-1'
-              onClick={() => navigate("/order/create")}>
-              <PlusCircle className='h-3.5 w-3.5' />
-              <span className='sr-only sm:not-sr-only sm:whitespace-nowrap'>
-                Add Product
-              </span>
-            </Button>
-          </div> */}
+        <div className="flex justify-between items-center">
+          {renderStatusTabsView()}
+          <Button onClick={() => navigate("/order/create")}>
+            Create New Order
+          </Button>
         </div>
-        {renderStatusTabsView()}
+
         <div className="grid grid-1 md:grid-cols-3 md:gap-4">
           <div
             className={` ${
@@ -307,7 +236,7 @@ const OrderList = () => {
                 </CardHeader>
                 <CardContent>
                   <TabsContent value="all">
-                    <div className="max-h-[50vh] overflow-y-auto">
+                    <div className="max-h-[65vh] overflow-y-auto">
                       <Table>
                         <TableHeader className=" sticky  ">
                           <TableRow>
@@ -422,6 +351,28 @@ const OrderList = () => {
                         of <strong>{totalOrders}</strong> orders
                       </div>
                       <div className="flex gap-2 items-center">
+                        <Select
+                          value={`${limit}`}
+                          onValueChange={(value: string) => {
+                            setLimit(parseInt(value, 10));
+                          }}
+                        >
+                          <SelectTrigger className="w-auto">
+                            <SelectValue placeholder="Select Row Limit" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectGroup>
+                              <SelectLabel>Limit</SelectLabel>
+                              <SelectItem value="10">10</SelectItem>
+                              <SelectItem value="50">50</SelectItem>
+                              <SelectItem value="100">100</SelectItem>
+                              <SelectItem value="150">150</SelectItem>
+                              <SelectItem value="200">200</SelectItem>
+                              <SelectItem value="500">500</SelectItem>
+                            </SelectGroup>
+                          </SelectContent>
+                        </Select>{" "}
+                        Row Per Page{" "}
                         <Button
                           disabled={currentPageNum < 2}
                           variant="outline"
@@ -432,7 +383,6 @@ const OrderList = () => {
                           <ChevronLeft className="h-4 w-4" />
                           <span className="sr-only">Back</span>
                         </Button>
-
                         <Button
                           disabled={currentPageNum >= totalPages}
                           variant="outline"
@@ -931,7 +881,7 @@ const OrderList = () => {
 
   const mainView = () => {
     if (orderFetching) {
-      return <DefaultLoading />;
+      return <SkeletonCard title="Loading Order Data..." />;
     } else if (modifyDialogOpen && !!selectedOrder) {
       return (
         <UpdateProductData

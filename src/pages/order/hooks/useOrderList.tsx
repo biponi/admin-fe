@@ -25,13 +25,17 @@ export const useOrderList = () => {
     totalPaid: 0,
   });
   const [bulkOrders, setBulkOrders] = useState<number[]>([]);
-  const limit = 50;
+  const [limit, setLimit] = useState(50);
 
   useEffect(() => {
     if (currentPageNum === 1) return;
     else getOrderList();
     //eslint-disable-next-line
   }, [currentPageNum]);
+
+  useEffect(() => {
+    setCurrentPage(0);
+  }, [limit]);
 
   useEffect(() => {
     if (searchQuery === "") setCurrentPage(0);
@@ -60,7 +64,7 @@ export const useOrderList = () => {
 
   const getOrderList = async () => {
     setOrderFetching(true);
-    refresh();
+    await refresh();
     setOrderFetching(false);
   };
 
@@ -139,6 +143,7 @@ export const useOrderList = () => {
     limit,
     orders,
     refresh,
+    setLimit,
     analytics,
     bulkOrders,
     totalPages,

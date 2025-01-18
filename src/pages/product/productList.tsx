@@ -38,13 +38,22 @@ import { useProductList } from "./hooks/useProductList";
 import SingleItem from "./components/singleProductList";
 import EmptyView from "../../coreComponents/emptyView";
 import { IProduct } from "./interface";
-import DefaultLoading from "../../coreComponents/defaultLoading";
 import useCategory from "./hooks/useCategory";
 import { useEffect, useState } from "react";
 import { Input } from "../../components/ui/input";
 import useDebounce from "../../customHook/useDebounce";
 import { useNavigate } from "react-router-dom";
 import SingleProductItemMobileView from "./components/singleProductMobileView";
+import {
+  Select,
+  SelectContent,
+  SelectGroup,
+  SelectItem,
+  SelectLabel,
+  SelectTrigger,
+  SelectValue,
+} from "../../components/ui/select";
+import { SkeletonCard } from "../../coreComponents/sekeleton";
 
 interface Props {
   handleEditProduct: (id: string) => void;
@@ -53,6 +62,7 @@ interface Props {
 const ProductList: React.FC<Props> = ({ handleEditProduct }) => {
   const {
     limit,
+    setLimit,
     productFetching,
     products,
     currentPageNum,
@@ -208,47 +218,49 @@ const ProductList: React.FC<Props> = ({ handleEditProduct }) => {
                   renderMobileProductView(product, index)
                 )}
               </ul>
-              <Table className=" hidden md:table ">
-                <TableHeader>
-                  <TableRow>
-                    <TableHead className="hidden w-[100px] sm:table-cell">
-                      <span className="sr-only">Image</span>
-                    </TableHead>
-                    <TableHead>Name</TableHead>
-                    <TableHead>SKU</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead>Category Name</TableHead>
-                    <TableHead>Price</TableHead>
-                    <TableHead className="hidden md:table-cell">
-                      Total Stock
-                    </TableHead>
-                    <TableHead className="hidden md:table-cell">
-                      Last Updated at
-                    </TableHead>
-                    <TableHead>
-                      <span className="sr-only">Actions</span>
-                    </TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody className=" max-h-[70vh] overflow-y-auto ">
-                  {products.map((product: IProduct) => (
-                    <SingleItem
-                      key={product?.id}
-                      id={product?.id}
-                      sku={product?.sku}
-                      image={product?.thumbnail}
-                      title={product?.name}
-                      categoryName={product?.categoryName ?? "Not Added"}
-                      active={product?.active}
-                      quantity={product?.quantity}
-                      unitPrice={product?.unitPrice}
-                      handleUpdateProduct={handleEditProduct}
-                      deleteExistingProduct={deleteProductData}
-                      updatedAt={product?.timestamps?.updatedAt}
-                    />
-                  ))}
-                </TableBody>
-              </Table>
+              <div className="w-full max-h-[65vh] overflow-y-auto">
+                <Table className=" hidden md:table ">
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead className="hidden w-[100px] sm:table-cell">
+                        <span className="sr-only">Image</span>
+                      </TableHead>
+                      <TableHead>Name</TableHead>
+                      <TableHead>SKU</TableHead>
+                      <TableHead>Status</TableHead>
+                      <TableHead>Category Name</TableHead>
+                      <TableHead>Price</TableHead>
+                      <TableHead className="hidden md:table-cell">
+                        Total Stock
+                      </TableHead>
+                      <TableHead className="hidden md:table-cell">
+                        Last Updated at
+                      </TableHead>
+                      <TableHead>
+                        <span className="sr-only">Actions</span>
+                      </TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody className=" max-h-[70vh] overflow-y-auto ">
+                    {products.map((product: IProduct) => (
+                      <SingleItem
+                        key={product?.id}
+                        id={product?.id}
+                        sku={product?.sku}
+                        image={product?.thumbnail}
+                        title={product?.name}
+                        categoryName={product?.categoryName ?? "Not Added"}
+                        active={product?.active}
+                        quantity={product?.quantity}
+                        unitPrice={product?.unitPrice}
+                        handleUpdateProduct={handleEditProduct}
+                        deleteExistingProduct={deleteProductData}
+                        updatedAt={product?.timestamps?.updatedAt}
+                      />
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
             </TabsContent>
             <TabsContent value="active">
               <ul className="grid grid-cols-2 gap-x-4 gap-y-8 md:hidden sm:grid-cols-3 sm:gap-x-6 lg:grid-cols-4 xl:gap-x-8">
@@ -258,49 +270,51 @@ const ProductList: React.FC<Props> = ({ handleEditProduct }) => {
                     renderMobileProductView(product, index)
                   )}
               </ul>
-              <Table className=" hidden md:table ">
-                <TableHeader>
-                  <TableRow>
-                    <TableHead className="hidden w-[100px] sm:table-cell">
-                      <span className="sr-only">Image</span>
-                    </TableHead>
-                    <TableHead>Name</TableHead>
-                    <TableHead>SKU</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead>Category Name</TableHead>
-                    <TableHead>Price</TableHead>
-                    <TableHead className="hidden md:table-cell">
-                      Total Stock
-                    </TableHead>
-                    <TableHead className="hidden md:table-cell">
-                      Last Updated at
-                    </TableHead>
-                    <TableHead>
-                      <span className="sr-only">Actions</span>
-                    </TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody className=" max-h-[70vh] overflow-y-auto ">
-                  {products
-                    .filter((product: IProduct) => product.active)
-                    .map((product: IProduct, index: number) => (
-                      <SingleItem
-                        key={index}
-                        id={product?.id}
-                        sku={product?.sku}
-                        image={product?.thumbnail}
-                        title={product?.name}
-                        categoryName={product?.categoryName ?? "Not Added"}
-                        active={product?.active}
-                        quantity={product?.quantity}
-                        unitPrice={product?.unitPrice}
-                        handleUpdateProduct={handleEditProduct}
-                        deleteExistingProduct={deleteProductData}
-                        updatedAt={product?.timestamps?.updatedAt}
-                      />
-                    ))}
-                </TableBody>
-              </Table>
+              <div className="w-full max-h-[65vh] overflow-y-auto">
+                <Table className=" hidden md:table ">
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead className="hidden w-[100px] sm:table-cell">
+                        <span className="sr-only">Image</span>
+                      </TableHead>
+                      <TableHead>Name</TableHead>
+                      <TableHead>SKU</TableHead>
+                      <TableHead>Status</TableHead>
+                      <TableHead>Category Name</TableHead>
+                      <TableHead>Price</TableHead>
+                      <TableHead className="hidden md:table-cell">
+                        Total Stock
+                      </TableHead>
+                      <TableHead className="hidden md:table-cell">
+                        Last Updated at
+                      </TableHead>
+                      <TableHead>
+                        <span className="sr-only">Actions</span>
+                      </TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody className=" max-h-[70vh] overflow-y-auto ">
+                    {products
+                      .filter((product: IProduct) => product.active)
+                      .map((product: IProduct, index: number) => (
+                        <SingleItem
+                          key={index}
+                          id={product?.id}
+                          sku={product?.sku}
+                          image={product?.thumbnail}
+                          title={product?.name}
+                          categoryName={product?.categoryName ?? "Not Added"}
+                          active={product?.active}
+                          quantity={product?.quantity}
+                          unitPrice={product?.unitPrice}
+                          handleUpdateProduct={handleEditProduct}
+                          deleteExistingProduct={deleteProductData}
+                          updatedAt={product?.timestamps?.updatedAt}
+                        />
+                      ))}
+                  </TableBody>
+                </Table>
+              </div>
             </TabsContent>
             <TabsContent value="inactive">
               <ul className="grid grid-cols-2 gap-x-4 gap-y-8 md:hidden sm:grid-cols-3 sm:gap-x-6 lg:grid-cols-4 xl:gap-x-8">
@@ -310,49 +324,51 @@ const ProductList: React.FC<Props> = ({ handleEditProduct }) => {
                     renderMobileProductView(product, index)
                   )}
               </ul>
-              <Table className=" hidden md:table ">
-                <TableHeader>
-                  <TableRow>
-                    <TableHead className="hidden w-[100px] sm:table-cell">
-                      <span className="sr-only">Image</span>
-                    </TableHead>
-                    <TableHead>Name</TableHead>
-                    <TableHead>SKU</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead>Category Name</TableHead>
-                    <TableHead>Price</TableHead>
-                    <TableHead className="hidden md:table-cell">
-                      Total Stock
-                    </TableHead>
-                    <TableHead className="hidden md:table-cell">
-                      Last Updated at
-                    </TableHead>
-                    <TableHead>
-                      <span className="sr-only">Actions</span>
-                    </TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody className=" max-h-[70vh] overflow-y-auto ">
-                  {products
-                    .filter((product: IProduct) => !product.active)
-                    .map((product: IProduct, index: number) => (
-                      <SingleItem
-                        key={index}
-                        id={product?.id}
-                        sku={product?.sku}
-                        image={product?.thumbnail}
-                        title={product?.name}
-                        categoryName={product?.categoryName ?? "Not Added"}
-                        active={product?.active}
-                        quantity={product?.quantity}
-                        unitPrice={product?.unitPrice}
-                        handleUpdateProduct={handleEditProduct}
-                        deleteExistingProduct={deleteProductData}
-                        updatedAt={product?.timestamps?.updatedAt}
-                      />
-                    ))}
-                </TableBody>
-              </Table>
+              <div className="w-full max-h-[65vh] overflow-y-auto">
+                <Table className=" hidden md:table ">
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead className="hidden w-[100px] sm:table-cell">
+                        <span className="sr-only">Image</span>
+                      </TableHead>
+                      <TableHead>Name</TableHead>
+                      <TableHead>SKU</TableHead>
+                      <TableHead>Status</TableHead>
+                      <TableHead>Category Name</TableHead>
+                      <TableHead>Price</TableHead>
+                      <TableHead className="hidden md:table-cell">
+                        Total Stock
+                      </TableHead>
+                      <TableHead className="hidden md:table-cell">
+                        Last Updated at
+                      </TableHead>
+                      <TableHead>
+                        <span className="sr-only">Actions</span>
+                      </TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody className=" max-h-[70vh] overflow-y-auto ">
+                    {products
+                      .filter((product: IProduct) => !product.active)
+                      .map((product: IProduct, index: number) => (
+                        <SingleItem
+                          key={index}
+                          id={product?.id}
+                          sku={product?.sku}
+                          image={product?.thumbnail}
+                          title={product?.name}
+                          categoryName={product?.categoryName ?? "Not Added"}
+                          active={product?.active}
+                          quantity={product?.quantity}
+                          unitPrice={product?.unitPrice}
+                          handleUpdateProduct={handleEditProduct}
+                          deleteExistingProduct={deleteProductData}
+                          updatedAt={product?.timestamps?.updatedAt}
+                        />
+                      ))}
+                  </TableBody>
+                </Table>
+              </div>
             </TabsContent>
             <TabsContent value="instock">
               <ul className="grid grid-cols-2 gap-x-4 gap-y-8 md:hidden sm:grid-cols-3 sm:gap-x-6 lg:grid-cols-4 xl:gap-x-8">
@@ -362,49 +378,51 @@ const ProductList: React.FC<Props> = ({ handleEditProduct }) => {
                     renderMobileProductView(product, index)
                   )}
               </ul>
-              <Table className=" hidden md:table ">
-                <TableHeader>
-                  <TableRow>
-                    <TableHead className="hidden w-[100px] sm:table-cell">
-                      <span className="sr-only">Image</span>
-                    </TableHead>
-                    <TableHead>Name</TableHead>
-                    <TableHead>SKU</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead>Category Name</TableHead>
-                    <TableHead>Price</TableHead>
-                    <TableHead className="hidden md:table-cell">
-                      Total Stock
-                    </TableHead>
-                    <TableHead className="hidden md:table-cell">
-                      Last Updated at
-                    </TableHead>
-                    <TableHead>
-                      <span className="sr-only">Actions</span>
-                    </TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody className=" max-h-[70vh] overflow-y-auto ">
-                  {products
-                    .filter((product: IProduct) => product.quantity > 3)
-                    .map((product: IProduct, index: number) => (
-                      <SingleItem
-                        key={index}
-                        id={product?.id}
-                        sku={product?.sku}
-                        image={product?.thumbnail}
-                        title={product?.name}
-                        categoryName={product?.categoryName ?? "Not Added"}
-                        active={product?.active}
-                        quantity={product?.quantity}
-                        unitPrice={product?.unitPrice}
-                        handleUpdateProduct={handleEditProduct}
-                        deleteExistingProduct={deleteProductData}
-                        updatedAt={product?.timestamps?.updatedAt}
-                      />
-                    ))}
-                </TableBody>
-              </Table>
+              <div className="w-full max-h-[65vh] overflow-y-auto">
+                <Table className=" hidden md:table ">
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead className="hidden w-[100px] sm:table-cell">
+                        <span className="sr-only">Image</span>
+                      </TableHead>
+                      <TableHead>Name</TableHead>
+                      <TableHead>SKU</TableHead>
+                      <TableHead>Status</TableHead>
+                      <TableHead>Category Name</TableHead>
+                      <TableHead>Price</TableHead>
+                      <TableHead className="hidden md:table-cell">
+                        Total Stock
+                      </TableHead>
+                      <TableHead className="hidden md:table-cell">
+                        Last Updated at
+                      </TableHead>
+                      <TableHead>
+                        <span className="sr-only">Actions</span>
+                      </TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody className=" max-h-[70vh] overflow-y-auto ">
+                    {products
+                      .filter((product: IProduct) => product.quantity > 3)
+                      .map((product: IProduct, index: number) => (
+                        <SingleItem
+                          key={index}
+                          id={product?.id}
+                          sku={product?.sku}
+                          image={product?.thumbnail}
+                          title={product?.name}
+                          categoryName={product?.categoryName ?? "Not Added"}
+                          active={product?.active}
+                          quantity={product?.quantity}
+                          unitPrice={product?.unitPrice}
+                          handleUpdateProduct={handleEditProduct}
+                          deleteExistingProduct={deleteProductData}
+                          updatedAt={product?.timestamps?.updatedAt}
+                        />
+                      ))}
+                  </TableBody>
+                </Table>
+              </div>
             </TabsContent>
             <TabsContent value="outofstock">
               <ul className="grid grid-cols-2 gap-x-4 gap-y-8 md:hidden sm:grid-cols-3 sm:gap-x-6 lg:grid-cols-4 xl:gap-x-8">
@@ -414,49 +432,51 @@ const ProductList: React.FC<Props> = ({ handleEditProduct }) => {
                     renderMobileProductView(product, index)
                   )}
               </ul>
-              <Table className=" hidden md:table ">
-                <TableHeader>
-                  <TableRow>
-                    <TableHead className="hidden w-[100px] sm:table-cell">
-                      <span className="sr-only">Image</span>
-                    </TableHead>
-                    <TableHead>Name</TableHead>
-                    <TableHead>SKU</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead>Category Name</TableHead>
-                    <TableHead>Price</TableHead>
-                    <TableHead className="hidden md:table-cell">
-                      Total Stock
-                    </TableHead>
-                    <TableHead className="hidden md:table-cell">
-                      Last Updated at
-                    </TableHead>
-                    <TableHead>
-                      <span className="sr-only">Actions</span>
-                    </TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody className=" max-h-[70vh] overflow-y-auto ">
-                  {products
-                    .filter((product: IProduct) => product.quantity <= 0)
-                    .map((product: IProduct, index: number) => (
-                      <SingleItem
-                        key={index}
-                        sku={product?.sku}
-                        id={product?.id}
-                        image={product?.thumbnail}
-                        title={product?.name}
-                        categoryName={product?.categoryName ?? "Not Added"}
-                        active={product?.active}
-                        quantity={product?.quantity}
-                        unitPrice={product?.unitPrice}
-                        handleUpdateProduct={handleEditProduct}
-                        deleteExistingProduct={deleteProductData}
-                        updatedAt={product?.timestamps?.updatedAt}
-                      />
-                    ))}
-                </TableBody>
-              </Table>
+              <div className="w-full max-h-[65vh] overflow-y-auto">
+                <Table className=" hidden md:table ">
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead className="hidden w-[100px] sm:table-cell">
+                        <span className="sr-only">Image</span>
+                      </TableHead>
+                      <TableHead>Name</TableHead>
+                      <TableHead>SKU</TableHead>
+                      <TableHead>Status</TableHead>
+                      <TableHead>Category Name</TableHead>
+                      <TableHead>Price</TableHead>
+                      <TableHead className="hidden md:table-cell">
+                        Total Stock
+                      </TableHead>
+                      <TableHead className="hidden md:table-cell">
+                        Last Updated at
+                      </TableHead>
+                      <TableHead>
+                        <span className="sr-only">Actions</span>
+                      </TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody className=" max-h-[70vh] overflow-y-auto ">
+                    {products
+                      .filter((product: IProduct) => product.quantity <= 0)
+                      .map((product: IProduct, index: number) => (
+                        <SingleItem
+                          key={index}
+                          sku={product?.sku}
+                          id={product?.id}
+                          image={product?.thumbnail}
+                          title={product?.name}
+                          categoryName={product?.categoryName ?? "Not Added"}
+                          active={product?.active}
+                          quantity={product?.quantity}
+                          unitPrice={product?.unitPrice}
+                          handleUpdateProduct={handleEditProduct}
+                          deleteExistingProduct={deleteProductData}
+                          updatedAt={product?.timestamps?.updatedAt}
+                        />
+                      ))}
+                  </TableBody>
+                </Table>
+              </div>
             </TabsContent>
           </CardContent>
           {inputValue === "" && (
@@ -473,6 +493,28 @@ const ProductList: React.FC<Props> = ({ handleEditProduct }) => {
                   of <strong>{totalProducts}</strong> products
                 </div>
                 <div className="flex gap-2 items-center">
+                  <Select
+                    value={`${limit}`}
+                    onValueChange={(value: string) => {
+                      setLimit(parseInt(value, 10));
+                    }}
+                  >
+                    <SelectTrigger className="w-auto">
+                      <SelectValue placeholder="Select Row Limit" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectGroup>
+                        <SelectLabel>Limit</SelectLabel>
+                        <SelectItem value="10">10</SelectItem>
+                        <SelectItem value="20">20</SelectItem>
+                        <SelectItem value="50">50</SelectItem>
+                        <SelectItem value="100">100</SelectItem>
+                        <SelectItem value="150">150</SelectItem>
+                        <SelectItem value="200">200</SelectItem>
+                      </SelectGroup>
+                    </SelectContent>
+                  </Select>{" "}
+                  Row Per Page{" "}
                   <Button
                     disabled={currentPageNum < 2}
                     variant="outline"
@@ -483,7 +525,6 @@ const ProductList: React.FC<Props> = ({ handleEditProduct }) => {
                     <ChevronLeft className="h-4 w-4" />
                     <span className="sr-only">Back</span>
                   </Button>
-
                   <Button
                     disabled={currentPageNum >= totalPages}
                     variant="outline"
@@ -505,7 +546,7 @@ const ProductList: React.FC<Props> = ({ handleEditProduct }) => {
 
   const mainView = () => {
     if (productFetching) {
-      return <DefaultLoading />;
+      return <SkeletonCard title="Loading Product Data..." />;
     } else if (inputValue !== "" || (!!products && products.length > 0)) {
       return renderProductListView();
     } else {

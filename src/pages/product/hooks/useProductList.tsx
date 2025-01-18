@@ -12,7 +12,7 @@ export const useProductList = () => {
   const [currentPageNum, setCurrentPage] = useState(0);
   const [selectedCategory, setSelectedCategory] = useState("all");
   const [searchQuery, setSearchQuery] = useState("");
-  const limit = 20;
+  const [limit, setLimit] = useState(20);
 
   useEffect(() => {
     if (currentPageNum === 1) return;
@@ -23,7 +23,7 @@ export const useProductList = () => {
 
   useEffect(() => {
     setCurrentPage(0);
-  }, [selectedCategory]);
+  }, [selectedCategory, limit]);
 
   useEffect(() => {
     if (searchQuery === "") setCurrentPage(0);
@@ -109,6 +109,7 @@ export const useProductList = () => {
 
   return {
     limit,
+    setLimit,
     products,
     totalPages,
     totalProducts,

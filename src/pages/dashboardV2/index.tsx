@@ -10,7 +10,6 @@ import {
   endOfDay,
   subMonths,
 } from "date-fns";
-import { Tabs, TabsList, TabsTrigger } from "../../components/ui/tabs"; // Assuming you have a Tabs component
 import {
   Table,
   TableHeader,
@@ -36,6 +35,8 @@ import {
 } from "./utils/functions";
 import { SkeletonCard } from "../../coreComponents/sekeleton";
 import InteractiveSingleCardComponent from "./interactiveSingleCard";
+import { DateRangePicker } from "../../coreComponents/DateRangePicker";
+import { DateRange } from "react-day-picker";
 export interface ReportResponse {
   reports: {
     sales: number;
@@ -510,17 +511,33 @@ const DashboardPage: React.FC = () => {
   return (
     <div className="p-6">
       <h1 className="text-3xl font-bold mb-4">Dashboard</h1>
-      <Tabs
-        value={selectedTab}
-        onValueChange={(value: string) => setRange(value)}
-      >
-        <TabsList>
-          <TabsTrigger value="today">Today</TabsTrigger>
-          <TabsTrigger value="lastWeek">Last Week</TabsTrigger>
-          <TabsTrigger value="lastMonth">Last Month</TabsTrigger>
-          <TabsTrigger value="last6Months">Last 6 Months</TabsTrigger>
-        </TabsList>
-      </Tabs>
+      <div className="flex justify-between items-center">
+        <p className="text-base font-normal text-gray-600 px-3 py-2 bg-gray-50 rounded-lg border border-gray-200 shadow">
+          Showing data from{" "}
+          <span className="font-semibold text-gray-900">
+            {dateRange?.start.toDateString()}
+          </span>{" "}
+          to{" "}
+          <span className="font-semibold text-gray-900">
+            {dateRange?.end.toDateString()}
+          </span>
+        </p>
+
+        <DateRangePicker
+          initialDateFrom={startOfDay(new Date())}
+          initialDateTo={endOfDay(new Date())}
+          showCompare={false}
+          onUpdate={(values: {
+            range: DateRange;
+            rangeCompare?: DateRange | undefined;
+          }) => {
+            setDateRange({
+              start: values.range.from || new Date(),
+              end: values.range.to || new Date(),
+            });
+          }}
+        />
+      </div>
 
       {loading ? (
         <SkeletonCard title="Data is loading, please wait..." />
