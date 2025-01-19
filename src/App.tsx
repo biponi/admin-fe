@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, Suspense } from "react";
 import { Routes, Route, Navigate } from "react-router-dom";
 import { decodeToken } from "react-jwt";
 import { Toaster } from "react-hot-toast";
@@ -72,11 +72,12 @@ const App = () => {
         } else {
           await refreshUser();
         }
+      } else {
+        setIsAuth(false);
       }
       setIsLoading(false);
     };
     initAuth();
-
     //eslint-disable-next-line
   }, [token]);
 
@@ -93,62 +94,71 @@ const App = () => {
       <div className="grid min-h-[70vh] w-full pl-0 sm:pl-[53px] sm:h-screen">
         {isAuth && <Navbar />}
 
-        <Routes>
-          {/* Authentication Routes */}
-          {!isAuth && (
-            <>
-              <Route path="/login" element={<SignIn />} />
-              <Route path="/unauthorize" element={<AccessDeniedPage />} />
-            </>
-          )}
+        <Suspense fallback={<span>Loading routes...</span>}>
+          <Routes>
+            {/* Authentication Routes */}
+            {!isAuth ? (
+              <>
+                <Route path="/login" element={<SignIn />} />
+                <Route path="/unauthorize" element={<AccessDeniedPage />} />
+              </>
+            ) : (
+              <>
+                {/* Default Landing Route */}
+                <Route
+                  path="/"
+                  element={<Navigate to="/dashboard" replace />}
+                />
 
-          {/* Protected Routes */}
-          {isAuth ? (
-            <>
-              <Route path="/" element={<Navigate to="/dashboard" replace />} />
-              <Route path="/products" element={<ProductPage />} />
-              <Route path="/product/update/:id" element={<UpdateProduct />} />
-              <Route path="/product/create" element={<CreateNewProduct />} />
-              <Route path="/category" element={<Category />} />
-              <Route path="/order" element={<OrderPage />} />
-              <Route path="/order/create" element={<CreateOrder />} />
-              <Route path="/campaign/create" element={<CreateCampaignForm />} />
-              <Route
-                path="/campaign/update/:id"
-                element={<UpdateCampaignForm />}
-              />
-              <Route path="/campaign" element={<CampaignList />} />
+                {/* Public Pages */}
+                <Route path="/products" element={<ProductPage />} />
+                <Route path="/product/update/:id" element={<UpdateProduct />} />
+                <Route path="/product/create" element={<CreateNewProduct />} />
+                <Route path="/category" element={<Category />} />
+                <Route path="/order" element={<OrderPage />} />
+                <Route path="/order/create" element={<CreateOrder />} />
+                <Route
+                  path="/campaign/create"
+                  element={<CreateCampaignForm />}
+                />
+                <Route
+                  path="/campaign/update/:id"
+                  element={<UpdateCampaignForm />}
+                />
+                <Route path="/campaign" element={<CampaignList />} />
 
-              {/* Role Protected Route */}
-              <Route
-                path="/dashboard"
-                element={
-                  <ProtectedRoute roles={["admin"]}>
-                    <DashboardPage />
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/purchase-order/list"
-                element={
-                  <ProtectedRoute roles={["admin", "manager"]}>
-                    <PurchaseOrders />
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/purchase-order/create"
-                element={
-                  <ProtectedRoute roles={["admin", "manager"]}>
-                    <CreatePurchaseOrder />
-                  </ProtectedRoute>
-                }
-              />
-            </>
-          ) : (
+                {/* Protected Routes */}
+                <Route
+                  path="/dashboard"
+                  element={
+                    <ProtectedRoute roles={["admin"]}>
+                      <DashboardPage />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/purchase-order/list"
+                  element={
+                    <ProtectedRoute roles={["admin", "manager"]}>
+                      <PurchaseOrders />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/purchase-order/create"
+                  element={
+                    <ProtectedRoute roles={["admin", "manager"]}>
+                      <CreatePurchaseOrder />
+                    </ProtectedRoute>
+                  }
+                />
+              </>
+            )}
+
+            {/* Fallback Route */}
             <Route path="*" element={<Navigate to="/login" replace />} />
-          )}
-        </Routes>
+          </Routes>
+        </Suspense>
       </div>
       <Toaster />
     </TooltipProvider>

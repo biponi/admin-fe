@@ -11,8 +11,10 @@ import {
   updateUserState,
   updateUserToken,
 } from "../../../store/reducers/userReducer";
+import { useNavigate } from "react-router-dom";
 
 const useLoginAuth = () => {
+  const navigate = useNavigate();
   const dispatch: any = useDispatch();
   const userStore = useSelector((state: any) => state?.user);
   const [loading, setLoading] = useState(false);
@@ -32,6 +34,7 @@ const useLoginAuth = () => {
           localStorage.setItem("token", user?.data?.token);
           localStorage.setItem("refreshToken", user?.data?.refreshToken);
           dispatch(updateUserState(user?.data));
+          navigate("/");
         } else {
           errorToast(user?.error || "", "top-center");
         }
