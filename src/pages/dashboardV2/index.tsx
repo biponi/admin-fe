@@ -416,7 +416,7 @@ const DashboardPage: React.FC = () => {
             )}
 
           {!!analysisData?.reports?.failedAndCancelled &&
-            analysisData?.reports?.failedAndCancelled.length > 1 &&
+            analysisData?.reports?.failedAndCancelled.length > 2 &&
             !!analysisData?.reports?.failedAndCancelled[2]._id && (
               <RadialChartComponent
                 label={analysisData?.reports?.failedAndCancelled[2]._id ?? ""}
