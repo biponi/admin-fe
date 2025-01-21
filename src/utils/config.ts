@@ -43,6 +43,8 @@ const config = {
       `${baseURL}/transection/${transectionId}/edit`,
     getTransectionById: (transectionId: number) =>
       `${baseURL}/transection/${transectionId}`,
+    delete: (transectionId: number) =>
+      `${baseURL}/transection/${transectionId}/delete`,
   },
   manufecturer: {
     manufecturerList: () => `${baseURL}/manufecturer/all`,

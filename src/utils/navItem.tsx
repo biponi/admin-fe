@@ -1,8 +1,9 @@
 import {
-  Coins,
+  BadgeDollarSign,
   Home,
   Package2,
   Shirt,
+  ShoppingBag,
   ShoppingCart,
   User2,
   Zap,
@@ -45,11 +46,18 @@ export const navItems = [
     roles: ["admin", "manager"],
   },
   {
-    icon: <Coins className="w-5 h-5" />,
+    icon: <ShoppingBag className="w-5 h-5" />,
     title: "Purchase Order",
     link: "/purchase-order/list",
     active: true,
     roles: ["admin", "manager"],
+  },
+  {
+    icon: <BadgeDollarSign className="w-5 h-5" />,
+    title: "Transactions",
+    link: "/transactions",
+    active: true,
+    roles: ["admin"],
   },
   {
     icon: <User2 className="w-5 h-5" />,

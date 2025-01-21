@@ -23,6 +23,7 @@ import useLoginAuth from "./pages/auth/hooks/useLoginAuth";
 import { TooltipProvider } from "./components/ui/tooltip";
 import PurchaseOrders from "./pages/purchaseOrder/purchaseOrders";
 import CreatePurchaseOrder from "./pages/purchaseOrder/CreatePurchaseOrder";
+import TransactionsPage from "./pages/transection";
 
 // Protected Route Component
 const ProtectedRoute = ({
@@ -149,6 +150,14 @@ const App = () => {
                   element={
                     <ProtectedRoute roles={["admin", "manager"]}>
                       <CreatePurchaseOrder />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/transactions"
+                  element={
+                    <ProtectedRoute roles={["admin", "manager"]}>
+                      <TransactionsPage />
                     </ProtectedRoute>
                   }
                 />
