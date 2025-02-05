@@ -3,6 +3,7 @@ import {
   ChevronLeft,
   ChevronRight,
   Grid2X2,
+  Image,
   List,
   ListFilter,
   PlusCircle,
@@ -97,12 +98,12 @@ const ProductList: React.FC<Props> = ({ handleEditProduct }) => {
   } = useProductList();
   const navigate = useNavigate();
   const { user } = useLoginAuth();
-  const { categories, fetchCategories } = useCategory();
   const [inputValue, setInputValue] = useState<string>("");
+  const { categories, fetchCategories } = useCategory();
+  const debounceHandler = useDebounce(inputValue, 500);
+
   const [viewType, setViewType] = useState<"list" | "grid">("list");
   const [summary, setSummary] = useState<StockSummaryResponse | null>(null);
-
-  const debounceHandler = useDebounce(inputValue, 500);
 
   const getProductSummaryDetails = async () => {
     const response = await getProductSummary();
@@ -256,144 +257,95 @@ const ProductList: React.FC<Props> = ({ handleEditProduct }) => {
     );
   };
 
-  const renderCardSummaryView = () => {
-    const renderProgressView = (
-      name: string,
-      val: number,
-      total: number,
-      index: number
-    ) => {
-      return (
-        <div className="w-full grid grid-cols-5 gap-2 my-2" key={index}>
-          <span className="text-xs text-gray-800 font-medium col-span-2 uppercase">
-            {name}
-          </span>
-          <Progress value={(val / total) * 100} className="col-span-2 mt-1" />
-          <span className="text-xs text-gray-800 font-medium w-full text-right col-span-1">
-            {val}
-          </span>
-        </div>
-      );
-    };
-    return (
-      <div className="grid grid-cols-1 gap-2 md:grid-cols-4 my-2 ">
-        <Card>
-          <CardHeader>
-            <CardTitle>
-              Total Active Products{" "}
-              {!!summary && !!summary?.totalActiveProductType
-                ? `( ${summary?.totalActiveProductType ?? 0} )`
-                : "( N/A )"}
-            </CardTitle>
-            <CardDescription>Summary of product stock data.</CardDescription>
-          </CardHeader>
-          <CardContent>
-            {!summary || !summary?.categories ? (
-              <div className="flex justify-center items-center p-10">
-                {" "}
-                No Data Found
-              </div>
-            ) : (
-              summary?.categories.map(
-                (res: CategoryStockSummary, index: number) =>
-                  renderProgressView(
-                    res?.categoryName,
-                    res?.totalActiveProducts,
-                    summary?.totalActiveProductType,
-                    index
-                  )
-              )
-            )}
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader>
-            <CardTitle>
-              Total Products{" "}
-              {!!summary && !!summary?.totalActiveProducts
-                ? `( ${summary?.totalActiveProducts ?? 0} )`
-                : "( N/A )"}
-            </CardTitle>
-            <CardDescription>Summary of product stock data.</CardDescription>
-          </CardHeader>
-          <CardContent>
-            {!summary || !summary?.categories ? (
-              <div className="flex justify-center items-center p-10">
-                {" "}
-                No Data Found
-              </div>
-            ) : (
-              summary?.categories.map(
-                (res: CategoryStockSummary, index: number) =>
-                  renderProgressView(
-                    res?.categoryName,
-                    res?.totalStock,
-                    summary?.totalActiveProducts,
-                    index
-                  )
-              )
-            )}
-          </CardContent>
-        </Card>
+  const formatNumber = (num: number | undefined): string => {
+    if (num === undefined || num === null) return "0";
+    return Number(num) % 1 < 1
+      ? Math.floor(num).toLocaleString()
+      : num.toLocaleString(undefined, {
+          minimumFractionDigits: 2,
+          maximumFractionDigits: 2,
+        });
+  };
 
-        <Card>
-          <CardHeader>
-            <CardTitle>
-              Total Product Variations{" "}
-              {!!summary && !!summary?.totalActiveProductVariations
-                ? `( ${summary?.totalActiveProductVariations ?? 0} )`
-                : "( N/A )"}
-            </CardTitle>
-            <CardDescription>Summary of product stock data.</CardDescription>
-          </CardHeader>
-          <CardContent>
-            {!summary || !summary?.categories ? (
-              <div className="flex justify-center items-center p-10">
-                {" "}
-                No Data Found
-              </div>
-            ) : (
-              summary?.categories.map(
-                (res: CategoryStockSummary, index: number) =>
-                  renderProgressView(
-                    res?.categoryName,
-                    res?.totalVariants,
-                    summary?.totalActiveProductVariations,
-                    index
-                  )
-              )
-            )}
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader>
-            <CardTitle>
-              Total Amount{" "}
-              {!!summary && !!summary?.totalActiveProductPrice
-                ? `( ${summary?.totalActiveProductPrice ?? 0} )`
-                : "( N/A )"}
-            </CardTitle>
-            <CardDescription>Summary of product stock data.</CardDescription>
-          </CardHeader>
-          <CardContent>
-            {!summary || !summary?.categories ? (
-              <div className="flex justify-center items-center p-10">
-                {" "}
-                No Data Found
-              </div>
-            ) : (
-              summary?.categories.map(
-                (res: CategoryStockSummary, index: number) =>
-                  renderProgressView(
-                    res?.categoryName,
-                    res?.totalPrice,
-                    summary?.totalActiveProductPrice,
-                    index
-                  )
-              )
-            )}
-          </CardContent>
-        </Card>
+  const renderProgressView = (
+    name: string,
+    value: number,
+    total: number,
+    index: number
+  ) => (
+    <div className="w-full grid grid-cols-5 gap-2 my-2" key={index}>
+      <span className="text-xs text-gray-800 font-medium col-span-2 uppercase">
+        {name}
+      </span>
+      <Progress value={(value / total) * 100} className="col-span-2 mt-1" />
+      <span className="text-xs text-gray-800 font-medium w-full text-right col-span-1">
+        {formatNumber(value)}
+      </span>
+    </div>
+  );
+
+  const renderCardSummaryView = () => {
+    const cardData = [
+      {
+        title: "Total Active Products",
+        total: summary?.totalActiveProductType,
+        key: "totalActiveProducts",
+        description:
+          "Displays the total number of active products available in the inventory, ensuring an up-to-date stock count.",
+      },
+      {
+        title: "Total Products",
+        total: summary?.totalActiveProducts,
+        key: "totalStock",
+        description:
+          "Represents the total stock count of all active products, helping track inventory levels effectively.",
+      },
+      {
+        title: "Total Product Variations",
+        total: summary?.totalActiveProductVariations,
+        key: "totalVariants",
+        description:
+          "Indicates the number of product variations (e.g., different sizes, colors) available across all active products.",
+      },
+      {
+        title: "Total Amount",
+        total: summary?.totalActiveProductPrice,
+        key: "totalPrice",
+        description:
+          "Calculates the total valuation of all active products (Stock Quantity × Unit Price), providing an overall monetary summary.",
+      },
+    ];
+
+    return (
+      <div className="grid grid-cols-1 gap-2 md:grid-cols-4 my-2">
+        {cardData.map(({ title, total, key, description }, cardIndex) => (
+          <Card key={cardIndex}>
+            <CardHeader>
+              <CardTitle>
+                {title}{" "}
+                {!!summary && total ? `( ${formatNumber(total)} )` : "( N/A )"}
+              </CardTitle>
+              <CardDescription>{description}</CardDescription>
+            </CardHeader>
+            <CardContent>
+              {!summary || !summary.categories ? (
+                <div className="flex justify-center items-center p-10">
+                  No Data Found
+                </div>
+              ) : (
+                summary.categories.map(
+                  (res: CategoryStockSummary, index: number) =>
+                    renderProgressView(
+                      res.categoryName,
+                      res[key as keyof CategoryStockSummary] as number,
+                      total ?? 1,
+                      index
+                    )
+                )
+              )}
+            </CardContent>
+          </Card>
+        ))}
       </div>
     );
   };
@@ -481,6 +433,7 @@ const ProductList: React.FC<Props> = ({ handleEditProduct }) => {
                         <TableRow>
                           <TableHead className="hidden w-[100px] sm:table-cell">
                             <span className="sr-only">Image</span>
+                            <Image className="size-5" />
                           </TableHead>
                           <TableHead>Name</TableHead>
                           <TableHead>SKU</TableHead>
