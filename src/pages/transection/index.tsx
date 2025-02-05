@@ -273,11 +273,11 @@ const TransactionsPage: React.FC = () => {
               ) : (
                 transactions.map((transaction) => (
                   <tr
-                    key={transaction.id}
+                    key={transaction?.id}
                     className=" border-b border-gray-300 "
                   >
                     <td className=" border-x border-gray-300 text-center">
-                      {transaction.id}
+                      {transaction?.id}
                     </td>
                     <td className=" border-x border-gray-300 text-center">
                       {transaction.intent}

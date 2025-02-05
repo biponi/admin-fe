@@ -91,6 +91,24 @@ export const getAllCategory = async (): Promise<ApiResponse<any>> => {
   }
 };
 
+// Function to get product data summary
+export const getProductSummary = async (): Promise<ApiResponse<any>> => {
+  try {
+    const response = await axios.get<any>(config.product.getProductSummary());
+    if (response.status === 200) {
+      return { success: true, data: response?.data?.data };
+    } else {
+      return {
+        success: false,
+        error: response.data.error || "Failed to get categories",
+      };
+    }
+  } catch (error: any) {
+    console.error("Error getting category:", error.message);
+    return handleApiError(error);
+  }
+};
+
 // Function to add category
 export const addCategory = async (
   newCategoryData: any
@@ -120,7 +138,6 @@ export const editCategory = async (
   id: string,
   newCategoryData: any
 ): Promise<ApiResponse<any>> => {
-  console.log("data", newCategoryData);
   try {
     const response = await axios.put<any>(
       config.category.editCategory(id),

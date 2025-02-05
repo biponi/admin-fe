@@ -20,6 +20,7 @@ const config = {
       `${baseURL}/product/manufecture/${manuId}`,
     getProductList: () => `${baseURL}/product/all`,
     getProductData: (id: string) => `${baseURL}/product/single/${id}`,
+    getProductSummary:()=>`${baseURL}/product/summary`,
   },
   order: {
     createOrder: () => `${baseURL}/order/prior/create`,

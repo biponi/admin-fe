@@ -17,6 +17,9 @@ export interface IProduct {
   categoryName?: string;
   hasVariation?: boolean;
   variation: IVariation[];
+  variantList?:string[];
+  sold?:number;
+  returned?:number;
   created_at: string; // Assuming the date/time string format
   timestamps: {
     createdAt: string;
@@ -97,4 +100,22 @@ export interface IChangeEvent extends React.ChangeEvent<HTMLInputElement> {
     name: string;
     value: any;
   };
+}
+
+
+export interface CategoryStockSummary {
+  categoryId: string;
+  categoryName: string;
+  totalStock: number;
+  totalActiveProducts: number;
+  totalVariants: number;
+  totalPrice: number;
+}
+
+export interface StockSummaryResponse {
+  categories: CategoryStockSummary[];
+  totalActiveProductPrice: number;
+  totalActiveProducts: number;
+      totalActiveProductVariations : number;
+      totalActiveProductType:number;
 }
