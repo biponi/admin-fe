@@ -6,6 +6,8 @@ import {
   Clipboard,
   File,
   MinusCircleIcon,
+  PlusCircle,
+  Settings,
   TimerReset,
   Trash2,
   TruckIcon,
@@ -74,6 +76,7 @@ import {
   DrawerFooter,
   DrawerHeader,
   DrawerTitle,
+  DrawerTrigger,
 } from "../../components/ui/drawer";
 import UpdateProductData from "./updateProductData";
 import { Badge } from "../../components/ui/badge";
@@ -94,6 +97,7 @@ import {
   SelectValue,
 } from "../../components/ui/select";
 import { SkeletonCard } from "../../coreComponents/sekeleton";
+import SingleItemMobileView from "./components/SingleOrderItemMobileView";
 
 const OrderList = () => {
   const {
@@ -166,6 +170,49 @@ const OrderList = () => {
     );
   };
 
+  const renderStatusButtonView = () => {
+    return (
+      <div className='mt-2 w-full p-2 rounded-md bg-gray-300 grid grid-cols-3 gap-2'>
+        <Button
+          variant={selectedStatus === "" ? "outline" : "ghost"}
+          onClick={() => setSelectedStatus("")}
+          className='text-xs md:text-sm'>
+          All
+        </Button>
+        <Button
+          variant={selectedStatus === "processing" ? "outline" : "ghost"}
+          onClick={() => setSelectedStatus("processing")}
+          className='text-xs md:text-sm'>
+          Processing
+        </Button>
+        <Button
+          variant={selectedStatus === "shipped" ? "outline" : "ghost"}
+          onClick={() => setSelectedStatus("shipped")}
+          className='text-xs md:text-sm'>
+          Shipped
+        </Button>
+        <Button
+          variant={selectedStatus === "completed" ? "outline" : "ghost"}
+          onClick={() => setSelectedStatus("completed")}
+          className='text-xs md:text-sm'>
+          Completed
+        </Button>
+        <Button
+          variant={selectedStatus === "cancel" ? "outline" : "ghost"}
+          onClick={() => setSelectedStatus("cancel")}
+          className='text-xs md:text-sm'>
+          Cancelled
+        </Button>
+        <Button
+          variant={selectedStatus === "return" ? "outline" : "ghost"}
+          onClick={() => setSelectedStatus("return")}
+          className='text-xs md:text-sm'>
+          Return
+        </Button>
+      </div>
+    );
+  };
+
   const renderStatusTabsView = () => {
     return (
       <div className='mt-2'>
@@ -173,12 +220,24 @@ const OrderList = () => {
           value={selectedStatus}
           onValueChange={(value: string) => setSelectedStatus(value)}>
           <TabsList>
-            <TabsTrigger value=''>All</TabsTrigger>
-            <TabsTrigger value='processing'>Processing</TabsTrigger>
-            <TabsTrigger value='shipped'>Shipped</TabsTrigger>
-            <TabsTrigger value='completed'>Completed</TabsTrigger>
-            <TabsTrigger value='cancel'>Cancelled</TabsTrigger>
-            <TabsTrigger value='return'>Return</TabsTrigger>
+            <TabsTrigger value='' className='text-xs md:text-sm'>
+              All
+            </TabsTrigger>
+            <TabsTrigger value='processing' className='text-xs md:text-sm'>
+              Processing
+            </TabsTrigger>
+            <TabsTrigger value='shipped' className='text-xs md:text-sm'>
+              Shipped
+            </TabsTrigger>
+            <TabsTrigger value='completed' className='text-xs md:text-sm'>
+              Completed
+            </TabsTrigger>
+            <TabsTrigger value='cancel' className='text-xs md:text-sm'>
+              Cancelled
+            </TabsTrigger>
+            <TabsTrigger value='return' className='text-xs md:text-sm'>
+              Return
+            </TabsTrigger>
           </TabsList>
         </Tabs>
       </div>
@@ -189,7 +248,8 @@ const OrderList = () => {
     return (
       <Tabs defaultValue='all'>
         {drawerDialog()}
-        <div className='flex justify-between items-center'>
+        <div className='md:hidden'>{renderStatusButtonView()}</div>
+        <div className='hidden md:flex justify-between items-center'>
           {renderStatusTabsView()}
           <Button onClick={() => navigate("/order/create")}>
             Create New Order
@@ -207,16 +267,37 @@ const OrderList = () => {
             }`}>
             {(!orders || orders.length < 1) && renderEmptyView()}
             {!!orders && orders.length > 0 && (
-              <Card x-chunk='dashboard-06-chunk-0' className='mt-4'>
+              <Card
+                x-chunk='dashboard-06-chunk-0'
+                className='mt-4  w-[92vw] md:mt-4 md:w-full px-0'>
                 <CardHeader>
-                  <div className='flex w-full justify-between'>
-                    <div className='mr-auto'>
-                      <CardTitle>Order</CardTitle>
-                      <CardDescription>
+                  <div className='flex flex-col w-full justify-between md:flex-row  '>
+                    <div className='md:mr-auto'>
+                      <div className='flex md:hidden items-center justify-between'>
+                        <CardTitle>Orders</CardTitle>
+                        <div className='flex justify-between items-center gap-4'>
+                          {["admin", "moderator"].includes(user?.role) && (
+                            <Button
+                              size='sm'
+                              className='h-7 ml-2 '
+                              onClick={() => navigate("/order/create")}>
+                              <PlusCircle className='h-3.5 w-3.5' />
+                              <span className='sr-only sm:not-sr-only sm:whitespace-nowrap'>
+                                Create New Order
+                              </span>
+                            </Button>
+                          )}
+                          {!selectedStatus.includes("return") &&
+                            !!bulkOrders &&
+                            bulkOrders.length > 0 &&
+                            renderMobileBulkActionPanel()}
+                        </div>
+                      </div>
+                      <CardDescription className='mt-2 hidden md:block'>
                         Manage your orders and view your sales performance.
                       </CardDescription>
                     </div>
-                    <div className='ml-auto grid grid-cols-2 gap-4 sm:flex sm:justify-between sm:items-center'>
+                    <div className=' mt-2 md:mt-0 md:ml-auto'>
                       <Input
                         type='text'
                         placeholder='Search'
@@ -224,17 +305,56 @@ const OrderList = () => {
                           setInputValue(event.target.value);
                         }}
                       />
-                      {user?.role !== "admin" && (
-                        <Button onClick={() => navigate("/order/create")}>
-                          Create New Order
-                        </Button>
-                      )}
                     </div>
                   </div>
                 </CardHeader>
-                <CardContent>
+                <CardContent className='px-2'>
                   <TabsContent value='all'>
-                    <div className='max-h-[65vh] overflow-y-auto'>
+                    <div className='max-h-[65vh] overflow-y-auto block md:hidden'>
+                      {!!orders &&
+                        orders.map((order: IOrder, index: number) => (
+                          <SingleItemMobileView
+                            key={index}
+                            orderNumber={order?.orderNumber}
+                            id={`${order?.id}`}
+                            paid={order?.paid}
+                            status={order?.status}
+                            isBulkAdded={bulkOrders.includes(order?.id)}
+                            handleBulkCheck={(val: boolean) => {
+                              val
+                                ? setBulkOrders([...bulkOrders, order?.id])
+                                : setBulkOrders(
+                                    bulkOrders.filter((b) => b !== order?.id)
+                                  );
+                            }}
+                            district={order?.shipping.district}
+                            totalPrice={order?.totalPrice ?? 0}
+                            remaining={order?.remaining}
+                            customerName={order?.customer?.name}
+                            CustomerPhoneNumber={order?.customer?.phoneNumber}
+                            handleUpdateOrder={() => {
+                              setSelectedOrder(order);
+                              setEditDialogOpen(true);
+                            }}
+                            handleModifyProduct={() => {
+                              // setSelectedOrder(order);
+                              // setModifyDialogOpen(true);
+                              navigate(`/order/modify/${order?.id}`);
+                            }}
+                            handleReturnProducts={() => {
+                              setSelectedOrder(order);
+                              setIsReturnProduct(true);
+                            }}
+                            handleViewDetails={() => {
+                              setShowDetails(true);
+                              setSelectedOrder(order);
+                            }}
+                            deleteExistingOrder={deleteOrderData}
+                            updatedAt={order?.timestamps?.updatedAt}
+                          />
+                        ))}
+                    </div>
+                    <div className='max-h-[65vh] overflow-y-auto hidden md:block'>
                       <Table>
                         <TableHeader className=' sticky  '>
                           <TableRow>
@@ -355,7 +475,7 @@ const OrderList = () => {
                           onValueChange={(value: string) => {
                             setLimit(parseInt(value, 10));
                           }}>
-                          <SelectTrigger className='w-auto'>
+                          <SelectTrigger className='w-auto border-0 md:border'>
                             <SelectValue placeholder='Select Row Limit' />
                           </SelectTrigger>
                           <SelectContent>
@@ -370,7 +490,6 @@ const OrderList = () => {
                             </SelectGroup>
                           </SelectContent>
                         </Select>{" "}
-                        Row Per Page{" "}
                         <Button
                           disabled={currentPageNum < 2}
                           variant='outline'
@@ -400,7 +519,9 @@ const OrderList = () => {
           {!selectedStatus.includes("return") &&
             !!bulkOrders &&
             bulkOrders.length > 0 && (
-              <div className='mt-4'>{renderBulkActionPanel()}</div>
+              <div className='mt-4 hidden md:block'>
+                {renderBulkActionPanel()}
+              </div>
             )}
         </div>
       </Tabs>
@@ -752,6 +873,70 @@ const OrderList = () => {
           </div>
         </CardFooter>
       </Card>
+    );
+  };
+
+  const renderMobileBulkActionPanel = () => {
+    return (
+      <Drawer>
+        <DrawerTrigger asChild>
+          <Button variant='outline' size='sm' className='h-7  '>
+            <Settings className='size-5' />
+          </Button>
+        </DrawerTrigger>
+        <DrawerContent className='p-6'>
+          <DrawerHeader>
+            <DrawerTitle>Bulk Action</DrawerTitle>
+          </DrawerHeader>
+          <div className='grid grid-cols-2 justify-center items-center gap-4 my-2'>
+            <Button
+              variant='secondary'
+              className='w-full'
+              onClick={() => {
+                generateMultipleInvoicesAndDownloadZip(bulkOrders);
+              }}>
+              <File className='size-5 text-gray-900 mr-2' /> Generate Invoices
+            </Button>
+
+            <Button
+              variant='default'
+              className='w-full bg-blue-700'
+              onClick={() => setBulkAction("shipped")}>
+              <TruckIcon className='size-5 text-white mr-2' /> Shipped
+            </Button>
+            <Button
+              variant='default'
+              className='w-full bg-green-700'
+              onClick={() => setBulkAction("complete")}>
+              <CheckCircleIcon className='size-5 text-white mr-2' /> Complete
+            </Button>
+            <Button
+              variant='default'
+              className='w-full'
+              onClick={() => setBulkAction("processing")}>
+              <TimerReset className='size-5 text-white mr-2' /> Processing
+            </Button>
+
+            <Button
+              variant='outline'
+              className='w-full'
+              onClick={() => setBulkAction("cancel")}>
+              <MinusCircleIcon className='size-5 text-red-600 mr-2' /> Cancel
+            </Button>
+            <Button
+              variant='destructive'
+              className='w-full'
+              onClick={() => setBulkAction("delete")}>
+              <Trash2 className='size-5 text-white mr-2' /> Delete
+            </Button>
+          </div>
+          <DrawerFooter className='flex flex-row items-center border-t bg-muted/50 px-6 py-3'>
+            <div className='text-xs text-muted-foreground'>
+              {bulkOrders?.length} of {orders?.length} selected
+            </div>
+          </DrawerFooter>
+        </DrawerContent>
+      </Drawer>
     );
   };
 

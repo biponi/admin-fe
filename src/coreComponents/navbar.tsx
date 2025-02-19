@@ -1,5 +1,4 @@
 import { LifeBuoy, PanelLeft, User2 } from "lucide-react";
-
 import { Button } from "../components/ui/button";
 import {
   Tooltip,
@@ -10,202 +9,138 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "../components/ui/dropdown-menu";
-import { Sheet, SheetContent, SheetTrigger } from "../components/ui/sheet";
+import {
+  Drawer,
+  DrawerClose,
+  DrawerContent,
+  DrawerHeader,
+  DrawerTrigger,
+} from "../components/ui/drawer";
 import { navItems } from "../utils/navItem";
-import { Link, useLocation, useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { BiponiLogo } from "../utils/contents";
 import useLoginAuth from "../pages/auth/hooks/useLoginAuth";
-import { useRef } from "react";
 import { Avatar, AvatarFallback } from "../components/ui/avatar";
 import { getInitialsWord } from "../utils/functions";
 
 const Navbar = () => {
-  const sheetRef = useRef(null);
   const { signOut, user } = useLoginAuth();
   const navigate = useNavigate();
+  const pathName = useLocation().pathname;
+
   const navigateToRoute = (link: string) => {
     navigate(link);
   };
-  const pathName = useLocation().pathname;
+
   return (
     <>
-      <aside className="inset-y fixed  left-0 z-20 hidden sm:flex h-full flex-col border-r">
-        <div className="border-b p-2">
-          <Button variant="outline" size="icon" aria-label="Home">
-            <img
-              src={BiponiLogo}
-              className="size-5 fill-foreground"
-              alt="main-logo"
-            />
+      <aside className='inset-y fixed left-0 z-20 hidden sm:flex h-full flex-col border-r'>
+        <div className='border-b p-2'>
+          <Button variant='outline' size='icon' aria-label='Home'>
+            <img src={BiponiLogo} className='size-5' alt='main-logo' />
           </Button>
         </div>
-        <nav className="grid gap-1 p-2">
+        <nav className='grid gap-1 p-2'>
           {navItems
             .filter((nav) => nav.active && nav.roles.includes(user?.role))
             .map((item) => (
-              <Tooltip>
+              <Tooltip key={item.link}>
                 <TooltipTrigger asChild>
                   <Button
                     variant={
                       pathName.includes(item?.link) ? "default" : "ghost"
                     }
-                    size="icon"
-                    className={`${
-                      !pathName.includes(item?.link)
-                        ? "rounded-lg bg-muted"
-                        : "rounded-lg"
-                    } `}
-                    aria-label="Playground"
-                    onClick={() => navigateToRoute(item?.link)}
-                  >
+                    size='icon'
+                    className='rounded-lg'
+                    aria-label={item.title}
+                    onClick={() => navigateToRoute(item?.link)}>
                     {item?.icon}
                   </Button>
                 </TooltipTrigger>
-                <TooltipContent side="right" sideOffset={5}>
+                <TooltipContent side='right' sideOffset={5}>
                   {item?.title}
                 </TooltipContent>
               </Tooltip>
             ))}
         </nav>
-        <nav className="mt-auto grid gap-1 p-2">
+        <nav className='mt-auto grid gap-1 p-2'>
           <Tooltip>
             <TooltipTrigger asChild>
               <Button
-                variant="ghost"
-                size="icon"
-                className="mt-auto rounded-lg"
-                aria-label="Help"
-              >
-                <LifeBuoy className="size-5" />
+                variant='ghost'
+                size='icon'
+                className='mt-auto rounded-lg'
+                aria-label='Help'>
+                <LifeBuoy className='size-5' />
               </Button>
             </TooltipTrigger>
-            <TooltipContent side="right" sideOffset={5}>
+            <TooltipContent side='right' sideOffset={5}>
               Help
             </TooltipContent>
           </Tooltip>
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Avatar>
-                    <AvatarFallback>
-                      {getInitialsWord(user?.name)}
-                    </AvatarFallback>
-                  </Avatar>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end">
-                  {/* <DropdownMenuLabel>My Account</DropdownMenuLabel>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem>Settings</DropdownMenuItem>
-                  <DropdownMenuItem>Support</DropdownMenuItem>
-                  <DropdownMenuSeparator /> */}
-                  <DropdownMenuItem onClick={() => signOut()}>
-                    Logout
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
-            </TooltipTrigger>
-            <TooltipContent side="right" sideOffset={5}>
-              Account
-            </TooltipContent>
-          </Tooltip>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Avatar>
+                <AvatarFallback>{getInitialsWord(user?.name)}</AvatarFallback>
+              </Avatar>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align='end'>
+              <DropdownMenuItem onClick={() => signOut()}>
+                Logout
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </nav>
       </aside>
-      <header className="sticky top-0 z-30 flex h-14 items-center gap-4 border-b bg-background px-4 sm:hidden sm:h-auto sm:border-0 sm:bg-transparent sm:px-6">
-        <Sheet>
-          <SheetTrigger asChild>
-            <Button size="icon" variant="outline" className="sm:hidden">
-              <PanelLeft className="h-5 w-5" />
-              <span className="sr-only">Toggle Menu</span>
+      <header className='sticky top-0 z-30 flex h-14 items-center gap-4 border-b bg-background px-4 sm:hidden'>
+        <Drawer>
+          <DrawerTrigger asChild>
+            <Button size='icon' variant='outline'>
+              <PanelLeft className='h-5 w-5' />
+              <span className='sr-only'>Toggle Menu</span>
             </Button>
-          </SheetTrigger>
-          <SheetContent
-            side="left"
-            className="sm:max-w-xs"
-            onChange={() => {
-              if (!!sheetRef) {
-                //@ts-ignore
-                sheetRef.current.click();
-              }
-            }}
-          >
-            <nav className="grid gap-6 text-lg font-medium">
-              <div className="border-b p-2">
-                <Button
-                  variant="outline"
-                  size="icon"
-                  aria-label="Home"
-                  ref={sheetRef}
-                >
-                  <img
-                    src={BiponiLogo}
-                    className="size-5 fill-foreground"
-                    alt="main-logo"
-                  />
+          </DrawerTrigger>
+          <DrawerContent>
+            <DrawerHeader>
+              <div className='border-b p-2 flex justify-center items-center gap-1'>
+                <Button variant='outline' size='icon' aria-label='Home'>
+                  <img src={BiponiLogo} className='size-5' alt='main-logo' />{" "}
                 </Button>
+                <span className='text-base font-semibold text-gray-700'>
+                  Prior Admin
+                </span>
               </div>
+            </DrawerHeader>
+            <nav className='grid grid-cols-2 gap-6 p-4 text-lg font-medium mb-4'>
               {navItems
                 .filter((nav) => nav.active && nav.roles.includes(user?.role))
-                .map((item, index) => (
-                  <Link
-                    key={index}
-                    to={item?.link}
-                    className="flex items-center gap-4 px-2.5 text-muted-foreground hover:text-foreground"
-                  >
-                    {item.icon}
-                    {item.title}
-                  </Link>
+                .map((item) => (
+                  <DrawerClose>
+                    <Button
+                      key={item.link}
+                      variant={
+                        pathName.includes(item?.link) ? "default" : "outline"
+                      }
+                      className='flex justify-center items-center w-full gap-4'
+                      onClick={() => navigateToRoute(item.link)}>
+                      {item.icon}
+                      {item.title}
+                    </Button>
+                  </DrawerClose>
                 ))}
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button
-                    variant="outline"
-                    size="icon"
-                    className="overflow-hidden rounded-full hidden"
-                  >
-                    <User2 className="w-8 h-8" /> User
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end">
-                  <DropdownMenuLabel>My Account</DropdownMenuLabel>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem>Settings</DropdownMenuItem>
-                  <DropdownMenuItem>Support</DropdownMenuItem>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem>Logout</DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
-            </nav>
-
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
+              <DrawerClose>
                 <Button
-                  variant="ghost"
-                  size="lg"
-                  className="flex items-center gap-4 px-2.5 text-muted-foreground hover:text-foreground mt-[15px]"
-                  aria-label="Account"
-                >
-                  <User2 className="size-5" />{" "}
-                  <span className="text-lg font-medium">Profile</span>
+                  variant={"destructive"}
+                  className='flex justify-center items-center w-full gap-4'
+                  onClick={() => signOut()}>
+                  <User2 className='size-5' /> Logout
                 </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="start">
-                {/* <DropdownMenuLabel>My Account</DropdownMenuLabel>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem>Settings</DropdownMenuItem>
-                  <DropdownMenuItem>Support</DropdownMenuItem>
-                  <DropdownMenuSeparator /> */}
-                <DropdownMenuItem onClick={() => signOut()}>
-                  Logout
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-          </SheetContent>
-        </Sheet>
+              </DrawerClose>
+            </nav>
+          </DrawerContent>
+        </Drawer>
       </header>
     </>
   );
