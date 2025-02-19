@@ -2,7 +2,10 @@ const baseURL = `/api/v1`;
 
 const config = {
   refreshToken: () => `/api/refresh-token`,
-  dashboard:{getDashboardAnalysis:()=>`${baseURL}/dashboard/analysis`,getDashboardAnalysisData:()=>`${baseURL}/dashboard/analysis_v2`,},
+  dashboard: {
+    getDashboardAnalysis: () => `${baseURL}/dashboard/analysis`,
+    getDashboardAnalysisData: () => `${baseURL}/dashboard/analysis_v2`,
+  },
   user: {
     signup: () => `${baseURL}/user/signup`,
     login: () => `${baseURL}/user/login`,
@@ -20,20 +23,24 @@ const config = {
       `${baseURL}/product/manufecture/${manuId}`,
     getProductList: () => `${baseURL}/product/all`,
     getProductData: (id: string) => `${baseURL}/product/single/${id}`,
-    getProductSummary:()=>`${baseURL}/product/summary`,
+    getProductSummary: () => `${baseURL}/product/summary`,
+    searchProductV2: () => `${baseURL}/product/searchv2`,
   },
   order: {
     createOrder: () => `${baseURL}/order/prior/create`,
     updateOrderProduct: () => `${baseURL}/order/prior/update/product`,
     getOrderAnalytics: () => `${baseURL}/order/prior/analytics`,
     getOrders: () => `${baseURL}/order/prior/all`,
+    getOrderProducts: (id: string) => `${baseURL}/order/prior/${id}/products`,
     editOrder: () => `${baseURL}/order/prior/edit`,
     updateOrderStatus: () => `${baseURL}/order/prior/updateStatus`,
-     orderBulkAction: () => `${baseURL}/order/prior/bulk-update`,
+    orderBulkAction: () => `${baseURL}/order/prior/bulk-update`,
     deleteOrder: (id: string) => `${baseURL}/order/prior/delete/${id}`,
     searchOrder: () => `${baseURL}/order/prior/search`,
-    returnProducts:() =>`${baseURL}/order/prior/return-product`,
-     getMultiOrderByIds: () => `${baseURL}/order/prior/by/ids`,
+    returnProducts: () => `${baseURL}/order/prior/return-product`,
+    getMultiOrderByIds: () => `${baseURL}/order/prior/by/ids`,
+    modifyOrderProducts: (id: string) =>
+      `${baseURL}/order/prior/${id}/products`,
   },
   transaction: {
     create: () => `${baseURL}/transection/create`,
@@ -60,20 +67,22 @@ const config = {
     editCategory: (id: string) => `${baseURL}/category/update/${id}`,
     deleteCategory: (id: string) => `${baseURL}/category/delete/${id}`,
   },
-  campaign:{
-    createCampaign:() => `${baseURL}/campaign/create`,
-    getAllCampaign:() => `${baseURL}/campaign`,
-    editCampaign:(id:string) => `${baseURL}/campaign/update/${id}`,
-    getCampaignById:(id:string) => `${baseURL}/campaign/by/${id}`,
-    deleteCampaign:(id:string) => `${baseURL}/campaign/remove/${id}`,
+  campaign: {
+    createCampaign: () => `${baseURL}/campaign/create`,
+    getAllCampaign: () => `${baseURL}/campaign`,
+    editCampaign: (id: string) => `${baseURL}/campaign/update/${id}`,
+    getCampaignById: (id: string) => `${baseURL}/campaign/by/${id}`,
+    deleteCampaign: (id: string) => `${baseURL}/campaign/remove/${id}`,
   },
-  purchaseOrder:{
-    purchaseList:()=>`${baseURL}/purchase-order/all`,
-    purchaseSearch:()=>`${baseURL}/purchase-order/search`,
-    createPurchaseOrder:()=>`${baseURL}/purchase-order/create`,
-    deletePurchaseOrder:(id:string)=>`${baseURL}/purchase-order/delete/${id}`,
-    restorePurchaseOrder:(id:string)=>`${baseURL}/purchase-order/restore/${id}`,
-  }
+  purchaseOrder: {
+    purchaseList: () => `${baseURL}/purchase-order/all`,
+    purchaseSearch: () => `${baseURL}/purchase-order/search`,
+    createPurchaseOrder: () => `${baseURL}/purchase-order/create`,
+    deletePurchaseOrder: (id: string) =>
+      `${baseURL}/purchase-order/delete/${id}`,
+    restorePurchaseOrder: (id: string) =>
+      `${baseURL}/purchase-order/restore/${id}`,
+  },
 };
 
 export default config;

@@ -31,7 +31,7 @@ export interface IOrder {
     email?: string; // Optional email field
     phoneNumber: string;
   };
-  notes?:string;
+  notes?: string;
   status: string;
   deliveryCharge: number;
   totalPrice: number;
@@ -55,7 +55,7 @@ export interface IOrder {
     address: string;
   };
   products: {
-    id?:string;
+    id?: string;
     productId: string;
     name: string;
     thumbnail: string;
@@ -71,3 +71,27 @@ export interface IOrder {
     };
   }[];
 }
+
+export type ProductListResponse = {
+  totalDocs: number;
+  totalPages: number;
+  currentPage: number;
+  purchaseOrders: PurchaseOrder[];
+};
+
+export type ProductSearchResponse = {
+  id: string;
+  name: string;
+  sku: string;
+  unitPrice: number | string;
+  updatePrice: number | string;
+  discount: number | string;
+  quantity: number;
+  maxQuantity: number;
+  image?: string;
+  variant: {
+    id: string;
+    size: string;
+    color: string;
+  } | null;
+};

@@ -158,9 +158,9 @@ const OrderList = () => {
   const renderEmptyView = () => {
     return (
       <EmptyView
-        title="You have no orders"
-        description="You can start selling as soon as you add a product."
-        buttonText="Create Order"
+        title='You have no orders'
+        description='You can start selling as soon as you add a product.'
+        buttonText='Create Order'
         handleButtonClick={() => navigate("/order/create")}
       />
     );
@@ -168,18 +168,17 @@ const OrderList = () => {
 
   const renderStatusTabsView = () => {
     return (
-      <div className="mt-2">
+      <div className='mt-2'>
         <Tabs
           value={selectedStatus}
-          onValueChange={(value: string) => setSelectedStatus(value)}
-        >
+          onValueChange={(value: string) => setSelectedStatus(value)}>
           <TabsList>
-            <TabsTrigger value="">All</TabsTrigger>
-            <TabsTrigger value="processing">Processing</TabsTrigger>
-            <TabsTrigger value="shipped">Shipped</TabsTrigger>
-            <TabsTrigger value="completed">Completed</TabsTrigger>
-            <TabsTrigger value="cancel">Cancelled</TabsTrigger>
-            <TabsTrigger value="return">Return</TabsTrigger>
+            <TabsTrigger value=''>All</TabsTrigger>
+            <TabsTrigger value='processing'>Processing</TabsTrigger>
+            <TabsTrigger value='shipped'>Shipped</TabsTrigger>
+            <TabsTrigger value='completed'>Completed</TabsTrigger>
+            <TabsTrigger value='cancel'>Cancelled</TabsTrigger>
+            <TabsTrigger value='return'>Return</TabsTrigger>
           </TabsList>
         </Tabs>
       </div>
@@ -188,16 +187,16 @@ const OrderList = () => {
 
   const renderProductListView = () => {
     return (
-      <Tabs defaultValue="all">
+      <Tabs defaultValue='all'>
         {drawerDialog()}
-        <div className="flex justify-between items-center">
+        <div className='flex justify-between items-center'>
           {renderStatusTabsView()}
           <Button onClick={() => navigate("/order/create")}>
             Create New Order
           </Button>
         </div>
 
-        <div className="grid grid-1 md:grid-cols-3 md:gap-4">
+        <div className='grid grid-1 md:grid-cols-3 md:gap-4'>
           <div
             className={` ${
               !selectedStatus.includes("return") &&
@@ -205,23 +204,22 @@ const OrderList = () => {
               bulkOrders.length > 0
                 ? "md:col-span-2"
                 : "md:col-span-3"
-            }`}
-          >
+            }`}>
             {(!orders || orders.length < 1) && renderEmptyView()}
             {!!orders && orders.length > 0 && (
-              <Card x-chunk="dashboard-06-chunk-0" className="mt-4">
+              <Card x-chunk='dashboard-06-chunk-0' className='mt-4'>
                 <CardHeader>
-                  <div className="flex w-full justify-between">
-                    <div className="mr-auto">
+                  <div className='flex w-full justify-between'>
+                    <div className='mr-auto'>
                       <CardTitle>Order</CardTitle>
                       <CardDescription>
                         Manage your orders and view your sales performance.
                       </CardDescription>
                     </div>
-                    <div className="ml-auto grid grid-cols-2 gap-4 sm:flex sm:justify-between sm:items-center">
+                    <div className='ml-auto grid grid-cols-2 gap-4 sm:flex sm:justify-between sm:items-center'>
                       <Input
-                        type="text"
-                        placeholder="Search"
+                        type='text'
+                        placeholder='Search'
                         onChange={(event) => {
                           setInputValue(event.target.value);
                         }}
@@ -235,16 +233,16 @@ const OrderList = () => {
                   </div>
                 </CardHeader>
                 <CardContent>
-                  <TabsContent value="all">
-                    <div className="max-h-[65vh] overflow-y-auto">
+                  <TabsContent value='all'>
+                    <div className='max-h-[65vh] overflow-y-auto'>
                       <Table>
-                        <TableHeader className=" sticky  ">
+                        <TableHeader className=' sticky  '>
                           <TableRow>
                             {!selectedStatus.includes("return") && (
                               <TableHead>
                                 <input
-                                  className="border-gray-200 rounded-lg text-primary"
-                                  type="checkbox"
+                                  className='border-gray-200 rounded-lg text-primary'
+                                  type='checkbox'
                                   onChange={(event) => {
                                     const check = event?.target?.checked;
                                     setBulkOrders(
@@ -258,30 +256,30 @@ const OrderList = () => {
                                 />
                               </TableHead>
                             )}
-                            <TableHead className="hidden w-[100px] sm:table-cell">
+                            <TableHead className='hidden w-[100px] sm:table-cell'>
                               NO.
                             </TableHead>
                             <TableHead>Customer Name</TableHead>
                             <TableHead>Phone Number</TableHead>
                             <TableHead>Status</TableHead>
-                            <TableHead className="hidden md:table-cell">
+                            <TableHead className='hidden md:table-cell'>
                               District
                             </TableHead>
                             <TableHead>Price</TableHead>
-                            <TableHead className="hidden md:table-cell">
+                            <TableHead className='hidden md:table-cell'>
                               Paid
                             </TableHead>
-                            <TableHead className="hidden md:table-cell">
+                            <TableHead className='hidden md:table-cell'>
                               Remaining
                             </TableHead>
-                            <TableHead className="hidden ">
+                            <TableHead className='hidden '>
                               Last Updated at
                             </TableHead>
                             <TableHead>
                               <View />
                             </TableHead>
                             <TableHead>
-                              <span className="sr-only">Actions</span>
+                              <span className='sr-only'>Actions</span>
                             </TableHead>
                           </TableRow>
                         </TableHeader>
@@ -317,8 +315,9 @@ const OrderList = () => {
                                   setEditDialogOpen(true);
                                 }}
                                 handleModifyProduct={() => {
-                                  setSelectedOrder(order);
-                                  setModifyDialogOpen(true);
+                                  // setSelectedOrder(order);
+                                  // setModifyDialogOpen(true);
+                                  navigate(`/order/modify/${order?.id}`);
                                 }}
                                 handleReturnProducts={() => {
                                   setSelectedOrder(order);
@@ -339,8 +338,8 @@ const OrderList = () => {
                 </CardContent>
                 {inputValue === "" && (
                   <CardFooter>
-                    <div className="w-full flex justify-between items-center">
-                      <div className="text-xs text-muted-foreground">
+                    <div className='w-full flex justify-between items-center'>
+                      <div className='text-xs text-muted-foreground'>
                         Showing{" "}
                         <strong>{`${
                           (Number(currentPageNum) - 1) * limit + 1
@@ -350,48 +349,45 @@ const OrderList = () => {
                         )}`}</strong>{" "}
                         of <strong>{totalOrders}</strong> orders
                       </div>
-                      <div className="flex gap-2 items-center">
+                      <div className='flex gap-2 items-center'>
                         <Select
                           value={`${limit}`}
                           onValueChange={(value: string) => {
                             setLimit(parseInt(value, 10));
-                          }}
-                        >
-                          <SelectTrigger className="w-auto">
-                            <SelectValue placeholder="Select Row Limit" />
+                          }}>
+                          <SelectTrigger className='w-auto'>
+                            <SelectValue placeholder='Select Row Limit' />
                           </SelectTrigger>
                           <SelectContent>
                             <SelectGroup>
                               <SelectLabel>Limit</SelectLabel>
-                              <SelectItem value="10">10</SelectItem>
-                              <SelectItem value="50">50</SelectItem>
-                              <SelectItem value="100">100</SelectItem>
-                              <SelectItem value="150">150</SelectItem>
-                              <SelectItem value="200">200</SelectItem>
-                              <SelectItem value="500">500</SelectItem>
+                              <SelectItem value='10'>10</SelectItem>
+                              <SelectItem value='50'>50</SelectItem>
+                              <SelectItem value='100'>100</SelectItem>
+                              <SelectItem value='150'>150</SelectItem>
+                              <SelectItem value='200'>200</SelectItem>
+                              <SelectItem value='500'>500</SelectItem>
                             </SelectGroup>
                           </SelectContent>
                         </Select>{" "}
                         Row Per Page{" "}
                         <Button
                           disabled={currentPageNum < 2}
-                          variant="outline"
-                          size="icon"
-                          className="h-7 w-7"
-                          onClick={() => updateCurrentPage(-1)}
-                        >
-                          <ChevronLeft className="h-4 w-4" />
-                          <span className="sr-only">Back</span>
+                          variant='outline'
+                          size='icon'
+                          className='h-7 w-7'
+                          onClick={() => updateCurrentPage(-1)}>
+                          <ChevronLeft className='h-4 w-4' />
+                          <span className='sr-only'>Back</span>
                         </Button>
                         <Button
                           disabled={currentPageNum >= totalPages}
-                          variant="outline"
-                          size="icon"
-                          className="h-7 w-7"
-                          onClick={() => updateCurrentPage(1)}
-                        >
-                          <ChevronRight className="h-4 w-4" />
-                          <span className="sr-only">Next</span>
+                          variant='outline'
+                          size='icon'
+                          className='h-7 w-7'
+                          onClick={() => updateCurrentPage(1)}>
+                          <ChevronRight className='h-4 w-4' />
+                          <span className='sr-only'>Next</span>
                         </Button>
                       </div>
                     </div>
@@ -404,7 +400,7 @@ const OrderList = () => {
           {!selectedStatus.includes("return") &&
             !!bulkOrders &&
             bulkOrders.length > 0 && (
-              <div className="mt-4">{renderBulkActionPanel()}</div>
+              <div className='mt-4'>{renderBulkActionPanel()}</div>
             )}
         </div>
       </Tabs>
@@ -416,39 +412,36 @@ const OrderList = () => {
       <Sheet
         open={showDetails}
         onOpenChange={(value: boolean) => setShowDetails(value)}
-        x-chunk="dashboard-05-chunk-4"
-      >
-        <SheetContent className="px-4 pb-2 pt-10">
-          <SheetHeader className="flex flex-row items-start ">
-            <div className="grid gap-0.5 pb-9">
-              <SheetTitle className="group flex items-center gap-2 text-lg w-full">
+        x-chunk='dashboard-05-chunk-4'>
+        <SheetContent className='px-4 pb-2 pt-10'>
+          <SheetHeader className='flex flex-row items-start '>
+            <div className='grid gap-0.5 pb-9'>
+              <SheetTitle className='group flex items-center gap-2 text-lg w-full'>
                 Order #{selectedOrder?.orderNumber}
                 {!selectedOrder?.status.includes("return") && (
                   <>
                     {selectedOrder?.status === "processing" && (
                       <CustomAlertDialog
-                        title="Order Status Change"
-                        description="Are You Sure Change the status to SHIPPED???"
-                        cancelButtonText="NO"
-                        submitButtonText="YES"
+                        title='Order Status Change'
+                        description='Are You Sure Change the status to SHIPPED???'
+                        cancelButtonText='NO'
+                        submitButtonText='YES'
                         onSubmit={() => {
                           updateOrderStatus(
                             `${selectedOrder?.id}`,
                             "shipped",
                             () => refresh()
                           );
-                        }}
-                      >
+                        }}>
                         <TooltipProvider>
                           <Tooltip>
                             <TooltipTrigger>
                               <Button
-                                size="icon"
-                                variant="outline"
-                                className="h-6 w-6 "
-                              >
-                                <TruckIcon className="h-3 w-3" />
-                                <span className="sr-only">Copy Order ID</span>
+                                size='icon'
+                                variant='outline'
+                                className='h-6 w-6 '>
+                                <TruckIcon className='h-3 w-3' />
+                                <span className='sr-only'>Copy Order ID</span>
                               </Button>
                             </TooltipTrigger>
                             <TooltipContent>
@@ -460,28 +453,26 @@ const OrderList = () => {
                     )}
                     {selectedOrder?.status === "shipped" && (
                       <CustomAlertDialog
-                        title="Order Status Change"
-                        description="Are You Sure Change the status to Complete???"
-                        cancelButtonText="NO"
-                        submitButtonText="YES"
+                        title='Order Status Change'
+                        description='Are You Sure Change the status to Complete???'
+                        cancelButtonText='NO'
+                        submitButtonText='YES'
                         onSubmit={() => {
                           updateOrderStatus(
                             `${selectedOrder?.id}`,
                             "completed",
                             () => refresh()
                           );
-                        }}
-                      >
+                        }}>
                         <TooltipProvider>
                           <Tooltip>
                             <TooltipTrigger>
                               <Button
-                                size="icon"
-                                variant="outline"
-                                className="h-6 w-6 "
-                              >
-                                <CheckCircleIcon className="h-3 w-3" />
-                                <span className="sr-only">Copy Order ID</span>
+                                size='icon'
+                                variant='outline'
+                                className='h-6 w-6 '>
+                                <CheckCircleIcon className='h-3 w-3' />
+                                <span className='sr-only'>Copy Order ID</span>
                               </Button>
                             </TooltipTrigger>
                             <TooltipContent>Complete the order</TooltipContent>
@@ -491,28 +482,26 @@ const OrderList = () => {
                     )}
                     {selectedOrder?.status !== "processing" && (
                       <CustomAlertDialog
-                        title="Order Status Change"
-                        description="Are You Sure Change the status to Processing??? Use for return or other"
-                        cancelButtonText="NO"
-                        submitButtonText="YES"
+                        title='Order Status Change'
+                        description='Are You Sure Change the status to Processing??? Use for return or other'
+                        cancelButtonText='NO'
+                        submitButtonText='YES'
                         onSubmit={() => {
                           updateOrderStatus(
                             `${selectedOrder?.id}`,
                             "processing",
                             () => refresh()
                           );
-                        }}
-                      >
+                        }}>
                         <TooltipProvider>
                           <Tooltip>
                             <TooltipTrigger>
                               <Button
-                                size="icon"
-                                variant="outline"
-                                className="h-6 w-6 "
-                              >
-                                <TimerReset className="h-3 w-3" />
-                                <span className="sr-only">Copy Order ID</span>
+                                size='icon'
+                                variant='outline'
+                                className='h-6 w-6 '>
+                                <TimerReset className='h-3 w-3' />
+                                <span className='sr-only'>Copy Order ID</span>
                               </Button>
                             </TooltipTrigger>
                             <TooltipContent>
@@ -522,14 +511,13 @@ const OrderList = () => {
                         </TooltipProvider>
                       </CustomAlertDialog>
                     )}
-                    <div className="ml-auto">
+                    <div className='ml-auto'>
                       {" "}
                       <Button
-                        size="sm"
-                        variant="outline"
-                        className="float-right ml-auto"
-                        onClick={() => handleGenerateInvoice()}
-                      >
+                        size='sm'
+                        variant='outline'
+                        className='float-right ml-auto'
+                        onClick={() => handleGenerateInvoice()}>
                         Invoice
                       </Button>
                     </div>
@@ -537,23 +525,22 @@ const OrderList = () => {
                 )}
               </SheetTitle>
               <SheetDescription>
-                <span className="text-sm font-medium text-gray-500 block mt-2 mb-1">
+                <span className='text-sm font-medium text-gray-500 block mt-2 mb-1'>
                   Track Id: {selectedOrder?.id}
                   <button
                     onClick={handleCopy}
-                    className="ml-2 relative inline-flex items-center"
-                    title="Copy URL"
-                  >
+                    className='ml-2 relative inline-flex items-center'
+                    title='Copy URL'>
                     {isCopied ? (
-                      <Check size={18} className="text-green-500" />
+                      <Check size={18} className='text-green-500' />
                     ) : (
                       <Clipboard
                         size={18}
-                        className="text-gray-500 hover:text-gray-700"
+                        className='text-gray-500 hover:text-gray-700'
                       />
                     )}
                     {isCopied && (
-                      <span className="absolute -top-3 left-5 bg-green-100 text-green-700 text-xs font-medium px-2 py-1 rounded">
+                      <span className='absolute -top-3 left-5 bg-green-100 text-green-700 text-xs font-medium px-2 py-1 rounded'>
                         Copied!
                       </span>
                     )}
@@ -565,7 +552,7 @@ const OrderList = () => {
                 )}
               </SheetDescription>
             </div>
-            <div className="ml-auto flex items-center gap-1">
+            <div className='ml-auto flex items-center gap-1'>
               {/* <Button size='sm' variant='outline' className='h-8 gap-1'>
               <Truck className='h-3.5 w-3.5' />
               <span className='lg:sr-only xl:not-sr-only xl:whitespace-nowrap'>
@@ -574,13 +561,13 @@ const OrderList = () => {
             </Button> */}
             </div>
           </SheetHeader>
-          <div className=" text-sm ">
-            <div className="grid gap-3">
-              <div className="font-semibold">Order Details</div>
-              <ul className="grid gap-3">
+          <div className=' text-sm '>
+            <div className='grid gap-3'>
+              <div className='font-semibold'>Order Details</div>
+              <ul className='grid gap-3'>
                 {selectedOrder?.products.map((product, index) => (
-                  <li key={index} className="flex items-center justify-between">
-                    <Badge variant={"default"} className="bg-gray-600">
+                  <li key={index} className='flex items-center justify-between'>
+                    <Badge variant={"default"} className='bg-gray-600'>
                       {product?.name}{" "}
                       {product?.hasVariation
                         ? `(${`${product?.variation.color}${
@@ -596,82 +583,82 @@ const OrderList = () => {
                   </li>
                 ))}
               </ul>
-              <Separator className="my-2" />
-              <ul className="grid gap-3">
-                <li className="flex items-center justify-between">
-                  <span className="text-gray-700">Subtotal</span>
+              <Separator className='my-2' />
+              <ul className='grid gap-3'>
+                <li className='flex items-center justify-between'>
+                  <span className='text-gray-700'>Subtotal</span>
                   <span>{selectedOrder?.totalPrice}</span>
                 </li>
 
-                <li className="flex items-center justify-between">
-                  <span className="text-gray-700">Delivery Charge</span>
+                <li className='flex items-center justify-between'>
+                  <span className='text-gray-700'>Delivery Charge</span>
                   <span>{selectedOrder?.deliveryCharge}</span>
                 </li>
 
-                <li className="flex items-center justify-between">
-                  <span className="text-gray-700">Discount</span>
+                <li className='flex items-center justify-between'>
+                  <span className='text-gray-700'>Discount</span>
                   <span>{selectedOrder?.discount}</span>
                 </li>
 
-                <li className="flex items-center justify-between">
-                  <span className="text-gray-700">Paid</span>
+                <li className='flex items-center justify-between'>
+                  <span className='text-gray-700'>Paid</span>
                   <span>{selectedOrder?.paid}</span>
                 </li>
-                <li className="flex items-center justify-between font-semibold">
-                  <span className="text-gray-700">Remaining</span>
+                <li className='flex items-center justify-between font-semibold'>
+                  <span className='text-gray-700'>Remaining</span>
                   <span>{selectedOrder?.remaining}</span>
                 </li>
               </ul>
             </div>
-            <Separator className="my-2" />
+            <Separator className='my-2' />
             {!!selectedOrder?.notes && (
-              <div className="grid grid-cols-1 gap-4">
-                <div className="grid gap-3">
-                  <div className="font-semibold">Notes</div>
-                  <address className="grid gap-0.5 not-italic text-gray-700">
+              <div className='grid grid-cols-1 gap-4'>
+                <div className='grid gap-3'>
+                  <div className='font-semibold'>Notes</div>
+                  <address className='grid gap-0.5 not-italic text-gray-700'>
                     <span>{selectedOrder?.notes ?? ""} </span>
                   </address>
                 </div>
               </div>
             )}
-            <Separator className="my-2" />
-            <div className="grid grid-cols-1 gap-4">
-              <div className="grid gap-3">
-                <div className="font-semibold">Shipping Information</div>
-                <address className="grid gap-0.5 not-italic text-gray-700">
+            <Separator className='my-2' />
+            <div className='grid grid-cols-1 gap-4'>
+              <div className='grid gap-3'>
+                <div className='font-semibold'>Shipping Information</div>
+                <address className='grid gap-0.5 not-italic text-gray-700'>
                   <span>{selectedOrder?.shipping.division}, </span>
                   <span>{selectedOrder?.shipping.district}</span>
                   <span>{selectedOrder?.shipping.address}</span>
                 </address>
               </div>
             </div>
-            <Separator className="my-2" />
-            <div className="grid gap-3">
-              <div className="font-semibold">Customer Information</div>
-              <dl className="grid gap-3">
-                <div className="flex items-center justify-between">
-                  <dt className="text-gray-700">Customer</dt>
+            <Separator className='my-2' />
+            <div className='grid gap-3'>
+              <div className='font-semibold'>Customer Information</div>
+              <dl className='grid gap-3'>
+                <div className='flex items-center justify-between'>
+                  <dt className='text-gray-700'>Customer</dt>
                   <dd>{selectedOrder?.customer.name}</dd>
                 </div>
-                <div className="flex items-center justify-between">
-                  <dt className="text-gray-700">Email</dt>
+                <div className='flex items-center justify-between'>
+                  <dt className='text-gray-700'>Email</dt>
                   <dd>
-                    <a href="mailto:">{selectedOrder?.customer.email}</a>
+                    <a href='mailto:'>{selectedOrder?.customer.email}</a>
                   </dd>
                 </div>
-                <div className="flex items-center justify-between">
-                  <dt className="text-gray-700">Phone</dt>
+                <div className='flex items-center justify-between'>
+                  <dt className='text-gray-700'>Phone</dt>
                   <dd>
-                    <a href="tel:">{selectedOrder?.customer.phoneNumber}</a>
+                    <a href='tel:'>{selectedOrder?.customer.phoneNumber}</a>
                   </dd>
                 </div>
               </dl>
             </div>
           </div>
-          <SheetFooter className="flex flex-row items-center border-t py-3">
-            <div className="text-xs text-gray-700">
+          <SheetFooter className='flex flex-row items-center border-t py-3'>
+            <div className='text-xs text-gray-700'>
               Updated{" "}
-              <time dateTime="2023-11-23">
+              <time dateTime='2023-11-23'>
                 {dayjs(selectedOrder?.timestamps.updatedAt).format(
                   "MMMM D, YYYY"
                 )}
@@ -685,14 +672,14 @@ const OrderList = () => {
 
   const renderBulkActionPanel = () => {
     return (
-      <Card className="overflow-hidden" x-chunk="dashboard-05-chunk-4">
-        <CardHeader className="flex flex-row items-start bg-muted/50">
-          <div className="grid gap-0.5">
-            <CardTitle className="group flex items-center gap-2 text-lg w-full">
+      <Card className='overflow-hidden' x-chunk='dashboard-05-chunk-4'>
+        <CardHeader className='flex flex-row items-start bg-muted/50'>
+          <div className='grid gap-0.5'>
+            <CardTitle className='group flex items-center gap-2 text-lg w-full'>
               Bulk Action
             </CardTitle>
           </div>
-          <div className="ml-auto flex items-center gap-1">
+          <div className='ml-auto flex items-center gap-1'>
             {/* <Button size='sm' variant='outline' className='h-8 gap-1'>
               <Truck className='h-3.5 w-3.5' />
               <span className='lg:sr-only xl:not-sr-only xl:whitespace-nowrap'>
@@ -701,72 +688,66 @@ const OrderList = () => {
             </Button> */}
           </div>
         </CardHeader>
-        <CardContent className="p-6 text-sm">
-          <div className="flex flex-col justify-center items-center gap-4">
-            <div className="w-full grid grid-cols-1 gap-4">
+        <CardContent className='p-6 text-sm'>
+          <div className='flex flex-col justify-center items-center gap-4'>
+            <div className='w-full grid grid-cols-1 gap-4'>
               <Button
-                variant="secondary"
-                className="w-full"
+                variant='secondary'
+                className='w-full'
                 onClick={() => {
                   generateMultipleInvoicesAndDownloadZip(bulkOrders);
-                }}
-              >
+                }}>
                 {" "}
-                <File className="size-5 text-gray-900 mr-2" /> Generate Invoices
+                <File className='size-5 text-gray-900 mr-2' /> Generate Invoices
               </Button>
             </div>
-            <div className="w-full grid grid-cols-3 gap-2">
+            <div className='w-full grid grid-cols-3 gap-2'>
               {" "}
               <Button
-                variant="default"
-                className="w-full bg-blue-700"
-                onClick={() => setBulkAction("shipped")}
-              >
+                variant='default'
+                className='w-full bg-blue-700'
+                onClick={() => setBulkAction("shipped")}>
                 {" "}
-                <TruckIcon className="size-5 text-white mr-2" />
+                <TruckIcon className='size-5 text-white mr-2' />
                 Shipped
               </Button>
               <Button
-                variant="default"
-                className="w-full bg-green-700"
-                onClick={() => setBulkAction("complete")}
-              >
+                variant='default'
+                className='w-full bg-green-700'
+                onClick={() => setBulkAction("complete")}>
                 {" "}
-                <CheckCircleIcon className="size-5 text-white mr-2" />
+                <CheckCircleIcon className='size-5 text-white mr-2' />
                 Complete
               </Button>
               <Button
-                variant="default"
-                className="w-full"
-                onClick={() => setBulkAction("processing")}
-              >
+                variant='default'
+                className='w-full'
+                onClick={() => setBulkAction("processing")}>
                 {" "}
-                <TimerReset className="size-5 text-white mr-2" />
+                <TimerReset className='size-5 text-white mr-2' />
                 Processing
               </Button>
             </div>
-            <div className="w-full grid grid-cols-2 gap-4">
+            <div className='w-full grid grid-cols-2 gap-4'>
               <Button
-                variant="outline"
-                className="w-full"
-                onClick={() => setBulkAction("cancel")}
-              >
+                variant='outline'
+                className='w-full'
+                onClick={() => setBulkAction("cancel")}>
                 {" "}
-                <MinusCircleIcon className="size-5 text-red-600 mr-2" /> Cancel
+                <MinusCircleIcon className='size-5 text-red-600 mr-2' /> Cancel
               </Button>
               <Button
-                variant="destructive"
-                className="w-full"
-                onClick={() => setBulkAction("delete")}
-              >
+                variant='destructive'
+                className='w-full'
+                onClick={() => setBulkAction("delete")}>
                 {" "}
-                <Trash2 className="size-5 text-white mr-2" /> Delete
+                <Trash2 className='size-5 text-white mr-2' /> Delete
               </Button>
             </div>
           </div>
         </CardContent>
-        <CardFooter className="flex flex-row items-center border-t bg-muted/50 px-6 py-3">
-          <div className="text-xs text-muted-foreground">
+        <CardFooter className='flex flex-row items-center border-t bg-muted/50 px-6 py-3'>
+          <div className='text-xs text-muted-foreground'>
             {bulkOrders?.length} of {orders?.length} selected
           </div>
         </CardFooter>
@@ -778,12 +759,11 @@ const OrderList = () => {
     return (
       <Sheet
         open={isEditDialogOpen}
-        onOpenChange={(val) => setEditDialogOpen(val)}
-      >
+        onOpenChange={(val) => setEditDialogOpen(val)}>
         <SheetContent>
           <SheetHeader>
             <SheetTitle>Edit Order</SheetTitle>
-            <SheetDescription className="text-red-400">
+            <SheetDescription className='text-red-400'>
               This action cannot be undone.
             </SheetDescription>
           </SheetHeader>
@@ -822,28 +802,26 @@ const OrderList = () => {
           ["shipped", "complete", "processing", "delete", "cancel"].includes(
             bulkAction
           )
-        }
-      >
-        <DrawerContent className="p-20">
-          <DrawerHeader className="mx-auto">
+        }>
+        <DrawerContent className='p-20'>
+          <DrawerHeader className='mx-auto'>
             <DrawerTitle>Are you absolutely sure?</DrawerTitle>
             <DrawerDescription>This action cannot be undone.</DrawerDescription>
           </DrawerHeader>
-          <DrawerFooter className="container">
-            <div className="flex justify-center items-center gap-6">
+          <DrawerFooter className='container'>
+            <div className='flex justify-center items-center gap-6'>
               <DrawerClose>
                 <Button
-                  variant="destructive"
+                  variant='destructive'
                   onClick={() => {
                     performOrderBulkUpdate(bulkAction);
                     setBulkAction("");
-                  }}
-                >
+                  }}>
                   I'm Sure
                 </Button>
               </DrawerClose>
               <DrawerClose>
-                <Button variant="outline" onClick={() => setBulkAction("")}>
+                <Button variant='outline' onClick={() => setBulkAction("")}>
                   Cancel
                 </Button>
               </DrawerClose>
@@ -858,13 +836,12 @@ const OrderList = () => {
     return (
       <Dialog
         open={isReturnProduct && !!selectedOrder}
-        onOpenChange={(open) => setIsReturnProduct(open)}
-      >
-        <DialogContent className="sm:max-w-[425px]">
+        onOpenChange={(open) => setIsReturnProduct(open)}>
+        <DialogContent className='sm:max-w-[425px]'>
           <DialogHeader>
             <DialogTitle>Return Product</DialogTitle>
           </DialogHeader>
-          <div className="w-auto">
+          <div className='w-auto'>
             <AdjustReturnProduct
               // @ts-ignore
               order={selectedOrder}
@@ -881,7 +858,7 @@ const OrderList = () => {
 
   const mainView = () => {
     if (orderFetching) {
-      return <SkeletonCard title="Loading Order Data..." />;
+      return <SkeletonCard title='Loading Order Data...' />;
     } else if (modifyDialogOpen && !!selectedOrder) {
       return (
         <UpdateProductData
@@ -899,7 +876,7 @@ const OrderList = () => {
   };
 
   return (
-    <div className="w-full sm:w-[95vw]">
+    <div className='w-full sm:w-[95vw]'>
       {mainView()}
       {renderBulkActionDrawer()}
       {returnModal()}

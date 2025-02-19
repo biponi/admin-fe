@@ -24,6 +24,7 @@ import { TooltipProvider } from "./components/ui/tooltip";
 import PurchaseOrders from "./pages/purchaseOrder/purchaseOrders";
 import CreatePurchaseOrder from "./pages/purchaseOrder/CreatePurchaseOrder";
 import TransactionsPage from "./pages/transection";
+import ModifyOrder from "./pages/order/modifyOrderProduct";
 
 // Protected Route Component
 const ProtectedRoute = ({
@@ -36,7 +37,7 @@ const ProtectedRoute = ({
   const { user } = useLoginAuth();
 
   if (!user || !roles.includes(user.role)) {
-    return <Navigate to="/unauthorize" />;
+    return <Navigate to='/unauthorize' />;
   }
   return children;
 };
@@ -84,15 +85,15 @@ const App = () => {
 
   if (isLoading) {
     return (
-      <div className="w-full h-screen flex justify-center items-center">
-        <span className="text-lg font-semibold animate-bounce">Loading...</span>
+      <div className='w-full h-screen flex justify-center items-center'>
+        <span className='text-lg font-semibold animate-bounce'>Loading...</span>
       </div>
     );
   }
 
   return (
     <TooltipProvider>
-      <div className="grid min-h-[70vh] w-full pl-0 sm:pl-[53px] sm:h-screen">
+      <div className='grid min-h-[70vh] w-full pl-0 sm:pl-[53px] sm:h-screen'>
         {isAuth && <Navbar />}
 
         <Suspense fallback={<span>Loading routes...</span>}>
@@ -100,37 +101,41 @@ const App = () => {
             {/* Authentication Routes */}
             {!isAuth ? (
               <>
-                <Route path="/login" element={<SignIn />} />
-                <Route path="/unauthorize" element={<AccessDeniedPage />} />
+                <Route path='/login' element={<SignIn />} />
+                <Route path='/unauthorize' element={<AccessDeniedPage />} />
               </>
             ) : (
               <>
                 {/* Default Landing Route */}
                 <Route
-                  path="/"
-                  element={<Navigate to="/dashboard" replace />}
+                  path='/'
+                  element={<Navigate to='/dashboard' replace />}
                 />
 
                 {/* Public Pages */}
-                <Route path="/products" element={<ProductPage />} />
-                <Route path="/product/update/:id" element={<UpdateProduct />} />
-                <Route path="/product/create" element={<CreateNewProduct />} />
-                <Route path="/category" element={<Category />} />
-                <Route path="/order" element={<OrderPage />} />
-                <Route path="/order/create" element={<CreateOrder />} />
+                <Route path='/products' element={<ProductPage />} />
+                <Route path='/product/update/:id' element={<UpdateProduct />} />
+                <Route path='/product/create' element={<CreateNewProduct />} />
+                <Route path='/category' element={<Category />} />
+                <Route path='/order' element={<OrderPage />} />
+                <Route path='/order/create' element={<CreateOrder />} />
                 <Route
-                  path="/campaign/create"
+                  path='/order/modify/:orderId'
+                  element={<ModifyOrder />}
+                />
+                <Route
+                  path='/campaign/create'
                   element={<CreateCampaignForm />}
                 />
                 <Route
-                  path="/campaign/update/:id"
+                  path='/campaign/update/:id'
                   element={<UpdateCampaignForm />}
                 />
-                <Route path="/campaign" element={<CampaignList />} />
+                <Route path='/campaign' element={<CampaignList />} />
 
                 {/* Protected Routes */}
                 <Route
-                  path="/dashboard"
+                  path='/dashboard'
                   element={
                     <ProtectedRoute roles={["admin"]}>
                       <DashboardPage />
@@ -138,7 +143,7 @@ const App = () => {
                   }
                 />
                 <Route
-                  path="/purchase-order/list"
+                  path='/purchase-order/list'
                   element={
                     <ProtectedRoute roles={["admin", "manager"]}>
                       <PurchaseOrders />
@@ -146,7 +151,7 @@ const App = () => {
                   }
                 />
                 <Route
-                  path="/purchase-order/create"
+                  path='/purchase-order/create'
                   element={
                     <ProtectedRoute roles={["admin", "manager"]}>
                       <CreatePurchaseOrder />
@@ -154,7 +159,7 @@ const App = () => {
                   }
                 />
                 <Route
-                  path="/transactions"
+                  path='/transactions'
                   element={
                     <ProtectedRoute roles={["admin", "manager"]}>
                       <TransactionsPage />
@@ -165,7 +170,7 @@ const App = () => {
             )}
 
             {/* Fallback Route */}
-            <Route path="*" element={<Navigate to="/login" replace />} />
+            <Route path='*' element={<Navigate to='/login' replace />} />
           </Routes>
         </Suspense>
       </div>
