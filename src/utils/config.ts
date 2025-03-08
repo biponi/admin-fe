@@ -83,6 +83,15 @@ const config = {
     restorePurchaseOrder: (id: string) =>
       `${baseURL}/purchase-order/restore/${id}`,
   },
+  reserve: {
+    getReserveStores: () => `${baseURL}/store-reserve/stores`,
+    createReserve: () => `${baseURL}/store-reserve/create`,
+    getReserveStore: (id: string) => `${baseURL}/store-reserve/store/${id}`,
+    addRecord: () => `${baseURL}/store-reserve/store/record/add`,
+    editStoreRecord: () => `${baseURL}/store-reserve/store/record/edit`,
+    deleteStoreRecord: () => `${baseURL}/store-reserve/store/record/delete`,
+    deleteReserve: (id: number) => `${baseURL}/store-reserve/store/${id}`,
+  },
 };
 
 export default config;

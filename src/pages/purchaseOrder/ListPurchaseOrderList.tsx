@@ -21,6 +21,11 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "../../components/ui/alert-dialog";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "../../components/ui/popover";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 
@@ -69,62 +74,113 @@ const ListPurchaseOrders: React.FC = () => {
       });
   };
 
+  const renderVariationPopover = (order: PurchaseOrder) => {
+    return (
+      <Popover>
+        <PopoverTrigger asChild>
+          <Button variant='default' className='bg-gray-700' size={"sm"}>
+            View More
+          </Button>
+        </PopoverTrigger>
+        <PopoverContent className='w-96'>
+          <div className='grid grid-cols-2 gap-2 w-full'>
+            {order?.products
+              ?.slice(2, order?.products?.length)
+              .map((val, index) => (
+                <Button key={index} variant={"default"} size={"sm"}>
+                  {`${val?.title}`}{" "}
+                  <Badge
+                    variant={"secondary"}
+                    className='ml-2'>{`x${val?.quantity}`}</Badge>
+                </Button>
+              ))}
+          </div>
+        </PopoverContent>
+      </Popover>
+    );
+  };
+
   return (
-    <div className="p-6 w-[90vw]">
-      <div className="flex justify-between items-center w-full mb-4">
-        <h1 className="text-2xl font-bold mb-4">Purchase Orders</h1>
+    <div className='p-6 w-[90vw]'>
+      <div className='flex justify-between items-center w-full mb-4'>
+        <h1 className='text-2xl font-bold mb-4'>Purchase Orders</h1>
         <Button onClick={() => naviagate("/purchase-order/create")}>
           Create Purchase Order
         </Button>
       </div>
       {!purchaseOrders ||
         (purchaseOrders.length === 0 && (
-          <div className="w-full p-10 flex justify-center items-center bg-gray-200">
-            <div className="text-center">
-              <Bird className="w-12 h-12 mx-auto mb-4" />
-              <p className="text-lg">No data found</p>
+          <div className='w-full p-10 flex justify-center items-center bg-gray-200'>
+            <div className='text-center'>
+              <Bird className='w-12 h-12 mx-auto mb-4' />
+              <p className='text-lg'>No data found</p>
             </div>
           </div>
         ))}
       {!!purchaseOrders && purchaseOrders.length > 0 && (
-        <Table className="border border-gray-300">
-          <thead className="bg-gray-200">
+        <Table className='border border-gray-300'>
+          <thead className='bg-gray-200'>
             <tr>
-              <th className="text-lg border border-gray-300 p-2">ID</th>
-              <th className="text-lg border border-gray-300 p-2">Products</th>
-              <th className="text-lg border border-gray-300 p-2">
+              <th className='text-lg border border-gray-300 p-2'>ID</th>
+              <th className='text-lg border border-gray-300 p-2'>Products</th>
+              <th className='text-lg border border-gray-300 p-2'>
                 Total Amount
               </th>
-              <th className="text-lg border border-gray-300 p-2">Created At</th>
-              <th className="text-lg border border-gray-300 p-2">Action</th>
+              <th className='text-lg border border-gray-300 p-2'>Created At</th>
+              <th className='text-lg border border-gray-300 p-2'>Action</th>
             </tr>
           </thead>
           <tbody>
             {purchaseOrders.map((order) => (
-              <tr key={order?.id} className="border border-gray-300">
-                <td className="border border-gray-300 p-2">
+              <tr key={order?.id} className='border border-gray-300'>
+                <td className='border border-gray-300 p-2'>
                   {order?.purchaseNumber}
                 </td>
-                <td className="border border-gray-300 p-2">
-                  <div className="flex flex-wrap gap-1">
-                    {order.products.map((product) => (
-                      <Badge key={product?.productId} className="mr-1 mb-1">
-                        {product?.title} {`(${product?.quantity})`}
-                      </Badge>
-                    ))}
+                <td className='border border-gray-300 p-2'>
+                  <div className='flex flex-wrap gap-1'>
+                    {order.products?.length > 3 ? (
+                      <>
+                        {order.products?.slice(0, 2).map((val, index) => (
+                          <Button
+                            key={index}
+                            className='mx-1'
+                            variant={"default"}
+                            size={"sm"}>
+                            {`${val?.title} `}{" "}
+                            <Badge
+                              variant={"secondary"}
+                              className='ml-2'>{`x${val?.quantity}`}</Badge>
+                          </Button>
+                        ))}{" "}
+                        {renderVariationPopover(order)}
+                      </>
+                    ) : (
+                      order.products?.map((val, index) => (
+                        <Button
+                          key={index}
+                          className='mx-1'
+                          variant={"default"}
+                          size={"sm"}>
+                          {`${val?.title} `}{" "}
+                          <Badge
+                            variant={"secondary"}
+                            className='ml-2'>{`x${val?.quantity}`}</Badge>
+                        </Button>
+                      ))
+                    )}
                   </div>
                 </td>
-                <td className="border border-gray-300 p-2">
+                <td className='border border-gray-300 p-2'>
                   {order?.totalAmount}
                 </td>
-                <td className="border border-gray-300 p-2">
+                <td className='border border-gray-300 p-2'>
                   {new Date(order?.createdAt).toLocaleString()}
                 </td>
-                <td className="border border-gray-300 p-2">
-                  <div className="w-full grid grid-cols-2 gap-2">
+                <td className='border border-gray-300 p-2'>
+                  <div className='w-full grid grid-cols-2 gap-2'>
                     <AlertDialog>
                       <AlertDialogTrigger asChild>
-                        <ArchiveRestore className=" text-purple-500 cursor-pointer mx-auto" />
+                        <ArchiveRestore className=' text-purple-500 cursor-pointer mx-auto' />
                       </AlertDialogTrigger>
                       <AlertDialogContent>
                         <AlertDialogHeader>
@@ -142,8 +198,7 @@ const ListPurchaseOrders: React.FC = () => {
                           <AlertDialogAction
                             onClick={() =>
                               handleRestorePurchaseOrder(order?.id)
-                            }
-                          >
+                            }>
                             Continue
                           </AlertDialogAction>
                         </AlertDialogFooter>
@@ -152,7 +207,7 @@ const ListPurchaseOrders: React.FC = () => {
 
                     <Trash2
                       onClick={() => handleDelete(order?.id)}
-                      className="text-red-500 cursor-pointer mx-auto"
+                      className='text-red-500 cursor-pointer mx-auto'
                     />
                   </div>
                 </td>

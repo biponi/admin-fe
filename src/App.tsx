@@ -25,6 +25,8 @@ import PurchaseOrders from "./pages/purchaseOrder/purchaseOrders";
 import CreatePurchaseOrder from "./pages/purchaseOrder/CreatePurchaseOrder";
 import TransactionsPage from "./pages/transection";
 import ModifyOrder from "./pages/order/modifyOrderProduct";
+import ReserveStore from "./pages/reserve";
+import SingleReserveStore from "./pages/reserve/singleReserveStore";
 
 // Protected Route Component
 const ProtectedRoute = ({
@@ -163,6 +165,22 @@ const App = () => {
                   element={
                     <ProtectedRoute roles={["admin", "manager"]}>
                       <TransactionsPage />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path='/stores'
+                  element={
+                    <ProtectedRoute roles={["admin", "manager"]}>
+                      <ReserveStore />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path='/store/:storeId'
+                  element={
+                    <ProtectedRoute roles={["admin", "manager"]}>
+                      <SingleReserveStore />
                     </ProtectedRoute>
                   }
                 />
