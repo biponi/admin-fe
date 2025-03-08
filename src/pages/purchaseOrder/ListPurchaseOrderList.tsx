@@ -78,7 +78,7 @@ const ListPurchaseOrders: React.FC = () => {
     return (
       <Popover>
         <PopoverTrigger asChild>
-          <Button variant='default' className='bg-gray-700' size={"sm"}>
+          <Button variant='outline' size={"sm"}>
             View More
           </Button>
         </PopoverTrigger>
