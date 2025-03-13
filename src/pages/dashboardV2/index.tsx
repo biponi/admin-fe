@@ -533,7 +533,7 @@ const DashboardPage: React.FC = () => {
           }) => {
             setDateRange({
               start: values.range.from || new Date(),
-              end: values.range.to || new Date(),
+              end: endOfDay(values.range.to || new Date()),
             });
           }}
         />
