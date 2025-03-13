@@ -33,10 +33,10 @@ interface Props {
   quantity: number;
   unitPrice: number;
   updatedAt: string;
-  totalSold: number;
   categoryName: string;
   variations: string[];
   totalReturned: number;
+  totalSold: { status: string; sold: number }[];
   handleUpdateProduct: (id: string) => void;
   deleteExistingProduct: (id: string) => void;
 }
@@ -63,13 +63,12 @@ const SingleProductCardItem: React.FC<Props> = ({
   const discardDialog = () => {
     return (
       <CustomAlertDialog
-        title="Are You Sure?"
+        title='Are You Sure?'
         description={`Deleting ${title}?`}
         onSubmit={() => {
           deleteExistingProduct(id);
-        }}
-      >
-        <Button className="hidden" ref={dialogBtn}>
+        }}>
+        <Button className='hidden' ref={dialogBtn}>
           show dialog
         </Button>
       </CustomAlertDialog>
@@ -80,27 +79,26 @@ const SingleProductCardItem: React.FC<Props> = ({
     return (
       <Drawer>
         <DrawerTrigger asChild>
-          <Button variant="outline" className="hidden" ref={variantBtn}>
+          <Button variant='outline' className='hidden' ref={variantBtn}>
             Open Drawer
           </Button>
         </DrawerTrigger>
         <DrawerContent>
-          <div className="mx-auto w-full max-w-sm">
+          <div className='mx-auto w-full max-w-sm'>
             <DrawerHeader>
               <DrawerTitle>Variants</DrawerTitle>
               <DrawerDescription>
                 Total Variations:{" "}
-                <Badge className="outline">{variations?.length ?? 0}</Badge>
+                <Badge className='outline'>{variations?.length ?? 0}</Badge>
               </DrawerDescription>
             </DrawerHeader>
-            <div className="p-4 pb-0">
-              <div className="grid grid-cols-2 gap-2">
+            <div className='p-4 pb-0'>
+              <div className='grid grid-cols-2 gap-2'>
                 {variations?.map((val, index) => (
                   <Badge
                     key={index}
                     variant={"secondary"}
-                    className="bg-gray-300 text-gray-900"
-                  >
+                    className='bg-gray-300 text-gray-900'>
                     {val}
                   </Badge>
                 ))}
@@ -108,7 +106,7 @@ const SingleProductCardItem: React.FC<Props> = ({
             </div>
             <DrawerFooter>
               <DrawerClose asChild>
-                <Button variant="outline">Close</Button>
+                <Button variant='outline'>Close</Button>
               </DrawerClose>
             </DrawerFooter>
           </div>
@@ -120,97 +118,95 @@ const SingleProductCardItem: React.FC<Props> = ({
   const renderCardView = () => {
     return (
       <Card>
-        <CardHeader className="p-2">
-          <CardTitle className="w-full grid grid-cols-3 gap-2">
+        <CardHeader className='p-2'>
+          <CardTitle className='w-full grid grid-cols-3 gap-2'>
             <img
-              alt="img"
-              className="aspect-square rounded-md object-cover pointer-events-none group-hover:opacity-75"
-              height="64"
+              alt='img'
+              className='aspect-square rounded-md object-cover pointer-events-none group-hover:opacity-75'
+              height='64'
               src={image}
-              width="64"
+              width='64'
             />
-            <div className="col-span-2 grid-cols-1 gap-2">
-              <Badge className="w-full text-center mb-1">{categoryName}</Badge>
+            <div className='col-span-2 grid-cols-1 gap-2'>
+              <Badge className='w-full text-center mb-1'>{categoryName}</Badge>
               <Badge
-                className="w-full text-center"
-                variant={quantity > 0 ? "outline" : "destructive"}
-              >
+                className='w-full text-center'
+                variant={quantity > 0 ? "outline" : "destructive"}>
                 {quantity > 0 && (
-                  <span className="relative flex size-3">
-                    <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-sky-400 opacity-75"></span>
-                    <span className="relative inline-flex size-3 rounded-full bg-sky-500"></span>
+                  <span className='relative flex size-3'>
+                    <span className='absolute inline-flex h-full w-full animate-ping rounded-full bg-sky-400 opacity-75'></span>
+                    <span className='relative inline-flex size-3 rounded-full bg-sky-500'></span>
                   </span>
                 )}
-                <span className="ml-2">
+                <span className='ml-2'>
                   {quantity > 0 ? "in stock" : "out of stock"}
                 </span>
               </Badge>
             </div>
           </CardTitle>
-          <CardDescription className="w-full">
-            <div className="grid grid-cols-2 gap-2 justify-center items-center">
+          <CardDescription className='w-full'>
+            <div className='grid grid-cols-2 gap-2 justify-center items-center'>
               <Badge
                 variant={"outline"}
-                className="text-sm font-bold uppercase text-blue-700"
-              >
+                className='text-sm font-bold uppercase text-blue-700'>
                 {title}
               </Badge>
-              <span className="text-sm font-medium uppercase text-gray-900 text-right">
+              <span className='text-sm font-medium uppercase text-gray-900 text-right'>
                 {unitPrice} BDT
               </span>
             </div>
-            <div className="grid grid-cols-2 gap-2 justify-center items-center"></div>
+            <div className='grid grid-cols-2 gap-2 justify-center items-center'></div>
           </CardDescription>
         </CardHeader>
-        <CardContent className="p-2 h-[55px]">
-          <div className="grid grid-cols-4 sm:grid-cols-4 mx-auto gap-2">
-            <Badge variant={"outline"} className=" flex flex-col ">
-              <BoxIcon className=" size-4 mr-1 " /> {quantity}
+        <CardContent className='p-2 h-[55px]'>
+          <div className='grid grid-cols-4 sm:grid-cols-4 mx-auto gap-2'>
+            <Badge variant={"outline"} className=' flex flex-col '>
+              <BoxIcon className=' size-4 mr-1 ' /> {quantity}
             </Badge>
-            <Badge variant={"outline"} className=" flex flex-col">
-              <ShoppingCart className=" size-4 mr-1 " /> {totalSold}
+            <Badge variant={"outline"} className=' flex flex-col'>
+              <ShoppingCart className=' size-4 mr-1 ' />
+              {!!totalSold && totalSold?.length > 0
+                ? totalSold.reduce((sum, ss) => sum + ss?.sold, 0)
+                : 0}
             </Badge>
-            <Badge variant={"outline"} className=" flex flex-col">
-              <RotateCcw className=" size-4 mr-1 " /> {totalReturned}
+            <Badge variant={"outline"} className=' flex flex-col'>
+              <RotateCcw className=' size-4 mr-1 ' /> {totalReturned}
             </Badge>
 
             <Badge
               variant={"outline"}
-              className=" flex flex-col"
+              className=' flex flex-col'
               onClick={() => {
                 //@ts-ignore
                 if (!!variantBtn) variantBtn?.current.click();
-              }}
-            >
-              <Package className=" size-4 mr-1 " /> {variations.length ?? 0}
+              }}>
+              <Package className=' size-4 mr-1 ' /> {variations.length ?? 0}
             </Badge>
           </div>
-          <Badge variant={"outline"} className="my-1 hidden">
-            <span className="text-[10px] font-medium text-gray-800">
+          <Badge variant={"outline"} className='my-1 hidden'>
+            <span className='text-[10px] font-medium text-gray-800'>
               Updated At: {dayjs(updatedAt).format("DD-MM-YYYY HH:mm:ss")}
             </span>
           </Badge>
           {discardDialog()}
           {renderDrawerView()}
         </CardContent>
-        <CardFooter className="grid grid-cols-2 gap-2 p-1">
+        <CardFooter className='grid grid-cols-2 gap-2 p-1'>
           <Button
-            className="w-full"
+            className='w-full'
             size={"sm"}
             variant={"secondary"}
-            onClick={() => handleUpdateProduct(id)}
-          >
+            onClick={() => handleUpdateProduct(id)}>
             Edit
           </Button>
           <Button
-            className="w-full"
+            className='w-full'
             size={"sm"}
             variant={"destructive"}
             onClick={() => {
               //@ts-ignore
               if (!!dialogBtn) dialogBtn.current?.click();
-            }}
-          >
+            }}>
             Delete
           </Button>
         </CardFooter>

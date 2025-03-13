@@ -1,6 +1,6 @@
 {
   "name": "prior-admin-fe",
-  "version": "0.2.17",
+  "version": "0.2.18",
   "private": true,
   "dependencies": {
     "@hookform/resolvers": "^3.3.4",

@@ -17,9 +17,9 @@ export interface IProduct {
   categoryName?: string;
   hasVariation?: boolean;
   variation: IVariation[];
-  variantList?:string[];
-  sold?:number;
-  returned?:number;
+  variantList?: string[];
+  sold?: { status: string; sold: number }[];
+  returned?: number;
   created_at: string; // Assuming the date/time string format
   timestamps: {
     createdAt: string;
@@ -50,7 +50,7 @@ export interface IProductCreateData {
   unitPrice: number;
   manufactureId: string;
   discount: number;
-  discountType:string;
+  discountType: string;
   description: string;
   thumbnail: File | null;
   variation: IVariation[]; // Assuming variation can be an array of any type
@@ -67,14 +67,16 @@ export interface IProductUpdateData {
   unitPrice: number;
   manufactureId: string;
   discount: number;
-  discountType:string;
+  discountType: string;
   description: string;
   thumbnail: string | File | null;
   variation: IVariation[]; // Assuming variation can be an array of any type
   sku: string;
   categoryId: string;
   images: File[] | [];
-  removeImageIndexes?: number[];
+
+  removeImageIndexes?: string[];
+  removeAbleVarations?: string[];
 }
 
 export interface ICategory {
@@ -83,7 +85,7 @@ export interface ICategory {
   discount: number;
   active: boolean;
   img: string;
-  description:string;
+  description: string;
   totalProducts: number;
 }
 
@@ -91,7 +93,7 @@ export interface ICreateCategory {
   name: string;
   discount: number;
   active: boolean;
-  description:string;
+  description: string;
   img: string | File;
 }
 
@@ -101,7 +103,6 @@ export interface IChangeEvent extends React.ChangeEvent<HTMLInputElement> {
     value: any;
   };
 }
-
 
 export interface CategoryStockSummary {
   categoryId: string;
@@ -116,6 +117,6 @@ export interface StockSummaryResponse {
   categories: CategoryStockSummary[];
   totalActiveProductPrice: number;
   totalActiveProducts: number;
-      totalActiveProductVariations : number;
-      totalActiveProductType:number;
+  totalActiveProductVariations: number;
+  totalActiveProductType: number;
 }

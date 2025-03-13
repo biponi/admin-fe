@@ -27,10 +27,10 @@ interface Props {
   quantity: number;
   unitPrice: number;
   updatedAt: string;
-  totalSold: number;
   categoryName: string;
   variations: string[];
   totalReturned: number;
+  totalSold: { status: string; sold: number }[];
   handleUpdateProduct: (id: string) => void;
   deleteExistingProduct: (id: string) => void;
 }
@@ -56,13 +56,12 @@ const SingleItem: React.FC<Props> = ({
   const discardDialog = () => {
     return (
       <CustomAlertDialog
-        title="Are You Sure?"
+        title='Are You Sure?'
         description={`Deleting ${title}?`}
         onSubmit={() => {
           deleteExistingProduct(id);
-        }}
-      >
-        <Button className="hidden" ref={dialogBtn}>
+        }}>
+        <Button className='hidden' ref={dialogBtn}>
           show dialog
         </Button>
       </CustomAlertDialog>
@@ -72,12 +71,12 @@ const SingleItem: React.FC<Props> = ({
     return (
       <Popover>
         <PopoverTrigger asChild>
-          <Button variant="default" size={"sm"}>
+          <Button variant='default' size={"sm"}>
             View More
           </Button>
         </PopoverTrigger>
-        <PopoverContent className="w-96">
-          <div className="grid grid-cols-3 gap-2 w-full">
+        <PopoverContent className='w-96'>
+          <div className='grid grid-cols-3 gap-2 w-full'>
             {variations?.slice(2, variations?.length).map((val, index) => (
               <Button key={index} variant={"secondary"} size={"sm"}>
                 {val}
@@ -90,20 +89,20 @@ const SingleItem: React.FC<Props> = ({
   };
   return (
     <TableRow>
-      <TableCell className="hidden sm:table-cell">
+      <TableCell className='hidden sm:table-cell'>
         <img
-          alt="img"
-          className="aspect-square rounded-md object-cover"
-          height="32"
+          alt='img'
+          className='aspect-square rounded-md object-cover'
+          height='32'
           src={image}
-          width="32"
+          width='32'
         />
       </TableCell>
-      <TableCell className="font-medium">{title}</TableCell>
+      <TableCell className='font-medium'>{title}</TableCell>
       <TableCell>{sku}</TableCell>
       <TableCell>{categoryName}</TableCell>
       <TableCell>{unitPrice}</TableCell>
-      <TableCell className="grid grid-cols-3 gap-2">
+      <TableCell className='grid grid-cols-3 gap-2'>
         {variations?.length > 3 ? (
           <>
             {variations?.slice(0, 2).map((val, index) => (
@@ -121,30 +120,63 @@ const SingleItem: React.FC<Props> = ({
           ))
         )}
       </TableCell>
-      <TableCell className="hidden text-center md:table-cell">
+      <TableCell className='hidden text-center md:table-cell'>
         {quantity > 0 ? (
           <Badge variant={"outline"}>
-            <BoxIcon className=" size-4 mr-2" />
+            <BoxIcon className=' size-4 mr-2' />
             {quantity}
           </Badge>
         ) : (
           <Badge variant={"destructive"}>Out Of Stock</Badge>
         )}
       </TableCell>
-      <TableCell>{totalSold}</TableCell>
+      <TableCell>
+        <Popover>
+          <PopoverTrigger asChild>
+            <Button size={"sm"} variant={"outline"}>
+              {!!totalSold && totalSold?.length > 0
+                ? totalSold.reduce((sum, ts) => sum + ts?.sold, 0)
+                : 0}
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent>
+            <div className='grid grid-cols-3 gap-2 grid-flow-row auto-rows-min'>
+              {!!totalSold && totalSold?.length > 0 ? (
+                totalSold.map((activity, index: number) => (
+                  <Badge
+                    key={id + index}
+                    variant={"outline"}
+                    className='flex flex-col col-auto justify-center items-center gap-1 py-2 uppercase text-[10px]'>
+                    {`${activity?.status}`}{" "}
+                    <Badge
+                      variant={"default"}
+                      className='font-bold'>{`${activity?.sold}`}</Badge>{" "}
+                  </Badge>
+                ))
+              ) : (
+                <Badge
+                  variant={"secondary"}
+                  className=' col-span-3 text-center mx-auto'>
+                  No Activity Found
+                </Badge>
+              )}
+            </div>
+          </PopoverContent>
+        </Popover>
+      </TableCell>
       <TableCell>{totalReturned}</TableCell>
-      <TableCell className="hidden md:table-cell">
+      <TableCell className='hidden md:table-cell'>
         {dayjs(updatedAt).format("DD-MM-YYYY HH:mm:ss")}
       </TableCell>
       <TableCell>
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button aria-haspopup="true" size="icon" variant="ghost">
-              <MoreHorizontalIcon className="h-4 w-4" />
-              <span className="sr-only">Toggle menu</span>
+            <Button aria-haspopup='true' size='icon' variant='ghost'>
+              <MoreHorizontalIcon className='h-4 w-4' />
+              <span className='sr-only'>Toggle menu</span>
             </Button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
+          <DropdownMenuContent align='end'>
             <DropdownMenuLabel>Actions</DropdownMenuLabel>
             <DropdownMenuItem onClick={() => handleUpdateProduct(id)}>
               Edit
@@ -153,8 +185,7 @@ const SingleItem: React.FC<Props> = ({
               onClick={() => {
                 //@ts-ignore
                 if (!!dialogBtn) dialogBtn.current?.click();
-              }}
-            >
+              }}>
               Delete
             </DropdownMenuItem>
           </DropdownMenuContent>

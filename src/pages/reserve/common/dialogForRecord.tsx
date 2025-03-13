@@ -311,7 +311,12 @@ const DialogForRecord = ({
   };
 
   return (
-    <AlertDialog open={openDialog} onOpenChange={() => setOpenDialog(false)}>
+    <AlertDialog
+      open={openDialog}
+      onOpenChange={() => {
+        setSelectedProducts([]);
+        setOpenDialog(false);
+      }}>
       <AlertDialogContent className='w-[95vw] max-w-[95vw]'>
         <AlertDialogHeader>
           <AlertDialogTitle>Products</AlertDialogTitle>

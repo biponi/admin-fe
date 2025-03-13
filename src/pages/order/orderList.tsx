@@ -534,7 +534,7 @@ const OrderList = () => {
         open={showDetails}
         onOpenChange={(value: boolean) => setShowDetails(value)}
         x-chunk='dashboard-05-chunk-4'>
-        <SheetContent className='px-4 pb-2 pt-10'>
+        <SheetContent className='px-4 pb-2 pt-10 '>
           <SheetHeader className='flex flex-row items-start '>
             <div className='grid gap-0.5 pb-9'>
               <SheetTitle className='group flex items-center gap-2 text-lg w-full'>
@@ -682,7 +682,7 @@ const OrderList = () => {
             </Button> */}
             </div>
           </SheetHeader>
-          <div className=' text-sm '>
+          <div className=' text-sm max-h-[70vh] overflow-y-auto'>
             <div className='grid gap-3'>
               <div className='font-semibold'>Order Details</div>
               <ul className='grid gap-3'>

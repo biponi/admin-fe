@@ -132,9 +132,9 @@ const ProductList: React.FC<Props> = ({ handleEditProduct }) => {
   const renderEmptyView = () => {
     return (
       <EmptyView
-        title="You have no products"
-        description="You can start selling as soon as you add a product."
-        buttonText="Add Product"
+        title='You have no products'
+        description='You can start selling as soon as you add a product.'
+        buttonText='Add Product'
         handleButtonClick={() => navigate("/product/create")}
       />
     );
@@ -147,28 +147,27 @@ const ProductList: React.FC<Props> = ({ handleEditProduct }) => {
           <Drawer>
             <DrawerTrigger asChild>
               <Button
-                size="sm"
+                size='sm'
                 variant={"outline"}
-                className="h-7 mr-2 md:hidden "
-              >
-                <BarChartHorizontalBig className="h-3.5 w-3.5" />
-                <span className="sr-only sm:not-sr-only sm:whitespace-nowrap">
+                className='h-7 mr-2 md:hidden '>
+                <BarChartHorizontalBig className='h-3.5 w-3.5' />
+                <span className='sr-only sm:not-sr-only sm:whitespace-nowrap'>
                   View Summary
                 </span>
               </Button>
             </DrawerTrigger>
             <DrawerContent>
-              <div className="mx-auto w-full max-w-sm">
+              <div className='mx-auto w-full max-w-sm'>
                 <DrawerHeader>
                   <DrawerTitle>Inventory Summary</DrawerTitle>
                   <DrawerDescription>
                     Set your inventory summary...
                   </DrawerDescription>
                 </DrawerHeader>
-                <div className="px-4 pb-0 max-h-[70vh] overflow-y-scroll">
+                <div className='px-4 pb-0 max-h-[70vh] overflow-y-scroll'>
                   {renderCardSummaryView()}
                 </div>
-                <DrawerFooter className="bg-gray-100">
+                <DrawerFooter className='bg-gray-100'>
                   <DrawerClose asChild>
                     <Button variant={"default"}>Close</Button>
                   </DrawerClose>
@@ -179,27 +178,25 @@ const ProductList: React.FC<Props> = ({ handleEditProduct }) => {
         )}
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button variant="outline" size="sm" className="h-7 gap-1">
-              <ListFilter className="h-3.5 w-3.5" />
-              <span className="sr-only sm:not-sr-only sm:whitespace-nowrap">
+            <Button variant='outline' size='sm' className='h-7 gap-1'>
+              <ListFilter className='h-3.5 w-3.5' />
+              <span className='sr-only sm:not-sr-only sm:whitespace-nowrap'>
                 Filter
               </span>
             </Button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
+          <DropdownMenuContent align='end'>
             <DropdownMenuLabel>Filter by</DropdownMenuLabel>
             <DropdownMenuSeparator />
             <DropdownMenuCheckboxItem
               checked={selectedCategory === "all"}
-              onClick={() => setSelectedCategory("all")}
-            >
+              onClick={() => setSelectedCategory("all")}>
               All
             </DropdownMenuCheckboxItem>
             {categories.map((category, index) => (
               <DropdownMenuCheckboxItem
                 checked={selectedCategory === category?.id}
-                onClick={() => setSelectedCategory(category.id)}
-              >
+                onClick={() => setSelectedCategory(category.id)}>
                 {category?.name}
               </DropdownMenuCheckboxItem>
             ))}
@@ -212,12 +209,11 @@ const ProductList: React.FC<Props> = ({ handleEditProduct }) => {
               </span>
             </Button> */}
         <Button
-          size="sm"
-          className="h-7 ml-2 md:ml-0 md:gap-1 "
-          onClick={() => navigate("/product/create")}
-        >
-          <PlusCircle className="h-3.5 w-3.5" />
-          <span className="sr-only sm:not-sr-only sm:whitespace-nowrap">
+          size='sm'
+          className='h-7 ml-2 md:ml-0 md:gap-1 '
+          onClick={() => navigate("/product/create")}>
+          <PlusCircle className='h-3.5 w-3.5' />
+          <span className='sr-only sm:not-sr-only sm:whitespace-nowrap'>
             Add Product
           </span>
         </Button>
@@ -237,7 +233,7 @@ const ProductList: React.FC<Props> = ({ handleEditProduct }) => {
         active={product?.active}
         quantity={product?.quantity}
         unitPrice={product?.unitPrice}
-        totalSold={product?.sold ?? 0}
+        totalSold={product?.sold ?? []}
         totalReturned={product?.returned ?? 0}
         variations={product?.variantList ?? ["No Variant"]}
         handleUpdateProduct={handleEditProduct}
@@ -249,7 +245,7 @@ const ProductList: React.FC<Props> = ({ handleEditProduct }) => {
 
   const renderGridView = () => {
     return (
-      <div className="grid grid-cols-4 gap-2  w-full">
+      <div className='grid grid-cols-4 gap-2  w-full'>
         {products.map((product: IProduct, index: number) =>
           renderMobileProductView(product, index)
         )}
@@ -273,12 +269,12 @@ const ProductList: React.FC<Props> = ({ handleEditProduct }) => {
     total: number,
     index: number
   ) => (
-    <div className="w-full grid grid-cols-5 gap-2 my-2" key={index}>
-      <span className="text-xs text-gray-800 font-medium col-span-2 uppercase">
+    <div className='w-full grid grid-cols-5 gap-2 my-2' key={index}>
+      <span className='text-xs text-gray-800 font-medium col-span-2 uppercase'>
         {name}
       </span>
-      <Progress value={(value / total) * 100} className="col-span-2 mt-1" />
-      <span className="text-xs text-gray-800 font-medium w-full text-right col-span-1">
+      <Progress value={(value / total) * 100} className='col-span-2 mt-1' />
+      <span className='text-xs text-gray-800 font-medium w-full text-right col-span-1'>
         {formatNumber(value)}
       </span>
     </div>
@@ -317,7 +313,7 @@ const ProductList: React.FC<Props> = ({ handleEditProduct }) => {
     ];
 
     return (
-      <div className="grid grid-cols-1 gap-2 md:grid-cols-4 my-2">
+      <div className='grid grid-cols-1 gap-2 md:grid-cols-4 my-2'>
         {cardData.map(({ title, total, key, description }, cardIndex) => (
           <Card key={cardIndex}>
             <CardHeader>
@@ -329,7 +325,7 @@ const ProductList: React.FC<Props> = ({ handleEditProduct }) => {
             </CardHeader>
             <CardContent>
               {!summary || !summary.categories ? (
-                <div className="flex justify-center items-center p-10">
+                <div className='flex justify-center items-center p-10'>
                   No Data Found
                 </div>
               ) : (
@@ -353,107 +349,104 @@ const ProductList: React.FC<Props> = ({ handleEditProduct }) => {
   const renderProductListView = () => {
     return (
       <>
-        <div className="hidden md:block">
+        <div className='hidden md:block'>
           {user?.role.includes("admin") && renderCardSummaryView()}
         </div>
-        <Tabs defaultValue="all">
-          <div className="flex flex-col items-center w-[90vw] md:w-full md:flex-row">
-            <TabsList className="hidden md:block">
-              <TabsTrigger value="all">All</TabsTrigger>
-              <TabsTrigger value="active">Active</TabsTrigger>
-              <TabsTrigger value="inactive">Inactive</TabsTrigger>
-              <TabsTrigger value="instock">In Stock</TabsTrigger>
-              <TabsTrigger value="outofstock">Out of stock</TabsTrigger>
+        <Tabs defaultValue='all'>
+          <div className='flex flex-col items-center w-[90vw] md:w-full md:flex-row'>
+            <TabsList className='hidden md:block'>
+              <TabsTrigger value='all'>All</TabsTrigger>
+              <TabsTrigger value='active'>Active</TabsTrigger>
+              <TabsTrigger value='inactive'>Inactive</TabsTrigger>
+              <TabsTrigger value='instock'>In Stock</TabsTrigger>
+              <TabsTrigger value='outofstock'>Out of stock</TabsTrigger>
             </TabsList>
-            <div className="ml-auto hidden items-center gap-2 md:flex">
+            <div className='ml-auto hidden items-center gap-2 md:flex'>
               {renderButtonAndFilterView()}
             </div>
           </div>
 
           <Card
-            x-chunk="dashboard-06-chunk-0"
-            className=" mt-2 shadow-none border-0 md:shadow md:border  w-[90vw] md:mt-4 md:w-full"
-          >
-            <CardHeader className="shadow border rounded-xl md:rounded-none md:shadow-none md:border">
-              <div className="flex flex-col w-full justify-between md:flex-row  ">
-                <div className="md:mr-auto">
-                  <div className="flex items-center justify-between">
+            x-chunk='dashboard-06-chunk-0'
+            className=' mt-2 shadow-none border-0 md:shadow md:border  w-[90vw] md:mt-4 md:w-full'>
+            <CardHeader className='shadow border rounded-xl md:rounded-none md:shadow-none md:border'>
+              <div className='flex flex-col w-full justify-between md:flex-row  '>
+                <div className='md:mr-auto'>
+                  <div className='flex items-center justify-between'>
                     <CardTitle>Products</CardTitle>
-                    <div className="ml-auto md:hidden">
+                    <div className='ml-auto md:hidden'>
                       {renderButtonAndFilterView()}
                     </div>
                   </div>
-                  <CardDescription className="mt-2 hidden md:block">
+                  <CardDescription className='mt-2 hidden md:block'>
                     Manage your products and view their sales performance.
                   </CardDescription>
                 </div>
-                <div className=" mt-2 md:mt-0 md:ml-auto">
+                <div className=' mt-2 md:mt-0 md:ml-auto'>
                   <Input
-                    type="text"
-                    placeholder="Search"
+                    type='text'
+                    placeholder='Search'
                     onChange={(event) => {
                       setInputValue(event.target.value);
                     }}
                   />
                 </div>
-                <div className=" justify-between items-center gap-2 hidden">
+                <div className=' justify-between items-center gap-2 hidden'>
                   <Button
                     variant={viewType.includes("grid") ? "default" : "outline"}
-                    onClick={() => setViewType("grid")}
-                  >
-                    <Grid2X2 className="size-5" />
+                    onClick={() => setViewType("grid")}>
+                    <Grid2X2 className='size-5' />
                   </Button>
                   <Button
                     variant={viewType.includes("list") ? "default" : "outline"}
-                    onClick={() => setViewType("list")}
-                  >
-                    <List className="size-5" />
+                    onClick={() => setViewType("list")}>
+                    <List className='size-5' />
                   </Button>
                 </div>
               </div>
             </CardHeader>
-            <CardContent className="p-0">
-              <TabsList className="block md:hidden my-2">
-                <TabsTrigger value="all">All</TabsTrigger>
-                <TabsTrigger value="inactive">Inactive</TabsTrigger>
-                <TabsTrigger value="instock">In Stock</TabsTrigger>
-                <TabsTrigger value="outofstock">Out of stock</TabsTrigger>
+            <CardContent className='p-0'>
+              <TabsList className='block md:hidden my-2'>
+                <TabsTrigger value='all'>All</TabsTrigger>
+                <TabsTrigger value='inactive'>Inactive</TabsTrigger>
+                <TabsTrigger value='instock'>In Stock</TabsTrigger>
+                <TabsTrigger value='outofstock'>Out of stock</TabsTrigger>
               </TabsList>
-              <TabsContent value="all">
-                <ul className="grid grid-cols-2 max-h-[63vh] overflow-y-auto gap-x-2 gap-y-2 md:hidden sm:grid-cols-4 sm:gap-x-2 lg:grid-cols-4 xl:gap-x-8">
+              <TabsContent value='all'>
+                <ul className='grid grid-cols-2 max-h-[63vh] overflow-y-auto gap-x-2 gap-y-2 md:hidden sm:grid-cols-4 sm:gap-x-2 lg:grid-cols-4 xl:gap-x-8'>
                   {products.map((product: IProduct, index: number) =>
                     renderMobileProductView(product, index)
                   )}
                 </ul>
-                <div className="w-full max-h-[65vh] overflow-y-auto">
+                <div className='w-full max-h-[65vh] overflow-y-auto'>
                   {viewType.includes("grid") && renderGridView()}
                   {viewType.includes("list") && (
-                    <Table className=" hidden md:table ">
+                    <Table className=' hidden md:table '>
                       <TableHeader>
                         <TableRow>
-                          <TableHead className="hidden w-[100px] sm:table-cell">
-                            <span className="sr-only">Image</span>
-                            <Image className="size-5" />
+                          <TableHead className='hidden w-[100px] sm:table-cell'>
+                            <span className='sr-only'>Image</span>
+                            <Image className='size-5' />
                           </TableHead>
                           <TableHead>Name</TableHead>
                           <TableHead>SKU</TableHead>
                           <TableHead>Category Name</TableHead>
                           <TableHead>Price</TableHead>
                           <TableHead>Variations</TableHead>
-                          <TableHead className="hidden md:table-cell">
+                          <TableHead className='hidden md:table-cell'>
                             Total Stock
                           </TableHead>
                           <TableHead>Sold</TableHead>
                           <TableHead>Returned</TableHead>
-                          <TableHead className="hidden md:table-cell">
+                          <TableHead className='hidden md:table-cell'>
                             Last Updated at
                           </TableHead>
                           <TableHead>
-                            <span className="sr-only">Actions</span>
+                            <span className='sr-only'>Actions</span>
                           </TableHead>
                         </TableRow>
                       </TableHeader>
-                      <TableBody className=" max-h-[70vh] overflow-y-auto ">
+                      <TableBody className=' max-h-[70vh] overflow-y-auto '>
                         {products.map((product: IProduct) => (
                           <SingleItem
                             key={product?.id}
@@ -465,7 +458,7 @@ const ProductList: React.FC<Props> = ({ handleEditProduct }) => {
                             active={product?.active}
                             quantity={product?.quantity}
                             unitPrice={product?.unitPrice}
-                            totalSold={product?.sold ?? 0}
+                            totalSold={product?.sold ?? []}
                             totalReturned={product?.returned ?? 0}
                             variations={product?.variantList ?? ["No Variant"]}
                             handleUpdateProduct={handleEditProduct}
@@ -478,40 +471,40 @@ const ProductList: React.FC<Props> = ({ handleEditProduct }) => {
                   )}
                 </div>
               </TabsContent>
-              <TabsContent value="active">
-                <ul className="grid grid-cols-2 max-h-[63vh] overflow-y-auto gap-2 md:hidden sm:grid-cols-3 sm:gap-x-6 lg:grid-cols-4 xl:gap-x-8">
+              <TabsContent value='active'>
+                <ul className='grid grid-cols-2 max-h-[63vh] overflow-y-auto gap-2 md:hidden sm:grid-cols-3 sm:gap-x-6 lg:grid-cols-4 xl:gap-x-8'>
                   {products
                     .filter((product: IProduct) => product.active)
                     .map((product: IProduct, index: number) =>
                       renderMobileProductView(product, index)
                     )}
                 </ul>
-                <div className="w-full max-h-[65vh] overflow-y-auto">
+                <div className='w-full max-h-[65vh] overflow-y-auto'>
                   {viewType.includes("grid") && renderGridView()}
                   {viewType.includes("list") && (
-                    <Table className=" hidden md:table ">
+                    <Table className=' hidden md:table '>
                       <TableHeader>
                         <TableRow>
-                          <TableHead className="hidden w-[100px] sm:table-cell">
-                            <span className="sr-only">Image</span>
+                          <TableHead className='hidden w-[100px] sm:table-cell'>
+                            <span className='sr-only'>Image</span>
                           </TableHead>
                           <TableHead>Name</TableHead>
                           <TableHead>SKU</TableHead>
                           <TableHead>Status</TableHead>
                           <TableHead>Category Name</TableHead>
                           <TableHead>Price</TableHead>
-                          <TableHead className="hidden md:table-cell">
+                          <TableHead className='hidden md:table-cell'>
                             Total Stock
                           </TableHead>
-                          <TableHead className="hidden md:table-cell">
+                          <TableHead className='hidden md:table-cell'>
                             Last Updated at
                           </TableHead>
                           <TableHead>
-                            <span className="sr-only">Actions</span>
+                            <span className='sr-only'>Actions</span>
                           </TableHead>
                         </TableRow>
                       </TableHeader>
-                      <TableBody className=" max-h-[70vh] overflow-y-auto ">
+                      <TableBody className=' max-h-[70vh] overflow-y-auto '>
                         {products
                           .filter((product: IProduct) => product.active)
                           .map((product: IProduct, index: number) => (
@@ -527,7 +520,7 @@ const ProductList: React.FC<Props> = ({ handleEditProduct }) => {
                               active={product?.active}
                               quantity={product?.quantity}
                               unitPrice={product?.unitPrice}
-                              totalSold={product?.sold ?? 0}
+                              totalSold={product?.sold ?? []}
                               totalReturned={product?.returned ?? 0}
                               variations={
                                 product?.variantList ?? ["No Variant"]
@@ -542,40 +535,40 @@ const ProductList: React.FC<Props> = ({ handleEditProduct }) => {
                   )}
                 </div>
               </TabsContent>
-              <TabsContent value="inactive">
-                <ul className="grid grid-cols-2 max-h-[63vh] overflow-y-auto gap-2  md:hidden sm:grid-cols-3 sm:gap-x-6 lg:grid-cols-4 xl:gap-x-8">
+              <TabsContent value='inactive'>
+                <ul className='grid grid-cols-2 max-h-[63vh] overflow-y-auto gap-2  md:hidden sm:grid-cols-3 sm:gap-x-6 lg:grid-cols-4 xl:gap-x-8'>
                   {products
                     .filter((product: IProduct) => !product.active)
                     .map((product: IProduct, index: number) =>
                       renderMobileProductView(product, index)
                     )}
                 </ul>
-                <div className="w-full max-h-[65vh] overflow-y-auto">
+                <div className='w-full max-h-[65vh] overflow-y-auto'>
                   {viewType.includes("grid") && renderGridView()}
                   {viewType.includes("list") && (
-                    <Table className=" hidden md:table ">
+                    <Table className=' hidden md:table '>
                       <TableHeader>
                         <TableRow>
-                          <TableHead className="hidden w-[100px] sm:table-cell">
-                            <span className="sr-only">Image</span>
+                          <TableHead className='hidden w-[100px] sm:table-cell'>
+                            <span className='sr-only'>Image</span>
                           </TableHead>
                           <TableHead>Name</TableHead>
                           <TableHead>SKU</TableHead>
                           <TableHead>Status</TableHead>
                           <TableHead>Category Name</TableHead>
                           <TableHead>Price</TableHead>
-                          <TableHead className="hidden md:table-cell">
+                          <TableHead className='hidden md:table-cell'>
                             Total Stock
                           </TableHead>
-                          <TableHead className="hidden md:table-cell">
+                          <TableHead className='hidden md:table-cell'>
                             Last Updated at
                           </TableHead>
                           <TableHead>
-                            <span className="sr-only">Actions</span>
+                            <span className='sr-only'>Actions</span>
                           </TableHead>
                         </TableRow>
                       </TableHeader>
-                      <TableBody className=" max-h-[70vh] overflow-y-auto ">
+                      <TableBody className=' max-h-[70vh] overflow-y-auto '>
                         {products
                           .filter((product: IProduct) => !product.active)
                           .map((product: IProduct, index: number) => (
@@ -594,7 +587,7 @@ const ProductList: React.FC<Props> = ({ handleEditProduct }) => {
                               handleUpdateProduct={handleEditProduct}
                               deleteExistingProduct={deleteProductData}
                               updatedAt={product?.timestamps?.updatedAt}
-                              totalSold={product?.sold ?? 0}
+                              totalSold={product?.sold ?? []}
                               totalReturned={product?.returned ?? 0}
                               variations={
                                 product?.variantList ?? ["No Variant"]
@@ -606,40 +599,40 @@ const ProductList: React.FC<Props> = ({ handleEditProduct }) => {
                   )}
                 </div>
               </TabsContent>
-              <TabsContent value="instock">
-                <ul className="grid grid-cols-2 max-h-[63vh] overflow-y-auto gap-2 md:hidden sm:grid-cols-3 sm:gap-x-6 lg:grid-cols-4 xl:gap-x-8">
+              <TabsContent value='instock'>
+                <ul className='grid grid-cols-2 max-h-[63vh] overflow-y-auto gap-2 md:hidden sm:grid-cols-3 sm:gap-x-6 lg:grid-cols-4 xl:gap-x-8'>
                   {products
                     .filter((product: IProduct) => product.quantity > 0)
                     .map((product: IProduct, index: number) =>
                       renderMobileProductView(product, index)
                     )}
                 </ul>
-                <div className="w-full max-h-[65vh] overflow-y-auto">
+                <div className='w-full max-h-[65vh] overflow-y-auto'>
                   {viewType.includes("grid") && renderGridView()}
                   {viewType.includes("list") && (
-                    <Table className=" hidden md:table ">
+                    <Table className=' hidden md:table '>
                       <TableHeader>
                         <TableRow>
-                          <TableHead className="hidden w-[100px] sm:table-cell">
-                            <span className="sr-only">Image</span>
+                          <TableHead className='hidden w-[100px] sm:table-cell'>
+                            <span className='sr-only'>Image</span>
                           </TableHead>
                           <TableHead>Name</TableHead>
                           <TableHead>SKU</TableHead>
                           <TableHead>Status</TableHead>
                           <TableHead>Category Name</TableHead>
                           <TableHead>Price</TableHead>
-                          <TableHead className="hidden md:table-cell">
+                          <TableHead className='hidden md:table-cell'>
                             Total Stock
                           </TableHead>
-                          <TableHead className="hidden md:table-cell">
+                          <TableHead className='hidden md:table-cell'>
                             Last Updated at
                           </TableHead>
                           <TableHead>
-                            <span className="sr-only">Actions</span>
+                            <span className='sr-only'>Actions</span>
                           </TableHead>
                         </TableRow>
                       </TableHeader>
-                      <TableBody className=" max-h-[70vh] overflow-y-auto ">
+                      <TableBody className=' max-h-[70vh] overflow-y-auto '>
                         {products
                           .filter((product: IProduct) => product.quantity > 3)
                           .map((product: IProduct, index: number) => (
@@ -658,7 +651,7 @@ const ProductList: React.FC<Props> = ({ handleEditProduct }) => {
                               handleUpdateProduct={handleEditProduct}
                               deleteExistingProduct={deleteProductData}
                               updatedAt={product?.timestamps?.updatedAt}
-                              totalSold={product?.sold ?? 0}
+                              totalSold={product?.sold ?? []}
                               totalReturned={product?.returned ?? 0}
                               variations={
                                 product?.variantList ?? ["No Variant"]
@@ -670,40 +663,40 @@ const ProductList: React.FC<Props> = ({ handleEditProduct }) => {
                   )}
                 </div>
               </TabsContent>
-              <TabsContent value="outofstock">
-                <ul className="grid grid-cols-2 max-h-[63vh] overflow-y-auto gap-2 md:hidden sm:grid-cols-3 sm:gap-x-6 lg:grid-cols-4 xl:gap-x-8">
+              <TabsContent value='outofstock'>
+                <ul className='grid grid-cols-2 max-h-[63vh] overflow-y-auto gap-2 md:hidden sm:grid-cols-3 sm:gap-x-6 lg:grid-cols-4 xl:gap-x-8'>
                   {products
                     .filter((product: IProduct) => product.quantity <= 0)
                     .map((product: IProduct, index: number) =>
                       renderMobileProductView(product, index)
                     )}
                 </ul>
-                <div className="w-full max-h-[65vh] overflow-y-auto">
+                <div className='w-full max-h-[65vh] overflow-y-auto'>
                   {viewType.includes("grid") && renderGridView()}
                   {viewType.includes("list") && (
-                    <Table className=" hidden md:table ">
+                    <Table className=' hidden md:table '>
                       <TableHeader>
                         <TableRow>
-                          <TableHead className="hidden w-[100px] sm:table-cell">
-                            <span className="sr-only">Image</span>
+                          <TableHead className='hidden w-[100px] sm:table-cell'>
+                            <span className='sr-only'>Image</span>
                           </TableHead>
                           <TableHead>Name</TableHead>
                           <TableHead>SKU</TableHead>
                           <TableHead>Status</TableHead>
                           <TableHead>Category Name</TableHead>
                           <TableHead>Price</TableHead>
-                          <TableHead className="hidden md:table-cell">
+                          <TableHead className='hidden md:table-cell'>
                             Total Stock
                           </TableHead>
-                          <TableHead className="hidden md:table-cell">
+                          <TableHead className='hidden md:table-cell'>
                             Last Updated at
                           </TableHead>
                           <TableHead>
-                            <span className="sr-only">Actions</span>
+                            <span className='sr-only'>Actions</span>
                           </TableHead>
                         </TableRow>
                       </TableHeader>
-                      <TableBody className=" max-h-[70vh] overflow-y-auto ">
+                      <TableBody className=' max-h-[70vh] overflow-y-auto '>
                         {products
                           .filter((product: IProduct) => product.quantity <= 0)
                           .map((product: IProduct, index: number) => (
@@ -719,7 +712,7 @@ const ProductList: React.FC<Props> = ({ handleEditProduct }) => {
                               active={product?.active}
                               quantity={product?.quantity}
                               unitPrice={product?.unitPrice}
-                              totalSold={product?.sold ?? 0}
+                              totalSold={product?.sold ?? []}
                               totalReturned={product?.returned ?? 0}
                               variations={
                                 product?.variantList ?? ["No Variant"]
@@ -736,9 +729,9 @@ const ProductList: React.FC<Props> = ({ handleEditProduct }) => {
               </TabsContent>
             </CardContent>
             {inputValue === "" && (
-              <CardFooter className="mt-2 px-0">
-                <div className="w-full flex justify-between items-center border md:border-0 border-gray-300  rounded-xl  px-2 md:px-4">
-                  <div className="text-xs text-muted-foreground">
+              <CardFooter className='mt-2 px-0'>
+                <div className='w-full flex justify-between items-center border md:border-0 border-gray-300  rounded-xl  px-2 md:px-4'>
+                  <div className='text-xs text-muted-foreground'>
                     Showing{" "}
                     <strong>{`${
                       (Number(currentPageNum) - 1) * limit + 1
@@ -748,47 +741,44 @@ const ProductList: React.FC<Props> = ({ handleEditProduct }) => {
                     )}`}</strong>{" "}
                     of <strong>{totalProducts}</strong> products
                   </div>
-                  <div className="flex gap-2 items-center">
+                  <div className='flex gap-2 items-center'>
                     <Select
                       value={`${limit}`}
                       onValueChange={(value: string) => {
                         setLimit(parseInt(value, 10));
-                      }}
-                    >
-                      <SelectTrigger className="w-auto border-0 md:border">
-                        <SelectValue placeholder="Select Row Limit" />
+                      }}>
+                      <SelectTrigger className='w-auto border-0 md:border'>
+                        <SelectValue placeholder='Select Row Limit' />
                       </SelectTrigger>
                       <SelectContent>
                         <SelectGroup>
                           <SelectLabel>Limit</SelectLabel>
-                          <SelectItem value="10">10</SelectItem>
-                          <SelectItem value="20">20</SelectItem>
-                          <SelectItem value="50">50</SelectItem>
-                          <SelectItem value="100">100</SelectItem>
-                          <SelectItem value="150">150</SelectItem>
-                          <SelectItem value="200">200</SelectItem>
+                          <SelectItem value='10'>10</SelectItem>
+                          <SelectItem value='20'>20</SelectItem>
+                          <SelectItem value='50'>50</SelectItem>
+                          <SelectItem value='100'>100</SelectItem>
+                          <SelectItem value='150'>150</SelectItem>
+                          <SelectItem value='200'>200</SelectItem>
                         </SelectGroup>
                       </SelectContent>
                     </Select>{" "}
                     <Button
                       disabled={currentPageNum < 2}
-                      variant="outline"
-                      size="icon"
-                      className="h-7 w-7"
-                      onClick={() => updateCurrentPage(-1)}
-                    >
-                      <ChevronLeft className="h-4 w-4" />
-                      <span className="sr-only">Back</span>
+                      variant='outline'
+                      size='icon'
+                      className='h-7 w-7'
+                      onClick={() => updateCurrentPage(-1)}>
+                      <ChevronLeft className='h-4 w-4' />
+                      <span className='sr-only'>Back</span>
                     </Button>
                     <Button
                       disabled={currentPageNum >= totalPages}
-                      variant="outline"
-                      size="icon"
-                      className="h-7 w-7"
-                      onClick={() => updateCurrentPage(1)}
-                    >
-                      <ChevronRight className="h-4 w-4" />
-                      <span className="sr-only">Next</span>
+                      variant='outline'
+                      size='icon'
+                      className='h-7 w-7'
+                      onClick={() => updateCurrentPage(1)}>
+                      <ChevronRight className='h-4 w-4' />
+                      <span className='sr-only'>Next</span>
                     </Button>
                   </div>
                 </div>
@@ -802,7 +792,7 @@ const ProductList: React.FC<Props> = ({ handleEditProduct }) => {
 
   const mainView = () => {
     if (productFetching) {
-      return <SkeletonCard title="Loading Product Data..." />;
+      return <SkeletonCard title='Loading Product Data...' />;
     } else if (inputValue !== "" || (!!products && products.length > 0)) {
       return renderProductListView();
     } else {
@@ -810,7 +800,7 @@ const ProductList: React.FC<Props> = ({ handleEditProduct }) => {
     }
   };
 
-  return <div className="w-full md:w-[95vw]">{mainView()}</div>;
+  return <div className='w-full md:w-[95vw]'>{mainView()}</div>;
 };
 
 export default ProductList;

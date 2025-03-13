@@ -137,7 +137,7 @@ const SingleReserveStore: React.FC = () => {
           </Button>
         </PopoverTrigger>
         <PopoverContent className='w-96'>
-          <div className='grid grid-cols-2 gap-2 w-full'>
+          <div className='grid grid-cols-2 gap-2 w-full max-h-[30vh] overflow-y-auto'>
             {record?.products
               ?.slice(2, record?.products?.length)
               .map((val, index) => (

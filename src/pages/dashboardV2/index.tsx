@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 
 import {
-  format,
+  formatISO,
   startOfWeek,
   endOfWeek,
   startOfMonth,
@@ -161,8 +161,8 @@ const DashboardPage: React.FC = () => {
         config.dashboard.getDashboardAnalysis(),
         {
           params: {
-            startDate: format(dateRange?.start || new Date(), "yyyy-MM-dd"),
-            endDate: format(dateRange?.end || new Date(), "yyyy-MM-dd"),
+            startDate: formatISO(dateRange?.start || new Date()),
+            endDate: formatISO(dateRange?.end || new Date()),
           },
         }
       );
@@ -189,10 +189,10 @@ const DashboardPage: React.FC = () => {
   const mainReportView = () => {
     return (
       <>
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 py-4">
+        <div className='grid grid-cols-1 md:grid-cols-4 gap-4 py-4'>
           <DynamicCard
-            title="Total Orders"
-            subtitle="Growth in total orders this period"
+            title='Total Orders'
+            subtitle='Growth in total orders this period'
             previousValue={
               analysisData?.orderMetrics?.previousMonthMetrics?.totalOrders ?? 0
             }
@@ -201,8 +201,8 @@ const DashboardPage: React.FC = () => {
             }
           />
           <DynamicCard
-            title="Total Amount"
-            subtitle="Growth in total amount by order this period"
+            title='Total Amount'
+            subtitle='Growth in total amount by order this period'
             previousValue={
               analysisData?.orderMetrics?.previousMonthMetrics?.totalAmount ?? 0
             }
@@ -211,23 +211,23 @@ const DashboardPage: React.FC = () => {
             }
           />
           <DynamicCard
-            title="Total Purchase"
-            subtitle="This is only the total purchase amount this period"
+            title='Total Purchase'
+            subtitle='This is only the total purchase amount this period'
             previousValue={0}
             currentValue={analysisData?.reports?.purchases ?? 0}
           />
           <DynamicCard
-            title="Total Return"
-            subtitle="This is only the order return amount this period"
+            title='Total Return'
+            subtitle='This is only the order return amount this period'
             previousValue={0}
             currentValue={analysisData?.reports?.returns ?? 0}
           />
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 pb-4">
+        <div className='grid grid-cols-1 md:grid-cols-4 gap-4 pb-4'>
           <DynamicCard
-            title="Total Paid"
-            subtitle="Growth in total paid this period"
+            title='Total Paid'
+            subtitle='Growth in total paid this period'
             previousValue={
               analysisData?.orderMetrics?.previousMonthMetrics?.totalPaid ?? 0
             }
@@ -236,8 +236,8 @@ const DashboardPage: React.FC = () => {
             }
           />
           <DynamicCard
-            title="Total Remaining"
-            subtitle="Growth in order remaining this period"
+            title='Total Remaining'
+            subtitle='Growth in order remaining this period'
             previousValue={
               analysisData?.orderMetrics?.previousMonthMetrics
                 ?.totalRemaining ?? 0
@@ -247,8 +247,8 @@ const DashboardPage: React.FC = () => {
             }
           />
           <DynamicCard
-            title="Total Delivery Charge"
-            subtitle="Growth in total delivery charge this period"
+            title='Total Delivery Charge'
+            subtitle='Growth in total delivery charge this period'
             previousValue={
               analysisData?.orderMetrics?.previousMonthMetrics
                 ?.totalDeliveryCharge ?? 0
@@ -259,8 +259,8 @@ const DashboardPage: React.FC = () => {
             }
           />
           <DynamicCard
-            title="Total Discount Amount"
-            subtitle="Growth in total discount amount by order this period"
+            title='Total Discount Amount'
+            subtitle='Growth in total discount amount by order this period'
             previousValue={
               analysisData?.orderMetrics?.previousMonthMetrics?.totalDiscount ??
               0
@@ -271,9 +271,9 @@ const DashboardPage: React.FC = () => {
           />
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
           <InteractiveCardComponent
-            title="Purchase Vs Order Amount"
+            title='Purchase Vs Order Amount'
             subTitle={`Showing data from ${
               dateRange?.start.toDateString() ?? ""
             } to ${dateRange?.end.toDateString() ?? ""}`}
@@ -285,7 +285,7 @@ const DashboardPage: React.FC = () => {
           />
 
           <InteractiveSingleCardComponent
-            title="Order Stauts Daily Comparison"
+            title='Order Stauts Daily Comparison'
             subTitle={`Showing data from ${
               dateRange?.start.toDateString() ?? ""
             } to ${dateRange?.end.toDateString() ?? ""}`}
@@ -294,7 +294,7 @@ const DashboardPage: React.FC = () => {
         </div>
 
         {/* Metrics Cards */}
-        <div className="mt-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 py-4">
+        <div className='mt-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 py-4'>
           {!!analysisData?.reports?.processingAndCompleted &&
             analysisData?.reports?.processingAndCompleted.length > 0 &&
             !!analysisData?.reports?.processingAndCompleted[0]._id && (
@@ -445,7 +445,7 @@ const DashboardPage: React.FC = () => {
         </div>
 
         {/* Tables */}
-        <div className="mt-6 grid grid-cols-1 gap-2 md:grid-cols-2 md:gap-6 ">
+        <div className='mt-6 grid grid-cols-1 gap-2 md:grid-cols-2 md:gap-6 '>
           <Card>
             <CardHeader>
               <CardTitle>Top Customers</CardTitle>
@@ -509,16 +509,16 @@ const DashboardPage: React.FC = () => {
   };
 
   return (
-    <div className="p-6">
-      <h1 className="text-3xl font-bold mb-4">Dashboard</h1>
-      <div className="flex justify-between items-center">
-        <p className="text-base font-normal text-gray-600 px-3 py-2 bg-gray-50 rounded-lg border border-gray-200 shadow">
+    <div className='p-6'>
+      <h1 className='text-3xl font-bold mb-4'>Dashboard</h1>
+      <div className='grid grid-cols-1 gap-2 md:flex justify-between items-center'>
+        <p className='hidden md:block text-base font-normal text-gray-600 px-3 py-2 bg-gray-50 rounded-lg border border-gray-200 shadow'>
           Showing data from{" "}
-          <span className="font-semibold text-gray-900">
+          <span className='font-semibold text-gray-900'>
             {dateRange?.start.toDateString()}
           </span>{" "}
           to{" "}
-          <span className="font-semibold text-gray-900">
+          <span className='font-semibold text-gray-900'>
             {dateRange?.end.toDateString()}
           </span>
         </p>
@@ -540,7 +540,7 @@ const DashboardPage: React.FC = () => {
       </div>
 
       {loading ? (
-        <SkeletonCard title="Data is loading, please wait..." />
+        <SkeletonCard title='Data is loading, please wait...' />
       ) : (
         mainReportView()
       )}
