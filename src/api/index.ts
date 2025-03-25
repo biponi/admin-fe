@@ -202,7 +202,7 @@ export const getProductsById = async (
   try {
     const response = await axios.get<any>(config.product.multiProducts(), {
       params: {
-        ids:idList.join(",")
+        ids: idList.join(","),
       },
     });
     if (response.status === 200) {

@@ -11,6 +11,13 @@ const config = {
     login: () => `${baseURL}/user/login`,
     allUsers: () => `${baseURL}/user/all`,
     getUserById: (userId: number) => `${baseURL}/user/by/${userId}`,
+    getUserProfile: () => `${baseURL}/user/member/profile`,
+    updateUserData: () => `${baseURL}/user/member/update`,
+    updatePasssword: () => `${baseURL}/user/member/change-password`,
+    updateMemberData: (memberId: string) =>
+      `${baseURL}/user/member/${memberId}/admin-change-user-data`,
+    deleteMember: (memberId: string) =>
+      `${baseURL}/user/member/delete/${memberId}`,
   },
   product: {
     createProduct: () => `${baseURL}/product/create`,

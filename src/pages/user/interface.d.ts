@@ -8,4 +8,5 @@ export interface IUser {
   avatar: string;
   bio: string;
   whatsapp_number: string;
+  password?: string;
 }

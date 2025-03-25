@@ -1,5 +1,6 @@
 import {
   BadgeDollarSign,
+  CircleUser,
   Home,
   Package2,
   Shirt,
@@ -66,6 +67,13 @@ export const navItems = [
     link: "/stores",
     active: true,
     roles: ["admin", "manager"],
+  },
+  {
+    icon: <CircleUser className='w-5 h-5' />,
+    title: "Users",
+    link: "/users",
+    active: true,
+    roles: ["admin"],
   },
   {
     icon: <User2 className='w-5 h-5' />,

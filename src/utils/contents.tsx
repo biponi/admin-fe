@@ -9,28 +9,28 @@ export const NavBarItems = [
     label: "Dashboard",
     link: "/dashboard",
     roles: ["admin", "manager", "moderator"],
-    icon: <Home className="h-5 w-5" />,
+    icon: <Home className='h-5 w-5' />,
   },
   {
     active: true,
     label: "Products",
     link: "/product",
     roles: ["admin", "manager"],
-    icon: <ShirtIcon className="h-5 w-5" />,
+    icon: <ShirtIcon className='h-5 w-5' />,
   },
   {
     active: true,
     label: "Categories",
     link: "/category",
     roles: ["admin", "manager"],
-    icon: <BoxesIcon className="h-5 w-5" />,
+    icon: <BoxesIcon className='h-5 w-5' />,
   },
   {
     active: true,
     label: "Orders",
     link: "/order",
     roles: ["admin", "manager", "moderator"],
-    icon: <ShoppingCart className="h-5 w-5" />,
+    icon: <ShoppingCart className='h-5 w-5' />,
   },
 ];
 
@@ -621,4 +621,13 @@ export const BDDivisions = [
     lat: "24.747149",
     long: "90.420273",
   },
+];
+
+export const UserRoleList = [
+  { id: 1, roleName: "ADMIN", roleId: 1 },
+  { id: 2, roleName: "AGENT", roleId: 2 },
+  { id: 3, roleName: "EDITOR", roleId: 3 },
+  { id: 4, roleName: "MANUFACTURER", roleId: 4 },
+  { id: 5, roleName: "MANAGER", roleId: 5 },
+  { id: 6, roleName: "MODERATOR", roleId: 6 },
 ];

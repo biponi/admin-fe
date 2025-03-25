@@ -22,7 +22,7 @@ import { navItems } from "../utils/navItem";
 import { useLocation, useNavigate } from "react-router-dom";
 import { BiponiLogo } from "../utils/contents";
 import useLoginAuth from "../pages/auth/hooks/useLoginAuth";
-import { Avatar, AvatarFallback } from "../components/ui/avatar";
+import { Avatar, AvatarFallback, AvatarImage } from "../components/ui/avatar";
 import { getInitialsWord } from "../utils/functions";
 
 const Navbar = () => {
@@ -82,11 +82,15 @@ const Navbar = () => {
           </Tooltip>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Avatar>
+              <Avatar className='border-2 border-white shadow-lg'>
+                <AvatarImage src={user?.avatar} />
                 <AvatarFallback>{getInitialsWord(user?.name)}</AvatarFallback>
               </Avatar>
             </DropdownMenuTrigger>
             <DropdownMenuContent align='end'>
+              <DropdownMenuItem onClick={() => navigate("/profile")}>
+                My Profile
+              </DropdownMenuItem>
               <DropdownMenuItem onClick={() => signOut()}>
                 Logout
               </DropdownMenuItem>
@@ -117,7 +121,7 @@ const Navbar = () => {
               {navItems
                 .filter((nav) => nav.active && nav.roles.includes(user?.role))
                 .map((item) => (
-                  <DrawerClose>
+                  <DrawerClose key={item.link}>
                     <Button
                       key={item.link}
                       variant={
@@ -130,14 +134,24 @@ const Navbar = () => {
                     </Button>
                   </DrawerClose>
                 ))}
-              <DrawerClose>
-                <Button
-                  variant={"destructive"}
-                  className='flex justify-center items-center w-full gap-4'
-                  onClick={() => signOut()}>
-                  <User2 className='size-5' /> Logout
-                </Button>
-              </DrawerClose>
+              <div className='w-full grid-cols-2 gap-2'>
+                <DrawerClose>
+                  <Button
+                    variant={"secondary"}
+                    className='flex justify-center items-center w-full gap-4'
+                    onClick={() => navigate("/profile")}>
+                    <User2 className='size-5' /> My Profile
+                  </Button>
+                </DrawerClose>
+                <DrawerClose>
+                  <Button
+                    variant={"destructive"}
+                    className='flex justify-center items-center w-full gap-4'
+                    onClick={() => signOut()}>
+                    <User2 className='size-5' /> Logout
+                  </Button>
+                </DrawerClose>
+              </div>
             </nav>
           </DrawerContent>
         </Drawer>
