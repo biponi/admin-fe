@@ -137,11 +137,11 @@ const CreateOrder = () => {
 
   const renderMainView = () => {
     return (
-      <MainView title="Order Creation">
-        <div className="w-full sm:w-[95vw]">
+      <MainView title='Order Creation'>
+        <div className='w-full sm:w-[95vw]'>
           <Stepper steps={orderSteps} />
           <br />
-          <div className="my-2" />
+          <div className='my-2' />
           {renderContentView()}
         </div>
       </MainView>

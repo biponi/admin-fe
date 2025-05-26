@@ -18,6 +18,8 @@ import { Input } from "../../components/ui/input";
 import { BDDistrictList, BDDivisions } from "../../utils/contents";
 import { Textarea } from "../../components/ui/textarea";
 import { Button } from "../../components/ui/button";
+import { isValidBangladeshiMobileNumber } from "../../utils/helperFunction";
+import { errorToast } from "../../utils/toast";
 const defaultPersonalInformation = {
   name: "",
   email: "",
@@ -46,6 +48,26 @@ const CustomerInformation: React.FC<Props> = ({
 
   const [divisionQuery, setDivisionQuery] = useState("");
   const [districtQuery, setDistrictQuery] = useState("");
+
+  const handleSubmit = () => {
+    if (
+      !!personalInfomation?.phoneNumber &&
+      !isValidBangladeshiMobileNumber(personalInfomation?.phoneNumber)
+    ) {
+      return errorToast("Please enter a valid Bangladeshi phone number.");
+    }
+    if (!shippingAddress?.division) {
+      return errorToast("Please select a division.");
+    }
+    if (!shippingAddress?.district) {
+      return errorToast("Please select a district.");
+    }
+
+    handleCustomerDataChange({
+      customer: personalInfomation,
+      shipping: shippingAddress,
+    });
+  };
 
   const handlePersonalInfomationChange = (
     e: React.ChangeEvent<HTMLInputElement>
@@ -249,14 +271,7 @@ const CustomerInformation: React.FC<Props> = ({
               }}>
               Back
             </Button>
-            <Button
-              className=' w-full'
-              onClick={() =>
-                handleCustomerDataChange({
-                  customer: personalInfomation,
-                  shipping: shippingAddress,
-                })
-              }>
+            <Button className=' w-full' onClick={() => handleSubmit()}>
               Next
             </Button>
           </div>
