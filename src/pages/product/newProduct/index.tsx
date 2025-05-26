@@ -7,6 +7,7 @@ import AddProduct from "./addProduct";
 import DefaultLoading from "../../../coreComponents/defaultLoading";
 import useCategory from "../hooks/useCategory";
 import { buildFormDataFromObject } from "../../../utils/functions";
+import { errorToast } from "../../../utils/toast";
 
 const CreateNewProduct = () => {
   const { toast } = useToast();
@@ -81,6 +82,10 @@ const CreateNewProduct = () => {
         description: validateResponse?.message,
         variant: "destructive",
       });
+      errorToast(
+        validateResponse?.message || "Product validation failed",
+        "top-center"
+      );
     } else {
       setLoading(true);
       const response = await createProduct(
@@ -100,6 +105,10 @@ const CreateNewProduct = () => {
           description: response?.error,
           variant: "destructive",
         });
+        errorToast(
+          response?.error || "🆘 Oops!!, Product creation failed",
+          "top-center"
+        );
       }
     }
 
