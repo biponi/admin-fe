@@ -40,6 +40,11 @@ const CreateNewProduct = () => {
         isValidate: false,
         message: "Enter a valid sku for the product",
       };
+    } else if (!productData?.categoryId) {
+      return {
+        isValidate: false,
+        message: "Select a valid category for the product",
+      };
     } else if (
       productData?.variation.length < 0 &&
       (Number(productData?.quantity) < 0 || productData?.unitPrice)
