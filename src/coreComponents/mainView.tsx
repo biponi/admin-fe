@@ -2,6 +2,7 @@ import { ReactElement } from "react";
 
 interface Props {
   title: string;
+  subTitle?: string;
   children: ReactElement;
 }
 

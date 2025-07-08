@@ -1,0 +1,22 @@
+export const pagePermissions: Record<string, string[]> = {
+  Dashboard: ["view"],
+  Order: [
+    "view",
+    "create",
+    "edit",
+    "delete",
+    "modify",
+    "view_details",
+    "bulk_action",
+    "documents",
+  ],
+  Product: ["view", "create", "edit", "delete", "summary"],
+  Category: ["view", "create", "edit", "delete"],
+  Campaign: ["view", "create", "edit", "delete"],
+  PurchaseOrder: ["view", "create", "edit", "delete"],
+  Transaction: ["view", "edit", "delete"],
+  ReserveStore: ["view", "create", "edit", "delete", "store_access"],
+  ReserveRecord: ["view", "create", "edit", "delete"],
+  User: ["view", "create", "edit", "delete"],
+  Role: ["view", "create", "edit", "delete"],
+};

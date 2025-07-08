@@ -28,9 +28,11 @@ import {
 } from "../../components/ui/popover";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
+import useRoleCheck from "../auth/hooks/useRoleCheck";
 
 const ListPurchaseOrders: React.FC = () => {
   const naviagate = useNavigate();
+  const { hasRequiredPermission, hasSomePermissionsForPage } = useRoleCheck();
   const [purchaseOrders, setPurchaseOrders] = useState<PurchaseOrder[]>([]);
 
   useEffect(() => {
@@ -104,9 +106,11 @@ const ListPurchaseOrders: React.FC = () => {
     <div className='p-6 w-[90vw]'>
       <div className='flex justify-between items-center w-full mb-4'>
         <h1 className='text-2xl font-bold mb-4'>Purchase Orders</h1>
-        <Button onClick={() => naviagate("/purchase-order/create")}>
-          Create Purchase Order
-        </Button>
+        {hasRequiredPermission("purchaseorder", "create") && (
+          <Button onClick={() => naviagate("/purchase-order/create")}>
+            Create Purchase Order
+          </Button>
+        )}
       </div>
       {!purchaseOrders ||
         (purchaseOrders.length === 0 && (
@@ -127,7 +131,12 @@ const ListPurchaseOrders: React.FC = () => {
                 Total Amount
               </th>
               <th className='text-lg border border-gray-300 p-2'>Created At</th>
-              <th className='text-lg border border-gray-300 p-2'>Action</th>
+              {hasSomePermissionsForPage("purchaseorder", [
+                "edit",
+                "delete",
+              ]) && (
+                <th className='text-lg border border-gray-300 p-2'>Action</th>
+              )}
             </tr>
           </thead>
           <tbody>
@@ -176,41 +185,50 @@ const ListPurchaseOrders: React.FC = () => {
                 <td className='border border-gray-300 p-2'>
                   {new Date(order?.createdAt).toLocaleString()}
                 </td>
-                <td className='border border-gray-300 p-2'>
-                  <div className='w-full grid grid-cols-2 gap-2'>
-                    <AlertDialog>
-                      <AlertDialogTrigger asChild>
-                        <ArchiveRestore className=' text-purple-500 cursor-pointer mx-auto' />
-                      </AlertDialogTrigger>
-                      <AlertDialogContent>
-                        <AlertDialogHeader>
-                          <AlertDialogTitle>
-                            Are you absolutely sure?
-                          </AlertDialogTitle>
-                          <AlertDialogDescription>
-                            This action cannot be undone. This will permanently
-                            delete your purchase order and remove the product
-                            data from the list.
-                          </AlertDialogDescription>
-                        </AlertDialogHeader>
-                        <AlertDialogFooter>
-                          <AlertDialogCancel>Cancel</AlertDialogCancel>
-                          <AlertDialogAction
-                            onClick={() =>
-                              handleRestorePurchaseOrder(order?.id)
-                            }>
-                            Continue
-                          </AlertDialogAction>
-                        </AlertDialogFooter>
-                      </AlertDialogContent>
-                    </AlertDialog>
+                {hasSomePermissionsForPage("purchaseorder", [
+                  "edit",
+                  "delete",
+                ]) && (
+                  <td className='border border-gray-300 p-2'>
+                    <div className='w-full grid grid-cols-2 gap-2'>
+                      {hasRequiredPermission("purchaseorder", "edit") && (
+                        <AlertDialog>
+                          <AlertDialogTrigger asChild>
+                            <ArchiveRestore className=' text-purple-500 cursor-pointer mx-auto' />
+                          </AlertDialogTrigger>
+                          <AlertDialogContent>
+                            <AlertDialogHeader>
+                              <AlertDialogTitle>
+                                Are you absolutely sure?
+                              </AlertDialogTitle>
+                              <AlertDialogDescription>
+                                This action cannot be undone. This will
+                                permanently delete your purchase order and
+                                remove the product data from the list.
+                              </AlertDialogDescription>
+                            </AlertDialogHeader>
+                            <AlertDialogFooter>
+                              <AlertDialogCancel>Cancel</AlertDialogCancel>
+                              <AlertDialogAction
+                                onClick={() =>
+                                  handleRestorePurchaseOrder(order?.id)
+                                }>
+                                Continue
+                              </AlertDialogAction>
+                            </AlertDialogFooter>
+                          </AlertDialogContent>
+                        </AlertDialog>
+                      )}
 
-                    <Trash2
-                      onClick={() => handleDelete(order?.id)}
-                      className='text-red-500 cursor-pointer mx-auto'
-                    />
-                  </div>
-                </td>
+                      {hasRequiredPermission("purchaseorder", "delete") && (
+                        <Trash2
+                          onClick={() => handleDelete(order?.id)}
+                          className='text-red-500 cursor-pointer mx-auto'
+                        />
+                      )}
+                    </div>
+                  </td>
+                )}
               </tr>
             ))}
           </tbody>

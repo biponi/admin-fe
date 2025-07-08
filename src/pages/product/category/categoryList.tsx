@@ -29,6 +29,7 @@ import useCategory from "../hooks/useCategory";
 import { useEffect, useState } from "react";
 import { SkeletonCard } from "../../../coreComponents/sekeleton";
 import UpdateCategory from "./updateCategory";
+import useRoleCheck from "../../auth/hooks/useRoleCheck";
 
 const CatergoryList = () => {
   const {
@@ -39,6 +40,7 @@ const CatergoryList = () => {
     editExistingCategory,
     deleteExistingCategory,
   } = useCategory();
+  const { hasRequiredPermission, hasSomePermissionsForPage } = useRoleCheck();
   const [openCreateDialog, setOpenCreateDialog] = useState(false);
   const [openUpdateDialog, setOpenUpdateDialog] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState<ICategory | null>(
@@ -55,7 +57,7 @@ const CatergoryList = () => {
   }, [selectedCategory]);
 
   const renderEmptyView = () => {
-    return (
+    return hasRequiredPermission("category", "create") ? (
       <EmptyView
         title='You have no category'
         description='You can start adding product as soon as you add a category.'
@@ -64,6 +66,11 @@ const CatergoryList = () => {
           //@ts-ignore
           setOpenCreateDialog(true);
         }}
+      />
+    ) : (
+      <EmptyView
+        title='You have no category'
+        description='You can start adding product as soon as you add a category.'
       />
     );
   };
@@ -77,20 +84,22 @@ const CatergoryList = () => {
             <TabsTrigger value='active'>Active</TabsTrigger>
             <TabsTrigger value='inactive'>Inactive</TabsTrigger>
           </TabsList>
-          <div className='ml-auto flex items-center gap-2'>
-            <Button
-              size='sm'
-              className='h-7 gap-1'
-              onClick={() => {
-                //@ts-ignore
-                setOpenCreateDialog(true);
-              }}>
-              <PlusCircle className='h-3.5 w-3.5' />
-              <span className='sr-only sm:not-sr-only sm:whitespace-nowrap'>
-                Add Category
-              </span>
-            </Button>
-          </div>
+          {hasRequiredPermission("category", "create") && (
+            <div className='ml-auto flex items-center gap-2'>
+              <Button
+                size='sm'
+                className='h-7 gap-1'
+                onClick={() => {
+                  //@ts-ignore
+                  setOpenCreateDialog(true);
+                }}>
+                <PlusCircle className='h-3.5 w-3.5' />
+                <span className='sr-only sm:not-sr-only sm:whitespace-nowrap'>
+                  Add Category
+                </span>
+              </Button>
+            </div>
+          )}
         </div>
         <TabsContent value='all'>
           <Card x-chunk='dashboard-06-chunk-0'>
@@ -173,9 +182,14 @@ const CatergoryList = () => {
                     <TableHead className='hidden md:table-cell'>
                       Discount
                     </TableHead>
-                    <TableHead>
-                      <span className='sr-only'>Actions</span>
-                    </TableHead>
+                    {hasSomePermissionsForPage("category", [
+                      "edit",
+                      "delete",
+                    ]) && (
+                      <TableHead>
+                        <span className='sr-only'>Actions</span>
+                      </TableHead>
+                    )}
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -236,9 +250,14 @@ const CatergoryList = () => {
                     <TableHead className='hidden md:table-cell'>
                       Discount
                     </TableHead>
-                    <TableHead>
-                      <span className='sr-only'>Actions</span>
-                    </TableHead>
+                    {hasSomePermissionsForPage("category", [
+                      "edit",
+                      "delete",
+                    ]) && (
+                      <TableHead>
+                        <span className='sr-only'>Actions</span>
+                      </TableHead>
+                    )}
                   </TableRow>
                 </TableHeader>
                 <TableBody>

@@ -19,6 +19,7 @@ import { TableCell, TableRow } from "../../../components/ui/table";
 import { Button } from "../../../components/ui/button";
 import { useRef } from "react";
 import CustomAlertDialog from "../../../coreComponents/OptionModal";
+import useRoleCheck from "../../auth/hooks/useRoleCheck";
 
 interface Props {
   id: string;
@@ -59,40 +60,41 @@ const SingleItem: React.FC<Props> = ({
   deleteExistingOrder,
   handleReturnProducts,
 }) => {
+  const { hasRequiredPermission, hasSomePermissionsForPage } = useRoleCheck();
   const dialogBtn = useRef(null);
 
   const discardDialog = () => {
     return (
       <CustomAlertDialog
-        title="Are You Sure?"
+        title='Are You Sure?'
         description={`Deleting #${id}?`}
         onSubmit={() => {
           deleteExistingOrder(id);
-        }}
-      >
-        <Button className="hidden" ref={dialogBtn}>
+        }}>
+        <Button className='hidden' ref={dialogBtn}>
           show dialog
         </Button>
       </CustomAlertDialog>
     );
   };
   return (
-    <TableRow className="hover:bg-zinc-300">
-      {!status.includes("return") && (
-        <TableCell className="hidden sm:table-cell">
-          <input
-            className="border-gray-200 rounded-lg text-primary"
-            type="checkbox"
-            checked={isBulkAdded}
-            onChange={(e) => {
-              handleBulkCheck(!isBulkAdded);
-            }}
-          />
-        </TableCell>
-      )}
-      <TableCell className="hidden sm:table-cell">{orderNumber}</TableCell>
+    <TableRow className='hover:bg-zinc-300'>
+      {hasSomePermissionsForPage("order", ["edit", "delete", "documents"]) &&
+        !status.includes("return") && (
+          <TableCell className='hidden sm:table-cell'>
+            <input
+              className='border-gray-200 rounded-lg text-primary'
+              type='checkbox'
+              checked={isBulkAdded}
+              onChange={(e) => {
+                handleBulkCheck(!isBulkAdded);
+              }}
+            />
+          </TableCell>
+        )}
+      <TableCell className='hidden sm:table-cell'>{orderNumber}</TableCell>
       <TableCell>{customerName}</TableCell>
-      <TableCell className="font-medium">{CustomerPhoneNumber}</TableCell>
+      <TableCell className='font-medium'>{CustomerPhoneNumber}</TableCell>
       <TableCell>
         <Badge
           variant={
@@ -106,73 +108,78 @@ const SingleItem: React.FC<Props> = ({
               : ["cancel", "delete"].includes(status)
               ? ""
               : "bg-green-500 text-gray-200"
-          }`}
-        >
+          }`}>
           {status === "processing" ? (
-            <TimerIcon className="w-4 h-4 mr-2  " />
+            <TimerIcon className='w-4 h-4 mr-2  ' />
           ) : status === "shipped" ? (
-            <Truck className="w-4 h-4 mr-2" />
+            <Truck className='w-4 h-4 mr-2' />
           ) : ["cancel", "delete", "fail", "failed"].includes(status) ? (
-            <CircleMinusIcon className="w-4 h-4 mr-2" />
+            <CircleMinusIcon className='w-4 h-4 mr-2' />
           ) : (
-            <CircleCheck className="w-4 h-4 mr-2 " />
+            <CircleCheck className='w-4 h-4 mr-2 ' />
           )}
           {status.toUpperCase()}
         </Badge>
       </TableCell>
-      <TableCell className="hidden md:table-cell">
-        <Badge variant="outline" className="py-1 px-3">
-          <MapPin className="w-4 h-4 mr-2" />
+      <TableCell className='hidden md:table-cell'>
+        <Badge variant='outline' className='py-1 px-3'>
+          <MapPin className='w-4 h-4 mr-2' />
           {district}
         </Badge>
       </TableCell>
       <TableCell>{totalPrice}</TableCell>
-      <TableCell className="hidden md:table-cell">{paid}</TableCell>
-      <TableCell className="hidden md:table-cell">{remaining}</TableCell>
-      <TableCell className="hidden ">
+      <TableCell className='hidden md:table-cell'>{paid}</TableCell>
+      <TableCell className='hidden md:table-cell'>{remaining}</TableCell>
+      <TableCell className='hidden '>
         {dayjs(updatedAt).format("DD-MM-YYYY HH:mm:ss")}
       </TableCell>
       <TableCell
-        className=" cursor-pointer"
-        onClick={() => handleViewDetails()}
-      >
-        <u className=" cursor-pointer">Details</u>
+        className=' cursor-pointer'
+        onClick={() => handleViewDetails()}>
+        <u className=' cursor-pointer'>Details</u>
       </TableCell>
-      <TableCell>
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button aria-haspopup="true" size="icon" variant="ghost">
-              <MoreHorizontalIcon className="h-4 w-4" />
-              <span className="sr-only">Toggle menu</span>
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
-            <DropdownMenuLabel>Actions</DropdownMenuLabel>
+      {hasSomePermissionsForPage("order", ["edit", "delete"]) && (
+        <TableCell>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button aria-haspopup='true' size='icon' variant='ghost'>
+                <MoreHorizontalIcon className='h-4 w-4' />
+                <span className='sr-only'>Toggle menu</span>
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align='end'>
+              <DropdownMenuLabel>Actions</DropdownMenuLabel>
 
-            <DropdownMenuItem onClick={() => handleUpdateOrder()}>
-              Edit
-            </DropdownMenuItem>
-            {status.includes("processing") && (
-              <DropdownMenuItem onClick={() => handleModifyProduct()}>
-                Modify Product
-              </DropdownMenuItem>
-            )}
-            {status.includes("shipped") && (
-              <DropdownMenuItem onClick={() => handleReturnProducts()}>
-                Return Product
-              </DropdownMenuItem>
-            )}
-            <DropdownMenuItem
-              onClick={() => {
-                //@ts-ignore
-                if (!!dialogBtn) dialogBtn.current?.click();
-              }}
-            >
-              Delete
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
-      </TableCell>
+              {hasRequiredPermission("order", "edit") && (
+                <DropdownMenuItem onClick={() => handleUpdateOrder()}>
+                  Edit
+                </DropdownMenuItem>
+              )}
+              {hasRequiredPermission("order", "edit") &&
+                status.includes("processing") && (
+                  <DropdownMenuItem onClick={() => handleModifyProduct()}>
+                    Modify Product
+                  </DropdownMenuItem>
+                )}
+              {hasRequiredPermission("order", "edit") &&
+                status.includes("shipped") && (
+                  <DropdownMenuItem onClick={() => handleReturnProducts()}>
+                    Return Product
+                  </DropdownMenuItem>
+                )}
+              {hasRequiredPermission("order", "delete") && (
+                <DropdownMenuItem
+                  onClick={() => {
+                    //@ts-ignore
+                    if (!!dialogBtn) dialogBtn.current?.click();
+                  }}>
+                  Delete
+                </DropdownMenuItem>
+              )}
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </TableCell>
+      )}
       {discardDialog()}
     </TableRow>
   );

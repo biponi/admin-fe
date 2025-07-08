@@ -15,3 +15,24 @@ export const isValidBangladeshiMobileNumber = (number: string) => {
 export const decodeTokenFunction = (authToken: string) => {
   return isExpired(authToken);
 };
+
+const hasPagePermissionForAllActiveUsers = ["profile"];
+
+type Permission = {
+  page: string;
+  actions: string[];
+};
+
+export const hasPagePermission = (
+  page: string,
+  action: string,
+  permissions: Permission[]
+): boolean => {
+  if (hasPagePermissionForAllActiveUsers.includes(page.trim().toLowerCase()))
+    return true;
+
+  const permission = permissions.find(
+    (perm) => perm.page.trim().toLowerCase() === page.trim().toLowerCase()
+  );
+  return permission?.actions.includes(action) ?? false;
+};

@@ -23,6 +23,7 @@ import {
   DrawerTitle,
   DrawerTrigger,
 } from "../../../components/ui/drawer";
+import useRoleCheck from "../../auth/hooks/useRoleCheck";
 
 interface Props {
   id: string;
@@ -57,6 +58,7 @@ const SingleProductCardItem: React.FC<Props> = ({
   handleUpdateProduct,
   deleteExistingProduct,
 }) => {
+  const { hasSomePermissionsForPage, hasRequiredPermission } = useRoleCheck();
   const dialogBtn = useRef(null);
   const variantBtn = useRef(null);
 
@@ -191,25 +193,31 @@ const SingleProductCardItem: React.FC<Props> = ({
           {discardDialog()}
           {renderDrawerView()}
         </CardContent>
-        <CardFooter className='grid grid-cols-2 gap-2 p-1'>
-          <Button
-            className='w-full'
-            size={"sm"}
-            variant={"secondary"}
-            onClick={() => handleUpdateProduct(id)}>
-            Edit
-          </Button>
-          <Button
-            className='w-full'
-            size={"sm"}
-            variant={"destructive"}
-            onClick={() => {
-              //@ts-ignore
-              if (!!dialogBtn) dialogBtn.current?.click();
-            }}>
-            Delete
-          </Button>
-        </CardFooter>
+        {hasSomePermissionsForPage("product", ["edit", "delete"]) && (
+          <CardFooter className='grid grid-cols-2 gap-2 p-1'>
+            {hasRequiredPermission("product", "edit") && (
+              <Button
+                className='w-full'
+                size={"sm"}
+                variant={"secondary"}
+                onClick={() => handleUpdateProduct(id)}>
+                Edit
+              </Button>
+            )}
+            {hasRequiredPermission("product", "delete") && (
+              <Button
+                className='w-full'
+                size={"sm"}
+                variant={"destructive"}
+                onClick={() => {
+                  //@ts-ignore
+                  if (!!dialogBtn) dialogBtn.current?.click();
+                }}>
+                Delete
+              </Button>
+            )}
+          </CardFooter>
+        )}
       </Card>
     );
   };

@@ -1,11 +1,11 @@
-export interface ICampaingProducts{
-    id:string;
-     name:string;
-      description:string;
-       thumbnail:string;
-        quantity:number;
-        active:boolean;
-         unitPrice:number;
+export interface ICampaingProducts {
+  id: string;
+  name: string;
+  description: string;
+  thumbnail: string;
+  quantity: number;
+  active: boolean;
+  unitPrice: number;
 }
 export interface ICampaign {
   id: string;
@@ -18,4 +18,9 @@ export interface ICampaign {
   startDate: Date;
   endDate: Date;
   active?: boolean; // Optional with default true
+  prepaymentRequired?: boolean;
+  prepaymentAmount?: number;
+  prepaymentType?: string; // Optional with default 'percentage'
+  minOrderAmount?: number; // Optional with default 0
+  maxPrepaymentAmount?: number; // Optional with default 0
 }

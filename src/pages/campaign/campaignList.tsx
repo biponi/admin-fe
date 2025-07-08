@@ -35,10 +35,12 @@ import { Card, CardContent, CardHeader } from "../../components/ui/card";
 import { Input } from "../../components/ui/input";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-hot-toast";
+import useRoleCheck from "../auth/hooks/useRoleCheck";
 const DATE_FORMAT = "DD/MM/YYYY HH:mm";
 
 const CampaignList = () => {
   const navigate = useNavigate();
+  const { hasRequiredPermission, hasSomePermissionsForPage } = useRoleCheck();
   const { fetchCampaignList, deleteACampaign } = useCampaign();
   const [campaigns, setCampaigns] = useState([]);
   const [query, setQuery] = useState("");
@@ -70,32 +72,30 @@ const CampaignList = () => {
     return (
       <Drawer>
         <DrawerTrigger>
-          <button ref={deleteBtnRef} className="hidden">
+          <button ref={deleteBtnRef} className='hidden'>
             delete
           </button>
         </DrawerTrigger>
         <DrawerContent>
-          <DrawerHeader className="mx-auto">
+          <DrawerHeader className='mx-auto'>
             <DrawerTitle>Are you absolutely sure?</DrawerTitle>
             <DrawerDescription>This action cannot be undone.</DrawerDescription>
           </DrawerHeader>
-          <DrawerFooter className="container">
-            <div className="flex justify-center items-center gap-6">
+          <DrawerFooter className='container'>
+            <div className='flex justify-center items-center gap-6'>
               <DrawerClose>
                 <Button
-                  variant="destructive"
+                  variant='destructive'
                   onClick={() => {
                     handleCampaignDelete(selectedCamIdToDelete);
-                  }}
-                >
+                  }}>
                   I'm Sure
                 </Button>
               </DrawerClose>
               <DrawerClose>
                 <Button
-                  variant="outline"
-                  onClick={() => setSelectedCamIdToDelete("")}
-                >
+                  variant='outline'
+                  onClick={() => setSelectedCamIdToDelete("")}>
                   Cancel
                 </Button>
               </DrawerClose>
@@ -109,7 +109,7 @@ const CampaignList = () => {
     if (!campaigns || campaigns.length < 1) {
       return (
         <TableRow>
-          <TableCell colSpan={5} className="text-center">
+          <TableCell colSpan={5} className='text-center'>
             <Badge variant={"secondary"}>No Campaign Found</Badge>
           </TableCell>
         </TableRow>
@@ -121,36 +121,40 @@ const CampaignList = () => {
         )
         .map((cam: ICampaign, index: number) => (
           <TableRow>
-            <TableCell className="font-medium">{index + 1}</TableCell>
+            <TableCell className='font-medium'>{index + 1}</TableCell>
             <TableCell>{cam?.title}</TableCell>
             <TableCell>{cam?.products?.length ?? 0}</TableCell>
             <TableCell>{dayjs(cam?.startDate).format(DATE_FORMAT)}</TableCell>
             <TableCell>{dayjs(cam?.endDate).format(DATE_FORMAT)}</TableCell>
-            <TableCell className="text-right">
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Ellipsis />
-                </DropdownMenuTrigger>
-                <DropdownMenuContent>
-                  <DropdownMenuItem
-                    onClick={() => navigate(`/campaign/update/${cam?.id}`)}
-                  >
-                    Edit
-                  </DropdownMenuItem>
-                  <DropdownMenuItem
-                    className="text-red-600"
-                    onClick={() => {
-                      if (!!deleteBtnRef) {
-                        setSelectedCamIdToDelete(cam?.id);
-                        deleteBtnRef?.current?.click();
-                      }
-                    }}
-                  >
-                    Delete
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
-            </TableCell>
+            {hasSomePermissionsForPage("campaign", ["edit", "delete"]) && (
+              <TableCell className='text-right'>
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Ellipsis />
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent>
+                    {hasRequiredPermission("campaign", "edit") && (
+                      <DropdownMenuItem
+                        onClick={() => navigate(`/campaign/update/${cam?.id}`)}>
+                        Edit
+                      </DropdownMenuItem>
+                    )}
+                    {hasRequiredPermission("campaign", "delete") && (
+                      <DropdownMenuItem
+                        className='text-red-600'
+                        onClick={() => {
+                          if (!!deleteBtnRef) {
+                            setSelectedCamIdToDelete(cam?.id);
+                            deleteBtnRef?.current?.click();
+                          }
+                        }}>
+                        Delete
+                      </DropdownMenuItem>
+                    )}
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </TableCell>
+            )}
           </TableRow>
         ));
     }
@@ -162,13 +166,15 @@ const CampaignList = () => {
         <TableHeader>
           <TableRow>
             <TableHead>#</TableHead>
-            <TableHead className="w-[100px] truncate text-left">
+            <TableHead className='w-[100px] truncate text-left'>
               Title
             </TableHead>
             <TableHead>Total Products</TableHead>
             <TableHead>Start Date</TableHead>
             <TableHead>End Date</TableHead>
-            <TableHead>Action</TableHead>
+            {hasSomePermissionsForPage("campaign", ["edit", "delete"]) && (
+              <TableHead>Action</TableHead>
+            )}
           </TableRow>
         </TableHeader>
         <TableBody>{renderSingleCampaign()}</TableBody>
@@ -176,21 +182,23 @@ const CampaignList = () => {
     );
   };
   return (
-    <MainView title="Campaign">
-      <div className="w-full sm:w-[95vw] my-2">
+    <MainView title='Campaign'>
+      <div className='w-full sm:w-[95vw] my-2'>
         {!loading && (
-          <Card className="w-full">
+          <Card className='w-full'>
             <CardHeader>
-              <div className="flex justify-between items-start">
+              <div className='flex justify-between items-start'>
                 <Input
-                  className="w-1/2"
-                  type="text"
-                  placeholder="Search (id, title)..."
+                  className='w-1/2'
+                  type='text'
+                  placeholder='Search (id, title)...'
                   onChange={(e) => setQuery(e.target.value ?? "")}
                 />
-                <Button onClick={() => navigate("/campaign/create")}>
-                  Create New Campaign
-                </Button>
+                {hasRequiredPermission("campaign", "create") && (
+                  <Button onClick={() => navigate("/campaign/create")}>
+                    Create New Campaign
+                  </Button>
+                )}
               </div>
             </CardHeader>
             <CardContent>{renderCampaignList()}</CardContent>
@@ -198,11 +206,12 @@ const CampaignList = () => {
         )}
 
         {loading && (
-          <Badge variant={"outline"} className="mx-auto mt-10">
+          <Badge variant={"outline"} className='mx-auto mt-10'>
             Loading...
           </Badge>
         )}
-        {renderDeleteDrawerView()}
+        {hasRequiredPermission("campaign", "delete") &&
+          renderDeleteDrawerView()}
       </div>
     </MainView>
   );

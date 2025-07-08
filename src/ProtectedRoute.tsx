@@ -1,19 +1,38 @@
 import { Navigate } from "react-router-dom";
-import useLoginAuth from "./pages/auth/hooks/useLoginAuth";
+import { hasPagePermission } from "./utils/helperFunction"; // adjust path as needed
+import { useSelector } from "react-redux";
 
-interface Props {
-  roles: string[];
-  children: React.ReactNode;
-}
-
-const ProtectedRoute: React.FC<Props> = ({ roles, children }) => {
-  const { user } = useLoginAuth();
-  if (roles.includes(user?.role)) {
-    return <>{children}</>;
-  } else {
-    return <Navigate to='/unauthorize' />;
-  }
-  // User is authenticated, render children
+type ProtectedRouteProps = {
+  children: JSX.Element;
+  page: string; // NEW: Page name, like 'Dashboard'
+  requiredAction?: string; // Optional: defaults to 'view'
 };
 
+const ProtectedRoute = ({
+  children,
+  page,
+  requiredAction = "view",
+}: ProtectedRouteProps) => {
+  const user = useSelector((state: any) => state?.user);
+
+  if (!user) {
+    return <Navigate to='/login' />;
+  }
+
+  if (page !== "all") {
+    const userPermissions = user.permissions || [];
+
+    const hasPermission = hasPagePermission(
+      page,
+      requiredAction,
+      userPermissions
+    );
+
+    if (!hasPermission) {
+      return <Navigate to='/unauthorize' />;
+    }
+  }
+
+  return children;
+};
 export default ProtectedRoute;

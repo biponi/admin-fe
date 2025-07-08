@@ -20,6 +20,7 @@ import dayjs from "dayjs";
 import { Button } from "../../../components/ui/button";
 import { useRef } from "react";
 import CustomAlertDialog from "../../../coreComponents/OptionModal";
+import useRoleCheck from "../../auth/hooks/useRoleCheck";
 
 interface Props {
   id: string;
@@ -60,6 +61,7 @@ const SingleItemMobileView: React.FC<Props> = ({
   deleteExistingOrder,
   handleReturnProducts,
 }) => {
+  const { hasRequiredPermission, hasSomePermissionsForPage } = useRoleCheck();
   const dialogBtn = useRef(null);
 
   const discardDialog = () => {
@@ -81,16 +83,21 @@ const SingleItemMobileView: React.FC<Props> = ({
     <Card className='mb-4 w-[85vw]'>
       <CardHeader className='flex flex-row items-center justify-between p-2'>
         <div className='flex items-center space-x-2'>
-          {!status.includes("return") && (
-            <input
-              className='border-gray-200 rounded-lg text-primary'
-              type='checkbox'
-              checked={isBulkAdded}
-              onChange={(e) => {
-                handleBulkCheck(!isBulkAdded);
-              }}
-            />
-          )}
+          {hasSomePermissionsForPage("order", [
+            "edit",
+            "delete",
+            "documents",
+          ]) &&
+            !status.includes("return") && (
+              <input
+                className='border-gray-200 rounded-lg text-primary'
+                type='checkbox'
+                checked={isBulkAdded}
+                onChange={(e) => {
+                  handleBulkCheck(!isBulkAdded);
+                }}
+              />
+            )}
           <span className='font-medium'>#{orderNumber}</span>
         </div>
 
@@ -154,60 +161,70 @@ const SingleItemMobileView: React.FC<Props> = ({
         <Button variant={"outline"} onClick={() => handleViewDetails()}>
           Details
         </Button>
-        <Drawer>
-          <DrawerTrigger asChild>
-            <Button>
-              <MoreHorizontalIcon className='h-4 w-4' />
-              <span className='sr-only'>Toggle menu</span>
-            </Button>
-          </DrawerTrigger>
-          <DrawerContent>
-            <DrawerHeader>
-              <DrawerTitle>Actions</DrawerTitle>
-              <DrawerDescription>
-                Choose an action for this order.
-              </DrawerDescription>
-            </DrawerHeader>
-            <div className='p-4 space-y-2'>
-              <Button
-                variant='outline'
-                className='w-full'
-                onClick={() => handleUpdateOrder()}>
-                Edit
+        {hasSomePermissionsForPage("order", ["edit", "delete"]) && (
+          <Drawer>
+            <DrawerTrigger asChild>
+              <Button>
+                <MoreHorizontalIcon className='h-4 w-4' />
+                <span className='sr-only'>Toggle menu</span>
               </Button>
-              {status.includes("processing") && (
-                <Button
-                  variant='outline'
-                  className='w-full'
-                  onClick={() => handleModifyProduct()}>
-                  Modify Product
-                </Button>
+            </DrawerTrigger>
+            <DrawerContent>
+              <DrawerHeader>
+                <DrawerTitle>Actions</DrawerTitle>
+                <DrawerDescription>
+                  Choose an action for this order.
+                </DrawerDescription>
+              </DrawerHeader>
+              <div className='p-4 space-y-2'>
+                {hasRequiredPermission("order", "edit") && (
+                  <Button
+                    variant='outline'
+                    className='w-full'
+                    onClick={() => handleUpdateOrder()}>
+                    Edit
+                  </Button>
+                )}
+                {hasRequiredPermission("order", "edit") &&
+                  status.includes("processing") && (
+                    <Button
+                      variant='outline'
+                      className='w-full'
+                      onClick={() => handleModifyProduct()}>
+                      Modify Product
+                    </Button>
+                  )}
+                {hasRequiredPermission("order", "edit") &&
+                  status.includes("shipped") && (
+                    <Button
+                      variant='outline'
+                      className='w-full'
+                      onClick={() => handleReturnProducts()}>
+                      Return Product
+                    </Button>
+                  )}
+                {hasRequiredPermission("order", "delete") && (
+                  <Button
+                    variant='destructive'
+                    className='w-full'
+                    onClick={() => {
+                      //@ts-ignore
+                      if (!!dialogBtn) dialogBtn.current?.click();
+                    }}>
+                    Delete
+                  </Button>
+                )}
+              </div>
+              {hasRequiredPermission("order", "edit") && (
+                <DrawerFooter>
+                  <DrawerClose asChild>
+                    <Button variant='outline'>Close</Button>
+                  </DrawerClose>
+                </DrawerFooter>
               )}
-              {status.includes("shipped") && (
-                <Button
-                  variant='outline'
-                  className='w-full'
-                  onClick={() => handleReturnProducts()}>
-                  Return Product
-                </Button>
-              )}
-              <Button
-                variant='destructive'
-                className='w-full'
-                onClick={() => {
-                  //@ts-ignore
-                  if (!!dialogBtn) dialogBtn.current?.click();
-                }}>
-                Delete
-              </Button>
-            </div>
-            <DrawerFooter>
-              <DrawerClose asChild>
-                <Button variant='outline'>Close</Button>
-              </DrawerClose>
-            </DrawerFooter>
-          </DrawerContent>
-        </Drawer>
+            </DrawerContent>
+          </Drawer>
+        )}
       </CardFooter>
 
       {/* Discard Dialog */}

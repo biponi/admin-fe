@@ -38,10 +38,10 @@ import {
   CardHeader,
   CardTitle,
 } from "../../components/ui/card";
-import useLoginAuth from "../auth/hooks/useLoginAuth";
 import { ChevronLeft, ChevronRight, Edit2Icon, Trash2 } from "lucide-react";
 import useDebounce from "../../customHook/useDebounce";
 import MainView from "../../coreComponents/mainView";
+import useRoleCheck from "../auth/hooks/useRoleCheck";
 
 const defaultParams = {
   intent: "",
@@ -52,6 +52,7 @@ const defaultParams = {
 };
 
 const TransactionsPage: React.FC = () => {
+  const { hasRequiredPermission, hasSomePermissionsForPage } = useRoleCheck();
   const [transactions, setTransactions] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   const [editModalOpen, setEditModalOpen] = useState(false);
@@ -67,8 +68,6 @@ const TransactionsPage: React.FC = () => {
   const [selectedParamsType, setSelectedParamType] = useState("");
   const [searchParams, setSearchParams] = useState(defaultParams);
   const handleDebounce = useDebounce(inputValue, 500);
-
-  const { user } = useLoginAuth();
 
   // Track the initial render
   const isFirstRender = useRef(true);
@@ -166,35 +165,33 @@ const TransactionsPage: React.FC = () => {
   const renderCardView = () => {
     return (
       <Card
-        x-chunk="dashboard-06-chunk-0"
-        className="mt-4 border-0 rounded-none shadow-none"
-      >
+        x-chunk='dashboard-06-chunk-0'
+        className='mt-4 border-0 rounded-none shadow-none'>
         <CardHeader>
-          <div className="flex w-full justify-between">
-            <div className="mr-auto">
+          <div className='flex w-full justify-between'>
+            <div className='mr-auto'>
               <CardTitle>Transaction</CardTitle>
               <CardDescription>
                 Manage your transactions and view your transactions history.
               </CardDescription>
             </div>
-            <div className="ml-auto grid grid-cols-2 gap-4 sm:flex sm:justify-between sm:items-center">
-              <div className="flex justify-center items-center gap-2">
+            <div className='ml-auto grid grid-cols-2 gap-4 sm:flex sm:justify-between sm:items-center'>
+              <div className='flex justify-center items-center gap-2'>
                 <Select
                   value={searchParams["intent"]}
                   onValueChange={(value: string) => {
                     setSearchParams((prev) => {
                       return { ...prev, intent: value };
                     });
-                  }}
-                >
-                  <SelectTrigger className="w-auto">
-                    <SelectValue placeholder="Select an intent" />
+                  }}>
+                  <SelectTrigger className='w-auto'>
+                    <SelectValue placeholder='Select an intent' />
                   </SelectTrigger>
                   <SelectContent>
                     <SelectGroup>
                       <SelectLabel>Intents</SelectLabel>
-                      <SelectItem value="sale">Sales</SelectItem>
-                      <SelectItem value="purchase">Purchases</SelectItem>
+                      <SelectItem value='sale'>Sales</SelectItem>
+                      <SelectItem value='purchase'>Purchases</SelectItem>
                     </SelectGroup>
                   </SelectContent>
                 </Select>
@@ -213,107 +210,106 @@ const TransactionsPage: React.FC = () => {
                         });
                       return value;
                     });
-                  }}
-                >
-                  <SelectTrigger className="w-auto">
-                    <SelectValue placeholder="Select an option" />
+                  }}>
+                  <SelectTrigger className='w-auto'>
+                    <SelectValue placeholder='Select an option' />
                   </SelectTrigger>
                   <SelectContent>
                     <SelectGroup>
                       <SelectLabel>Search By</SelectLabel>
-                      <SelectItem value="vendor_id">Vendor Id</SelectItem>
-                      <SelectItem value="vendor_transaction_id">
+                      <SelectItem value='vendor_id'>Vendor Id</SelectItem>
+                      <SelectItem value='vendor_transaction_id'>
                         Transaction Id
                       </SelectItem>
-                      <SelectItem value="payment_from">Payment From</SelectItem>
+                      <SelectItem value='payment_from'>Payment From</SelectItem>
                     </SelectGroup>
                   </SelectContent>
                 </Select>
                 <Input
-                  type="text"
+                  type='text'
                   disabled={!selectedParamsType}
-                  placeholder="Search"
+                  placeholder='Search'
                   onChange={(event) => {
                     setInputValue(event.target.value);
                   }}
                 />
               </div>
-              {user?.role !== "admin" && (
+              {hasRequiredPermission("Transaction", "create") && (
                 <Button
                   onClick={() => {
                     setEditingId(null);
                     setFormData({});
                     setEditModalOpen(true);
-                  }}
-                >
+                  }}>
                   Create Transaction
                 </Button>
               )}
             </div>
           </div>
         </CardHeader>
-        <CardContent className="max-h-[70vh] overflow-y-auto">
-          <Table className="my-4">
-            <thead className="border bg-slate-950 text-white">
+        <CardContent className='max-h-[70vh] overflow-y-auto'>
+          <Table className='my-4'>
+            <thead className='border bg-slate-950 text-white'>
               <tr>
-                <th className=" border-x border-white ">ID</th>
-                <th className=" border-x border-white ">Intent</th>
-                <th className=" border-x border-white ">Amount</th>
-                <th className=" border-x border-white ">Success</th>
-                <th className=" border-x border-white ">Vendor</th>
-                <th className=" border-x border-white ">Payment From</th>
-                <th className=" border-x border-white ">Actions</th>
+                <th className=' border-x border-white '>ID</th>
+                <th className=' border-x border-white '>Intent</th>
+                <th className=' border-x border-white '>Amount</th>
+                <th className=' border-x border-white '>Success</th>
+                <th className=' border-x border-white '>Vendor</th>
+                <th className=' border-x b"order-white '>Payment From</th>
+                {hasSomePermissionsForPage("Transaction", [
+                  "edit",
+                  "delete",
+                ]) && <th className=' border-x border-white '>Actions</th>}
               </tr>
             </thead>
             <tbody>
               {loading ? (
-                <tr className=" border-b border-gray-300 ">
+                <tr className=' border-b border-gray-300 '>
                   <td colSpan={6}>Loading...</td>
                 </tr>
               ) : (
                 transactions.map((transaction) => (
                   <tr
                     key={transaction?.id}
-                    className=" border-b border-gray-300 "
-                  >
-                    <td className=" border-x border-gray-300 text-center">
+                    className=' border-b border-gray-300 '>
+                    <td className=' border-x border-gray-300 text-center'>
                       {transaction?.id}
                     </td>
-                    <td className=" border-x border-gray-300 text-center">
+                    <td className=' border-x border-gray-300 text-center'>
                       {transaction.intent}
                     </td>
-                    <td className=" border-x border-gray-300 text-center">
+                    <td className=' border-x border-gray-300 text-center'>
                       {transaction.amount}
                     </td>
-                    <td className=" border-x border-gray-300 text-center">
+                    <td className=' border-x border-gray-300 text-center'>
                       {transaction.success ? "Yes ✅" : "No ❌"}
                     </td>
-                    <td className=" border-x border-gray-300 text-center">
+                    <td className=' border-x border-gray-300 text-center'>
                       {!!transaction?.vendor_transaction_id ? (
                         <HoverCard>
                           <HoverCardTrigger>
                             <img
                               src={bkashIcon}
-                              className="w-16 mx-auto"
-                              alt="bkash"
+                              className='w-16 mx-auto'
+                              alt='bkash'
                             />
                           </HoverCardTrigger>
                           <HoverCardContent>
-                            <div className="p-8">
-                              <h1 className="text-lg font-semibold">
+                            <div className='p-8'>
+                              <h1 className='text-lg font-semibold'>
                                 Transaction Id:
                               </h1>
                               <Separator />
-                              <div className="flex justify-center items-center gap-2">
+                              <div className='flex justify-center items-center gap-2'>
                                 <Badge
                                   variant={"default"}
-                                  className=" cursor-pointer "
+                                  className=' cursor-pointer '
                                   onClick={() =>
                                     handleCopy(
                                       transaction?.vendor_transaction_id
                                     )
-                                  }
-                                >
+                                  }>
                                   {transaction?.vendor_transaction_id}
                                 </Badge>
                               </div>
@@ -324,31 +320,38 @@ const TransactionsPage: React.FC = () => {
                         <Badge variant={"outline"}>N/A</Badge>
                       )}
                     </td>
-                    <td className=" border-x border-gray-300 text-center">
+                    <td className=' border-x border-gray-300 text-center'>
                       {transaction.payment_from}
                     </td>
-                    <td className=" border-x border-gray-300 text-center flex items-center justify-center gap-6">
-                      <Button
-                        size="sm"
-                        onClick={() => {
-                          setEditingId(transaction.id);
-                          setFormData(transaction);
-                          setEditModalOpen(true);
-                        }}
-                      >
-                        <Edit2Icon className="w-5 h-5" />
-                      </Button>
-                      <Button
-                        size="sm"
-                        variant="destructive"
-                        onClick={() => {
-                          setDeletingId(transaction.id);
-                          setDeleteModalOpen(true);
-                        }}
-                      >
-                        <Trash2 className="w-5 h-5" />
-                      </Button>
-                    </td>
+                    {hasSomePermissionsForPage("Transaction", [
+                      "edit",
+                      "delete",
+                    ]) && (
+                      <td className=' border-x border-gray-300 text-center flex items-center justify-center gap-6'>
+                        {hasRequiredPermission("Transaction", "edit") && (
+                          <Button
+                            size='sm'
+                            onClick={() => {
+                              setEditingId(transaction.id);
+                              setFormData(transaction);
+                              setEditModalOpen(true);
+                            }}>
+                            <Edit2Icon className='w-5 h-5' />
+                          </Button>
+                        )}
+                        {hasRequiredPermission("Transaction", "delete") && (
+                          <Button
+                            size='sm'
+                            variant='destructive'
+                            onClick={() => {
+                              setDeletingId(transaction.id);
+                              setDeleteModalOpen(true);
+                            }}>
+                            <Trash2 className='w-5 h-5' />
+                          </Button>
+                        )}
+                      </td>
+                    )}
                   </tr>
                 ))
               )}
@@ -357,8 +360,8 @@ const TransactionsPage: React.FC = () => {
         </CardContent>
         {inputValue === "" && (
           <CardFooter>
-            <div className="w-full flex justify-between items-center py-4">
-              <div className="text-xs text-muted-foreground">
+            <div className='w-full flex justify-between items-center py-4'>
+              <div className='text-xs text-muted-foreground'>
                 Showing{" "}
                 <strong>{`${
                   (Number(currentPageNum) - 1) * limit + 1
@@ -368,48 +371,45 @@ const TransactionsPage: React.FC = () => {
                 )}`}</strong>{" "}
                 of <strong>{totalTransactions}</strong> transactions
               </div>
-              <div className="flex gap-2 items-center">
+              <div className='flex gap-2 items-center'>
                 <Select
                   value={`${limit}`}
                   onValueChange={(value: string) => {
                     setLimit(parseInt(value, 10));
-                  }}
-                >
-                  <SelectTrigger className="w-auto">
-                    <SelectValue placeholder="Select Row Limit" />
+                  }}>
+                  <SelectTrigger className='w-auto'>
+                    <SelectValue placeholder='Select Row Limit' />
                   </SelectTrigger>
                   <SelectContent>
                     <SelectGroup>
                       <SelectLabel>Limit</SelectLabel>
-                      <SelectItem value="10">10</SelectItem>
-                      <SelectItem value="50">50</SelectItem>
-                      <SelectItem value="100">100</SelectItem>
-                      <SelectItem value="150">150</SelectItem>
-                      <SelectItem value="200">200</SelectItem>
-                      <SelectItem value="500">500</SelectItem>
+                      <SelectItem value='10'>10</SelectItem>
+                      <SelectItem value='50'>50</SelectItem>
+                      <SelectItem value='100'>100</SelectItem>
+                      <SelectItem value='150'>150</SelectItem>
+                      <SelectItem value='200'>200</SelectItem>
+                      <SelectItem value='500'>500</SelectItem>
                     </SelectGroup>
                   </SelectContent>
                 </Select>{" "}
                 Row Per Page{" "}
                 <Button
                   disabled={currentPageNum < 2}
-                  variant="outline"
-                  size="icon"
-                  className="h-7 w-7"
-                  onClick={() => updateCurrentPage(-1)}
-                >
-                  <ChevronLeft className="h-4 w-4" />
-                  <span className="sr-only">Back</span>
+                  variant='outline'
+                  size='icon'
+                  className='h-7 w-7'
+                  onClick={() => updateCurrentPage(-1)}>
+                  <ChevronLeft className='h-4 w-4' />
+                  <span className='sr-only'>Back</span>
                 </Button>
                 <Button
                   disabled={currentPageNum >= totalPageNum}
-                  variant="outline"
-                  size="icon"
-                  className="h-7 w-7"
-                  onClick={() => updateCurrentPage(1)}
-                >
-                  <ChevronRight className="h-4 w-4" />
-                  <span className="sr-only">Next</span>
+                  variant='outline'
+                  size='icon'
+                  className='h-7 w-7'
+                  onClick={() => updateCurrentPage(1)}>
+                  <ChevronRight className='h-4 w-4' />
+                  <span className='sr-only'>Next</span>
                 </Button>
               </div>
             </div>
@@ -420,8 +420,8 @@ const TransactionsPage: React.FC = () => {
   };
 
   return (
-    <MainView title="Transactions">
-      <div className="w-[95vw] pb-6">
+    <MainView title='Transactions'>
+      <div className='w-[95vw] pb-6'>
         {renderCardView()}
 
         {/* Edit/Create Modal */}
@@ -432,39 +432,37 @@ const TransactionsPage: React.FC = () => {
                 {editingId ? "Edit Transaction" : "Create Transaction"}
               </DialogTitle>
             </DialogHeader>
-            <div className="p-4">
+            <div className='p-4'>
               <form
                 onSubmit={(e) => {
                   e.preventDefault();
                   handleSave();
-                }}
-              >
-                <div className="grid gap-2">
+                }}>
+                <div className='grid gap-2'>
                   <Label>Intent</Label>
                   <Select
                     value={formData.intent || ""}
                     onValueChange={(value) =>
                       setFormData({ ...formData, intent: value })
-                    }
-                  >
-                    <SelectTrigger className="w-[180px]">
-                      <SelectValue placeholder="Select Intent" />
+                    }>
+                    <SelectTrigger className='w-[180px]'>
+                      <SelectValue placeholder='Select Intent' />
                     </SelectTrigger>
                     <SelectContent>
                       <SelectGroup>
                         <SelectLabel>Intent</SelectLabel>
-                        <SelectItem value="sale">Sale</SelectItem>
-                        <SelectItem value="purchase">Purchase</SelectItem>
+                        <SelectItem value='sale'>Sale</SelectItem>
+                        <SelectItem value='purchase'>Purchase</SelectItem>
                       </SelectGroup>
                     </SelectContent>
                   </Select>
                 </div>
-                <div className="grid gap-2 mt-4">
-                  <Label htmlFor="amount">Transaction Amount</Label>
+                <div className='grid gap-2 mt-4'>
+                  <Label htmlFor='amount'>Transaction Amount</Label>
                   <Input
-                    name="amount"
-                    placeholder="Amount"
-                    type="number"
+                    name='amount'
+                    placeholder='Amount'
+                    type='number'
                     value={formData.amount || ""}
                     onChange={(e) =>
                       setFormData({
@@ -474,11 +472,11 @@ const TransactionsPage: React.FC = () => {
                     }
                   />
                 </div>
-                <div className="grid gap-2 mt-4">
-                  <Label htmlFor="payment_from">Payment From</Label>
+                <div className='grid gap-2 mt-4'>
+                  <Label htmlFor='payment_from'>Payment From</Label>
                   <Input
-                    name="payment_from"
-                    placeholder="Payment From"
+                    name='payment_from'
+                    placeholder='Payment From'
                     value={formData.payment_from || ""}
                     onChange={(e) =>
                       setFormData({ ...formData, payment_from: e.target.value })
@@ -490,15 +488,15 @@ const TransactionsPage: React.FC = () => {
                   onCheckedChange={(checked) =>
                     setFormData({ ...formData, success: checked })
                   }
-                  className="mt-4 mr-2"
+                  className='mt-4 mr-2'
                 />
                 Transaction Successful
-                <div className="grid gap-2 mt-4">
-                  <Label htmlFor="vendor_transaction_id">Transaction Id</Label>
+                <div className='grid gap-2 mt-4'>
+                  <Label htmlFor='vendor_transaction_id'>Transaction Id</Label>
                   {!editingId && (
                     <Input
-                      name="vendor_transaction_id"
-                      placeholder="Vendor Transaction ID"
+                      name='vendor_transaction_id'
+                      placeholder='Vendor Transaction ID'
                       value={formData.vendor_transaction_id || ""}
                       onChange={(e) =>
                         setFormData({
@@ -510,19 +508,19 @@ const TransactionsPage: React.FC = () => {
                     />
                   )}
                   {!!editingId && !!formData?.vendor_transaction_id ? (
-                    <Badge variant={"outline"} className="w-auto text-center">
+                    <Badge variant={"outline"} className='w-auto text-center'>
                       {formData?.vendor_transaction_id}
                     </Badge>
                   ) : (
                     ""
                   )}
                 </div>
-                <div className="grid gap-2 mt-4">
-                  <Label htmlFor="vendor_id">Vendor Id</Label>
+                <div className='grid gap-2 mt-4'>
+                  <Label htmlFor='vendor_id'>Vendor Id</Label>
                   <Input
-                    name="vendor_id"
-                    placeholder="Vendor ID"
-                    type="number"
+                    name='vendor_id'
+                    placeholder='Vendor ID'
+                    type='number'
                     value={formData.vendor_id || ""}
                     onChange={(e) =>
                       setFormData({
@@ -532,12 +530,12 @@ const TransactionsPage: React.FC = () => {
                     }
                   />
                 </div>
-                <div className="grid gap-2 mt-4">
-                  <Label htmlFor="payment_id">Paymnent Id</Label>
+                <div className='grid gap-2 mt-4'>
+                  <Label htmlFor='payment_id'>Paymnent Id</Label>
                   <Input
-                    name="payment_id"
-                    placeholder="Payment ID"
-                    type="number"
+                    name='payment_id'
+                    placeholder='Payment ID'
+                    type='number'
                     value={formData.payment_id || ""}
                     onChange={(e) =>
                       setFormData({
@@ -547,9 +545,11 @@ const TransactionsPage: React.FC = () => {
                     }
                   />
                 </div>
-                <Button type="submit" className="mt-4">
-                  {editingId ? "Update" : "Create"}
-                </Button>
+                {hasRequiredPermission("Transaction", "create") && (
+                  <Button type='submit' className='mt-4'>
+                    {editingId ? "Update" : "Create"}
+                  </Button>
+                )}
               </form>
             </div>
           </DialogContent>
@@ -561,16 +561,15 @@ const TransactionsPage: React.FC = () => {
             <DialogHeader>
               <DialogTitle>Delete Transaction</DialogTitle>
             </DialogHeader>
-            <div className="p-4">
+            <div className='p-4'>
               <p>Are you sure you want to delete this transaction?</p>
-              <div className="flex justify-end gap-4 mt-4">
+              <div className='flex justify-end gap-4 mt-4'>
                 <Button
-                  variant="ghost"
-                  onClick={() => setDeleteModalOpen(false)}
-                >
+                  variant='ghost'
+                  onClick={() => setDeleteModalOpen(false)}>
                   Cancel
                 </Button>
-                <Button variant="destructive" onClick={handleDelete}>
+                <Button variant='destructive' onClick={handleDelete}>
                   Delete
                 </Button>
               </div>

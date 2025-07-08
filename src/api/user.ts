@@ -14,7 +14,7 @@ export const signupUser = async (userData: {
   mobileNumber: string;
   password: string;
   nid?: string;
-  type: string;
+  type: number;
   avatar?: string;
 }): Promise<ApiResponse<any>> => {
   try {

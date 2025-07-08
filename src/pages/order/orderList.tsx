@@ -63,7 +63,6 @@ import {
 } from "../../components/ui/tooltip";
 
 import CustomAlertDialog from "../../coreComponents/OptionModal";
-import useLoginAuth from "../auth/hooks/useLoginAuth";
 import {
   generateInvoice,
   generateMultipleInvoicesAndDownloadZip,
@@ -98,6 +97,7 @@ import {
 } from "../../components/ui/select";
 import { SkeletonCard } from "../../coreComponents/sekeleton";
 import SingleItemMobileView from "./components/SingleOrderItemMobileView";
+import useRoleCheck from "../auth/hooks/useRoleCheck";
 
 const OrderList = () => {
   const {
@@ -120,7 +120,7 @@ const OrderList = () => {
     performOrderBulkUpdate,
   } = useOrderList();
 
-  const { user } = useLoginAuth();
+  const { hasRequiredPermission, hasSomePermissionsForPage } = useRoleCheck();
 
   const { editOrderData, updateOrderStatus } = useOrder();
 
@@ -160,12 +160,17 @@ const OrderList = () => {
   };
 
   const renderEmptyView = () => {
-    return (
+    return hasRequiredPermission("order", "create") ? (
       <EmptyView
         title='You have no orders'
         description='You can start selling as soon as you add a product.'
         buttonText='Create Order'
         handleButtonClick={() => navigate("/order/create")}
+      />
+    ) : (
+      <EmptyView
+        title='You have no orders'
+        description='You can start selling as soon as you add a product.'
       />
     );
   };
@@ -276,7 +281,7 @@ const OrderList = () => {
                       <div className='flex md:hidden items-center justify-between'>
                         <CardTitle>Orders</CardTitle>
                         <div className='flex justify-between items-center gap-4'>
-                          {["admin", "moderator"].includes(user?.role) && (
+                          {hasRequiredPermission("order", "create") && (
                             <Button
                               size='sm'
                               className='h-7 ml-2 '
@@ -287,7 +292,12 @@ const OrderList = () => {
                               </span>
                             </Button>
                           )}
-                          {!selectedStatus.includes("return") &&
+                          {hasSomePermissionsForPage("order", [
+                            "edit",
+                            "delete",
+                            "documents",
+                          ]) &&
+                            !selectedStatus.includes("return") &&
                             !!bulkOrders &&
                             bulkOrders.length > 0 &&
                             renderMobileBulkActionPanel()}
@@ -398,9 +408,14 @@ const OrderList = () => {
                             <TableHead>
                               <View />
                             </TableHead>
-                            <TableHead>
-                              <span className='sr-only'>Actions</span>
-                            </TableHead>
+                            {hasSomePermissionsForPage("order", [
+                              "edit",
+                              "delete",
+                            ]) && (
+                              <TableHead>
+                                <span className='sr-only'>Actions</span>
+                              </TableHead>
+                            )}
                           </TableRow>
                         </TableHeader>
 
@@ -812,58 +827,68 @@ const OrderList = () => {
         <CardContent className='p-6 text-sm'>
           <div className='flex flex-col justify-center items-center gap-4'>
             <div className='w-full grid grid-cols-1 gap-4'>
-              <Button
-                variant='secondary'
-                className='w-full'
-                onClick={() => {
-                  generateMultipleInvoicesAndDownloadZip(bulkOrders);
-                }}>
-                {" "}
-                <File className='size-5 text-gray-900 mr-2' /> Generate Invoices
-              </Button>
+              {hasRequiredPermission("order", "documents") && (
+                <Button
+                  variant='secondary'
+                  className='w-full'
+                  onClick={() => {
+                    generateMultipleInvoicesAndDownloadZip(bulkOrders);
+                  }}>
+                  {" "}
+                  <File className='size-5 text-gray-900 mr-2' /> Generate
+                  Invoices
+                </Button>
+              )}
             </div>
-            <div className='w-full grid grid-cols-3 gap-2'>
-              {" "}
-              <Button
-                variant='default'
-                className='w-full bg-blue-700'
-                onClick={() => setBulkAction("shipped")}>
+            {hasRequiredPermission("order", "edit") && (
+              <div className='w-full grid grid-cols-3 gap-2'>
                 {" "}
-                <TruckIcon className='size-5 text-white mr-2' />
-                Shipped
-              </Button>
-              <Button
-                variant='default'
-                className='w-full bg-green-700'
-                onClick={() => setBulkAction("complete")}>
-                {" "}
-                <CheckCircleIcon className='size-5 text-white mr-2' />
-                Complete
-              </Button>
-              <Button
-                variant='default'
-                className='w-full'
-                onClick={() => setBulkAction("processing")}>
-                {" "}
-                <TimerReset className='size-5 text-white mr-2' />
-                Processing
-              </Button>
-            </div>
+                <Button
+                  variant='default'
+                  className='w-full bg-blue-700'
+                  onClick={() => setBulkAction("shipped")}>
+                  {" "}
+                  <TruckIcon className='size-5 text-white mr-2' />
+                  Shipped
+                </Button>
+                <Button
+                  variant='default'
+                  className='w-full bg-green-700'
+                  onClick={() => setBulkAction("complete")}>
+                  {" "}
+                  <CheckCircleIcon className='size-5 text-white mr-2' />
+                  Complete
+                </Button>
+                <Button
+                  variant='default'
+                  className='w-full'
+                  onClick={() => setBulkAction("processing")}>
+                  {" "}
+                  <TimerReset className='size-5 text-white mr-2' />
+                  Processing
+                </Button>
+              </div>
+            )}
             <div className='w-full grid grid-cols-2 gap-4'>
-              <Button
-                variant='outline'
-                className='w-full'
-                onClick={() => setBulkAction("cancel")}>
-                {" "}
-                <MinusCircleIcon className='size-5 text-red-600 mr-2' /> Cancel
-              </Button>
-              <Button
-                variant='destructive'
-                className='w-full'
-                onClick={() => setBulkAction("delete")}>
-                {" "}
-                <Trash2 className='size-5 text-white mr-2' /> Delete
-              </Button>
+              {hasRequiredPermission("order", "edit") && (
+                <Button
+                  variant='outline'
+                  className='w-full'
+                  onClick={() => setBulkAction("cancel")}>
+                  {" "}
+                  <MinusCircleIcon className='size-5 text-red-600 mr-2' />{" "}
+                  Cancel
+                </Button>
+              )}
+              {hasRequiredPermission("order", "delete") && (
+                <Button
+                  variant='destructive'
+                  className='w-full'
+                  onClick={() => setBulkAction("delete")}>
+                  {" "}
+                  <Trash2 className='size-5 text-white mr-2' /> Delete
+                </Button>
+              )}
             </div>
           </div>
         </CardContent>
@@ -889,46 +914,57 @@ const OrderList = () => {
             <DrawerTitle>Bulk Action</DrawerTitle>
           </DrawerHeader>
           <div className='grid grid-cols-2 justify-center items-center gap-4 my-2'>
-            <Button
-              variant='secondary'
-              className='w-full'
-              onClick={() => {
-                generateMultipleInvoicesAndDownloadZip(bulkOrders);
-              }}>
-              <File className='size-5 text-gray-900 mr-2' /> Generate Invoices
-            </Button>
+            {hasRequiredPermission("order", "documents") && (
+              <Button
+                variant='secondary'
+                className='w-full'
+                onClick={() => {
+                  generateMultipleInvoicesAndDownloadZip(bulkOrders);
+                }}>
+                <File className='size-5 text-gray-900 mr-2' /> Generate Invoices
+              </Button>
+            )}
 
-            <Button
-              variant='default'
-              className='w-full bg-blue-700'
-              onClick={() => setBulkAction("shipped")}>
-              <TruckIcon className='size-5 text-white mr-2' /> Shipped
-            </Button>
-            <Button
-              variant='default'
-              className='w-full bg-green-700'
-              onClick={() => setBulkAction("complete")}>
-              <CheckCircleIcon className='size-5 text-white mr-2' /> Complete
-            </Button>
-            <Button
-              variant='default'
-              className='w-full'
-              onClick={() => setBulkAction("processing")}>
-              <TimerReset className='size-5 text-white mr-2' /> Processing
-            </Button>
-
-            <Button
-              variant='outline'
-              className='w-full'
-              onClick={() => setBulkAction("cancel")}>
-              <MinusCircleIcon className='size-5 text-red-600 mr-2' /> Cancel
-            </Button>
-            <Button
-              variant='destructive'
-              className='w-full'
-              onClick={() => setBulkAction("delete")}>
-              <Trash2 className='size-5 text-white mr-2' /> Delete
-            </Button>
+            {hasRequiredPermission("order", "edit") && (
+              <Button
+                variant='default'
+                className='w-full bg-blue-700'
+                onClick={() => setBulkAction("shipped")}>
+                <TruckIcon className='size-5 text-white mr-2' /> Shipped
+              </Button>
+            )}
+            {hasRequiredPermission("order", "edit") && (
+              <Button
+                variant='default'
+                className='w-full bg-green-700'
+                onClick={() => setBulkAction("complete")}>
+                <CheckCircleIcon className='size-5 text-white mr-2' /> Complete
+              </Button>
+            )}
+            {hasRequiredPermission("order", "edit") && (
+              <Button
+                variant='default'
+                className='w-full'
+                onClick={() => setBulkAction("processing")}>
+                <TimerReset className='size-5 text-white mr-2' /> Processing
+              </Button>
+            )}
+            {hasRequiredPermission("order", "edit") && (
+              <Button
+                variant='outline'
+                className='w-full'
+                onClick={() => setBulkAction("cancel")}>
+                <MinusCircleIcon className='size-5 text-red-600 mr-2' /> Cancel
+              </Button>
+            )}
+            {hasRequiredPermission("order", "delete") && (
+              <Button
+                variant='destructive'
+                className='w-full'
+                onClick={() => setBulkAction("delete")}>
+                <Trash2 className='size-5 text-white mr-2' /> Delete
+              </Button>
+            )}
           </div>
           <DrawerFooter className='flex flex-row items-center border-t bg-muted/50 px-6 py-3'>
             <div className='text-xs text-muted-foreground'>

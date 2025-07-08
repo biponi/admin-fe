@@ -37,13 +37,19 @@ const CreateCampaignForm: React.FC = () => {
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [products, setProducts] = useState<string[]>([]);
-  const [discount, setDiscount] = useState<number>(0);
+  const [discount, setDiscount] = useState<string>("0");
   const [discountType, setDiscountType] = useState<string>("-");
   const [startDate, setStartDate] = useState<string>("");
   const [endDate, setEndDate] = useState<string>("");
   const [active, setActive] = useState(false);
   const [image, setImage] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string>("");
+  const [prepaymentAmount, setPrepaymentAmount] = useState<string>("0");
+  const [prepaymentType, setPrepaymentType] = useState<string>("fixed");
+  const [minOrderAmount, setMinOrderAmount] = useState<string>("0");
+  const [maxPrepaymentAmount, setMaxPrepaymentAmount] = useState<string | null>(
+    null
+  );
 
   const [step, setStep] = useState(1);
 
@@ -72,10 +78,22 @@ const CreateCampaignForm: React.FC = () => {
     formData.append("title", title);
     formData.append("description", description);
     formData.append("products", JSON.stringify(products));
-    formData.append("discount", discount.toString());
+    formData.append("discount", discount);
     formData.append("discountType", discountType);
     formData.append("startDate", startDate);
     formData.append("endDate", endDate);
+    formData.append("prepaymentAmount", prepaymentAmount);
+    formData.append("minOrderAmount", minOrderAmount);
+    !!maxPrepaymentAmount &&
+      formData.append("maxPrepaymentAmount", maxPrepaymentAmount);
+    formData.append("prepaymentType", prepaymentType.toString());
+    formData.append(
+      "prepaymentRequired",
+      Number(prepaymentAmount) > 0 || prepaymentType.includes("deliverycharge")
+        ? "true"
+        : "false"
+    );
+
     formData.append("active", active.toString());
     if (image) {
       formData.append("image", image);
@@ -101,42 +119,42 @@ const CreateCampaignForm: React.FC = () => {
 
   const renderCampaignDetailsView = () => {
     return (
-      <div className="w-full sm:w-[95vw]">
-        <div className="mx-auto grid max-w-full flex-1 auto-rows-max gap-4">
-          <form onSubmit={handleStep} className="space-y-4">
-            <div className="grid gap-2 md:grid-cols-[1fr_250px] lg:grid-cols-3 lg:gap-4">
-              <div className="grid auto-rows-max items-start gap-4 lg:col-span-2 lg:gap-8">
+      <div className='w-full sm:w-[95vw]'>
+        <div className='mx-auto grid max-w-full flex-1 auto-rows-max gap-4'>
+          <form onSubmit={handleStep} className='space-y-4'>
+            <div className='grid gap-2 md:grid-cols-[1fr_250px] lg:grid-cols-3 lg:gap-4'>
+              <div className='grid auto-rows-max items-start gap-4 lg:col-span-2 lg:gap-8'>
                 <Card>
                   <CardHeader>
                     <CardTitle>Campaign</CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <Card x-chunk="dashboard-07-chunk-2">
+                    <Card x-chunk='dashboard-07-chunk-2'>
                       <CardHeader>Campaign Details</CardHeader>
                       <CardContent>
-                        <div className="grid gap-6">
-                          <div className="grid gap-3">
-                            <Label htmlFor="title">Title</Label>
+                        <div className='grid gap-6'>
+                          <div className='grid gap-3'>
+                            <Label htmlFor='title'>Title</Label>
                             <Input
-                              id="title"
-                              type="text"
-                              placeholder="Enter campaign title"
+                              id='title'
+                              type='text'
+                              placeholder='Enter campaign title'
                               value={title}
-                              className="w-full"
-                              defaultValue=""
+                              className='w-full'
+                              defaultValue=''
                               onChange={(e) => setTitle(e.target.value)}
                               required
                             />
                           </div>
 
-                          <div className="grid gap-3">
-                            <Label htmlFor="description">Description</Label>
+                          <div className='grid gap-3'>
+                            <Label htmlFor='description'>Description</Label>
                             <Textarea
-                              id="description"
-                              placeholder="Enter campaign description"
+                              id='description'
+                              placeholder='Enter campaign description'
                               value={description}
-                              className="w-full"
-                              defaultValue=""
+                              className='w-full'
+                              defaultValue=''
                               rows={5}
                               onChange={(e) => setDescription(e.target.value)}
                               required
@@ -147,41 +165,39 @@ const CreateCampaignForm: React.FC = () => {
                     </Card>
 
                     <Card
-                      className="overflow-hidden mt-4"
-                      x-chunk="dashboard-07-chunk-4"
-                    >
+                      className='overflow-hidden mt-4'
+                      x-chunk='dashboard-07-chunk-4'>
                       <CardHeader>
                         <CardTitle>
-                          <div className="flex justify-between items-center">
-                            <h3 className="text-md font-semibold text-gray-800">
+                          <div className='flex justify-between items-center'>
+                            <h3 className='text-md font-semibold text-gray-800'>
                               Campaign Image
                             </h3>
-                            <div className="ml-auto">
+                            <div className='ml-auto'>
                               <Input
-                                id="picture"
-                                type="file"
-                                className="hidden"
+                                id='picture'
+                                type='file'
+                                className='hidden'
                                 ref={fileRef}
-                                name="image"
-                                accept=".png, .jpg, .jpeg"
+                                name='image'
+                                accept='.png, .jpg, .jpeg'
                                 onChange={handleImageChange}
                               />
                               <Tooltip>
                                 <TooltipTrigger asChild>
                                   <Button
-                                    variant="outline"
-                                    size="icon"
+                                    variant='outline'
+                                    size='icon'
                                     onClick={() => {
                                       if (!!fileRef) {
                                         //@ts-ignore
                                         fileRef.current.click();
                                       }
-                                    }}
-                                  >
-                                    <Upload className="h-4 w-4" />
+                                    }}>
+                                    <Upload className='h-4 w-4' />
                                   </Button>
                                 </TooltipTrigger>
-                                <TooltipContent side="right" sideOffset={5}>
+                                <TooltipContent side='right' sideOffset={5}>
                                   Change Image
                                 </TooltipContent>
                               </Tooltip>
@@ -193,10 +209,10 @@ const CreateCampaignForm: React.FC = () => {
                         </CardDescription>
                       </CardHeader>
                       <CardContent>
-                        <div className="grid gap-2">
+                        <div className='grid gap-2'>
                           <img
-                            alt="Product_image"
-                            className="rounded-md object-fill w-full h-64"
+                            alt='Product_image'
+                            className='rounded-md object-fill w-full h-64'
                             src={!!imagePreview ? imagePreview : placeHolder}
                           />
                         </div>
@@ -205,68 +221,176 @@ const CreateCampaignForm: React.FC = () => {
                   </CardContent>
                 </Card>
               </div>
-              <div className="grid auto-rows-max items-start gap-4 lg:gap-4">
-                <Card x-chunk="dashboard-07-chunk-2">
+              <div className='grid auto-rows-max items-start gap-4 lg:gap-4'>
+                <Card x-chunk='dashboard-07-chunk-2'>
                   <CardHeader>
                     <CardTitle>Campaign Discount</CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <div className="grid gap-6 sm:grid-cols-2">
-                      <div className="grid gap-3">
-                        <Label htmlFor="discount-type">Discount Type</Label>
+                    <div className='grid gap-6 sm:grid-cols-2'>
+                      <div className='grid gap-3'>
+                        <Label htmlFor='discount-type'>Discount Type</Label>
                         <Select
+                          value={discountType}
                           onValueChange={(value) => {
                             setDiscountType(value);
-                          }}
-                        >
+                          }}>
                           <SelectTrigger
-                            id="discount-type"
-                            aria-label="Select Discount Type"
-                          >
-                            <SelectValue placeholder="Select Discount Type" />
+                            id='discount-type'
+                            aria-label='Select Discount Type'>
+                            <SelectValue placeholder='Select Discount Type' />
                           </SelectTrigger>
                           <SelectContent>
-                            <SelectItem value="%">Percentage (%)</SelectItem>
-                            <SelectItem value="-">Fixed Amount (-)</SelectItem>
+                            <SelectItem value='%'>Percentage (%)</SelectItem>
+                            <SelectItem value='-'>Fixed Amount (-)</SelectItem>
                           </SelectContent>
                         </Select>
                       </div>
-                      <div className="grid gap-3">
-                        <Label htmlFor="discount">Discount</Label>
+                      <div className='grid gap-3'>
+                        <Label htmlFor='discount'>Discount</Label>
                         <Input
-                          id="discount"
-                          name="discount"
-                          type="number"
+                          id='discount'
+                          name='discount'
+                          type='text'
                           value={discount}
-                          className="w-full"
-                          defaultValue=""
-                          onChange={(e) => setDiscount(Number(e.target.value))}
+                          className='w-full'
+                          defaultValue=''
+                          onChange={(e) =>
+                            setDiscount(
+                              isNaN(Number(e.target.value))
+                                ? ""
+                                : e.target.value
+                            )
+                          }
                           required
                         />
                       </div>
                     </div>
                   </CardContent>
                 </Card>
-                <div className=" grid grid-cols-1 gap-2  md:my-4">
+
+                <Card x-chunk='dashboard-07-chunk-2' className='my-2'>
+                  <CardHeader>
+                    <CardTitle>Campaign Pre-Payment</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className='grid gap-6 sm:grid-cols-2'>
+                      <div className='grid gap-3'>
+                        <Label htmlFor='discount-type2'>Payment Type</Label>
+                        <Select
+                          value={prepaymentType}
+                          onValueChange={(value) => {
+                            setPrepaymentType(value);
+                          }}>
+                          <SelectTrigger
+                            id='discount-type2'
+                            aria-label='Select Discount Type'>
+                            <SelectValue placeholder='Select Discount Type' />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value='percentage'>
+                              Percentage (%)
+                            </SelectItem>
+                            <SelectItem value='fixed'>
+                              Fixed Amount (-)
+                            </SelectItem>
+                            <SelectItem value='deliverycharge'>
+                              Delivery Charge
+                            </SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      {!prepaymentType.includes("deliverycharge") && (
+                        <div className='grid gap-3'>
+                          <Label htmlFor='discount'>Amount to pay</Label>
+                          <Input
+                            id='discount'
+                            name='discount'
+                            type='text'
+                            value={prepaymentAmount}
+                            className='w-full'
+                            defaultValue=''
+                            max={
+                              prepaymentType.includes("percentage")
+                                ? 100
+                                : undefined
+                            }
+                            onChange={(e) =>
+                              setPrepaymentAmount(
+                                isNaN(Number(e.target.value))
+                                  ? ""
+                                  : e.target.value
+                              )
+                            }
+                            required
+                          />
+                        </div>
+                      )}
+                    </div>
+
+                    <div className='grid gap-6 sm:grid-cols-2 mt-2'>
+                      <div className='grid gap-3'>
+                        <Label htmlFor='minimum-amount'>
+                          Minimum Order Payment
+                        </Label>
+                        <Input
+                          id='minimum-amount'
+                          name='minimum-amount'
+                          type='text'
+                          value={minOrderAmount}
+                          className='w-full'
+                          defaultValue=''
+                          onChange={(e) =>
+                            setMinOrderAmount(
+                              isNaN(Number(e.target.value))
+                                ? ""
+                                : e.target.value
+                            )
+                          }
+                          required
+                        />
+                      </div>
+                      <div className='grid gap-3'>
+                        <Label htmlFor='max-amount'>Maximum Amount</Label>
+                        <Input
+                          id='max-amount'
+                          name='max-amount'
+                          type='text'
+                          value={maxPrepaymentAmount ?? ""}
+                          className='w-full'
+                          defaultValue=''
+                          onChange={(e) =>
+                            setMaxPrepaymentAmount(
+                              isNaN(Number(e.target.value))
+                                ? ""
+                                : e.target.value
+                            )
+                          }
+                          required
+                        />
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+                <div className=' grid grid-cols-1 gap-2  md:my-4'>
                   <Card
-                    x-chunk="dashboard-07-chunk-4"
-                    className="col-span-1 md:col-span-2 w-full"
-                  >
+                    x-chunk='dashboard-07-chunk-4'
+                    className='col-span-1 md:col-span-2 w-full'>
                     <CardHeader>
                       <CardTitle>Campaign Start & End Date-time</CardTitle>
                     </CardHeader>
-                    <CardContent className="w-full mt-6 mb-2">
-                      <div className="grid gap-2 mb-2">
-                        <div className="grid gap-3">
-                          <Label className="mb-1">Start</Label>
+                    <CardContent className='w-full mt-6 mb-2'>
+                      <div className='grid gap-2 mb-2'>
+                        <div className='grid gap-3'>
+                          <Label className='mb-1'>Start</Label>
                           <DateTimePicker
                             onChange={(value: any) => setStartDate(value)}
                           />
                         </div>
                       </div>
-                      <div className="grid gap-2">
-                        <div className="grid gap-3">
-                          <Label className="mb-1">End</Label>
+                      <div className='grid gap-2'>
+                        <div className='grid gap-3'>
+                          <Label className='mb-1'>End</Label>
                           <DateTimePicker
                             onChange={(value: any) => setEndDate(value)}
                           />
@@ -274,36 +398,32 @@ const CreateCampaignForm: React.FC = () => {
                       </div>
                     </CardContent>
                   </Card>
-                  <Card x-chunk="dashboard-07-chunk-3" className="col-span-1">
+                  <Card x-chunk='dashboard-07-chunk-3' className='col-span-1'>
                     <CardHeader>
                       <CardTitle>Campaign Status</CardTitle>
                     </CardHeader>
                     <CardContent>
-                      <div className="grid gap-6">
-                        <div className="grid gap-3">
+                      <div className='grid gap-6'>
+                        <div className='grid gap-3'>
                           <Label>Status</Label>
                           <Select
                             onValueChange={(value) => {
                               setActive(Boolean(value));
-                            }}
-                          >
+                            }}>
                             <SelectTrigger
-                              id="status"
-                              aria-label="Select status"
-                            >
-                              <SelectValue placeholder="Select status" />
+                              id='status'
+                              aria-label='Select status'>
+                              <SelectValue placeholder='Select status' />
                             </SelectTrigger>
                             <SelectContent>
                               <SelectItem
-                                value="true"
-                                className="text-green-500 "
-                              >
+                                value='true'
+                                className='text-green-500 '>
                                 Active
                               </SelectItem>
                               <SelectItem
-                                value="false"
-                                className="text-red-500"
-                              >
+                                value='false'
+                                className='text-red-500'>
                                 Inactive
                               </SelectItem>
                             </SelectContent>
@@ -315,7 +435,7 @@ const CreateCampaignForm: React.FC = () => {
                 </div>
                 <Card>
                   <CardHeader>
-                    <Button size="sm" type="submit" disabled={loading}>
+                    <Button size='sm' type='submit' disabled={loading}>
                       Select Products
                     </Button>
                   </CardHeader>
@@ -334,16 +454,15 @@ const CreateCampaignForm: React.FC = () => {
         <CardHeader>
           <CardTitle>Select Products for campaign</CardTitle>
           <CardDescription>
-            <div className="flex justify-between items-end">
-              <span className="text-sm font-semibold">
+            <div className='flex justify-between items-end'>
+              <span className='text-sm font-semibold'>
                 This campaign discount will be added to the selected products.
               </span>
-              <div className="flex justify-center items-center">
+              <div className='flex justify-center items-center'>
                 <Button
                   variant={"secondary"}
-                  className="mr-2"
-                  onClick={() => setStep(1)}
-                >
+                  className='mr-2'
+                  onClick={() => setStep(1)}>
                   Back
                 </Button>
                 <Button onClick={handleSubmit} disabled={loading}>
@@ -369,7 +488,7 @@ const CreateCampaignForm: React.FC = () => {
       <div>
         {step === 1 && renderCampaignDetailsView()}
         {step === 2 && (
-          <div className="w-full sm:w-[95vw] my-2">
+          <div className='w-full sm:w-[95vw] my-2'>
             {renderProductListView()}
           </div>
         )}
@@ -377,7 +496,7 @@ const CreateCampaignForm: React.FC = () => {
     );
   };
 
-  return <MainView title="Create a campaign">{renderMainView()}</MainView>;
+  return <MainView title='Create a campaign'>{renderMainView()}</MainView>;
 };
 
 export default CreateCampaignForm;

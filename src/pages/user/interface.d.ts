@@ -1,12 +1,18 @@
+export interface Permission {
+  page: string;
+  actions: string[];
+}
 export interface IUser {
-  id: number;
+  id: string;
   name: string;
-  email: string | null;
+  email: string;
   mobile_number: string;
   role: string;
-  created_date: Date;
-  avatar: string;
-  bio: string;
-  whatsapp_number: string;
+  role_id: string;
+  permissions: Permission[];
+  created_date: string | Date;
+  avatar?: string;
+  bio?: string;
+  whatsapp_number?: string;
   password?: string;
 }

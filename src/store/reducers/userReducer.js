@@ -15,6 +15,7 @@ const userSlice = createSlice({
     type: "default", // "admin" | "retailer" | "menu" | "ro" | "logistic" | "default"
     token: null,
     refreshToken: null,
+    permissions: [],
     timestamps: {
       createdAt: null,
       updatedAt: null,

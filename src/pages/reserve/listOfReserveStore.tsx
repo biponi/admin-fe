@@ -45,6 +45,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "../../components/ui/alert-dialog";
+import useRoleCheck from "../auth/hooks/useRoleCheck";
 
 interface Store {
   id: number;
@@ -55,7 +56,7 @@ interface Store {
 
 const ReserveStoresList: React.FC = () => {
   const navigate = useNavigate();
-
+  const { hasRequiredPermission, hasSomePermissionsForPage } = useRoleCheck();
   const [stores, setStores] = useState<Store[]>([]);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [newStore, setNewStore] = useState({ name: "", location: "" });
@@ -107,52 +108,54 @@ const ReserveStoresList: React.FC = () => {
             <CardTitle>Reserve Stores</CardTitle>
             <CardDescription>List of all reserve stores</CardDescription>
           </div>
-          <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-            <DialogTrigger asChild>
-              <Button>
-                <Plus className='mr-2 h-4 w-4' /> Create Store
-              </Button>
-            </DialogTrigger>
-            <DialogContent>
-              <DialogHeader>
-                <DialogTitle>Create New Store</DialogTitle>
-                <DialogDescription>
-                  Enter the details for the new store.
-                </DialogDescription>
-              </DialogHeader>
-              <div className='grid gap-4 py-4'>
-                <div className='grid grid-cols-4 items-center gap-4'>
-                  <Label htmlFor='name' className='text-right'>
-                    Name
-                  </Label>
-                  <Input
-                    id='name'
-                    value={newStore.name}
-                    onChange={(e) =>
-                      setNewStore({ ...newStore, name: e.target.value })
-                    }
-                    className='col-span-3'
-                  />
+          {hasRequiredPermission("ReserveStore", "create") && (
+            <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+              <DialogTrigger asChild>
+                <Button>
+                  <Plus className='mr-2 h-4 w-4' /> Create Store
+                </Button>
+              </DialogTrigger>
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle>Create New Store</DialogTitle>
+                  <DialogDescription>
+                    Enter the details for the new store.
+                  </DialogDescription>
+                </DialogHeader>
+                <div className='grid gap-4 py-4'>
+                  <div className='grid grid-cols-4 items-center gap-4'>
+                    <Label htmlFor='name' className='text-right'>
+                      Name
+                    </Label>
+                    <Input
+                      id='name'
+                      value={newStore.name}
+                      onChange={(e) =>
+                        setNewStore({ ...newStore, name: e.target.value })
+                      }
+                      className='col-span-3'
+                    />
+                  </div>
+                  <div className='grid grid-cols-4 items-center gap-4'>
+                    <Label htmlFor='location' className='text-right'>
+                      Location
+                    </Label>
+                    <Input
+                      id='location'
+                      value={newStore.location}
+                      onChange={(e) =>
+                        setNewStore({ ...newStore, location: e.target.value })
+                      }
+                      className='col-span-3'
+                    />
+                  </div>
                 </div>
-                <div className='grid grid-cols-4 items-center gap-4'>
-                  <Label htmlFor='location' className='text-right'>
-                    Location
-                  </Label>
-                  <Input
-                    id='location'
-                    value={newStore.location}
-                    onChange={(e) =>
-                      setNewStore({ ...newStore, location: e.target.value })
-                    }
-                    className='col-span-3'
-                  />
-                </div>
-              </div>
-              <DialogFooter>
-                <Button onClick={handleCreateStore}>Save</Button>
-              </DialogFooter>
-            </DialogContent>
-          </Dialog>
+                <DialogFooter>
+                  <Button onClick={handleCreateStore}>Save</Button>
+                </DialogFooter>
+              </DialogContent>
+            </Dialog>
+          )}
         </div>
       </CardHeader>
       <CardContent>
@@ -171,43 +174,55 @@ const ReserveStoresList: React.FC = () => {
                 <TableCell>{store.id}</TableCell>
                 <TableCell>{store.name}</TableCell>
                 <TableCell>{store.location}</TableCell>
-                <TableCell>
-                  <div className='flex space-x-2'>
-                    <Button
-                      variant='ghost'
-                      size='icon'
-                      onClick={() => handleView(store?.slug)}>
-                      <Eye className='h-4 w-4' />
-                    </Button>
-
-                    <AlertDialog>
-                      <AlertDialogTrigger>
-                        <Button variant='ghost' size='icon'>
-                          <Trash2 className='h-4 w-4' />
+                {hasSomePermissionsForPage("ReserveStore", [
+                  "store_access",
+                  "delete",
+                ]) && (
+                  <TableCell>
+                    <div className='flex space-x-2'>
+                      {hasRequiredPermission(
+                        "ReserveStore",
+                        "store_access"
+                      ) && (
+                        <Button
+                          variant='ghost'
+                          size='icon'
+                          onClick={() => handleView(store?.slug)}>
+                          <Eye className='h-4 w-4' />
                         </Button>
-                      </AlertDialogTrigger>
-                      <AlertDialogContent>
-                        <AlertDialogHeader>
-                          <AlertDialogTitle>
-                            Are you absolutely sure?
-                          </AlertDialogTitle>
-                          <AlertDialogDescription>
-                            This action cannot be undone. This will permanently
-                            delete your store and remove your data from admin
-                            servers.
-                          </AlertDialogDescription>
-                        </AlertDialogHeader>
-                        <AlertDialogFooter>
-                          <AlertDialogCancel>Cancel</AlertDialogCancel>
-                          <AlertDialogAction
-                            onClick={() => handleDelete(store.id)}>
-                            Continue
-                          </AlertDialogAction>
-                        </AlertDialogFooter>
-                      </AlertDialogContent>
-                    </AlertDialog>
-                  </div>
-                </TableCell>
+                      )}
+
+                      {hasRequiredPermission("ReserveStore", "delete") && (
+                        <AlertDialog>
+                          <AlertDialogTrigger>
+                            <Button variant='ghost' size='icon'>
+                              <Trash2 className='h-4 w-4' />
+                            </Button>
+                          </AlertDialogTrigger>
+                          <AlertDialogContent>
+                            <AlertDialogHeader>
+                              <AlertDialogTitle>
+                                Are you absolutely sure?
+                              </AlertDialogTitle>
+                              <AlertDialogDescription>
+                                This action cannot be undone. This will
+                                permanently delete your store and remove your
+                                data from admin servers.
+                              </AlertDialogDescription>
+                            </AlertDialogHeader>
+                            <AlertDialogFooter>
+                              <AlertDialogCancel>Cancel</AlertDialogCancel>
+                              <AlertDialogAction
+                                onClick={() => handleDelete(store.id)}>
+                                Continue
+                              </AlertDialogAction>
+                            </AlertDialogFooter>
+                          </AlertDialogContent>
+                        </AlertDialog>
+                      )}
+                    </div>
+                  </TableCell>
+                )}
               </TableRow>
             ))}
           </TableBody>

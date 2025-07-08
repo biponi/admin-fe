@@ -38,8 +38,10 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "../../components/ui/alert-dialog";
+import useRoleCheck from "../auth/hooks/useRoleCheck";
 
 const SingleReserveStore: React.FC = () => {
+  const { hasRequiredPermission } = useRoleCheck();
   const { storeId } = useParams<{ storeId: string }>();
   const [id, setId] = useState<string | undefined>(undefined);
   const [storeInformation, setStoreInformation] =
@@ -164,14 +166,16 @@ const SingleReserveStore: React.FC = () => {
               A list of all the stores in your database including their records.
             </p>
           </div>
-          <div className='mt-4 sm:ml-16 sm:mt-0 sm:flex-none'>
-            <Button
-              type='button'
-              onClick={() => setOpenCreateDialog(true)}
-              className='block rounded-md bg-indigo-600 px-3 py-2 text-center text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600'>
-              Add Record
-            </Button>
-          </div>
+          {hasRequiredPermission("ReserveRecord", "create") && (
+            <div className='mt-4 sm:ml-16 sm:mt-0 sm:flex-none'>
+              <Button
+                type='button'
+                onClick={() => setOpenCreateDialog(true)}
+                className='block rounded-md bg-indigo-600 px-3 py-2 text-center text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600'>
+                Add Record
+              </Button>
+            </div>
+          )}
         </div>
         <div className='mt-8 flow-root'>
           <div className='-mx-4 -my-2 overflow-x-auto sm:-mx-6 lg:-mx-8'>
@@ -205,16 +209,20 @@ const SingleReserveStore: React.FC = () => {
                         className='px-3 py-3.5 text-left text-sm font-semibold text-gray-900'>
                         Total Amount
                       </th>
-                      <th
-                        scope='col'
-                        className='px-3 py-3.5 text-left text-sm font-semibold text-gray-900'>
-                        Delete
-                      </th>
-                      <th
-                        scope='col'
-                        className='relative py-3.5 pl-3 pr-4 sm:pr-6'>
-                        <span className='sr-only'>Edit</span>
-                      </th>
+                      {hasRequiredPermission("ReserveRecord", "delete") && (
+                        <th
+                          scope='col'
+                          className='px-3 py-3.5 text-left text-sm font-semibold text-gray-900'>
+                          Delete
+                        </th>
+                      )}
+                      {hasRequiredPermission("ReserveRecord", "edit") && (
+                        <th
+                          scope='col'
+                          className='relative py-3.5 pl-3 pr-4 sm:pr-6'>
+                          <span className='sr-only'>Edit</span>
+                        </th>
+                      )}
                     </tr>
                   </thead>
                   <tbody className='divide-y divide-gray-200 bg-white'>
@@ -269,47 +277,53 @@ const SingleReserveStore: React.FC = () => {
                           <td className='relative whitespace-nowrap py-4 pl-3 pr-4 text-right text-sm font-medium sm:pr-6'>
                             {calculateTotalPrice(record?.products)}
                           </td>
-                          <td className='relative whitespace-nowrap py-4 pl-3 pr-4 text-right text-sm font-medium sm:pr-6'>
-                            <AlertDialog>
-                              <AlertDialogTrigger>
-                                <Button variant={"destructive"}>
-                                  <Trash className='w-5 h-5' />
-                                </Button>
-                              </AlertDialogTrigger>
-                              <AlertDialogContent>
-                                <AlertDialogHeader>
-                                  <AlertDialogTitle>
-                                    Are you absolutely sure?
-                                  </AlertDialogTitle>
-                                  <AlertDialogDescription>
-                                    This action cannot be undone. This will
-                                    permanently delete your record and remove
-                                    your data from admin servers.
-                                  </AlertDialogDescription>
-                                </AlertDialogHeader>
-                                <AlertDialogFooter>
-                                  <AlertDialogCancel>Cancel</AlertDialogCancel>
-                                  <AlertDialogAction
-                                    onClick={() =>
-                                      handleDeleteRecord(record?._id ?? "")
-                                    }>
-                                    Continue
-                                  </AlertDialogAction>
-                                </AlertDialogFooter>
-                              </AlertDialogContent>
-                            </AlertDialog>
-                          </td>
-                          <td className='relative whitespace-nowrap py-4 pl-3 pr-4 text-right text-sm font-medium sm:pr-6'>
-                            <Button
-                              className='bg-blue-600'
-                              onClick={() => {
-                                setSelectedProducts([...record?.products]);
-                                setOpenEditDialog(true);
-                                setRecordId(record?.id);
-                              }}>
-                              Edit
-                            </Button>
-                          </td>
+                          {hasRequiredPermission("ReserveRecord", "delete") && (
+                            <td className='relative whitespace-nowrap py-4 pl-3 pr-4 text-right text-sm font-medium sm:pr-6'>
+                              <AlertDialog>
+                                <AlertDialogTrigger>
+                                  <Button variant={"destructive"}>
+                                    <Trash className='w-5 h-5' />
+                                  </Button>
+                                </AlertDialogTrigger>
+                                <AlertDialogContent>
+                                  <AlertDialogHeader>
+                                    <AlertDialogTitle>
+                                      Are you absolutely sure?
+                                    </AlertDialogTitle>
+                                    <AlertDialogDescription>
+                                      This action cannot be undone. This will
+                                      permanently delete your record and remove
+                                      your data from admin servers.
+                                    </AlertDialogDescription>
+                                  </AlertDialogHeader>
+                                  <AlertDialogFooter>
+                                    <AlertDialogCancel>
+                                      Cancel
+                                    </AlertDialogCancel>
+                                    <AlertDialogAction
+                                      onClick={() =>
+                                        handleDeleteRecord(record?._id ?? "")
+                                      }>
+                                      Continue
+                                    </AlertDialogAction>
+                                  </AlertDialogFooter>
+                                </AlertDialogContent>
+                              </AlertDialog>
+                            </td>
+                          )}
+                          {hasRequiredPermission("ReserveRecord", "edit") && (
+                            <td className='relative whitespace-nowrap py-4 pl-3 pr-4 text-right text-sm font-medium sm:pr-6'>
+                              <Button
+                                className='bg-blue-600'
+                                onClick={() => {
+                                  setSelectedProducts([...record?.products]);
+                                  setOpenEditDialog(true);
+                                  setRecordId(record?.id);
+                                }}>
+                                Edit
+                              </Button>
+                            </td>
+                          )}
                         </tr>
                       )
                     )}

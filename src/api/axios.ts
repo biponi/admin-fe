@@ -1,8 +1,7 @@
 import axios, { AxiosError } from "axios";
 import useLoginAuth from "../pages/auth/hooks/useLoginAuth";
 
-const baseHostName = "https://app.priorbd.com"; //"https://prior-express.onrender.com";
-
+const baseHostName = process.env.REACT_APP_API_BASE_URL;
 const axiosInstance = axios.create({
   baseURL: baseHostName,
   headers: {

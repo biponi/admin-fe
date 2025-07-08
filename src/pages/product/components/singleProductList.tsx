@@ -17,6 +17,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "../../../components/ui/popover";
+import useRoleCheck from "../../auth/hooks/useRoleCheck";
 
 interface Props {
   id: string;
@@ -51,6 +52,7 @@ const SingleItem: React.FC<Props> = ({
   handleUpdateProduct,
   deleteExistingProduct,
 }) => {
+  const { hasRequiredPermission, hasSomePermissionsForPage } = useRoleCheck();
   const dialogBtn = useRef(null);
 
   const discardDialog = () => {
@@ -168,29 +170,35 @@ const SingleItem: React.FC<Props> = ({
       <TableCell className='hidden md:table-cell'>
         {dayjs(updatedAt).format("DD-MM-YYYY HH:mm:ss")}
       </TableCell>
-      <TableCell>
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button aria-haspopup='true' size='icon' variant='ghost'>
-              <MoreHorizontalIcon className='h-4 w-4' />
-              <span className='sr-only'>Toggle menu</span>
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align='end'>
-            <DropdownMenuLabel>Actions</DropdownMenuLabel>
-            <DropdownMenuItem onClick={() => handleUpdateProduct(id)}>
-              Edit
-            </DropdownMenuItem>
-            <DropdownMenuItem
-              onClick={() => {
-                //@ts-ignore
-                if (!!dialogBtn) dialogBtn.current?.click();
-              }}>
-              Delete
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
-      </TableCell>
+      {hasSomePermissionsForPage("product", ["edit", "delete"]) && (
+        <TableCell>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button aria-haspopup='true' size='icon' variant='ghost'>
+                <MoreHorizontalIcon className='h-4 w-4' />
+                <span className='sr-only'>Toggle menu</span>
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align='end'>
+              <DropdownMenuLabel>Actions</DropdownMenuLabel>
+              {hasRequiredPermission("product", "edit") && (
+                <DropdownMenuItem onClick={() => handleUpdateProduct(id)}>
+                  Edit
+                </DropdownMenuItem>
+              )}
+              {hasRequiredPermission("product", "delete") && (
+                <DropdownMenuItem
+                  onClick={() => {
+                    //@ts-ignore
+                    if (!!dialogBtn) dialogBtn.current?.click();
+                  }}>
+                  Delete
+                </DropdownMenuItem>
+              )}
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </TableCell>
+      )}
       {discardDialog()}
     </TableRow>
   );

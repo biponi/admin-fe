@@ -30,30 +30,11 @@ import useLoginAuth from "./pages/auth/hooks/useLoginAuth";
 import { TooltipProvider } from "./components/ui/tooltip";
 import MainView from "./coreComponents/mainView";
 import ProfilePage from "./pages/user/userProfile";
-
-// Protected Route Component
-const ProtectedRoute = ({
-  children,
-  roles,
-}: {
-  children: JSX.Element;
-  roles: string[];
-}) => {
-  const { user } = useLoginAuth();
-
-  // If user is not authenticated, redirect to login
-  if (!user) {
-    return <Navigate to='/login' />;
-  }
-
-  // If user is authenticated but doesn't have the required role, redirect to unauthorized page
-  if (!roles.includes(user.role)) {
-    return <Navigate to='/unauthorize' />;
-  }
-
-  // If user is authenticated and has the required role, render the children
-  return children;
-};
+import RolesListPage from "./pages/role";
+import EditRolePage from "./pages/role/editView";
+import CreateRolePage from "./pages/role/create";
+import ProtectedRoute from "./ProtectedRoute";
+import ViewRolePage from "./pages/role/viewRolePage";
 
 const App = () => {
   const { token, refreshToken, fetchUserById, signOut } = useLoginAuth();
@@ -170,7 +151,7 @@ const App = () => {
             <Route
               path='/dashboard'
               element={
-                <ProtectedRoute roles={["admin"]}>
+                <ProtectedRoute page='dashboard'>
                   <DashboardPage />
                 </ProtectedRoute>
               }
@@ -178,7 +159,7 @@ const App = () => {
             <Route
               path='/purchase-order/list'
               element={
-                <ProtectedRoute roles={["admin", "manager"]}>
+                <ProtectedRoute page='PurchaseOrder'>
                   <PurchaseOrders />
                 </ProtectedRoute>
               }
@@ -186,7 +167,7 @@ const App = () => {
             <Route
               path='/purchase-order/create'
               element={
-                <ProtectedRoute roles={["admin", "manager"]}>
+                <ProtectedRoute page='PurchaseOrder' requiredAction='create'>
                   <CreatePurchaseOrder />
                 </ProtectedRoute>
               }
@@ -194,7 +175,7 @@ const App = () => {
             <Route
               path='/transactions'
               element={
-                <ProtectedRoute roles={["admin", "manager"]}>
+                <ProtectedRoute page='Transaction'>
                   <TransactionsPage />
                 </ProtectedRoute>
               }
@@ -202,7 +183,7 @@ const App = () => {
             <Route
               path='/stores'
               element={
-                <ProtectedRoute roles={["admin", "manager"]}>
+                <ProtectedRoute page='ReserveStore'>
                   <ReserveStore />
                 </ProtectedRoute>
               }
@@ -210,7 +191,9 @@ const App = () => {
             <Route
               path='/store/:storeId'
               element={
-                <ProtectedRoute roles={["admin", "manager"]}>
+                <ProtectedRoute
+                  page='ReserveStore'
+                  requiredAction='store_access'>
                   <SingleReserveStore />
                 </ProtectedRoute>
               }
@@ -218,7 +201,7 @@ const App = () => {
             <Route
               path='/users'
               element={
-                <ProtectedRoute roles={["admin"]}>
+                <ProtectedRoute page='user' requiredAction='view'>
                   <MainView title='User Management'>
                     <UserComponent />
                   </MainView>
@@ -228,9 +211,49 @@ const App = () => {
             <Route
               path='/profile'
               element={
-                <ProtectedRoute roles={["admin"]}>
+                <ProtectedRoute page='profile'>
                   <MainView title='User Profile'>
                     <ProfilePage />
+                  </MainView>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path='/roles'
+              element={
+                <ProtectedRoute page='role'>
+                  <MainView title='Role Management'>
+                    <RolesListPage />
+                  </MainView>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path='/roles/:id/edit'
+              element={
+                <ProtectedRoute page='role' requiredAction='edit'>
+                  <MainView title='Role Edit'>
+                    <EditRolePage />
+                  </MainView>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path='/roles/create'
+              element={
+                <ProtectedRoute page='role' requiredAction='create'>
+                  <MainView title='Role Create'>
+                    <CreateRolePage />
+                  </MainView>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path='/role/:id'
+              element={
+                <ProtectedRoute page='role' requiredAction='view'>
+                  <MainView title='Role View'>
+                    <ViewRolePage />
                   </MainView>
                 </ProtectedRoute>
               }

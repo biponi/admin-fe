@@ -99,6 +99,19 @@ const config = {
     deleteStoreRecord: () => `${baseURL}/store-reserve/store/record/delete`,
     deleteReserve: (id: number) => `${baseURL}/store-reserve/store/${id}`,
   },
+  role: {
+    // Basic CRUD operations
+    fetchRoles: () => `${baseURL}/role`,
+    fetchRoleById: (id: string) => `${baseURL}/role/${id}`,
+    createRole: () => `${baseURL}/role`,
+    updateRole: (id: string) => `${baseURL}/role/${id}`,
+    deleteRole: (id: string) => `${baseURL}/role/${id}`,
+
+    // Additional endpoints
+    permanentDeleteRole: (id: string) => `${baseURL}/role/${id}/permanent`,
+    getRolePermissions: (id: string) => `${baseURL}/role/${id}/permissions`,
+    updateRolePermissions: (id: string) => `${baseURL}/role/${id}/permissions`,
+  },
 };
 
 export default config;

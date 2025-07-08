@@ -12,6 +12,7 @@ import { Button } from "../../../components/ui/button";
 import placeholderImage from "../../../assets/placeholder.svg";
 import CustomAlertDialog from "../../../coreComponents/OptionModal";
 import { useRef } from "react";
+import useRoleCheck from "../../auth/hooks/useRoleCheck";
 interface Props {
   id: string;
   image: string;
@@ -33,6 +34,7 @@ const SingleCategoryItem: React.FC<Props> = ({
   handleEditBtnClick,
   deleteExistingCategory,
 }) => {
+  const { hasSomePermissionsForPage, hasRequiredPermission } = useRoleCheck();
   const dialogBtn = useRef(null);
 
   const discardDialog = () => {
@@ -71,31 +73,37 @@ const SingleCategoryItem: React.FC<Props> = ({
       {/* <TableCell className='hidden md:table-cell'>
         2023-07-12 10:42 AM
       </TableCell> */}
-      <TableCell>
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button aria-haspopup='true' size='icon' variant='ghost'>
-              <MoreHorizontalIcon className='h-4 w-4' />
-              <span className='sr-only'>Toggle menu</span>
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align='end'>
-            <DropdownMenuLabel>Actions</DropdownMenuLabel>
-            <DropdownMenuItem onClick={() => handleEditBtnClick()}>
-              Edit
-            </DropdownMenuItem>
-            <DropdownMenuItem
-              onClick={() => {
-                if (!!dialogBtn) {
-                  //@ts-ignore
-                  dialogBtn?.current?.click();
-                }
-              }}>
-              Delete
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
-      </TableCell>
+      {hasSomePermissionsForPage("category", ["edit", "delete"]) && (
+        <TableCell>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button aria-haspopup='true' size='icon' variant='ghost'>
+                <MoreHorizontalIcon className='h-4 w-4' />
+                <span className='sr-only'>Toggle menu</span>
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align='end'>
+              <DropdownMenuLabel>Actions</DropdownMenuLabel>
+              {hasRequiredPermission("category", "edit") && (
+                <DropdownMenuItem onClick={() => handleEditBtnClick()}>
+                  Edit
+                </DropdownMenuItem>
+              )}
+              {hasRequiredPermission("category", "delete") && (
+                <DropdownMenuItem
+                  onClick={() => {
+                    if (!!dialogBtn) {
+                      //@ts-ignore
+                      dialogBtn?.current?.click();
+                    }
+                  }}>
+                  Delete
+                </DropdownMenuItem>
+              )}
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </TableCell>
+      )}
       {discardDialog()}
     </TableRow>
   );

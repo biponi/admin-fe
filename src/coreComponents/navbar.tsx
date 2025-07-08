@@ -1,4 +1,4 @@
-import { LifeBuoy, PanelLeft, User2 } from "lucide-react";
+import { CircleUserRound, LifeBuoy, LogOut, PanelLeft } from "lucide-react";
 import { Button } from "../components/ui/button";
 import {
   Tooltip,
@@ -20,13 +20,15 @@ import {
 } from "../components/ui/drawer";
 import { navItems } from "../utils/navItem";
 import { useLocation, useNavigate } from "react-router-dom";
-import { BiponiLogo } from "../utils/contents";
+import { BiponiMainLogo } from "../utils/contents";
 import useLoginAuth from "../pages/auth/hooks/useLoginAuth";
 import { Avatar, AvatarFallback, AvatarImage } from "../components/ui/avatar";
 import { getInitialsWord } from "../utils/functions";
+import useRoleCheck from "../pages/auth/hooks/useRoleCheck";
 
 const Navbar = () => {
   const { signOut, user } = useLoginAuth();
+  const { hasRequiredPermission } = useRoleCheck();
   const navigate = useNavigate();
   const pathName = useLocation().pathname;
 
@@ -39,12 +41,14 @@ const Navbar = () => {
       <aside className='inset-y fixed left-0 z-20 hidden sm:flex h-full flex-col border-r'>
         <div className='border-b p-2'>
           <Button variant='outline' size='icon' aria-label='Home'>
-            <img src={BiponiLogo} className='size-5' alt='main-logo' />
+            <img src={BiponiMainLogo} className='size-5' alt='main-logo' />
           </Button>
         </div>
         <nav className='grid gap-1 p-2'>
           {navItems
-            .filter((nav) => nav.active && nav.roles.includes(user?.role))
+            .filter(
+              (nav) => nav.active && hasRequiredPermission(nav.id, "view")
+            )
             .map((item) => (
               <Tooltip key={item.link}>
                 <TooltipTrigger asChild>
@@ -110,7 +114,11 @@ const Navbar = () => {
             <DrawerHeader>
               <div className='border-b p-2 flex justify-center items-center gap-1'>
                 <Button variant='outline' size='icon' aria-label='Home'>
-                  <img src={BiponiLogo} className='size-5' alt='main-logo' />{" "}
+                  <img
+                    src={BiponiMainLogo}
+                    className='size-5'
+                    alt='main-logo'
+                  />{" "}
                 </Button>
                 <span className='text-base font-semibold text-gray-700'>
                   Prior Admin
@@ -119,7 +127,9 @@ const Navbar = () => {
             </DrawerHeader>
             <nav className='grid grid-cols-2 gap-6 p-4 text-lg font-medium mb-4'>
               {navItems
-                .filter((nav) => nav.active && nav.roles.includes(user?.role))
+                .filter(
+                  (nav) => nav.active && hasRequiredPermission(nav.id, "view")
+                )
                 .map((item) => (
                   <DrawerClose key={item.link}>
                     <Button
@@ -134,25 +144,25 @@ const Navbar = () => {
                     </Button>
                   </DrawerClose>
                 ))}
-              <div className='w-full grid-cols-2 gap-2'>
-                <DrawerClose>
-                  <Button
-                    variant={"secondary"}
-                    className='flex justify-center items-center w-full gap-4'
-                    onClick={() => navigate("/profile")}>
-                    <User2 className='size-5' /> My Profile
-                  </Button>
-                </DrawerClose>
-                <DrawerClose>
-                  <Button
-                    variant={"destructive"}
-                    className='flex justify-center items-center w-full gap-4'
-                    onClick={() => signOut()}>
-                    <User2 className='size-5' /> Logout
-                  </Button>
-                </DrawerClose>
-              </div>
             </nav>
+            <div className='w-full grid grid-cols-2 gap-6 pt-4 px-4 py-6 rounded-tl-xl rounded-tr-xl bg-gray-300'>
+              <DrawerClose>
+                <Button
+                  variant={"secondary"}
+                  className='flex justify-center items-center w-full gap-4'
+                  onClick={() => navigate("/profile")}>
+                  <CircleUserRound className='size-5' /> My Profile
+                </Button>
+              </DrawerClose>
+              <DrawerClose>
+                <Button
+                  variant={"destructive"}
+                  className='flex justify-center items-center w-full gap-4'
+                  onClick={() => signOut()}>
+                  <LogOut className='size-5' /> Logout
+                </Button>
+              </DrawerClose>
+            </div>
           </DrawerContent>
         </Drawer>
       </header>

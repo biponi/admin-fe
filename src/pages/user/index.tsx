@@ -45,9 +45,12 @@ import {
   signupUser,
 } from "../../api/user";
 import toast from "react-hot-toast";
-import { UserRoleList } from "../../utils/contents";
+import { useRoles } from "../role/hooks/useRoleHook";
+import useRoleCheck from "../auth/hooks/useRoleCheck";
 
 export function UserComponent() {
+  const { hasRequiredPermission, hasSomePermissionsForPage } = useRoleCheck();
+  const { roles, fetchRoles } = useRoles();
   const [users, setUsers] = useState<IUser[]>([]);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
@@ -61,7 +64,7 @@ export function UserComponent() {
     email: "",
     mobile_number: "",
     password: "",
-    role: "user", // Default role
+    role: -1, // Default role
   });
 
   // Handle input change
@@ -72,7 +75,7 @@ export function UserComponent() {
 
   // Handle role change
   const handleNewUserRoleChange = (value: string) => {
-    setNewUser((prev) => ({ ...prev, role: value }));
+    setNewUser((prev) => ({ ...prev, role: Number(value) ?? -1 }));
   };
 
   // Handle form submission
@@ -106,7 +109,7 @@ export function UserComponent() {
         email: "",
         mobile_number: "",
         password: "",
-        role: "user",
+        role: -1,
       });
       // Optionally, refresh the user list here
     } else {
@@ -116,6 +119,8 @@ export function UserComponent() {
 
   useEffect(() => {
     fetchUsers();
+    fetchRoles();
+    //eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const fetchUsers = async () => {
@@ -243,20 +248,18 @@ export function UserComponent() {
               onChange={handleInputChange}
             />
             <Select
-              value={newUser.role}
+              value={`${newUser.role}`}
               onValueChange={handleNewUserRoleChange}>
               <SelectTrigger>
                 <SelectValue placeholder='Select Role' />
               </SelectTrigger>
               <SelectContent>
-                {UserRoleList.map(
+                {roles.map(
                   (
                     role // UserRoleList is a constant array of roles
                   ) => (
-                    <SelectItem
-                      key={role?.roleId}
-                      value={`${role?.roleName.toLowerCase()}`}>
-                      {role?.roleName}
+                    <SelectItem key={role?.id} value={`${role?.roleNumber}`}>
+                      {role?.name}
                     </SelectItem>
                   )
                 )}
@@ -280,9 +283,11 @@ export function UserComponent() {
     <Card className='p-6 w-[91vw]'>
       <div className='flex justify-between items-center mb-6'>
         <h2 className='text-xl font-semibold'>User List</h2>
-        <Button onClick={() => setIsCreateModalOpen(true)}>
-          <Plus className='mr-2 h-4 w-4' /> Create User
-        </Button>
+        {hasRequiredPermission("user", "create") && (
+          <Button onClick={() => setIsCreateModalOpen(true)}>
+            <Plus className='mr-2 h-4 w-4' /> Create User
+          </Button>
+        )}
       </div>
       <Table>
         <TableCaption>A list of users fetched from the API.</TableCaption>
@@ -293,7 +298,9 @@ export function UserComponent() {
             <TableHead>Email</TableHead>
             <TableHead>Mobile Number</TableHead>
             <TableHead>Role</TableHead>
-            <TableHead>Actions</TableHead>
+            {hasSomePermissionsForPage("user", ["edit", "delete"]) && (
+              <TableHead>Actions</TableHead>
+            )}
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -305,48 +312,52 @@ export function UserComponent() {
               <TableCell>{user.mobile_number}</TableCell>
               <TableCell>
                 <Select
-                  value={user.role}
+                  value={`${user.role_id}`}
                   onValueChange={(newRole) =>
                     handleRoleChange(`${user.id}`, newRole)
                   }
-                  disabled={user.role === "admin"}>
+                  disabled={user.role.includes("admin")}>
                   <SelectTrigger>
                     <SelectValue placeholder='Select Role' />
                   </SelectTrigger>
                   <SelectContent>
-                    {UserRoleList.map(
+                    {roles.map(
                       (
-                        role // UserRoleList is a constant array of roles
+                        rol // UserRoleList is a constant array of roles
                       ) => (
-                        <SelectItem
-                          key={role?.roleId}
-                          value={`${role?.roleName.toLowerCase()}`}>
-                          {role?.roleName}
+                        <SelectItem key={rol?.id} value={`${rol?.roleNumber}`}>
+                          {rol?.name}
                         </SelectItem>
                       )
                     )}
                   </SelectContent>
                 </Select>
               </TableCell>
-              <TableCell>
-                <Button
-                  variant='ghost'
-                  size='icon'
-                  onClick={() => handleEdit(user)}
-                  disabled={user.role === "admin"}>
-                  <Edit className='h-4 w-4' />
-                </Button>
-                <Button
-                  variant='ghost'
-                  size='icon'
-                  onClick={() => {
-                    setDeleteUserId(`${user.id}`);
-                    setIsDeleteModalOpen(true);
-                  }}
-                  disabled={user.role === "admin"}>
-                  <Trash className='h-4 w-4' />
-                </Button>
-              </TableCell>
+              {hasSomePermissionsForPage("user", ["edit", "delete"]) && (
+                <TableCell>
+                  {hasRequiredPermission("user", "edit") && (
+                    <Button
+                      variant='ghost'
+                      size='icon'
+                      onClick={() => handleEdit(user)}
+                      disabled={user.role === "admin"}>
+                      <Edit className='h-4 w-4' />
+                    </Button>
+                  )}
+                  {hasRequiredPermission("user", "delete") && (
+                    <Button
+                      variant='ghost'
+                      size='icon'
+                      onClick={() => {
+                        setDeleteUserId(`${user.id}`);
+                        setIsDeleteModalOpen(true);
+                      }}
+                      disabled={user.role === "admin"}>
+                      <Trash className='h-4 w-4' />
+                    </Button>
+                  )}
+                </TableCell>
+              )}
             </TableRow>
           ))}
         </TableBody>

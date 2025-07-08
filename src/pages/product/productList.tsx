@@ -65,7 +65,6 @@ import SingleProductCardItem from "./components/singleProductCard";
 import { getProductSummary } from "../../api/product";
 import { errorToast } from "../../utils/toast";
 import { Progress } from "../../components/ui/progress";
-import useLoginAuth from "../auth/hooks/useLoginAuth";
 import {
   Drawer,
   DrawerClose,
@@ -76,6 +75,7 @@ import {
   DrawerTitle,
   DrawerTrigger,
 } from "../../components/ui/drawer";
+import useRoleCheck from "../auth/hooks/useRoleCheck";
 
 interface Props {
   handleEditProduct: (id: string) => void;
@@ -97,7 +97,7 @@ const ProductList: React.FC<Props> = ({ handleEditProduct }) => {
     setSelectedCategory,
   } = useProductList();
   const navigate = useNavigate();
-  const { user } = useLoginAuth();
+  const { hasRequiredPermission } = useRoleCheck();
   const [inputValue, setInputValue] = useState<string>("");
   const { categories, fetchCategories } = useCategory();
   const debounceHandler = useDebounce(inputValue, 500);
@@ -130,12 +130,17 @@ const ProductList: React.FC<Props> = ({ handleEditProduct }) => {
   }, [debounceHandler]);
 
   const renderEmptyView = () => {
-    return (
+    return hasRequiredPermission("product", "create") ? (
       <EmptyView
         title='You have no products'
         description='You can start selling as soon as you add a product.'
         buttonText='Add Product'
         handleButtonClick={() => navigate("/product/create")}
+      />
+    ) : (
+      <EmptyView
+        title='You have no products'
+        description='You can start selling as soon as you add a product.'
       />
     );
   };
@@ -143,7 +148,7 @@ const ProductList: React.FC<Props> = ({ handleEditProduct }) => {
   const renderButtonAndFilterView = () => {
     return (
       <>
-        {user?.role.includes("admin") && (
+        {hasRequiredPermission("product", "summary") && (
           <Drawer>
             <DrawerTrigger asChild>
               <Button
@@ -208,15 +213,17 @@ const ProductList: React.FC<Props> = ({ handleEditProduct }) => {
                 Export
               </span>
             </Button> */}
-        <Button
-          size='sm'
-          className='h-7 ml-2 md:ml-0 md:gap-1 '
-          onClick={() => navigate("/product/create")}>
-          <PlusCircle className='h-3.5 w-3.5' />
-          <span className='sr-only sm:not-sr-only sm:whitespace-nowrap'>
-            Add Product
-          </span>
-        </Button>
+        {hasRequiredPermission("product", "create") && (
+          <Button
+            size='sm'
+            className='h-7 ml-2 md:ml-0 md:gap-1 '
+            onClick={() => navigate("/product/create")}>
+            <PlusCircle className='h-3.5 w-3.5' />
+            <span className='sr-only sm:not-sr-only sm:whitespace-nowrap'>
+              Add Product
+            </span>
+          </Button>
+        )}
       </>
     );
   };
@@ -350,7 +357,8 @@ const ProductList: React.FC<Props> = ({ handleEditProduct }) => {
     return (
       <>
         <div className='hidden md:block'>
-          {user?.role.includes("admin") && renderCardSummaryView()}
+          {hasRequiredPermission("product", "summary") &&
+            renderCardSummaryView()}
         </div>
         <Tabs defaultValue='all'>
           <div className='flex flex-col items-center w-[90vw] md:w-full md:flex-row'>

@@ -1,13 +1,14 @@
 import {
   BadgeDollarSign,
-  CircleUser,
   Home,
   Package2,
+  ShieldCheck,
   Shirt,
   ShoppingBag,
   ShoppingCart,
   StoreIcon,
   User2,
+  UsersRound,
   Zap,
 } from "lucide-react";
 
@@ -17,6 +18,7 @@ export const navItems = [
     title: "Dashboard",
     link: "/dashboard",
     active: true,
+    id: "dashboard",
     roles: ["admin", "manager", "moderator"],
   },
   {
@@ -24,6 +26,7 @@ export const navItems = [
     title: "Orders",
     link: "/order",
     active: true,
+    id: "order",
     roles: ["admin", "manager", "moderator"],
   },
   {
@@ -31,6 +34,7 @@ export const navItems = [
     title: "Products",
     link: "/products",
     active: true,
+    id: "product",
     roles: ["admin", "manager"],
   },
   {
@@ -38,6 +42,7 @@ export const navItems = [
     title: "Category",
     link: "/category",
     active: true,
+    id: "category",
     roles: ["admin", "manager"],
   },
   {
@@ -45,6 +50,7 @@ export const navItems = [
     title: "Campaign",
     link: "/campaign",
     active: true,
+    id: "campaign",
     roles: ["admin", "manager"],
   },
   {
@@ -52,6 +58,7 @@ export const navItems = [
     title: "Purchase Order",
     link: "/purchase-order/list",
     active: true,
+    id: "purchaseorder",
     roles: ["admin", "manager"],
   },
   {
@@ -59,6 +66,7 @@ export const navItems = [
     title: "Transactions",
     link: "/transactions",
     active: true,
+    id: "transaction",
     roles: ["admin"],
   },
   {
@@ -66,20 +74,31 @@ export const navItems = [
     title: "Stores",
     link: "/stores",
     active: true,
+    id: "reservestore",
     roles: ["admin", "manager"],
   },
   {
-    icon: <CircleUser className='w-5 h-5' />,
+    icon: <UsersRound className='w-5 h-5' />,
     title: "Users",
     link: "/users",
     active: true,
+    id: "user",
     roles: ["admin"],
+  },
+  {
+    icon: <ShieldCheck className='w-5 h-5' />,
+    title: "Roles",
+    link: "/roles",
+    active: true,
+    id: "role",
+    roles: ["admin", "manager"],
   },
   {
     icon: <User2 className='w-5 h-5' />,
     title: "Customers",
     link: "/customers",
     active: false,
+    id: "customer",
     roles: ["admin", "manager"],
   },
 ];
