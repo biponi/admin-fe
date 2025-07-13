@@ -75,7 +75,7 @@ export function UserComponent() {
 
   // Handle role change
   const handleNewUserRoleChange = (value: string) => {
-    setNewUser((prev) => ({ ...prev, role: Number(value) ?? -1 }));
+    setNewUser((prev) => ({ ...prev, role:( value ?? -1) }));
   };
 
   // Handle form submission
