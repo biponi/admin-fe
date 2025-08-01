@@ -38,6 +38,7 @@ import CustomAlertDialog from "../../../coreComponents/OptionModal";
 
 import { ICategory, IProductCreateData, IVariation } from "../interface";
 import { useNavigate } from "react-router-dom";
+import NestedCategorySelect from "../../../components/customComponent/NestedCategoryComponent";
 
 const defaultValue = {
   name: "",
@@ -385,28 +386,16 @@ const AddProduct: React.FC<Props> = ({ createProduct, categories }) => {
               </CardHeader>
               <CardContent>
                 <div className='grid gap-6 sm:grid-cols-4'>
-                  <div className='grid gap-3'>
-                    <Label htmlFor='category'>Category</Label>
-                    <Select
-                      onValueChange={(value) => {
-                        updateFormData({
-                          ...formData,
-                          categoryId: value,
-                        });
-                      }}>
-                      <SelectTrigger id='category' aria-label='Select category'>
-                        <SelectValue placeholder='Select category' />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {!!categories &&
-                          categories.map((category: ICategory) => (
-                            <SelectItem value={category?.id}>
-                              {category.name}
-                            </SelectItem>
-                          ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
+                  <NestedCategorySelect
+                    categories={categories}
+                    selectedCategoryId={formData?.categoryId}
+                    setSelectedCategoryId={(id: string) => {
+                      updateFormData({
+                        ...formData,
+                        categoryId: id,
+                      });
+                    }}
+                  />
                   {/* <div className='grid gap-3'>
                     <Label htmlFor='subcategory'>Subcategory (optional)</Label>
                     <Select>

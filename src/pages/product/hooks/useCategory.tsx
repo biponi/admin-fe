@@ -8,7 +8,6 @@ import {
 import { useToast } from "../../../components/ui/use-toast";
 import { ToastAction } from "../../../components/ui/toast";
 import { ICategory, ICreateCategory } from "../interface";
-import { buildFormDataFromObject } from "../../../utils/functions";
 
 const useCategory = () => {
   const [categories, setCategories] = useState<ICategory[]>([]);
@@ -44,7 +43,7 @@ const useCategory = () => {
       });
     } else {
       setLoading(true);
-      const response = await addCategory(buildFormDataFromObject(categoryData));
+      const response = await addCategory(categoryData);
       setLoading(false);
       if (response?.success) {
         toast({
@@ -73,10 +72,7 @@ const useCategory = () => {
       });
     } else {
       setLoading(true);
-      const response = await editCategory(
-        categoryData?.id,
-        buildFormDataFromObject(categoryData)
-      );
+      const response = await editCategory(categoryData?.id, categoryData);
       setLoading(false);
       if (response?.success) {
         toast({
@@ -96,14 +92,14 @@ const useCategory = () => {
     return false;
   };
 
-  const deleteExistingCategory = async (id: string, name: string) => {
+  const deleteExistingCategory = async (id: string, force: boolean = false) => {
     setLoading(true);
     const response = await deleteCategory(id);
     setLoading(false);
     if (response?.success) {
       toast({
         title: "Category deleted Successfully",
-        description: `You have deleted ${name} category`,
+        description: `You have deleted the category`,
       });
       fetchCategories();
       return true;

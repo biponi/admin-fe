@@ -69,9 +69,26 @@ const config = {
       `${baseURL}/manufecturer/${manuId}`,
   },
   category: {
+    // Get all categories (flat list with hierarchy info)
     getAllCategory: () => `${baseURL}/category/all`,
+
+    // Get categories in tree structure
+    getCategoryTree: () => `${baseURL}/category/tree`,
+
+    // Get single category by ID or slug
+    getCategoryByIdOrSlug: (identifier: string) =>
+      `${baseURL}/category/${identifier}`,
+
+    // Create new category
     addCategory: () => `${baseURL}/category/add`,
+
+    // Update existing category
     editCategory: (id: string) => `${baseURL}/category/update/${id}`,
+
+    // Move category to new parent
+    moveCategory: (id: string) => `${baseURL}/category/move/${id}`,
+
+    // Delete category (supports ?force=true query param)
     deleteCategory: (id: string) => `${baseURL}/category/delete/${id}`,
   },
   campaign: {

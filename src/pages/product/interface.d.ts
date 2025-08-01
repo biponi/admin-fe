@@ -78,30 +78,103 @@ export interface IProductUpdateData {
   removeImageIndexes?: string[];
   removeAbleVarations?: string[];
 }
+// Updated interfaces for hierarchical categories
 
 export interface ICategory {
   id: string;
   name: string;
+  slug?: string;
+  description?: string;
   discount: number;
   active: boolean;
-  img: string;
-  description: string;
-  totalProducts: number;
+  google_category_type?: string;
+  img?: string;
+
+  // Hierarchy fields
+  parentId?: string | null;
+  level?: number;
+  ancestors?: string[];
+
+  // API response fields
+  totalProducts?: number;
+  totalChildren?: number;
+  parent?: string; // Parent name from API
+  parentCategoryName?: string;
+  categoryHierarchy?: Array<{
+    id: string;
+    name: string;
+    slug: string;
+    level: number;
+  }>;
+
+  // For tree view
+  children?: ICategory[];
 }
 
 export interface ICreateCategory {
   name: string;
-  discount: number;
-  active: boolean;
-  description: string;
-  img: string | File;
+  description?: string;
+  discount?: number;
+  active?: boolean;
+  google_category_type?: string;
+  img?: File | string;
+  parentId?: string | null;
 }
 
-export interface IChangeEvent extends React.ChangeEvent<HTMLInputElement> {
+export interface ICategoryTree extends ICategory {
+  children: ICategoryTree[];
+}
+
+// Form interfaces
+export interface IChangeEvent {
   target: {
     name: string;
-    value: any;
+    value: string | number | boolean;
   };
+}
+
+// API response interfaces
+export interface ApiResponse<T> {
+  success: boolean;
+  data?: T;
+  error?: string;
+}
+
+export interface ICategoryListResponse {
+  categories: ICategory[];
+  totalCount?: number;
+}
+
+export interface ICategoryTreeResponse {
+  tree: ICategoryTree[];
+}
+
+// Filter and search interfaces
+export interface ICategoryFilters {
+  level?: number;
+  parentId?: string;
+  active?: boolean;
+  search?: string;
+}
+
+export interface ICategoryMoveRequest {
+  newParentId: string | null;
+}
+
+// Component prop interfaces
+export interface ISingleCategoryProps {
+  id: string;
+  image?: string;
+  name: string;
+  active: boolean;
+  discount: number;
+  totalProduct?: number;
+  level?: number;
+  parentName?: string;
+  breadcrumb?: string;
+  isChild?: boolean;
+  handleEditBtnClick: () => void;
+  deleteExistingCategory: (id: string, force?: boolean) => Promise<boolean>;
 }
 
 export interface CategoryStockSummary {

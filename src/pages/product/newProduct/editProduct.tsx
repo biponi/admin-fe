@@ -37,6 +37,7 @@ import {
 import CustomAlertDialog from "../../../coreComponents/OptionModal";
 
 import { ICategory, IProductUpdateData, IVariation } from "../interface";
+import NestedCategorySelect from "../../../components/customComponent/NestedCategoryComponent";
 
 const defaultVariation = {
   id: 0,
@@ -401,29 +402,16 @@ const EditProduct: React.FC<Props> = ({
               </CardHeader>
               <CardContent>
                 <div className='grid gap-6 sm:grid-cols-4'>
-                  <div className='grid gap-3'>
-                    <Label htmlFor='category'>Category</Label>
-                    <Select
-                      value={formData?.categoryId}
-                      onValueChange={(value) => {
-                        updateFormData({
-                          ...formData,
-                          categoryId: value,
-                        });
-                      }}>
-                      <SelectTrigger id='category' aria-label='Select category'>
-                        <SelectValue placeholder='Select category' />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {!!categories &&
-                          categories.map((category: ICategory) => (
-                            <SelectItem value={category?.id}>
-                              {category.name}
-                            </SelectItem>
-                          ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
+                  <NestedCategorySelect
+                    categories={categories}
+                    selectedCategoryId={formData?.categoryId}
+                    setSelectedCategoryId={(id: string) => {
+                      updateFormData({
+                        ...formData,
+                        categoryId: id,
+                      });
+                    }}
+                  />
                   {/* <div className='grid gap-3'>
                     <Label htmlFor='subcategory'>Subcategory (optional)</Label>
                     <Select>
