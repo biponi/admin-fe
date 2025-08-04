@@ -5,18 +5,10 @@ import {
   Grid2X2,
   Image,
   List,
-  ListFilter,
   PlusCircle,
 } from "lucide-react";
 import { Button } from "../../components/ui/button";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuLabel,
-  DropdownMenuTrigger,
-  DropdownMenuSeparator,
-  DropdownMenuCheckboxItem,
-} from "../../components/ui/dropdown-menu";
+
 import {
   Tabs,
   TabsContent,
@@ -76,6 +68,7 @@ import {
   DrawerTrigger,
 } from "../../components/ui/drawer";
 import useRoleCheck from "../auth/hooks/useRoleCheck";
+import CategoryFilterDropdown from "./components/FilterByCategory";
 
 interface Props {
   handleEditProduct: (id: string) => void;
@@ -181,32 +174,11 @@ const ProductList: React.FC<Props> = ({ handleEditProduct }) => {
             </DrawerContent>
           </Drawer>
         )}
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant='outline' size='sm' className='h-7 gap-1'>
-              <ListFilter className='h-3.5 w-3.5' />
-              <span className='sr-only sm:not-sr-only sm:whitespace-nowrap'>
-                Filter
-              </span>
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align='end'>
-            <DropdownMenuLabel>Filter by</DropdownMenuLabel>
-            <DropdownMenuSeparator />
-            <DropdownMenuCheckboxItem
-              checked={selectedCategory === "all"}
-              onClick={() => setSelectedCategory("all")}>
-              All
-            </DropdownMenuCheckboxItem>
-            {categories.map((category, index) => (
-              <DropdownMenuCheckboxItem
-                checked={selectedCategory === category?.id}
-                onClick={() => setSelectedCategory(category.id)}>
-                {category?.name}
-              </DropdownMenuCheckboxItem>
-            ))}
-          </DropdownMenuContent>
-        </DropdownMenu>
+        <CategoryFilterDropdown
+          categories={categories}
+          setSelectedCategory={setSelectedCategory}
+          selectedCategory={selectedCategory}
+        />
         {/* <Button size='sm' variant='outline' className='h-7 gap-1'>
               <File className='h-3.5 w-3.5' />
               <span className='sr-only sm:not-sr-only sm:whitespace-nowrap'>

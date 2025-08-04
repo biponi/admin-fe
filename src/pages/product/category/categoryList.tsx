@@ -66,20 +66,6 @@ const CategoryList = () => {
     if (!!selectedCategory) setOpenUpdateDialog(true);
   }, [selectedCategory]);
 
-  // Build category breadcrumb
-  const buildBreadcrumb = (category: ICategory): string => {
-    if (
-      !category.categoryHierarchy ||
-      category.categoryHierarchy.length === 0
-    ) {
-      return category.name;
-    }
-    return category.categoryHierarchy
-      .map((cat: any) => cat.name)
-      .concat(category.name)
-      .join(" > ");
-  };
-
   const getCategoryBreadcrumb = (
     parentId: string | null,
     existingCategory: ICategory
@@ -192,35 +178,38 @@ const CategoryList = () => {
     ));
   };
 
-  const renderCategoryTable = (categoryList: ICategory[]) => (
-    <Table>
-      <TableHeader>
-        <TableRow>
-          <TableHead className='hidden w-[100px] sm:table-cell'>
-            <span className='sr-only'>Image</span>
-          </TableHead>
-          <TableHead>Name</TableHead>
-          <TableHead>Hierarchy</TableHead>
-          <TableHead>Status</TableHead>
-          <TableHead className='hidden md:table-cell'>Level</TableHead>
-          <TableHead className='hidden md:table-cell'>Total Products</TableHead>
-          <TableHead className='hidden md:table-cell'>Discount</TableHead>
-          {hasSomePermissionsForPage("category", ["edit", "delete"]) && (
-            <TableHead>
-              <span className='sr-only'>Actions</span>
+  const renderCategoryTable = (categoryList: ICategory[]) =>
+    viewMode === "tree" ? (
+      renderTreeView(buildCategoryTree(categoryList))
+    ) : (
+      <Table>
+        <TableHeader>
+          <TableRow>
+            <TableHead className='hidden w-[100px] sm:table-cell'>
+              <span className='sr-only'>Image</span>
             </TableHead>
-          )}
-        </TableRow>
-      </TableHeader>
-      <TableBody>
-        {viewMode === "tree"
-          ? renderTreeView(buildCategoryTree(categoryList))
-          : categoryList.map((category: ICategory) =>
-              renderCategoryRow(category)
+            <TableHead>Name</TableHead>
+            <TableHead>Hierarchy</TableHead>
+            <TableHead>Status</TableHead>
+            <TableHead className='hidden md:table-cell'>Level</TableHead>
+            <TableHead className='hidden md:table-cell'>
+              Total Products
+            </TableHead>
+            <TableHead className='hidden md:table-cell'>Discount</TableHead>
+            {hasSomePermissionsForPage("category", ["edit", "delete"]) && (
+              <TableHead>
+                <span className='sr-only'>Actions</span>
+              </TableHead>
             )}
-      </TableBody>
-    </Table>
-  );
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {categoryList.map((category: ICategory) =>
+            renderCategoryRow(category)
+          )}
+        </TableBody>
+      </Table>
+    );
 
   const renderCategoryListView = () => {
     return (
