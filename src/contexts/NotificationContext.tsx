@@ -1,0 +1,288 @@
+import React, {
+  createContext,
+  useContext,
+  useReducer,
+  useCallback,
+  useEffect,
+} from "react";
+import { socketService } from "../services/socketService";
+import { hasPagePermission } from "../utils/helperFunction";
+import { useSelector } from "react-redux";
+
+export interface Notification {
+  _id: string;
+  type:
+    | "new_ticket"
+    | "new_message"
+    | "ticket_assigned"
+    | "ticket_transferred"
+    | "agent_requested"
+    | "system";
+  title: string;
+  message: string;
+  priority: "low" | "normal" | "high" | "urgent";
+  read: boolean;
+  readAt?: Date;
+  createdAt: Date;
+  relatedData?: {
+    ticketId?: string;
+    customerId?: string;
+    messageId?: string;
+  };
+}
+
+interface NotificationState {
+  notifications: Notification[];
+  unreadCount: number;
+  isLoading: boolean;
+  error: string | null;
+}
+
+type NotificationAction =
+  | { type: "SET_LOADING"; payload: boolean }
+  | { type: "SET_ERROR"; payload: string | null }
+  | { type: "SET_NOTIFICATIONS"; payload: Notification[] }
+  | { type: "ADD_NOTIFICATION"; payload: Notification }
+  | { type: "MARK_AS_READ"; payload: string }
+  | { type: "MARK_ALL_AS_READ" }
+  | { type: "REMOVE_NOTIFICATION"; payload: string };
+
+const initialState: NotificationState = {
+  notifications: [],
+  unreadCount: 0,
+  isLoading: false,
+  error: null,
+};
+
+function notificationReducer(
+  state: NotificationState,
+  action: NotificationAction
+): NotificationState {
+  switch (action.type) {
+    case "SET_LOADING":
+      return { ...state, isLoading: action.payload };
+
+    case "SET_ERROR":
+      return { ...state, error: action.payload, isLoading: false };
+
+    case "SET_NOTIFICATIONS":
+      const unreadCount = action.payload.filter((n) => !n.read).length;
+      return {
+        ...state,
+        notifications: action.payload,
+        unreadCount,
+        isLoading: false,
+        error: null,
+      };
+
+    case "ADD_NOTIFICATION":
+      const newNotifications = [action.payload, ...state.notifications];
+      const newUnreadCount = newNotifications.filter((n) => !n.read).length;
+      return {
+        ...state,
+        notifications: newNotifications,
+        unreadCount: newUnreadCount,
+      };
+
+    case "MARK_AS_READ":
+      const updatedNotifications = state.notifications.map((n) =>
+        n._id === action.payload ? { ...n, read: true, readAt: new Date() } : n
+      );
+      const updatedUnreadCount = updatedNotifications.filter(
+        (n) => !n.read
+      ).length;
+      return {
+        ...state,
+        notifications: updatedNotifications,
+        unreadCount: updatedUnreadCount,
+      };
+
+    case "MARK_ALL_AS_READ":
+      const allReadNotifications = state.notifications.map((n) => ({
+        ...n,
+        read: true,
+        readAt: new Date(),
+      }));
+      return {
+        ...state,
+        notifications: allReadNotifications,
+        unreadCount: 0,
+      };
+
+    case "REMOVE_NOTIFICATION":
+      const filteredNotifications = state.notifications.filter(
+        (n) => n._id !== action.payload
+      );
+      const filteredUnreadCount = filteredNotifications.filter(
+        (n) => !n.read
+      ).length;
+      return {
+        ...state,
+        notifications: filteredNotifications,
+        unreadCount: filteredUnreadCount,
+      };
+
+    default:
+      return state;
+  }
+}
+
+interface NotificationContextType {
+  notifications: Notification[];
+  unreadCount: number;
+  isLoading: boolean;
+  error: string | null;
+  markAsRead: (notificationId: string) => void;
+  markAllAsRead: () => void;
+  removeNotification: (notificationId: string) => void;
+  refreshNotifications: () => void;
+}
+
+const NotificationContext = createContext<NotificationContextType | undefined>(
+  undefined
+);
+
+export const useNotifications = () => {
+  const context = useContext(NotificationContext);
+  if (context === undefined) {
+    throw new Error(
+      "useNotifications must be used within a NotificationProvider"
+    );
+  }
+  return context;
+};
+
+interface NotificationProviderProps {
+  children: React.ReactNode;
+}
+
+export const NotificationProvider: React.FC<NotificationProviderProps> = ({
+  children,
+}) => {
+  const userStore = useSelector((state: any) => state?.user);
+
+  const [state, dispatch] = useReducer(notificationReducer, initialState);
+
+  // Play notification sound
+  const playNotificationSound = useCallback(() => {
+    try {
+      const audio = new Audio("notification.mp3");
+      audio.volume = 0.5; // adjust volume (0.0 - 1.0)
+      audio.play().catch((err) => {
+        console.warn("Notification sound could not play:", err);
+      });
+    } catch (error) {
+      console.warn("Could not play notification sound:", error);
+    }
+  }, []);
+
+  // Handle incoming notifications from socket
+  const handleNewNotification = useCallback(
+    (notification: Notification) => {
+      if (
+        !userStore ||
+        !hasPagePermission("chat", "view", userStore?.permissions)
+      )
+        return;
+      console.log(
+        "🔔 handleNewNotification: Processing notification:",
+        notification
+      );
+
+      dispatch({ type: "ADD_NOTIFICATION", payload: notification });
+      console.log("🔔 handleNewNotification: Added notification to state");
+
+      // Play notification sound
+      console.log("🔔 handleNewNotification: Playing notification sound");
+      playNotificationSound();
+
+      // Show browser notification if permission granted
+      if (Notification.permission === "granted") {
+        console.log("🔔 handleNewNotification: Showing browser notification");
+        new Notification(notification.title, {
+          body: notification.message,
+          icon: "/favicon.ico",
+          tag: notification._id,
+        });
+      } else {
+        console.log(
+          "🔔 handleNewNotification: Browser notification permission not granted:",
+          Notification.permission
+        );
+      }
+    },
+    //eslint-disable-next-line react-hooks/exhaustive-deps
+    [playNotificationSound]
+  );
+
+  // Mark notification as read
+  const markAsRead = useCallback((notificationId: string) => {
+    dispatch({ type: "MARK_AS_READ", payload: notificationId });
+    socketService.markNotificationAsRead(notificationId);
+  }, []);
+
+  // Mark all notifications as read
+  const markAllAsRead = useCallback(() => {
+    dispatch({ type: "MARK_ALL_AS_READ" });
+    socketService.markNotificationsAsRead([]);
+  }, []);
+
+  // Remove notification
+  const removeNotification = useCallback((notificationId: string) => {
+    dispatch({ type: "REMOVE_NOTIFICATION", payload: notificationId });
+  }, []);
+
+  // Refresh notifications
+  const refreshNotifications = useCallback(() => {
+    dispatch({ type: "SET_LOADING", payload: true });
+    socketService.getNotifications();
+  }, []);
+
+  // Setup socket listeners
+  useEffect(() => {
+    console.log("🔔 NotificationContext: Setting up notification callback");
+    const socketCallbacks = {
+      onNotification: (notification: Notification) => {
+        console.log(
+          "🔔 NotificationContext: handleNewNotification called with:",
+          notification
+        );
+        handleNewNotification(notification);
+      },
+      onError: (error: any) => {
+        dispatch({
+          type: "SET_ERROR",
+          payload: error.message || "Socket error occurred",
+        });
+      },
+    };
+
+    socketService.setCallbacks(socketCallbacks);
+
+    // Request browser notification permission
+    if (Notification.permission === "default") {
+      Notification.requestPermission();
+    }
+
+    return () => {
+      // Cleanup if needed
+    };
+  }, [handleNewNotification]);
+
+  const value: NotificationContextType = {
+    notifications: state.notifications,
+    unreadCount: state.unreadCount,
+    isLoading: state.isLoading,
+    error: state.error,
+    markAsRead,
+    markAllAsRead,
+    removeNotification,
+    refreshNotifications,
+  };
+
+  return (
+    <NotificationContext.Provider value={value}>
+      {children}
+    </NotificationContext.Provider>
+  );
+};

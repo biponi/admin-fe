@@ -187,7 +187,7 @@ const EditRolePage: React.FC = () => {
   const currentPermissions = getPermissionsObject();
 
   return (
-    <div className='mx-auto px-2 py-6 w-[90vw] grid-cols-3'>
+    <div className='mx-auto px-2 py-6  grid-cols-3'>
       <div className='flex items-center gap-4 mb-6'>
         <Button variant='outline' onClick={() => navigate("/roles")}>
           <ArrowLeft className='h-4 w-4 mr-2' />
@@ -203,8 +203,31 @@ const EditRolePage: React.FC = () => {
 
       <form onSubmit={handleSubmit} className='space-y-6'>
         <Card>
-          <CardHeader>
+          <CardHeader className='flex flex-row w-full justify-between items-center'>
             <CardTitle>Basic Information</CardTitle>
+            <div className='flex justify-end gap-4'>
+              <Button
+                type='button'
+                variant='outline'
+                onClick={() => navigate("/roles")}>
+                Cancel
+              </Button>
+              <Button
+                type='submit'
+                disabled={isSubmitting || !formData.name?.trim()}>
+                {isSubmitting ? (
+                  <>
+                    <Loader2 className='h-4 w-4 mr-2 animate-spin' />
+                    Updating...
+                  </>
+                ) : (
+                  <>
+                    <Save className='h-4 w-4 mr-2' />
+                    Update Role
+                  </>
+                )}
+              </Button>
+            </div>
           </CardHeader>
           <CardContent className='space-y-4'>
             <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
@@ -256,7 +279,7 @@ const EditRolePage: React.FC = () => {
             <CardTitle>Permissions</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className='space-y-6'>
+            <div className='w-full grid grid-cols-1 md:grid-cols-2 gap-4'>
               {Object.entries(pagePermissions).map(
                 ([pageName, permissions]) => (
                   <div key={pageName} className='border rounded-lg p-4'>
@@ -317,30 +340,6 @@ const EditRolePage: React.FC = () => {
             </div>
           </CardContent>
         </Card>
-
-        <div className='flex justify-end gap-4'>
-          <Button
-            type='button'
-            variant='outline'
-            onClick={() => navigate("/roles")}>
-            Cancel
-          </Button>
-          <Button
-            type='submit'
-            disabled={isSubmitting || !formData.name?.trim()}>
-            {isSubmitting ? (
-              <>
-                <Loader2 className='h-4 w-4 mr-2 animate-spin' />
-                Updating...
-              </>
-            ) : (
-              <>
-                <Save className='h-4 w-4 mr-2' />
-                Update Role
-              </>
-            )}
-          </Button>
-        </div>
       </form>
     </div>
   );

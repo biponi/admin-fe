@@ -183,7 +183,7 @@ const CampaignList = () => {
   };
   return (
     <MainView title='Campaign'>
-      <div className='w-full sm:w-[95vw] my-2'>
+      <div className='w-full my-2'>
         {!loading && (
           <Card className='w-full'>
             <CardHeader>

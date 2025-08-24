@@ -16,8 +16,8 @@ const AccessDeniedPage: React.FC = () => {
         <Button
           variant={"default"}
           className='bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded'
-          onClick={() => (window.location.href = "/")}>
-          Go to Home
+          onClick={() => (window.location.href = "/profile")}>
+          Go to profile
         </Button>
       </div>
     </div>

@@ -59,19 +59,18 @@ const DynamicCard: React.FC<DynamicCardProps> = ({
         <CardDescription>{subtitle}</CardDescription>
       </CardHeader>
       <CardContent>
-        <div className="flex items-center justify-between">
+        <div className='flex items-center justify-between'>
           <div>
-            <div className="text-xl font-semibold">
-              {currentValue}{" "}
-              <span className="text-xs font-medium"> From {previousValue}</span>
+            <div className='text-xl font-semibold'>
+              {currentValue.toLocaleString()}{" "}
+              <span className='text-xs font-medium'> From {previousValue}</span>
             </div>
             <div
-              className={` flex justify-start items-center gap-1 text-sm ${growthColor}`}
-            >
+              className={` flex justify-start items-center gap-1 text-sm ${growthColor}`}>
               {growthPercentage > 0 ? (
-                <TrendingUp className="h-4 w-4" />
+                <TrendingUp className='h-4 w-4' />
               ) : (
-                <TrendingDown className="h-4 w-4" />
+                <TrendingDown className='h-4 w-4' />
               )}{" "}
               {growthPercentage.toFixed(2)}%
             </div>

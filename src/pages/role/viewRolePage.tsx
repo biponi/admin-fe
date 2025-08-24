@@ -90,7 +90,7 @@ const ViewRolePage: React.FC = () => {
   }
 
   return (
-    <div className=' mx-auto p-6 w-[91vw]'>
+    <div className=' mx-auto p-6 '>
       <div className='flex items-center justify-between mb-6'>
         <div className='flex items-center gap-4'>
           <Button variant='outline' onClick={() => navigate("/roles")}>

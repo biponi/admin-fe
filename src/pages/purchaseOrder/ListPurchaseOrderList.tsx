@@ -15,6 +15,7 @@ import {
   Calendar,
   DollarSign,
   Hash,
+  Edit,
 } from "lucide-react";
 import toast from "react-hot-toast";
 import { Badge } from "../../components/ui/badge";
@@ -321,7 +322,7 @@ const ListPurchaseOrders: React.FC = () => {
   );
 
   return (
-    <div className='container mx-auto p-6 space-y-6 w-[92vw]'>
+    <div className='container mx-auto p-6 space-y-6 '>
       {/* Header */}
       <div className='flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4'>
         <div>
@@ -491,13 +492,27 @@ const ListPurchaseOrders: React.FC = () => {
                     <TableCell>
                       <div className='flex items-center justify-center gap-1'>
                         {hasRequiredPermission("purchaseorder", "edit") && (
+                          <Button
+                            variant='ghost'
+                            size='sm'
+                            onClick={() =>
+                              navigate(`/purchase-order/update/${order.id}`)
+                            }
+                            className='text-green-600 hover:text-green-700 hover:bg-green-50'
+                            title='Edit Purchase Order'>
+                            <Edit className='w-4 h-4' />
+                          </Button>
+                        )}
+
+                        {hasRequiredPermission("purchaseorder", "edit") && (
                           <AlertDialog>
                             <AlertDialogTrigger asChild>
                               <Button
                                 variant='ghost'
                                 size='sm'
                                 disabled={isRestoring === order.id}
-                                className='text-blue-600 hover:text-blue-700 hover:bg-blue-50'>
+                                className='text-blue-600 hover:text-blue-700 hover:bg-blue-50'
+                                title='Restore Purchase Order'>
                                 <ArchiveRestore className='w-4 h-4' />
                               </Button>
                             </AlertDialogTrigger>
@@ -530,7 +545,8 @@ const ListPurchaseOrders: React.FC = () => {
                             size='sm'
                             disabled={isDeleting === order.id}
                             onClick={() => handleDelete(order.id)}
-                            className='text-red-600 hover:text-red-700 hover:bg-red-50'>
+                            className='text-red-600 hover:text-red-700 hover:bg-red-50'
+                            title='Delete Purchase Order'>
                             <Trash2 className='w-4 h-4' />
                           </Button>
                         )}

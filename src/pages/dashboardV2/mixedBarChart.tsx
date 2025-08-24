@@ -77,52 +77,51 @@ const MixedBarChart: React.FC<Props> = ({
           <BarChart
             accessibilityLayer
             data={data}
-            layout="vertical"
+            layout='vertical'
             margin={{
               right: 16,
-            }}
-          >
+            }}>
             <CartesianGrid horizontal={false} />
             <YAxis
-              dataKey="browser"
-              type="category"
+              dataKey='browser'
+              type='category'
               tickLine={false}
               tickMargin={10}
               axisLine={false}
               tickFormatter={(value) => value.slice(0, 3)}
               hide
             />
-            <XAxis dataKey="sum" type="number" hide />
+            <XAxis dataKey='sum' type='number' hide />
             <ChartTooltip
               cursor={false}
-              content={<ChartTooltipContent indicator="line" />}
+              content={<ChartTooltipContent indicator='line' />}
             />
             <Bar
-              dataKey="sum"
-              layout="vertical"
-              fill="var(--color-purchase)"
-              radius={4}
-            >
+              dataKey='sum'
+              //@ts-ignore
+              layout='vertical'
+              fill='var(--color-purchase)'
+              radius={4}>
               <LabelList
-                dataKey="browser"
-                position="insideLeft"
+                dataKey='browser'
+                position='insideLeft'
                 offset={8}
-                className="fill-[--color-label]"
+                className='fill-[--color-label]'
                 fontSize={12}
               />
               <LabelList
-                dataKey="sum"
-                position="right"
+                dataKey='sum'
+                position='right'
                 offset={8}
-                className="fill-foreground"
+                className='fill-foreground'
                 fontSize={12}
               />
             </Bar>
           </BarChart>
         </ChartContainer>
       </CardContent>
-      <CardFooter className="flex-col items-start gap-2 text-sm">
-        <div className="leading-none text-muted-foreground">{footerString}</div>
+      <CardFooter className='flex-col items-start gap-2 text-sm'>
+        <div className='leading-none text-muted-foreground'>{footerString}</div>
       </CardFooter>
     </Card>
   );

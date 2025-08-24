@@ -356,7 +356,7 @@ const UpdateCategory: React.FC<Props> = ({
   return (
     <Dialog open={open} onOpenChange={(open) => handleOpenChange(open)}>
       {!!children && <DialogTrigger asChild>{children}</DialogTrigger>}
-      <DialogContent className='w-[90vw] max-w-[95vw] sm:w-[80vw] sm:max-w-[90vw] max-h-[90vh] overflow-y-auto'>
+      <DialogContent className=' overflow-y-auto'>
         <DialogHeader>
           <DialogTitle>
             {isNewCategory ? "Create Category" : "Update Category"}

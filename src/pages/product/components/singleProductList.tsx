@@ -8,6 +8,7 @@ import {
   DropdownMenuTrigger,
 } from "../../../components/ui/dropdown-menu";
 import dayjs from "dayjs";
+import advancedFormat from "dayjs/plugin/advancedFormat.js"; // note the /plugin path
 import { TableCell, TableRow } from "../../../components/ui/table";
 import { Button } from "../../../components/ui/button";
 import { useRef } from "react";
@@ -35,6 +36,8 @@ interface Props {
   handleUpdateProduct: (id: string) => void;
   deleteExistingProduct: (id: string) => void;
 }
+
+dayjs.extend(advancedFormat);
 
 const SingleItem: React.FC<Props> = ({
   id,
@@ -168,7 +171,7 @@ const SingleItem: React.FC<Props> = ({
       </TableCell>
       <TableCell>{totalReturned}</TableCell>
       <TableCell className='hidden md:table-cell'>
-        {dayjs(updatedAt).format("DD-MM-YYYY HH:mm:ss")}
+        {dayjs(updatedAt).format("Do MMMM YYYY hh.mm A")}
       </TableCell>
       {hasSomePermissionsForPage("product", ["edit", "delete"]) && (
         <TableCell>

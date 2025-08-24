@@ -1,5 +1,3 @@
-import { ReportResponse } from "..";
-
 type CombinedDailyComparison = {
   _id: string;
   totalPurchases?: number;
@@ -68,7 +66,7 @@ export const getRankWithEmoji = (rank: number): string => {
   return !!emoji ? emoji : `${rank}${suffix}`;
 };
 
-export const statusArrayGenerator = (reportData: ReportResponse | null) => {
+export const statusArrayGenerator = (reportData: any | null) => {
   if (!reportData) return [];
   const array = [
     {
@@ -76,7 +74,7 @@ export const statusArrayGenerator = (reportData: ReportResponse | null) => {
       sum: reportData?.orderMetrics?.currentMetrics?.totalOrders,
     },
   ];
-  reportData?.graphs?.statusCounts?.forEach((item) => {
+  reportData?.graphs?.statusCounts?.forEach((item: any) => {
     array.push({
       browser: item._id,
       sum: item.count,
@@ -98,7 +96,7 @@ const transformStatusData = (data: {
   return result;
 };
 
-export const structureStatusData = (data: ReportResponse | null) => {
+export const structureStatusData = (data: any | null) => {
   if (!data) return [];
   return data?.graphs?.orderStatusDailyComparison?.map(transformStatusData);
 };

@@ -80,7 +80,7 @@ const SingleItemMobileView: React.FC<Props> = ({
   };
 
   return (
-    <Card className='mb-4 w-[85vw]'>
+    <Card className=' w-full  rounded-none'>
       <CardHeader className='flex flex-row items-center justify-between p-2'>
         <div className='flex items-center space-x-2'>
           {hasSomePermissionsForPage("order", [

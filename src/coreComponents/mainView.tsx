@@ -1,4 +1,5 @@
-import { ReactElement } from "react";
+import { ReactElement, useEffect } from "react";
+import { usePageTitle } from "../contexts/PageContext";
 
 interface Props {
   title: string;
@@ -7,12 +8,16 @@ interface Props {
 }
 
 const MainView: React.FC<Props> = ({ title, children }) => {
+  const { setPageTitle } = usePageTitle();
+
+  useEffect(() => {
+    setPageTitle(title);
+  }, [title, setPageTitle]);
+
   return (
-    <div className='flex flex-col w-full'>
-      <header className='sticky top-0 z-10 hidden sm:flex h-[53px] items-center gap-1 border-b bg-background px-4'>
-        <h1 className='text-xl font-semibold'>{title}</h1>
-      </header>
-      <main className='grid flex-1 gap-4 overflow-auto p-4 w-full md:grid-cols-2 lg:grid-cols-3'>
+    <div className='flex flex-1 flex-col gap-4'>
+      {/* Title is now handled by SiteHeader with breadcrumbs */}
+      <main className='grid flex-1 gap-4 overflow-auto w-full mx-2 grid-cols-1'>
         {children}
       </main>
     </div>

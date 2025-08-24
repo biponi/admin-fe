@@ -172,7 +172,7 @@ const RolesListPage: React.FC = () => {
   };
 
   return (
-    <div className=' mx-auto p-6 space-y-6 w-[90vw]'>
+    <div className=' mx-auto p-6 space-y-6'>
       {/* Header */}
       <div className='flex justify-between items-center'></div>
 

@@ -4,6 +4,9 @@ const config = {
   refreshToken: () => `/api/refresh-token`,
   dashboard: {
     getDashboardAnalysis: () => `${baseURL}/dashboard/analysis`,
+    getDashboardAdvanceAnalysis: () =>
+      `${baseURL}/dashboard/advanced-analytics`,
+    generateAnalysisReport: () => `${baseURL}/dashboard/csv-report`,
     getDashboardAnalysisData: () => `${baseURL}/dashboard/analysis_v2`,
   },
   user: {
@@ -100,6 +103,9 @@ const config = {
   },
   purchaseOrder: {
     purchaseList: () => `${baseURL}/purchase-order/all`,
+    updatePurchaseOrderById: (id: string) =>
+      `${baseURL}/purchase-order/update/${id}`,
+    getPuirchaseOrderById: (id: string) => `${baseURL}/purchase-order/${id}`,
     purchaseSearch: () => `${baseURL}/purchase-order/search`,
     createPurchaseOrder: () => `${baseURL}/purchase-order/create`,
     deletePurchaseOrder: (id: string) =>

@@ -1,6 +1,7 @@
 import {
   BadgeDollarSign,
   Home,
+  MessageCircle,
   Package2,
   ShieldCheck,
   Shirt,
@@ -35,6 +36,12 @@ export const navItems = [
     link: "/products",
     active: true,
     id: "product",
+    items: [
+      {
+        title: "Add Product",
+        url: "/product/create",
+      },
+    ],
     roles: ["admin", "manager"],
   },
   {
@@ -100,5 +107,13 @@ export const navItems = [
     active: false,
     id: "customer",
     roles: ["admin", "manager"],
+  },
+  {
+    icon: <MessageCircle className='w-5 h-5' />,
+    title: "Live Chat",
+    link: "/chat",
+    active: true,
+    id: "chat",
+    roles: ["admin", "manager", "moderator"],
   },
 ];

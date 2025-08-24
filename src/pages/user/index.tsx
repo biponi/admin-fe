@@ -281,7 +281,7 @@ export function UserComponent() {
   };
 
   return (
-    <Card className='p-6 w-[91vw]'>
+    <Card className='p-6'>
       <div className='flex justify-between items-center mb-6'>
         <h2 className='text-xl font-semibold'>User List</h2>
         {hasRequiredPermission("user", "create") && (

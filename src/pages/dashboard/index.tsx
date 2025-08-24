@@ -144,46 +144,45 @@ const DashboardPage: React.FC = () => {
     //eslint-disable-next-line
   }, [selectedTab]);
   return (
-    <div className="p-6">
-      <h1 className="text-3xl font-bold mb-4">Dashboard</h1>
+    <div className='p-6'>
+      <h1 className='text-3xl font-bold mb-4'>Dashboard</h1>
       <Tabs
         value={selectedTab}
-        onValueChange={(value: string) => setRange(value)}
-      >
+        onValueChange={(value: string) => setRange(value)}>
         <TabsList>
-          <TabsTrigger value="today">Today</TabsTrigger>
-          <TabsTrigger value="lastWeek">Last Week</TabsTrigger>
-          <TabsTrigger value="lastMonth">Last Month</TabsTrigger>
-          <TabsTrigger value="last6Months">Last 6 Months</TabsTrigger>
+          <TabsTrigger value='today'>Today</TabsTrigger>
+          <TabsTrigger value='lastWeek'>Last Week</TabsTrigger>
+          <TabsTrigger value='lastMonth'>Last Month</TabsTrigger>
+          <TabsTrigger value='last6Months'>Last 6 Months</TabsTrigger>
         </TabsList>
       </Tabs>
 
       {/* Metrics Cards */}
-      <div className="mt-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className='mt-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4'>
         <TrendCard
-          title="Total Orders"
-          dataKey="count"
+          title='Total Orders'
+          dataKey='count'
           trendData={trends.totalOrdersTrend}
           currentMetric={currentMetrics.totalOrders}
           previousMetric={previousMonthMetrics.totalOrders}
         />
         <TrendCard
-          title="Total Paid"
-          dataKey="count"
+          title='Total Paid'
+          dataKey='count'
           trendData={trends.totalPaidTrend}
           currentMetric={currentMetrics.totalPaid}
           previousMetric={previousMonthMetrics.totalPaid}
         />
         <TrendCard
-          title="Total Shipped"
-          dataKey="count"
+          title='Total Shipped'
+          dataKey='count'
           trendData={trends.totalShippedTrend}
           currentMetric={currentMetrics.totalShipped}
           previousMetric={previousMonthMetrics.totalShipped}
         />
         <TrendCard
-          title="Completed Orders"
-          dataKey="count"
+          title='Completed Orders'
+          dataKey='count'
           trendData={trends.processingOrdersTrend}
           currentMetric={currentMetrics.processingOrders}
           previousMetric={previousMonthMetrics.processingOrders}
@@ -193,7 +192,7 @@ const DashboardPage: React.FC = () => {
       <SecondPage selectedTab={selectedTab} />
 
       {/* Tables */}
-      <div className="mt-6 grid grid-cols-1 gap-2 md:grid-cols-2 md:gap-6 ">
+      <div className='mt-6 grid grid-cols-1 gap-2 md:grid-cols-2 md:gap-6 '>
         <Card>
           <CardHeader>
             <CardTitle>Recent Orders</CardTitle>
@@ -225,8 +224,7 @@ const DashboardPage: React.FC = () => {
                               : order?.status === "processing"
                               ? "secondary"
                               : "destructive"
-                          }
-                        >
+                          }>
                           {order.status}
                         </Badge>
                       </TableCell>

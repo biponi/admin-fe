@@ -3,12 +3,24 @@ import { searchProducts, modifyOrderProducts } from "./services/orderApi";
 import { ProductSearchResponse } from "./interface";
 import { Input } from "../../components/ui/input";
 import { Button } from "../../components/ui/button";
-import { Table } from "../../components/ui/table";
 import useDebounce from "../../customHook/useDebounce";
 import { Badge } from "../../components/ui/badge";
-import { Bird, CircleX, Disc3, Image, Trash } from "lucide-react";
+import {
+  Bird,
+  CircleX,
+  Trash,
+  Search,
+  Package,
+  Plus,
+  Minus,
+  ShoppingCart,
+  Edit3,
+  AlertTriangle,
+  CheckCircle2,
+  ArrowLeft,
+  Loader2,
+} from "lucide-react";
 import { toast } from "react-hot-toast";
-import MainView from "../../coreComponents/mainView";
 import axios from "../../api/axios";
 import { isAxiosError } from "axios";
 import {
@@ -21,7 +33,6 @@ import {
 import { Separator } from "../../components/ui/separator";
 import config from "../../utils/config";
 import { useNavigate, useParams } from "react-router-dom";
-import { SkeletonCard } from "../../coreComponents/sekeleton";
 import {
   Card,
   CardContent,
@@ -35,6 +46,9 @@ import {
   DrawerHeader,
   DrawerTitle,
 } from "../../components/ui/drawer";
+import { Alert, AlertDescription } from "../../components/ui/alert";
+import { ScrollArea } from "../../components/ui/scroll-area";
+import { Skeleton } from "../../components/ui/skeleton";
 
 const ModifyOrder = () => {
   const navigate = useNavigate();
@@ -218,75 +232,144 @@ const ModifyOrder = () => {
         : p.id === product.id
     );
 
+    const isOutOfStock = product?.quantity <= 0;
+    const isAlreadyAdded = !!existingProduct;
+
     return (
-      <div
+      <Card
         key={index}
-        className={`cursor-pointer p-4 rounded border border-gray-50 hover:bg-gray-100 shadow ${
-          !!existingProduct?.quantity &&
-          existingProduct?.quantity >= product?.quantity
-            ? "bg-gray-100"
-            : ""
+        className={`group cursor-pointer transition-all duration-300 hover:shadow-lg border-2 ${
+          isOutOfStock
+            ? "border-red-200 bg-red-50/50 opacity-60"
+            : isAlreadyAdded
+            ? "border-green-200 bg-green-50/50 hover:border-green-300"
+            : "border-gray-200 hover:border-blue-300 hover:shadow-lg hover:-translate-y-1"
         }`}
         onClick={() => {
-          !!existingProduct?.quantity &&
-          existingProduct?.quantity >= product?.quantity
-            ? toast.error("Product out of stock")
-            : handleAddProduct(product);
+          if (isOutOfStock) {
+            toast.error("Product out of stock");
+            return;
+          }
+          handleAddProduct(product);
         }}>
-        <div className='flex justify-between items-center w-full'>
-          <div className='flex justify-start items-center gap-2'>
-            {!!product.image && (
-              <img
-                alt='Product'
-                src={product?.image}
-                className='w-8 h-8 rounded mr-2'
-              />
-            )}
-            <span className='text-base font-bold text-gray-950'>
-              {product?.name}{" "}
-              <Badge className='ml-4'>x {product?.quantity}</Badge>
-            </span>
+        <CardContent className='p-4'>
+          <div className='flex items-start gap-4'>
+            <div className='relative flex-shrink-0'>
+              <div className='w-16 h-16 rounded-xl overflow-hidden border-2 border-gray-100 group-hover:border-blue-200 transition-colors'>
+                {product.image ? (
+                  <img
+                    alt={product?.name}
+                    src={product?.image}
+                    className='w-full h-full object-cover'
+                  />
+                ) : (
+                  <div className='w-full h-full bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center'>
+                    <Package className='w-8 h-8 text-gray-400' />
+                  </div>
+                )}
+              </div>
+              {isAlreadyAdded && (
+                <div className='absolute -top-2 -right-2 w-6 h-6 bg-green-500 rounded-full flex items-center justify-center'>
+                  <CheckCircle2 className='w-4 h-4 text-white' />
+                </div>
+              )}
+              {isOutOfStock && (
+                <div className='absolute -top-2 -right-2 w-6 h-6 bg-red-500 rounded-full flex items-center justify-center'>
+                  <AlertTriangle className='w-4 h-4 text-white' />
+                </div>
+              )}
+            </div>
+
+            <div className='flex-1 min-w-0'>
+              <div className='space-y-2'>
+                <div className='flex items-start justify-between'>
+                  <h3 className='font-semibold text-gray-900 text-base leading-tight line-clamp-2 group-hover:text-blue-600 transition-colors'>
+                    {product?.name}
+                  </h3>
+                  {product?.unitPrice && (
+                    <span className='text-lg font-bold text-gray-900 ml-2'>
+                      ৳{product?.unitPrice}
+                    </span>
+                  )}
+                </div>
+
+                <div className='flex items-center gap-2 flex-wrap'>
+                  <Badge
+                    variant={isOutOfStock ? "destructive" : "default"}
+                    className='text-xs font-medium'>
+                    {isOutOfStock
+                      ? "Out of Stock"
+                      : `Stock: ${product?.quantity}`}
+                  </Badge>
+
+                  {isAlreadyAdded && (
+                    <Badge
+                      variant='outline'
+                      className='text-xs bg-green-50 text-green-700 border-green-200'>
+                      Added to Order
+                    </Badge>
+                  )}
+
+                  {!!product.variant && (
+                    <Badge
+                      variant='outline'
+                      className='text-xs bg-blue-50 text-blue-700 border-blue-200'>
+                      {`${product?.variant.color || ""}${
+                        product?.variant?.color && product?.variant?.size
+                          ? " • "
+                          : ""
+                      }${product?.variant?.size || ""}`}
+                    </Badge>
+                  )}
+                </div>
+
+                <div className='text-sm text-gray-500'>
+                  Click to {isAlreadyAdded ? "add more" : "add to order"}
+                </div>
+              </div>
+            </div>
           </div>
-          {!!product.variant && (
-            <Badge variant='outline' className='ml-auto'>
-              {`${product?.variant.color}${
-                !!product?.variant?.color && !!product?.variant?.size
-                  ? " - "
-                  : ""
-              }${product?.variant?.size}`}
-            </Badge>
-          )}
-        </div>
-      </div>
+        </CardContent>
+      </Card>
     );
   };
 
   const renderProductSearch = () => {
     return (
-      <>
-        <p>Search products and add them to the order.</p>
-        <br />
-        <div className='p-2 rounded w-full flex items-center'>
+      <div className='space-y-6'>
+        <div className='relative'>
+          <div className='absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none'>
+            <Search className='h-5 w-5 text-gray-400' />
+          </div>
           <Input
-            placeholder='Search products by name, SKU, or ID'
+            placeholder='Search by product name, SKU, or ID...'
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className='hover:ring-0 focus:ring-0 transition-all flex-1'
+            className='pl-12 pr-12 h-12 text-base border-2 focus:border-blue-500 focus:ring-2 focus:ring-blue-100 rounded-xl transition-all'
           />
           {!!searchQuery && (
             <Button
-              variant='destructive'
+              variant='ghost'
               size='sm'
               onClick={() => {
                 setSearchQuery("");
                 setProducts([]);
               }}
-              className='flex-shrink-0 ml-2'>
-              <CircleX className='w-4 h-4' />
+              className='absolute inset-y-0 right-0 px-4 hover:bg-gray-100 rounded-r-xl'>
+              <CircleX className='w-5 h-5 text-gray-400 hover:text-gray-600' />
             </Button>
           )}
         </div>
-      </>
+
+        {searchQuery && (
+          <Alert className='border-blue-200 bg-blue-50'>
+            <Search className='h-4 w-4 text-blue-600' />
+            <AlertDescription className='text-blue-800'>
+              Searching for products matching "{searchQuery}"...
+            </AlertDescription>
+          </Alert>
+        )}
+      </div>
     );
   };
 
@@ -294,36 +377,81 @@ const ModifyOrder = () => {
   const renderProductSheet = () => {
     return (
       <Sheet open={openSheet} onOpenChange={(sta) => setOpenSheet(sta)}>
-        <SheetContent className='w-[40vw]'>
-          <SheetHeader>
-            <SheetTitle>Products</SheetTitle>
-            <Separator />
-            <SheetDescription>{renderProductSearch()}</SheetDescription>
-          </SheetHeader>
-          {searching && (
-            <div className='flex justify-center items-center p-10'>
-              <div className='flex items-center'>
-                Searching Please Wait...{" "}
-                <Disc3 className='w-5 h-5 ml-2 animate-spin' />
+        <SheetContent className='w-[50vw] max-w-2xl'>
+          <SheetHeader className='pb-6'>
+            <div className='flex items-center gap-3'>
+              <div className='w-8 h-8 bg-gradient-to-r from-blue-500 to-purple-600 rounded-lg flex items-center justify-center'>
+                <ShoppingCart className='w-4 h-4 text-white' />
+              </div>
+              <div>
+                <SheetTitle className='text-xl'>Add Products</SheetTitle>
+                <p className='text-sm text-gray-600 mt-1'>
+                  Find and add products to your order
+                </p>
               </div>
             </div>
-          )}
-          {!searching && (
-            <div className='max-h-[70vh] overflow-y-auto'>
-              {!!products && products.length > 0 ? (
-                <div className='grid grid-cols-1 gap-2 p-2'>
-                  {products.map((result, index) =>
-                    renderProductButton(result, index)
-                  )}
+            <Separator className='my-4' />
+          </SheetHeader>
+
+          <div className='space-y-6'>
+            <SheetDescription asChild>
+              <div>{renderProductSearch()}</div>
+            </SheetDescription>
+
+            <ScrollArea className='h-[calc(100vh-300px)]'>
+              {searching ? (
+                <div className='flex flex-col justify-center items-center py-12 space-y-4'>
+                  <Loader2 className='w-8 h-8 animate-spin text-blue-500' />
+                  <div className='text-center space-y-2'>
+                    <p className='text-lg font-medium text-gray-900'>
+                      Searching Products
+                    </p>
+                    <p className='text-sm text-gray-600'>
+                      Please wait while we find matching products...
+                    </p>
+                  </div>
                 </div>
               ) : (
-                <div className='w-full p-10 flex justify-center items-center'>
-                  <Bird className='w-12 h-12 mx-auto mb-4' />
-                  <p className='text-lg'>No Product Found</p>
+                <div className='space-y-4'>
+                  {!!products && products.length > 0 ? (
+                    <div className='space-y-3'>
+                      {products.map((result, index) =>
+                        renderProductButton(result, index)
+                      )}
+                    </div>
+                  ) : searchQuery ? (
+                    <div className='text-center py-12 space-y-4'>
+                      <div className='w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto'>
+                        <Bird className='w-8 h-8 text-gray-400' />
+                      </div>
+                      <div className='space-y-2'>
+                        <p className='text-lg font-medium text-gray-900'>
+                          No Products Found
+                        </p>
+                        <p className='text-sm text-gray-600'>
+                          Try adjusting your search terms or check the spelling
+                        </p>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className='text-center py-8 space-y-4'>
+                      <div className='w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto'>
+                        <Search className='w-8 h-8 text-blue-500' />
+                      </div>
+                      <div className='space-y-2'>
+                        <p className='text-base font-medium text-gray-700'>
+                          Start searching
+                        </p>
+                        <p className='text-sm text-gray-500'>
+                          Enter a product name, SKU, or ID to begin
+                        </p>
+                      </div>
+                    </div>
+                  )}
                 </div>
               )}
-            </div>
-          )}
+            </ScrollArea>
+          </div>
         </SheetContent>
       </Sheet>
     );
@@ -332,288 +460,515 @@ const ModifyOrder = () => {
   const renderProductDrawer = () => {
     return (
       <Drawer open={openDrawer} onOpenChange={(sta) => setOpenDrawer(sta)}>
-        <DrawerContent>
-          <DrawerHeader>
-            <DrawerTitle>Products</DrawerTitle>
-            <DrawerDescription>{renderProductSearch()}</DrawerDescription>
-          </DrawerHeader>
-          {searching && (
-            <div className='flex justify-center items-center p-10'>
-              <div className='flex items-center'>
-                Searching Please Wait...{" "}
-                <Disc3 className='w-5 h-5 ml-2 animate-spin' />
+        <DrawerContent className='max-h-[90vh]'>
+          <DrawerHeader className='pb-4'>
+            <div className='flex items-center gap-3 text-center justify-center'>
+              <div className='w-8 h-8 bg-gradient-to-r from-blue-500 to-purple-600 rounded-lg flex items-center justify-center'>
+                <ShoppingCart className='w-4 h-4 text-white' />
+              </div>
+              <div>
+                <DrawerTitle className='text-xl'>Add Products</DrawerTitle>
+                <p className='text-sm text-gray-600 mt-1'>
+                  Find and add products to your order
+                </p>
               </div>
             </div>
-          )}
-          {!searching && (
-            <div className='max-h-[70vh] overflow-y-auto'>
-              {!!products && products.length > 0 ? (
-                <div className='grid grid-cols-1 gap-2 p-2'>
-                  {products.map((result, index) =>
-                    renderProductButton(result, index)
-                  )}
+          </DrawerHeader>
+
+          <div className='px-4 pb-6 space-y-4'>
+            <DrawerDescription asChild>
+              <div>{renderProductSearch()}</div>
+            </DrawerDescription>
+
+            <ScrollArea className='h-[50vh]'>
+              {searching ? (
+                <div className='flex flex-col justify-center items-center py-8 space-y-3'>
+                  <Loader2 className='w-6 h-6 animate-spin text-blue-500' />
+                  <div className='text-center space-y-1'>
+                    <p className='font-medium text-gray-900'>Searching...</p>
+                    <p className='text-sm text-gray-600'>
+                      Finding products for you
+                    </p>
+                  </div>
                 </div>
               ) : (
-                <div className='w-full p-10 flex justify-center items-center'>
-                  <Bird className='w-12 h-12 mx-auto mb-4' />
-                  <p className='text-lg'>No Product Found</p>
+                <div className='space-y-3'>
+                  {!!products && products.length > 0 ? (
+                    <div className='space-y-3'>
+                      {products.map((result, index) =>
+                        renderProductButton(result, index)
+                      )}
+                    </div>
+                  ) : searchQuery ? (
+                    <div className='text-center py-8 space-y-3'>
+                      <Bird className='w-12 h-12 text-gray-400 mx-auto' />
+                      <div className='space-y-1'>
+                        <p className='font-medium text-gray-900'>
+                          No Products Found
+                        </p>
+                        <p className='text-sm text-gray-600'>
+                          Try different search terms
+                        </p>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className='text-center py-6 space-y-3'>
+                      <div className='w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center mx-auto'>
+                        <Search className='h-6 w-6 text-blue-600' />
+                      </div>
+                      <div className='space-y-1'>
+                        <p className='font-medium text-gray-700'>
+                          Start searching
+                        </p>
+                        <p className='text-sm text-gray-500'>
+                          Enter product details to begin
+                        </p>
+                      </div>
+                    </div>
+                  )}
                 </div>
               )}
-            </div>
-          )}
+            </ScrollArea>
+          </div>
         </DrawerContent>
       </Drawer>
     );
   };
 
   const renderMobileProductView = () => {
+    if (!selectedProducts || selectedProducts.length === 0) {
+      return (
+        <Card className='border-dashed border-2 border-gray-200'>
+          <CardContent className='flex flex-col items-center justify-center py-12 text-center'>
+            <div className='w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mb-4'>
+              <ShoppingCart className='w-8 h-8 text-gray-400' />
+            </div>
+            <h3 className='text-lg font-semibold text-gray-900 mb-2'>
+              No Products Added
+            </h3>
+            <p className='text-sm text-gray-600 mb-4'>
+              Add products to modify this order
+            </p>
+            <Button
+              onClick={() => setOpenDrawer(true)}
+              size='sm'
+              className='bg-blue-600 hover:bg-blue-700'>
+              <Plus className='w-4 h-4 mr-2' />
+              Add Products
+            </Button>
+          </CardContent>
+        </Card>
+      );
+    }
+
     return (
-      <>
-        {!!selectedProducts &&
-          selectedProducts?.length > 0 &&
-          selectedProducts.map((product, index) => (
-            <Card key={product.variant?.id || product.id} className='mb-4 p-4'>
-              <div className='flex items-center justify-between'>
-                <div className='flex items-center space-x-4'>
-                  <img
-                    src={product?.image}
-                    className='size-12 rounded-md'
-                    alt='product'
-                  />
-                  <div>
-                    <p className='font-medium'>{product.name}</p>
-                    {!!product.variant ? (
-                      <Badge variant='outline' className='mt-1'>
-                        {`${product?.variant.color}${
-                          !!product?.variant?.color && !!product?.variant?.size
-                            ? " - "
-                            : ""
-                        }${product?.variant?.size}`}
-                      </Badge>
+      <div className='space-y-4'>
+        {selectedProducts.map((product, index) => (
+          <Card
+            key={product.variant?.id || product.id}
+            className='border-2 hover:border-blue-200 transition-all duration-200'>
+            <CardContent className='p-4'>
+              <div className='flex items-start justify-between mb-4'>
+                <div className='flex items-start space-x-3'>
+                  <div className='w-16 h-16 rounded-xl overflow-hidden border border-gray-200'>
+                    {product?.image ? (
+                      <img
+                        src={product?.image}
+                        className='w-full h-full object-cover'
+                        alt={product.name}
+                      />
                     ) : (
-                      <Badge variant='default' className='mt-1'>
-                        N/A
-                      </Badge>
+                      <div className='w-full h-full bg-gray-100 flex items-center justify-center'>
+                        <Package className='w-6 h-6 text-gray-400' />
+                      </div>
                     )}
                   </div>
+                  <div className='flex-1 min-w-0'>
+                    <p className='font-semibold text-gray-900 text-base leading-tight'>
+                      {product.name}
+                    </p>
+                    <div className='flex flex-wrap gap-2 mt-2'>
+                      {!!product.variant ? (
+                        <Badge
+                          variant='outline'
+                          className='text-xs bg-blue-50 text-blue-700 border-blue-200'>
+                          {`${product?.variant.color || ""}${
+                            product?.variant?.color && product?.variant?.size
+                              ? " • "
+                              : ""
+                          }${product?.variant?.size || ""}`}
+                        </Badge>
+                      ) : (
+                        <Badge variant='secondary' className='text-xs'>
+                          No Variant
+                        </Badge>
+                      )}
+                    </div>
+                  </div>
                 </div>
-                <Trash
-                  className='size-5 text-red-500 cursor-pointer'
+                <Button
+                  variant='ghost'
+                  size='sm'
                   onClick={() =>
                     setSelectedProducts(
                       selectedProducts.filter((_, i) => i !== index)
                     )
                   }
-                />
+                  className='text-red-500 hover:text-red-700 hover:bg-red-50 p-2'>
+                  <Trash className='w-4 h-4' />
+                </Button>
               </div>
-              <div className='mt-4 flex items-center justify-between'>
-                <div className='flex items-center'>
+
+              <div className='flex items-center justify-between'>
+                <div className='flex items-center border border-gray-200 rounded-lg overflow-hidden'>
                   <Button
-                    variant='outline'
+                    variant='ghost'
+                    size='sm'
                     onClick={() => handleDecrease(index)}
-                    aria-label='Decrease quantity'
-                    disabled={product?.quantity < 1}
-                    className='rounded-r-none disabled:opacity-50 border-0'>
-                    -
+                    disabled={product?.quantity <= 1}
+                    className='h-10 w-10 p-0 disabled:opacity-50 hover:bg-gray-50'>
+                    <Minus className='w-4 h-4' />
                   </Button>
                   <Input
                     type='text'
                     value={product?.quantity}
                     onChange={(e) => handleInputChange(e?.target?.value, index)}
-                    aria-label={`Quantity of ${product.name}`}
-                    className='text-center w-16 border-0'
+                    className='text-center w-16 h-10 border-0 bg-gray-50 font-medium'
                   />
                   <Button
-                    variant='outline'
+                    variant='ghost'
+                    size='sm'
                     onClick={() => handleIncrease(index)}
-                    aria-label='Increase quantity'
-                    className='border-0'>
-                    +
+                    className='h-10 w-10 p-0 hover:bg-gray-50'>
+                    <Plus className='w-4 h-4' />
                   </Button>
                 </div>
-                <p className='font-medium'>{product?.unitPrice}</p>
+                <div className='text-right'>
+                  <p className='text-sm text-gray-600'>Price</p>
+                  <p className='font-bold text-lg text-gray-900'>
+                    ৳{product?.unitPrice}
+                  </p>
+                  <p className='text-xs text-gray-500'>
+                    Total: ৳
+                    {(product?.quantity * Number(product?.unitPrice)).toFixed(
+                      2
+                    )}
+                  </p>
+                </div>
               </div>
-            </Card>
-          ))}
-      </>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
     );
   };
 
   const renderTableView = () => {
+    if (!selectedProducts || selectedProducts.length === 0) {
+      return (
+        <Card className='border-dashed border-2 border-gray-200'>
+          <CardContent className='flex flex-col items-center justify-center py-16 text-center'>
+            <div className='w-20 h-20 bg-gray-100 rounded-full flex items-center justify-center mb-6'>
+              <ShoppingCart className='w-10 h-10 text-gray-400' />
+            </div>
+            <h3 className='text-xl font-semibold text-gray-900 mb-2'>
+              No Products Added
+            </h3>
+            <p className='text-gray-600 mb-6 max-w-sm'>
+              Start by adding products to modify this order. Click the button
+              below to browse available products.
+            </p>
+            <Button
+              onClick={() => setOpenSheet(true)}
+              size='lg'
+              className='bg-blue-600 hover:bg-blue-700'>
+              <Plus className='w-5 h-5 mr-2' />
+              Add Products
+            </Button>
+          </CardContent>
+        </Card>
+      );
+    }
+
     return (
-      <Table>
-        <thead className='bg-gray-100 p-4'>
-          <tr className='divide-x divide-gray-200 text-gray-950'>
-            <th className='mx-auto'>
-              <Image className='size-5' />
-            </th>
-            <th className='p-4'>Name</th>
-            <th>Variant</th>
-            <th>Quantity</th>
-            <th>Unit Price</th>
-            <th>Action</th>
-          </tr>
-        </thead>
-        <tbody className='divide-y divide-gray-200 border border-gray-200'>
-          {!!selectedProducts && selectedProducts?.length === 0 && (
-            <tr>
-              <td colSpan={6}>
-                <div className='w-full p-16 flex justify-center items-center bg-gray-100'>
-                  <div className='text-center'>
-                    <Bird className='w-12 h-12 mx-auto mb-4' />
-                    <p className='text-lg'>No Product Added</p>
-                  </div>
-                </div>
-              </td>
-            </tr>
-          )}
-          {!!selectedProducts &&
-            selectedProducts?.length > 0 &&
-            selectedProducts.map((product, index) => (
-              <tr
-                className='divide-x divide-gray-200'
-                key={product.variant?.id || product.id}>
-                <td className='text-center mx-auto'>
-                  <img
-                    src={product?.image}
-                    className=' size-8 '
-                    alt='product'
-                  />
-                </td>
-                <td className='text-center'>{product.name}</td>
-                <td className='text-center'>
-                  {!!product.variant ? (
-                    <Badge variant='outline' className='ml-2'>
-                      {`${product?.variant.color}${
-                        !!product?.variant?.color && !!product?.variant?.size
-                          ? " - "
-                          : ""
-                      }${product?.variant?.size}`}
-                    </Badge>
-                  ) : (
-                    <Badge variant='default'>N/A</Badge>
-                  )}
-                </td>
-                <td className='flex items-center justify-center'>
-                  <div className='flex items-center'>
-                    <Button
-                      variant='outline'
-                      onClick={() => handleDecrease(index)}
-                      aria-label='Decrease quantity'
-                      disabled={product?.quantity < 1}
-                      className='rounded-r-none disabled:opacity-50 border-0'>
-                      -
-                    </Button>
-                    <Input
-                      type='text'
-                      value={product?.quantity}
-                      onChange={(e) =>
-                        handleInputChange(e?.target?.value, index)
-                      }
-                      aria-label={`Quantity of ${product.name}`}
-                      className='text-center w-16 border-0'
-                    />
-                    <Button
-                      variant='outline'
-                      onClick={() => handleIncrease(index)}
-                      aria-label='Increase quantity'
-                      className='border-0'>
-                      +
-                    </Button>
-                  </div>
-                </td>
-                <td className='text-center'>{product?.unitPrice}</td>
-                <td className='text-center'>
-                  <Trash
-                    className='size-5 text-red-500 cursor-pointer mx-auto'
-                    onClick={() =>
-                      setSelectedProducts(
-                        selectedProducts.filter((_, i) => i !== index)
-                      )
-                    }
-                  />
-                </td>
+      <div className='border border-gray-200 rounded-xl overflow-hidden bg-white shadow-sm'>
+        <div className='overflow-x-auto'>
+          <table className='w-full'>
+            <thead className='bg-gradient-to-r from-gray-50 to-gray-100'>
+              <tr className='border-b border-gray-200'>
+                <th className='px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider'>
+                  Product
+                </th>
+                <th className='px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider'>
+                  Variant
+                </th>
+                <th className='px-6 py-4 text-center text-xs font-semibold text-gray-600 uppercase tracking-wider'>
+                  Quantity
+                </th>
+                <th className='px-6 py-4 text-right text-xs font-semibold text-gray-600 uppercase tracking-wider'>
+                  Unit Price
+                </th>
+                <th className='px-6 py-4 text-right text-xs font-semibold text-gray-600 uppercase tracking-wider'>
+                  Total
+                </th>
+                <th className='px-6 py-4 text-center text-xs font-semibold text-gray-600 uppercase tracking-wider'>
+                  Action
+                </th>
               </tr>
-            ))}
-        </tbody>
-      </Table>
+            </thead>
+            <tbody className='divide-y divide-gray-100'>
+              {selectedProducts.map((product, index) => (
+                <tr
+                  key={product.variant?.id || product.id}
+                  className='hover:bg-gray-50 transition-colors'>
+                  <td className='px-6 py-4'>
+                    <div className='flex items-center space-x-4'>
+                      <div className='w-12 h-12 rounded-lg overflow-hidden border border-gray-200'>
+                        {product?.image ? (
+                          <img
+                            src={product?.image}
+                            className='w-full h-full object-cover'
+                            alt={product.name}
+                          />
+                        ) : (
+                          <div className='w-full h-full bg-gray-100 flex items-center justify-center'>
+                            <Package className='w-5 h-5 text-gray-400' />
+                          </div>
+                        )}
+                      </div>
+                      <div className='min-w-0 flex-1'>
+                        <p className='text-sm font-semibold text-gray-900 truncate'>
+                          {product.name}
+                        </p>
+                        <p className='text-xs text-gray-500'>
+                          SKU: {product.id}
+                        </p>
+                      </div>
+                    </div>
+                  </td>
+                  <td className='px-6 py-4'>
+                    {!!product.variant ? (
+                      <Badge
+                        variant='outline'
+                        className='bg-blue-50 text-blue-700 border-blue-200'>
+                        {`${product?.variant.color || ""}${
+                          product?.variant?.color && product?.variant?.size
+                            ? " • "
+                            : ""
+                        }${product?.variant?.size || ""}`}
+                      </Badge>
+                    ) : (
+                      <Badge variant='secondary' className='text-xs'>
+                        No Variant
+                      </Badge>
+                    )}
+                  </td>
+                  <td className='px-6 py-4'>
+                    <div className='flex items-center justify-center'>
+                      <div className='flex items-center border border-gray-200 rounded-lg overflow-hidden bg-white'>
+                        <Button
+                          variant='ghost'
+                          size='sm'
+                          onClick={() => handleDecrease(index)}
+                          disabled={product?.quantity <= 1}
+                          className='h-8 w-8 p-0 disabled:opacity-50 hover:bg-gray-50'>
+                          <Minus className='w-3 h-3' />
+                        </Button>
+                        <Input
+                          type='text'
+                          value={product?.quantity}
+                          onChange={(e) =>
+                            handleInputChange(e?.target?.value, index)
+                          }
+                          className='text-center w-12 h-8 border-0 bg-transparent font-medium text-sm'
+                        />
+                        <Button
+                          variant='ghost'
+                          size='sm'
+                          onClick={() => handleIncrease(index)}
+                          className='h-8 w-8 p-0 hover:bg-gray-50'>
+                          <Plus className='w-3 h-3' />
+                        </Button>
+                      </div>
+                    </div>
+                  </td>
+                  <td className='px-6 py-4 text-right text-sm font-medium text-gray-900'>
+                    ৳{product?.unitPrice}
+                  </td>
+                  <td className='px-6 py-4 text-right text-sm font-bold text-gray-900'>
+                    ৳
+                    {(product?.quantity * Number(product?.unitPrice)).toFixed(
+                      2
+                    )}
+                  </td>
+                  <td className='px-6 py-4 text-center'>
+                    <Button
+                      variant='ghost'
+                      size='sm'
+                      onClick={() =>
+                        setSelectedProducts(
+                          selectedProducts.filter((_, i) => i !== index)
+                        )
+                      }
+                      className='text-red-500 hover:text-red-700 hover:bg-red-50 p-2'>
+                      <Trash className='w-4 h-4' />
+                    </Button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
     );
   };
   // Render the main view
   const renderMainView = () => {
     return (
-      <div className='p-6'>
-        <h1 className='text-2xl font-bold mb-4'>Modify Order</h1>
-
-        {/* Search Products */}
-        <div className='hidden md:block'> {renderProductSheet()}</div>
-        <div className='md:hidden'>{renderProductDrawer()}</div>
-
-        {/* Selected Products */}
-        <div className='w-full flex justify-between items-center'>
-          <h2 className='text-xl font-semibold hidden md:inline-block'>
-            Selected Products
-          </h2>
-          <div className='flex justify-between items-center'>
-            <Button
-              variant='outline'
-              onClick={() => setOpenSheet(true)}
-              className='mr-2 hidden md:block'>
-              Add Product
-            </Button>
-            <Button
-              variant='outline'
-              onClick={() => setOpenDrawer(true)}
-              className='mr-2 md:hidden'>
-              Add Product
-            </Button>
-            <Button
-              disabled={selectedProducts.length < 1}
-              onClick={handleUpdateOrder}>
-              Update Order
-            </Button>
+      <div className='min-h-screen bg-gradient-to-br from-gray-50 to-gray-100'>
+        <div className='max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8'>
+          {/* Header */}
+          <div className='mb-8'>
+            <div className='flex items-center gap-4 mb-2'>
+              <Button
+                variant='ghost'
+                size='sm'
+                onClick={() => navigate("/order")}
+                className='text-gray-600 hover:text-gray-900'>
+                <ArrowLeft className='w-4 h-4 mr-2' />
+                Back to Orders
+              </Button>
+            </div>
+            <div className='flex items-center gap-4'>
+              <div className='w-12 h-12 bg-gradient-to-r from-blue-500 to-purple-600 rounded-xl flex items-center justify-center'>
+                <Edit3 className='w-6 h-6 text-white' />
+              </div>
+              <div>
+                <h1 className='text-3xl font-bold text-gray-900'>
+                  Modify Order
+                </h1>
+                <p className='text-gray-600 mt-1'>Order ID: #{orderId}</p>
+              </div>
+            </div>
           </div>
-        </div>
-        <br />
-        <div className='hidden md:block'>{renderTableView()}</div>
-        <div className='md:hidden'>{renderMobileProductView()}</div>
 
-        <div className='mt-4 grid grid-cols-1 gap-4 md:grid-cols-2'>
-          <div className=''></div>
-          <div>
-            <Card>
-              <CardHeader>
-                <CardTitle>Order Summary</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className='flex justify-between items-center'>
-                  <span>Total Price</span>
-                  <span>
-                    {selectedProducts.reduce(
-                      (sum, item) =>
-                        (sum =
-                          Number(sum) +
-                          Number(item?.quantity * Number(item?.unitPrice))),
-                      0
-                    )}
-                  </span>
+          {/* Search Products - Hidden components for mobile/desktop */}
+          <div className='hidden md:block'>{renderProductSheet()}</div>
+          <div className='md:hidden'>{renderProductDrawer()}</div>
+
+          {/* Main Content Grid */}
+          <div className='grid grid-cols-1 xl:grid-cols-4 gap-8'>
+            {/* Products Section */}
+            <div className='xl:col-span-3'>
+              <div className='bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden'>
+                {/* Products Header */}
+                <div className='p-6 bg-gradient-to-r from-gray-50 to-gray-100 border-b border-gray-200'>
+                  <div className='flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4'>
+                    <div>
+                      <h2 className='text-xl font-bold text-gray-900'>
+                        Order Products
+                      </h2>
+                      <p className='text-sm text-gray-600 mt-1'>
+                        {selectedProducts.length} product
+                        {selectedProducts.length !== 1 ? "s" : ""} in this order
+                      </p>
+                    </div>
+                    <div className='flex gap-3'>
+                      <Button
+                        variant='outline'
+                        onClick={() => setOpenSheet(true)}
+                        className='hidden md:flex items-center gap-2 border-blue-200 text-blue-700 hover:bg-blue-50'>
+                        <Plus className='w-4 h-4' />
+                        Add Products
+                      </Button>
+                      <Button
+                        variant='outline'
+                        onClick={() => setOpenDrawer(true)}
+                        className='md:hidden flex items-center gap-2 border-blue-200 text-blue-700 hover:bg-blue-50'>
+                        <Plus className='w-4 h-4' />
+                        Add Products
+                      </Button>
+                    </div>
+                  </div>
                 </div>
-                <div className='flex justify-between items-center'>
-                  <span>Delivery Charge</span>
-                  <span>{orderData.deliveryCarge}</span>
+
+                {/* Products Content */}
+                <div className='p-6'>
+                  <div className='hidden md:block'>{renderTableView()}</div>
+                  <div className='md:hidden'>{renderMobileProductView()}</div>
                 </div>
-                <div className='flex justify-between items-center'>
-                  <span>Paid Amount</span>
-                  <span>{orderData.paid}</span>
-                </div>
-                <div className='flex justify-between items-center text-red-700'>
-                  <span>
-                    Please note: The final price will be calculated after the
-                    order is modified.
-                  </span>
-                </div>
-              </CardContent>
-            </Card>
+              </div>
+            </div>
+
+            {/* Order Summary Sidebar */}
+            <div className='xl:col-span-1'>
+              <div className='sticky top-8'>
+                <Card className='border-2 border-gray-200 shadow-lg'>
+                  <CardHeader className='bg-gradient-to-r from-blue-500 to-purple-600 text-white rounded-t-lg'>
+                    <CardTitle className='flex items-center gap-2 text-white'>
+                      <ShoppingCart className='w-5 h-5' />
+                      Order Summary
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className='p-6 space-y-4'>
+                    <div className='space-y-3'>
+                      <div className='flex justify-between items-center py-2 border-b border-gray-100'>
+                        <span className='text-gray-600'>Subtotal</span>
+                        <span className='font-semibold text-gray-900'>
+                          ৳
+                          {selectedProducts
+                            .reduce(
+                              (sum, item) =>
+                                sum +
+                                item?.quantity * Number(item?.unitPrice || 0),
+                              0
+                            )
+                            .toFixed(2)}
+                        </span>
+                      </div>
+                      <div className='flex justify-between items-center py-2 border-b border-gray-100'>
+                        <span className='text-gray-600'>Delivery Charge</span>
+                        <span className='font-semibold text-gray-900'>
+                          ৳{orderData.deliveryCarge}
+                        </span>
+                      </div>
+                      <div className='flex justify-between items-center py-2 border-b border-gray-100'>
+                        <span className='text-gray-600'>Paid Amount</span>
+                        <span className='font-semibold text-green-600'>
+                          ৳{orderData.paid}
+                        </span>
+                      </div>
+                    </div>
+
+                    <Alert className='bg-amber-50 border-amber-200'>
+                      <AlertTriangle className='h-4 w-4 text-amber-600' />
+                      <AlertDescription className='text-amber-800 text-sm'>
+                        Final pricing will be calculated after order
+                        modification.
+                      </AlertDescription>
+                    </Alert>
+
+                    <Button
+                      onClick={handleUpdateOrder}
+                      disabled={selectedProducts.length < 1 || loading}
+                      className='w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-medium py-3 rounded-lg transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed'
+                      size='lg'>
+                      {loading ? (
+                        <>
+                          <Loader2 className='w-4 h-4 mr-2 animate-spin' />
+                          Updating...
+                        </>
+                      ) : (
+                        <>
+                          <CheckCircle2 className='w-4 h-4 mr-2' />
+                          Update Order
+                        </>
+                      )}
+                    </Button>
+                  </CardContent>
+                </Card>
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -622,20 +977,30 @@ const ModifyOrder = () => {
 
   const renderLoading = () => {
     return (
-      <SkeletonCard
-        title='Modifying Order'
-        description='Please wait while we processing.'
-      />
+      <div className='min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 flex items-center justify-center'>
+        <Card className='w-full max-w-md mx-4'>
+          <CardContent className='flex flex-col items-center justify-center py-12 text-center'>
+            <div className='w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mb-6'>
+              <Loader2 className='w-8 h-8 text-blue-600 animate-spin' />
+            </div>
+            <h3 className='text-xl font-semibold text-gray-900 mb-2'>
+              Updating Order
+            </h3>
+            <p className='text-gray-600'>
+              Please wait while we process your changes...
+            </p>
+            <div className='mt-6 space-y-2 w-full'>
+              <Skeleton className='h-2 w-3/4 mx-auto' />
+              <Skeleton className='h-2 w-1/2 mx-auto' />
+              <Skeleton className='h-2 w-2/3 mx-auto' />
+            </div>
+          </CardContent>
+        </Card>
+      </div>
     );
   };
 
-  return (
-    <MainView title='Modify Order'>
-      <div className='w-[90vw]'>
-        {loading ? renderLoading() : renderMainView()}
-      </div>
-    </MainView>
-  );
+  return <>{loading ? renderLoading() : renderMainView()}</>;
 };
 
 export default ModifyOrder;

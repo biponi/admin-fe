@@ -61,95 +61,94 @@ const InteractiveSingleCardComponent: React.FC<Props> = ({
 }) => {
   return (
     <Card>
-      <CardHeader className="flex flex-col items-stretch space-y-0 border-b p-0 sm:flex-row">
-        <div className="flex flex-1 flex-col justify-center gap-1 px-6 py-5 sm:py-6">
+      <CardHeader className='flex flex-col items-stretch space-y-0 border-b p-0 sm:flex-row'>
+        <div className='flex flex-1 flex-col justify-center gap-1 px-6 py-5 sm:py-6'>
           <CardTitle>Bar Chart - {title}</CardTitle>
           <CardDescription>{subTitle}</CardDescription>
         </div>
       </CardHeader>
-      <CardContent className="px-2 pt-4 sm:px-6 sm:pt-6">
+      <CardContent className='px-2 pt-4 sm:px-6 sm:pt-6'>
         <ChartContainer
           config={chartConfig}
-          className="aspect-auto h-[250px] w-full"
-        >
+          className='aspect-auto h-[250px] w-full'>
           <AreaChart data={data}>
             <defs>
-              <linearGradient id="fillDesktop" x1="0" y1="0" x2="0" y2="1">
+              <linearGradient id='fillDesktop' x1='0' y1='0' x2='0' y2='1'>
                 <stop
-                  offset="5%"
-                  stopColor="var(--color-processing)"
+                  offset='5%'
+                  stopColor='var(--color-processing)'
                   stopOpacity={0.8}
                 />
                 <stop
-                  offset="95%"
-                  stopColor="var(--color-processing)"
+                  offset='95%'
+                  stopColor='var(--color-processing)'
                   stopOpacity={0.1}
                 />
               </linearGradient>
-              <linearGradient id="fillMobile" x1="0" y1="0" x2="0" y2="1">
+              <linearGradient id='fillMobile' x1='0' y1='0' x2='0' y2='1'>
                 <stop
-                  offset="5%"
-                  stopColor="var(--color-completed)"
+                  offset='5%'
+                  stopColor='var(--color-completed)'
                   stopOpacity={0.8}
                 />
                 <stop
-                  offset="95%"
-                  stopColor="var(--color-completed)"
+                  offset='95%'
+                  stopColor='var(--color-completed)'
                   stopOpacity={0.1}
                 />
               </linearGradient>
-              <linearGradient id="fillMobile" x1="0" y1="0" x2="0" y2="1">
+              <linearGradient id='fillMobile' x1='0' y1='0' x2='0' y2='1'>
                 <stop
-                  offset="5%"
-                  stopColor="var(--color-cancel)"
+                  offset='5%'
+                  stopColor='var(--color-cancel)'
                   stopOpacity={0.8}
                 />
                 <stop
-                  offset="95%"
-                  stopColor="var(--color-cancel)"
+                  offset='95%'
+                  stopColor='var(--color-cancel)'
                   stopOpacity={0.1}
                 />
               </linearGradient>
-              <linearGradient id="fillMobile" x1="0" y1="0" x2="0" y2="1">
+              <linearGradient id='fillMobile' x1='0' y1='0' x2='0' y2='1'>
                 <stop
-                  offset="5%"
-                  stopColor="var(--color-failed)"
+                  offset='5%'
+                  stopColor='var(--color-failed)'
                   stopOpacity={0.8}
                 />
                 <stop
-                  offset="95%"
-                  stopColor="var(--color-failed)"
+                  offset='95%'
+                  stopColor='var(--color-failed)'
                   stopOpacity={0.1}
                 />
               </linearGradient>
-              <linearGradient id="fillMobile" x1="0" y1="0" x2="0" y2="1">
+              <linearGradient id='fillMobile' x1='0' y1='0' x2='0' y2='1'>
                 <stop
-                  offset="5%"
-                  stopColor="var(--color-delete)"
+                  offset='5%'
+                  stopColor='var(--color-delete)'
                   stopOpacity={0.8}
                 />
                 <stop
-                  offset="95%"
-                  stopColor="var(--color-delete)"
+                  offset='95%'
+                  stopColor='var(--color-delete)'
                   stopOpacity={0.1}
                 />
               </linearGradient>
-              <linearGradient id="fillMobile" x1="0" y1="0" x2="0" y2="1">
+              <linearGradient id='fillMobile' x1='0' y1='0' x2='0' y2='1'>
                 <stop
-                  offset="5%"
-                  stopColor="var(--color-shipped)"
+                  offset='5%'
+                  stopColor='var(--color-shipped)'
                   stopOpacity={0.8}
                 />
                 <stop
-                  offset="95%"
-                  stopColor="var(--color-shipped)"
+                  offset='95%'
+                  stopColor='var(--color-shipped)'
                   stopOpacity={0.1}
                 />
               </linearGradient>
             </defs>
             <CartesianGrid vertical={false} />
             <XAxis
-              dataKey="_id"
+              dataKey='_id'
               tickLine={false}
               axisLine={false}
               tickMargin={8}
@@ -172,53 +171,53 @@ const InteractiveSingleCardComponent: React.FC<Props> = ({
                       day: "numeric",
                     });
                   }}
-                  indicator="dot"
+                  indicator='dot'
                 />
               }
             />
             <Area
-              dataKey="processing"
-              type="natural"
-              fill="url(#fillMobile)"
-              stroke="var(--color-processing)"
-              stackId="a"
+              dataKey='processing'
+              type='natural'
+              fill='url(#fillMobile)'
+              stroke='var(--color-processing)'
+              stackId='a'
             />
             <Area
-              dataKey="completed"
-              type="natural"
-              fill="url(#fillDesktop)"
-              stroke="var(--color-completed)"
-              stackId="a"
+              dataKey='completed'
+              type='natural'
+              fill='url(#fillDesktop)'
+              stroke='var(--color-completed)'
+              stackId='a'
             />
             <Area
-              dataKey="shipped"
-              type="natural"
-              fill="url(#fillMobile)"
-              stroke="var(--color-shipped)"
-              stackId="a"
+              dataKey='shipped'
+              type='natural'
+              fill='url(#fillMobile)'
+              stroke='var(--color-shipped)'
+              stackId='a'
             />
             <Area
-              dataKey="cancel"
-              type="natural"
-              fill="url(#fillDesktop)"
-              stroke="var(--color-cancel)"
-              stackId="a"
+              dataKey='cancel'
+              type='natural'
+              fill='url(#fillDesktop)'
+              stroke='var(--color-cancel)'
+              stackId='a'
             />
             <Area
-              dataKey="delete"
-              type="natural"
-              fill="url(#fillMobile)"
-              stroke="var(--color-delete)"
-              stackId="a"
+              dataKey='delete'
+              type='natural'
+              fill='url(#fillMobile)'
+              stroke='var(--color-delete)'
+              stackId='a'
             />
             <Area
-              dataKey="failed"
-              type="natural"
-              fill="url(#fillDesktop)"
-              stroke="var(--color-failed)"
-              stackId="a"
+              dataKey='failed'
+              type='natural'
+              fill='url(#fillDesktop)'
+              stroke='var(--color-failed)'
+              stackId='a'
             />
-            <ChartLegend content={<ChartLegendContent />} />
+            <ChartLegend content={<ChartLegendContent payload={[]} />} />
           </AreaChart>
         </ChartContainer>
       </CardContent>

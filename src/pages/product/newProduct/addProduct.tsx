@@ -1,4 +1,4 @@
-import { PlusCircle, Trash, Upload } from "lucide-react";
+import { PlusCircle, Trash, Upload, X, Plus } from "lucide-react";
 import { Button } from "../../../components/ui/button";
 import {
   Card,
@@ -23,6 +23,12 @@ import {
   TableHeader,
   TableRow,
 } from "../../../components/ui/table";
+import {
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
+} from "../../../components/ui/tabs";
 import { Textarea } from "../../../components/ui/textarea";
 import { useRef, useState } from "react";
 import { Input } from "../../../components/ui/input";
@@ -35,6 +41,7 @@ import {
   TooltipTrigger,
 } from "../../../components/ui/tooltip";
 import CustomAlertDialog from "../../../coreComponents/OptionModal";
+import { Badge } from "../../../components/ui/badge";
 
 import { ICategory, IProductCreateData, IVariation } from "../interface";
 import { useNavigate } from "react-router-dom";
@@ -76,6 +83,11 @@ const AddProduct: React.FC<Props> = ({ createProduct, categories }) => {
   const [formData, updateFormData] = useState<IProductCreateData>(defaultValue);
   const [hasVariation, setHasVariation] = useState(false);
   const [isSameUnitPrice, setSameunitPrice] = useState(true);
+  const [variationTab, setVariationTab] = useState("v1");
+  const [v2Colors, setV2Colors] = useState<string[]>([]);
+  const [v2Sizes, setV2Sizes] = useState<string[]>([]);
+  const [newColor, setNewColor] = useState("");
+  const [newSize, setNewSize] = useState("");
 
   const navigate = useNavigate();
 
@@ -190,110 +202,361 @@ const AddProduct: React.FC<Props> = ({ createProduct, categories }) => {
     onUnitPriceChange(value ? formData.unitPrice : 0.0);
   };
 
-  const renderVariationView = () => {
+  // V2 Variation Functions
+  const addColor = () => {
+    if (newColor.trim() && !v2Colors.includes(newColor.trim())) {
+      setV2Colors([...v2Colors, newColor.trim()]);
+      setNewColor("");
+      generateV2Variations([...v2Colors, newColor.trim()], v2Sizes);
+    }
+  };
+
+  const addSize = () => {
+    if (newSize.trim() && !v2Sizes.includes(newSize.trim())) {
+      setV2Sizes([...v2Sizes, newSize.trim()]);
+      setNewSize("");
+      generateV2Variations(v2Colors, [...v2Sizes, newSize.trim()]);
+    }
+  };
+
+  const removeColor = (colorToRemove: string) => {
+    const newColors = v2Colors.filter((color) => color !== colorToRemove);
+    setV2Colors(newColors);
+    generateV2Variations(newColors, v2Sizes);
+  };
+
+  const removeSize = (sizeToRemove: string) => {
+    const newSizes = v2Sizes.filter((size) => size !== sizeToRemove);
+    setV2Sizes(newSizes);
+    generateV2Variations(v2Colors, newSizes);
+  };
+
+  const generateV2Variations = (colors: string[], sizes: string[]) => {
+    const variations: IVariation[] = [];
+    let id = 0;
+
+    for (const color of colors) {
+      for (const size of sizes) {
+        variations.push({
+          id: id.toString(),
+          size,
+          color,
+          name: `${color} - ${size}`,
+          title: `${color} ${size}`,
+          sku: `${formData.sku}-${id}`,
+          quantity: 0,
+          unitPrice: isSameUnitPrice ? formData.unitPrice : 0,
+        });
+        id++;
+      }
+    }
+
+    updateFormData({
+      ...formData,
+      variation: variations,
+      quantity: variations.reduce((sum, variant) => sum + variant.quantity, 0),
+    });
+  };
+
+  const renderV1VariationView = () => {
     return (
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead className='w-[100px]'>SKU</TableHead>
-            <TableHead>Stock</TableHead>
-            <TableHead>Price</TableHead>
-            <TableHead className='w-[100px]'>Color</TableHead>
-            <TableHead className='w-[100px]'>Size</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {!!formData.variation &&
-            formData.variation.map((variation: IVariation, index: number) => (
-              <TableRow>
-                <TableCell className='font-semibold'>
-                  {variation?.sku}
-                </TableCell>
-                <TableCell>
-                  <Label htmlFor='stock-3' className='sr-only'>
-                    Stock
-                  </Label>
-                  <Input
-                    id='stock-3'
-                    name='quantity'
-                    onChange={(e) => updateVariationData(index, e)}
-                    type='number'
-                    value={variation.quantity}
-                    defaultValue='32'
-                  />
-                </TableCell>
-                <TableCell>
-                  <Label htmlFor='price-3' className='sr-only'>
-                    Unit Price
-                  </Label>
-                  <Input
-                    disabled={isSameUnitPrice}
-                    id='price-3'
-                    className={`${
-                      isSameUnitPrice ? "bg-gray-100" : "bg-white"
-                    }`}
-                    name='unitPrice'
-                    onChange={(e) => updateVariationData(index, e)}
-                    type='number'
-                    value={variation.unitPrice}
-                    defaultValue='99.99'
-                  />
-                </TableCell>
-                <TableCell>
-                  <Label htmlFor='price-3' className='sr-only'>
-                    Color
-                  </Label>
-                  <Input
-                    id='price-3'
-                    name='color'
-                    onChange={(e) => updateVariationData(index, e)}
-                    type='text'
-                    value={variation.color}
-                    defaultValue='99.99'
-                  />
-                </TableCell>
-                <TableCell>
-                  <Label htmlFor='price-3' className='sr-only'>
-                    Size
-                  </Label>
-                  <Input
-                    id='price-3'
-                    name='size'
-                    onChange={(e) => updateVariationData(index, e)}
-                    type='text'
-                    value={variation.size}
-                    defaultValue='99.99'
-                  />
-                </TableCell>
-                <TableCell>
-                  <Label htmlFor='price-3' className='sr-only'>
-                    Remove
-                  </Label>
-                  <Button
-                    variant={"destructive"}
-                    onClick={() => {
-                      updateFormData((prev) => {
-                        return {
-                          ...prev,
-                          variation: prev?.variation.filter(
-                            (__, i) => i !== index
-                          ),
-                          quantity: prev?.quantity - variation?.quantity,
-                        };
-                      });
-                    }}>
-                    <Trash className='size-5' />
-                  </Button>
-                </TableCell>
+      <div className='space-y-4'>
+        <div className='rounded-lg border'>
+          <Table>
+            <TableHeader>
+              <TableRow className='bg-muted/50'>
+                <TableHead className='font-semibold'>SKU</TableHead>
+                <TableHead className='font-semibold'>Stock</TableHead>
+                <TableHead className='font-semibold'>Price</TableHead>
+                <TableHead className='font-semibold'>Color</TableHead>
+                <TableHead className='font-semibold'>Size</TableHead>
+                <TableHead className='font-semibold w-[100px]'>
+                  Actions
+                </TableHead>
               </TableRow>
-            ))}
-        </TableBody>
-      </Table>
+            </TableHeader>
+            <TableBody>
+              {!!formData.variation &&
+                formData.variation.map(
+                  (variation: IVariation, index: number) => (
+                    <TableRow key={variation.id} className='hover:bg-muted/30'>
+                      <TableCell className='font-mono text-sm'>
+                        {variation?.sku}
+                      </TableCell>
+                      <TableCell>
+                        <Input
+                          name='quantity'
+                          onChange={(e) => updateVariationData(index, e)}
+                          type='number'
+                          value={variation.quantity}
+                          min='0'
+                          className='w-20'
+                          placeholder='0'
+                        />
+                      </TableCell>
+                      <TableCell>
+                        <Input
+                          disabled={isSameUnitPrice}
+                          className={`w-24 ${
+                            isSameUnitPrice ? "bg-muted" : "bg-background"
+                          }`}
+                          name='unitPrice'
+                          onChange={(e) => updateVariationData(index, e)}
+                          type='number'
+                          value={variation.unitPrice}
+                          min='0'
+                          step='0.01'
+                          placeholder='0.00'
+                        />
+                      </TableCell>
+                      <TableCell>
+                        <Input
+                          name='color'
+                          onChange={(e) => updateVariationData(index, e)}
+                          type='text'
+                          value={variation.color}
+                          className='w-24'
+                          placeholder='Color'
+                        />
+                      </TableCell>
+                      <TableCell>
+                        <Input
+                          name='size'
+                          onChange={(e) => updateVariationData(index, e)}
+                          type='text'
+                          value={variation.size}
+                          className='w-24'
+                          placeholder='Size'
+                        />
+                      </TableCell>
+                      <TableCell>
+                        <Button
+                          variant='destructive'
+                          size='sm'
+                          onClick={() => {
+                            updateFormData((prev) => {
+                              return {
+                                ...prev,
+                                variation: prev?.variation.filter(
+                                  (__, i) => i !== index
+                                ),
+                                quantity: prev?.quantity - variation?.quantity,
+                              };
+                            });
+                          }}>
+                          <Trash className='h-4 w-4' />
+                        </Button>
+                      </TableCell>
+                    </TableRow>
+                  )
+                )}
+              {(!formData.variation || formData.variation.length === 0) && (
+                <TableRow>
+                  <TableCell
+                    colSpan={6}
+                    className='text-center text-muted-foreground py-8'>
+                    No variations added yet. Click "Add Variant" to get started.
+                  </TableCell>
+                </TableRow>
+              )}
+            </TableBody>
+          </Table>
+        </div>
+      </div>
     );
   };
 
-  const renderNoVariationView = () => {
-    return "";
+  const renderV2VariationView = () => {
+    return (
+      <div className='space-y-6'>
+        <div className='grid gap-6 sm:grid-cols-2'>
+          {/* Colors Section */}
+          <div className='space-y-4'>
+            <div className='flex items-center justify-between'>
+              <Label className='text-base font-semibold'>Colors</Label>
+              <span className='text-sm text-muted-foreground'>
+                {v2Colors.length} color{v2Colors.length !== 1 ? "s" : ""}
+              </span>
+            </div>
+
+            <div className='flex gap-2'>
+              <Input
+                placeholder='Add color (e.g., Red, Blue)'
+                value={newColor}
+                onChange={(e) => setNewColor(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") {
+                    e.preventDefault();
+                    addColor();
+                  }
+                }}
+                className='flex-1'
+              />
+              <Button
+                onClick={addColor}
+                size='sm'
+                disabled={
+                  !newColor.trim() || v2Colors.includes(newColor.trim())
+                }>
+                <Plus className='h-4 w-4' />
+              </Button>
+            </div>
+
+            <div className='flex flex-wrap gap-2 min-h-[80px] p-3 border rounded-lg bg-muted/30'>
+              {v2Colors.length > 0 ? (
+                v2Colors.map((color) => (
+                  <Badge
+                    key={color}
+                    variant='secondary'
+                    className='flex items-center gap-1 px-3 py-1'>
+                    {color}
+                    <Button
+                      variant='ghost'
+                      size='sm'
+                      onClick={() => removeColor(color)}
+                      className='h-4 w-4 p-0 ml-1 hover:bg-destructive hover:text-destructive-foreground'>
+                      <X className='h-3 w-3' />
+                    </Button>
+                  </Badge>
+                ))
+              ) : (
+                <p className='text-sm text-muted-foreground flex items-center justify-center w-full h-12'>
+                  No colors added yet
+                </p>
+              )}
+            </div>
+          </div>
+
+          {/* Sizes Section */}
+          <div className='space-y-4'>
+            <div className='flex items-center justify-between'>
+              <Label className='text-base font-semibold'>Sizes</Label>
+              <span className='text-sm text-muted-foreground'>
+                {v2Sizes.length} size{v2Sizes.length !== 1 ? "s" : ""}
+              </span>
+            </div>
+
+            <div className='flex gap-2'>
+              <Input
+                placeholder='Add size (e.g., S, M, L)'
+                value={newSize}
+                onChange={(e) => setNewSize(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") {
+                    e.preventDefault();
+                    addSize();
+                  }
+                }}
+                className='flex-1'
+              />
+              <Button
+                onClick={addSize}
+                size='sm'
+                disabled={!newSize.trim() || v2Sizes.includes(newSize.trim())}>
+                <Plus className='h-4 w-4' />
+              </Button>
+            </div>
+
+            <div className='flex flex-wrap gap-2 min-h-[80px] p-3 border rounded-lg bg-muted/30'>
+              {v2Sizes.length > 0 ? (
+                v2Sizes.map((size) => (
+                  <Badge
+                    key={size}
+                    variant='secondary'
+                    className='flex items-center gap-1 px-3 py-1'>
+                    {size}
+                    <Button
+                      variant='ghost'
+                      size='sm'
+                      onClick={() => removeSize(size)}
+                      className='h-4 w-4 p-0 ml-1 hover:bg-destructive hover:text-destructive-foreground'>
+                      <X className='h-3 w-3' />
+                    </Button>
+                  </Badge>
+                ))
+              ) : (
+                <p className='text-sm text-muted-foreground flex items-center justify-center w-full h-12'>
+                  No sizes added yet
+                </p>
+              )}
+            </div>
+          </div>
+        </div>
+
+        {/* Generated Variations Preview */}
+        {formData.variation.length > 0 && (
+          <div className='space-y-4'>
+            <div className='flex items-center justify-between'>
+              <Label className='text-base font-semibold'>
+                Generated Variations
+              </Label>
+              <span className='text-sm text-muted-foreground'>
+                {formData.variation.length} variation
+                {formData.variation.length !== 1 ? "s" : ""}
+              </span>
+            </div>
+
+            <div className='grid gap-4 sm:grid-cols-2 lg:grid-cols-3'>
+              {formData.variation.map(
+                (variation: IVariation, index: number) => (
+                  <Card key={variation.id} className='p-4'>
+                    <div className='space-y-3'>
+                      <div className='flex items-center justify-between'>
+                        <h4 className='font-medium'>{variation.name}</h4>
+                        <Badge variant='outline' className='text-xs'>
+                          {variation.sku}
+                        </Badge>
+                      </div>
+
+                      <div className='grid grid-cols-2 gap-2'>
+                        <div>
+                          <Label
+                            htmlFor={`qty-${variation.id}`}
+                            className='text-xs'>
+                            Stock
+                          </Label>
+                          <Input
+                            id={`qty-${variation.id}`}
+                            name='quantity'
+                            onChange={(e) => updateVariationData(index, e)}
+                            type='number'
+                            value={variation.quantity}
+                            min='0'
+                            className='h-8'
+                            placeholder='0'
+                          />
+                        </div>
+
+                        {!isSameUnitPrice && (
+                          <div>
+                            <Label
+                              htmlFor={`price-${variation.id}`}
+                              className='text-xs'>
+                              Price
+                            </Label>
+                            <Input
+                              id={`price-${variation.id}`}
+                              name='unitPrice'
+                              onChange={(e) => updateVariationData(index, e)}
+                              type='number'
+                              value={variation.unitPrice}
+                              min='0'
+                              step='0.01'
+                              className='h-8'
+                              placeholder='0.00'
+                            />
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </Card>
+                )
+              )}
+            </div>
+          </div>
+        )}
+      </div>
+    );
   };
 
   const discardDialog = () => {
@@ -326,431 +589,665 @@ const AddProduct: React.FC<Props> = ({ createProduct, categories }) => {
   };
 
   return (
-    <div className='w-full sm:w-[95vw]'>
-      <div className='mx-auto grid max-w-full flex-1 auto-rows-max gap-4'>
-        <div className='flex items-center gap-4'>
-          <div className='hidden items-center gap-2 md:ml-auto md:flex'>
-            <Button
-              variant='outline'
-              size='sm'
-              //@ts-ignore
-              onClick={() => !!dialogBtn && dialogBtn.current.click()}>
-              Discard
-            </Button>
-            <Button size='sm' onClick={() => createProductAndExit()}>
-              Save Product
-            </Button>
-            <Button size='sm' onClick={() => createProductAndContinue()}>
-              Save Product & Continue
-            </Button>
+    <div className='w-full min-h-screen bg-background'>
+      <div className='container mx-auto px-4 py-8'>
+        {/* Header Section */}
+        <div className='mb-8'>
+          <div className='flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between'>
+            <div>
+              <h1 className='text-3xl font-bold tracking-tight text-foreground'>
+                Add New Product
+              </h1>
+              <p className='text-muted-foreground mt-2'>
+                Create a new product with detailed information and variations
+              </p>
+            </div>
+
+            <div className='flex items-center gap-3'>
+              <Button
+                variant='outline'
+                onClick={() => {
+                  if (dialogBtn?.current) {
+                    //@ts-ignore
+                    dialogBtn.current.click();
+                  }
+                }}
+                className='min-w-[100px]'>
+                Discard
+              </Button>
+              <Button
+                onClick={() => createProductAndExit()}
+                className='min-w-[120px]'>
+                Save Product
+              </Button>
+              <Button
+                onClick={() => createProductAndContinue()}
+                variant='secondary'
+                className='min-w-[160px]'>
+                Save & Continue
+              </Button>
+            </div>
           </div>
         </div>
-        <div className='grid gap-4 md:grid-cols-[1fr_250px] lg:grid-cols-3 lg:gap-8'>
-          <div className='grid auto-rows-max items-start gap-4 lg:col-span-2 lg:gap-8'>
-            <Card x-chunk='dashboard-07-chunk-0'>
+
+        <div className='grid gap-8 lg:grid-cols-[2fr_1fr]'>
+          <div className='space-y-8'>
+            <Card>
               <CardHeader>
-                <CardTitle>Product Details</CardTitle>
-                <CardDescription>Enter product information</CardDescription>
+                <CardTitle className='text-xl'>Basic Information</CardTitle>
+                <CardDescription>
+                  Provide the essential details about your product
+                </CardDescription>
               </CardHeader>
-              <CardContent>
-                <div className='grid gap-6'>
-                  <div className='grid gap-3'>
-                    <Label htmlFor='name'>Name</Label>
-                    <Input
-                      id='name'
-                      name='name'
-                      type='text'
-                      className='w-full'
-                      value={formData?.name}
-                      defaultValue='Enter a valid name'
-                      onChange={handleChange}
-                    />
-                  </div>
-                  <div className='grid gap-3'>
-                    <Label htmlFor='description'>Description</Label>
-                    <Textarea
-                      id='description'
-                      name='description'
-                      defaultValue='Enter a valid description'
-                      value={formData?.description}
-                      className='min-h-32'
-                      onChange={handleChange}
-                    />
-                  </div>
+              <CardContent className='space-y-6'>
+                <div className='space-y-2'>
+                  <Label htmlFor='name' className='text-sm font-medium'>
+                    Product Name *
+                  </Label>
+                  <Input
+                    id='name'
+                    name='name'
+                    type='text'
+                    value={formData?.name}
+                    onChange={handleChange}
+                    placeholder='Enter product name'
+                    className='h-11'
+                    required
+                  />
+                </div>
+
+                <div className='space-y-2'>
+                  <Label htmlFor='description' className='text-sm font-medium'>
+                    Description
+                  </Label>
+                  <Textarea
+                    id='description'
+                    name='description'
+                    value={formData?.description}
+                    onChange={handleChange}
+                    placeholder='Describe your product features, benefits, and specifications'
+                    className='min-h-[120px] resize-none'
+                  />
                 </div>
               </CardContent>
             </Card>
-            <Card x-chunk='dashboard-07-chunk-2'>
+            <Card>
               <CardHeader>
-                <CardTitle>Product Category, SKU & Unit Price</CardTitle>
+                <CardTitle className='text-xl'>Product Details</CardTitle>
+                <CardDescription>
+                  Set category, SKU, pricing, and inventory information
+                </CardDescription>
               </CardHeader>
-              <CardContent>
-                <div className='grid gap-6 sm:grid-cols-4'>
-                  <NestedCategorySelect
-                    categories={categories}
-                    selectedCategoryId={formData?.categoryId}
-                    setSelectedCategoryId={(id: string) => {
-                      updateFormData({
-                        ...formData,
-                        categoryId: id,
-                      });
-                    }}
-                  />
-                  {/* <div className='grid gap-3'>
-                    <Label htmlFor='subcategory'>Subcategory (optional)</Label>
-                    <Select>
-                      <SelectTrigger
-                        id='subcategory'
-                        aria-label='Select subcategory'>
-                        <SelectValue placeholder='Select subcategory' />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value='t-shirts'>T-Shirts</SelectItem>
-                        <SelectItem value='hoodies'>Hoodies</SelectItem>
-                        <SelectItem value='sweatshirts'>Sweatshirts</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div> */}
-                  <div className='grid gap-3'>
-                    <Label htmlFor='product-sku'>Product Sku</Label>
-                    <Input
-                      id='product-sku'
-                      name='sku'
-                      type='text'
-                      value={formData?.sku}
-                      className='w-full'
-                      defaultValue=''
-                      onChange={handleChange}
+              <CardContent className='space-y-6'>
+                <div className='grid gap-6 sm:grid-cols-2'>
+                  <div className='space-y-4'>
+                    <NestedCategorySelect
+                      categories={categories}
+                      selectedCategoryId={formData?.categoryId}
+                      setSelectedCategoryId={(id: string) => {
+                        updateFormData({
+                          ...formData,
+                          categoryId: id,
+                        });
+                      }}
                     />
-                  </div>
-                  <div className='grid gap-3'>
-                    <Label htmlFor='sku'>Unit Price</Label>
-                    <Input
-                      id='product-unit-price'
-                      name='unitPrice'
-                      type='number'
-                      className='w-full'
-                      value={formData?.unitPrice}
-                      defaultValue='0.00'
-                      onChange={handleChange}
-                      disabled={!isSameUnitPrice}
-                    />
+
+                    <div className='space-y-2'>
+                      <Label
+                        htmlFor='product-sku'
+                        className='text-sm font-medium'>
+                        Product SKU *
+                      </Label>
+                      <Input
+                        id='product-sku'
+                        name='sku'
+                        type='text'
+                        value={formData?.sku}
+                        onChange={handleChange}
+                        placeholder='Enter unique SKU'
+                        className='h-11 font-mono'
+                        required
+                      />
+                      <p className='text-xs text-muted-foreground'>
+                        Stock Keeping Unit - unique identifier
+                      </p>
+                    </div>
                   </div>
 
-                  <div className='grid gap-3'>
-                    <Label htmlFor='quantity'>Total Quntity</Label>
-                    <Input
-                      id='quantity'
-                      name='quantity'
-                      type='number'
-                      value={formData?.quantity}
-                      className={`w-full ${
-                        hasVariation
-                          ? "bg-gray-100 border-gray-300"
-                          : "bg-white border-gray-200"
-                      } `}
-                      defaultValue='0.00'
-                      onChange={handleChange}
-                      disabled={hasVariation}
-                    />
+                  <div className='space-y-4'>
+                    <div className='space-y-2'>
+                      <Label
+                        htmlFor='product-unit-price'
+                        className='text-sm font-medium'>
+                        Unit Price *
+                      </Label>
+                      <Input
+                        id='product-unit-price'
+                        name='unitPrice'
+                        type='number'
+                        value={formData?.unitPrice}
+                        onChange={handleChange}
+                        placeholder='0.00'
+                        className='h-11'
+                        min='0'
+                        step='0.01'
+                        required
+                      />
+                    </div>
+
+                    <div className='space-y-2'>
+                      <Label htmlFor='quantity' className='text-sm font-medium'>
+                        Total Quantity
+                      </Label>
+                      <Input
+                        id='quantity'
+                        name='quantity'
+                        type='number'
+                        value={formData?.quantity}
+                        onChange={handleChange}
+                        placeholder='0'
+                        className={`h-11 ${
+                          hasVariation
+                            ? "bg-muted text-muted-foreground"
+                            : "bg-background"
+                        }`}
+                        min='0'
+                        disabled={hasVariation}
+                      />
+                      {hasVariation && (
+                        <p className='text-xs text-muted-foreground'>
+                          Auto-calculated from variations
+                        </p>
+                      )}
+                    </div>
                   </div>
                 </div>
               </CardContent>
             </Card>
-            <Card x-chunk='dashboard-07-chunk-3'>
+            <Card>
               <CardHeader>
-                <CardTitle>Product Discount</CardTitle>
+                <CardTitle className='text-xl'>Pricing & Discounts</CardTitle>
+                <CardDescription>
+                  Configure discount options and promotional pricing
+                </CardDescription>
               </CardHeader>
-              <CardContent>
+              <CardContent className='space-y-6'>
                 <div className='grid gap-6 sm:grid-cols-2'>
-                  <div className='grid gap-3'>
-                    <Label htmlFor='discount-type'>Discount Type</Label>
+                  <div className='space-y-2'>
+                    <Label
+                      htmlFor='discount-type'
+                      className='text-sm font-medium'>
+                      Discount Type
+                    </Label>
                     <Select
+                      value={formData?.discountType}
                       onValueChange={(value) => {
                         updateFormData({
                           ...formData,
                           discountType: value,
                         });
                       }}>
-                      <SelectTrigger
-                        id='discount-type'
-                        aria-label='Select Discount Type'>
-                        <SelectValue placeholder='Select Discount Type' />
+                      <SelectTrigger id='discount-type' className='h-11'>
+                        <SelectValue placeholder='Select discount type' />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value='%'>Percentage (%)</SelectItem>
-                        <SelectItem value='-'>Fixed Amount (-)</SelectItem>
+                        <SelectItem value='%'>
+                          <div className='flex items-center gap-2'>
+                            <span>Percentage (%)</span>
+                          </div>
+                        </SelectItem>
+                        <SelectItem value='-'>
+                          <div className='flex items-center gap-2'>
+                            <span>Fixed Amount</span>
+                          </div>
+                        </SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
-                  <div className='grid gap-3'>
-                    <Label htmlFor='discount'>Discount</Label>
+
+                  <div className='space-y-2'>
+                    <Label htmlFor='discount' className='text-sm font-medium'>
+                      Discount Value
+                    </Label>
                     <Input
                       id='discount'
                       name='discount'
                       type='number'
                       value={formData?.discount}
-                      className='w-full'
-                      defaultValue=''
                       onChange={(e) =>
                         updateFormData({
                           ...formData,
                           discount: Number(e.target?.value),
                         })
                       }
-                      required
+                      placeholder='0'
+                      className='h-11'
+                      min='0'
+                      step={formData?.discountType === "%" ? "1" : "0.01"}
                     />
+                    {formData?.discountType && (
+                      <p className='text-xs text-muted-foreground'>
+                        {formData?.discountType === "%"
+                          ? "Enter percentage (0-100)"
+                          : "Enter fixed amount to deduct"}
+                      </p>
+                    )}
                   </div>
                 </div>
               </CardContent>
             </Card>
-            <Card x-chunk='dashboard-07-chunk-1'>
+            <Card>
               <CardHeader>
-                <CardTitle>Stock</CardTitle>
+                <CardTitle className='flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2'>
+                  <span>Product Variations</span>
+                  {hasVariation && (
+                    <Badge variant='secondary' className='w-fit'>
+                      {formData.variation.length} variation
+                      {formData.variation.length !== 1 ? "s" : ""}
+                    </Badge>
+                  )}
+                </CardTitle>
                 <CardDescription>
-                  <div className='flex justify-between items-center'>
-                    <div className='flex items-center'>
-                      <Label htmlFor='airplane-mode'>Has Variation? </Label>
-                      <span
-                        className={`text-sm mx-2 ${
-                          !hasVariation
-                            ? "font-semibold text-gray-800 "
-                            : "font-normal text-gray-600"
-                        }`}>
-                        No
-                      </span>
-                      <Switch
-                        id='airplane-mode'
-                        checked={hasVariation}
-                        onCheckedChange={(value) => {
-                          setHasVariation(value);
-                        }}
-                      />
-                      <span
-                        className={`text-sm mx-2 ${
-                          hasVariation
-                            ? "font-semibold text-gray-800 "
-                            : "font-normal text-gray-600"
-                        }`}>
-                        Yes
-                      </span>
-                    </div>
+                  Configure product variations with different sizes, colors, and
+                  pricing options.
+                </CardDescription>
+              </CardHeader>
 
-                    {hasVariation && (
-                      <div className='flex items-center ml-auto'>
-                        <Label htmlFor='airplane-mode-01'>
-                          Are Unit Prices Same?{" "}
-                        </Label>
+              <CardContent className='space-y-6'>
+                {/* Variation Toggle */}
+                <div className='space-y-4 p-4 bg-muted/30 rounded-lg'>
+                  <div className='flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4'>
+                    <div className='flex items-center gap-4'>
+                      <Label
+                        htmlFor='variation-toggle'
+                        className='text-base font-medium'>
+                        Enable Variations
+                      </Label>
+                      <div className='flex items-center gap-2'>
                         <span
-                          className={`text-sm mx-2 ${
-                            !isSameUnitPrice
-                              ? "font-semibold text-gray-800 "
-                              : "font-normal text-gray-600"
-                          }`}>
+                          className={`text-sm ${
+                            !hasVariation
+                              ? "font-semibold text-foreground"
+                              : "text-muted-foreground"
+                          }`}
+                          aria-hidden='true'>
                           No
                         </span>
                         <Switch
-                          id='airplane-mode-01'
-                          checked={isSameUnitPrice}
+                          id='variation-toggle'
+                          checked={hasVariation}
                           onCheckedChange={(value) => {
-                            handleSameUnitPrice(value);
+                            setHasVariation(value);
+                            if (!value) {
+                              updateFormData({ ...formData, variation: [] });
+                              setV2Colors([]);
+                              setV2Sizes([]);
+                            }
                           }}
+                          aria-describedby='variation-help'
                         />
                         <span
-                          className={`text-sm mx-2 ${
-                            isSameUnitPrice
-                              ? "font-semibold text-gray-800 "
-                              : "font-normal text-gray-600"
-                          }`}>
+                          className={`text-sm ${
+                            hasVariation
+                              ? "font-semibold text-foreground"
+                              : "text-muted-foreground"
+                          }`}
+                          aria-hidden='true'>
                           Yes
                         </span>
                       </div>
+                    </div>
+
+                    {hasVariation && (
+                      <div className='flex flex-col sm:flex-row sm:items-center gap-4'>
+                        <Label
+                          htmlFor='same-price-toggle'
+                          className='text-sm font-medium'>
+                          Same Unit Price for All
+                        </Label>
+                        <div className='flex items-center gap-2'>
+                          <span
+                            className={`text-sm ${
+                              !isSameUnitPrice
+                                ? "font-semibold text-foreground"
+                                : "text-muted-foreground"
+                            }`}
+                            aria-hidden='true'>
+                            No
+                          </span>
+                          <Switch
+                            id='same-price-toggle'
+                            checked={isSameUnitPrice}
+                            onCheckedChange={handleSameUnitPrice}
+                            aria-describedby='same-price-help'
+                          />
+                          <span
+                            className={`text-sm ${
+                              isSameUnitPrice
+                                ? "font-semibold text-foreground"
+                                : "text-muted-foreground"
+                            }`}
+                            aria-hidden='true'>
+                            Yes
+                          </span>
+                        </div>
+                      </div>
                     )}
                   </div>
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                {hasVariation ? renderVariationView() : renderNoVariationView()}
+
+                  <div className='space-y-1 text-xs text-muted-foreground'>
+                    <p id='variation-help'>
+                      Enable variations to create different versions of your
+                      product with unique combinations of attributes.
+                    </p>
+                    {hasVariation && (
+                      <p id='same-price-help'>
+                        When enabled, all variations will inherit the main
+                        product's unit price.
+                      </p>
+                    )}
+                  </div>
+                </div>
+
+                {hasVariation && (
+                  <Tabs
+                    value={variationTab}
+                    onValueChange={setVariationTab}
+                    className='w-full'>
+                    <TabsList className='grid w-full grid-cols-2'>
+                      <TabsTrigger
+                        value='v1'
+                        className='flex items-center gap-2'>
+                        <span>Advanced</span>
+                        <Badge variant='outline' className='text-xs'>
+                          V1
+                        </Badge>
+                      </TabsTrigger>
+                      <TabsTrigger
+                        value='v2'
+                        className='flex items-center gap-2'>
+                        <span>Simple</span>
+                        <Badge variant='outline' className='text-xs'>
+                          V2
+                        </Badge>
+                      </TabsTrigger>
+                    </TabsList>
+
+                    <TabsContent value='v1' className='mt-6'>
+                      <div className='space-y-4'>
+                        <div className='text-sm text-muted-foreground bg-blue-50 dark:bg-blue-950/20 p-3 rounded-lg border'>
+                          <strong>Advanced Mode:</strong> Manually configure
+                          each variation with full control over all properties.
+                        </div>
+                        {renderV1VariationView()}
+                      </div>
+                    </TabsContent>
+
+                    <TabsContent value='v2' className='mt-6'>
+                      <div className='space-y-4'>
+                        <div className='text-sm text-muted-foreground bg-green-50 dark:bg-green-950/20 p-3 rounded-lg border'>
+                          <strong>Simple Mode:</strong> Quick setup for size and
+                          color combinations. Variations are auto-generated.
+                        </div>
+                        {renderV2VariationView()}
+                      </div>
+                    </TabsContent>
+                  </Tabs>
+                )}
+
+                {!hasVariation && (
+                  <div className='text-center py-8 text-muted-foreground'>
+                    <p className='mb-2'>No variations configured</p>
+                    <p className='text-sm'>
+                      Enable variations above to add different sizes, colors, or
+                      other variants.
+                    </p>
+                  </div>
+                )}
               </CardContent>
-              {hasVariation && (
-                <CardFooter className='justify-center border-t p-4'>
+
+              {hasVariation && variationTab === "v1" && (
+                <CardFooter className='border-t bg-muted/20'>
                   <Button
-                    size='sm'
-                    variant='ghost'
-                    className='gap-1'
-                    onClick={() => addNewVariation()}>
-                    <PlusCircle className='h-3.5 w-3.5' />
-                    Add Variant
+                    onClick={addNewVariation}
+                    variant='outline'
+                    className='w-full'>
+                    <PlusCircle className='h-4 w-4 mr-2' />
+                    Add New Variation
                   </Button>
                 </CardFooter>
               )}
             </Card>
           </div>
-          <div className='grid auto-rows-max items-start gap-4 lg:gap-8'>
-            <Card x-chunk='dashboard-07-chunk-3'>
+          <div className='space-y-8'>
+            <Card>
               <CardHeader>
-                <CardTitle>Product Status</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className='grid gap-6'>
-                  <div className='grid gap-3'>
-                    <Label>Status</Label>
-                    <Select
-                      onValueChange={(value) => {
-                        updateFormData({
-                          ...formData,
-                          active: value === "active",
-                        });
-                      }}>
-                      <SelectTrigger id='status' aria-label='Select status'>
-                        <SelectValue placeholder='Select status' />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value='active' className='text-green-500 '>
-                          Active
-                        </SelectItem>
-                        <SelectItem value='inactive' className='text-red-500'>
-                          Inactive
-                        </SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-            <Card className='overflow-hidden' x-chunk='dashboard-07-chunk-4'>
-              <CardHeader>
-                <CardTitle>
-                  <div className='flex justify-between items-center'>
-                    <h3 className='text-md font-semibold text-gray-800'>
-                      Product Image
-                    </h3>
-                    <div className='ml-auto'>
-                      <Input
-                        id='picture'
-                        type='file'
-                        className='hidden'
-                        ref={fileRef}
-                        name='thumbnail'
-                        accept='.png, .jpg, .jpeg'
-                        onChange={(e) => {
-                          //@ts-ignore
-                          const file = e.target.files[0];
-                          updateFormData({
-                            ...formData,
-                            thumbnail: file,
-                          });
-                        }}
-                      />
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                          <Button
-                            variant='outline'
-                            size='icon'
-                            onClick={() => {
-                              if (!!fileRef) {
-                                //@ts-ignore
-                                fileRef.current.click();
-                              }
-                            }}>
-                            <Upload className='h-4 w-4' />
-                          </Button>
-                        </TooltipTrigger>
-                        <TooltipContent side='right' sideOffset={5}>
-                          Change Image
-                        </TooltipContent>
-                      </Tooltip>
-                    </div>
-                  </div>
-                </CardTitle>
+                <CardTitle className='text-xl'>Product Status</CardTitle>
                 <CardDescription>
-                  This is a visual representation of the product
+                  Set the product visibility and availability
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                <div className='grid gap-2'>
-                  <img
-                    alt='Product_image'
-                    className='aspect-square w-full rounded-md object-fill'
-                    height='200'
-                    src={
-                      !!formData?.thumbnail
-                        ? URL.createObjectURL(formData?.thumbnail)
-                        : PlaceHolderImage
-                    }
-                    width='200'
-                  />
+                <div className='space-y-2'>
+                  <Label htmlFor='status' className='text-sm font-medium'>
+                    Publication Status
+                  </Label>
+                  <Select
+                    value={formData?.active ? "active" : "inactive"}
+                    onValueChange={(value) => {
+                      updateFormData({
+                        ...formData,
+                        active: value === "active",
+                      });
+                    }}>
+                    <SelectTrigger id='status' className='h-11'>
+                      <SelectValue placeholder='Select status' />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value='active'>
+                        <div className='flex items-center gap-2'>
+                          <div className='h-2 w-2 rounded-full bg-green-500'></div>
+                          <span>Active</span>
+                        </div>
+                      </SelectItem>
+                      <SelectItem value='inactive'>
+                        <div className='flex items-center gap-2'>
+                          <div className='h-2 w-2 rounded-full bg-red-500'></div>
+                          <span>Inactive</span>
+                        </div>
+                      </SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <p className='text-xs text-muted-foreground'>
+                    {formData?.active
+                      ? "Product will be visible to customers"
+                      : "Product will be hidden from customers"}
+                  </p>
                 </div>
-                <div className='grid grid-cols-3 gap-2 mt-2'>
-                  {formData?.images.map((imgData, index) => (
-                    <button
-                      key={index}
-                      onDoubleClick={() => {
-                        const images = formData.images.splice(index, 1);
-                        updateFormData({
-                          ...formData,
-                          images: [...images],
-                        });
-                      }}>
-                      <img
-                        alt='Product_image2'
-                        className='aspect-square w-full rounded-md object-cover'
-                        height='84'
-                        src={
-                          !!imgData
-                            ? URL.createObjectURL(imgData)
-                            : PlaceHolderImage
-                        }
-                        width='84'
-                      />
-                    </button>
-                  ))}
+              </CardContent>
+            </Card>
+            <Card className='overflow-hidden'>
+              <CardHeader>
+                <CardTitle className='text-xl flex items-center justify-between'>
+                  <span>Product Images</span>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button
+                        variant='outline'
+                        size='sm'
+                        onClick={() => {
+                          if (fileRef?.current) {
+                            //@ts-ignore
+                            fileRef.current.click();
+                          }
+                        }}>
+                        <Upload className='h-4 w-4 mr-2' />
+                        Upload
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent side='bottom'>
+                      Upload main product image
+                    </TooltipContent>
+                  </Tooltip>
+                </CardTitle>
+                <CardDescription>
+                  Upload high-quality images that showcase your product
+                </CardDescription>
+              </CardHeader>
 
-                  <Input
-                    id='picture'
-                    type='file'
-                    className='hidden'
-                    ref={fileRef2}
-                    name='thumbnail'
-                    accept='.png, .jpg, .jpeg'
-                    onChange={(e) => {
-                      //@ts-ignore
-                      const file = e.target.files[0];
+              <CardContent className='space-y-6'>
+                {/* Hidden file inputs */}
+                <Input
+                  id='main-picture'
+                  type='file'
+                  className='hidden'
+                  ref={fileRef}
+                  name='thumbnail'
+                  accept='.png,.jpg,.jpeg,.webp'
+                  onChange={(e) => {
+                    //@ts-ignore
+                    const file = e.target.files?.[0];
+                    if (file) {
+                      updateFormData({
+                        ...formData,
+                        thumbnail: file,
+                      });
+                    }
+                  }}
+                />
+
+                <Input
+                  id='gallery-picture'
+                  type='file'
+                  className='hidden'
+                  ref={fileRef2}
+                  name='gallery'
+                  accept='.png,.jpg,.jpeg,.webp'
+                  onChange={(e) => {
+                    //@ts-ignore
+                    const file = e.target.files?.[0];
+                    if (file) {
                       updateFormData({
                         ...formData,
                         images: [...formData?.images, file],
                       });
-                    }}
-                  />
-                  {formData?.images?.length < 3 && (
-                    <button
-                      className='flex aspect-square w-full items-center justify-center rounded-md border border-dashed'
-                      onClick={() => {
-                        if (!!fileRef2) {
-                          //@ts-ignore
-                          fileRef2.current.click();
-                        }
-                      }}>
-                      <Upload className='h-4 w-4 text-muted-foreground' />
-                      <span className='sr-only'>Upload</span>
-                    </button>
+                    }
+                  }}
+                />
+
+                {/* Main Product Image */}
+                <div className='space-y-2'>
+                  <Label className='text-sm font-medium'>Main Image</Label>
+                  <div className='relative group'>
+                    <img
+                      alt='Main product'
+                      className='aspect-square w-full rounded-lg object-cover border-2 border-dashed border-muted-foreground/25 hover:border-muted-foreground/50 transition-colors'
+                      src={
+                        formData?.thumbnail
+                          ? URL.createObjectURL(formData.thumbnail)
+                          : PlaceHolderImage
+                      }
+                    />
+                    {!formData?.thumbnail && (
+                      <div className='absolute inset-0 flex flex-col items-center justify-center text-muted-foreground'>
+                        <Upload className='h-8 w-8 mb-2' />
+                        <p className='text-sm text-center px-2'>
+                          Click "Upload" to add main image
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                  <p className='text-xs text-muted-foreground'>
+                    Recommended: 800x800px, under 2MB
+                  </p>
+                </div>
+
+                {/* Gallery Images */}
+                <div className='space-y-3'>
+                  <div className='flex items-center justify-between'>
+                    <Label className='text-sm font-medium'>
+                      Gallery Images
+                    </Label>
+                    <span className='text-xs text-muted-foreground'>
+                      {formData?.images.length}/7 images
+                    </span>
+                  </div>
+
+                  <div className='grid grid-cols-3 gap-3'>
+                    {formData?.images.map((imgData, index) => (
+                      <div key={index} className='relative group'>
+                        <img
+                          alt={`Gallery ${index + 1}`}
+                          className='aspect-square w-full rounded-lg object-cover border hover:opacity-75 transition-opacity'
+                          src={URL.createObjectURL(imgData)}
+                        />
+                        <Button
+                          variant='destructive'
+                          size='sm'
+                          className='absolute top-1 right-1 h-6 w-6 p-0 opacity-0 group-hover:opacity-100 transition-opacity'
+                          onClick={() => {
+                            const newImages = formData.images.filter(
+                              (_, i) => i !== index
+                            );
+                            updateFormData({
+                              ...formData,
+                              images: newImages,
+                            });
+                          }}>
+                          <X className='h-3 w-3' />
+                        </Button>
+                      </div>
+                    ))}
+
+                    {formData?.images.length < 7 && (
+                      <button
+                        className='aspect-square w-full flex flex-col items-center justify-center rounded-lg border-2 border-dashed border-muted-foreground/25 hover:border-muted-foreground/50 hover:bg-muted/50 transition-colors text-muted-foreground'
+                        onClick={() => {
+                          if (fileRef2?.current) {
+                            //@ts-ignore
+                            fileRef2.current.click();
+                          }
+                        }}>
+                        <Plus className='h-5 w-5 mb-1' />
+                        <span className='text-xs text-center'>Add Image</span>
+                      </button>
+                    )}
+                  </div>
+
+                  {formData?.images.length < 7 && (
+                    <p className='text-xs text-muted-foreground'>
+                      Add up to 7 additional product images
+                    </p>
                   )}
                 </div>
               </CardContent>
             </Card>
           </div>
         </div>
-        <div className='flex items-center justify-center gap-2 md:hidden'>
+        {/* Mobile Actions */}
+        <div className='flex flex-col gap-3 sm:hidden mt-8 p-4 bg-muted/30 rounded-lg'>
           <Button
             variant='outline'
-            size='sm'
-            //@ts-ignore
-            onClick={() => !!dialogBtn && dialogBtn.current.click()}>
-            Discard
+            onClick={() => {
+              if (dialogBtn?.current) {
+                //@ts-ignore
+                dialogBtn.current.click();
+              }
+            }}
+            className='w-full'>
+            Discard Changes
           </Button>
-          <Button size='sm' onClick={() => createProductAndExit()}>
-            Save Product
-          </Button>
+          <div className='grid grid-cols-2 gap-3'>
+            <Button onClick={() => createProductAndExit()} className='w-full'>
+              Save Product
+            </Button>
+            <Button
+              onClick={() => createProductAndContinue()}
+              variant='secondary'
+              className='w-full'>
+              Save & Continue
+            </Button>
+          </div>
         </div>
       </div>
       {discardDialog()}

@@ -409,7 +409,7 @@ const CategoryList = () => {
   };
 
   return (
-    <div className='w-full sm:w-[95vw]'>
+    <div className='w-[80%] mx-auto my-4'>
       {mainView()}
       {renderAddNewCategoryDialog()}
       {!!categories && categories.length > 0 && renderUpdateCategoryDialog()}

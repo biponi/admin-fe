@@ -1,8 +1,8 @@
+// Updated EditCustomerInformation Component for Sheet Layout
 import { useEffect, useState } from "react";
 import {
   Card,
   CardContent,
-  CardFooter,
   CardHeader,
   CardTitle,
 } from "../../components/ui/card";
@@ -18,7 +18,25 @@ import { Input } from "../../components/ui/input";
 import { BDDistrictList, BDDivisions } from "../../utils/contents";
 import { Textarea } from "../../components/ui/textarea";
 import { Button } from "../../components/ui/button";
+import { Badge } from "../../components/ui/badge";
+import { Separator } from "../../components/ui/separator";
+import {
+  User,
+  MapPin,
+  CreditCard,
+  Phone,
+  Mail,
+  FileText,
+  Search,
+  Calculator,
+  Truck,
+  Tag,
+  Wallet,
+  Save,
+  X,
+} from "lucide-react";
 import { getLocationByFormattedString } from "../../utils/functions";
+
 const defaultPersonalInformation = {
   name: "",
   email: "",
@@ -30,6 +48,7 @@ const defaultShippingAddress = {
   district: {},
   address: "",
 };
+
 interface Props {
   shipping: any;
   customerInfo: any;
@@ -42,6 +61,7 @@ interface Props {
   handleClose: () => void;
   handleCustomerDataChange: (information: any) => void;
 }
+
 const EditCustomerInformation: React.FC<Props> = ({
   paid,
   totalPrice,
@@ -54,7 +74,7 @@ const EditCustomerInformation: React.FC<Props> = ({
   deliveryCharge,
   handleCustomerDataChange,
 }) => {
-  const [personalInfomation, setPersonalInformation] = useState(
+  const [personalInformation, setPersonalInformation] = useState(
     defaultPersonalInformation
   );
   const [shippingAddress, setShippingAddress] = useState(
@@ -70,6 +90,10 @@ const EditCustomerInformation: React.FC<Props> = ({
 
   const [divisionQuery, setDivisionQuery] = useState("");
   const [districtQuery, setDistrictQuery] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // Calculate final amount
+  const finalAmount = Number(tp) + Number(sdeliveryCharge) - Number(sdiscount);
 
   useEffect(() => {
     setShippingAddress({
@@ -103,11 +127,11 @@ const EditCustomerInformation: React.FC<Props> = ({
     //eslint-disable-next-line
   }, [notes]);
 
-  const handlePersonalInfomationChange = (
+  const handlePersonalInformationChange = (
     e: React.ChangeEvent<HTMLInputElement>
   ) => {
     setPersonalInformation({
-      ...personalInfomation,
+      ...personalInformation,
       [e.target.name]: e.target.value,
     });
   };
@@ -121,6 +145,7 @@ const EditCustomerInformation: React.FC<Props> = ({
         setShippingAddress({
           ...shippingAddress,
           division: filteredDivision[0],
+          district: {}, // Reset district when division changes
         });
     } else {
       const filteredDistrict = BDDistrictList.filter(
@@ -134,163 +159,254 @@ const EditCustomerInformation: React.FC<Props> = ({
     }
   };
 
+  const handleSubmit = async () => {
+    setIsSubmitting(true);
+    try {
+      await handleCustomerDataChange({
+        notes: updatedNotes,
+        customer: personalInformation,
+        shipping: {
+          address: shippingAddress?.address,
+          //@ts-ignore
+          district: `${shippingAddress?.district?.name ?? ""}(${
+            //@ts-ignore
+            shippingAddress?.district?.bn_name ?? ""
+          })`,
+          //@ts-ignore
+          division: `${shippingAddress?.division?.name ?? ""}(${
+            //@ts-ignore
+            shippingAddress?.division?.bn_name ?? ""
+          })`,
+        },
+        discount: sdiscount,
+        remaining: sremaining,
+        paid: spaid,
+        deliveryCharge: sdeliveryCharge,
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
   const renderCustomerPersonalInformation = () => {
     return (
-      <Card>
-        <CardHeader>
-          <CardTitle>Customer Information</CardTitle>
+      <Card className='border-slate-200/60 shadow-none border-x-0 border-t-0 rounded-none'>
+        <CardHeader className='px-0 pb-3'>
+          <CardTitle className='flex items-center gap-2 text-slate-700 text-base'>
+            <div className='p-1 rounded bg-blue-100'>
+              <User className='h-3.5 w-3.5 text-blue-600' />
+            </div>
+            Customer Information
+          </CardTitle>
         </CardHeader>
-        <CardContent>
-          <div className="grid w-full max-w-sm items-center gap-1.5 mt-2">
-            <Label htmlFor="name">Customer name</Label>
+        <CardContent className='px-0 space-y-3'>
+          <div className='space-y-2'>
+            <Label
+              htmlFor='name'
+              className='text-xs font-medium text-slate-700 flex items-center gap-1'>
+              <User className='h-3 w-3' />
+              Customer Name
+            </Label>
             <Input
-              type="text"
-              id="name"
-              name="name"
-              placeholder="Name"
-              value={personalInfomation.name}
-              onChange={handlePersonalInfomationChange}
-            />
-          </div>
-          <div className="grid w-full max-w-sm items-center gap-1.5 mt-2">
-            <Label htmlFor="email">Email</Label>
-            <Input
-              type="email"
-              id="email"
-              name="email"
-              placeholder="Email"
-              value={personalInfomation.email}
-              onChange={handlePersonalInfomationChange}
-            />
-          </div>
-          <div className="grid w-full max-w-sm items-center gap-1.5 mt-2">
-            <Label htmlFor="phone-number">Phone Number</Label>
-            <Input
-              type="text"
-              id="phone-number"
-              name="phoneNumber"
-              placeholder="017XXXXXXXXXXX"
-              value={personalInfomation.phoneNumber}
-              onChange={handlePersonalInfomationChange}
+              type='text'
+              id='name'
+              name='name'
+              placeholder='Enter customer name'
+              value={personalInformation.name}
+              onChange={handlePersonalInformationChange}
+              className='h-9 text-sm transition-all duration-200 focus:ring-1 focus:ring-blue-500/30'
             />
           </div>
 
-          <div className="grid w-full max-w-sm items-center gap-1.5 mt-2">
-            <Label htmlFor="notes">Notes</Label>
+          <div className='grid grid-cols-1 sm:grid-cols-2 gap-3'>
+            <div className='space-y-2'>
+              <Label
+                htmlFor='email'
+                className='text-xs font-medium text-slate-700 flex items-center gap-1'>
+                <Mail className='h-3 w-3' />
+                Email
+              </Label>
+              <Input
+                type='email'
+                id='email'
+                name='email'
+                placeholder='email@example.com'
+                value={personalInformation.email}
+                onChange={handlePersonalInformationChange}
+                className='h-9 text-sm transition-all duration-200 focus:ring-1 focus:ring-blue-500/30'
+              />
+            </div>
+
+            <div className='space-y-2'>
+              <Label
+                htmlFor='phone-number'
+                className='text-xs font-medium text-slate-700 flex items-center gap-1'>
+                <Phone className='h-3 w-3' />
+                Phone
+              </Label>
+              <Input
+                type='text'
+                id='phone-number'
+                name='phoneNumber'
+                placeholder='017XXXXXXXXX'
+                value={personalInformation.phoneNumber}
+                onChange={handlePersonalInformationChange}
+                className='h-9 text-sm transition-all duration-200 focus:ring-1 focus:ring-blue-500/30'
+              />
+            </div>
+          </div>
+
+          <div className='space-y-2'>
+            <Label
+              htmlFor='notes'
+              className='text-xs font-medium text-slate-700 flex items-center gap-1'>
+              <FileText className='h-3 w-3' />
+              Notes
+            </Label>
             <Textarea
-              rows={5}
-              id="notes"
-              name="notes"
-              placeholder="Write a note..."
+              rows={2}
+              id='notes'
+              name='notes'
+              placeholder='Special instructions...'
               value={updatedNotes}
-              onChange={(e) => {
-                setUpdatedNotes(e.target.value);
-              }}
+              onChange={(e) => setUpdatedNotes(e.target.value)}
+              className='text-sm transition-all duration-200 focus:ring-1 focus:ring-blue-500/30 resize-none'
             />
           </div>
         </CardContent>
       </Card>
     );
   };
+
   const renderCustomerShippingInformation = () => {
     return (
-      <Card>
-        <CardHeader>
-          <CardTitle>Shipping Information</CardTitle>
+      <Card className='border-slate-200/60 shadow-none border-x-0 border-t-0 rounded-none'>
+        <CardHeader className='px-0 pb-3'>
+          <CardTitle className='flex items-center gap-2 text-slate-700 text-base'>
+            <div className='p-1 rounded bg-green-100'>
+              <MapPin className='h-3.5 w-3.5 text-green-600' />
+            </div>
+            Shipping Address
+          </CardTitle>
         </CardHeader>
-        <CardContent>
-          <div className="grid w-full max-w-sm items-center gap-1.5 mt-2">
-            <Label htmlFor="district">Division</Label>
-            <Select
-              value={
-                //@ts-ignore
-                !!shippingAddress?.division?.id
-                  ? //@ts-ignore
-                    shippingAddress?.division?.id
-                  : ""
-              }
-              onValueChange={(value: string) => {
-                handleShippingDivChange(value, "division");
-              }}
-            >
-              <SelectTrigger className="w-full">
-                <SelectValue placeholder="Division" />
-              </SelectTrigger>
-              <SelectContent>
-                <Input
-                  type="text"
-                  className="mb-2"
-                  placeholder="search"
-                  value={divisionQuery}
-                  onChange={(e) => setDivisionQuery(e.target.value)}
-                />
-                {BDDivisions.filter(
-                  (division) =>
-                    division.name
-                      .toLowerCase()
-                      .includes(divisionQuery.toLowerCase()) ||
-                    division.bn_name.includes(divisionQuery)
-                ).map((division, index: number) => (
-                  <SelectItem
-                    key={index}
-                    value={division?.id}
-                  >{`${division?.name}(${division?.bn_name})`}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-          {!!shippingAddress?.division && (
-            <div className="grid w-full max-w-sm items-center gap-1.5 mt-2">
-              <Label htmlFor="district">Districts</Label>
+        <CardContent className='px-0 space-y-3'>
+          <div className='grid grid-cols-1 sm:grid-cols-2 gap-3'>
+            <div className='space-y-2'>
+              <Label
+                htmlFor='division'
+                className='text-xs font-medium text-slate-700'>
+                Division
+              </Label>
               <Select
-                //@ts-ignore
                 value={
                   //@ts-ignore
-                  !!shippingAddress?.district?.id
+                  !!shippingAddress?.division?.id
                     ? //@ts-ignore
-                      shippingAddress?.district?.id
+                      shippingAddress?.division?.id
                     : ""
                 }
                 onValueChange={(value: string) => {
-                  handleShippingDivChange(value, "district");
-                }}
-              >
-                <SelectTrigger className="w-full">
-                  <SelectValue placeholder="District" />
+                  handleShippingDivChange(value, "division");
+                  setDistrictQuery("");
+                }}>
+                <SelectTrigger className='h-9 text-sm transition-all duration-200 focus:ring-1 focus:ring-green-500/30'>
+                  <SelectValue placeholder='Select division' />
                 </SelectTrigger>
                 <SelectContent>
-                  <Input
-                    type="text"
-                    className="mb-2"
-                    placeholder="search"
-                    value={districtQuery}
-                    onChange={(e) => setDistrictQuery(e.target.value)}
-                  />
-                  {BDDistrictList.filter(
-                    (district) =>
-                      !!shippingAddress.division &&
-                      //@ts-ignore
-                      shippingAddress?.division.id === district.division_id &&
-                      (district.name
+                  <div className='relative'>
+                    <Search className='absolute left-2 top-2 h-3 w-3 text-gray-400' />
+                    <Input
+                      type='text'
+                      className='h-7 pl-7 text-xs border-0 border-b border-gray-200 rounded-none focus:border-green-500 focus:ring-0'
+                      placeholder='Search...'
+                      value={divisionQuery}
+                      onChange={(e) => setDivisionQuery(e.target.value)}
+                    />
+                  </div>
+                  {BDDivisions.filter(
+                    (division) =>
+                      division.name
                         .toLowerCase()
-                        .includes(districtQuery.toLowerCase()) ||
-                        district.bn_name.includes(districtQuery))
+                        .includes(divisionQuery.toLowerCase()) ||
+                      division.bn_name.includes(divisionQuery)
                   ).map((division, index: number) => (
                     <SelectItem
                       key={index}
                       value={division?.id}
-                    >{`${division?.name}(${division?.bn_name})`}</SelectItem>
+                      className='text-xs cursor-pointer hover:bg-green-50'>
+                      {`${division?.name} (${division?.bn_name})`}
+                    </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
             </div>
-          )}
-          <div className="grid w-full max-w-sm items-center gap-1.5 mt-2">
-            <Label htmlFor="address">Address</Label>
+
+            {!!shippingAddress?.division && (
+              <div className='space-y-2 animate-in slide-in-from-right-2 duration-300'>
+                <Label
+                  htmlFor='district'
+                  className='text-xs font-medium text-slate-700'>
+                  District
+                </Label>
+                <Select
+                  //@ts-ignore
+                  value={
+                    //@ts-ignore
+                    !!shippingAddress?.district?.id
+                      ? //@ts-ignore
+                        shippingAddress?.district?.id
+                      : ""
+                  }
+                  onValueChange={(value: string) => {
+                    handleShippingDivChange(value, "district");
+                  }}>
+                  <SelectTrigger className='h-9 text-sm transition-all duration-200 focus:ring-1 focus:ring-green-500/30'>
+                    <SelectValue placeholder='Select district' />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <div className='relative'>
+                      <Search className='absolute left-2 top-2 h-3 w-3 text-gray-400' />
+                      <Input
+                        type='text'
+                        className='h-7 pl-7 text-xs border-0 border-b border-gray-200 rounded-none focus:border-green-500 focus:ring-0'
+                        placeholder='Search...'
+                        value={districtQuery}
+                        onChange={(e) => setDistrictQuery(e.target.value)}
+                      />
+                    </div>
+                    {BDDistrictList.filter(
+                      (district) =>
+                        !!shippingAddress.division &&
+                        //@ts-ignore
+                        shippingAddress?.division.id === district.division_id &&
+                        (district.name
+                          .toLowerCase()
+                          .includes(districtQuery.toLowerCase()) ||
+                          district.bn_name.includes(districtQuery))
+                    ).map((district, index: number) => (
+                      <SelectItem
+                        key={index}
+                        value={district?.id}
+                        className='text-xs cursor-pointer hover:bg-green-50'>
+                        {`${district?.name} (${district?.bn_name})`}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
+          </div>
+
+          <div className='space-y-2'>
+            <Label
+              htmlFor='address'
+              className='text-xs font-medium text-slate-700'>
+              Complete Address
+            </Label>
             <Textarea
-              id="address"
-              name="address"
-              placeholder="Enter Full Address"
+              id='address'
+              name='address'
+              placeholder='House/Flat no., Street, Area...'
               value={shippingAddress.address}
               onChange={(e) => {
                 setShippingAddress({
@@ -298,7 +414,9 @@ const EditCustomerInformation: React.FC<Props> = ({
                   address: e.target.value,
                 });
               }}
-            ></Textarea>
+              rows={2}
+              className='text-sm transition-all duration-200 focus:ring-1 focus:ring-green-500/30 resize-none'
+            />
           </div>
         </CardContent>
       </Card>
@@ -307,149 +425,186 @@ const EditCustomerInformation: React.FC<Props> = ({
 
   const renderPaymentDetails = () => {
     return (
-      <Card>
-        <CardHeader>
-          <CardTitle>Payment Data</CardTitle>
+      <Card className='border-slate-200/60 shadow-none border-x-0 border-t-0 rounded-none'>
+        <CardHeader className='px-0 pb-3'>
+          <CardTitle className='flex items-center gap-2 text-slate-700 text-base'>
+            <div className='p-1 rounded bg-amber-100'>
+              <CreditCard className='h-3.5 w-3.5 text-amber-600' />
+            </div>
+            Payment Details
+          </CardTitle>
         </CardHeader>
-        <CardContent>
-          <div className="grid w-full max-w-sm items-center gap-1.5">
-            <Label htmlFor="total">Total Price</Label>
-            <Input
-              type="number"
-              min={0}
-              id="total"
-              value={tp}
-              placeholder="Total Price"
-              disabled
-            />
+        <CardContent className='px-0 space-y-4'>
+          <div className='grid grid-cols-2 gap-3'>
+            <div className='space-y-2'>
+              <Label
+                htmlFor='total'
+                className='text-xs font-medium text-slate-700 flex items-center gap-1'>
+                <Calculator className='h-3 w-3' />
+                Total Price
+              </Label>
+              <Input
+                type='number'
+                min={0}
+                id='total'
+                value={tp}
+                placeholder='0.00'
+                disabled
+                className='h-9 text-sm bg-slate-50 text-slate-600'
+              />
+            </div>
+
+            <div className='space-y-2'>
+              <Label
+                htmlFor='dc'
+                className='text-xs font-medium text-slate-700 flex items-center gap-1'>
+                <Truck className='h-3 w-3' />
+                Delivery
+              </Label>
+              <Input
+                type='number'
+                min={0}
+                id='dc'
+                value={sdeliveryCharge}
+                onChange={(e) => {
+                  const newDeliveryCharge = Number(e.target.value);
+                  setRemaining(
+                    Number(tp) +
+                      newDeliveryCharge -
+                      Number(spaid) -
+                      Number(sdiscount)
+                  );
+                  setDeliveryCharge(newDeliveryCharge);
+                }}
+                placeholder='0.00'
+                className='h-9 text-sm transition-all duration-200 focus:ring-1 focus:ring-amber-500/30'
+              />
+            </div>
+
+            <div className='space-y-2'>
+              <Label
+                htmlFor='discount'
+                className='text-xs font-medium text-slate-700 flex items-center gap-1'>
+                <Tag className='h-3 w-3' />
+                Discount
+              </Label>
+              <Input
+                type='number'
+                min={0}
+                id='discount'
+                placeholder='0.00'
+                value={sdiscount}
+                onChange={(e) => {
+                  const newDiscount = Number(e.target.value);
+                  setRemaining(
+                    Number(tp) +
+                      Number(sdeliveryCharge) -
+                      newDiscount -
+                      Number(spaid)
+                  );
+                  setDiscount(newDiscount);
+                }}
+                className='h-9 text-sm transition-all duration-200 focus:ring-1 focus:ring-amber-500/30'
+              />
+            </div>
+
+            <div className='space-y-2'>
+              <Label
+                htmlFor='paid'
+                className='text-xs font-medium text-slate-700 flex items-center gap-1'>
+                <Wallet className='h-3 w-3' />
+                Paid
+              </Label>
+              <Input
+                type='number'
+                min={0}
+                id='paid'
+                placeholder='0.00'
+                value={spaid}
+                onChange={(e) => {
+                  const newPaid = Number(e.target.value);
+                  setRemaining(
+                    Number(tp) +
+                      Number(sdeliveryCharge) -
+                      newPaid -
+                      Number(sdiscount)
+                  );
+                  setPaid(newPaid);
+                }}
+                className='h-9 text-sm transition-all duration-200 focus:ring-1 focus:ring-amber-500/30'
+              />
+            </div>
           </div>
-          <div className="grid w-full max-w-sm items-center gap-1.5 mt-2">
-            <Label htmlFor="dc">Delivery Charge</Label>
-            <Input
-              type="number"
-              min={0}
-              id="dc"
-              value={sdeliveryCharge}
-              onChange={(e) => {
-                setRemaining(
-                  Number(tp) +
-                    Number(e.target.value) -
-                    Number(spaid) -
-                    Number(discount)
-                );
-                setDeliveryCharge(Number(e.target.value));
-              }}
-              placeholder="Delivery Charge"
-            />
-          </div>
-          <div className="grid w-full max-w-sm items-center gap-1.5 mt-2">
-            <Label htmlFor="discount">Discount</Label>
-            <Input
-              type="number"
-              min={0}
-              id="discount"
-              placeholder="Discount"
-              value={sdiscount}
-              onChange={(e) => {
-                setRemaining(
-                  Number(tp) +
-                    Number(sdeliveryCharge) -
-                    Number(e.target.value) -
-                    Number(spaid)
-                );
-                setDiscount(Number(e.target.value));
-              }}
-            />
-          </div>
-          <div className="grid w-full max-w-sm items-center gap-1.5 mt-2">
-            <Label htmlFor="paid">Paid</Label>
-            <Input
-              type="number"
-              min={0}
-              id="paid"
-              placeholder="Paid"
-              value={spaid}
-              onChange={(e) => {
-                setRemaining(
-                  Number(tp) +
-                    Number(sdeliveryCharge) -
-                    Number(e.target.value) -
-                    Number(discount)
-                );
-                setPaid(Number(e.target.value));
-              }}
-            />
-          </div>
-          <div className="grid w-full max-w-sm items-center gap-1.5 mt-2">
-            <Label htmlFor="remaining">Remaining</Label>
-            <Input
-              type="number"
-              min={0}
-              id="remaining"
-              placeholder="Remaining"
-              disabled
-              value={sremaining}
-            />
+
+          <Separator className='my-3' />
+
+          {/* Compact Payment Summary */}
+          <div className='bg-slate-50 p-3 rounded-md space-y-2'>
+            <h4 className='text-xs font-medium text-slate-700 flex items-center gap-1'>
+              <Calculator className='h-3 w-3' />
+              Summary
+            </h4>
+            <div className='grid grid-cols-2 gap-2 text-xs'>
+              <div className='flex justify-between'>
+                <span className='text-slate-600'>Final:</span>
+                <span className='font-medium'>
+                  ৳{finalAmount.toLocaleString()}
+                </span>
+              </div>
+              <div className='flex justify-between items-center'>
+                <span className='text-slate-600'>Due:</span>
+                <Badge
+                  variant={sremaining > 0 ? "destructive" : "secondary"}
+                  className='text-xs h-5 px-2'>
+                  ৳{sremaining.toLocaleString()}
+                </Badge>
+              </div>
+            </div>
           </div>
         </CardContent>
       </Card>
     );
   };
+
   return (
-    <>
-      <Card className="border-0 shadow-none p-0 h-[88vh]">
-        <CardContent className="max-h-[80vh] overflow-y-auto p-0">
-          <div className="grid grid-cols-1 gap-4">
-            <div>{renderCustomerPersonalInformation()}</div>
-            <div>{renderCustomerShippingInformation()}</div>
-            <div>{renderPaymentDetails()}</div>
-          </div>
-        </CardContent>
-        <CardFooter>
-          <div className="flex w-full justify-center items-center py-4">
-            <Button
-              className="w-full mr-2"
-              variant="destructive"
-              onClick={() => {
-                setPersonalInformation(defaultPersonalInformation);
-                setShippingAddress(defaultShippingAddress);
-                handleClose();
-              }}
-            >
-              Close
-            </Button>
-            <Button
-              className=" w-full"
-              onClick={() =>
-                handleCustomerDataChange({
-                  notes: updatedNotes,
-                  customer: personalInfomation,
-                  shipping: {
-                    address: shippingAddress?.address,
-                    //@ts-ignore
-                    district: `${shippingAddress?.district?.name ?? ""}(${
-                      //@ts-ignore
-                      shippingAddress?.district?.bn_name ?? ""
-                    })`,
-                    //@ts-ignore
-                    division: `${shippingAddress?.division?.name ?? ""}(${
-                      //@ts-ignore
-                      shippingAddress?.division?.bn_name ?? ""
-                    })`,
-                  },
-                  discount: sdiscount,
-                  remaining: sremaining,
-                  paid: spaid,
-                  deliveryCharge: sdeliveryCharge,
-                })
-              }
-            >
-              Submit
-            </Button>
-          </div>
-        </CardFooter>
-      </Card>
-    </>
+    <div className='flex flex-col h-full'>
+      {/* Scrollable Content */}
+      <div className='flex-1 overflow-y-auto px-6 py-4 space-y-4'>
+        {renderCustomerPersonalInformation()}
+        {renderCustomerShippingInformation()}
+        {renderPaymentDetails()}
+      </div>
+
+      {/* Fixed Footer */}
+      <div className='border-t bg-slate-50/80 backdrop-blur-sm p-4'>
+        <div className='flex gap-3'>
+          <Button
+            variant='outline'
+            onClick={handleClose}
+            disabled={isSubmitting}
+            className='flex-1 h-9 text-sm transition-all duration-200 hover:bg-slate-100'>
+            <X className='h-3.5 w-3.5 mr-1' />
+            Cancel
+          </Button>
+          <Button
+            onClick={handleSubmit}
+            disabled={isSubmitting}
+            className='flex-1 h-9 text-sm bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 transition-all duration-200'>
+            {isSubmitting ? (
+              <>
+                <div className='w-3.5 h-3.5 border border-white border-t-transparent rounded-full animate-spin mr-1' />
+                Saving...
+              </>
+            ) : (
+              <>
+                <Save className='h-3.5 w-3.5 mr-1' />
+                Save Changes
+              </>
+            )}
+          </Button>
+        </div>
+      </div>
+    </div>
   );
 };
 

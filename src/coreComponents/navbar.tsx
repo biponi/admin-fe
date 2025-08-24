@@ -25,6 +25,7 @@ import useLoginAuth from "../pages/auth/hooks/useLoginAuth";
 import { Avatar, AvatarFallback, AvatarImage } from "../components/ui/avatar";
 import { getInitialsWord } from "../utils/functions";
 import useRoleCheck from "../pages/auth/hooks/useRoleCheck";
+import { SettingsPanel } from "../components/settings-panel";
 
 const Navbar = () => {
   const { signOut, user } = useLoginAuth();
@@ -82,6 +83,20 @@ const Navbar = () => {
             </TooltipTrigger>
             <TooltipContent side='right' sideOffset={5}>
               Help
+            </TooltipContent>
+          </Tooltip>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                variant='ghost'
+                size='icon'
+                className='mt-auto rounded-lg'
+                aria-label='Help'>
+                <SettingsPanel />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent side='right' sideOffset={5}>
+              Settings
             </TooltipContent>
           </Tooltip>
           <DropdownMenu>

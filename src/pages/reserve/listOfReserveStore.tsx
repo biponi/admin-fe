@@ -5,17 +5,11 @@ import {
   CardTitle,
   CardDescription,
   CardContent,
+  CardFooter,
 } from "../../components/ui/card";
-import {
-  Table,
-  TableHeader,
-  TableRow,
-  TableHead,
-  TableBody,
-  TableCell,
-} from "../../components/ui/table";
 import { Button } from "../../components/ui/button";
-import { Eye, Trash2, Plus } from "lucide-react";
+import { Badge } from "../../components/ui/badge";
+import { Eye, Trash2, Plus, MapPin, Building2 } from "lucide-react";
 import {
   Dialog,
   DialogTrigger,
@@ -101,17 +95,17 @@ const ReserveStoresList: React.FC = () => {
   };
 
   return (
-    <Card className='w-[93vw]'>
+    <Card>
       <CardHeader>
-        <div className='flex justify-between items-center'>
+        <div className='flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4'>
           <div>
-            <CardTitle>Reserve Stores</CardTitle>
-            <CardDescription>List of all reserve stores</CardDescription>
+            <CardTitle className='text-2xl'>Reserve Stores</CardTitle>
+            <CardDescription className='text-base mt-1'>Manage and monitor your reserve store locations</CardDescription>
           </div>
           {hasRequiredPermission("ReserveStore", "create") && (
             <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
               <DialogTrigger asChild>
-                <Button>
+                <Button className='w-full sm:w-auto'>
                   <Plus className='mr-2 h-4 w-4' /> Create Store
                 </Button>
               </DialogTrigger>
@@ -158,75 +152,94 @@ const ReserveStoresList: React.FC = () => {
           )}
         </div>
       </CardHeader>
-      <CardContent>
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>ID</TableHead>
-              <TableHead>Name</TableHead>
-              <TableHead>Location</TableHead>
-              <TableHead>Actions</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
+      <CardContent className='p-6'>
+        {stores.length === 0 ? (
+          <div className='flex flex-col items-center justify-center py-12 text-center'>
+            <Building2 className='h-12 w-12 text-muted-foreground mb-4' />
+            <h3 className='text-lg font-semibold mb-2'>No stores found</h3>
+            <p className='text-muted-foreground mb-4'>Get started by creating your first reserve store.</p>
+          </div>
+        ) : (
+          <div className='grid gap-4 sm:gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4'>
             {stores.map((store) => (
-              <TableRow key={store.id}>
-                <TableCell>{store.id}</TableCell>
-                <TableCell>{store.name}</TableCell>
-                <TableCell>{store.location}</TableCell>
+              <Card key={store.id} className='group hover:shadow-lg transition-all duration-200 border-2 hover:border-primary/20'>
+                <CardHeader className='pb-3'>
+                  <div className='flex items-start justify-between'>
+                    <div className='flex items-center space-x-2'>
+                      <div className='p-2 bg-primary/10 rounded-lg'>
+                        <Building2 className='h-5 w-5 text-primary' />
+                      </div>
+                      <div>
+                        <CardTitle className='text-lg group-hover:text-primary transition-colors'>
+                          {store.name}
+                        </CardTitle>
+                        <Badge variant='secondary' className='mt-1 text-xs'>
+                          ID: {store.id}
+                        </Badge>
+                      </div>
+                    </div>
+                  </div>
+                </CardHeader>
+                
+                <CardContent className='pb-3'>
+                  <div className='flex items-center space-x-2 text-muted-foreground'>
+                    <MapPin className='h-4 w-4 flex-shrink-0' />
+                    <span className='text-sm truncate' title={store.location}>
+                      {store.location}
+                    </span>
+                  </div>
+                </CardContent>
+                
                 {hasSomePermissionsForPage("ReserveStore", [
                   "store_access",
                   "delete",
                 ]) && (
-                  <TableCell>
-                    <div className='flex space-x-2'>
-                      {hasRequiredPermission(
-                        "ReserveStore",
-                        "store_access"
-                      ) && (
-                        <Button
-                          variant='ghost'
-                          size='icon'
-                          onClick={() => handleView(store?.slug)}>
-                          <Eye className='h-4 w-4' />
-                        </Button>
-                      )}
-
-                      {hasRequiredPermission("ReserveStore", "delete") && (
-                        <AlertDialog>
-                          <AlertDialogTrigger>
-                            <Button variant='ghost' size='icon'>
-                              <Trash2 className='h-4 w-4' />
-                            </Button>
-                          </AlertDialogTrigger>
-                          <AlertDialogContent>
-                            <AlertDialogHeader>
-                              <AlertDialogTitle>
-                                Are you absolutely sure?
-                              </AlertDialogTitle>
-                              <AlertDialogDescription>
-                                This action cannot be undone. This will
-                                permanently delete your store and remove your
-                                data from admin servers.
-                              </AlertDialogDescription>
-                            </AlertDialogHeader>
-                            <AlertDialogFooter>
-                              <AlertDialogCancel>Cancel</AlertDialogCancel>
-                              <AlertDialogAction
-                                onClick={() => handleDelete(store.id)}>
-                                Continue
-                              </AlertDialogAction>
-                            </AlertDialogFooter>
-                          </AlertDialogContent>
-                        </AlertDialog>
-                      )}
-                    </div>
-                  </TableCell>
+                  <CardFooter className='pt-0 flex flex-col sm:flex-row justify-end gap-2 sm:space-x-2'>
+                    {hasRequiredPermission("ReserveStore", "store_access") && (
+                      <Button
+                        variant='outline'
+                        size='sm'
+                        onClick={() => handleView(store?.slug)}
+                        className='w-full sm:w-auto hover:bg-primary hover:text-primary-foreground transition-colors'>
+                        <Eye className='h-4 w-4 mr-2' />
+                        View
+                      </Button>
+                    )}
+                    
+                    {hasRequiredPermission("ReserveStore", "delete") && (
+                      <AlertDialog>
+                        <AlertDialogTrigger>
+                          <Button variant='outline' size='sm' className='w-full sm:w-auto hover:bg-destructive hover:text-destructive-foreground transition-colors'>
+                            <Trash2 className='h-4 w-4 mr-2' />
+                            Delete
+                          </Button>
+                        </AlertDialogTrigger>
+                        <AlertDialogContent>
+                          <AlertDialogHeader>
+                            <AlertDialogTitle>
+                              Delete Reserve Store
+                            </AlertDialogTitle>
+                            <AlertDialogDescription>
+                              Are you sure you want to delete "{store.name}"? This action cannot be undone and will permanently remove the store and all associated data.
+                            </AlertDialogDescription>
+                          </AlertDialogHeader>
+                          <AlertDialogFooter>
+                            <AlertDialogCancel>Cancel</AlertDialogCancel>
+                            <AlertDialogAction
+                              onClick={() => handleDelete(store.id)}
+                              className='bg-destructive text-destructive-foreground hover:bg-destructive/90'>
+                              Delete Store
+                            </AlertDialogAction>
+                          </AlertDialogFooter>
+                        </AlertDialogContent>
+                      </AlertDialog>
+                    )}
+                  </CardFooter>
                 )}
-              </TableRow>
+              </Card>
             ))}
-          </TableBody>
-        </Table>
+          </div>
+        )}
       </CardContent>
     </Card>
   );

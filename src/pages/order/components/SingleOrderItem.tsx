@@ -1,6 +1,7 @@
 import {
   CircleCheck,
   CircleMinusIcon,
+  Edit,
   MapPin,
   MoreHorizontalIcon,
   TimerIcon,
@@ -138,6 +139,13 @@ const SingleItem: React.FC<Props> = ({
         onClick={() => handleViewDetails()}>
         <u className=' cursor-pointer'>Details</u>
       </TableCell>
+      {hasRequiredPermission("order", "edit") && (
+        <TableCell
+          className=' cursor-pointer'
+          onClick={() => handleUpdateOrder()}>
+          <Edit className='w-5 h-5' />
+        </TableCell>
+      )}
       {hasSomePermissionsForPage("order", ["edit", "delete"]) && (
         <TableCell>
           <DropdownMenu>
@@ -150,11 +158,6 @@ const SingleItem: React.FC<Props> = ({
             <DropdownMenuContent align='end'>
               <DropdownMenuLabel>Actions</DropdownMenuLabel>
 
-              {hasRequiredPermission("order", "edit") && (
-                <DropdownMenuItem onClick={() => handleUpdateOrder()}>
-                  Edit
-                </DropdownMenuItem>
-              )}
               {hasRequiredPermission("order", "edit") &&
                 status.includes("processing") && (
                   <DropdownMenuItem onClick={() => handleModifyProduct()}>

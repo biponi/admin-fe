@@ -1,3 +1,10 @@
+import { type ClassValue, clsx } from "clsx"
+import { twMerge } from "tailwind-merge"
+
+export function cn(...inputs: ClassValue[]) {
+  return twMerge(clsx(inputs))
+}
+
 export const isValidImageUrl = (url: string): boolean => {
   // Regular expression to match common image file extensions
   const imageExtensions = /\.(jpg|jpeg|png|gif|bmp|webp)$/i;

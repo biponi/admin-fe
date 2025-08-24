@@ -124,7 +124,7 @@ const CreateRolePage: React.FC = () => {
   const currentPermissions = getPermissionsObject();
 
   return (
-    <div className='mx-auto px-2 py-6 w-[90vw] grid-cols-3'>
+    <div className='mx-auto px-2 py-6  grid-cols-3'>
       <div className='flex items-center gap-4 mb-6'>
         <Button variant='outline' onClick={() => navigate("/roles")}>
           <ArrowLeft className='h-4 w-4 mr-2' />

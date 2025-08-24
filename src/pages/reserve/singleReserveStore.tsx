@@ -1,12 +1,5 @@
 import React, { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "../../components/ui/card";
 import { Cat, Trash } from "lucide-react";
 import { IRecord, IStoreReserve } from "./interface";
 import { Button } from "../../components/ui/button";
@@ -171,7 +164,7 @@ const SingleReserveStore: React.FC = () => {
               <Button
                 type='button'
                 onClick={() => setOpenCreateDialog(true)}
-                className='block rounded-md bg-indigo-600 px-3 py-2 text-center text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600'>
+                className='block rounded-md bg-primary px-3 py-2 text-center text-sm font-semibold text-white shadow-sm hover:bg-primary/70 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600'>
                 Add Record
               </Button>
             </div>
@@ -206,21 +199,21 @@ const SingleReserveStore: React.FC = () => {
                       </th>
                       <th
                         scope='col'
-                        className='px-3 py-3.5 text-left text-sm font-semibold text-gray-900'>
+                        className=' text-left text-sm font-semibold text-gray-900'>
                         Total Amount
                       </th>
                       {hasRequiredPermission("ReserveRecord", "delete") && (
                         <th
                           scope='col'
-                          className='px-3 py-3.5 text-left text-sm font-semibold text-gray-900'>
+                          className='px-3 py-3.5  text-sm font-semibold text-gray-900 text-center'>
                           Delete
                         </th>
                       )}
                       {hasRequiredPermission("ReserveRecord", "edit") && (
                         <th
                           scope='col'
-                          className='relative py-3.5 pl-3 pr-4 sm:pr-6'>
-                          <span className='sr-only'>Edit</span>
+                          className='relative py-3.5 pl-3 text-sm font-semibold pr-4 sm:pr-6 text-center'>
+                          Edit
                         </th>
                       )}
                     </tr>
@@ -229,18 +222,18 @@ const SingleReserveStore: React.FC = () => {
                     {storeInformation?.records.map(
                       (record: IRecord, index: number) => (
                         <tr key={index}>
-                          <td className='whitespace-nowrap py-4 pl-4 pr-3 text-sm font-medium text-gray-900 sm:pl-6'>
+                          <td className='whitespace-nowrap py-2 text-sm font-medium text-gray-900 sm:pl-6'>
                             {Number(index) + 1}
                           </td>
-                          <td className='whitespace-nowrap px-3 py-4 text-sm text-gray-500'>
+                          <td className='whitespace-nowrap py-2  text-sm text-gray-500'>
                             {dayjs(record?.created_at).format(
                               "DD-MM-YYYY HH:mm:ss"
                             )}
                           </td>
-                          <td className='whitespace-nowrap px-3 py-4 text-sm text-gray-500'>
+                          <td className='whitespace-nowrap py-2 text-sm text-gray-500'>
                             {record?.created_by}
                           </td>
-                          <td className='whitespace-nowrap px-3 py-4 text-sm text-gray-500'>
+                          <td className='whitespace-nowrap py-2 text-sm text-gray-500'>
                             {record?.products?.length > 3 ? (
                               <>
                                 {record?.products
@@ -274,11 +267,11 @@ const SingleReserveStore: React.FC = () => {
                               ))
                             )}
                           </td>
-                          <td className='relative whitespace-nowrap py-4 pl-3 pr-4 text-right text-sm font-medium sm:pr-6'>
+                          <td className='relative whitespace-nowrap py-2 text-left text-sm font-medium '>
                             {calculateTotalPrice(record?.products)}
                           </td>
                           {hasRequiredPermission("ReserveRecord", "delete") && (
-                            <td className='relative whitespace-nowrap py-4 pl-3 pr-4 text-right text-sm font-medium sm:pr-6'>
+                            <td className='relative whitespace-nowrap py-2 text-center text-sm font-medium '>
                               <AlertDialog>
                                 <AlertDialogTrigger>
                                   <Button variant={"destructive"}>
@@ -312,7 +305,7 @@ const SingleReserveStore: React.FC = () => {
                             </td>
                           )}
                           {hasRequiredPermission("ReserveRecord", "edit") && (
-                            <td className='relative whitespace-nowrap py-4 pl-3 pr-4 text-right text-sm font-medium sm:pr-6'>
+                            <td className='relative whitespace-nowrap py-2 text-center text-sm font-medium '>
                               <Button
                                 className='bg-blue-600'
                                 onClick={() => {
@@ -338,21 +331,19 @@ const SingleReserveStore: React.FC = () => {
   };
   const renderMainView = () => {
     return (
-      <>
-        <Card className='w-[93vw]'>
-          <CardHeader>
-            <CardTitle>Store Data</CardTitle>
-            {!!storeInformation && (
-              <CardDescription>
-                Here is the information of{" "}
-                <span className='font-bold '>{storeInformation?.name}</span>
-              </CardDescription>
-            )}
-          </CardHeader>
-          <CardContent>
-            {!!storeInformation ? renderStoreTable() : renderEmptyStoreData()}
-          </CardContent>
-        </Card>
+      <div className='container mx-auto p-6 space-y-6'>
+        <div className='p-6 rounded-lg border-2 border-dashed border-sidebar shadow'>
+          <h1 className='text-xl font-bold tracking-tight text-primary/90'>
+            Store Data
+          </h1>
+          {!!storeInformation && (
+            <p className='text-primary/90'>
+              Here is the information of{" "}
+              <span className='font-bold '>{storeInformation?.name}</span>
+            </p>
+          )}
+        </div>
+        {!!storeInformation ? renderStoreTable() : renderEmptyStoreData()}
         <DialogForRecord
           openDialog={openCreateDialog}
           setOpenDialog={setOpenCreateDialog}
@@ -367,7 +358,7 @@ const SingleReserveStore: React.FC = () => {
           setSelectedProducts={setSelectedProducts}
           handleSubmit={() => handleEditRecord()}
         />
-      </>
+      </div>
     );
   };
 

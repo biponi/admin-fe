@@ -40,3 +40,23 @@ export const deletePurchaseOrder = async (id: string): Promise<void> => {
 export const restorePurchaseOrder = async (id: string): Promise<void> => {
   await axios.delete(`${config.purchaseOrder.restorePurchaseOrder(id)}`);
 };
+
+// Fetch single purchase order for updating
+export const fetchPurchaseOrderById = async (id: string): Promise<any> => {
+  const response = await axios.get(
+    config.purchaseOrder.getPuirchaseOrderById(id)
+  );
+  return response.data;
+};
+
+// Update purchase order
+export const updatePurchaseOrder = async (
+  id: string,
+  data: any
+): Promise<any> => {
+  const response = await axios.put(
+    config.purchaseOrder.updatePurchaseOrderById(id),
+    data
+  );
+  return response.data;
+};

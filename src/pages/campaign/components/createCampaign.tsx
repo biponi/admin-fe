@@ -119,7 +119,7 @@ const CreateCampaignForm: React.FC = () => {
 
   const renderCampaignDetailsView = () => {
     return (
-      <div className='w-full sm:w-[95vw]'>
+      <div className='w-full '>
         <div className='mx-auto grid max-w-full flex-1 auto-rows-max gap-4'>
           <form onSubmit={handleStep} className='space-y-4'>
             <div className='grid gap-2 md:grid-cols-[1fr_250px] lg:grid-cols-3 lg:gap-4'>
@@ -488,9 +488,7 @@ const CreateCampaignForm: React.FC = () => {
       <div>
         {step === 1 && renderCampaignDetailsView()}
         {step === 2 && (
-          <div className='w-full sm:w-[95vw] my-2'>
-            {renderProductListView()}
-          </div>
+          <div className='w-full my-2'>{renderProductListView()}</div>
         )}
       </div>
     );

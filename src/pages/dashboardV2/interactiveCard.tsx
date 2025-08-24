@@ -49,71 +49,68 @@ const InteractiveCardComponent: React.FC<Props> = ({
 }) => {
   return (
     <Card>
-      <CardHeader className="flex flex-col items-stretch space-y-0 border-b p-0 sm:flex-row">
-        <div className="flex flex-1 flex-col justify-center gap-1 px-6 py-5 sm:py-6">
+      <CardHeader className='flex flex-col items-stretch space-y-0 border-b p-0 sm:flex-row'>
+        <div className='flex flex-1 flex-col justify-center gap-1 px-6 py-5 sm:py-6'>
           <CardTitle>Bar Chart - {title}</CardTitle>
           <CardDescription>{subTitle}</CardDescription>
         </div>
-        <div className="flex">
+        <div className='flex'>
           <button
             disabled
-            className="relative z-30 flex flex-1 flex-col justify-center gap-1 border-t px-6 py-4 text-left even:border-l data-[active=true]:bg-muted/50 sm:border-l sm:border-t-0 sm:px-8 sm:py-6"
-          >
-            <span className="text-xs text-muted-foreground">
+            className='relative z-30 flex flex-1 flex-col justify-center gap-1 border-t px-6 py-4 text-left even:border-l data-[active=true]:bg-muted/50 sm:border-l sm:border-t-0 sm:px-8 sm:py-6'>
+            <span className='text-xs text-muted-foreground'>
               Total Purchase Amount
             </span>
-            <span className="text-lg font-bold leading-none sm:text-3xl">
+            <span className='text-lg font-bold leading-none sm:text-3xl'>
               {totalPurchase}
             </span>
           </button>
           <button
             disabled
-            className="relative z-30 flex flex-1 flex-col justify-center gap-1 border-t px-6 py-4 text-left even:border-l data-[active=true]:bg-muted/50 sm:border-l sm:border-t-0 sm:px-8 sm:py-6"
-          >
-            <span className="text-xs text-muted-foreground">
+            className='relative z-30 flex flex-1 flex-col justify-center gap-1 border-t px-6 py-4 text-left even:border-l data-[active=true]:bg-muted/50 sm:border-l sm:border-t-0 sm:px-8 sm:py-6'>
+            <span className='text-xs text-muted-foreground'>
               Total Amount of Orders
             </span>
-            <span className="text-lg font-bold leading-none sm:text-3xl">
+            <span className='text-lg font-bold leading-none sm:text-3xl'>
               {totalOrder}
             </span>
           </button>
         </div>
       </CardHeader>
-      <CardContent className="px-2 pt-4 sm:px-6 sm:pt-6">
+      <CardContent className='px-2 pt-4 sm:px-6 sm:pt-6'>
         <ChartContainer
           config={chartConfig}
-          className="aspect-auto h-[250px] w-full"
-        >
+          className='aspect-auto h-[250px] w-full'>
           <AreaChart data={data}>
             <defs>
-              <linearGradient id="fillDesktop" x1="0" y1="0" x2="0" y2="1">
+              <linearGradient id='fillDesktop' x1='0' y1='0' x2='0' y2='1'>
                 <stop
-                  offset="5%"
-                  stopColor="var(--color-totalPurchases)"
+                  offset='5%'
+                  stopColor='var(--color-totalPurchases)'
                   stopOpacity={0.8}
                 />
                 <stop
-                  offset="95%"
-                  stopColor="var(--color-totalPurchases)"
+                  offset='95%'
+                  stopColor='var(--color-totalPurchases)'
                   stopOpacity={0.1}
                 />
               </linearGradient>
-              <linearGradient id="fillMobile" x1="0" y1="0" x2="0" y2="1">
+              <linearGradient id='fillMobile' x1='0' y1='0' x2='0' y2='1'>
                 <stop
-                  offset="5%"
-                  stopColor="var(--color-totalOrders)"
+                  offset='5%'
+                  stopColor='var(--color-totalOrders)'
                   stopOpacity={0.8}
                 />
                 <stop
-                  offset="95%"
-                  stopColor="var(--color-totalOrders)"
+                  offset='95%'
+                  stopColor='var(--color-totalOrders)'
                   stopOpacity={0.1}
                 />
               </linearGradient>
             </defs>
             <CartesianGrid vertical={false} />
             <XAxis
-              dataKey="_id"
+              dataKey='_id'
               tickLine={false}
               axisLine={false}
               tickMargin={8}
@@ -136,25 +133,25 @@ const InteractiveCardComponent: React.FC<Props> = ({
                       day: "numeric",
                     });
                   }}
-                  indicator="dot"
+                  indicator='dot'
                 />
               }
             />
             <Area
-              dataKey="totalOrders"
-              type="natural"
-              fill="url(#fillMobile)"
-              stroke="var(--color-totalOrders)"
-              stackId="a"
+              dataKey='totalOrders'
+              type='natural'
+              fill='url(#fillMobile)'
+              stroke='var(--color-totalOrders)'
+              stackId='a'
             />
             <Area
-              dataKey="totalPurchases"
-              type="natural"
-              fill="url(#fillDesktop)"
-              stroke="var(--color-totalPurchases)"
-              stackId="a"
+              dataKey='totalPurchases'
+              type='natural'
+              fill='url(#fillDesktop)'
+              stroke='var(--color-totalPurchases)'
+              stackId='a'
             />
-            <ChartLegend content={<ChartLegendContent />} />
+            <ChartLegend content={<ChartLegendContent payload={[]} />} />
           </AreaChart>
         </ChartContainer>
       </CardContent>
