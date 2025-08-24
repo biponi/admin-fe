@@ -38,14 +38,7 @@ import { DateRangePicker } from "../../coreComponents/DateRangePicker";
 import { DateRange } from "react-day-picker";
 import toast from "react-hot-toast";
 import { Button } from "../../components/ui/button";
-import {
-  Loader,
-  PieChart,
-  Calendar,
-  BarChart3,
-  Crown,
-  Star,
-} from "lucide-react";
+import { Loader, PieChart, BarChart3, Crown, Star } from "lucide-react";
 import { useSettings } from "../../contexts/SettingsContext";
 export interface ReportResponse {
   reports: {
@@ -599,10 +592,10 @@ const DashboardPage: React.FC = () => {
                   <BarChart3 className='h-8 w-8 text-primary' />
                 </div>
                 <div>
-                  <h1 className='text-4xl font-bold bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text text-transparent'>
+                  <h1 className='text-lg font-bold bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text text-transparent'>
                     Dashboard Overview
                   </h1>
-                  <p className='text-muted-foreground text-lg mt-1'>
+                  <p className='text-muted-foreground text-sm mt-1'>
                     Monitor your business performance and key metrics
                   </p>
                 </div>
@@ -611,13 +604,13 @@ const DashboardPage: React.FC = () => {
 
             {/* Control Panel */}
             <div className='flex flex-col sm:flex-row items-start sm:items-center space-y-3 sm:space-y-0 sm:space-x-4'>
-              <div className='hidden lg:flex items-center space-x-2 text-sm text-muted-foreground px-4 py-2 bg-muted/50 rounded-full border'>
+              {/* <div className='hidden lg:flex items-center space-x-2 text-sm text-muted-foreground px-4 py-2 bg-muted/50 rounded-full border'>
                 <Calendar className='h-4 w-4' />
                 <span>
                   {dateRange?.start.toLocaleDateString()} -{" "}
                   {dateRange?.end.toLocaleDateString()}
                 </span>
-              </div>
+              </div> */}
 
               <DateRangePicker
                 initialDateFrom={startOfDay(new Date())}
@@ -635,7 +628,6 @@ const DashboardPage: React.FC = () => {
               />
 
               <Button
-                size='lg'
                 className='bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-0.5'
                 onClick={() => generateReport()}
                 disabled={loadingCSV}>

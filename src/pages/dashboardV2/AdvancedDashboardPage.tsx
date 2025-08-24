@@ -1340,10 +1340,10 @@ const AdvancedDashboardPage: React.FC = () => {
                   <Activity className='h-8 w-8 text-primary' />
                 </div>
                 <div>
-                  <h1 className='text-4xl font-bold bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text text-transparent'>
+                  <h1 className='text-lg font-bold bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text text-transparent'>
                     Advanced Analytics
                   </h1>
-                  <p className='text-muted-foreground text-lg mt-1'>
+                  <p className='text-muted-foreground text-sm mt-1'>
                     Comprehensive business intelligence and insights
                   </p>
                 </div>
