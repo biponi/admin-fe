@@ -179,7 +179,7 @@ const styles = StyleSheet.create({
   tableHeaderCell: {
     color: "#333333",
     fontWeight: "bold",
-    fontSize: 8,
+    fontSize: 16,
     textAlign: "center",
   },
   tableRow: {
@@ -193,7 +193,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#F9F9F9",
   },
   tableCell: {
-    fontSize: 7,
+    fontSize: 12,
     textAlign: "center",
     paddingHorizontal: 2,
     color: "#333333",
@@ -214,38 +214,38 @@ const styles = StyleSheet.create({
     minHeight: 18,
   },
   summaryRowRegular: {
-    backgroundColor: "#F8F9FA",
+    backgroundColor: "#F9F9F9",
     borderBottom: "1px solid #E9ECEF",
   },
   summaryRowSubtotal: {
-    backgroundColor: "#2980B9",
+    backgroundColor: "#F0F0F0",
   },
   summaryRowDue: {
-    backgroundColor: "#E74C3C",
+    backgroundColor: "#F9F9F9",
   },
   summaryLabel: {
-    fontSize: 8,
+    fontSize: 15,
     fontWeight: "bold",
     width: 70,
     textAlign: "right",
     marginRight: 10,
   },
   summaryValue: {
-    fontSize: 8,
+    fontSize: 15,
     fontWeight: "bold",
     width: 60,
     textAlign: "right",
   },
   summaryLabelWhite: {
-    color: "#FFFFFF",
+    color: "#333333",
   },
   summaryValueWhite: {
-    color: "#FFFFFF",
+    color: "#333333",
   },
   // Footer Styles - Compact
   footer: {
     backgroundColor: "#F5F5F5",
-    padding: 12,
+    padding: 20,
     marginTop: "auto",
   },
   footerContent: {

@@ -832,9 +832,9 @@ const OrderList = () => {
         onOpenChange={(value: boolean) => setShowDetails(value)}>
         <SheetContent className=' px-0'>
           <ScrollArea className='h-full'>
-            <div className='px-6 py-6'>
+            <div className='px-2 py-6 w-[600px] sm:w-[700px] md:w-[800px] lg:w-[900px] xl:w-[1000px] 2xl:w-[1100px]'>
               {/* Header */}
-              <div className='space-y-4 pb-6 border-b'>
+              <div className='space-y-4 pb-6 border-b ]'>
                 <div className='flex items-start justify-between'>
                   <div className='space-y-2'>
                     <div className='flex items-center gap-3'>
