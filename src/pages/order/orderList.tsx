@@ -832,9 +832,9 @@ const OrderList = () => {
         onOpenChange={(value: boolean) => setShowDetails(value)}>
         <SheetContent className=' px-0'>
           <ScrollArea className='h-full'>
-            <div className='px-2 py-6 w-[600px] sm:w-[700px] md:w-[800px] lg:w-[900px] xl:w-[1000px] 2xl:w-[1100px]'>
+            <div className='px-4 py-6 w-[425px] sm:w-full '>
               {/* Header */}
-              <div className='space-y-4 pb-6 border-b ]'>
+              <div className='space-y-4 pb-6 border-b'>
                 <div className='flex items-start justify-between'>
                   <div className='space-y-2'>
                     <div className='flex items-center gap-3'>
@@ -898,7 +898,7 @@ const OrderList = () => {
                       onClick={() => handleGenerateInvoice()}
                       className='gap-2'>
                       <Download className='w-4 h-4' />
-                      Invoice
+                      <span className='hidden sm:inline'>Invoice</span>
                     </Button>
 
                     {/* Status Change Actions */}
@@ -981,24 +981,26 @@ const OrderList = () => {
                     <div
                       key={index}
                       className='flex items-center justify-between p-3 bg-gray-50 rounded-lg'>
-                      <div className='flex-1'>
-                        <div className='font-medium text-gray-900'>
+                      <div className='flex-1 space-y-1'>
+                        <div className='font-medium text-gray-900 uppercase'>
                           {product?.name}
                         </div>
                         {product?.hasVariation && (
-                          <div className='text-sm text-gray-600'>
-                            {product?.variation.color}{" "}
-                            {product?.variation.color &&
-                              product?.variation.size &&
-                              "•"}{" "}
-                            {product?.variation.size}
+                          <div className='text-sm w-auto'>
+                            <Badge className='border-0 bg-orange-100 text-orange-600'>
+                              {product?.variation.color}{" "}
+                              {product?.variation.color &&
+                                product?.variation.size &&
+                                "•"}{" "}
+                              {product?.variation.size}
+                            </Badge>
                           </div>
                         )}
                         <div className='text-sm text-gray-500'>
                           Quantity: {product?.quantity}
                         </div>
                       </div>
-                      <div className='text-right'>
+                      <div className='text-right space-y-6'>
                         <div className='font-semibold text-gray-900'>
                           ৳{product?.totalPrice}
                         </div>
@@ -1347,7 +1349,7 @@ const OrderList = () => {
             </SheetDescription>
           </SheetHeader>
 
-          <ScrollArea className='flex-1'>
+          <ScrollArea className='w-full'>
             <EditCustomerInformation
               notes={selectedOrder.notes ?? ""}
               customerInfo={selectedOrder.customer}

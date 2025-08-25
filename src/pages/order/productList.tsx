@@ -127,28 +127,52 @@ const OrderProductList: React.FC<Props> = ({
   }, [debounce]);
 
   const handleSelect = (product: IProduct) => {
-    // Check if product is already selected
-    const isAlreadySelected = selectedProducts.some((p) => p.id === product.id);
-    if (isAlreadySelected) {
-      toast.error("Product already selected!");
-      return;
+    // For products without variation, prevent duplicate selection
+    if (!product.hasVariation) {
+      const isAlreadySelected = selectedProducts.some((p) => p.id === product.id);
+      if (isAlreadySelected) {
+        toast.error("Product already selected!");
+        return;
+      }
     }
+    // For products with variation, allow multiple selections with different variants
 
     if (!!product.hasVariation) {
-      const variant = product.variation.filter(
+      const availableVariants = product.variation.filter(
         (variant) => variant?.quantity > 0
       );
-      if (variant.length > 0) {
-        setSelectedProducts([
-          ...selectedProducts,
-          {
-            ...product,
-            selectedQuantity: 1,
-            selectedVariant: variant[0],
-            totalPrice: variant[0].unitPrice * 1,
-          },
-        ]);
-        toast.success(`${product.name} added to order! 🛍️`);
+      
+      if (availableVariants.length > 0) {
+        // Find the first variant that hasn't been selected yet
+        const selectedVariants = selectedProducts
+          .filter(p => p.id === product.id)
+          .map(p => p.selectedVariant);
+        
+        const availableVariant = availableVariants.find(variant => 
+          !selectedVariants.some(selected => 
+            selected?.color === variant?.color && selected?.size === variant?.size
+          )
+        );
+
+        if (availableVariant) {
+          const existingCount = selectedProducts.filter(p => p.id === product.id).length;
+          setSelectedProducts([
+            ...selectedProducts,
+            {
+              ...product,
+              selectedQuantity: 1,
+              selectedVariant: availableVariant,
+              totalPrice: availableVariant.unitPrice * 1,
+            },
+          ]);
+          toast.success(
+            existingCount > 0 
+              ? `${product.name} variation added to order! 🎨` 
+              : `${product.name} added to order! 🛍️`
+          );
+        } else {
+          toast.error("All available variations of this product are already selected!");
+        }
       } else {
         toast.error("No Available variant found");
       }
@@ -210,7 +234,27 @@ const OrderProductList: React.FC<Props> = ({
     return (
       <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 max-h-[60vh] overflow-y-auto pr-2'>
         {products.map((product: IProduct, index: number) => {
-          const isSelected = selectedProducts.some((p) => p.id === product.id);
+          // For products with variations, check if all available variants are selected
+          // For products without variations, show as selected if already in cart
+          let isSelected = false;
+          let allVariantsSelected = false;
+          
+          if (product.hasVariation) {
+            const availableVariants = product.variation.filter(v => v?.quantity > 0);
+            const selectedVariants = selectedProducts
+              .filter(p => p.id === product.id)
+              .map(p => p.selectedVariant);
+            
+            allVariantsSelected = availableVariants.every(variant =>
+              selectedVariants.some(selected =>
+                selected?.color === variant?.color && selected?.size === variant?.size
+              )
+            );
+            isSelected = allVariantsSelected;
+          } else {
+            isSelected = selectedProducts.some((p) => p.id === product.id);
+          }
+          
           const isAvailable = product?.quantity > 0 && product?.active;
 
           return (
@@ -232,6 +276,12 @@ const OrderProductList: React.FC<Props> = ({
                     {isSelected && (
                       <div className='absolute top-2 right-2 w-6 h-6 bg-green-500 rounded-full flex items-center justify-center'>
                         <CheckCircle2 className='w-4 h-4 text-white' />
+                      </div>
+                    )}
+                    {/* Show count of selected variations */}
+                    {product.hasVariation && selectedProducts.filter(p => p.id === product.id).length > 0 && (
+                      <div className='absolute top-2 left-2 px-2 py-1 bg-blue-500 text-white text-xs rounded-full font-semibold'>
+                        {selectedProducts.filter(p => p.id === product.id).length}
                       </div>
                     )}
                     {!isAvailable && (
@@ -291,12 +341,12 @@ const OrderProductList: React.FC<Props> = ({
                       {isSelected ? (
                         <>
                           <CheckCircle2 className='w-4 h-4 mr-2' />
-                          Selected
+                          {product.hasVariation ? "All Variants Added" : "Selected"}
                         </>
                       ) : isAvailable ? (
                         <>
                           <Plus className='w-4 h-4 mr-2' />
-                          Add to Order
+                          {product.hasVariation ? "Add Variation" : "Add to Order"}
                         </>
                       ) : (
                         <>
@@ -352,6 +402,9 @@ const OrderProductList: React.FC<Props> = ({
   };
 
   const renderSelectedProductCard = (product: IOrderProduct, index: number) => {
+    // Count how many times this product appears in selected products
+    const productCount = selectedProducts.filter(p => p.id === product.id).length;
+    const productInstanceNumber = selectedProducts.slice(0, index + 1).filter(p => p.id === product.id).length;
     const distinctColors = new Set<string>();
     const distinctSizes = new Set<string>();
 
@@ -407,6 +460,11 @@ const OrderProductList: React.FC<Props> = ({
               <div className='flex items-start justify-between mb-2'>
                 <h4 className='font-semibold text-gray-900 truncate pr-2'>
                   {product?.name}
+                  {productCount > 1 && product.hasVariation && (
+                    <span className='ml-2 text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded-full'>
+                      #{productInstanceNumber}
+                    </span>
+                  )}
                 </h4>
                 <Button
                   variant='ghost'
