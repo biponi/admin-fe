@@ -17,6 +17,11 @@ import {
   Archive,
   Activity,
   FilePieChart,
+  X,
+  Hash,
+  Palette,
+  Ruler,
+  DollarSign,
 } from "lucide-react";
 import { Button } from "../../components/ui/button";
 
@@ -97,6 +102,222 @@ import MobileProductCard from "./components/MobileProductCard";
 import MobileProductFilters from "./components/MobileProductFilters";
 import MobileProductEmpty from "./components/MobileProductEmpty";
 import MobileProductSummary from "./components/MobileProductSummary";
+import { Badge } from "../../components/ui/badge";
+
+// Product Variation Drawer Component
+const ProductVariationDrawer: React.FC<{
+  isOpen: boolean;
+  onClose: () => void;
+  product: IProduct | null;
+}> = ({ isOpen, onClose, product }) => {
+  if (!product || !isOpen) return null;
+
+  const formatNumber = (num: number): string => {
+    return Number(num) % 1 < 1
+      ? Math.floor(num).toLocaleString()
+      : num.toLocaleString(undefined, {
+          minimumFractionDigits: 2,
+          maximumFractionDigits: 2,
+        });
+  };
+
+  const getStockStatusColor = (quantity: number) => {
+    if (quantity <= 0) return "bg-red-100 text-red-700 border-red-200";
+    if (quantity <= 10)
+      return "bg-orange-100 text-orange-700 border-orange-200";
+    return "bg-green-100 text-green-700 border-green-200";
+  };
+
+  const getStockStatusText = (quantity: number) => {
+    if (quantity <= 0) return "Out of Stock";
+    if (quantity <= 10) return "Low Stock";
+    return "In Stock";
+  };
+
+  return (
+    <Drawer open={isOpen} onOpenChange={onClose}>
+      <DrawerContent className='max-h-[90vh]'>
+        <DrawerHeader className='pb-4'>
+          <div className='flex items-center justify-between'>
+            <div className='flex-1 pr-4'>
+              <DrawerTitle className='text-lg font-semibold text-gray-900 mb-1 uppercase'>
+                {product.name}
+              </DrawerTitle>
+              <DrawerDescription className='text-sm text-gray-600'>
+                Product variations and stock details
+              </DrawerDescription>
+            </div>
+            <Button
+              variant='ghost'
+              size='sm'
+              onClick={onClose}
+              className='h-8 w-8 p-0 rounded-full hover:bg-gray-100'>
+              <X className='h-4 w-4' />
+            </Button>
+          </div>
+        </DrawerHeader>
+
+        <div className='px-4 pb-6 max-h-[calc(90vh-120px)] overflow-y-auto'>
+          {/* Product Summary */}
+          <div className='bg-gray-50 rounded-lg p-4 mb-4'>
+            <div className='flex items-center justify-between mb-3'>
+              <div className='flex items-center gap-2'>
+                <Package className='h-5 w-5 text-gray-600' />
+                <h3 className='font-medium text-gray-900'>Product Overview</h3>
+              </div>
+              <Badge
+                variant='outline'
+                className={
+                  product.active
+                    ? "border-green-200 text-green-700 bg-green-50"
+                    : "border-red-200 text-red-700 bg-red-50"
+                }>
+                {product.active ? "Active" : "Inactive"}
+              </Badge>
+            </div>
+
+            <div className='grid grid-cols-2 gap-4 text-sm'>
+              <div className='flex items-center gap-2'>
+                <Hash className='h-4 w-4 text-gray-500' />
+                <span className='text-gray-600'>SKU:</span>
+                <span className='font-mono font-medium'>{product.sku}</span>
+              </div>
+              <div className='flex items-center gap-2'>
+                <DollarSign className='h-4 w-4 text-gray-500' />
+                <span className='text-gray-600'>Base Price:</span>
+                <span className='font-semibold'>
+                  ৳{formatNumber(product.unitPrice)}
+                </span>
+              </div>
+              <div className='flex items-center gap-2'>
+                <Archive className='h-4 w-4 text-gray-500' />
+                <span className='text-gray-600'>Total Stock:</span>
+                <span className='font-semibold'>
+                  {formatNumber(product.quantity)}
+                </span>
+              </div>
+              <div className='flex items-center gap-2'>
+                <Activity className='h-4 w-4 text-gray-500' />
+                <span className='text-gray-600'>Variations:</span>
+                <span className='font-semibold'>
+                  {product.variation?.length || 0}
+                </span>
+              </div>
+            </div>
+          </div>
+
+          {/* Variations List */}
+          <div className='space-y-3'>
+            <div className='flex items-center gap-2 mb-4'>
+              <Activity className='h-5 w-5 text-blue-600' />
+              <h3 className='font-medium text-gray-900'>Product Variations</h3>
+              <Badge variant='outline' className='ml-auto'>
+                {product.variation?.length || 0} variants
+              </Badge>
+            </div>
+
+            {/* Debug info - remove this later */}
+            <div className='bg-yellow-50 border border-yellow-200 rounded p-2 mb-4 text-sm hidden'>
+              <p>
+                <strong>Debug Info:</strong>
+              </p>
+              <p>Has variation array: {product.variation ? "Yes" : "No"}</p>
+              <p>Variation length: {product.variation?.length || 0}</p>
+              <p>
+                Variation data:{" "}
+                {JSON.stringify(product.variation?.slice(0, 2) || "None")}
+              </p>
+              <p>
+                Has hasVariation flag: {product.hasVariation ? "Yes" : "No"}
+              </p>
+            </div>
+
+            {product.variation &&
+            Array.isArray(product.variation) &&
+            product.variation.length > 0 ? (
+              <div className='space-y-3'>
+                {product.variation.map((variation, index) => (
+                  <div
+                    key={variation.id || index}
+                    className='bg-white border border-gray-200 rounded-lg p-4 hover:shadow-sm transition-shadow'>
+                    {/* Variation Header */}
+                    <div className='flex items-start justify-between mb-3'>
+                      <div className='flex-1'>
+                        <h4 className='font-semibold text-gray-900 mb-1'>
+                          {variation.name || variation.title}
+                        </h4>
+                        <div className='flex items-center gap-2 text-sm text-gray-600'>
+                          <Hash className='h-3 w-3' />
+                          <span className='font-mono'>{variation.sku}</span>
+                        </div>
+                      </div>
+                      <Badge
+                        className={`${getStockStatusColor(
+                          variation.quantity
+                        )} text-xs`}>
+                        {getStockStatusText(variation.quantity)}
+                      </Badge>
+                    </div>
+
+                    {/* Variation Details */}
+                    <div className='grid grid-cols-2 gap-3 mb-3'>
+                      {variation.size && (
+                        <div className='flex items-center gap-2 text-sm'>
+                          <Ruler className='h-3 w-3 text-gray-500' />
+                          <span className='text-gray-600'>Size:</span>
+                          <span className='font-medium'>{variation.size}</span>
+                        </div>
+                      )}
+                      {variation.color && (
+                        <div className='flex items-center gap-2 text-sm'>
+                          <Palette className='h-3 w-3 text-gray-500' />
+                          <span className='text-gray-600'>Color:</span>
+                          <span className='font-medium'>{variation.color}</span>
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Price and Stock */}
+                    <div className='grid grid-cols-2 gap-3 pt-3 border-t border-gray-100'>
+                      <div className='text-center p-2 bg-blue-50 rounded-md'>
+                        <DollarSign className='h-4 w-4 text-blue-600 mx-auto mb-1' />
+                        <p className='font-bold text-sm text-blue-800'>
+                          ৳{formatNumber(variation.unitPrice)}
+                        </p>
+                        <p className='text-xs text-blue-600'>Price</p>
+                      </div>
+                      <div className='text-center p-2 bg-green-50 rounded-md'>
+                        <Archive className='h-4 w-4 text-green-600 mx-auto mb-1' />
+                        <p className='font-bold text-sm text-green-800'>
+                          {formatNumber(variation.quantity)}
+                        </p>
+                        <p className='text-xs text-green-600'>Stock</p>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className='text-center py-8 text-gray-500'>
+                <Activity className='h-12 w-12 text-gray-300 mx-auto mb-3' />
+                <p className='text-sm font-medium mb-1'>No Variations</p>
+                <p className='text-xs'>
+                  This product has no variations configured
+                </p>
+              </div>
+            )}
+          </div>
+        </div>
+
+        <DrawerFooter className='pt-4 border-t'>
+          <Button onClick={onClose} variant='outline' className='w-full'>
+            Close
+          </Button>
+        </DrawerFooter>
+      </DrawerContent>
+    </Drawer>
+  );
+};
 
 interface Props {
   handleEditProduct: (id: string) => void;
@@ -128,6 +349,9 @@ const ProductList: React.FC<Props> = ({ handleEditProduct }) => {
   const [showFilters, setShowFilters] = useState(true);
   const [selectedTab, setSelectedTab] = useState("all");
   const [isMobileSummaryOpen, setIsMobileSummaryOpen] = useState(false);
+  const [isVariationDrawerOpen, setIsVariationDrawerOpen] = useState(false);
+  const [selectedProductForVariations, setSelectedProductForVariations] =
+    useState<IProduct | null>(null);
 
   const getProductSummaryDetails = async () => {
     const response = await getProductSummary();
@@ -193,6 +417,16 @@ const ProductList: React.FC<Props> = ({ handleEditProduct }) => {
     );
   };
 
+  const handleOpenVariationDrawer = (product: IProduct) => {
+    setSelectedProductForVariations(product);
+    setIsVariationDrawerOpen(true);
+  };
+
+  const handleCloseVariationDrawer = () => {
+    setIsVariationDrawerOpen(false);
+    setSelectedProductForVariations(null);
+  };
+
   const renderMobileProductView = (product: IProduct, key: number) => {
     return (
       <SingleProductCardItem
@@ -207,10 +441,15 @@ const ProductList: React.FC<Props> = ({ handleEditProduct }) => {
         unitPrice={product?.unitPrice}
         totalSold={product?.sold ?? []}
         totalReturned={product?.returned ?? 0}
-        variations={product?.variantList ?? ["No Variant"]}
+        variations={
+          product?.variation && product?.variation.length > 0
+            ? product.variation.map((v) => v.name || v.title || "Variant")
+            : ["No Variant"]
+        }
         handleUpdateProduct={handleEditProduct}
         deleteExistingProduct={deleteProductData}
         updatedAt={product?.timestamps?.updatedAt}
+        onViewVariations={() => handleOpenVariationDrawer(product)}
       />
     );
   };
@@ -566,16 +805,23 @@ const ProductList: React.FC<Props> = ({ handleEditProduct }) => {
                     unitPrice={product.unitPrice}
                     totalSold={product.sold ?? []}
                     totalReturned={product.returned ?? 0}
-                    variations={product.variantList ?? ["No Variant"]}
+                    variations={
+                      product.variation && product.variation.length > 0
+                        ? product.variation.map(
+                            (v) => v.name || v.title || "Variant"
+                          )
+                        : ["No Variant"]
+                    }
                     updatedAt={
                       product.timestamps?.updatedAt || new Date().toISOString()
                     }
                     onEdit={handleEditProduct}
                     onDelete={deleteProductData}
+                    onViewVariations={() => handleOpenVariationDrawer(product)}
                   />
                 ))}
               </div>
-              
+
               {/* Mobile Pagination */}
               {inputValue === "" && (
                 <div className='bg-white rounded-xl border border-gray-200 p-4 mt-4 mb-20 shadow-sm'>
@@ -592,7 +838,7 @@ const ProductList: React.FC<Props> = ({ handleEditProduct }) => {
                     </span>{" "}
                     products
                   </div>
-                  
+
                   {/* Pagination Controls */}
                   <div className='flex items-center justify-between gap-4'>
                     <Button
@@ -604,7 +850,7 @@ const ProductList: React.FC<Props> = ({ handleEditProduct }) => {
                       <ChevronLeft className='h-4 w-4' />
                       Previous
                     </Button>
-                    
+
                     {/* Page indicator */}
                     <div className='flex items-center gap-2'>
                       <span className='text-sm font-medium text-gray-700'>
@@ -629,7 +875,7 @@ const ProductList: React.FC<Props> = ({ handleEditProduct }) => {
                         </SelectContent>
                       </Select>
                     </div>
-                    
+
                     <Button
                       disabled={currentPageNum >= totalPages}
                       variant='outline'
@@ -990,7 +1236,13 @@ const ProductList: React.FC<Props> = ({ handleEditProduct }) => {
                                       totalSold={product?.sold ?? []}
                                       totalReturned={product?.returned ?? 0}
                                       variations={
-                                        product?.variantList ?? ["No Variant"]
+                                        product?.variation &&
+                                        product?.variation.length > 0
+                                          ? product.variation.map(
+                                              (v) =>
+                                                v.name || v.title || "Variant"
+                                            )
+                                          : ["No Variant"]
                                       }
                                       handleUpdateProduct={handleEditProduct}
                                       deleteExistingProduct={deleteProductData}
@@ -1596,6 +1848,13 @@ const ProductList: React.FC<Props> = ({ handleEditProduct }) => {
       <div className='hidden sm:block w-full space-y-4 md:p-4'>
         {/* Desktop content will be shown through renderDesktopView */}
       </div>
+
+      {/* Product Variation Drawer */}
+      <ProductVariationDrawer
+        isOpen={isVariationDrawerOpen}
+        onClose={handleCloseVariationDrawer}
+        product={selectedProductForVariations}
+      />
     </>
   );
 };

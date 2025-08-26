@@ -156,7 +156,7 @@ export function ChatSidebar({
 
   return (
     <div
-      className={`w-80 bg-white border-r border-gray-100 flex flex-col ${className}`}>
+      className={`w-full sm:w-80 bg-white border-r border-gray-100 flex flex-col ${className}`}>
       {/* Simple Header */}
       <div className='p-4 border-b border-gray-100'>
         <div className='flex items-center justify-between mb-4'>

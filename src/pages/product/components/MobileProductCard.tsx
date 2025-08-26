@@ -16,6 +16,7 @@ import {
   Tag,
   Hash,
   Calendar,
+  AlignJustify,
 } from "lucide-react";
 import { Badge } from "../../../components/ui/badge";
 import { Button } from "../../../components/ui/button";
@@ -45,6 +46,7 @@ interface MobileProductCardProps {
   updatedAt: string;
   onEdit: (id: string) => void;
   onDelete: (id: string) => void;
+  onViewVariations?: () => void;
 }
 
 const MobileProductCard: React.FC<MobileProductCardProps> = ({
@@ -62,6 +64,7 @@ const MobileProductCard: React.FC<MobileProductCardProps> = ({
   updatedAt,
   onEdit,
   onDelete,
+  onViewVariations,
 }) => {
   const { hasRequiredPermission, hasSomePermissionsForPage } = useRoleCheck();
 
@@ -182,7 +185,7 @@ const MobileProductCard: React.FC<MobileProductCardProps> = ({
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align='end' className='w-40'>
-                  <DropdownMenuItem onClick={() => {}}>
+                  <DropdownMenuItem onClick={onViewVariations}>
                     <Eye className='h-4 w-4 mr-2' />
                     View Details
                   </DropdownMenuItem>
@@ -252,10 +255,12 @@ const MobileProductCard: React.FC<MobileProductCardProps> = ({
             <p className='text-[9px] text-orange-600'>Return</p>
           </div>
 
-          <div className='text-center p-1 bg-purple-50 rounded-md'>
+          <div
+            className='text-center p-1 bg-purple-50 rounded-md cursor-pointer hover:bg-purple-100 transition-colors touch-manipulation'
+            onClick={onViewVariations}>
             <Activity className='h-2.5 w-2.5 text-purple-600 mx-auto mb-0.5' />
             <p className='font-bold text-xs text-purple-800'>
-              {variations.length}
+              {variations.length || 0}
             </p>
             <p className='text-[9px] text-purple-600'>Variant</p>
           </div>
@@ -267,15 +272,17 @@ const MobileProductCard: React.FC<MobileProductCardProps> = ({
             <Calendar className='h-2.5 w-2.5' />
             <span>{dayjs(updatedAt).format("MMM D")}</span>
           </div>
-          {variations.length > 0 && variations[0] !== "No Variant" && (
-            <Badge
-              variant='outline'
-              className='text-[9px] px-1 py-0 bg-gray-50 border-gray-200 h-4'>
-              {variations.length > 1
-                ? `${variations.length} variants`
-                : variations[0].substring(0, 8)}
-            </Badge>
-          )}
+
+          <Badge
+            variant='outline'
+            onClick={onViewVariations}
+            className='text-[9px] px-1 py-0 bg-gray-50 border-gray-200 h-4 cursor-pointer hover:bg-gray-100 transition-colors touch-manipulation'>
+            {variations.length > 1 ? (
+              `${variations.length} variants`
+            ) : (
+              <AlignJustify className='h-2.5 w-2.5 mr-0.5' />
+            )}
+          </Badge>
         </div>
       </div>
     </div>

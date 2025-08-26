@@ -1,4 +1,4 @@
-import React, { useRef } from "react";
+import React, { useEffect, useRef } from "react";
 import { Button } from "../../components/ui/button";
 import { Textarea } from "../../components/ui/textarea";
 import { Badge } from "../../components/ui/badge";
@@ -25,12 +25,8 @@ import { ChatSidebar } from "../../components/chat-sidebar";
 import { useChatData } from "../../hooks/useChatDataSimple";
 import { useChatSocket } from "../../hooks/useChatSocket";
 import { ChatErrorBoundary } from "../../components/ChatErrorBoundary";
-import {
-  Drawer,
-  DrawerContent,
-  DrawerHeader,
-  DrawerTitle,
-} from "../../components/ui/drawer";
+
+import { Sheet, SheetContent, SheetHeader } from "../../components/ui/sheet";
 
 // Local interface for component props
 interface LocalMessage {
@@ -192,13 +188,15 @@ const MobileDrawer: React.FC<{
   ticketsError,
 }) => {
   return (
-    <Drawer open={isOpen} onOpenChange={onOpenChange}>
-      <DrawerContent className='w-80 sm:w-96 p-0 z-50' style={{ zIndex: 1000 }}>
-        <DrawerHeader className='p-4 border-b bg-white'>
-          <DrawerTitle className='text-left text-lg font-semibold'>
+    <Sheet open={isOpen} onOpenChange={onOpenChange}>
+      <SheetContent
+        className='w-full sm:w-full p-0 z-50'
+        style={{ zIndex: 1000 }}>
+        <SheetHeader className='p-4 border-b bg-white'>
+          <SheetHeader className='text-left text-lg font-semibold'>
             Support Tickets
-          </DrawerTitle>
-        </DrawerHeader>
+          </SheetHeader>
+        </SheetHeader>
         <div className='h-[calc(100vh-80px)] overflow-hidden bg-white'>
           <ChatSidebar
             tickets={tickets}
@@ -208,8 +206,8 @@ const MobileDrawer: React.FC<{
             error={ticketsError}
           />
         </div>
-      </DrawerContent>
-    </Drawer>
+      </SheetContent>
+    </Sheet>
   );
 };
 
@@ -845,6 +843,10 @@ const ChatPage: React.FC = () => {
     }
   };
 
+  useEffect(() => {
+    console.log("list:", isTicketListOpen);
+  }, [isTicketListOpen]);
+
   const handleOpenTicketList = React.useCallback(() => {
     console.log("Opening ticket list sheet...");
     setIsTicketListOpen(true);
@@ -922,20 +924,19 @@ const ChatPage: React.FC = () => {
         </div>
 
         {/* Mobile Drawer - Only shown when ticket is selected */}
-        {selectedTicket && (
-          <MobileDrawer
-            isOpen={isTicketListOpen}
-            onOpenChange={(open) => {
-              console.log("Sheet open state changed:", open);
-              setIsTicketListOpen(open);
-            }}
-            tickets={tickets}
-            selectedTicket={selectedTicket}
-            onTicketSelect={handleTicketSelectAndClose}
-            ticketsLoading={ticketsLoading}
-            ticketsError={ticketsError}
-          />
-        )}
+
+        <MobileDrawer
+          isOpen={isTicketListOpen}
+          onOpenChange={(open) => {
+            console.log("Sheet open state changed:", open);
+            setIsTicketListOpen(open);
+          }}
+          tickets={tickets}
+          selectedTicket={selectedTicket}
+          onTicketSelect={handleTicketSelectAndClose}
+          ticketsLoading={ticketsLoading}
+          ticketsError={ticketsError}
+        />
       </div>
     </ChatErrorBoundary>
   );

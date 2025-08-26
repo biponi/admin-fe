@@ -30,6 +30,17 @@ import { Badge } from "../../../components/ui/badge";
 import PlaceHolderImage from "../../../assets/placeholder.svg";
 import { Button } from "../../../components/ui/button";
 import { Textarea } from "../../../components/ui/textarea";
+import {
+  Drawer,
+  DrawerClose,
+  DrawerContent,
+  DrawerDescription,
+  DrawerFooter,
+  DrawerHeader,
+  DrawerTitle,
+} from "../../../components/ui/drawer";
+import { ScrollArea } from "../../../components/ui/scroll-area";
+import { useIsMobile } from "../../../hooks/use-mobile";
 
 interface Props {
   open?: boolean;
@@ -64,6 +75,7 @@ const UpdateCategory: React.FC<Props> = ({
   createCategory,
   editExistingCategory,
 }) => {
+  const isMobile = useIsMobile();
   const [image, setImage] = useState<File | null>(null);
   const [existingCategory, setExistingCategory] = useState<
     ICategory | ICreateCategory | null
@@ -352,6 +364,44 @@ const UpdateCategory: React.FC<Props> = ({
       </Card>
     );
   };
+
+  if (isMobile)
+    return (
+      <Drawer open={open} onOpenChange={(open) => handleOpenChange(open)}>
+        <DrawerContent>
+          <ScrollArea className='h-[calc(100vh-200px)] p-2'>
+            <DrawerHeader>
+              <DrawerTitle>
+                {" "}
+                {isNewCategory ? "Create Category" : "Update Category"}
+              </DrawerTitle>
+              <DrawerDescription>{`Configure your category settings. Categories can be nested to create hierarchical organization. Click ${
+                isNewCategory ? "create" : "update"
+              } when you're done.`}</DrawerDescription>
+            </DrawerHeader>
+
+            {renderFormView()}
+          </ScrollArea>
+          <DrawerFooter className='flex flex-col w-full bg-primary/10 rounded-t-xl space-y-3 p-8'>
+            <DrawerClose>
+              <Button
+                className='w-full mb-4'
+                disabled={!!!existingCategory?.name || loading}
+                onClick={() => handleSubmit()}>
+                {loading
+                  ? "Processing..."
+                  : isNewCategory
+                  ? "Create Category"
+                  : "Update Category"}
+              </Button>
+              <Button className='w-full' variant='destructive'>
+                Cancel
+              </Button>
+            </DrawerClose>
+          </DrawerFooter>
+        </DrawerContent>
+      </Drawer>
+    );
 
   return (
     <Dialog open={open} onOpenChange={(open) => handleOpenChange(open)}>

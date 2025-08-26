@@ -58,6 +58,47 @@ const MobileOrderProductSearch: React.FC<MobileOrderProductSearchProps> = ({
 
   const debouncedQuery = useDebounce(query, 500);
 
+  // Calculate delivery charge based on location
+  // This function is now handled in the parent CreateOrder component
+  // const calculateDeliveryCharge = (district: string, division: string): number => {
+  //   let deliveryChargeX = 150; // Default charge
+  //
+  //   if (
+  //     district.toLowerCase().includes("dhaka") &&
+  //     division.toLowerCase().includes("dhaka")
+  //   ) {
+  //     deliveryChargeX = 80;
+  //   } else if (
+  //     division.toLowerCase().includes("dhaka") &&
+  //     ["gazipur", "tongi", "narayanganj", "savar"].includes(
+  //       district.replace(/\s*\(.*?\)\s*/g, "").toLowerCase()
+  //     )
+  //   ) {
+  //     deliveryChargeX = 130;
+  //   } else {
+  //     deliveryChargeX = 150;
+  //   }
+  //
+  //   return deliveryChargeX;
+  // };
+
+  // Function to update delivery charge based on location
+  // This function can be called from parent components when customer info changes
+  // const updateDeliveryChargeFromLocation = (customerInfo: any) => {
+  //   if (customerInfo?.shipping?.district && customerInfo?.shipping?.division) {
+  //     const calculatedCharge = calculateDeliveryCharge(
+  //       customerInfo.shipping.district.name || customerInfo.shipping.district,
+  //       customerInfo.shipping.division.name || customerInfo.shipping.division
+  //     );
+  //
+  //     setTransaction(prev => ({
+  //       ...prev,
+  //       deliveryCharge: calculatedCharge
+  //     }));
+  //     setTempDeliveryCharge(calculatedCharge.toString());
+  //   }
+  // };
+
   useEffect(() => {
     if (debouncedQuery.trim()) {
       handleProductSearch();
@@ -204,7 +245,11 @@ const MobileOrderProductSearch: React.FC<MobileOrderProductSearchProps> = ({
                     <span className='text-sm font-medium'>{product.name}</span>
                     {product.selectedVariant && (
                       <Badge variant='outline' className='ml-2 text-xs'>
-                        {String(product.selectedVariant)}
+                        {product.selectedVariant.color}
+                        {product.selectedVariant.color &&
+                          product.selectedVariant.size &&
+                          " • "}
+                        {product.selectedVariant.size}
                       </Badge>
                     )}
                     <div className='text-xs text-gray-500'>

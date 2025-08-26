@@ -913,7 +913,7 @@ const OrderProductList: React.FC<Props> = ({
 
       {/* Order Summary Section */}
       <Card className='border-2 border-slate-200 shadow-lg bg-white'>
-        <CardHeader className='bg-gradient-to-r from-slate-50 via-blue-50 to-slate-50 border-b border-slate-200 rounded-lg'>
+        <CardHeader className='hidden bg-gradient-to-r from-slate-50 via-blue-50 to-slate-50 border-b border-slate-200 rounded-lg'>
           <CardTitle className='flex items-center gap-3 text-xl text-slate-800'>
             <div className='w-8 h-8 bg-gradient-to-r from-slate-100 to-blue-100 rounded-full flex items-center justify-center'>
               <Receipt className='w-5 h-5 text-slate-600' />
@@ -924,7 +924,7 @@ const OrderProductList: React.FC<Props> = ({
             Review pricing details and proceed to next step
           </CardDescription>
         </CardHeader>
-        <CardContent className='p-6 bg-gradient-to-b from-white to-slate-50'>
+        <CardContent className='hidden p-6 bg-gradient-to-b from-white to-slate-50'>
           {renderTransectionData()}
         </CardContent>
         <CardFooter className='bg-gray-50 border-t p-6'>

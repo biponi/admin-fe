@@ -6,8 +6,6 @@ import React, {
   useEffect,
 } from "react";
 import { socketService } from "../services/socketService";
-import { hasPagePermission } from "../utils/helperFunction";
-import { useSelector } from "react-redux";
 
 export interface Notification {
   _id: string;
@@ -159,8 +157,6 @@ interface NotificationProviderProps {
 export const NotificationProvider: React.FC<NotificationProviderProps> = ({
   children,
 }) => {
-  const userStore = useSelector((state: any) => state?.user);
-
   const [state, dispatch] = useReducer(notificationReducer, initialState);
 
   // Play notification sound
@@ -179,11 +175,6 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({
   // Handle incoming notifications from socket
   const handleNewNotification = useCallback(
     (notification: Notification) => {
-      if (
-        !userStore ||
-        !hasPagePermission("chat", "view", userStore?.permissions)
-      )
-        return;
       console.log(
         "🔔 handleNewNotification: Processing notification:",
         notification

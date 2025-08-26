@@ -40,16 +40,20 @@ const MobileOrderProductCard: React.FC<MobileOrderProductCardProps> = ({
   const [showDetails, setShowDetails] = useState(false);
 
   // Use the same variation logic as desktop - check for hasVariation and variation array
-  const hasVariants = product.hasVariation && product.variation && product.variation.length > 0;
-  const availableVariants = hasVariants ? product.variation.filter(v => v?.quantity > 0) : [];
+  const hasVariants =
+    product.hasVariation && product.variation && product.variation.length > 0;
+  const availableVariants = hasVariants
+    ? product.variation.filter((v) => v?.quantity > 0)
+    : [];
 
   const handleAddToOrder = () => {
     if (hasVariants && !variant) {
       // Don't allow adding without selecting a variant
       return;
     }
-    
-    const unitPrice = hasVariants && variant ? variant.unitPrice : product.unitPrice;
+
+    const unitPrice =
+      hasVariants && variant ? variant.unitPrice : product.unitPrice;
     const orderProduct: IOrderProduct = {
       ...product,
       selectedQuantity: quantity,
@@ -119,13 +123,13 @@ const MobileOrderProductCard: React.FC<MobileOrderProductCardProps> = ({
 
           {/* Product Info */}
           <div className='flex-1 min-w-0'>
-            <h3 className='font-semibold text-gray-900 text-sm leading-tight line-clamp-2 mb-1'>
+            <h3 className=' uppercase font-semibold text-gray-900 text-sm leading-tight line-clamp-2 mb-1'>
               {product.name}
             </h3>
             <div className='flex items-center gap-2 mb-1'>
               <Badge
                 variant='outline'
-                className='text-xs px-1.5 py-0.5 bg-gray-50'>
+                className='text-xs px-1.5 py-0.5 bg-gray-50 hidden'>
                 {product.sku}
               </Badge>
               <Badge
@@ -137,10 +141,14 @@ const MobileOrderProductCard: React.FC<MobileOrderProductCardProps> = ({
             <div className='flex items-center justify-between'>
               <div>
                 <span className='text-lg font-bold text-gray-900'>
-                  ৳{hasVariants && variant ? variant.unitPrice : product.unitPrice}
+                  ৳
+                  {hasVariants && variant
+                    ? variant.unitPrice
+                    : product.unitPrice}
                 </span>
                 <div className='text-xs text-gray-500'>
-                  Stock: {hasVariants && variant ? variant.quantity : product.quantity}
+                  Stock:{" "}
+                  {hasVariants && variant ? variant.quantity : product.quantity}
                 </div>
               </div>
               <Button
@@ -172,7 +180,7 @@ const MobileOrderProductCard: React.FC<MobileOrderProductCardProps> = ({
                   value={variant ? `${variant.color}-${variant.size}` : ""}
                   onValueChange={(value) => {
                     const selectedVariant = availableVariants.find(
-                      v => `${v.color}-${v.size}` === value
+                      (v) => `${v.color}-${v.size}` === value
                     );
                     setVariant(selectedVariant || null);
                     // Reset quantity when variant changes
@@ -185,7 +193,9 @@ const MobileOrderProductCard: React.FC<MobileOrderProductCardProps> = ({
                   </SelectTrigger>
                   <SelectContent>
                     {availableVariants.map((variant, index) => (
-                      <SelectItem key={index} value={`${variant.color}-${variant.size}`}>
+                      <SelectItem
+                        key={index}
+                        value={`${variant.color}-${variant.size}`}>
                         <div className='flex items-center gap-2 text-xs'>
                           <span className='font-medium'>{variant.color}</span>
                           {variant.size && (
@@ -194,7 +204,9 @@ const MobileOrderProductCard: React.FC<MobileOrderProductCardProps> = ({
                               <span>{variant.size}</span>
                             </>
                           )}
-                          <span className='text-gray-500'>({variant.quantity} left)</span>
+                          <span className='text-gray-500'>
+                            ({variant.quantity} left)
+                          </span>
                         </div>
                       </SelectItem>
                     ))}
@@ -247,7 +259,12 @@ const MobileOrderProductCard: React.FC<MobileOrderProductCardProps> = ({
             <div className='flex items-center justify-between pt-2 border-t border-gray-100'>
               <span className='text-xs text-gray-600'>Total:</span>
               <span className='font-bold text-primary'>
-                ৳{((hasVariants && variant ? variant.unitPrice : product.unitPrice) * quantity).toFixed(2)}
+                ৳
+                {(
+                  (hasVariants && variant
+                    ? variant.unitPrice
+                    : product.unitPrice) * quantity
+                ).toFixed(2)}
               </span>
             </div>
           </div>
@@ -257,7 +274,11 @@ const MobileOrderProductCard: React.FC<MobileOrderProductCardProps> = ({
         <div className='mt-3 pt-3 border-t border-gray-100'>
           <Button
             onClick={handleAddToOrder}
-            disabled={!product.active || getMaxQuantity() < 1 || (hasVariants && !variant)}
+            disabled={
+              !product.active ||
+              getMaxQuantity() < 1 ||
+              (hasVariants && !variant)
+            }
             className={cn(
               "w-full h-8 text-xs font-semibold rounded-lg transition-all duration-200",
               isSelected

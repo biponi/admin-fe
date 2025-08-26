@@ -623,7 +623,7 @@ const AddProduct: React.FC<Props> = ({ createProduct, categories }) => {
               <Button
                 onClick={() => createProductAndContinue()}
                 variant='secondary'
-                className='min-w-[160px]'>
+                className='min-w-[160px] hidden sm:inline-flex'>
                 Save & Continue
               </Button>
             </div>

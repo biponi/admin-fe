@@ -1,6 +1,6 @@
 {
   "name": "prior-admin-fe",
-  "version": "1.1.1",
+  "version": "1.2.1",
   "private": true,
   "engines": {
     "node": ">=20.0.0"
@@ -110,16 +110,20 @@
   },
   "browserslist": {
     "production": [
-      ">0.2%",
-      "not dead",
-      "not op_mini all",
-      "iOS >= 12",
-      "Safari >= 12"
+      "last 3 Chrome versions",
+      "last 3 Firefox versions",
+      "last 3 Edge major versions",
+      "last 3 Safari major versions",
+      "iOS >= 14",
+      "last 3 iOS major versions",
+      "last 3 Android major versions",
+      "Firefox ESR",
+      "not dead"
     ],
     "development": [
-      "last 1 chrome version",
-      "last 1 firefox version",
-      "last 1 safari version"
+      "last 3 chrome version",
+      "last 3 firefox version",
+      "last 3 safari version"
     ]
   },
   "devDependencies": {

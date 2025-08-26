@@ -95,8 +95,9 @@ const CreateOrder = () => {
     setCurrentStep(1);
   };
 
-  const handleCustomerDataChange = (customerData: any) => {
+  const handleCustomerDataChange = (customerData: any, transaction: ITransection) => {
     setCustomerInformation(customerData);
+    setTransectionData(transaction);
     setCurrentStep(2);
   };
 
@@ -186,6 +187,8 @@ const CreateOrder = () => {
             <CustomerInformation
               handleBack={handleStepBack}
               handleCustomerDataChange={handleCustomerDataChange}
+              initialTransaction={transectionData}
+              orderTotal={transectionData?.totalPrice || 0}
             />
           </div>
         );

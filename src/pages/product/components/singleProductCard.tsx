@@ -40,6 +40,7 @@ interface Props {
   totalSold: { status: string; sold: number }[];
   handleUpdateProduct: (id: string) => void;
   deleteExistingProduct: (id: string) => void;
+  onViewVariations?: () => void;
 }
 
 const SingleProductCardItem: React.FC<Props> = ({
@@ -57,6 +58,7 @@ const SingleProductCardItem: React.FC<Props> = ({
   totalReturned,
   handleUpdateProduct,
   deleteExistingProduct,
+  onViewVariations,
 }) => {
   const { hasSomePermissionsForPage, hasRequiredPermission } = useRoleCheck();
   const dialogBtn = useRef(null);
@@ -177,11 +179,11 @@ const SingleProductCardItem: React.FC<Props> = ({
 
             <Badge
               variant={"outline"}
-              className=' flex flex-col'
-              onClick={() => {
+              className=' flex flex-col cursor-pointer hover:bg-gray-100 transition-colors'
+              onClick={onViewVariations || (() => {
                 //@ts-ignore
                 if (!!variantBtn) variantBtn?.current.click();
-              }}>
+              })}>
               <Package className=' size-4 mr-1 ' /> {variations.length ?? 0}
             </Badge>
           </div>
