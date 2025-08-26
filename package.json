@@ -1,6 +1,6 @@
 {
   "name": "prior-admin-fe",
-  "version": "1.0.1",
+  "version": "1.1.1",
   "private": true,
   "engines": {
     "node": ">=20.0.0"
@@ -110,7 +110,9 @@
     "production": [
       ">0.2%",
       "not dead",
-      "not op_mini all"
+      "not op_mini all",
+      "iOS >= 10",
+      "Safari >= 10"
     ],
     "development": [
       "last 1 chrome version",

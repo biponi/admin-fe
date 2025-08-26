@@ -144,21 +144,23 @@ const DashboardPage: React.FC = () => {
     //eslint-disable-next-line
   }, [selectedTab]);
   return (
-    <div className='p-6'>
-      <h1 className='text-3xl font-bold mb-4'>Dashboard</h1>
-      <Tabs
-        value={selectedTab}
-        onValueChange={(value: string) => setRange(value)}>
-        <TabsList>
-          <TabsTrigger value='today'>Today</TabsTrigger>
-          <TabsTrigger value='lastWeek'>Last Week</TabsTrigger>
-          <TabsTrigger value='lastMonth'>Last Month</TabsTrigger>
-          <TabsTrigger value='last6Months'>Last 6 Months</TabsTrigger>
-        </TabsList>
-      </Tabs>
+    <div className='p-3 sm:p-6'>
+      <div className='mb-4 sm:mb-6'>
+        <h1 className='text-2xl sm:text-3xl font-bold mb-3 sm:mb-4'>Dashboard</h1>
+        <Tabs
+          value={selectedTab}
+          onValueChange={(value: string) => setRange(value)}>
+          <TabsList className='grid w-full grid-cols-2 sm:grid-cols-4 h-9 sm:h-10'>
+            <TabsTrigger value='today' className='text-xs sm:text-sm h-full touch-manipulation'>Today</TabsTrigger>
+            <TabsTrigger value='lastWeek' className='text-xs sm:text-sm h-full touch-manipulation'>This Week</TabsTrigger>
+            <TabsTrigger value='lastMonth' className='text-xs sm:text-sm h-full touch-manipulation'>This Month</TabsTrigger>
+            <TabsTrigger value='last6Months' className='text-xs sm:text-sm h-full touch-manipulation'>6 Months</TabsTrigger>
+          </TabsList>
+        </Tabs>
+      </div>
 
-      {/* Metrics Cards */}
-      <div className='mt-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4'>
+      {/* Metrics Cards - Mobile Optimized */}
+      <div className='mb-4 sm:mb-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4'>
         <TrendCard
           title='Total Orders'
           dataKey='count'
@@ -191,12 +193,16 @@ const DashboardPage: React.FC = () => {
 
       <SecondPage selectedTab={selectedTab} />
 
-      {/* Tables */}
-      <div className='mt-6 grid grid-cols-1 gap-2 md:grid-cols-2 md:gap-6 '>
+      {/* Mobile-Friendly Tables */}
+      <div className='grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6'>
+        {/* Recent Orders - Mobile Cards */}
         <Card>
-          <CardHeader>
-            <CardTitle>Recent Orders</CardTitle>
-            <CardContent>
+          <CardHeader className='pb-3'>
+            <CardTitle className='text-lg sm:text-xl'>Recent Orders</CardTitle>
+          </CardHeader>
+          <CardContent className='p-0'>
+            {/* Desktop Table */}
+            <div className='hidden sm:block overflow-x-auto'>
               <Table>
                 <TableHeader>
                   <TableRow>
@@ -208,7 +214,7 @@ const DashboardPage: React.FC = () => {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {orders.slice(0, 20).map((order, index) => (
+                  {orders.slice(0, 10).map((order, index) => (
                     <TableRow key={order.id}>
                       <TableCell>{index + 1}</TableCell>
                       <TableCell>{order.id}</TableCell>
@@ -232,39 +238,98 @@ const DashboardPage: React.FC = () => {
                   ))}
                 </TableBody>
               </Table>
-            </CardContent>
-          </CardHeader>
+            </div>
+            
+            {/* Mobile Card List */}
+            <div className='sm:hidden space-y-3 p-4'>
+              {orders.slice(0, 8).map((order, index) => (
+                <div key={order.id} className='bg-gray-50 rounded-lg p-3 space-y-2'>
+                  <div className='flex justify-between items-start'>
+                    <div>
+                      <p className='font-medium text-sm'>#{order.id}</p>
+                      <p className='text-xs text-gray-600'>{order.customer.name}</p>
+                    </div>
+                    <Badge
+                      variant={
+                        order?.status === "completed"
+                          ? "default"
+                          : order?.status === "shipped"
+                          ? "outline"
+                          : order?.status === "processing"
+                          ? "secondary"
+                          : "destructive"
+                      }
+                      className='text-xs'>
+                      {order.status}
+                    </Badge>
+                  </div>
+                  <div className='flex justify-between items-center'>
+                    <span className='text-xs text-gray-500'>Order #{index + 1}</span>
+                    <span className='font-semibold text-sm'>৳ {order.totalPrice.toFixed(2)}</span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </CardContent>
         </Card>
 
+        {/* Trending Products - Mobile Cards */}
         <Card>
-          <CardHeader>
-            <CardTitle>Trending Products</CardTitle>
+          <CardHeader className='pb-3'>
+            <CardTitle className='text-lg sm:text-xl'>Trending Products</CardTitle>
           </CardHeader>
-          <CardContent>
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableCell>#</TableCell>
-                  <TableCell>Product</TableCell>
-                  <TableCell>Variation</TableCell>
-                  <TableCell>Category</TableCell>
-                  <TableCell>Total Sales</TableCell>
-                  <TableCell>Estimate Amount</TableCell>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {trendingProducts.map((product, index) => (
-                  <TableRow key={product.id}>
-                    <TableCell>{index + 1}</TableCell>
-                    <TableCell>{product.productName}</TableCell>
-                    <TableCell>{product.variation}</TableCell>
-                    <TableCell>{product.categoryName}</TableCell>
-                    <TableCell>{product.totalSales}</TableCell>
-                    <TableCell>{product.totalRevenue}</TableCell>
+          <CardContent className='p-0'>
+            {/* Desktop Table */}
+            <div className='hidden sm:block overflow-x-auto'>
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableCell>#</TableCell>
+                    <TableCell>Product</TableCell>
+                    <TableCell>Variation</TableCell>
+                    <TableCell>Category</TableCell>
+                    <TableCell>Sales</TableCell>
+                    <TableCell>Amount</TableCell>
                   </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+                </TableHeader>
+                <TableBody>
+                  {trendingProducts.slice(0, 10).map((product, index) => (
+                    <TableRow key={product.id}>
+                      <TableCell>{index + 1}</TableCell>
+                      <TableCell className='max-w-32 truncate'>{product.productName}</TableCell>
+                      <TableCell>{product.variation}</TableCell>
+                      <TableCell>{product.categoryName}</TableCell>
+                      <TableCell>{product.totalSales}</TableCell>
+                      <TableCell>{product.totalRevenue}</TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
+            
+            {/* Mobile Card List */}
+            <div className='sm:hidden space-y-3 p-4'>
+              {trendingProducts.slice(0, 8).map((product, index) => (
+                <div key={product.id} className='bg-gray-50 rounded-lg p-3 space-y-2'>
+                  <div className='flex justify-between items-start'>
+                    <div className='flex-1 min-w-0'>
+                      <p className='font-medium text-sm truncate'>{product.productName}</p>
+                      <p className='text-xs text-gray-600'>{product.categoryName}</p>
+                    </div>
+                    <div className='text-right'>
+                      <p className='font-semibold text-sm'>{product.totalRevenue}</p>
+                      <p className='text-xs text-gray-500'>{product.totalSales} sales</p>
+                    </div>
+                  </div>
+                  {product.variation && (
+                    <div className='flex justify-between items-center'>
+                      <span className='text-xs text-gray-500'>#{index + 1}</span>
+                      <span className='text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded'>{product.variation}</span>
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
           </CardContent>
         </Card>
       </div>

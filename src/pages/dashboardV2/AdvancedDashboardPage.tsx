@@ -1328,31 +1328,31 @@ const AdvancedDashboardPage: React.FC = () => {
 
   return (
     <div className={getBackgroundClasses()}>
-      {/* Enhanced Header Section */}
+      {/* Enhanced Header Section - Mobile Optimized */}
       <header className='bg-white/80 backdrop-blur-sm shadow-sm border-b border-slate-200 sticky top-0 z-10'>
-        <div className='p-6 lg:p-8'>
-          <div className='flex flex-col space-y-6 lg:flex-row lg:items-center lg:justify-between lg:space-y-0'>
-            <div className='space-y-3'>
-              <div className='flex items-center space-x-3'>
+        <div className='p-3 sm:p-6 lg:p-8'>
+          <div className='flex flex-col space-y-4 sm:space-y-6 lg:flex-row lg:items-center lg:justify-between lg:space-y-0'>
+            <div className='space-y-2 sm:space-y-3'>
+              <div className='flex items-center space-x-2 sm:space-x-3'>
                 <div
-                  className='p-3 bg-gradient-to-r from-primary/20 to-primary/10 rounded-xl'
+                  className='p-2 sm:p-3 bg-gradient-to-r from-primary/20 to-primary/10 rounded-lg sm:rounded-xl'
                   aria-hidden='true'>
-                  <Activity className='h-8 w-8 text-primary' />
+                  <Activity className='h-5 w-5 sm:h-8 sm:w-8 text-primary' />
                 </div>
-                <div>
-                  <h1 className='text-lg font-bold bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text text-transparent'>
+                <div className='min-w-0 flex-1'>
+                  <h1 className='text-base sm:text-lg font-bold bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text text-transparent truncate'>
                     Advanced Analytics
                   </h1>
-                  <p className='text-muted-foreground text-sm mt-1'>
+                  <p className='text-muted-foreground text-xs sm:text-sm mt-1 line-clamp-1'>
                     Comprehensive business intelligence and insights
                   </p>
                 </div>
               </div>
             </div>
 
-            {/* Control Panel */}
+            {/* Control Panel - Mobile Optimized */}
             <nav
-              className='flex flex-col sm:flex-row items-start sm:items-center space-y-3 sm:space-y-0 sm:space-x-4'
+              className='flex flex-col sm:flex-row items-stretch sm:items-center space-y-2 sm:space-y-0 sm:space-x-3'
               aria-label='Dashboard controls'>
               <div
                 className='hidden lg:flex items-center space-x-2 text-sm text-muted-foreground px-4 py-2 bg-muted/50 rounded-full border'
@@ -1382,15 +1382,17 @@ const AdvancedDashboardPage: React.FC = () => {
                 }}
               />
 
-              <div className='flex space-x-2'>
+              <div className='flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-2'>
                 <Sheet>
                   <SheetTrigger asChild>
                     <Button
                       variant='outline'
-                      size='lg'
+                      size='sm'
+                      className='touch-manipulation h-9 sm:h-10 text-sm'
                       aria-label='Show chart explanations and calculations'>
-                      <HelpCircle className='mr-2 h-4 w-4' aria-hidden='true' />
-                      Help
+                      <HelpCircle className='mr-2 h-3 w-3 sm:h-4 sm:w-4' aria-hidden='true' />
+                      <span className='hidden sm:inline'>Help</span>
+                      <span className='sm:hidden'>Guide</span>
                     </Button>
                   </SheetTrigger>
                   <SheetContent className='md:min-w-[600px] md:max-w-[800px] overflow-y-auto'>
@@ -1400,7 +1402,8 @@ const AdvancedDashboardPage: React.FC = () => {
 
                 <Button
                   variant='outline'
-                  size='lg'
+                  size='sm'
+                  className='touch-manipulation h-9 sm:h-10 text-sm'
                   onClick={refreshData}
                   disabled={refreshing}
                   aria-label={
@@ -1408,13 +1411,14 @@ const AdvancedDashboardPage: React.FC = () => {
                   }>
                   {refreshing ? (
                     <Loader2
-                      className='animate-spin mr-2 h-4 w-4'
+                      className='animate-spin mr-2 h-3 w-3 sm:h-4 sm:w-4'
                       aria-hidden='true'
                     />
                   ) : (
-                    <RefreshCw className='mr-2 h-4 w-4' aria-hidden='true' />
+                    <RefreshCw className='mr-2 h-3 w-3 sm:h-4 sm:w-4' aria-hidden='true' />
                   )}
-                  Refresh
+                  <span className='hidden sm:inline'>Refresh</span>
+                  <span className='sm:hidden'>Update</span>
                 </Button>
 
                 {/* <Button
@@ -1430,21 +1434,21 @@ const AdvancedDashboardPage: React.FC = () => {
         </div>
       </header>
 
-      {/* Main Content */}
+      {/* Main Content - Mobile Optimized */}
       <main
-        className='p-6 lg:p-8 space-y-8'
+        className='p-3 sm:p-6 lg:p-8 space-y-4 sm:space-y-8'
         role='main'
         aria-label='Analytics dashboard content'>
         {error && !loading ? (
           <div className='space-y-8'>
-            <div className='text-center py-12'>
-              <div className='inline-flex items-center justify-center w-16 h-16 bg-destructive/10 rounded-full mb-4'>
-                <AlertCircle className='h-8 w-8 text-destructive' />
+            <div className='text-center py-8 sm:py-12'>
+              <div className='inline-flex items-center justify-center w-12 h-12 sm:w-16 sm:h-16 bg-destructive/10 rounded-full mb-4'>
+                <AlertCircle className='h-6 w-6 sm:h-8 sm:w-8 text-destructive' />
               </div>
-              <h3 className='text-xl font-semibold text-foreground mb-2'>
+              <h3 className='text-lg sm:text-xl font-semibold text-foreground mb-2'>
                 Unable to Load Analytics Data
               </h3>
-              <p className='text-muted-foreground mb-4 max-w-md mx-auto'>
+              <p className='text-sm sm:text-base text-muted-foreground mb-4 max-w-md mx-auto px-4'>
                 {error}
               </p>
               <div className='flex justify-center space-x-4'>
@@ -1465,21 +1469,21 @@ const AdvancedDashboardPage: React.FC = () => {
           </div>
         ) : loading ? (
           <div className='space-y-8'>
-            <div className='text-center py-12'>
-              <div className='inline-flex items-center justify-center w-16 h-16 bg-primary/10 rounded-full mb-4'>
-                <Loader2 className='h-8 w-8 text-primary animate-spin' />
+            <div className='text-center py-8 sm:py-12'>
+              <div className='inline-flex items-center justify-center w-12 h-12 sm:w-16 sm:h-16 bg-primary/10 rounded-full mb-4'>
+                <Loader2 className='h-6 w-6 sm:h-8 sm:w-8 text-primary animate-spin' />
               </div>
-              <h3 className='text-xl font-semibold text-foreground mb-2'>
+              <h3 className='text-lg sm:text-xl font-semibold text-foreground mb-2'>
                 Loading Advanced Analytics
               </h3>
-              <p className='text-muted-foreground'>
+              <p className='text-sm sm:text-base text-muted-foreground px-4'>
                 Analyzing your business data and generating insights...
               </p>
             </div>
             {/* Skeleton Loading */}
             <div>
-              <div className='h-6 bg-muted rounded w-48 mb-6 animate-pulse' />
-              <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-6'>
+              <div className='h-4 sm:h-6 bg-muted rounded w-32 sm:w-48 mb-3 sm:mb-6 animate-pulse' />
+              <div className='grid grid-cols-2 md:grid-cols-3 lg:grid-cols-3 xl:grid-cols-6 gap-3 sm:gap-6'>
                 {[...Array(6)].map((_, i) => (
                   <div key={i} className='space-y-3'>
                     <div className='h-32 bg-card rounded-xl animate-pulse border shadow-sm' />
@@ -1488,8 +1492,8 @@ const AdvancedDashboardPage: React.FC = () => {
               </div>
             </div>
             <div>
-              <div className='h-6 bg-muted rounded w-36 mb-6 animate-pulse' />
-              <div className='grid grid-cols-1 xl:grid-cols-3 gap-8'>
+              <div className='h-4 sm:h-6 bg-muted rounded w-24 sm:w-36 mb-3 sm:mb-6 animate-pulse' />
+              <div className='grid grid-cols-1 xl:grid-cols-3 gap-4 sm:gap-8'>
                 <div className='xl:col-span-2'>
                   <div className='h-96 bg-card rounded-xl animate-pulse border shadow-sm' />
                 </div>
@@ -1503,11 +1507,11 @@ const AdvancedDashboardPage: React.FC = () => {
             <section aria-labelledby='kpi-section'>
               <h2
                 id='kpi-section'
-                className='text-2xl font-bold mb-6 text-foreground'>
+                className='text-lg sm:text-2xl font-bold mb-3 sm:mb-6 text-foreground'>
                 Key Performance Indicators
               </h2>
               <div
-                className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6'
+                className='grid grid-cols-2 md:grid-cols-3 lg:grid-cols-3 gap-3 sm:gap-6'
                 role='region'
                 aria-label='Key performance metrics'>
                 {analyticsData.kpis.map((kpi, index) => (
@@ -1520,12 +1524,12 @@ const AdvancedDashboardPage: React.FC = () => {
             <section aria-labelledby='charts-section'>
               <h2
                 id='charts-section'
-                className='text-2xl font-bold mb-6 text-foreground'>
+                className='text-lg sm:text-2xl font-bold mb-3 sm:mb-6 text-foreground'>
                 Performance Trends & Analytics
               </h2>
 
-              {/* Primary Charts Grid - Following Implementation Guide */}
-              <div className='grid grid-cols-1 xl:grid-cols-3 gap-8 mb-8'>
+              {/* Primary Charts Grid - Mobile Optimized */}
+              <div className='grid grid-cols-1 xl:grid-cols-3 gap-4 sm:gap-8 mb-4 sm:mb-8'>
                 {/* Main Content: Daily Trends (spans 2 columns) */}
                 <div className='xl:col-span-2'>
                   <DailyTrendsChart
@@ -1543,8 +1547,8 @@ const AdvancedDashboardPage: React.FC = () => {
                 </div>
               </div>
 
-              {/* Secondary Charts Grid */}
-              <div className='grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-8 mb-8'>
+              {/* Secondary Charts Grid - Mobile Optimized */}
+              <div className='grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-4 sm:gap-8 mb-4 sm:mb-8'>
                 {/* Main Content: Top Products */}
                 <ProductRevenueChart
                   data={analyticsData.charts.topProductsRevenue}
@@ -1668,8 +1672,8 @@ const AdvancedDashboardPage: React.FC = () => {
                 />
               </div>
 
-              {/* Additional Sections - Time Heatmap & Order Funnel */}
-              <div className='grid grid-cols-1 xl:grid-cols-2 gap-8'>
+              {/* Additional Sections - Time Heatmap & Order Funnel - Mobile Optimized */}
+              <div className='grid grid-cols-1 xl:grid-cols-2 gap-4 sm:gap-8'>
                 <TimeHeatmapChart
                   data={analyticsData.charts.timeHeatmap}
                   title='Time Patterns'
@@ -1682,11 +1686,11 @@ const AdvancedDashboardPage: React.FC = () => {
             <section aria-labelledby='analytics-section'>
               <h2
                 id='analytics-section'
-                className='text-2xl font-bold mb-6 text-foreground'>
+                className='text-lg sm:text-2xl font-bold mb-3 sm:mb-6 text-foreground'>
                 Detailed Analytics
               </h2>
               <div
-                className='grid grid-cols-1 xl:grid-cols-2 gap-8'
+                className='grid grid-cols-1 xl:grid-cols-2 gap-4 sm:gap-8'
                 role='region'
                 aria-label='Detailed analytics tables'>
                 <TopCustomersTable
@@ -1698,8 +1702,8 @@ const AdvancedDashboardPage: React.FC = () => {
               </div>
             </section>
 
-            {/* Additional Insights - Payment Methods */}
-            <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6'>
+            {/* Additional Insights - Payment Methods - Mobile Optimized */}
+            <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-6'>
               <Card className='hover:shadow-lg transition-all duration-300'>
                 <CardHeader>
                   <div className='flex items-center space-x-3'>
@@ -1833,14 +1837,14 @@ const AdvancedDashboardPage: React.FC = () => {
             </div>
           </>
         ) : (
-          <div className='text-center py-12'>
-            <div className='inline-flex items-center justify-center w-16 h-16 bg-muted/10 rounded-full mb-4'>
-              <BarChart3 className='h-8 w-8 text-muted-foreground' />
+          <div className='text-center py-8 sm:py-12'>
+            <div className='inline-flex items-center justify-center w-12 h-12 sm:w-16 sm:h-16 bg-muted/10 rounded-full mb-4'>
+              <BarChart3 className='h-6 w-6 sm:h-8 sm:w-8 text-muted-foreground' />
             </div>
-            <h3 className='text-xl font-semibold text-foreground mb-2'>
+            <h3 className='text-lg sm:text-xl font-semibold text-foreground mb-2'>
               No Data Available
             </h3>
-            <p className='text-muted-foreground mb-4'>
+            <p className='text-sm sm:text-base text-muted-foreground mb-4 px-4'>
               No analytics data found for the selected date range.
             </p>
             <Button onClick={() => fetchAdvancedAnalytics()} variant='outline'>

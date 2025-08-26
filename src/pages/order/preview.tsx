@@ -404,7 +404,7 @@ const OrderPreview: React.FC<Props> = ({
     <div className='min-h-screen border-4 border-dashed rounded-xl'>
       <div className=' container max-w-full mx-auto px-4 sm:px-6 lg:px-8 py-8'>
         {/* Header */}
-        <div className='mb-8'>
+        <div className='mb-8 hidden md:block'>
           <div className='flex items-center gap-4'>
             <div className='w-12 h-12 bg-gradient-to-r from-blue-500 to-purple-600 rounded-xl flex items-center justify-center'>
               <ShoppingCart className='w-6 h-6 text-white' />

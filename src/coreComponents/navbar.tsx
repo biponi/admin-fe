@@ -117,7 +117,7 @@ const Navbar = () => {
           </DropdownMenu>
         </nav>
       </aside>
-      <header className='sticky top-0 z-30 flex h-14 items-center gap-4 border-b bg-background px-4 sm:hidden'>
+      <header className='sticky top-0 z-30 flex h-16 items-center gap-4 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 px-4 sm:hidden'>
         <Drawer>
           <DrawerTrigger asChild>
             <Button size='icon' variant='outline'>
@@ -125,58 +125,77 @@ const Navbar = () => {
               <span className='sr-only'>Toggle Menu</span>
             </Button>
           </DrawerTrigger>
-          <DrawerContent>
-            <DrawerHeader>
-              <div className='border-b p-2 flex justify-center items-center gap-1'>
-                <Button variant='outline' size='icon' aria-label='Home'>
+          <DrawerContent className='h-[90vh]'>
+            <DrawerHeader className='pb-4'>
+              <div className='flex justify-center items-center gap-3 py-2'>
+                <div className='h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center'>
                   <img
                     src={BiponiMainLogo}
-                    className='size-5'
+                    className='size-6'
                     alt='main-logo'
-                  />{" "}
-                </Button>
-                <span className='text-base font-semibold text-gray-700'>
-                  Prior Admin
-                </span>
+                  />
+                </div>
+                <div>
+                  <span className='text-xl font-bold text-primary block'>
+                    Prior Admin
+                  </span>
+                  <span className='text-sm text-muted-foreground'>
+                    Management Dashboard
+                  </span>
+                </div>
               </div>
             </DrawerHeader>
-            <nav className='grid grid-cols-2 gap-6 p-4 text-lg font-medium mb-4'>
+            
+            <div className='flex-1 px-4'>
+            <nav className='grid gap-3 p-4 text-lg font-medium mb-4'>
               {navItems
                 .filter(
                   (nav) => nav.active && hasRequiredPermission(nav.id, "view")
                 )
                 .map((item) => (
-                  <DrawerClose key={item.link}>
+                  <DrawerClose key={item.link} asChild>
                     <Button
-                      key={item.link}
-                      variant={
-                        pathName.includes(item?.link) ? "default" : "outline"
-                      }
-                      className='flex justify-center items-center w-full gap-4'
+                      variant={pathName.includes(item?.link) ? "default" : "ghost"}
+                      className={`h-14 justify-start gap-4 text-left ${
+                        pathName.includes(item?.link) 
+                          ? "bg-primary text-primary-foreground shadow-lg" 
+                          : "hover:bg-accent"
+                      }`}
                       onClick={() => navigateToRoute(item.link)}>
-                      {item.icon}
-                      {item.title}
+                      <div className='flex items-center justify-center h-8 w-8 rounded-lg bg-background/20'>
+                        {item.icon}
+                      </div>
+                      <div className='flex flex-col items-start'>
+                        <span className='font-medium'>{item.title}</span>
+                        <span className='text-xs opacity-70'>Manage {item.title.toLowerCase()}</span>
+                      </div>
                     </Button>
                   </DrawerClose>
                 ))}
             </nav>
-            <div className='w-full grid grid-cols-2 gap-6 pt-4 px-4 py-6 rounded-tl-xl rounded-tr-xl bg-gray-300'>
-              <DrawerClose>
-                <Button
-                  variant={"secondary"}
-                  className='flex justify-center items-center w-full gap-4'
-                  onClick={() => navigate("/profile")}>
-                  <CircleUserRound className='size-5' /> My Profile
-                </Button>
-              </DrawerClose>
-              <DrawerClose>
-                <Button
-                  variant={"destructive"}
-                  className='flex justify-center items-center w-full gap-4'
-                  onClick={() => signOut()}>
-                  <LogOut className='size-5' /> Logout
-                </Button>
-              </DrawerClose>
+            </div>
+            
+            <div className='border-t bg-muted/30 px-4 py-4'>
+              <div className='grid grid-cols-2 gap-3'>
+                <DrawerClose asChild>
+                  <Button
+                    variant="secondary"
+                    className='h-12 flex flex-col gap-1 bg-background border'
+                    onClick={() => navigate("/profile")}>
+                    <CircleUserRound className='size-5' />
+                    <span className='text-xs'>Profile</span>
+                  </Button>
+                </DrawerClose>
+                <DrawerClose asChild>
+                  <Button
+                    variant="destructive"
+                    className='h-12 flex flex-col gap-1'
+                    onClick={() => signOut()}>
+                    <LogOut className='size-5' />
+                    <span className='text-xs'>Logout</span>
+                  </Button>
+                </DrawerClose>
+              </div>
             </div>
           </DrawerContent>
         </Drawer>

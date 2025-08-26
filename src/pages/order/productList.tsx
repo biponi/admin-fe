@@ -129,7 +129,9 @@ const OrderProductList: React.FC<Props> = ({
   const handleSelect = (product: IProduct) => {
     // For products without variation, prevent duplicate selection
     if (!product.hasVariation) {
-      const isAlreadySelected = selectedProducts.some((p) => p.id === product.id);
+      const isAlreadySelected = selectedProducts.some(
+        (p) => p.id === product.id
+      );
       if (isAlreadySelected) {
         toast.error("Product already selected!");
         return;
@@ -141,21 +143,26 @@ const OrderProductList: React.FC<Props> = ({
       const availableVariants = product.variation.filter(
         (variant) => variant?.quantity > 0
       );
-      
+
       if (availableVariants.length > 0) {
         // Find the first variant that hasn't been selected yet
         const selectedVariants = selectedProducts
-          .filter(p => p.id === product.id)
-          .map(p => p.selectedVariant);
-        
-        const availableVariant = availableVariants.find(variant => 
-          !selectedVariants.some(selected => 
-            selected?.color === variant?.color && selected?.size === variant?.size
-          )
+          .filter((p) => p.id === product.id)
+          .map((p) => p.selectedVariant);
+
+        const availableVariant = availableVariants.find(
+          (variant) =>
+            !selectedVariants.some(
+              (selected) =>
+                selected?.color === variant?.color &&
+                selected?.size === variant?.size
+            )
         );
 
         if (availableVariant) {
-          const existingCount = selectedProducts.filter(p => p.id === product.id).length;
+          const existingCount = selectedProducts.filter(
+            (p) => p.id === product.id
+          ).length;
           setSelectedProducts([
             ...selectedProducts,
             {
@@ -166,12 +173,14 @@ const OrderProductList: React.FC<Props> = ({
             },
           ]);
           toast.success(
-            existingCount > 0 
-              ? `${product.name} variation added to order! 🎨` 
+            existingCount > 0
+              ? `${product.name} variation added to order! 🎨`
               : `${product.name} added to order! 🛍️`
           );
         } else {
-          toast.error("All available variations of this product are already selected!");
+          toast.error(
+            "All available variations of this product are already selected!"
+          );
         }
       } else {
         toast.error("No Available variant found");
@@ -238,23 +247,27 @@ const OrderProductList: React.FC<Props> = ({
           // For products without variations, show as selected if already in cart
           let isSelected = false;
           let allVariantsSelected = false;
-          
+
           if (product.hasVariation) {
-            const availableVariants = product.variation.filter(v => v?.quantity > 0);
+            const availableVariants = product.variation.filter(
+              (v) => v?.quantity > 0
+            );
             const selectedVariants = selectedProducts
-              .filter(p => p.id === product.id)
-              .map(p => p.selectedVariant);
-            
-            allVariantsSelected = availableVariants.every(variant =>
-              selectedVariants.some(selected =>
-                selected?.color === variant?.color && selected?.size === variant?.size
+              .filter((p) => p.id === product.id)
+              .map((p) => p.selectedVariant);
+
+            allVariantsSelected = availableVariants.every((variant) =>
+              selectedVariants.some(
+                (selected) =>
+                  selected?.color === variant?.color &&
+                  selected?.size === variant?.size
               )
             );
             isSelected = allVariantsSelected;
           } else {
             isSelected = selectedProducts.some((p) => p.id === product.id);
           }
-          
+
           const isAvailable = product?.quantity > 0 && product?.active;
 
           return (
@@ -279,11 +292,16 @@ const OrderProductList: React.FC<Props> = ({
                       </div>
                     )}
                     {/* Show count of selected variations */}
-                    {product.hasVariation && selectedProducts.filter(p => p.id === product.id).length > 0 && (
-                      <div className='absolute top-2 left-2 px-2 py-1 bg-blue-500 text-white text-xs rounded-full font-semibold'>
-                        {selectedProducts.filter(p => p.id === product.id).length}
-                      </div>
-                    )}
+                    {product.hasVariation &&
+                      selectedProducts.filter((p) => p.id === product.id)
+                        .length > 0 && (
+                        <div className='absolute top-2 left-2 px-2 py-1 bg-blue-500 text-white text-xs rounded-full font-semibold'>
+                          {
+                            selectedProducts.filter((p) => p.id === product.id)
+                              .length
+                          }
+                        </div>
+                      )}
                     {!isAvailable && (
                       <div className='absolute inset-0 bg-gray-900/60 flex items-center justify-center'>
                         <Badge variant='destructive' className='text-xs'>
@@ -341,12 +359,16 @@ const OrderProductList: React.FC<Props> = ({
                       {isSelected ? (
                         <>
                           <CheckCircle2 className='w-4 h-4 mr-2' />
-                          {product.hasVariation ? "All Variants Added" : "Selected"}
+                          {product.hasVariation
+                            ? "All Variants Added"
+                            : "Selected"}
                         </>
                       ) : isAvailable ? (
                         <>
                           <Plus className='w-4 h-4 mr-2' />
-                          {product.hasVariation ? "Add Variation" : "Add to Order"}
+                          {product.hasVariation
+                            ? "Add Variation"
+                            : "Add to Order"}
                         </>
                       ) : (
                         <>
@@ -403,13 +425,24 @@ const OrderProductList: React.FC<Props> = ({
 
   const renderSelectedProductCard = (product: IOrderProduct, index: number) => {
     // Count how many times this product appears in selected products
-    const productCount = selectedProducts.filter(p => p.id === product.id).length;
-    const productInstanceNumber = selectedProducts.slice(0, index + 1).filter(p => p.id === product.id).length;
+    const productCount = selectedProducts.filter(
+      (p) => p.id === product.id
+    ).length;
+    const productInstanceNumber = selectedProducts
+      .slice(0, index + 1)
+      .filter((p) => p.id === product.id).length;
     const distinctColors = new Set<string>();
     const distinctSizes = new Set<string>();
 
     if (!!product?.variation) {
-      for (const item of product.variation) {
+      const variations = product.variation.filter((v) => v?.quantity > 0);
+      if (variations.length === 0) {
+        toast.error(
+          `No available variants for ${product.name}. Please remove this product.`
+        );
+        return null;
+      }
+      for (const item of variations) {
         if (!!item.color) distinctColors.add(item.color);
         if (!!item.size) distinctSizes.add(item.size);
       }

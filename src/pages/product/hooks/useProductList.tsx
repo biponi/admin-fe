@@ -9,7 +9,7 @@ export const useProductList = () => {
   const [products, setProducts] = useState([]);
   const [totalProducts, setTotalProducts] = useState(0);
   const [totalPages, setTotalPages] = useState(0);
-  const [currentPageNum, setCurrentPage] = useState(0);
+  const [currentPageNum, setCurrentPage] = useState(1);
   const [selectedCategory, setSelectedCategory] = useState("all");
   const [searchQuery, setSearchQuery] = useState("");
   const [limit, setLimit] = useState(20);

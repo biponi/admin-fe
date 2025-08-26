@@ -208,7 +208,7 @@ const CustomerInformation: React.FC<Props> = ({
   const renderCustomerPersonalInformation = () => {
     return (
       <Card className='border-2 border-blue-200 shadow-lg'>
-        <CardHeader className='bg-gradient-to-r from-blue-50 to-purple-50 border-b rounded-lg'>
+        <CardHeader className='bg-gradient-to-r from-blue-50 to-purple-50 border-b rounded-lg '>
           <CardTitle className='flex items-center gap-2 text-xl text-gray-800'>
             <User className='w-6 h-6 text-blue-600' />
             Customer Information
@@ -587,7 +587,7 @@ const CustomerInformation: React.FC<Props> = ({
   return (
     <div className='space-y-6'>
       {/* Form Progress Indicator */}
-      <div className='bg-white rounded-lg p-4 border-2 border-gray-200'>
+      <div className='bg-white rounded-lg p-4 border-2 border-gray-200 hidden md:block'>
         <div className='flex items-center gap-4'>
           <div className='w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center'>
             <User className='w-6 h-6 text-blue-600' />

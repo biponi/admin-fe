@@ -26,7 +26,6 @@ import {
   Mail,
   CreditCard,
   Grid3X3,
-  List,
   Loader2,
   AlertCircle,
   CheckCircle,
@@ -115,7 +114,11 @@ import {
   DropdownMenuLabel,
 } from "../../components/ui/dropdown-menu";
 import { Avatar, AvatarFallback } from "../../components/ui/avatar";
-import SingleItemMobileView from "./components/SingleOrderItemMobileView";
+import MobileOrderCard from "./components/MobileOrderCard";
+import MobileFilterSearch from "./components/MobileFilterSearch";
+import MobileOrderHeader from "./components/MobileOrderHeader";
+import MobileBulkActions from "./components/MobileBulkActions";
+import MobileEmptyState from "./components/MobileEmptyState";
 import useRoleCheck from "../auth/hooks/useRoleCheck";
 import {
   Collapsible,
@@ -183,7 +186,20 @@ const OrderList = () => {
     if (!!selectedOrder) await generateModernInvoice(selectedOrder);
   };
 
-  const renderEmptyView = () => {
+  const renderMobileEmptyView = () => {
+    return (
+      <MobileEmptyState
+        type={inputValue ? "no-search-results" : "no-orders"}
+        searchQuery={inputValue}
+        onCreateOrder={() => navigate("/order/create")}
+        onClearSearch={() => setInputValue("")}
+        onRetry={getOrderList}
+        hasCreatePermission={hasRequiredPermission("order", "create")}
+      />
+    );
+  };
+
+  const renderDesktopEmptyView = () => {
     return (
       <Card className='border-dashed border-2 border-gray-200'>
         <CardContent className='flex flex-col items-center justify-center py-24 text-center'>
@@ -342,9 +358,164 @@ const OrderList = () => {
     );
   };
 
-  const renderProductListView = () => {
+  const renderMobileView = () => {
     return (
-      <div className='min-h-screen md:min-h-[80vh] bg-white'>
+      <div className='min-h-screen bg-gray-50 sm:hidden'>
+        {/* Mobile Header */}
+        <MobileOrderHeader
+          totalOrders={totalOrders}
+          todayOrders={0}
+          totalRevenue={orders ? orders.reduce((sum: number, order: IOrder) => sum + (order.totalPrice || 0), 0) : 0}
+          activeCustomers={orders ? new Set(orders.map((o: IOrder) => o.customer?.phoneNumber)).size : 0}
+          hasCreatePermission={hasRequiredPermission("order", "create")}
+          selectedStatus={selectedStatus}
+        />
+
+        {/* Mobile Search and Filters */}
+        <MobileFilterSearch
+          searchValue={inputValue}
+          onSearchChange={setInputValue}
+          selectedStatus={selectedStatus}
+          onStatusChange={setSelectedStatus}
+          totalOrders={totalOrders}
+          onRefresh={getOrderList}
+        />
+
+        {/* Mobile Orders List */}
+        <div className='px-4 py-4'>
+          {(!orders || orders.length < 1) && renderMobileEmptyView()}
+          {!!orders && orders.length > 0 && (
+            <>
+              <div className='space-y-4 pb-4'>
+                {orders.map((order: IOrder, index: number) => (
+                  <MobileOrderCard
+                    key={index}
+                    orderNumber={order?.orderNumber}
+                    id={`${order?.id}`}
+                    customerName={order?.customer?.name}
+                    customerPhoneNumber={order?.customer?.phoneNumber}
+                    status={order?.status}
+                    district={order?.shipping.district}
+                    totalPrice={order?.totalPrice ?? 0}
+                    paid={order?.paid}
+                    remaining={order?.remaining}
+                    updatedAt={order?.timestamps?.updatedAt}
+                    isBulkAdded={bulkOrders.includes(order?.id)}
+                    handleBulkCheck={(val: boolean) => {
+                      val
+                        ? setBulkOrders([...bulkOrders, order?.id])
+                        : setBulkOrders(
+                            bulkOrders.filter((b) => b !== order?.id)
+                          );
+                    }}
+                    handleViewDetails={() => {
+                      setShowDetails(true);
+                      setSelectedOrder(order);
+                    }}
+                    handleUpdateOrder={() => {
+                      setEditDialogOpen(true);
+                      setSelectedOrder(order);
+                    }}
+                    handleModifyProduct={() => {
+                      navigate(`/order/modify/${order?.id}`);
+                    }}
+                    handleReturnProducts={() => {
+                      setSelectedOrder(order);
+                      setIsReturnProduct(true);
+                    }}
+                    deleteExistingOrder={deleteOrderData}
+                  />
+                ))}
+              </div>
+              
+              {/* Mobile Pagination */}
+              {inputValue === "" && (
+                <div className='bg-white rounded-xl border border-gray-200 p-4 mt-4 mb-32 shadow-sm'>
+                  {/* Items count */}
+                  <div className='text-center text-sm text-gray-600 mb-4'>
+                    Showing{" "}
+                    <span className='font-semibold text-gray-900'>
+                      {(Number(currentPageNum) - 1) * limit + 1}-
+                      {Math.min(
+                        Number(currentPageNum) * limit,
+                        totalOrders
+                      )}
+                    </span>{" "}
+                    of{" "}
+                    <span className='font-semibold text-gray-900'>{totalOrders}</span>{" "}
+                    orders
+                  </div>
+                  
+                  {/* Pagination Controls */}
+                  <div className='flex items-center justify-between gap-4'>
+                    <Button
+                      disabled={currentPageNum < 2}
+                      variant='outline'
+                      size='sm'
+                      onClick={() => updateCurrentPage(-1)}
+                      className='flex items-center gap-2 touch-manipulation'>
+                      <ChevronLeft className='h-4 w-4' />
+                      Previous
+                    </Button>
+                    
+                    {/* Page indicator */}
+                    <div className='flex items-center gap-2'>
+                      <span className='text-sm font-medium text-gray-700'>
+                        Page {currentPageNum} of {totalPages}
+                      </span>
+                      <Select
+                        value={`${limit}`}
+                        onValueChange={(value: string) =>
+                          setLimit(parseInt(value, 10))
+                        }>
+                        <SelectTrigger className='w-16 h-8'>
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectGroup>
+                            <SelectLabel>Per page</SelectLabel>
+                            <SelectItem value='10'>10</SelectItem>
+                            <SelectItem value='50'>50</SelectItem>
+                            <SelectItem value='100'>100</SelectItem>
+                            <SelectItem value='150'>150</SelectItem>
+                          </SelectGroup>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    
+                    <Button
+                      disabled={currentPageNum >= totalPages}
+                      variant='outline'
+                      size='sm'
+                      onClick={() => updateCurrentPage(1)}
+                      className='flex items-center gap-2 touch-manipulation'>
+                      Next
+                      <ChevronRight className='h-4 w-4' />
+                    </Button>
+                  </div>
+                </div>
+              )}
+            </>
+          )}
+        </div>
+
+        {/* Mobile Bulk Actions */}
+        <MobileBulkActions
+          selectedCount={bulkOrders.length}
+          totalCount={orders?.length || 0}
+          onClearSelection={() => setBulkOrders([])}
+          onSelectAll={() => setBulkOrders(orders?.map((order: IOrder) => order?.id) || [])}
+          onBulkAction={setBulkAction}
+          onGenerateInvoices={() => generateMultipleModernInvoicesAndDownloadZip(bulkOrders)}
+          isVisible={!selectedStatus.includes("return") && !!bulkOrders && bulkOrders.length > 0}
+        />
+      </div>
+    );
+  };
+
+  const renderDesktopView = () => {
+    return (
+      <div className='min-h-screen md:min-h-[80vh] bg-white hidden sm:block'>
         <div className='max-w-full mx-auto px-0 sm:px-6 lg:px-8'>
           {/* Header Section */}
           <div className='mb-2 px-4 md:px-0'>
@@ -514,66 +685,11 @@ const OrderList = () => {
                   ? "xl:col-span-3"
                   : "xl:col-span-4"
               }`}>
-              {(!orders || orders.length < 1) && renderEmptyView()}
+              {(!orders || orders.length < 1) && renderDesktopEmptyView()}
               {!!orders && orders.length > 0 && (
                 <Card className='border-0 shadow-none overflow-hidden'>
-                  {/* Mobile View */}
-                  <div className='block md:hidden'>
-                    <CardHeader className='bg-gradient-to-r from-gray-50 to-gray-100 border-b'>
-                      <div className='flex items-center justify-between'>
-                        <CardTitle className='flex items-center gap-2'>
-                          <List className='w-5 h-5' />
-                          Orders
-                        </CardTitle>
-                      </div>
-                    </CardHeader>
-                    <ScrollArea className='h-[60vh]'>
-                      <div className='space-y-4'>
-                        {orders.map((order: IOrder, index: number) => (
-                          <SingleItemMobileView
-                            key={index}
-                            orderNumber={order?.orderNumber}
-                            id={`${order?.id}`}
-                            paid={order?.paid}
-                            status={order?.status}
-                            isBulkAdded={bulkOrders.includes(order?.id)}
-                            handleBulkCheck={(val: boolean) => {
-                              val
-                                ? setBulkOrders([...bulkOrders, order?.id])
-                                : setBulkOrders(
-                                    bulkOrders.filter((b) => b !== order?.id)
-                                  );
-                            }}
-                            district={order?.shipping.district}
-                            totalPrice={order?.totalPrice ?? 0}
-                            remaining={order?.remaining}
-                            customerName={order?.customer?.name}
-                            CustomerPhoneNumber={order?.customer?.phoneNumber}
-                            handleUpdateOrder={() => {
-                              setEditDialogOpen(true);
-                              setSelectedOrder(order);
-                            }}
-                            handleModifyProduct={() => {
-                              navigate(`/order/modify/${order?.id}`);
-                            }}
-                            handleReturnProducts={() => {
-                              setSelectedOrder(order);
-                              setIsReturnProduct(true);
-                            }}
-                            handleViewDetails={() => {
-                              setShowDetails(true);
-                              setSelectedOrder(order);
-                            }}
-                            deleteExistingOrder={deleteOrderData}
-                            updatedAt={order?.timestamps?.updatedAt}
-                          />
-                        ))}
-                      </div>
-                    </ScrollArea>
-                  </div>
-
                   {/* Desktop Table View */}
-                  <div className='hidden md:block'>
+                  <div className='block'>
                     <CardHeader className='bg-white border-0  px-4 md:px-0 py-2  '>
                       <div className='flex items-center justify-between'>
                         <div>
@@ -1443,26 +1559,34 @@ const OrderList = () => {
   const mainView = () => {
     if (orderFetching) {
       return (
-        <div className='min-h-[80vh] bg-gradient-to-br from-gray-50 to-gray-100 flex items-center justify-center'>
-          <Card className='w-full max-w-md mx-4'>
-            <CardContent className='flex flex-col items-center justify-center py-16 text-center'>
-              <div className='w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mb-6'>
-                <Loader2 className='w-8 h-8 text-blue-600 animate-spin' />
-              </div>
-              <h3 className='text-xl font-semibold text-gray-900 mb-2'>
-                Loading Orders
-              </h3>
-              <p className='text-gray-600 mb-6'>
-                Please wait while we fetch your order data...
-              </p>
-              <div className='space-y-2 w-full'>
-                <Skeleton className='h-4 w-3/4 mx-auto' />
-                <Skeleton className='h-4 w-1/2 mx-auto' />
-                <Skeleton className='h-4 w-2/3 mx-auto' />
-              </div>
-            </CardContent>
-          </Card>
-        </div>
+        <>
+          {/* Mobile Loading */}
+          <div className='sm:hidden'>
+            <MobileEmptyState type="loading" />
+          </div>
+          
+          {/* Desktop Loading */}
+          <div className='hidden sm:flex min-h-[80vh] bg-gradient-to-br from-gray-50 to-gray-100 items-center justify-center'>
+            <Card className='w-full max-w-md mx-4'>
+              <CardContent className='flex flex-col items-center justify-center py-16 text-center'>
+                <div className='w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mb-6'>
+                  <Loader2 className='w-8 h-8 text-blue-600 animate-spin' />
+                </div>
+                <h3 className='text-xl font-semibold text-gray-900 mb-2'>
+                  Loading Orders
+                </h3>
+                <p className='text-gray-600 mb-6'>
+                  Please wait while we fetch your order data...
+                </p>
+                <div className='space-y-2 w-full'>
+                  <Skeleton className='h-4 w-3/4 mx-auto' />
+                  <Skeleton className='h-4 w-1/2 mx-auto' />
+                  <Skeleton className='h-4 w-2/3 mx-auto' />
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        </>
       );
     } else if (modifyDialogOpen && !!selectedOrder) {
       return (
@@ -1476,7 +1600,12 @@ const OrderList = () => {
         />
       );
     } else {
-      return renderProductListView();
+      return (
+        <>
+          {renderMobileView()}
+          {renderDesktopView()}
+        </>
+      );
     }
   };
 

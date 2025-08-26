@@ -140,7 +140,7 @@ const SecondPage: React.FC<Props> = ({ selectedTab }) => {
   }, [selectedTab]);
 
   return (
-    <div className="py-6">
+    <div className="py-4 sm:py-6 space-y-4 sm:space-y-6">
       <Tabs
         className="hidden"
         value={selectedTab}
@@ -154,139 +154,173 @@ const SecondPage: React.FC<Props> = ({ selectedTab }) => {
         </TabsList>
       </Tabs>
 
-      {/* Metrics Cards */}
-
+      {/* Orders Trend Chart - Mobile Optimized */}
       <Card className="w-full">
-        <CardHeader>
-          <CardTitle>Orders Trend</CardTitle>
+        <CardHeader className='pb-3'>
+          <CardTitle className='text-lg sm:text-xl'>Orders Trend</CardTitle>
+          <CardDescription className='text-sm text-gray-600'>Daily order analytics and trends</CardDescription>
         </CardHeader>
         <CardContent>
-          <ResponsiveContainer width="100%" height={300}>
-            <BarChart
-              width={500}
-              height={300}
-              data={trends}
-              margin={{
-                top: 5,
-                right: 30,
-                left: 20,
-                bottom: 5,
-              }}
-            >
-              <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey="_id" />
-              <YAxis />
-              <Tooltip />
-              <Legend />
-              <Bar
-                dataKey="totalProductCount"
-                fill={COLORS[COLORS.length - 1]}
-                activeBar={<Rectangle fill="pink" stroke="blue" />}
-              />
-              <Bar
-                dataKey="totalAmount"
-                fill={COLORS[COLORS.length - 2]}
-                activeBar={<Rectangle fill="gold" stroke="purple" />}
-              />
-              <Bar
-                dataKey="totalProductCount"
-                fill={COLORS[COLORS.length - 3]}
-                activeBar={<Rectangle fill="blue" stroke="blue" />}
-              />
-              <Bar
-                dataKey="totalDueAmount"
-                fill={COLORS[COLORS.length - 4]}
-                activeBar={<Rectangle fill="yellow" stroke="purple" />}
-              />
-            </BarChart>
-          </ResponsiveContainer>
+          <div className='h-64 sm:h-80 lg:h-96'>
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart
+                data={trends}
+                margin={{
+                  top: 5,
+                  right: 10,
+                  left: 10,
+                  bottom: 5,
+                }}
+              >
+                <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+                <XAxis 
+                  dataKey="_id" 
+                  fontSize={10}
+                  tick={{ fontSize: 10 }}
+                  axisLine={false}
+                />
+                <YAxis 
+                  fontSize={10}
+                  tick={{ fontSize: 10 }}
+                  axisLine={false}
+                />
+                <Tooltip 
+                  contentStyle={{
+                    backgroundColor: '#fff',
+                    border: '1px solid #e5e7eb',
+                    borderRadius: '8px',
+                    fontSize: '12px'
+                  }}
+                />
+                <Legend 
+                  wrapperStyle={{ fontSize: '12px' }}
+                />
+                <Bar
+                  dataKey="totalProductCount"
+                  name="Product Count"
+                  fill={COLORS[0] || '#3b82f6'}
+                  radius={[2, 2, 0, 0]}
+                />
+                <Bar
+                  dataKey="totalAmount"
+                  name="Total Amount"
+                  fill={COLORS[1] || '#10b981'}
+                  radius={[2, 2, 0, 0]}
+                />
+                <Bar
+                  dataKey="totalDueAmount"
+                  name="Due Amount"
+                  fill={COLORS[2] || '#f59e0b'}
+                  radius={[2, 2, 0, 0]}
+                />
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
         </CardContent>
       </Card>
 
-      {/* Line Chart and Pie Chart */}
-      <div className="mt-6 grid grid-cols-1 lg:grid-cols-2 gap-6">
+      {/* Pie Charts - Mobile Optimized Stack Layout */}
+      <div className="grid grid-cols-1 xl:grid-cols-2 gap-4 sm:gap-6">
         <Card className="flex flex-col">
-          <CardHeader className="items-center pb-0">
-            <CardTitle>Pie Chart - Order Status</CardTitle>
+          <CardHeader className="text-center pb-3">
+            <CardTitle className='text-lg sm:text-xl'>Order Status Distribution</CardTitle>
             {!!dateRange && (
-              <CardDescription>
-                {dateRange?.start.toDateString()} -{" "}
-                {dateRange?.end.toDateString()}
+              <CardDescription className='text-sm'>
+                {format(dateRange.start, 'MMM dd')} - {format(dateRange.end, 'MMM dd')}
               </CardDescription>
             )}
           </CardHeader>
-          <CardContent>
-            <ResponsiveContainer width="100%" height={300}>
-              <PieChart>
-                <Pie
-                  data={orderStatusData}
-                  dataKey="count"
-                  nameKey="_id"
-                  cx="50%"
-                  cy="50%"
-                  outerRadius={100}
-                  fill="#8884d8"
-                  label
-                >
-                  {orderStatusData.map((entry, index) => (
-                    <Cell
-                      key={`cell-${index}`}
-                      fill={COLORS[index % orderStatusData.length]}
-                    />
-                  ))}
-                </Pie>
-                <Tooltip />
-              </PieChart>
-            </ResponsiveContainer>
+          <CardContent className='flex-1'>
+            <div className='h-64 sm:h-80'>
+              <ResponsiveContainer width="100%" height="100%">
+                <PieChart>
+                  <Pie
+                    data={orderStatusData}
+                    dataKey="count"
+                    nameKey="_id"
+                    cx="50%"
+                    cy="50%"
+                    outerRadius="80%"
+                    fill="#8884d8"
+                    label={({ name, percent }: any) => 
+                      `${name}: ${((percent || 0) * 100).toFixed(0)}%`
+                    }
+                    labelLine={false}
+                  >
+                    {orderStatusData.map((entry, index) => (
+                      <Cell
+                        key={`cell-${index}`}
+                        fill={COLORS[index % COLORS.length]}
+                      />
+                    ))}
+                  </Pie>
+                  <Tooltip 
+                    contentStyle={{
+                      backgroundColor: '#fff',
+                      border: '1px solid #e5e7eb',
+                      borderRadius: '8px',
+                      fontSize: '12px'
+                    }}
+                  />
+                </PieChart>
+              </ResponsiveContainer>
+            </div>
           </CardContent>
-          <CardFooter className="flex-col gap-2 text-sm">
-            <div className="leading-none text-muted-foreground">
-              Showing total order status data from{" "}
-              {dateRange?.start.toDateString() ?? ""} to{" "}
-              {dateRange?.end.toDateString() ?? ""}
+          <CardFooter className="text-center">
+            <div className="text-xs sm:text-sm text-gray-600">
+              Order status breakdown for selected period
             </div>
           </CardFooter>
         </Card>
 
         <Card className="flex flex-col">
-          <CardHeader className="items-center pb-0">
-            <CardTitle>Pie Chart - Payment Status</CardTitle>
+          <CardHeader className="text-center pb-3">
+            <CardTitle className='text-lg sm:text-xl'>Payment Status Overview</CardTitle>
             {!!dateRange && (
-              <CardDescription>
-                {dateRange?.start.toDateString()} -{" "}
-                {dateRange?.end.toDateString()}
+              <CardDescription className='text-sm'>
+                {format(dateRange.start, 'MMM dd')} - {format(dateRange.end, 'MMM dd')}
               </CardDescription>
             )}
           </CardHeader>
-          <CardContent>
-            <ResponsiveContainer width="100%" height={300}>
-              <PieChart>
-                <Pie
-                  data={orderPaymentStatusData}
-                  dataKey="count"
-                  nameKey="_id"
-                  cx="50%"
-                  cy="50%"
-                  outerRadius={100}
-                  fill="#8884d8"
-                  label
-                >
-                  {orderPaymentStatusData.map((entry, index) => (
-                    <Cell
-                      key={`cell-${index}`}
-                      fill={COLORS[index % orderPaymentStatusData.length]}
-                    />
-                  ))}
-                </Pie>
-                <Tooltip />
-              </PieChart>
-            </ResponsiveContainer>
+          <CardContent className='flex-1'>
+            <div className='h-64 sm:h-80'>
+              <ResponsiveContainer width="100%" height="100%">
+                <PieChart>
+                  <Pie
+                    data={orderPaymentStatusData}
+                    dataKey="count"
+                    nameKey="_id"
+                    cx="50%"
+                    cy="50%"
+                    outerRadius="80%"
+                    fill="#8884d8"
+                    label={({ name, percent }: any) => 
+                      `${name}: ${((percent || 0) * 100).toFixed(0)}%`
+                    }
+                    labelLine={false}
+                  >
+                    {orderPaymentStatusData.map((entry, index) => (
+                      <Cell
+                        key={`cell-${index}`}
+                        fill={COLORS[index % COLORS.length]}
+                      />
+                    ))}
+                  </Pie>
+                  <Tooltip 
+                    contentStyle={{
+                      backgroundColor: '#fff',
+                      border: '1px solid #e5e7eb',
+                      borderRadius: '8px',
+                      fontSize: '12px'
+                    }}
+                  />
+                </PieChart>
+              </ResponsiveContainer>
+            </div>
           </CardContent>
-          <CardFooter className="flex-col gap-2 text-sm">
-            <div className="leading-none text-muted-foreground">
-              Showing total payment data from{" "}
-              {dateRange?.start.toDateString() ?? ""} to{" "}
-              {dateRange?.end.toDateString() ?? ""}
+          <CardFooter className="text-center">
+            <div className="text-xs sm:text-sm text-gray-600">
+              Payment analytics for selected timeframe
             </div>
           </CardFooter>
         </Card>

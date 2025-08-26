@@ -215,8 +215,8 @@ const DashboardPage: React.FC = () => {
   const mainReportView = () => {
     return (
       <>
-        {/* Key Metrics Overview */}
-        <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8'>
+        {/* Key Metrics Overview - Mobile Optimized */}
+        <div className='grid grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6 mb-4 sm:mb-8'>
           <DynamicCard
             title='Total Orders'
             subtitle='Growth in total orders this period'
@@ -251,8 +251,8 @@ const DashboardPage: React.FC = () => {
           />
         </div>
 
-        {/* Financial Metrics */}
-        <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8'>
+        {/* Financial Metrics - Mobile Optimized */}
+        <div className='grid grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6 mb-4 sm:mb-8'>
           <DynamicCard
             title='Total Paid'
             subtitle='Growth in total paid this period'
@@ -299,8 +299,8 @@ const DashboardPage: React.FC = () => {
           />
         </div>
 
-        {/* Charts Section */}
-        <div className='grid grid-cols-1 xl:grid-cols-2 gap-8 mb-8'>
+        {/* Charts Section - Mobile Optimized */}
+        <div className='grid grid-cols-1 xl:grid-cols-2 gap-4 sm:gap-8 mb-4 sm:mb-8'>
           <InteractiveCardComponent
             title='Purchase Vs Order Amount'
             subTitle={`Showing data from ${
@@ -322,12 +322,12 @@ const DashboardPage: React.FC = () => {
           />
         </div>
 
-        {/* Status Analytics */}
-        <div className='mb-8'>
-          <h2 className='text-2xl font-bold mb-6 text-foreground'>
+        {/* Status Analytics - Mobile Optimized */}
+        <div className='mb-4 sm:mb-8'>
+          <h2 className='text-lg sm:text-2xl font-bold mb-3 sm:mb-6 text-foreground'>
             Order Status Analytics
           </h2>
-          <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-6'>
+          <div className='grid grid-cols-2 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-3 sm:gap-6'>
             {!!analysisData?.reports?.processingAndCompleted &&
               analysisData?.reports?.processingAndCompleted.length > 0 &&
               !!analysisData?.reports?.processingAndCompleted[0]._id && (
@@ -478,19 +478,19 @@ const DashboardPage: React.FC = () => {
           </div>
         </div>
 
-        {/* Performance Tables */}
+        {/* Performance Tables - Mobile Optimized */}
         <div>
-          <h2 className='text-2xl font-bold mb-6 text-foreground'>
+          <h2 className='text-lg sm:text-2xl font-bold mb-3 sm:mb-6 text-foreground'>
             Performance Insights
           </h2>
-          <div className='grid grid-cols-1 xl:grid-cols-2 gap-8'>
+          <div className='grid grid-cols-1 xl:grid-cols-2 gap-4 sm:gap-8'>
             <Card className='hover:shadow-lg transition-all duration-300 bg-gradient-to-br from-card to-card/80 border-0 shadow-md'>
-              <CardHeader className='pb-4'>
-                <div className='flex items-center space-x-3'>
-                  <div className='p-2 bg-primary/10 rounded-lg'>
-                    <Crown className='h-5 w-5 text-primary' />
+              <CardHeader className='pb-2 sm:pb-4'>
+                <div className='flex items-center space-x-2 sm:space-x-3'>
+                  <div className='p-1 sm:p-2 bg-primary/10 rounded-lg'>
+                    <Crown className='h-4 w-4 sm:h-5 sm:w-5 text-primary' />
                   </div>
-                  <CardTitle className='text-xl'>Top Customers</CardTitle>
+                  <CardTitle className='text-base sm:text-xl'>Top Customers</CardTitle>
                 </div>
               </CardHeader>
               <CardContent className='pt-0'>
@@ -520,12 +520,12 @@ const DashboardPage: React.FC = () => {
             </Card>
 
             <Card className='hover:shadow-lg transition-all duration-300 bg-gradient-to-br from-card to-card/80 border-0 shadow-md'>
-              <CardHeader className='pb-4'>
-                <div className='flex items-center space-x-3'>
-                  <div className='p-2 bg-primary/10 rounded-lg'>
-                    <Star className='h-5 w-5 text-primary' />
+              <CardHeader className='pb-2 sm:pb-4'>
+                <div className='flex items-center space-x-2 sm:space-x-3'>
+                  <div className='p-1 sm:p-2 bg-primary/10 rounded-lg'>
+                    <Star className='h-4 w-4 sm:h-5 sm:w-5 text-primary' />
                   </div>
-                  <CardTitle className='text-xl'>Trending Products</CardTitle>
+                  <CardTitle className='text-base sm:text-xl'>Trending Products</CardTitle>
                 </div>
               </CardHeader>
               <CardContent className='pt-0'>
@@ -582,36 +582,28 @@ const DashboardPage: React.FC = () => {
 
   return (
     <div className={getBackgroundClasses()}>
-      {/* Enhanced Header Section */}
+      {/* Enhanced Header Section - Mobile Optimized */}
       <div className={getHeaderClasses()}>
-        <div className='p-6 lg:p-8'>
-          <div className='flex flex-col space-y-6 lg:flex-row lg:items-center lg:justify-between lg:space-y-0'>
-            <div className='space-y-3'>
-              <div className='flex items-center space-x-3'>
-                <div className='p-3 bg-gradient-to-r from-primary/20 to-primary/10 rounded-xl'>
-                  <BarChart3 className='h-8 w-8 text-primary' />
+        <div className='p-3 sm:p-6 lg:p-8'>
+          <div className='flex flex-col space-y-4 sm:space-y-6 lg:flex-row lg:items-center lg:justify-between lg:space-y-0'>
+            <div className='space-y-2 sm:space-y-3'>
+              <div className='flex items-center space-x-2 sm:space-x-3'>
+                <div className='p-2 sm:p-3 bg-gradient-to-r from-primary/20 to-primary/10 rounded-lg sm:rounded-xl'>
+                  <BarChart3 className='h-5 w-5 sm:h-8 sm:w-8 text-primary' />
                 </div>
-                <div>
-                  <h1 className='text-lg font-bold bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text text-transparent'>
+                <div className='min-w-0 flex-1'>
+                  <h1 className='text-base sm:text-lg font-bold bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text text-transparent truncate'>
                     Dashboard Overview
                   </h1>
-                  <p className='text-muted-foreground text-sm mt-1'>
+                  <p className='text-muted-foreground text-xs sm:text-sm mt-1 line-clamp-1'>
                     Monitor your business performance and key metrics
                   </p>
                 </div>
               </div>
             </div>
 
-            {/* Control Panel */}
-            <div className='flex flex-col sm:flex-row items-start sm:items-center space-y-3 sm:space-y-0 sm:space-x-4'>
-              {/* <div className='hidden lg:flex items-center space-x-2 text-sm text-muted-foreground px-4 py-2 bg-muted/50 rounded-full border'>
-                <Calendar className='h-4 w-4' />
-                <span>
-                  {dateRange?.start.toLocaleDateString()} -{" "}
-                  {dateRange?.end.toLocaleDateString()}
-                </span>
-              </div> */}
-
+            {/* Control Panel - Mobile Optimized */}
+            <div className='flex flex-col sm:flex-row items-stretch sm:items-center space-y-2 sm:space-y-0 sm:space-x-3'>
               <DateRangePicker
                 initialDateFrom={startOfDay(new Date())}
                 initialDateTo={endOfDay(new Date())}
@@ -628,37 +620,38 @@ const DashboardPage: React.FC = () => {
               />
 
               <Button
-                className='bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-0.5'
+                className='bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-0.5 touch-manipulation text-sm sm:text-base h-9 sm:h-10'
                 onClick={() => generateReport()}
                 disabled={loadingCSV}>
                 {loadingCSV ? (
-                  <Loader className='animate-spin mr-2 h-5 w-5' />
+                  <Loader className='animate-spin mr-2 h-4 w-4 sm:h-5 sm:w-5' />
                 ) : (
-                  <PieChart className='mr-2 h-5 w-5' />
+                  <PieChart className='mr-2 h-4 w-4 sm:h-5 sm:w-5' />
                 )}
-                Generate Report
+                <span className='hidden sm:inline'>Generate Report</span>
+                <span className='sm:hidden'>Report</span>
               </Button>
             </div>
           </div>
         </div>
       </div>
 
-      {/* Main Content */}
-      <div className='p-6 lg:p-8 space-y-8'>
+      {/* Main Content - Mobile Optimized */}
+      <div className='p-3 sm:p-6 lg:p-8 space-y-4 sm:space-y-8'>
         {loading ? (
           <div className='space-y-8'>
-            <div className='text-center py-12'>
-              <div className='inline-flex items-center justify-center w-16 h-16 bg-primary/10 rounded-full mb-4'>
-                <Loader className='h-8 w-8 text-primary animate-spin' />
+            <div className='text-center py-8 sm:py-12'>
+              <div className='inline-flex items-center justify-center w-12 h-12 sm:w-16 sm:h-16 bg-primary/10 rounded-full mb-4'>
+                <Loader className='h-6 w-6 sm:h-8 sm:w-8 text-primary animate-spin' />
               </div>
-              <h3 className='text-xl font-semibold text-foreground mb-2'>
+              <h3 className='text-lg sm:text-xl font-semibold text-foreground mb-2'>
                 Loading Dashboard Data
               </h3>
-              <p className='text-muted-foreground'>
+              <p className='text-sm sm:text-base text-muted-foreground'>
                 Please wait while we fetch your latest metrics...
               </p>
             </div>
-            <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6'>
+            <div className='grid grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6'>
               {[...Array(8)].map((_, i) => (
                 <div
                   key={i}

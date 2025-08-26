@@ -29,38 +29,70 @@ const TrendCard: React.FC<TrendCardProps> = ({
 }) => {
   const formattedData = trendData.map((d) => ({
     ...d,
-    date: format(new Date(d.date), "MMM dd"), // Format date to MM/DD/YYYY for display
+    date: format(new Date(d.date), "MMM dd"), // Format date for display
   }));
+  
+  // Calculate percentage change
+  const percentChange = previousMetric !== 0 
+    ? ((currentMetric - previousMetric) / previousMetric * 100).toFixed(1)
+    : 0;
   return (
-    <Card>
-      <CardHeader>
-        <h3 className="text-lg font-medium">{title}</h3>
+    <Card className='h-full'>
+      <CardHeader className='pb-2 sm:pb-4'>
+        <h3 className="text-sm sm:text-lg font-medium text-gray-700">{title}</h3>
       </CardHeader>
-      <CardContent>
-        <p className="text-2xl font-bold">{currentMetric}</p>
-        <p className="text-sm">
-          Compared to last month:{" "}
-          {currentMetric - previousMetric >= 0 ? "+" : "-"}
-          {Math.abs(currentMetric - previousMetric)}
-        </p>
-        <div className="w-full h-64">
-          <ResponsiveContainer>
+      <CardContent className='space-y-3 sm:space-y-4'>
+        <div>
+          <p className="text-xl sm:text-2xl font-bold text-gray-900">{currentMetric.toLocaleString()}</p>
+          <p className="text-xs sm:text-sm text-gray-600">
+            vs last month:{" "}
+            <span className={`font-medium ${
+              currentMetric - previousMetric >= 0 
+                ? 'text-green-600' 
+                : 'text-red-600'
+            }`}>
+              {currentMetric - previousMetric >= 0 ? "+" : ""}
+              {(currentMetric - previousMetric).toLocaleString()}
+            </span>
+          </p>
+        </div>
+        <div className="w-full h-32 sm:h-48 lg:h-64">
+          <ResponsiveContainer width="100%" height="100%">
             <AreaChart
-              width={500}
-              height={300}
               data={formattedData}
-              margin={{ top: 10, right: 0, left: 0, bottom: 0 }}
+              margin={{ top: 5, right: 5, left: 0, bottom: 5 }}
             >
-              <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey="date" />
-              <YAxis type="number" domain={["auto", "auto"]} scale="log" />
-              <Tooltip />
+              <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+              <XAxis 
+                dataKey="date" 
+                fontSize={10}
+                tick={{ fontSize: 10 }}
+                axisLine={false}
+                tickLine={false}
+              />
+              <YAxis 
+                type="number" 
+                domain={["auto", "auto"]} 
+                fontSize={10}
+                tick={{ fontSize: 10 }}
+                axisLine={false}
+                tickLine={false}
+              />
+              <Tooltip 
+                contentStyle={{
+                  backgroundColor: '#fff',
+                  border: '1px solid #e5e7eb',
+                  borderRadius: '8px',
+                  fontSize: '12px'
+                }}
+              />
               <Area
                 type="monotone"
                 dataKey={dataKey}
-                stroke="#8884d8"
-                fillOpacity={0.3}
-                fill="#8884d8"
+                stroke="#3b82f6"
+                strokeWidth={2}
+                fillOpacity={0.1}
+                fill="#3b82f6"
               />
             </AreaChart>
           </ResponsiveContainer>

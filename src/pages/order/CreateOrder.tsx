@@ -21,36 +21,51 @@ import {
   Clock,
   Send,
 } from "lucide-react";
+import MobileCreateHeader from "./components/MobileCreateHeader";
+import MobileStepper from "./components/MobileStepper";
+import MobileCreateLoading from "./components/MobileCreateLoading";
+import MobileOrderProductSearch from "./components/MobileOrderProductSearch";
 import { toast } from "react-hot-toast";
+import { ScrollArea } from "../../components/ui/scroll-area";
 
-const steps = [
+type StepStatus = "complete" | "in-progress" | "pending";
+
+interface Step {
+  id: number;
+  name: string;
+  description: string;
+  icon: React.ElementType;
+  status: StepStatus;
+}
+
+const steps: Step[] = [
   {
     id: 1,
     name: "Select Products",
     description: "Choose products for the order",
     icon: ShoppingCart,
-    status: "in-progress",
+    status: "in-progress" as const,
   },
   {
     id: 2,
     name: "Customer Details",
     description: "Enter customer information",
     icon: User,
-    status: "pending",
+    status: "pending" as const,
   },
   {
     id: 3,
     name: "Review & Create",
     description: "Review and confirm order",
-    icon: ShoppingCart,
-    status: "pending",
+    icon: CheckCircle2,
+    status: "pending" as const,
   },
 ];
 
 const CreateOrder = () => {
   const navigate = useNavigate();
   const [notes, setNotes] = useState("");
-  const [orderSteps, setOrderSteps] = useState(steps);
+  const [orderSteps, setOrderSteps] = useState<Step[]>(steps);
   const [currentStep, setCurrentStep] = useState(0);
   const [orderProducts, setOrderProduct] = useState<IOrderProduct[]>([]);
   const [transectionData, setTransectionData] = useState<ITransection | null>(
@@ -62,11 +77,11 @@ const CreateOrder = () => {
   useEffect(() => {
     const updatedSteps = steps.map((step, index) => {
       if (index < currentStep) {
-        return { ...step, status: "complete" };
+        return { ...step, status: "complete" as const };
       } else if (index === currentStep) {
-        return { ...step, status: "in-progress" };
+        return { ...step, status: "in-progress" as const };
       } else {
-        return { ...step, status: "pending" };
+        return { ...step, status: "pending" as const };
       }
     });
     setOrderSteps(updatedSteps);
@@ -144,32 +159,51 @@ const CreateOrder = () => {
     switch (currentStep) {
       case 0:
         return (
-          <OrderProductList
-            handleProductDataSubmit={handleProductDataSubmit}
-            initialProducts={orderProducts}
-            initialTransection={transectionData}
-          />
+          <>
+            {/* Mobile Product Search - Optimized for touch */}
+            <div className='sm:hidden'>
+              <div className='space-y-4'>
+                <MobileOrderProductSearch
+                  onProductsSubmit={handleProductDataSubmit}
+                  initialProducts={orderProducts}
+                  initialTransaction={transectionData}
+                />
+              </div>
+            </div>
+            {/* Desktop Product List */}
+            <div className='hidden sm:block'>
+              <OrderProductList
+                handleProductDataSubmit={handleProductDataSubmit}
+                initialProducts={orderProducts}
+                initialTransection={transectionData}
+              />
+            </div>
+          </>
         );
       case 1:
         return (
-          <CustomerInformation
-            handleBack={handleStepBack}
-            handleCustomerDataChange={handleCustomerDataChange}
-          />
+          <div className='space-y-4'>
+            <CustomerInformation
+              handleBack={handleStepBack}
+              handleCustomerDataChange={handleCustomerDataChange}
+            />
+          </div>
         );
       case 2:
         return (
-          <OrderPreview
-            notes={notes}
-            setNotes={(value: string) => setNotes(value)}
-            //@ts-ignore
-            customerInformation={customerInformation}
-            orderProducts={orderProducts}
-            //@ts-ignore
-            transection={transectionData}
-            handleBack={handleStepBack}
-            handleCreateOrder={handleSubmitCreateOrder}
-          />
+          <div className='space-y-4'>
+            <OrderPreview
+              notes={notes}
+              setNotes={(value: string) => setNotes(value)}
+              //@ts-ignore
+              customerInformation={customerInformation}
+              orderProducts={orderProducts}
+              //@ts-ignore
+              transection={transectionData}
+              handleBack={handleStepBack}
+              handleCreateOrder={handleSubmitCreateOrder}
+            />
+          </div>
         );
       default:
         return null;
@@ -262,116 +296,151 @@ const CreateOrder = () => {
     );
   };
 
+  // Get current step info for mobile header
+  const getCurrentStepInfo = () => {
+    return {
+      title: orderSteps[currentStep]?.name || "Create Order",
+      description: orderSteps[currentStep]?.description || "Build your order",
+    };
+  };
+
   // Render loading state when creating order
   if (isCreating) {
     return (
-      <div className='min-h-screen bg-gradient-to-br from-gray-50 via-blue-50 to-purple-50 flex items-center justify-center'>
-        <div className='max-w-md mx-auto p-8'>
-          <Card className='border-2 border-blue-200 shadow-2xl bg-white'>
-            <CardContent className='p-8 text-center'>
-              <div className='mb-6'>
-                <div className='w-20 h-20 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center mx-auto mb-4 shadow-lg'>
-                  <Loader2 className='w-10 h-10 text-white animate-spin' />
-                </div>
-                <div className='w-16 h-16 bg-gradient-to-r from-green-400 to-blue-500 rounded-full flex items-center justify-center mx-auto -mt-10 ml-12 shadow-lg animate-pulse'>
-                  <Send className='w-8 h-8 text-white' />
-                </div>
-              </div>
-
-              <h2 className='text-2xl font-bold text-gray-900 mb-2'>
-                Creating Your Order
-              </h2>
-              <p className='text-gray-600 mb-6 flex items-center justify-center gap-2'>
-                <Clock className='w-4 h-4' />
-                Please wait while we process your order...
-              </p>
-
-              <div className='space-y-3 text-left'>
-                <div className='flex items-center gap-3 p-3 bg-green-50 rounded-lg border border-green-200'>
-                  <CheckCircle2 className='w-5 h-5 text-green-600' />
-                  <span className='text-sm text-green-800'>
-                    Validating products
-                  </span>
-                </div>
-                <div className='flex items-center gap-3 p-3 bg-blue-50 rounded-lg border border-blue-200'>
-                  <Loader2 className='w-4 h-4 text-blue-600 animate-spin' />
-                  <span className='text-sm text-blue-800'>
-                    Processing order details
-                  </span>
-                </div>
-                <div className='flex items-center gap-3 p-3 bg-gray-50 rounded-lg border border-gray-200'>
-                  <Clock className='w-4 h-4 text-gray-500' />
-                  <span className='text-sm text-gray-600'>
-                    Finalizing order
-                  </span>
-                </div>
-              </div>
-
-              <div className='mt-6 p-4 bg-yellow-50 rounded-lg border border-yellow-200'>
-                <p className='text-sm text-yellow-800 flex items-center gap-2'>
-                  <Sparkles className='w-4 h-4' />
-                  <strong>Almost done!</strong> Your order is being created...
-                </p>
-              </div>
-            </CardContent>
-          </Card>
+      <>
+        {/* Mobile Loading */}
+        <div className='sm:hidden'>
+          <MobileCreateLoading />
         </div>
-      </div>
+
+        {/* Desktop Loading */}
+        <div className='hidden sm:flex min-h-screen bg-gradient-to-br from-gray-50 via-blue-50 to-purple-50 items-center justify-center'>
+          <div className='max-w-md mx-auto p-8'>
+            <Card className='border-2 border-blue-200 shadow-2xl bg-white'>
+              <CardContent className='p-8 text-center'>
+                <div className='mb-6'>
+                  <div className='w-20 h-20 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center mx-auto mb-4 shadow-lg'>
+                    <Loader2 className='w-10 h-10 text-white animate-spin' />
+                  </div>
+                  <div className='w-16 h-16 bg-gradient-to-r from-green-400 to-blue-500 rounded-full flex items-center justify-center mx-auto -mt-10 ml-12 shadow-lg animate-pulse'>
+                    <Send className='w-8 h-8 text-white' />
+                  </div>
+                </div>
+
+                <h2 className='text-2xl font-bold text-gray-900 mb-2'>
+                  Creating Your Order
+                </h2>
+                <p className='text-gray-600 mb-6 flex items-center justify-center gap-2'>
+                  <Clock className='w-4 h-4' />
+                  Please wait while we process your order...
+                </p>
+
+                <div className='space-y-3 text-left'>
+                  <div className='flex items-center gap-3 p-3 bg-green-50 rounded-lg border border-green-200'>
+                    <CheckCircle2 className='w-5 h-5 text-green-600' />
+                    <span className='text-sm text-green-800'>
+                      Validating products
+                    </span>
+                  </div>
+                  <div className='flex items-center gap-3 p-3 bg-blue-50 rounded-lg border border-blue-200'>
+                    <Loader2 className='w-4 h-4 text-blue-600 animate-spin' />
+                    <span className='text-sm text-blue-800'>
+                      Processing order details
+                    </span>
+                  </div>
+                  <div className='flex items-center gap-3 p-3 bg-gray-50 rounded-lg border border-gray-200'>
+                    <Clock className='w-4 h-4 text-gray-500' />
+                    <span className='text-sm text-gray-600'>
+                      Finalizing order
+                    </span>
+                  </div>
+                </div>
+
+                <div className='mt-6 p-4 bg-yellow-50 rounded-lg border border-yellow-200'>
+                  <p className='text-sm text-yellow-800 flex items-center gap-2'>
+                    <Sparkles className='w-4 h-4' />
+                    <strong>Almost done!</strong> Your order is being created...
+                  </p>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        </div>
+      </>
     );
   }
 
-  return (
-    <div className='min-h-screen bg-white'>
-      <div className=' container max-w-full mx-auto px-4 sm:px-6 lg:px-8 py-8'>
-        {/* Header */}
-        <div className='mb-8'>
-          <div className='flex items-center justify-between'>
-            <div className='flex items-center gap-4'>
-              <div className='w-14 h-14 bg-gradient-to-r from-blue-500 to-purple-600 rounded-2xl flex items-center justify-center'>
-                <Package2 className='w-8 h-8 text-white' />
-              </div>
-              <div>
-                <h1 className='text-4xl font-bold text-gray-900'>
-                  Create New Order
-                </h1>
-                <p className='text-gray-600 mt-1 flex items-center gap-2'>
-                  <Sparkles className='w-4 h-4' />
-                  Build amazing orders with our streamlined process
-                </p>
-              </div>
-            </div>
+  const stepInfo = getCurrentStepInfo();
 
-            <Button
-              variant='outline'
-              onClick={() => navigate("/order")}
-              className='hidden md:flex items-center gap-2 border-gray-300 hover:bg-gray-50'
-              disabled={isCreating}>
-              <ArrowLeft className='w-4 h-4' />
-              Back to Orders
-            </Button>
-          </div>
+  return (
+    <>
+      {/* Mobile View */}
+      <div className='min-h-screen bg-gray-50 sm:hidden'>
+        {/* Mobile Header with better safe area */}
+        <div className='relative z-50'>
+          <MobileCreateHeader
+            currentStep={currentStep}
+            totalSteps={steps.length}
+            onBack={() => navigate("/order")}
+            stepTitle={stepInfo.title}
+            stepDescription={stepInfo.description}
+          />
         </div>
 
-        {/* Modern Stepper */}
-        {renderModernStepper()}
+        {/* Mobile Stepper */}
+        <MobileStepper steps={orderSteps} currentStep={currentStep} />
 
-        {/* Step Content */}
-        <div className='mb-8'>{renderStepContent()}</div>
+        {/* Mobile Content with proper spacing and touch-friendly design */}
+        <ScrollArea className='h-[calc(100vh-140px)]'>
+          <div className='flex-1 min-h-0'>
+            <div className='px-4 py-4 pb-safe-or-6'>{renderStepContent()}</div>
+          </div>
+        </ScrollArea>
 
-        {/* Mobile Back Button */}
-        <div className='md:hidden fixed bottom-4 left-4'>
-          <Button
-            variant='outline'
-            onClick={() => navigate("/order")}
-            className='bg-white shadow-lg border-2 border-gray-300 hover:bg-gray-50'
-            size='lg'
-            disabled={isCreating}>
-            <ArrowLeft className='w-5 h-5 mr-2' />
-            Orders
-          </Button>
+        {/* Mobile Safe Area Bottom Padding */}
+        <div className='h-safe-bottom bg-gray-50' />
+      </div>
+
+      {/* Desktop View */}
+      <div className='hidden sm:block min-h-screen bg-white'>
+        <div className=' container max-w-full mx-auto px-4 sm:px-6 lg:px-8 py-8'>
+          {/* Header */}
+          <div className='mb-8'>
+            <div className='flex items-center justify-between'>
+              <div className='flex items-center gap-4'>
+                <div className='w-14 h-14 bg-gradient-to-r from-blue-500 to-purple-600 rounded-2xl flex items-center justify-center'>
+                  <Package2 className='w-8 h-8 text-white' />
+                </div>
+                <div>
+                  <h1 className='text-4xl font-bold text-gray-900'>
+                    Create New Order
+                  </h1>
+                  <p className='text-gray-600 mt-1 flex items-center gap-2'>
+                    <Sparkles className='w-4 h-4' />
+                    Build amazing orders with our streamlined process
+                  </p>
+                </div>
+              </div>
+
+              <Button
+                variant='outline'
+                onClick={() => navigate("/order")}
+                className='flex items-center gap-2 border-gray-300 hover:bg-gray-50'
+                disabled={isCreating}>
+                <ArrowLeft className='w-4 h-4' />
+                Back to Orders
+              </Button>
+            </div>
+          </div>
+
+          {/* Modern Stepper */}
+          {renderModernStepper()}
+
+          {/* Step Content */}
+          <div className='mb-8'>{renderStepContent()}</div>
         </div>
       </div>
-    </div>
+    </>
   );
 };
 

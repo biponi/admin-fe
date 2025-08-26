@@ -92,6 +92,11 @@ import {
 } from "../../components/ui/sheet";
 import useRoleCheck from "../auth/hooks/useRoleCheck";
 import CategoryFilterDropdown from "./components/FilterByCategory";
+import MobileProductHeader from "./components/MobileProductHeader";
+import MobileProductCard from "./components/MobileProductCard";
+import MobileProductFilters from "./components/MobileProductFilters";
+import MobileProductEmpty from "./components/MobileProductEmpty";
+import MobileProductSummary from "./components/MobileProductSummary";
 
 interface Props {
   handleEditProduct: (id: string) => void;
@@ -121,6 +126,8 @@ const ProductList: React.FC<Props> = ({ handleEditProduct }) => {
   const [viewType, setViewType] = useState<"list" | "grid">("list");
   const [summary, setSummary] = useState<StockSummaryResponse | null>(null);
   const [showFilters, setShowFilters] = useState(true);
+  const [selectedTab, setSelectedTab] = useState("all");
+  const [isMobileSummaryOpen, setIsMobileSummaryOpen] = useState(false);
 
   const getProductSummaryDetails = async () => {
     const response = await getProductSummary();
@@ -146,7 +153,31 @@ const ProductList: React.FC<Props> = ({ handleEditProduct }) => {
     //eslint-disable-next-line
   }, [debounceHandler]);
 
-  const renderEmptyView = () => {
+  const renderMobileEmptyView = () => {
+    if (inputValue || selectedCategory) {
+      return (
+        <MobileProductEmpty
+          type='no-search-results'
+          searchQuery={inputValue}
+          onClearFilters={() => {
+            setInputValue("");
+            setSelectedCategory("");
+          }}
+          onRetry={getProductSummaryDetails}
+        />
+      );
+    }
+    return (
+      <MobileProductEmpty
+        type='no-products'
+        hasCreatePermission={hasRequiredPermission("product", "create")}
+        onCreateProduct={() => navigate("/product/create")}
+        onRetry={getProductSummaryDetails}
+      />
+    );
+  };
+
+  const renderDesktopEmptyView = () => {
     return hasRequiredPermission("product", "create") ? (
       <EmptyView
         title='You have no products'
@@ -437,7 +468,188 @@ const ProductList: React.FC<Props> = ({ handleEditProduct }) => {
     );
   };
 
-  const renderProductListView = () => {
+  const renderMobileView = () => {
+    const getTabCounts = () => {
+      const activeProducts = products.filter((p: IProduct) => p.active);
+      const inStockProducts = products.filter((p: IProduct) => p.quantity > 0);
+      const outOfStockProducts = products.filter(
+        (p: IProduct) => p.quantity <= 0
+      );
+
+      return {
+        all: products.length,
+        active: activeProducts.length,
+        inactive: products.length - activeProducts.length,
+        instock: inStockProducts.length,
+        outofstock: outOfStockProducts.length,
+      };
+    };
+
+    const tabCounts = getTabCounts();
+
+    const getFilteredProducts = () => {
+      let filtered = products;
+
+      // Filter by tab
+      if (selectedTab === "active") {
+        filtered = filtered.filter((p: IProduct) => p.active);
+      } else if (selectedTab === "inactive") {
+        filtered = filtered.filter((p: IProduct) => !p.active);
+      } else if (selectedTab === "instock") {
+        filtered = filtered.filter((p: IProduct) => p.quantity > 0);
+      } else if (selectedTab === "outofstock") {
+        filtered = filtered.filter((p: IProduct) => p.quantity <= 0);
+      }
+
+      return filtered;
+    };
+
+    const displayProducts = getFilteredProducts();
+
+    return (
+      <div className='min-h-screen bg-gray-50 sm:hidden'>
+        {/* Mobile Header */}
+        <MobileProductHeader
+          totalProducts={totalProducts}
+          hasCreatePermission={hasRequiredPermission("product", "create")}
+          onCreateProduct={() => navigate("/product/create")}
+          selectedTab={selectedTab}
+          summary={summary}
+          onOpenSummary={
+            hasRequiredPermission("product", "summary")
+              ? () => setIsMobileSummaryOpen(true)
+              : undefined
+          }
+        />
+
+        {/* Mobile Summary Sheet */}
+        <MobileProductSummary
+          isOpen={isMobileSummaryOpen}
+          onClose={() => setIsMobileSummaryOpen(false)}
+          summary={summary}
+        />
+
+        {/* Mobile Filters */}
+        <MobileProductFilters
+          searchValue={inputValue}
+          onSearchChange={setInputValue}
+          selectedTab={selectedTab}
+          onTabChange={setSelectedTab}
+          selectedCategory={selectedCategory}
+          onCategoryChange={setSelectedCategory}
+          categories={categories}
+          totalProducts={tabCounts.all}
+          activeCount={tabCounts.active}
+          inactiveCount={tabCounts.inactive}
+          inStockCount={tabCounts.instock}
+          outOfStockCount={tabCounts.outofstock}
+          onRefresh={getProductSummaryDetails}
+        />
+
+        {/* Mobile Products List */}
+        <div className='px-4 py-2'>
+          {displayProducts.length === 0 ? (
+            renderMobileEmptyView()
+          ) : (
+            <>
+              <div className='grid grid-cols-2 gap-2 pb-4'>
+                {displayProducts.map((product: IProduct) => (
+                  <MobileProductCard
+                    key={product.id}
+                    id={product.id}
+                    sku={product.sku}
+                    image={product.thumbnail}
+                    title={product.name}
+                    categoryName={product.categoryName ?? "Not Added"}
+                    active={product.active}
+                    quantity={product.quantity}
+                    unitPrice={product.unitPrice}
+                    totalSold={product.sold ?? []}
+                    totalReturned={product.returned ?? 0}
+                    variations={product.variantList ?? ["No Variant"]}
+                    updatedAt={
+                      product.timestamps?.updatedAt || new Date().toISOString()
+                    }
+                    onEdit={handleEditProduct}
+                    onDelete={deleteProductData}
+                  />
+                ))}
+              </div>
+              
+              {/* Mobile Pagination */}
+              {inputValue === "" && (
+                <div className='bg-white rounded-xl border border-gray-200 p-4 mt-4 mb-20 shadow-sm'>
+                  {/* Items count */}
+                  <div className='text-center text-sm text-gray-600 mb-4'>
+                    Showing{" "}
+                    <span className='font-semibold text-gray-900'>
+                      {Math.max(1, (currentPageNum - 1) * limit + 1)}-
+                      {Math.min(currentPageNum * limit, totalProducts)}
+                    </span>{" "}
+                    of{" "}
+                    <span className='font-semibold text-gray-900'>
+                      {totalProducts}
+                    </span>{" "}
+                    products
+                  </div>
+                  
+                  {/* Pagination Controls */}
+                  <div className='flex items-center justify-between gap-4'>
+                    <Button
+                      disabled={currentPageNum < 2}
+                      variant='outline'
+                      size='sm'
+                      onClick={() => updateCurrentPage(-1)}
+                      className='flex items-center gap-2 touch-manipulation'>
+                      <ChevronLeft className='h-4 w-4' />
+                      Previous
+                    </Button>
+                    
+                    {/* Page indicator */}
+                    <div className='flex items-center gap-2'>
+                      <span className='text-sm font-medium text-gray-700'>
+                        Page {currentPageNum} of {totalPages}
+                      </span>
+                      <Select
+                        value={`${limit}`}
+                        onValueChange={(value: string) =>
+                          setLimit(parseInt(value, 10))
+                        }>
+                        <SelectTrigger className='w-16 h-8'>
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectGroup>
+                            <SelectLabel>Per page</SelectLabel>
+                            <SelectItem value='10'>10</SelectItem>
+                            <SelectItem value='20'>20</SelectItem>
+                            <SelectItem value='50'>50</SelectItem>
+                            <SelectItem value='100'>100</SelectItem>
+                          </SelectGroup>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    
+                    <Button
+                      disabled={currentPageNum >= totalPages}
+                      variant='outline'
+                      size='sm'
+                      onClick={() => updateCurrentPage(1)}
+                      className='flex items-center gap-2 touch-manipulation'>
+                      Next
+                      <ChevronRight className='h-4 w-4' />
+                    </Button>
+                  </div>
+                </div>
+              )}
+            </>
+          )}
+        </div>
+      </div>
+    );
+  };
+
+  const renderDesktopView = () => {
     const getTabCounts = () => {
       const activeProducts = products.filter((p: IProduct) => p.active);
       const inStockProducts = products.filter((p: IProduct) => p.quantity > 0);
@@ -1337,29 +1549,55 @@ const ProductList: React.FC<Props> = ({ handleEditProduct }) => {
   const mainView = () => {
     if (productFetching) {
       return (
-        <div className='space-y-4'>
-          <SkeletonCard title='Loading Product Data...' />
-          <div className='grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4'>
-            {[...Array(8)].map((_, i) => (
-              <Card key={i} className='animate-pulse'>
-                <CardContent className='p-4'>
-                  <div className='h-4 bg-gray-200 rounded w-3/4 mb-2'></div>
-                  <div className='h-8 bg-gray-200 rounded w-1/2 mb-2'></div>
-                  <div className='h-3 bg-gray-200 rounded w-full'></div>
-                </CardContent>
-              </Card>
-            ))}
+        <>
+          {/* Mobile Loading */}
+          <div className='sm:hidden'>
+            <MobileProductEmpty type='loading' />
           </div>
-        </div>
+
+          {/* Desktop Loading */}
+          <div className='hidden sm:block space-y-4'>
+            <SkeletonCard title='Loading Product Data...' />
+            <div className='grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4'>
+              {[...Array(8)].map((_, i) => (
+                <Card key={i} className='animate-pulse'>
+                  <CardContent className='p-4'>
+                    <div className='h-4 bg-gray-200 rounded w-3/4 mb-2'></div>
+                    <div className='h-8 bg-gray-200 rounded w-1/2 mb-2'></div>
+                    <div className='h-3 bg-gray-200 rounded w-full'></div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          </div>
+        </>
       );
     } else if (inputValue !== "" || (products && products.length > 0)) {
-      return renderProductListView();
+      return (
+        <>
+          {renderMobileView()}
+          <div className='hidden sm:block'>{renderDesktopView()}</div>
+        </>
+      );
     } else {
-      return renderEmptyView();
+      return (
+        <>
+          {renderMobileEmptyView()}
+          <div className='hidden sm:block'>{renderDesktopEmptyView()}</div>
+        </>
+      );
     }
   };
 
-  return <div className='w-full space-y-4 md:p-4'>{mainView()}</div>;
+  return (
+    <>
+      {mainView()}
+      {/* Desktop Container */}
+      <div className='hidden sm:block w-full space-y-4 md:p-4'>
+        {/* Desktop content will be shown through renderDesktopView */}
+      </div>
+    </>
+  );
 };
 
 export default ProductList;

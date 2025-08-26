@@ -38,6 +38,10 @@ import { useEffect, useState } from "react";
 import { SkeletonCard } from "../../../coreComponents/sekeleton";
 import UpdateCategory from "./updateCategory";
 import useRoleCheck from "../../auth/hooks/useRoleCheck";
+import MobileCategoryHeader from "./components/MobileCategoryHeader";
+import MobileCategoryCard from "./components/MobileCategoryCard";
+import MobileCategoryFilters from "./components/MobileCategoryFilters";
+import MobileCategoryEmpty from "./components/MobileCategoryEmpty";
 
 const CategoryList = () => {
   const {
@@ -56,6 +60,7 @@ const CategoryList = () => {
   );
   const [viewMode, setViewMode] = useState<"flat" | "tree">("flat");
   const [levelFilter, setLevelFilter] = useState<string>("all");
+  const [selectedTab, setSelectedTab] = useState("all");
 
   useEffect(() => {
     fetchCategories();
@@ -122,7 +127,18 @@ const CategoryList = () => {
     return rootCategories;
   };
 
-  const renderEmptyView = () => {
+  const renderMobileEmptyView = () => {
+    return (
+      <MobileCategoryEmpty
+        type="no-categories"
+        hasCreatePermission={hasRequiredPermission("category", "create")}
+        onCreateCategory={() => setOpenCreateDialog(true)}
+        onRetry={fetchCategories}
+      />
+    );
+  };
+
+  const renderDesktopEmptyView = () => {
     return hasRequiredPermission("category", "create") ? (
       <EmptyView
         title='You have no category'
@@ -210,6 +226,90 @@ const CategoryList = () => {
         </TableBody>
       </Table>
     );
+
+  const renderMobileView = () => {
+    const filteredCategories = getFilteredCategories(categories);
+    const activeCategories = categories.filter(cat => cat.active);
+    const inactiveCategories = categories.filter(cat => !cat.active);
+    
+    let displayCategories = filteredCategories;
+    if (selectedTab === "all") {
+      displayCategories = filteredCategories;
+    } else if (selectedTab === "active") {
+      displayCategories = getFilteredCategories(activeCategories);
+    } else if (selectedTab === "inactive") {
+      displayCategories = getFilteredCategories(inactiveCategories);
+    }
+
+    return (
+      <div className="min-h-screen bg-gray-50 sm:hidden">
+        {/* Mobile Header */}
+        <MobileCategoryHeader
+          totalCategories={categories.length}
+          activeCategories={activeCategories.length}
+          inactiveCategories={inactiveCategories.length}
+          hasCreatePermission={hasRequiredPermission("category", "create")}
+          onCreateCategory={() => setOpenCreateDialog(true)}
+          selectedTab={selectedTab}
+        />
+
+        {/* Mobile Filters */}
+        <MobileCategoryFilters
+          selectedTab={selectedTab}
+          onTabChange={setSelectedTab}
+          viewMode={viewMode}
+          onViewModeChange={setViewMode}
+          levelFilter={levelFilter}
+          onLevelFilterChange={setLevelFilter}
+          uniqueLevels={getUniqueLevels()}
+          totalCategories={categories.length}
+          activeCount={activeCategories.length}
+          inactiveCount={inactiveCategories.length}
+        />
+
+        {/* Mobile Categories List */}
+        <div className="px-4 py-4">
+          {displayCategories.length === 0 ? (
+            <MobileCategoryEmpty
+              type="no-filtered-results"
+              onClearFilters={() => {
+                setViewMode("flat");
+                setLevelFilter("all");
+              }}
+              onRetry={fetchCategories}
+            />
+          ) : (
+            <div className="space-y-4 pb-20">
+              {displayCategories.map((category: ICategory) => (
+                <MobileCategoryCard
+                  key={category.id}
+                  id={category.id}
+                  name={category.name}
+                  image={category.img}
+                  active={category.active}
+                  discount={category.discount}
+                  totalProducts={category.totalProducts || 0}
+                  level={category.level || 0}
+                  parentName={category.parentCategoryName}
+                  breadcrumb={getCategoryBreadcrumb(category?.parentId ?? null, category)}
+                  onEdit={() => setSelectedCategory(category)}
+                  onDelete={deleteExistingCategory}
+                />
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
+    );
+  };
+
+  const renderDesktopView = () => {
+    return (
+      <div className='hidden sm:block w-[80%] mx-auto my-4'>
+        {renderCategoryListView()}
+      </div>
+    );
+  };
 
   const renderCategoryListView = () => {
     return (
@@ -400,20 +500,49 @@ const CategoryList = () => {
 
   const mainView = () => {
     if (loading) {
-      return <SkeletonCard title='Categories are loading...' />;
+      return (
+        <>
+          {/* Mobile Loading */}
+          <div className='sm:hidden'>
+            <MobileCategoryEmpty type="loading" />
+          </div>
+          
+          {/* Desktop Loading */}
+          <div className='hidden sm:block'>
+            <SkeletonCard title='Categories are loading...' />
+          </div>
+        </>
+      );
     } else if (!!categories && categories.length > 0) {
-      return renderCategoryListView();
+      return (
+        <>
+          {renderMobileView()}
+          {renderDesktopView()}
+        </>
+      );
     } else {
-      return renderEmptyView();
+      return (
+        <>
+          {renderMobileEmptyView()}
+          <div className='hidden sm:block'>
+            {renderDesktopEmptyView()}
+          </div>
+        </>
+      );
     }
   };
 
   return (
-    <div className='w-[80%] mx-auto my-4'>
+    <>
       {mainView()}
       {renderAddNewCategoryDialog()}
       {!!categories && categories.length > 0 && renderUpdateCategoryDialog()}
-    </div>
+      
+      {/* Desktop Container */}
+      <div className='hidden sm:block w-[80%] mx-auto my-4'>
+        {/* Desktop content will be shown through renderDesktopView */}
+      </div>
+    </>
   );
 };
 

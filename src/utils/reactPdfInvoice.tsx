@@ -179,7 +179,7 @@ const styles = StyleSheet.create({
   tableHeaderCell: {
     color: "#333333",
     fontWeight: "bold",
-    fontSize: 16,
+    fontSize: 12,
     textAlign: "center",
   },
   tableRow: {
@@ -224,14 +224,14 @@ const styles = StyleSheet.create({
     backgroundColor: "#F9F9F9",
   },
   summaryLabel: {
-    fontSize: 15,
+    fontSize: 12,
     fontWeight: "bold",
     width: 70,
     textAlign: "right",
     marginRight: 10,
   },
   summaryValue: {
-    fontSize: 15,
+    fontSize: 12,
     fontWeight: "bold",
     width: 60,
     textAlign: "right",

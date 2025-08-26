@@ -75,48 +75,48 @@ const AgentView: React.FC = () => {
   }
 
   return (
-    <div className="p-6 max-w-7xl mx-auto">
-      {/* Header Section */}
-      <div className="mb-8">
-        <div className="flex items-center gap-3 mb-2">
-          <div className="p-2 bg-gradient-to-r from-blue-500 to-blue-600 rounded-lg">
-            <Activity className="w-6 h-6 text-white" />
+    <div className="p-3 sm:p-6 max-w-7xl mx-auto">
+      {/* Header Section - Mobile Optimized */}
+      <div className="mb-6 sm:mb-8">
+        <div className="flex items-center gap-3 mb-3 sm:mb-2">
+          <div className="p-2 sm:p-2 bg-gradient-to-r from-blue-500 to-blue-600 rounded-lg">
+            <Activity className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
           </div>
-          <div>
-            <h1 className="text-3xl font-bold text-gray-900">
+          <div className='flex-1 min-w-0'>
+            <h1 className="text-xl sm:text-3xl font-bold text-gray-900 truncate">
               Welcome back, {user?.name || "Agent"}
             </h1>
-            <p className="text-gray-600 mt-1">
+            <p className="text-sm sm:text-base text-gray-600 mt-1">
               Access your available modules and manage your tasks
             </p>
           </div>
         </div>
         
-        <div className="flex items-center gap-4 mt-4">
-          <Badge variant="secondary" className="px-3 py-1">
+        <div className="flex items-center gap-2 sm:gap-4 mt-3 sm:mt-4">
+          <Badge variant="secondary" className="px-2 py-1 sm:px-3 text-xs sm:text-sm">
             {filteredNavItems.length} Available Modules
           </Badge>
-          <Badge variant="outline" className="px-3 py-1">
+          <Badge variant="outline" className="px-2 py-1 sm:px-3 text-xs sm:text-sm">
             Role: {user?.role || "Agent"}
           </Badge>
         </div>
       </div>
 
-      {/* Cards Grid */}
+      {/* Cards Grid - Mobile Optimized */}
       {filteredNavItems.length === 0 ? (
-        <div className="text-center py-12">
-          <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
-            <Activity className="w-8 h-8 text-gray-400" />
+        <div className="text-center py-8 sm:py-12">
+          <div className="w-12 h-12 sm:w-16 sm:h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+            <Activity className="w-6 h-6 sm:w-8 sm:h-8 text-gray-400" />
           </div>
-          <h3 className="text-lg font-medium text-gray-900 mb-2">
+          <h3 className="text-base sm:text-lg font-medium text-gray-900 mb-2">
             No Modules Available
           </h3>
-          <p className="text-gray-500 max-w-md mx-auto">
+          <p className="text-sm sm:text-base text-gray-500 max-w-md mx-auto px-4">
             You don't have access to any modules at the moment. Contact your administrator to get the necessary permissions.
           </p>
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+        <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-6">
           {filteredNavItems.map((item, index) => (
             <Card
               key={item.id}
@@ -126,10 +126,10 @@ const AgentView: React.FC = () => {
                 item.isActive
                   ? "ring-2 ring-blue-500/20 border-blue-300/50"
                   : "hover:border-gray-300"
-              }`}
+              } touch-manipulation`}
               onClick={() => handleCardClick(item.url)}
             >
-              <CardContent className="p-6">
+              <CardContent className="p-3 sm:p-6">
                 {/* Active Indicator */}
                 {item.isActive && (
                   <div className="absolute top-3 right-3">
@@ -138,26 +138,26 @@ const AgentView: React.FC = () => {
                 )}
 
                 {/* Icon */}
-                <div className={`w-12 h-12 rounded-xl ${getIconColors(index)} flex items-center justify-center mb-4 group-hover:scale-110 transition-transform duration-300`}>
+                <div className={`w-8 h-8 sm:w-12 sm:h-12 rounded-lg sm:rounded-xl ${getIconColors(index)} flex items-center justify-center mb-2 sm:mb-4 group-hover:scale-110 transition-transform duration-300`}>
                   {React.cloneElement(item.icon as React.ReactElement, {
-                    className: "w-6 h-6"
+                    className: "w-4 h-4 sm:w-6 sm:h-6"
                   })}
                 </div>
 
                 {/* Content */}
-                <div className="space-y-2">
-                  <h3 className="font-semibold text-gray-900 text-lg group-hover:text-gray-700 transition-colors">
+                <div className="space-y-1 sm:space-y-2">
+                  <h3 className="font-semibold text-gray-900 text-sm sm:text-lg group-hover:text-gray-700 transition-colors line-clamp-2">
                     {item.title}
                   </h3>
                   
-                  <p className="text-sm text-gray-600 line-clamp-2">
+                  <p className="text-xs sm:text-sm text-gray-600 line-clamp-2 hidden sm:block">
                     Access and manage {item.title.toLowerCase()} related tasks and data
                   </p>
                 </div>
 
                 {/* Arrow Icon */}
-                <div className="absolute bottom-4 right-4 opacity-0 group-hover:opacity-100 transition-all duration-300 transform translate-x-2 group-hover:translate-x-0">
-                  <ChevronRight className="w-5 h-5 text-gray-400" />
+                <div className="absolute bottom-2 right-2 sm:bottom-4 sm:right-4 opacity-0 group-hover:opacity-100 transition-all duration-300 transform translate-x-2 group-hover:translate-x-0">
+                  <ChevronRight className="w-4 h-4 sm:w-5 sm:h-5 text-gray-400" />
                 </div>
 
                 {/* Hover Effect Overlay */}
@@ -168,26 +168,26 @@ const AgentView: React.FC = () => {
         </div>
       )}
 
-      {/* Footer Stats */}
-      <div className="mt-12 pt-8 border-t border-gray-200">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      {/* Footer Stats - Mobile Optimized */}
+      <div className="mt-8 sm:mt-12 pt-6 sm:pt-8 border-t border-gray-200">
+        <div className="grid grid-cols-3 gap-4 sm:gap-6">
           <div className="text-center">
-            <div className="text-2xl font-bold text-blue-600">
+            <div className="text-xl sm:text-2xl font-bold text-blue-600">
               {filteredNavItems.length}
             </div>
-            <div className="text-sm text-gray-600">Available Modules</div>
+            <div className="text-xs sm:text-sm text-gray-600">Available Modules</div>
           </div>
           <div className="text-center">
-            <div className="text-2xl font-bold text-green-600">
+            <div className="text-xl sm:text-2xl font-bold text-green-600">
               {filteredNavItems.filter(item => item.isActive).length}
             </div>
-            <div className="text-sm text-gray-600">Currently Active</div>
+            <div className="text-xs sm:text-sm text-gray-600">Currently Active</div>
           </div>
           <div className="text-center">
-            <div className="text-2xl font-bold text-purple-600">
+            <div className="text-xl sm:text-2xl font-bold text-purple-600 truncate">
               {user?.role || "Agent"}
             </div>
-            <div className="text-sm text-gray-600">Your Access Level</div>
+            <div className="text-xs sm:text-sm text-gray-600">Your Access Level</div>
           </div>
         </div>
       </div>
