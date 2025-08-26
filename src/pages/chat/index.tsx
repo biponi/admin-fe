@@ -15,6 +15,8 @@ import {
   CheckCheck,
   Loader2,
   Menu,
+  ArrowLeft,
+  Users,
 } from "lucide-react";
 import { format } from "date-fns";
 import { hasPagePermission } from "../../utils/helperFunction";
@@ -24,12 +26,11 @@ import { useChatData } from "../../hooks/useChatDataSimple";
 import { useChatSocket } from "../../hooks/useChatSocket";
 import { ChatErrorBoundary } from "../../components/ChatErrorBoundary";
 import {
-  Sheet,
-  SheetContent,
-  SheetHeader,
-  SheetTitle,
-  SheetTrigger,
-} from "../../components/ui/sheet";
+  Drawer,
+  DrawerContent,
+  DrawerHeader,
+  DrawerTitle,
+} from "../../components/ui/drawer";
 
 // Local interface for component props
 interface LocalMessage {
@@ -63,6 +64,155 @@ interface LocalTicket {
   lastMessage?: string;
 }
 
+// Mobile Empty State Component
+const MobileEmptyState: React.FC<{
+  tickets: LocalTicket[];
+  onOpenTicketList: () => void;
+  ticketsLoading: boolean;
+}> = ({ tickets, onOpenTicketList, ticketsLoading }) => {
+  const totalUnread = tickets.reduce(
+    (sum, ticket) => sum + (ticket.unreadCount || 0),
+    0
+  );
+
+  return (
+    <div className='flex flex-col h-full bg-gray-50 relative'>
+      {/* Top Panel - Always visible header for mobile */}
+      <div className='bg-white border-b border-gray-200 p-4 md:hidden shadow-sm'>
+        <div className='flex items-center justify-between'>
+          <h1 className='text-lg font-semibold text-gray-900'>Support Chat</h1>
+          <Button
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              console.log("Empty state header button clicked");
+              onOpenTicketList();
+            }}
+            variant='default'
+            size='sm'
+            className='flex items-center gap-2 bg-blue-500 hover:bg-blue-600 text-white shadow-sm touch-manipulation'>
+            <Menu className='w-4 h-4' />
+            <span>Tickets</span>
+            {totalUnread > 0 && (
+              <Badge
+                variant='secondary'
+                className='ml-1 px-1.5 py-0.5 text-xs min-w-[18px] h-[18px] rounded-full flex items-center justify-center bg-red-500 text-white border-0'>
+                {totalUnread > 99 ? "99+" : totalUnread}
+              </Badge>
+            )}
+          </Button>
+        </div>
+      </div>
+
+      {/* Main content */}
+      <div className='flex-1 flex flex-col items-center justify-center p-6'>
+        <div className='w-20 h-20 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-6'>
+          <MessageCircle className='w-10 h-10 text-blue-600' />
+        </div>
+        <h3 className='text-xl font-semibold text-gray-900 mb-3'>
+          Welcome to Support Chat
+        </h3>
+        <p className='text-gray-500 mb-8 leading-relaxed text-center max-w-sm'>
+          {ticketsLoading
+            ? "Loading conversations..."
+            : tickets.length > 0
+            ? "Select a customer support ticket to start chatting"
+            : "No support tickets available at the moment"}
+        </p>
+
+        {/* Large Action button - Always visible */}
+        <Button
+          onClick={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            console.log("Large action button clicked");
+            onOpenTicketList();
+          }}
+          size='lg'
+          className='bg-blue-500 hover:bg-blue-600 text-white px-8 py-3 rounded-xl shadow-sm flex items-center gap-3 transition-all text-base font-medium min-w-[200px] touch-manipulation'>
+          <Users className='w-5 h-5' />
+          {ticketsLoading
+            ? "Loading..."
+            : tickets.length > 0
+            ? `View ${tickets.length} Ticket${tickets.length !== 1 ? "s" : ""}`
+            : "View Tickets"}
+          {!ticketsLoading && totalUnread > 0 && (
+            <Badge
+              variant='secondary'
+              className='ml-2 bg-white text-blue-600 px-2 py-1 text-xs'>
+              {totalUnread} unread
+            </Badge>
+          )}
+        </Button>
+
+        {ticketsLoading && (
+          <div className='mt-4 flex items-center gap-2 text-gray-500'>
+            <Loader2 className='w-4 h-4 animate-spin' />
+            <span className='text-sm'>Loading tickets...</span>
+          </div>
+        )}
+      </div>
+
+      {/* Bottom Panel - Floating action button */}
+      {/* <div className='absolute bottom-6 left-4 right-4 md:hidden'>
+        <Button
+          onClick={onOpenTicketList}
+          className='w-full flex items-center justify-center gap-2 py-4 bg-gray-900 hover:bg-gray-800 text-white rounded-xl shadow-lg border-0'>
+          <Menu className='w-5 h-5' />
+          <span className='text-base font-medium'>Open Ticket List</span>
+          {totalUnread > 0 && (
+            <Badge
+              variant='secondary'
+              className='ml-2 px-2 py-1 text-xs bg-red-500 text-white border-0'>
+              {totalUnread}
+            </Badge>
+          )}
+        </Button>
+      </div> */}
+    </div>
+  );
+};
+
+// Mobile Drawer Component
+const MobileDrawer: React.FC<{
+  isOpen: boolean;
+  onOpenChange: (open: boolean) => void;
+  tickets: LocalTicket[];
+  selectedTicket: string | null;
+  onTicketSelect: (ticketId: string) => void;
+  ticketsLoading: boolean;
+  ticketsError: any;
+}> = ({
+  isOpen,
+  onOpenChange,
+  tickets,
+  selectedTicket,
+  onTicketSelect,
+  ticketsLoading,
+  ticketsError,
+}) => {
+  return (
+    <Drawer open={isOpen} onOpenChange={onOpenChange}>
+      <DrawerContent className='w-80 sm:w-96 p-0 z-50' style={{ zIndex: 1000 }}>
+        <DrawerHeader className='p-4 border-b bg-white'>
+          <DrawerTitle className='text-left text-lg font-semibold'>
+            Support Tickets
+          </DrawerTitle>
+        </DrawerHeader>
+        <div className='h-[calc(100vh-80px)] overflow-hidden bg-white'>
+          <ChatSidebar
+            tickets={tickets}
+            selectedTicket={selectedTicket}
+            onTicketSelect={onTicketSelect}
+            isLoading={ticketsLoading}
+            error={ticketsError}
+          />
+        </div>
+      </DrawerContent>
+    </Drawer>
+  );
+};
+
 // Components
 const ChatInterface: React.FC<{
   ticket: LocalTicket | null;
@@ -89,6 +239,10 @@ const ChatInterface: React.FC<{
   onTicketSelect: (ticketId: string) => void;
   ticketsLoading: boolean;
   ticketsError: any;
+  onBackToList: () => void;
+  // Mobile drawer props
+  isTicketListOpen: boolean;
+  onOpenTicketList: () => void;
 }> = ({
   ticket,
   canReply,
@@ -105,6 +259,9 @@ const ChatInterface: React.FC<{
   onTicketSelect,
   ticketsLoading,
   ticketsError,
+  onBackToList,
+  isTicketListOpen,
+  onOpenTicketList,
 }) => {
   const scrollAreaRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -195,19 +352,11 @@ const ChatInterface: React.FC<{
 
   if (!ticket) {
     return (
-      <div className='flex items-center justify-center h-full bg-gray-50'>
-        <div className='text-center max-w-md mx-auto p-8'>
-          <div className='w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4'>
-            <MessageCircle className='w-8 h-8 text-blue-600' />
-          </div>
-          <h3 className='text-lg font-medium text-gray-900 mb-2'>
-            Select a conversation
-          </h3>
-          <p className='text-gray-500'>
-            Choose a customer support ticket from the sidebar to start chatting
-          </p>
-        </div>
-      </div>
+      <MobileEmptyState
+        tickets={tickets}
+        onOpenTicketList={onOpenTicketList}
+        ticketsLoading={ticketsLoading}
+      />
     );
   }
 
@@ -227,37 +376,44 @@ const ChatInterface: React.FC<{
   };
 
   return (
-    <div className='flex flex-col h-full bg-white'>
+    <div className='flex flex-col h-[90vh] bg-white relative'>
+      {/* Floating Action Button - Always visible on mobile */}
+      <Button
+        onClick={(e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          console.log("FAB clicked, current state:", isTicketListOpen);
+          onOpenTicketList();
+        }}
+        className='fixed bottom-4 right-4 z-50 md:hidden w-14 h-14 rounded-full bg-blue-500 hover:bg-blue-600 text-white shadow-lg border-0 p-0 flex items-center justify-center touch-manipulation'>
+        <Menu className='w-6 h-6' />
+      </Button>
+
       {/* Modern Header - WhatsApp Style for Mobile */}
-      <div className='flex items-center justify-between p-3 sm:p-4 border-b border-gray-100 bg-white'>
-        {/* Mobile Menu Button - WhatsApp style */}
-        <div className='flex items-center gap-3 sm:hidden'>
-          <Sheet>
-            <SheetTrigger asChild>
-              <Button
-                variant="ghost"
-                size="sm"
-                className='p-2 h-auto hover:bg-gray-100'>
-                <Menu className='w-5 h-5' />
-              </Button>
-            </SheetTrigger>
-            <SheetContent side="left" className='w-80 p-0'>
-              <SheetHeader className='p-4 border-b'>
-                <SheetTitle className='text-left'>Support Tickets</SheetTitle>
-              </SheetHeader>
-              <div className='h-[calc(100vh-80px)] overflow-hidden'>
-                <ChatSidebar
-                  tickets={tickets}
-                  selectedTicket={selectedTicket}
-                  onTicketSelect={onTicketSelect}
-                  isLoading={ticketsLoading}
-                  error={ticketsError}
-                />
-              </div>
-            </SheetContent>
-          </Sheet>
+      <div className='flex items-center justify-between p-3 sm:p-4 border-b border-gray-100 bg-white relative'>
+        {/* Mobile Back/Menu Button */}
+        <div className='flex items-center gap-3 md:hidden'>
+          <Button
+            onClick={onBackToList}
+            variant='ghost'
+            size='sm'
+            className='p-2 h-auto hover:bg-gray-100'>
+            <ArrowLeft className='w-5 h-5' />
+          </Button>
+          <Button
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              console.log("Header menu button clicked");
+              onOpenTicketList();
+            }}
+            variant='ghost'
+            size='sm'
+            className='p-2 h-auto hover:bg-gray-100 bg-blue-50 border border-blue-200 touch-manipulation'>
+            <Menu className='w-5 h-5 text-blue-600' />
+          </Button>
         </div>
-        
+
         <div className='flex items-center gap-2 sm:gap-3 flex-1 min-w-0'>
           <Avatar className='w-8 h-8 sm:w-10 sm:h-10 flex-shrink-0'>
             <AvatarFallback className='bg-blue-100 text-blue-700 font-medium text-xs sm:text-sm'>
@@ -270,9 +426,13 @@ const ChatInterface: React.FC<{
             </h2>
             <div className='flex items-center gap-1 sm:gap-2 text-xs sm:text-sm text-gray-500'>
               <Phone className='w-3 h-3 flex-shrink-0' />
-              <span className='truncate'>{ticket.customerInfo.phone || "N/A"}</span>
+              <span className='truncate'>
+                {ticket.customerInfo.phone || "N/A"}
+              </span>
               <span className='hidden sm:inline'>•</span>
-              <span className='hidden sm:inline truncate'>{ticket.subject}</span>
+              <span className='hidden sm:inline truncate'>
+                {ticket.subject}
+              </span>
             </div>
           </div>
         </div>
@@ -499,9 +659,12 @@ const ChatInterface: React.FC<{
 // Main Chat Page Component
 const ChatPage: React.FC = () => {
   const selectedTicketRef = useRef<string | null>(null);
-  const [selectedTicket, setSelectedTicket] = React.useState<string | null>(null);
+  const [selectedTicket, setSelectedTicket] = React.useState<string | null>(
+    null
+  );
   const [isSending, setIsSending] = React.useState(false);
   const [isUpdatingStatus, setIsUpdatingStatus] = React.useState(false);
+  const [isTicketListOpen, setIsTicketListOpen] = React.useState(false);
   const initializedRef = useRef(false);
   const urlProcessedRef = useRef(false);
 
@@ -585,11 +748,11 @@ const ChatPage: React.FC = () => {
   React.useEffect(() => {
     if (!initializedRef.current) {
       initializedRef.current = true;
-      
+
       // Set up socket listeners, then connect
       setupSocketListeners();
       connectSocket();
-      
+
       // Fetch tickets only once on initial load
       fetchTickets();
     }
@@ -608,32 +771,42 @@ const ChatPage: React.FC = () => {
   const canAttend = hasPagePermission("Chat", "attend", userPermissions);
   const canView = hasPagePermission("Chat", "view", userPermissions);
 
-  const handleTicketSelect = React.useCallback((ticketId: string) => {
-    selectedTicketRef.current = ticketId;
-    setSelectedTicket(ticketId);
-    fetchTicket(ticketId);
-  }, [fetchTicket]);
+  const handleTicketSelect = React.useCallback(
+    (ticketId: string) => {
+      selectedTicketRef.current = ticketId;
+      setSelectedTicket(ticketId);
+      fetchTicket(ticketId);
+    },
+    [fetchTicket]
+  );
+
+  const handleBackToList = React.useCallback(() => {
+    setSelectedTicket(null);
+    selectedTicketRef.current = null;
+  }, []);
 
   // Handle URL query parameter for auto-selecting ticket
   React.useEffect(() => {
     if (!urlProcessedRef.current && tickets.length > 0) {
       urlProcessedRef.current = true;
-      
+
       const urlParams = new URLSearchParams(window.location.search);
-      const ticketParam = urlParams.get('ticket');
-      
+      const ticketParam = urlParams.get("ticket");
+
       if (ticketParam) {
         // Find ticket by ticketId (not _id)
-        const ticketToSelect = tickets.find(ticket => ticket.ticketId === ticketParam);
-        
+        const ticketToSelect = tickets.find(
+          (ticket) => ticket.ticketId === ticketParam
+        );
+
         if (ticketToSelect) {
           console.log(`Auto-selecting ticket from URL: ${ticketParam}`);
           handleTicketSelect(ticketToSelect._id);
-          
+
           // Update URL to remove the query parameter to avoid re-processing
           const newUrl = new URL(window.location.href);
-          newUrl.searchParams.delete('ticket');
-          window.history.replaceState({}, '', newUrl.toString());
+          newUrl.searchParams.delete("ticket");
+          window.history.replaceState({}, "", newUrl.toString());
         } else {
           console.warn(`Ticket not found in list: ${ticketParam}`);
         }
@@ -671,6 +844,19 @@ const ChatPage: React.FC = () => {
       setIsUpdatingStatus(false);
     }
   };
+
+  const handleOpenTicketList = React.useCallback(() => {
+    console.log("Opening ticket list sheet...");
+    setIsTicketListOpen(true);
+  }, []);
+
+  const handleTicketSelectAndClose = React.useCallback(
+    (ticketId: string) => {
+      handleTicketSelect(ticketId);
+      setIsTicketListOpen(false);
+    },
+    [handleTicketSelect]
+  );
 
   if (!canView) {
     return (
@@ -727,10 +913,29 @@ const ChatPage: React.FC = () => {
                 onTicketSelect={handleTicketSelect}
                 ticketsLoading={ticketsLoading}
                 ticketsError={ticketsError}
+                onBackToList={handleBackToList}
+                isTicketListOpen={isTicketListOpen}
+                onOpenTicketList={handleOpenTicketList}
               />
             )}
           </div>
         </div>
+
+        {/* Mobile Drawer - Only shown when ticket is selected */}
+        {selectedTicket && (
+          <MobileDrawer
+            isOpen={isTicketListOpen}
+            onOpenChange={(open) => {
+              console.log("Sheet open state changed:", open);
+              setIsTicketListOpen(open);
+            }}
+            tickets={tickets}
+            selectedTicket={selectedTicket}
+            onTicketSelect={handleTicketSelectAndClose}
+            ticketsLoading={ticketsLoading}
+            ticketsError={ticketsError}
+          />
+        )}
       </div>
     </ChatErrorBoundary>
   );
