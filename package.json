@@ -113,12 +113,11 @@
       ">0.2%",
       "not dead",
       "not op_mini all",
-      "iOS >= 11",
-      "Safari >= 11",
-      "last 2 Chrome versions",
-      "last 2 Firefox versions",
-      "last 2 Edge versions",
-      "last 2 Android versions"
+      "iOS >= 12",
+      "Safari >= 12",
+      "Chrome >= 65",
+      "Firefox >= 60",
+      "Edge >= 79"
     ],
     "development": [
       "last 1 Chrome version",
