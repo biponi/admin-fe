@@ -52,6 +52,38 @@ const initialState: NotificationState = {
   error: null,
 };
 
+// Helper function to check if browser notifications are supported
+const isBrowserNotificationSupported = (): boolean => {
+  return typeof window !== "undefined" && "Notification" in window;
+};
+
+// Helper function to get notification permission safely
+const getNotificationPermission = ():
+  | NotificationPermission
+  | "unsupported" => {
+  if (!isBrowserNotificationSupported()) {
+    return "unsupported";
+  }
+  return Notification.permission;
+};
+
+// Helper function to request notification permission safely
+const requestNotificationPermission = async (): Promise<
+  NotificationPermission | "unsupported"
+> => {
+  if (!isBrowserNotificationSupported()) {
+    return "unsupported";
+  }
+
+  try {
+    const permission = await Notification.requestPermission();
+    return permission;
+  } catch (error) {
+    console.warn("Failed to request notification permission:", error);
+    return "denied";
+  }
+};
+
 function notificationReducer(
   state: NotificationState,
   action: NotificationAction
@@ -134,6 +166,11 @@ interface NotificationContextType {
   markAllAsRead: () => void;
   removeNotification: (notificationId: string) => void;
   refreshNotifications: () => void;
+  isBrowserNotificationSupported: boolean;
+  notificationPermission: NotificationPermission | "unsupported";
+  requestNotificationPermission: () => Promise<
+    NotificationPermission | "unsupported"
+  >;
 }
 
 const NotificationContext = createContext<NotificationContextType | undefined>(
@@ -158,6 +195,9 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({
   children,
 }) => {
   const [state, dispatch] = useReducer(notificationReducer, initialState);
+  const [notificationPermission, setNotificationPermission] = React.useState<
+    NotificationPermission | "unsupported"
+  >(getNotificationPermission());
 
   // Play notification sound
   const playNotificationSound = useCallback(() => {
@@ -169,6 +209,32 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({
       });
     } catch (error) {
       console.warn("Could not play notification sound:", error);
+    }
+  }, []);
+
+  // Show browser notification safely
+  const showBrowserNotification = useCallback((notification: Notification) => {
+    if (!isBrowserNotificationSupported()) {
+      console.log("🔔 Browser notifications not supported on this device");
+      return;
+    }
+
+    if (getNotificationPermission() === "granted") {
+      try {
+        console.log("🔔 Showing browser notification");
+        new window.Notification(notification.title, {
+          body: notification.message,
+          icon: "/favicon.ico",
+          tag: notification._id,
+        });
+      } catch (error) {
+        console.warn("Failed to show browser notification:", error);
+      }
+    } else {
+      console.log(
+        "🔔 Browser notification permission not granted:",
+        getNotificationPermission()
+      );
     }
   }, []);
 
@@ -187,23 +253,10 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({
       console.log("🔔 handleNewNotification: Playing notification sound");
       playNotificationSound();
 
-      // Show browser notification if permission granted
-      if (Notification.permission === "granted") {
-        console.log("🔔 handleNewNotification: Showing browser notification");
-        new Notification(notification.title, {
-          body: notification.message,
-          icon: "/favicon.ico",
-          tag: notification._id,
-        });
-      } else {
-        console.log(
-          "🔔 handleNewNotification: Browser notification permission not granted:",
-          Notification.permission
-        );
-      }
+      // Show browser notification if supported and permitted
+      showBrowserNotification(notification);
     },
-    //eslint-disable-next-line react-hooks/exhaustive-deps
-    [playNotificationSound]
+    [playNotificationSound, showBrowserNotification]
   );
 
   // Mark notification as read
@@ -229,6 +282,13 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({
     socketService.getNotifications();
   }, []);
 
+  // Request notification permission with proper handling
+  const handleRequestNotificationPermission = useCallback(async () => {
+    const permission = await requestNotificationPermission();
+    setNotificationPermission(permission);
+    return permission;
+  }, []);
+
   // Setup socket listeners
   useEffect(() => {
     console.log("🔔 NotificationContext: Setting up notification callback");
@@ -250,15 +310,18 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({
 
     socketService.setCallbacks(socketCallbacks);
 
-    // Request browser notification permission
-    if (Notification.permission === "default") {
-      Notification.requestPermission();
+    // Request browser notification permission only if supported
+    if (
+      isBrowserNotificationSupported() &&
+      getNotificationPermission() === "default"
+    ) {
+      handleRequestNotificationPermission();
     }
 
     return () => {
       // Cleanup if needed
     };
-  }, [handleNewNotification]);
+  }, [handleNewNotification, handleRequestNotificationPermission]);
 
   const value: NotificationContextType = {
     notifications: state.notifications,
@@ -269,6 +332,9 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({
     markAllAsRead,
     removeNotification,
     refreshNotifications,
+    isBrowserNotificationSupported: isBrowserNotificationSupported(),
+    notificationPermission,
+    requestNotificationPermission: handleRequestNotificationPermission,
   };
 
   return (
