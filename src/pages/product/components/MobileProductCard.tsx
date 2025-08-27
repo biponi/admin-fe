@@ -16,7 +16,6 @@ import {
   Tag,
   Hash,
   Calendar,
-  AlignJustify,
 } from "lucide-react";
 import { Badge } from "../../../components/ui/badge";
 import { Button } from "../../../components/ui/button";
@@ -260,7 +259,7 @@ const MobileProductCard: React.FC<MobileProductCardProps> = ({
             onClick={onViewVariations}>
             <Activity className='h-2.5 w-2.5 text-purple-600 mx-auto mb-0.5' />
             <p className='font-bold text-xs text-purple-800'>
-              {variations.length || 0}
+              {variations.length === 1 && variations[0] === "No Variant" ? 0 : variations.length}
             </p>
             <p className='text-[9px] text-purple-600'>Variant</p>
           </div>
@@ -277,11 +276,16 @@ const MobileProductCard: React.FC<MobileProductCardProps> = ({
             variant='outline'
             onClick={onViewVariations}
             className='text-[9px] px-1 py-0 bg-gray-50 border-gray-200 h-4 cursor-pointer hover:bg-gray-100 transition-colors touch-manipulation'>
-            {variations.length > 1 ? (
-              `${variations.length} variants`
-            ) : (
-              <AlignJustify className='h-2.5 w-2.5 mr-0.5' />
-            )}
+            {(() => {
+              const variantCount = variations.length === 1 && variations[0] === "No Variant" ? 0 : variations.length;
+              return variantCount > 1 ? (
+                `${variantCount} variants`
+              ) : variantCount === 1 ? (
+                "1 variant"
+              ) : (
+                "No variants"
+              );
+            })()}
           </Badge>
         </div>
       </div>

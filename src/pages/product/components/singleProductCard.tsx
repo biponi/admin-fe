@@ -93,20 +93,29 @@ const SingleProductCardItem: React.FC<Props> = ({
               <DrawerTitle>Variants</DrawerTitle>
               <DrawerDescription>
                 Total Variations:{" "}
-                <Badge className='outline'>{variations?.length ?? 0}</Badge>
+                <Badge className='outline'>
+                {variations?.length === 1 && variations[0] === "No Variant" ? 0 : variations?.length ?? 0}
+              </Badge>
               </DrawerDescription>
             </DrawerHeader>
             <div className='p-4 pb-0'>
-              <div className='grid grid-cols-2 gap-2'>
-                {variations?.map((val, index) => (
-                  <Badge
-                    key={index}
-                    variant={"secondary"}
-                    className='bg-gray-300 text-gray-900'>
-                    {val}
-                  </Badge>
-                ))}
-              </div>
+              {variations?.length === 1 && variations[0] === "No Variant" ? (
+                <div className='text-center py-4 text-gray-500'>
+                  <Package className='h-8 w-8 text-gray-300 mx-auto mb-2' />
+                  <p className='text-sm'>No variations available</p>
+                </div>
+              ) : (
+                <div className='grid grid-cols-2 gap-2'>
+                  {variations?.map((val, index) => (
+                    <Badge
+                      key={index}
+                      variant={"secondary"}
+                      className='bg-gray-300 text-gray-900'>
+                      {val}
+                    </Badge>
+                  ))}
+                </div>
+              )}
             </div>
             <DrawerFooter>
               <DrawerClose asChild>
@@ -184,7 +193,8 @@ const SingleProductCardItem: React.FC<Props> = ({
                 //@ts-ignore
                 if (!!variantBtn) variantBtn?.current.click();
               })}>
-              <Package className=' size-4 mr-1 ' /> {variations.length ?? 0}
+              <Package className=' size-4 mr-1 ' /> 
+              {variations?.length === 1 && variations[0] === "No Variant" ? 0 : variations?.length ?? 0}
             </Badge>
           </div>
           <Badge variant={"outline"} className='my-1 hidden'>

@@ -200,7 +200,7 @@ const ProductVariationDrawer: React.FC<{
                 <Activity className='h-4 w-4 text-gray-500' />
                 <span className='text-gray-600'>Variations:</span>
                 <span className='font-semibold'>
-                  {product.variation?.length || 0}
+                  {product.variation?.length || product.variantList?.length || 0}
                 </span>
               </div>
             </div>
@@ -212,7 +212,7 @@ const ProductVariationDrawer: React.FC<{
               <Activity className='h-5 w-5 text-blue-600' />
               <h3 className='font-medium text-gray-900'>Product Variations</h3>
               <Badge variant='outline' className='ml-auto'>
-                {product.variation?.length || 0} variants
+                {product.variation?.length || product.variantList?.length || 0} variants
               </Badge>
             </div>
 
@@ -232,9 +232,9 @@ const ProductVariationDrawer: React.FC<{
               </p>
             </div>
 
-            {product.variation &&
-            Array.isArray(product.variation) &&
-            product.variation.length > 0 ? (
+            {(product.variation &&
+              Array.isArray(product.variation) &&
+              product.variation.length > 0) ? (
               <div className='space-y-3'>
                 {product.variation.map((variation, index) => (
                   <div
@@ -296,6 +296,30 @@ const ProductVariationDrawer: React.FC<{
                     </div>
                   </div>
                 ))}
+              </div>
+            ) : (product.variantList &&
+                Array.isArray(product.variantList) &&
+                product.variantList.length > 0) ? (
+              <div className='space-y-3'>
+                <div className='bg-blue-50 border border-blue-200 rounded-lg p-4'>
+                  <div className='flex items-center gap-2 mb-3'>
+                    <Activity className='h-5 w-5 text-blue-600' />
+                    <h4 className='font-medium text-blue-900'>Variation Names</h4>
+                  </div>
+                  <div className='text-sm text-blue-700'>
+                    <p className='mb-2'>This product has the following variations:</p>
+                    <div className='flex flex-wrap gap-2'>
+                      {product.variantList.map((variant, index) => (
+                        <span 
+                          key={index}
+                          className='px-2 py-1 bg-blue-100 text-blue-800 rounded-md text-xs font-medium'
+                        >
+                          {variant}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                </div>
               </div>
             ) : (
               <div className='text-center py-8 text-gray-500'>
@@ -427,7 +451,7 @@ const ProductList: React.FC<Props> = ({ handleEditProduct }) => {
     setSelectedProductForVariations(null);
   };
 
-  const renderMobileProductView = (product: IProduct, key: number) => {
+  const renderMobileProductView = (product: IProduct, _index: number) => {
     return (
       <SingleProductCardItem
         key={product?.id}
@@ -442,8 +466,8 @@ const ProductList: React.FC<Props> = ({ handleEditProduct }) => {
         totalSold={product?.sold ?? []}
         totalReturned={product?.returned ?? 0}
         variations={
-          product?.variation && product?.variation.length > 0
-            ? product.variation.map((v) => v.name || v.title || "Variant")
+          product?.variantList && product?.variantList.length > 0
+            ? product.variantList
             : ["No Variant"]
         }
         handleUpdateProduct={handleEditProduct}
@@ -806,10 +830,8 @@ const ProductList: React.FC<Props> = ({ handleEditProduct }) => {
                     totalSold={product.sold ?? []}
                     totalReturned={product.returned ?? 0}
                     variations={
-                      product.variation && product.variation.length > 0
-                        ? product.variation.map(
-                            (v) => v.name || v.title || "Variant"
-                          )
+                      product?.variantList && product?.variantList.length > 0
+                        ? product.variantList
                         : ["No Variant"]
                     }
                     updatedAt={
@@ -1236,12 +1258,8 @@ const ProductList: React.FC<Props> = ({ handleEditProduct }) => {
                                       totalSold={product?.sold ?? []}
                                       totalReturned={product?.returned ?? 0}
                                       variations={
-                                        product?.variation &&
-                                        product?.variation.length > 0
-                                          ? product.variation.map(
-                                              (v) =>
-                                                v.name || v.title || "Variant"
-                                            )
+                                        product?.variantList && product?.variantList.length > 0
+                                          ? product.variantList
                                           : ["No Variant"]
                                       }
                                       handleUpdateProduct={handleEditProduct}
