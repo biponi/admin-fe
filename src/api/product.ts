@@ -57,7 +57,7 @@ export const getProductsByCategory = async (
 ): Promise<ApiResponse<any>> => {
   try {
     const response = await axios.get<any>(config.product.getProductList(), {
-      params: { offset, limit, categoryId },
+      params: { page:offset, limit, categoryId },
     });
     if (response.status === 200) {
       return { success: true, data: response.data?.data };

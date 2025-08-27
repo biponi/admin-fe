@@ -79,7 +79,7 @@ class IOSErrorBoundary extends Component<Props, State> {
               )}
             </div>
 
-            {process.env.NODE_ENV === 'development' && this.state.error && (
+            {this.state.error && (
               <details className="mt-4 text-xs">
                 <summary className="cursor-pointer text-gray-600">Error Details</summary>
                 <pre className="mt-2 text-red-600 bg-red-50 p-2 rounded overflow-auto max-h-32">
