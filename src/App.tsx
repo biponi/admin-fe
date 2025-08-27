@@ -49,7 +49,6 @@ const AppContent = () => {
   const { token, refreshToken, fetchUserById, signOut } = useLoginAuth();
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [isAuth, setIsAuth] = useState<boolean>(false);
-  const [loadingTimeout, setLoadingTimeout] = useState<boolean>(false);
   const { user } = useLoginAuth();
   const navigate = useNavigate();
 
@@ -93,37 +92,31 @@ const AppContent = () => {
   };
 
   useEffect(() => {
-    // Add loading timeout for iOS devices
-    const timeoutId = setTimeout(() => {
-      if (isLoading) {
-        setLoadingTimeout(true);
-        setIsLoading(false);
-      }
-    }, 10000); // 10 second timeout
+    // 10 second timeout
 
     const initAuth = async () => {
       try {
         const authToken = localStorage.getItem("token");
         const refreshToken = localStorage.getItem("refreshToken");
 
-      if (authToken) {
-        const decoded = decodeToken<{ id: number; exp: number }>(authToken);
-        if (decoded && decoded.exp * 1000 > Date.now()) {
-          await fetchUserData(decoded.id);
-        } else if (refreshToken) {
-          const isRefreshed = await refreshUser();
-          if (isRefreshed?.success) {
-            const newDecoded = decodeToken<{ id: number; exp: number }>(
-              isRefreshed?.token!
-            );
-            if (newDecoded && newDecoded.exp * 1000 > Date.now())
-              await fetchUserData(newDecoded.id);
+        if (authToken) {
+          const decoded = decodeToken<{ id: number; exp: number }>(authToken);
+          if (decoded && decoded.exp * 1000 > Date.now()) {
+            await fetchUserData(decoded.id);
+          } else if (refreshToken) {
+            const isRefreshed = await refreshUser();
+            if (isRefreshed?.success) {
+              const newDecoded = decodeToken<{ id: number; exp: number }>(
+                isRefreshed?.token!
+              );
+              if (newDecoded && newDecoded.exp * 1000 > Date.now())
+                await fetchUserData(newDecoded.id);
+            }
+          } else {
+            setIsAuth(false);
+            signOut(); // Logout if both tokens are expired
+            navigate("/login");
           }
-        } else {
-          setIsAuth(false);
-          signOut(); // Logout if both tokens are expired
-          navigate("/login");
-        }
         } else {
           setIsAuth(false);
           navigate("/login");
@@ -138,39 +131,20 @@ const AppContent = () => {
     };
 
     initAuth();
-    
-    return () => {
-      clearTimeout(timeoutId);
-    };
+
     // eslint-disable-next-line
   }, [token]);
 
   if (isLoading) {
     return (
       <div className='w-full h-screen flex flex-col justify-center items-center bg-white'>
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mb-4"></div>
-        <span className='text-lg font-semibold text-gray-700'>Loading Dashboard...</span>
-        <p className='text-sm text-gray-500 mt-2'>Please wait while we load your content</p>
-      </div>
-    );
-  }
-
-  if (loadingTimeout) {
-    return (
-      <div className='w-full h-screen flex flex-col justify-center items-center bg-white'>
-        <div className="text-red-600 mb-4">
-          <svg className="w-12 h-12 mx-auto" fill="currentColor" viewBox="0 0 20 20">
-            <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
-          </svg>
-        </div>
-        <span className='text-lg font-semibold text-gray-700 mb-2'>Loading took too long</span>
-        <p className='text-sm text-gray-500 mb-4'>This might be due to a slow connection or iOS compatibility issues</p>
-        <button 
-          onClick={() => window.location.reload()} 
-          className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 focus:outline-none"
-        >
-          Refresh Page
-        </button>
+        <div className='animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mb-4'></div>
+        <span className='text-lg font-semibold text-gray-700'>
+          Loading Dashboard...
+        </span>
+        <p className='text-sm text-gray-500 mt-2'>
+          Please wait while we load your content
+        </p>
       </div>
     );
   }
