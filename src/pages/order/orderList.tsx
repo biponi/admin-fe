@@ -365,8 +365,19 @@ const OrderList = () => {
         <MobileOrderHeader
           totalOrders={totalOrders}
           todayOrders={0}
-          totalRevenue={orders ? orders.reduce((sum: number, order: IOrder) => sum + (order.totalPrice || 0), 0) : 0}
-          activeCustomers={orders ? new Set(orders.map((o: IOrder) => o.customer?.phoneNumber)).size : 0}
+          totalRevenue={
+            orders
+              ? orders.reduce(
+                  (sum: number, order: IOrder) => sum + (order.totalPrice || 0),
+                  0
+                )
+              : 0
+          }
+          activeCustomers={
+            orders
+              ? new Set(orders.map((o: IOrder) => o.customer?.phoneNumber)).size
+              : 0
+          }
           hasCreatePermission={hasRequiredPermission("order", "create")}
           selectedStatus={selectedStatus}
         />
@@ -427,7 +438,7 @@ const OrderList = () => {
                   />
                 ))}
               </div>
-              
+
               {/* Mobile Pagination */}
               {inputValue === "" && (
                 <div className='bg-white rounded-xl border border-gray-200 p-4 mt-4 mb-32 shadow-sm'>
@@ -436,16 +447,15 @@ const OrderList = () => {
                     Showing{" "}
                     <span className='font-semibold text-gray-900'>
                       {(Number(currentPageNum) - 1) * limit + 1}-
-                      {Math.min(
-                        Number(currentPageNum) * limit,
-                        totalOrders
-                      )}
+                      {Math.min(Number(currentPageNum) * limit, totalOrders)}
                     </span>{" "}
                     of{" "}
-                    <span className='font-semibold text-gray-900'>{totalOrders}</span>{" "}
+                    <span className='font-semibold text-gray-900'>
+                      {totalOrders}
+                    </span>{" "}
                     orders
                   </div>
-                  
+
                   {/* Pagination Controls */}
                   <div className='flex items-center justify-between gap-4'>
                     <Button
@@ -457,7 +467,7 @@ const OrderList = () => {
                       <ChevronLeft className='h-4 w-4' />
                       Previous
                     </Button>
-                    
+
                     {/* Page indicator */}
                     <div className='flex items-center gap-2'>
                       <span className='text-sm font-medium text-gray-700'>
@@ -482,7 +492,7 @@ const OrderList = () => {
                         </SelectContent>
                       </Select>
                     </div>
-                    
+
                     <Button
                       disabled={currentPageNum >= totalPages}
                       variant='outline'
@@ -504,10 +514,18 @@ const OrderList = () => {
           selectedCount={bulkOrders.length}
           totalCount={orders?.length || 0}
           onClearSelection={() => setBulkOrders([])}
-          onSelectAll={() => setBulkOrders(orders?.map((order: IOrder) => order?.id) || [])}
+          onSelectAll={() =>
+            setBulkOrders(orders?.map((order: IOrder) => order?.id) || [])
+          }
           onBulkAction={setBulkAction}
-          onGenerateInvoices={() => generateMultipleModernInvoicesAndDownloadZip(bulkOrders)}
-          isVisible={!selectedStatus.includes("return") && !!bulkOrders && bulkOrders.length > 0}
+          onGenerateInvoices={() =>
+            generateMultipleModernInvoicesAndDownloadZip(bulkOrders)
+          }
+          isVisible={
+            !selectedStatus.includes("return") &&
+            !!bulkOrders &&
+            bulkOrders.length > 0
+          }
         />
       </div>
     );
@@ -948,7 +966,7 @@ const OrderList = () => {
         onOpenChange={(value: boolean) => setShowDetails(value)}>
         <SheetContent className=' px-0'>
           <ScrollArea className='h-full'>
-            <div className='px-4 py-6 w-[425px] sm:w-full '>
+            <div className='px-4 py-6 w-full '>
               {/* Header */}
               <div className='space-y-4 pb-6 border-b'>
                 <div className='flex items-start justify-between'>
@@ -1438,8 +1456,6 @@ const OrderList = () => {
 
   // Parent Component - Sheet Implementation
   const drawerDialog = () => {
-    console.log("Selected Order: called");
-
     // Add safety check
     if (!selectedOrder) {
       return null;
@@ -1562,9 +1578,9 @@ const OrderList = () => {
         <>
           {/* Mobile Loading */}
           <div className='sm:hidden'>
-            <MobileEmptyState type="loading" />
+            <MobileEmptyState type='loading' />
           </div>
-          
+
           {/* Desktop Loading */}
           <div className='hidden sm:flex min-h-[80vh] bg-gradient-to-br from-gray-50 to-gray-100 items-center justify-center'>
             <Card className='w-full max-w-md mx-4'>
