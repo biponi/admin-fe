@@ -39,7 +39,7 @@ interface MobileProductCardProps {
   active: boolean;
   quantity: number;
   unitPrice: number;
-  totalSold: any[];
+  totalSold: number;
   totalReturned: number;
   variations: string[];
   updatedAt: string;
@@ -108,12 +108,7 @@ const MobileProductCard: React.FC<MobileProductCardProps> = ({
   const StatusIcon = statusConfig.icon;
   const StockIcon = stockConfig.icon;
 
-  const totalSoldQuantity = Array.isArray(totalSold)
-    ? totalSold.reduce(
-        (sum: number, item: any) => sum + (item?.quantity || 0),
-        0
-      )
-    : 0;
+  const totalSoldQuantity = totalSold ?? 0;
 
   const formatNumber = (num: number): string => {
     return Number(num) % 1 < 1
@@ -259,7 +254,9 @@ const MobileProductCard: React.FC<MobileProductCardProps> = ({
             onClick={onViewVariations}>
             <Activity className='h-2.5 w-2.5 text-purple-600 mx-auto mb-0.5' />
             <p className='font-bold text-xs text-purple-800'>
-              {variations.length === 1 && variations[0] === "No Variant" ? 0 : variations.length}
+              {variations.length === 1 && variations[0] === "No Variant"
+                ? 0
+                : variations.length}
             </p>
             <p className='text-[9px] text-purple-600'>Variant</p>
           </div>
@@ -277,14 +274,15 @@ const MobileProductCard: React.FC<MobileProductCardProps> = ({
             onClick={onViewVariations}
             className='text-[9px] px-1 py-0 bg-gray-50 border-gray-200 h-4 cursor-pointer hover:bg-gray-100 transition-colors touch-manipulation'>
             {(() => {
-              const variantCount = variations.length === 1 && variations[0] === "No Variant" ? 0 : variations.length;
-              return variantCount > 1 ? (
-                `${variantCount} variants`
-              ) : variantCount === 1 ? (
-                "1 variant"
-              ) : (
-                "No variants"
-              );
+              const variantCount =
+                variations.length === 1 && variations[0] === "No Variant"
+                  ? 0
+                  : variations.length;
+              return variantCount > 1
+                ? `${variantCount} variants`
+                : variantCount === 1
+                ? "1 variant"
+                : "No variants";
             })()}
           </Badge>
         </div>

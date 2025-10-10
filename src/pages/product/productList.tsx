@@ -827,7 +827,7 @@ const ProductList: React.FC<Props> = ({ handleEditProduct }) => {
                     active={product.active}
                     quantity={product.quantity}
                     unitPrice={product.unitPrice}
-                    totalSold={product.sold ?? []}
+                    totalSold={product.sold}
                     totalReturned={product.returned ?? 0}
                     variations={
                       product?.variantList && product?.variantList.length > 0

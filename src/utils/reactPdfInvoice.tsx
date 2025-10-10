@@ -160,7 +160,7 @@ const styles = StyleSheet.create({
     padding: 5,
   },
   orderDetailsText: {
-    fontSize: 8,
+    fontSize: 12,
     color: "#333333",
     fontWeight: "bold",
   },
@@ -353,7 +353,9 @@ const InvoiceDocument: React.FC<InvoiceDocumentProps> = ({ order }) => {
                 <SmartText style={styles.boldText}>
                   {order.customer?.name}
                 </SmartText>
-                <SmartText>{order.customer?.phoneNumber}</SmartText>
+                <SmartText style={styles.boldText}>
+                  {order.customer?.phoneNumber}
+                </SmartText>
                 <SmartText>
                   {`${order.shipping?.address}, ${order.shipping?.district}, ${order.shipping?.division}`}
                 </SmartText>

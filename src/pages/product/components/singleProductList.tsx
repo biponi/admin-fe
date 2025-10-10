@@ -171,7 +171,7 @@ const SingleItem: React.FC<Props> = ({
       </TableCell>
       <TableCell>{totalReturned}</TableCell>
       <TableCell className='hidden md:table-cell'>
-        {dayjs(updatedAt).format("Do MMMM YYYY hh.mm A")}
+        {dayjs(updatedAt).format("DD/MM/YYYY HH:mm A")}
       </TableCell>
       {hasSomePermissionsForPage("product", ["edit", "delete"]) && (
         <TableCell>
