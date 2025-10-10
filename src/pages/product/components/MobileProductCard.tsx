@@ -212,8 +212,9 @@ const MobileProductCard: React.FC<MobileProductCardProps> = ({
       {/* Content */}
       <div className='p-2'>
         {/* Product Title & Category */}
-        <div className='mb-2'>
-          <h3 className='font-semibold text-gray-900 text-sm leading-tight line-clamp-2 mb-0.5'>
+        <div className='mb-2 flex justify-between items-start'>
+          <h3 className='flex items-center gap-1 font-semibold text-gray-900 text-sm font-mono leading-tight line-clamp-2 mb-0.5 uppercase'>
+            <Hash className='h-2 w-2 text-gray-500' />
             {title}
           </h3>
           <div className='flex items-center gap-1 text-[10px] text-gray-600'>
@@ -227,7 +228,7 @@ const MobileProductCard: React.FC<MobileProductCardProps> = ({
           <div className='text-lg font-bold text-gray-900'>
             ৳{formatNumber(unitPrice)}
           </div>
-          <div className='flex items-center gap-1 text-[10px] text-gray-500'>
+          <div className=' items-center gap-1 text-[10px] text-gray-500 hidden'>
             <Hash className='h-2 w-2' />
             <span className='font-mono'>{sku}</span>
           </div>
