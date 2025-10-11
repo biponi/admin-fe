@@ -37,7 +37,7 @@ interface Props {
   categoryName: string;
   variations: string[];
   totalReturned: number;
-  totalSold: { status: string; sold: number }[];
+  totalSold: number;
   handleUpdateProduct: (id: string) => void;
   deleteExistingProduct: (id: string) => void;
   onViewVariations?: () => void;
@@ -94,8 +94,10 @@ const SingleProductCardItem: React.FC<Props> = ({
               <DrawerDescription>
                 Total Variations:{" "}
                 <Badge className='outline'>
-                {variations?.length === 1 && variations[0] === "No Variant" ? 0 : variations?.length ?? 0}
-              </Badge>
+                  {variations?.length === 1 && variations[0] === "No Variant"
+                    ? 0
+                    : variations?.length ?? 0}
+                </Badge>
               </DrawerDescription>
             </DrawerHeader>
             <div className='p-4 pb-0'>
@@ -178,9 +180,7 @@ const SingleProductCardItem: React.FC<Props> = ({
             </Badge>
             <Badge variant={"outline"} className=' flex flex-col'>
               <ShoppingCart className=' size-4 mr-1 ' />
-              {!!totalSold && totalSold?.length > 0
-                ? totalSold.reduce((sum, ss) => sum + ss?.sold, 0)
-                : 0}
+              {totalSold}
             </Badge>
             <Badge variant={"outline"} className=' flex flex-col'>
               <RotateCcw className=' size-4 mr-1 ' /> {totalReturned}
@@ -189,12 +189,17 @@ const SingleProductCardItem: React.FC<Props> = ({
             <Badge
               variant={"outline"}
               className=' flex flex-col cursor-pointer hover:bg-gray-100 transition-colors'
-              onClick={onViewVariations || (() => {
-                //@ts-ignore
-                if (!!variantBtn) variantBtn?.current.click();
-              })}>
-              <Package className=' size-4 mr-1 ' /> 
-              {variations?.length === 1 && variations[0] === "No Variant" ? 0 : variations?.length ?? 0}
+              onClick={
+                onViewVariations ||
+                (() => {
+                  //@ts-ignore
+                  if (!!variantBtn) variantBtn?.current.click();
+                })
+              }>
+              <Package className=' size-4 mr-1 ' />
+              {variations?.length === 1 && variations[0] === "No Variant"
+                ? 0
+                : variations?.length ?? 0}
             </Badge>
           </div>
           <Badge variant={"outline"} className='my-1 hidden'>

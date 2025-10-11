@@ -32,7 +32,7 @@ interface Props {
   categoryName: string;
   variations: string[];
   totalReturned: number;
-  totalSold: { status: string; sold: number }[];
+  totalSold: number;
   handleUpdateProduct: (id: string) => void;
   deleteExistingProduct: (id: string) => void;
 }
@@ -139,25 +139,17 @@ const SingleItem: React.FC<Props> = ({
         <Popover>
           <PopoverTrigger asChild>
             <Button size={"sm"} variant={"outline"}>
-              {!!totalSold && totalSold?.length > 0
-                ? totalSold.reduce((sum, ts) => sum + ts?.sold, 0)
-                : 0}
+              {totalSold}
             </Button>
           </PopoverTrigger>
           <PopoverContent>
             <div className='grid grid-cols-3 gap-2 grid-flow-row auto-rows-min'>
-              {!!totalSold && totalSold?.length > 0 ? (
-                totalSold.map((activity, index: number) => (
-                  <Badge
-                    key={id + index}
-                    variant={"outline"}
-                    className='flex flex-col col-auto justify-center items-center gap-1 py-2 uppercase text-[10px]'>
-                    {`${activity?.status}`}{" "}
-                    <Badge
-                      variant={"default"}
-                      className='font-bold'>{`${activity?.sold}`}</Badge>{" "}
-                  </Badge>
-                ))
+              {!!totalSold && totalSold > 0 ? (
+                <Badge
+                  variant={"outline"}
+                  className='flex flex-col col-auto justify-center items-center gap-1 py-2 uppercase text-[10px]'>
+                  {totalSold}
+                </Badge>
               ) : (
                 <Badge
                   variant={"secondary"}

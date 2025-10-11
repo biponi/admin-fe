@@ -18,8 +18,8 @@ export interface IProduct {
   hasVariation?: boolean;
   variation: IVariation[];
   variantList?: string[];
-  sold?: { status: string; sold: number }[];
-  returned?: number;
+  totalSold?: number;
+  totalReturned?: number;
   created_at: string; // Assuming the date/time string format
   timestamps: {
     createdAt: string;
