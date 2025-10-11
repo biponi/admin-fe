@@ -77,12 +77,12 @@ const SingleItem: React.FC<Props> = ({
       <Popover>
         <PopoverTrigger asChild>
           <Button variant='default' size={"sm"}>
-            View More
+            View
           </Button>
         </PopoverTrigger>
         <PopoverContent className='w-96'>
           <div className='grid grid-cols-3 gap-2 w-full'>
-            {variations?.slice(2, variations?.length).map((val, index) => (
+            {variations?.map((val, index) => (
               <Button key={index} variant={"secondary"} size={"sm"}>
                 {val}
               </Button>
@@ -108,22 +108,7 @@ const SingleItem: React.FC<Props> = ({
       <TableCell>{categoryName}</TableCell>
       <TableCell>{unitPrice}</TableCell>
       <TableCell className='grid grid-cols-3 gap-2'>
-        {variations?.length > 3 ? (
-          <>
-            {variations?.slice(0, 2).map((val, index) => (
-              <Button key={index} variant={"secondary"} size={"sm"}>
-                {val}
-              </Button>
-            ))}{" "}
-            {renderVariationPopover()}
-          </>
-        ) : (
-          variations?.map((val, index) => (
-            <Button key={index} variant={"secondary"} size={"sm"}>
-              {val}
-            </Button>
-          ))
-        )}
+        {renderVariationPopover()}
       </TableCell>
       <TableCell className='hidden text-center md:table-cell'>
         {quantity > 0 ? (
