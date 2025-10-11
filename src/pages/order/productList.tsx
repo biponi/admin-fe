@@ -138,8 +138,8 @@ const OrderProductList: React.FC<Props> = ({
       }
     }
     // For products with variation, allow multiple selections with different variants
-
-    if (!!product.hasVariation) {
+    console.log("ppp:", product);
+    if (!!product.hasVariation && !!product.variation) {
       const availableVariants = product.variation.filter(
         (variant) => variant?.quantity > 0
       );

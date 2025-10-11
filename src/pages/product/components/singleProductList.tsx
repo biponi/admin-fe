@@ -73,6 +73,13 @@ const SingleItem: React.FC<Props> = ({
     );
   };
   const renderVariationPopover = () => {
+    if (!variations || variations.length === 0) {
+      return (
+        <Button variant='secondary' disabled size={"sm"}>
+          No Variations
+        </Button>
+      );
+    }
     return (
       <Popover>
         <PopoverTrigger asChild>
@@ -107,9 +114,7 @@ const SingleItem: React.FC<Props> = ({
       <TableCell>{sku}</TableCell>
       <TableCell>{categoryName}</TableCell>
       <TableCell>{unitPrice}</TableCell>
-      <TableCell className='grid grid-cols-3 gap-2'>
-        {renderVariationPopover()}
-      </TableCell>
+      <TableCell>{renderVariationPopover()}</TableCell>
       <TableCell className='hidden text-center md:table-cell'>
         {quantity > 0 ? (
           <Badge variant={"outline"}>
