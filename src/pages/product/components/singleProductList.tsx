@@ -148,7 +148,7 @@ const SingleItem: React.FC<Props> = ({
               <ShareButton
                 linkToShare={`https://priorbd.com/collections/${slug}`}
                 title={`Check out this awesome product: ${title}`}
-                text={`This ${categoryName} has ${quantity} item left. Don't miss out!`}
+                text={`This ${categoryName} has only ${quantity} item left. Don't miss out!`}
               />
             </div>
             <DialogFooter className='sm:justify-start'>
