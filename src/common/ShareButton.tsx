@@ -9,10 +9,15 @@ interface ShareButtonProps {
   linkToShare: string;
   title?: string;
   text?: string;
-  ref?: React.Ref<HTMLButtonElement>;
+  sm?: boolean;
 }
 
-function ShareButton({ linkToShare, title, text, ref }: ShareButtonProps) {
+function ShareButton({
+  linkToShare,
+  title,
+  text,
+  sm = false,
+}: ShareButtonProps) {
   const [shared, setShared] = useState(false);
 
   const handleShare = async () => {
@@ -51,12 +56,24 @@ function ShareButton({ linkToShare, title, text, ref }: ShareButtonProps) {
     }
   };
 
+  if (sm)
+    return (
+      <Button
+        variant='ghost'
+        onClick={handleShare}
+        className='hover:scale-110 transition-transform duration-200 text-muted-foreground hover:text-foreground hover:bg-transparent h-5'>
+        {shared ? (
+          <Check className='h-2 w-2 text-green-500' />
+        ) : (
+          <Share2 className='h-2 w-2' />
+        )}
+      </Button>
+    );
   return (
     <Button
-      ref={ref}
       variant='ghost'
       size='icon'
-      className='hover:scale-110 transition-transform duration-200 text-muted-foreground hover:text-foreground'
+      className='hover:scale-110 transition-transform duration-200 text-muted-foreground hover:text-foreground '
       onClick={handleShare}>
       {shared ? (
         <Check className='h-5 w-5 text-green-500' />

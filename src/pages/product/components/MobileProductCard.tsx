@@ -16,7 +16,6 @@ import {
   Tag,
   Hash,
   Calendar,
-  Share2,
 } from "lucide-react";
 import { Badge } from "../../../components/ui/badge";
 import { Button } from "../../../components/ui/button";
@@ -70,7 +69,6 @@ const MobileProductCard: React.FC<MobileProductCardProps> = ({
   onViewVariations,
 }) => {
   const { hasRequiredPermission, hasSomePermissionsForPage } = useRoleCheck();
-  const shareButtonRef = React.useRef<HTMLButtonElement>(null);
 
   const getStatusConfig = () => {
     return active
@@ -126,14 +124,6 @@ const MobileProductCard: React.FC<MobileProductCardProps> = ({
 
   return (
     <div className='bg-white rounded-md border border-gray-100 shadow-sm hover:shadow-md transition-all duration-200 overflow-hidden'>
-      <div className='hidden'>
-        <ShareButton
-          ref={shareButtonRef}
-          linkToShare={`https://priorbd.com/collections/${slug}`}
-          title={`Check out this awesome product: ${title}`}
-          text={`This ${categoryName} is available for just ৳${unitPrice.toLocaleString()}. Don't miss out!`}
-        />
-      </div>
       {/* Header with Image */}
       <div className='relative'>
         <div className='aspect-[4/3] bg-gray-100 relative overflow-hidden'>
@@ -192,11 +182,6 @@ const MobileProductCard: React.FC<MobileProductCardProps> = ({
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align='end' className='w-40'>
-                  <DropdownMenuItem
-                    onClick={() => shareButtonRef.current?.click()}>
-                    <Share2 className='h-4 w-4 mr-2' />
-                    Share
-                  </DropdownMenuItem>
                   <DropdownMenuItem onClick={onViewVariations}>
                     <Eye className='h-4 w-4 mr-2' />
                     View Details
@@ -287,23 +272,12 @@ const MobileProductCard: React.FC<MobileProductCardProps> = ({
             <Calendar className='h-2.5 w-2.5' />
             <span>{dayjs(updatedAt).format("MMM D")}</span>
           </div>
-
-          <Badge
-            variant='outline'
-            onClick={onViewVariations}
-            className='text-[9px] px-1 py-0 bg-gray-50 border-gray-200 h-4 cursor-pointer hover:bg-gray-100 transition-colors touch-manipulation'>
-            {(() => {
-              const variantCount =
-                variations.length === 1 && variations[0] === "No Variant"
-                  ? 0
-                  : variations.length;
-              return variantCount > 1
-                ? `${variantCount} variants`
-                : variantCount === 1
-                ? "1 variant"
-                : "No variants";
-            })()}
-          </Badge>
+          <ShareButton
+            sm={true}
+            linkToShare={`https://priorbd.com/collections/${slug}`}
+            title={`Check out this awesome product: ${title}`}
+            text={`This ${categoryName} is available for just ৳${unitPrice.toLocaleString()}. Don't miss out!`}
+          />
         </div>
       </div>
     </div>
