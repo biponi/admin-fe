@@ -276,7 +276,7 @@ const MobileProductCard: React.FC<MobileProductCardProps> = ({
             sm={true}
             linkToShare={`https://priorbd.com/collections/${slug}`}
             title={`Check out this awesome product: ${title}`}
-            text={`This ${categoryName} is available for just ৳${unitPrice.toLocaleString()}. Don't miss out!`}
+            text={`This ${categoryName} has ${quantity} item left. Don't miss out!`}
           />
         </div>
       </div>
