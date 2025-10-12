@@ -2,6 +2,7 @@ import { useEffect, useState, Suspense } from "react";
 import { Routes, Route, Navigate, useNavigate } from "react-router-dom";
 import { decodeToken } from "react-jwt";
 import { Toaster } from "react-hot-toast";
+import { Toaster as Toaster2 } from "sonner";
 
 // Import components
 import { ModernLayout } from "./components/modern-layout";
@@ -330,6 +331,7 @@ const App = () => {
         <PageProvider>
           <NotificationProvider>
             <AppContent />
+            <Toaster2 position='top-center' richColors />
           </NotificationProvider>
         </PageProvider>
       </SettingsProvider>

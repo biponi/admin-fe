@@ -19,10 +19,24 @@ import {
   PopoverTrigger,
 } from "../../../components/ui/popover";
 import useRoleCheck from "../../auth/hooks/useRoleCheck";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+  DialogFooter,
+  DialogClose,
+} from "../../../components/ui/dialog";
+import { Label } from "../../../components/ui/label";
+import { Input } from "../../../components/ui/input";
+import ShareButton from "../../../common/ShareButton";
 
 interface Props {
   id: string;
   sku: string;
+  slug: string;
   image: string;
   title: string;
   active: boolean;
@@ -42,6 +56,7 @@ dayjs.extend(advancedFormat);
 const SingleItem: React.FC<Props> = ({
   id,
   sku,
+  slug,
   image,
   title,
   active,
@@ -102,13 +117,49 @@ const SingleItem: React.FC<Props> = ({
   return (
     <TableRow>
       <TableCell className='hidden sm:table-cell'>
-        <img
-          alt='img'
-          className='aspect-square rounded-md object-cover'
-          height='32'
-          src={image}
-          width='32'
-        />
+        <Dialog>
+          <DialogTrigger asChild>
+            <img
+              alt='img'
+              className='aspect-square rounded-md object-cover'
+              height='32'
+              src={image}
+              width='32'
+            />
+          </DialogTrigger>
+          <DialogContent className='sm:max-w-md'>
+            <DialogHeader>
+              <DialogTitle>Share link</DialogTitle>
+              <DialogDescription>
+                Anyone who has this link will be able to view this.
+              </DialogDescription>
+            </DialogHeader>
+            <div className='flex justify-between items-center gap-2'>
+              <div className='grid flex-1 gap-2'>
+                <Label htmlFor='link' className='sr-only'>
+                  Link
+                </Label>
+                <Input
+                  id='link'
+                  defaultValue={`https://priorbd.com/collections/${slug}`}
+                  readOnly
+                />
+              </div>
+              <ShareButton
+                linkToShare={`https://priorbd.com/collections/${slug}`}
+                title={`Check out this awesome product: ${title}`}
+                text={`This ${categoryName} is available for just ৳${unitPrice.toLocaleString()}. Don't miss out!`}
+              />
+            </div>
+            <DialogFooter className='sm:justify-start'>
+              <DialogClose asChild>
+                <Button type='button' variant='destructive'>
+                  Close
+                </Button>
+              </DialogClose>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       </TableCell>
       <TableCell className='font-medium'>{title}</TableCell>
       <TableCell>{sku}</TableCell>

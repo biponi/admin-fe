@@ -827,6 +827,7 @@ const ProductList: React.FC<Props> = ({ handleEditProduct }) => {
                     key={product.id}
                     id={product.id}
                     sku={product.sku}
+                    slug={product.slug}
                     image={product.thumbnail}
                     title={product.name}
                     categoryName={product.categoryName ?? "Not Added"}
@@ -1253,6 +1254,7 @@ const ProductList: React.FC<Props> = ({ handleEditProduct }) => {
                                       key={product?.id}
                                       id={product?.id}
                                       sku={product?.sku}
+                                      slug={product?.slug}
                                       image={product?.thumbnail}
                                       title={product?.name}
                                       categoryName={
@@ -1367,6 +1369,7 @@ const ProductList: React.FC<Props> = ({ handleEditProduct }) => {
                                         key={product?.id}
                                         id={product?.id}
                                         sku={product?.sku}
+                                        slug={product?.slug}
                                         image={product?.thumbnail}
                                         title={product?.name}
                                         categoryName={
@@ -1480,6 +1483,7 @@ const ProductList: React.FC<Props> = ({ handleEditProduct }) => {
                                         key={product?.id}
                                         id={product?.id}
                                         sku={product?.sku}
+                                        slug={product?.slug}
                                         image={product?.thumbnail}
                                         title={product?.name}
                                         categoryName={
@@ -1594,6 +1598,7 @@ const ProductList: React.FC<Props> = ({ handleEditProduct }) => {
                                         key={product?.id}
                                         id={product?.id}
                                         sku={product?.sku}
+                                        slug={product?.slug}
                                         image={product?.thumbnail}
                                         title={product?.name}
                                         categoryName={
@@ -1708,6 +1713,7 @@ const ProductList: React.FC<Props> = ({ handleEditProduct }) => {
                                         key={product?.id}
                                         id={product?.id}
                                         sku={product?.sku}
+                                        slug={product?.slug}
                                         image={product?.thumbnail}
                                         title={product?.name}
                                         categoryName={

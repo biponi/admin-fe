@@ -16,6 +16,7 @@ import {
   Tag,
   Hash,
   Calendar,
+  Share2,
 } from "lucide-react";
 import { Badge } from "../../../components/ui/badge";
 import { Button } from "../../../components/ui/button";
@@ -29,10 +30,12 @@ import {
 import { cn } from "../../../utils/functions";
 import useRoleCheck from "../../auth/hooks/useRoleCheck";
 import dayjs from "dayjs";
+import ShareButton from "../../../common/ShareButton";
 
 interface MobileProductCardProps {
   id: string;
   sku: string;
+  slug: string;
   image?: string;
   title: string;
   categoryName: string;
@@ -51,6 +54,7 @@ interface MobileProductCardProps {
 const MobileProductCard: React.FC<MobileProductCardProps> = ({
   id,
   sku,
+  slug,
   image,
   title,
   categoryName,
@@ -66,6 +70,7 @@ const MobileProductCard: React.FC<MobileProductCardProps> = ({
   onViewVariations,
 }) => {
   const { hasRequiredPermission, hasSomePermissionsForPage } = useRoleCheck();
+  const shareButtonRef = React.useRef<HTMLButtonElement>(null);
 
   const getStatusConfig = () => {
     return active
@@ -121,6 +126,14 @@ const MobileProductCard: React.FC<MobileProductCardProps> = ({
 
   return (
     <div className='bg-white rounded-md border border-gray-100 shadow-sm hover:shadow-md transition-all duration-200 overflow-hidden'>
+      <div className='hidden'>
+        <ShareButton
+          ref={shareButtonRef}
+          linkToShare={`https://priorbd.com/collections/${slug}`}
+          title={`Check out this awesome product: ${title}`}
+          text={`This ${categoryName} is available for just ৳${unitPrice.toLocaleString()}. Don't miss out!`}
+        />
+      </div>
       {/* Header with Image */}
       <div className='relative'>
         <div className='aspect-[4/3] bg-gray-100 relative overflow-hidden'>
@@ -179,6 +192,11 @@ const MobileProductCard: React.FC<MobileProductCardProps> = ({
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align='end' className='w-40'>
+                  <DropdownMenuItem
+                    onClick={() => shareButtonRef.current?.click()}>
+                    <Share2 className='h-4 w-4 mr-2' />
+                    Share
+                  </DropdownMenuItem>
                   <DropdownMenuItem onClick={onViewVariations}>
                     <Eye className='h-4 w-4 mr-2' />
                     View Details

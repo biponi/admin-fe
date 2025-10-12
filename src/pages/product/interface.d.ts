@@ -1,6 +1,7 @@
 export interface IProduct {
   id: string;
   sku: string;
+  slug: string;
   name: string;
   active: boolean;
   quantity: number;
