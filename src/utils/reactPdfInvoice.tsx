@@ -179,7 +179,7 @@ const styles = StyleSheet.create({
   tableHeaderCell: {
     color: "#333333",
     fontWeight: "bold",
-    fontSize: 12,
+    fontSize: 14,
     textAlign: "center",
   },
   tableRow: {
@@ -445,12 +445,7 @@ const InvoiceDocument: React.FC<InvoiceDocumentProps> = ({ order }) => {
                 <Text style={[styles.tableCell, { width: "6%" }]}>
                   {index + 1}
                 </Text>
-                <SmartText
-                  style={[
-                    styles.tableCell,
-                    styles.tableCellLeft,
-                    { width: "40%" },
-                  ]}>
+                <SmartText style={[styles.tableCell, { width: "40%" }]}>
                   {product.name}
                 </SmartText>
                 <Text style={[styles.tableCell, { width: "16%" }]}>
