@@ -465,7 +465,7 @@ const OrderPreview: React.FC<Props> = ({
 
               {/* Action Buttons */}
               <div className='p-6 border-t bg-white rounded-b-lg'>
-                <div className='flex flex-col sm:flex-row gap-3'>
+                <div className='flex flex-col gap-3'>
                   <Button
                     variant='outline'
                     onClick={handleBack}
