@@ -19,5 +19,6 @@ export const pagePermissions: Record<string, string[]> = {
   ReserveRecord: ["view", "create", "edit", "delete"],
   User: ["view", "create", "edit", "delete"],
   Role: ["view", "create", "edit", "delete"],
+  Report: ["view", "create", "edit", "delete", "download"],
   Chat: ["view", "reply", "attend", "manage", "delete"],
 };

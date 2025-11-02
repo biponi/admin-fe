@@ -1,5 +1,6 @@
 import {
   BadgeDollarSign,
+  File,
   Home,
   MessageCircle,
   Package2,
@@ -74,6 +75,14 @@ export const navItems = [
     link: "/transactions",
     active: true,
     id: "transaction",
+    roles: ["admin"],
+  },
+  {
+    icon: <File className='w-5 h-5' />,
+    title: "Reports",
+    link: "/reports",
+    active: true,
+    id: "report",
     roles: ["admin"],
   },
   {

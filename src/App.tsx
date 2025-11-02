@@ -29,6 +29,7 @@ import ReserveStore from "./pages/reserve";
 import SingleReserveStore from "./pages/reserve/singleReserveStore";
 import { UserComponent } from "./pages/user";
 import ChatPage from "./pages/chat";
+import ReportPage from "./pages/report";
 
 // Hooks
 import useLoginAuth from "./pages/auth/hooks/useLoginAuth";
@@ -310,6 +311,16 @@ const AppContent = () => {
               <ProtectedRoute page='Chat' requiredAction='view'>
                 <MainViewComponent title='Support'>
                   <ChatPage />
+                </MainViewComponent>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path='/reports'
+            element={
+              <ProtectedRoute page='Report' requiredAction='view'>
+                <MainViewComponent title='Reports & Analytics'>
+                  <ReportPage />
                 </MainViewComponent>
               </ProtectedRoute>
             }

@@ -135,6 +135,18 @@ const config = {
     getRolePermissions: (id: string) => `${baseURL}/role/${id}/permissions`,
     updateRolePermissions: (id: string) => `${baseURL}/role/${id}/permissions`,
   },
+  otp: {
+    sendOTP: () => `${baseURL}/otp/send`,
+    verifyOTP: () => `${baseURL}/otp/verify`,
+    resendOTP: () => `${baseURL}/otp/resend`,
+  },
+  report: {
+    salesOverview: () => `${baseURL}/report/sales-overview`,
+    salesTrend: () => `${baseURL}/report/sales-trend`,
+    customerInsights: () => `${baseURL}/report/customer-insights`,
+    productPerformance: () => `${baseURL}/report/product-performance`,
+    export: () => `${baseURL}/report/export`,
+  },
 };
 
 export default config;

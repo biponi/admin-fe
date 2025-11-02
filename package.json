@@ -1,6 +1,6 @@
 {
   "name": "prior-admin-fe",
-  "version": "1.2.3",
+  "version": "1.2.4",
   "private": true,
   "engines": {
     "node": ">=20.0.0"
@@ -62,7 +62,7 @@
     "jspdf-autotable": "^3.8.2",
     "jszip": "^3.10.1",
     "jwt-decode": "^3.1.2",
-    "lucide-react": "^0.539.0",
+    "lucide-react": "^0.552.0",
     "next-themes": "^0.4.6",
     "node-sass": "^9.0.0",
     "react": "^18.2.0",
@@ -76,7 +76,7 @@
     "react-resizable-panels": "^2.0.16",
     "react-router-dom": "^6.22.3",
     "react-scripts": "5.0.1",
-    "recharts": "^3.1.2",
+    "recharts": "2.15.4",
     "regenerator-runtime": "^0.14.1",
     "sass": "^1.71.1",
     "socket.io-client": "^4.8.1",

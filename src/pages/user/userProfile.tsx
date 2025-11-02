@@ -22,6 +22,7 @@ import {
 } from "../../api/user";
 import useLoginAuth from "../auth/hooks/useLoginAuth";
 import { successToast } from "../../utils/toast";
+import { OTPVerificationDialog } from "../../components/OTPVerificationDialog";
 
 const ProfilePage = () => {
   const { toast } = useToast();
@@ -48,6 +49,7 @@ const ProfilePage = () => {
 
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
   const [avatarPreview, setAvatarPreview] = useState("");
+  const [showOTPDialog, setShowOTPDialog] = useState(false);
 
   // Fetch profile data
   useEffect(() => {
@@ -98,11 +100,46 @@ const ProfilePage = () => {
     }
   };
 
+  // Function to actually change password after OTP verification
+  const performPasswordChange = async () => {
+    try {
+      const response = await changeUserPassword({
+        oldPassword: "", // You might need to add this field
+        newPassword: formData.newPassword,
+      });
+
+      if (response.success) {
+        successToast("Password updated successfully");
+        setEditMode((prev) => ({ ...prev, password: false }));
+        // Clear password fields
+        setFormData((prev) => ({
+          ...prev,
+          newPassword: "",
+          confirmPassword: "",
+        }));
+      } else {
+        toast({
+          title: "Error",
+          description: response.error || "Failed to update password",
+          variant: "destructive",
+        });
+      }
+    } catch (error) {
+      console.error("Password change error:", error);
+      toast({
+        title: "Error",
+        description: "An unexpected error occurred",
+        variant: "destructive",
+      });
+    }
+  };
+
   const handleSave = async (field: "name" | "avatar" | "password") => {
     try {
       let response;
 
       if (field === "password") {
+        // Validate passwords match
         if (formData.newPassword !== formData.confirmPassword) {
           toast({
             title: "Error",
@@ -111,10 +148,20 @@ const ProfilePage = () => {
           });
           return;
         }
-        response = await changeUserPassword({
-          oldPassword: "", // You might need to add this field
-          newPassword: formData.newPassword,
-        });
+
+        // Validate password length
+        if (formData.newPassword.length < 8) {
+          toast({
+            title: "Error",
+            description: "Password must be at least 8 characters long",
+            variant: "destructive",
+          });
+          return;
+        }
+
+        // Trigger OTP verification instead of directly changing password
+        setShowOTPDialog(true);
+        return;
       } else {
         // Create FormData only for avatar updates with a file
         const isAvatarFileUpload =
@@ -379,6 +426,23 @@ const ProfilePage = () => {
           </div>
         </CardFooter>
       </Card>
+
+      {/* OTP Verification Dialog for Password Change */}
+      {profile.email && (
+        <OTPVerificationDialog
+          open={showOTPDialog}
+          onOpenChange={setShowOTPDialog}
+          email={profile.email}
+          purpose="password_change"
+          title="Verify Password Change"
+          description="For security, please verify your email before changing your password"
+          onVerificationSuccess={performPasswordChange}
+          onVerificationFailure={(error) => {
+            console.error("OTP verification failed:", error);
+          }}
+          autoSendOnMount={true}
+        />
+      )}
     </div>
   );
 };
