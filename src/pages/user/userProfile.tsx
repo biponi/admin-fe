@@ -433,9 +433,9 @@ const ProfilePage = () => {
           open={showOTPDialog}
           onOpenChange={setShowOTPDialog}
           email={profile.email}
-          purpose="password_change"
-          title="Verify Password Change"
-          description="For security, please verify your email before changing your password"
+          purpose='password_reset'
+          title='Verify Password Change'
+          description='For security, please verify your email before changing your password'
           onVerificationSuccess={performPasswordChange}
           onVerificationFailure={(error) => {
             console.error("OTP verification failed:", error);
