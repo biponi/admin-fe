@@ -23,6 +23,24 @@ export interface ITransection {
   deliveryCharge: number;
 }
 
+export interface FraudDetection {
+  isFraud: boolean;
+  riskLevel: "green" | "yellow" | "red";
+  riskScore: number; // 0–100
+  fraudProbability: number; // percentage (0–100)
+  metrics: {
+    cancellationRate: number;
+    returnRate: number;
+    completionRate: number;
+    cancelledOrderCount?: number;
+    returnOrderCount?: number;
+    totalOrderCount?: number;
+    lastCancellationDate: string;
+  } | null;
+  fraudFlags: string[]; // e.g. ["suspicious_returns", "multiple_cancellations"]
+  lastAnalyzedAt: string | Date; // ISO string or Date object
+}
+
 export interface IOrder {
   id: number;
   orderNumber: number;
@@ -31,6 +49,7 @@ export interface IOrder {
     email?: string; // Optional email field
     phoneNumber: string;
   };
+  fraudDetection?: FraudDetection;
   notes?: string;
   status: string;
   deliveryCharge: number;

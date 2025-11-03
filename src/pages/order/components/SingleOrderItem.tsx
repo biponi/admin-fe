@@ -6,6 +6,9 @@ import {
   MoreHorizontalIcon,
   TimerIcon,
   Truck,
+  Shield,
+  AlertTriangle,
+  ShieldCheck,
 } from "lucide-react";
 import { Badge } from "../../../components/ui/badge";
 import {
@@ -21,6 +24,8 @@ import { Button } from "../../../components/ui/button";
 import { useRef } from "react";
 import CustomAlertDialog from "../../../coreComponents/OptionModal";
 import useRoleCheck from "../../auth/hooks/useRoleCheck";
+import { FraudDetection } from "../interface";
+import FraudDetectionDrawer from "./FraudDetectionDrawer";
 
 interface Props {
   id: string;
@@ -34,6 +39,7 @@ interface Props {
   updatedAt: string;
   remaining: number;
   isBulkAdded: boolean;
+  fraudDetection?: FraudDetection;
   handleViewDetails: () => void;
   handleUpdateOrder: () => void;
   handleModifyProduct: () => void;
@@ -54,6 +60,7 @@ const SingleItem: React.FC<Props> = ({
   remaining,
   updatedAt,
   isBulkAdded,
+  fraudDetection,
   handleBulkCheck,
   handleViewDetails,
   handleUpdateOrder,
@@ -63,6 +70,19 @@ const SingleItem: React.FC<Props> = ({
 }) => {
   const { hasRequiredPermission, hasSomePermissionsForPage } = useRoleCheck();
   const dialogBtn = useRef(null);
+
+  const getFraudIcon = (riskLevel?: string) => {
+    switch (riskLevel) {
+      case "red":
+        return <AlertTriangle className='w-4 h-4 text-red-600' />;
+      case "yellow":
+        return <Shield className='w-4 h-4 text-yellow-600' />;
+      case "green":
+        return <ShieldCheck className='w-4 h-4 text-green-600' />;
+      default:
+        return <Shield className='w-4 h-4 text-gray-400' />;
+    }
+  };
 
   const discardDialog = () => {
     return (
@@ -131,6 +151,18 @@ const SingleItem: React.FC<Props> = ({
       <TableCell>{totalPrice}</TableCell>
       <TableCell className='hidden md:table-cell'>{paid}</TableCell>
       <TableCell className='hidden md:table-cell'>{remaining}</TableCell>
+      <TableCell className='hidden lg:table-cell text-center'>
+        <FraudDetectionDrawer
+          fraudDetection={fraudDetection}
+          customerName={customerName}
+          phoneNumber={CustomerPhoneNumber}
+          trigger={
+            <Button variant='ghost' size='sm' className='h-8 w-8 p-0'>
+              {getFraudIcon(fraudDetection?.riskLevel)}
+            </Button>
+          }
+        />
+      </TableCell>
       <TableCell className='hidden '>
         {dayjs(updatedAt).format("DD-MM-YYYY HH:mm:ss")}
       </TableCell>

@@ -412,6 +412,7 @@ const OrderList = () => {
                     remaining={order?.remaining}
                     updatedAt={order?.timestamps?.updatedAt}
                     isBulkAdded={bulkOrders.includes(order?.id)}
+                    fraudDetection={order?.fraudDetection}
                     handleBulkCheck={(val: boolean) => {
                       val
                         ? setBulkOrders([...bulkOrders, order?.id])
@@ -665,7 +666,7 @@ const OrderList = () => {
           {/* Search and Filters Bar */}
           <div className='mb-2 px-4 md:px-0'>
             <div className='flex flex-row sm:flex-row gap-4 items-center justify-between'>
-              <div className='relative flex-1 max-w-full md:hidden'>
+              <div className='relative border border-gray-300 rounded-lg flex-1 max-w-full md:hidden'>
                 <Search className='absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4' />
                 <Input
                   type='text'
@@ -716,7 +717,7 @@ const OrderList = () => {
                             Orders List
                           </CardTitle>
                         </div>
-                        <div className='relative flex-1 max-w-md'>
+                        <div className='relative flex-1 max-w-md border border-gray-200 shadow-md rounded-lg'>
                           <Search className='absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4' />
                           <Input
                             type='text'
@@ -798,6 +799,9 @@ const OrderList = () => {
                               <TableHead className='font-semibold bg-sidebar text-sidebar-foreground text-right hidden lg:table-cell'>
                                 Due
                               </TableHead>
+                              <TableHead className='font-semibold bg-sidebar text-sidebar-foreground text-center hidden lg:table-cell'>
+                                Fraud Risk
+                              </TableHead>
                               <TableHead className='font-semibold bg-sidebar text-sidebar-foreground text-center'>
                                 Information
                               </TableHead>
@@ -820,6 +824,7 @@ const OrderList = () => {
                                 paid={order?.paid}
                                 status={order?.status}
                                 isBulkAdded={bulkOrders.includes(order?.id)}
+                                fraudDetection={order?.fraudDetection}
                                 handleBulkCheck={(val: boolean) => {
                                   val
                                     ? setBulkOrders([...bulkOrders, order?.id])

@@ -1,6 +1,6 @@
 "use client";
 
-import { BadgeCheck, Bell, LogOut, Sparkles } from "lucide-react";
+import { BadgeCheck, Bell, Code, LogOut, Sparkles } from "lucide-react";
 
 import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
 import {
@@ -21,6 +21,7 @@ import {
 import { CaretSortIcon, ComponentPlaceholderIcon } from "@radix-ui/react-icons";
 import useLoginAuth from "../pages/auth/hooks/useLoginAuth";
 import { useNavigate } from "react-router-dom";
+import useRoleCheck from "../pages/auth/hooks/useRoleCheck";
 
 export function NavUser({
   user,
@@ -87,6 +88,16 @@ export function NavUser({
                 <BadgeCheck />
                 Account
               </DropdownMenuItem>
+              {useRoleCheck().hasRequiredPermission(
+                "settings",
+                "jobs_management"
+              ) && (
+                <DropdownMenuItem
+                  onClick={() => navigateToRoute("/settings/jobs")}>
+                  <Code />
+                  Actions
+                </DropdownMenuItem>
+              )}
               <DropdownMenuItem className='hidden'>
                 <ComponentPlaceholderIcon />
                 Billing

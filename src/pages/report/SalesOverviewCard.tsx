@@ -28,11 +28,12 @@ import { Button } from "../../components/ui/button";
 import { Download, TrendingUp, ShoppingCart, DollarSign } from "lucide-react";
 import { PieChart, Pie, Sector, Label } from "recharts";
 import useRoleCheck from "../auth/hooks/useRoleCheck";
-import StatusBreakdownChart from "./StatusBreakdownChart";
 import { PieSectorDataItem } from "recharts/types/polar/Pie";
+import OrderBreakdownCharts from "./OrderBreakdownCharts";
 
 interface SalesOverviewCardProps {
   data: any;
+  duration?: string;
   onDownload: () => void;
 }
 
@@ -77,6 +78,7 @@ const chartConfig = {
 
 const SalesOverviewCard: React.FC<SalesOverviewCardProps> = ({
   data,
+  duration = "",
   onDownload,
 }) => {
   const formatCurrency = (amount: number) => {
@@ -330,13 +332,15 @@ const SalesOverviewCard: React.FC<SalesOverviewCardProps> = ({
           </div>
         </CardContent>
       </Card>
-      <StatusBreakdownChart
+
+      <OrderBreakdownCharts
+        data={data?.creatorBreakdown}
+        duration={duration}
         chartData={data?.statusBreakdown.map((item: any) => ({
           status: item.status,
           orders: item.count,
           amount: item.revenue,
         }))}
-        duration={""}
       />
     </>
   );

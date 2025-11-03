@@ -44,6 +44,7 @@ import ProtectedRoute from "./ProtectedRoute";
 import ViewRolePage from "./pages/role/viewRolePage";
 import { PageProvider } from "./contexts/PageContext";
 import { NotificationProvider } from "./contexts/NotificationContext";
+import { JobsManagement } from "./pages/settings";
 
 // Create a wrapper component that uses settings
 const AppContent = () => {
@@ -311,6 +312,16 @@ const AppContent = () => {
               <ProtectedRoute page='Chat' requiredAction='view'>
                 <MainViewComponent title='Support'>
                   <ChatPage />
+                </MainViewComponent>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path='/settings/jobs'
+            element={
+              <ProtectedRoute page='settings' requiredAction='jobs_management'>
+                <MainViewComponent title='Action Settings'>
+                  <JobsManagement />
                 </MainViewComponent>
               </ProtectedRoute>
             }

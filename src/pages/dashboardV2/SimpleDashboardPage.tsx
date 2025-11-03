@@ -38,7 +38,21 @@ import { DateRangePicker } from "../../coreComponents/DateRangePicker";
 import { DateRange } from "react-day-picker";
 import toast from "react-hot-toast";
 import { Button } from "../../components/ui/button";
-import { Loader, PieChart, BarChart3, Crown, Star } from "lucide-react";
+import {
+  Loader,
+  PieChart,
+  BarChart3,
+  Crown,
+  Star,
+  ShoppingCart,
+  Landmark,
+  BanknoteArrowDown,
+  BanknoteX,
+  HandCoins,
+  Wallet2,
+  Truck,
+  TicketPercent,
+} from "lucide-react";
 import { useSettings } from "../../contexts/SettingsContext";
 export interface ReportResponse {
   reports: {
@@ -218,6 +232,7 @@ const DashboardPage: React.FC = () => {
         {/* Key Metrics Overview - Mobile Optimized */}
         <div className='grid grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6 mb-4 sm:mb-8'>
           <DynamicCard
+            icon={ShoppingCart}
             title='Total Orders'
             subtitle='Growth in total orders this period'
             previousValue={
@@ -228,6 +243,7 @@ const DashboardPage: React.FC = () => {
             }
           />
           <DynamicCard
+            icon={Landmark}
             title='Total Amount'
             subtitle='Growth in total amount by order this period'
             previousValue={
@@ -238,12 +254,14 @@ const DashboardPage: React.FC = () => {
             }
           />
           <DynamicCard
+            icon={BanknoteArrowDown}
             title='Total Purchase'
             subtitle='This is only the total purchase amount this period'
             previousValue={0}
             currentValue={analysisData?.reports?.purchases ?? 0}
           />
           <DynamicCard
+            icon={BanknoteX}
             title='Total Return'
             subtitle='This is only the order return amount this period'
             previousValue={0}
@@ -254,6 +272,7 @@ const DashboardPage: React.FC = () => {
         {/* Financial Metrics - Mobile Optimized */}
         <div className='grid grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6 mb-4 sm:mb-8'>
           <DynamicCard
+            icon={HandCoins}
             title='Total Paid'
             subtitle='Growth in total paid this period'
             previousValue={
@@ -264,6 +283,7 @@ const DashboardPage: React.FC = () => {
             }
           />
           <DynamicCard
+            icon={Wallet2}
             title='Total Remaining'
             subtitle='Growth in order remaining this period'
             previousValue={
@@ -275,6 +295,7 @@ const DashboardPage: React.FC = () => {
             }
           />
           <DynamicCard
+            icon={Truck}
             title='Total Delivery Charge'
             subtitle='Growth in total delivery charge this period'
             previousValue={
@@ -287,6 +308,7 @@ const DashboardPage: React.FC = () => {
             }
           />
           <DynamicCard
+            icon={TicketPercent}
             title='Total Discount Amount'
             subtitle='Growth in total discount amount by order this period'
             previousValue={
@@ -300,7 +322,7 @@ const DashboardPage: React.FC = () => {
         </div>
 
         {/* Charts Section - Mobile Optimized */}
-        <div className='grid grid-cols-1 xl:grid-cols-2 gap-4 sm:gap-8 mb-4 sm:mb-8'>
+        <div className='grid grid-cols-1 xl:grid-cols-2 gap-4 sm:gap-8 mb-4 sm:mb-8 '>
           <InteractiveCardComponent
             title='Purchase Vs Order Amount'
             subTitle={`Showing data from ${
@@ -322,8 +344,122 @@ const DashboardPage: React.FC = () => {
           />
         </div>
 
+        {/* Performance Tables - Mobile Optimized */}
+        <div className='hidden'>
+          <h2 className='text-lg sm:text-2xl font-bold mb-3 sm:mb-6 text-foreground'>
+            Performance Insights
+          </h2>
+          <div className='grid grid-cols-1 xl:grid-cols-2 gap-4 sm:gap-8'>
+            <Card className='group relative overflow-hidden hover:shadow-2xl transition-all duration-500 hover:-translate-y-1 bg-gradient-to-br from-card via-card/95 to-card/90 border-0 shadow-lg'>
+              {/* Decorative gradient overlay */}
+              <div className='absolute top-0 left-0 w-64 h-64 bg-gradient-to-br from-yellow-500/10 via-amber-500/5 to-transparent rounded-full blur-3xl -translate-x-32 -translate-y-32 group-hover:scale-150 transition-transform duration-700'></div>
+
+              <CardHeader className='pb-2 sm:pb-4 relative z-10'>
+                <div className='flex items-center space-x-2 sm:space-x-3'>
+                  <div className='p-1 sm:p-2 bg-gradient-to-br from-yellow-500/20 to-amber-500/10 rounded-xl shadow-inner'>
+                    <Crown className='h-4 w-4 sm:h-5 sm:w-5 text-yellow-600 dark:text-yellow-400' />
+                  </div>
+                  <CardTitle className='text-base sm:text-xl font-bold bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text'>
+                    Top Customers
+                  </CardTitle>
+                </div>
+              </CardHeader>
+              <CardContent className='pt-0 relative z-10'>
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableCell>#</TableCell>
+                      <TableCell>Customer Name</TableCell>
+                      <TableCell>Mobile Number</TableCell>
+                      <TableCell>Total Order</TableCell>
+                      <TableCell>Total Spent</TableCell>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {analysisData?.topCustomers.map((customer, index) => (
+                      <TableRow
+                        key={index}
+                        className='hover:bg-primary/5 transition-colors duration-200'>
+                        <TableCell className='font-semibold'>
+                          {getRankWithEmoji(index + 1)}
+                        </TableCell>
+                        <TableCell className='font-medium'>
+                          {customer?.name}
+                        </TableCell>
+                        <TableCell className='text-muted-foreground'>
+                          {customer?.mobile}
+                        </TableCell>
+                        <TableCell className='font-semibold'>
+                          {customer?.totalOrders}
+                        </TableCell>
+                        <TableCell className='font-bold text-primary'>
+                          ৳ {customer?.totalSpent}
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </CardContent>
+
+              {/* Bottom accent line */}
+              <div className='h-1 w-full bg-gradient-to-r from-yellow-500/40 via-amber-500/20 to-transparent'></div>
+            </Card>
+
+            <Card className='group relative overflow-hidden hover:shadow-2xl transition-all duration-500 hover:-translate-y-1 bg-gradient-to-br from-card via-card/95 to-card/90 border-0 shadow-lg'>
+              {/* Decorative gradient overlay */}
+              <div className='absolute top-0 right-0 w-64 h-64 bg-gradient-to-br from-blue-500/10 via-indigo-500/5 to-transparent rounded-full blur-3xl translate-x-32 -translate-y-32 group-hover:scale-150 transition-transform duration-700'></div>
+
+              <CardHeader className='pb-2 sm:pb-4 relative z-10'>
+                <div className='flex items-center space-x-2 sm:space-x-3'>
+                  <div className='p-1 sm:p-2 bg-gradient-to-br from-blue-500/20 to-indigo-500/10 rounded-xl shadow-inner'>
+                    <Star className='h-4 w-4 sm:h-5 sm:w-5 text-blue-600 dark:text-blue-400' />
+                  </div>
+                  <CardTitle className='text-base sm:text-xl font-bold bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text'>
+                    Trending Products
+                  </CardTitle>
+                </div>
+              </CardHeader>
+              <CardContent className='pt-0 relative z-10'>
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableCell>#</TableCell>
+                      <TableCell>Product</TableCell>
+                      <TableCell>Total Sales</TableCell>
+                      <TableCell>Estimate Amount</TableCell>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {analysisData?.bestProducts.map((product, index) => (
+                      <TableRow
+                        key={index}
+                        className='hover:bg-primary/5 transition-colors duration-200'>
+                        <TableCell className='font-semibold'>
+                          {index + 1}
+                        </TableCell>
+                        <TableCell className='font-medium'>
+                          {product?.name}
+                        </TableCell>
+                        <TableCell className='font-semibold text-muted-foreground'>
+                          {product?.totalQuantity}
+                        </TableCell>
+                        <TableCell className='font-bold text-primary'>
+                          {product?.totalRevenue}
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </CardContent>
+
+              {/* Bottom accent line */}
+              <div className='h-1 w-full bg-gradient-to-r from-blue-500/40 via-indigo-500/20 to-transparent'></div>
+            </Card>
+          </div>
+        </div>
+
         {/* Status Analytics - Mobile Optimized */}
-        <div className='mb-4 sm:mb-8'>
+        <div className='hidden mb-4 sm:mb-8'>
           <h2 className='text-lg sm:text-2xl font-bold mb-3 sm:mb-6 text-foreground'>
             Order Status Analytics
           </h2>
@@ -477,82 +613,6 @@ const DashboardPage: React.FC = () => {
               )}
           </div>
         </div>
-
-        {/* Performance Tables - Mobile Optimized */}
-        <div>
-          <h2 className='text-lg sm:text-2xl font-bold mb-3 sm:mb-6 text-foreground'>
-            Performance Insights
-          </h2>
-          <div className='grid grid-cols-1 xl:grid-cols-2 gap-4 sm:gap-8'>
-            <Card className='hover:shadow-lg transition-all duration-300 bg-gradient-to-br from-card to-card/80 border-0 shadow-md'>
-              <CardHeader className='pb-2 sm:pb-4'>
-                <div className='flex items-center space-x-2 sm:space-x-3'>
-                  <div className='p-1 sm:p-2 bg-primary/10 rounded-lg'>
-                    <Crown className='h-4 w-4 sm:h-5 sm:w-5 text-primary' />
-                  </div>
-                  <CardTitle className='text-base sm:text-xl'>Top Customers</CardTitle>
-                </div>
-              </CardHeader>
-              <CardContent className='pt-0'>
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableCell>#</TableCell>
-                      <TableCell>Customer Name</TableCell>
-                      <TableCell>Mobile Number</TableCell>
-                      <TableCell>Total Order</TableCell>
-                      <TableCell>Total Spent</TableCell>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {analysisData?.topCustomers.map((customer, index) => (
-                      <TableRow key={index}>
-                        <TableCell>{getRankWithEmoji(index + 1)}</TableCell>
-                        <TableCell>{customer?.name}</TableCell>
-                        <TableCell>{customer?.mobile}</TableCell>
-                        <TableCell>{customer?.totalOrders}</TableCell>
-                        <TableCell>৳ {customer?.totalSpent}</TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </CardContent>
-            </Card>
-
-            <Card className='hover:shadow-lg transition-all duration-300 bg-gradient-to-br from-card to-card/80 border-0 shadow-md'>
-              <CardHeader className='pb-2 sm:pb-4'>
-                <div className='flex items-center space-x-2 sm:space-x-3'>
-                  <div className='p-1 sm:p-2 bg-primary/10 rounded-lg'>
-                    <Star className='h-4 w-4 sm:h-5 sm:w-5 text-primary' />
-                  </div>
-                  <CardTitle className='text-base sm:text-xl'>Trending Products</CardTitle>
-                </div>
-              </CardHeader>
-              <CardContent className='pt-0'>
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableCell>#</TableCell>
-                      <TableCell>Product</TableCell>
-                      <TableCell>Total Sales</TableCell>
-                      <TableCell>Estimate Amount</TableCell>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {analysisData?.bestProducts.map((product, index) => (
-                      <TableRow key={index}>
-                        <TableCell>{index + 1}</TableCell>
-                        <TableCell>{product?.name}</TableCell>
-                        <TableCell>{product?.totalQuantity}</TableCell>
-                        <TableCell>{product?.totalRevenue}</TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </CardContent>
-            </Card>
-          </div>
-        </div>
       </>
     );
   };
@@ -584,7 +644,7 @@ const DashboardPage: React.FC = () => {
     <div className={getBackgroundClasses()}>
       {/* Enhanced Header Section - Mobile Optimized */}
       <div className={getHeaderClasses()}>
-        <div className='p-3 sm:p-6 lg:p-8'>
+        <div className='p-3 sm:p-4 lg:p-4'>
           <div className='flex flex-col space-y-4 sm:space-y-6 lg:flex-row lg:items-center lg:justify-between lg:space-y-0'>
             <div className='space-y-2 sm:space-y-3'>
               <div className='flex items-center space-x-2 sm:space-x-3'>
@@ -637,7 +697,7 @@ const DashboardPage: React.FC = () => {
       </div>
 
       {/* Main Content - Mobile Optimized */}
-      <div className='p-3 sm:p-6 lg:p-8 space-y-4 sm:space-y-8'>
+      <div className='p-3 sm:p-4 space-y-4 sm:space-y-8 bg-white'>
         {loading ? (
           <div className='space-y-8'>
             <div className='text-center py-8 sm:py-12'>

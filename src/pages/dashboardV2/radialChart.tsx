@@ -48,12 +48,18 @@ const RadialChartComponent: React.FC<Props> = ({
   footerSrting,
 }) => {
   return (
-    <Card className="flex flex-col">
-      <CardHeader className="items-center pb-0">
-        <CardTitle>{title}</CardTitle>
-        <CardDescription>{subTitle}</CardDescription>
+    <Card className="group flex flex-col relative overflow-hidden border-0 bg-gradient-to-br from-card via-card/95 to-card/90 shadow-lg hover:shadow-2xl transition-all duration-500 hover:-translate-y-1">
+      {/* Decorative background element */}
+      <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+
+      {/* Animated gradient orb */}
+      <div className="absolute -top-20 -right-20 w-40 h-40 bg-gradient-to-br from-primary/20 via-primary/10 to-transparent rounded-full blur-3xl group-hover:scale-150 transition-transform duration-700"></div>
+
+      <CardHeader className="items-center pb-0 relative z-10">
+        <CardTitle className="text-base sm:text-lg font-bold bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text text-center">{title}</CardTitle>
+        <CardDescription className="text-xs sm:text-sm text-center line-clamp-2">{subTitle}</CardDescription>
       </CardHeader>
-      <CardContent className="flex-1 pb-0">
+      <CardContent className="flex-1 pb-0 relative z-10">
         <ChartContainer
           config={chartConfig}
           className="mx-auto aspect-square max-h-[250px]"
@@ -107,12 +113,15 @@ const RadialChartComponent: React.FC<Props> = ({
           </RadialBarChart>
         </ChartContainer>
       </CardContent>
-      <CardFooter className="flex-col gap-2 text-sm">
-        <div className="flex items-center gap-2 font-medium leading-none">
+      <CardFooter className="flex-col gap-2 text-sm relative z-10 pb-4">
+        <div className="flex items-center gap-2 font-medium leading-none text-primary">
           Trending data <TrendingUp className="h-4 w-4" />
         </div>
-        <div className="leading-none text-muted-foreground">{footerSrting}</div>
+        <div className="leading-none text-muted-foreground text-center">{footerSrting}</div>
       </CardFooter>
+
+      {/* Bottom accent gradient */}
+      <div className="h-1 w-full bg-gradient-to-r from-primary/40 via-primary/20 to-transparent"></div>
     </Card>
   );
 };

@@ -1,9 +1,9 @@
 import React from "react";
-import { 
-  Package, 
-  MapPin, 
-  Phone, 
-  DollarSign, 
+import {
+  Package,
+  MapPin,
+  Phone,
+  DollarSign,
   Calendar,
   MoreVertical,
   Eye,
@@ -13,7 +13,10 @@ import {
   CheckCircle,
   Clock,
   Truck,
-  XCircle
+  XCircle,
+  Shield,
+  AlertTriangle,
+  ShieldCheck,
 } from "lucide-react";
 import { Badge } from "../../../components/ui/badge";
 import { Button } from "../../../components/ui/button";
@@ -28,6 +31,8 @@ import {
 import dayjs from "dayjs";
 import { cn } from "../../../utils/functions";
 import useRoleCheck from "../../auth/hooks/useRoleCheck";
+import { FraudDetection } from "../interface";
+import FraudDetectionDrawer from "./FraudDetectionDrawer";
 
 interface Props {
   id: string;
@@ -41,6 +46,7 @@ interface Props {
   updatedAt: string;
   remaining: number;
   isBulkAdded: boolean;
+  fraudDetection?: FraudDetection;
   handleViewDetails: () => void;
   handleUpdateOrder: () => void;
   handleModifyProduct: () => void;
@@ -61,6 +67,7 @@ const MobileOrderCard: React.FC<Props> = ({
   remaining,
   updatedAt,
   isBulkAdded,
+  fraudDetection,
   handleBulkCheck,
   handleViewDetails,
   handleUpdateOrder,
@@ -69,6 +76,31 @@ const MobileOrderCard: React.FC<Props> = ({
   handleReturnProducts,
 }) => {
   const { hasRequiredPermission, hasSomePermissionsForPage } = useRoleCheck();
+
+  const getFraudButtonConfig = (riskLevel?: string) => {
+    switch (riskLevel) {
+      case "red":
+        return {
+          icon: AlertTriangle,
+          className: "bg-red-50 hover:bg-red-100 text-red-600 border-red-200",
+        };
+      case "yellow":
+        return {
+          icon: Shield,
+          className: "bg-yellow-50 hover:bg-yellow-100 text-yellow-600 border-yellow-200",
+        };
+      case "green":
+        return {
+          icon: ShieldCheck,
+          className: "bg-green-50 hover:bg-green-100 text-green-600 border-green-200",
+        };
+      default:
+        return {
+          icon: Shield,
+          className: "bg-gray-50 hover:bg-gray-100 text-gray-400 border-gray-200",
+        };
+    }
+  };
 
   const getStatusConfig = (status: string) => {
     switch (status) {
@@ -272,19 +304,44 @@ const MobileOrderCard: React.FC<Props> = ({
       {/* Footer */}
       <div className="px-4 pb-4">
         <div className="flex items-center justify-between">
-          <div className="flex items-center gap-1 text-xs text-gray-500">
-            <Calendar className="h-3 w-3" />
-            <span>Updated {dayjs(updatedAt).format("MMM D, h:mm A")}</span>
+          <div className="flex items-center gap-2">
+            <div className="flex items-center gap-1 text-xs text-gray-500">
+              <Calendar className="h-3 w-3" />
+              <span>Updated {dayjs(updatedAt).format("MMM D, h:mm A")}</span>
+            </div>
           </div>
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={handleViewDetails}
-            className="h-8 px-3 text-xs bg-primary/5 hover:bg-primary/10 text-primary rounded-lg"
-          >
-            <Eye className="h-3 w-3 mr-1" />
-            View Details
-          </Button>
+          <div className="flex items-center gap-2">
+            {fraudDetection && (
+              <FraudDetectionDrawer
+                fraudDetection={fraudDetection}
+                customerName={customerName}
+                phoneNumber={customerPhoneNumber}
+                trigger={
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className={cn(
+                      "h-8 w-8 p-0 border rounded-lg",
+                      getFraudButtonConfig(fraudDetection.riskLevel).className
+                    )}
+                  >
+                    {React.createElement(getFraudButtonConfig(fraudDetection.riskLevel).icon, {
+                      className: "h-4 w-4",
+                    })}
+                  </Button>
+                }
+              />
+            )}
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={handleViewDetails}
+              className="h-8 px-3 text-xs bg-primary/5 hover:bg-primary/10 text-primary rounded-lg"
+            >
+              <Eye className="h-3 w-3 mr-1" />
+              View Details
+            </Button>
+          </div>
         </div>
       </div>
     </div>
