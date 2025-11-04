@@ -6,7 +6,16 @@ import toast from "react-hot-toast";
 import { ProductSearchResponse } from "../../order/interface";
 import { Input } from "../../../components/ui/input";
 import { Button } from "../../../components/ui/button";
-import { Bird, CircleX, Disc3, Trash, Loader2, Search, Package, Plus, Minus } from "lucide-react";
+import {
+  Bird,
+  CircleX,
+  Trash,
+  Loader2,
+  Search,
+  Package,
+  Plus,
+  Minus,
+} from "lucide-react";
 import { Badge } from "../../../components/ui/badge";
 import { Table } from "../../../components/ui/table";
 import {
@@ -181,17 +190,20 @@ const DialogForRecord = ({
         : p.id === product.id
     );
 
-    const isOutOfStock = !!existingProduct?.quantity && existingProduct?.quantity >= product?.quantity;
+    const isOutOfStock =
+      !!existingProduct?.quantity &&
+      existingProduct?.quantity >= product?.quantity;
     const stockLevel = product?.quantity;
-    const stockColor = stockLevel === 0 ? 'rose' : stockLevel < 10 ? 'amber' : 'emerald';
+    const stockColor =
+      stockLevel === 0 ? "rose" : stockLevel < 10 ? "amber" : "emerald";
 
     return (
       <Card
         key={index}
         className={`group cursor-pointer p-4 transition-all duration-300 hover:shadow-lg hover:-translate-y-0.5 border-0 ${
           isOutOfStock
-            ? 'bg-gray-100 opacity-60 cursor-not-allowed'
-            : 'bg-gradient-to-br from-card to-card/95 hover:from-purple-50/50 hover:to-indigo-50/50'
+            ? "bg-gray-100 opacity-60 cursor-not-allowed"
+            : "bg-gradient-to-br from-card to-card/95 hover:from-purple-50/50 hover:to-indigo-50/50"
         }`}
         onClick={() => {
           isOutOfStock
@@ -211,7 +223,9 @@ const DialogForRecord = ({
             )}
             <div className='flex-1 min-w-0'>
               <div className='flex items-center gap-2 mb-1'>
-                <span className='text-sm font-semibold text-foreground truncate' title={product?.name}>
+                <span
+                  className='text-sm font-semibold text-foreground truncate'
+                  title={product?.name}>
                   {product?.name}
                 </span>
               </div>
@@ -223,9 +237,13 @@ const DialogForRecord = ({
             </div>
           </div>
           {!!product.variant && (
-            <Badge variant='outline' className='flex-shrink-0 text-xs border-purple-200'>
+            <Badge
+              variant='outline'
+              className='flex-shrink-0 text-xs border-purple-200'>
               {`${product?.variant.color}${
-                !!product?.variant?.color && !!product?.variant?.size ? " - " : ""
+                !!product?.variant?.color && !!product?.variant?.size
+                  ? " - "
+                  : ""
               }${product?.variant?.size}`}
             </Badge>
           )}
@@ -240,11 +258,21 @@ const DialogForRecord = ({
         <Table>
           <thead className='bg-gradient-to-r from-purple-50 via-indigo-50 to-purple-50 dark:from-purple-950/20 dark:via-indigo-950/20 dark:to-purple-950/20'>
             <tr>
-              <th className='px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-purple-900 dark:text-purple-100'>Name</th>
-              <th className='px-4 py-3 text-center text-xs font-semibold uppercase tracking-wider text-purple-900 dark:text-purple-100'>Variant</th>
-              <th className='px-4 py-3 text-center text-xs font-semibold uppercase tracking-wider text-purple-900 dark:text-purple-100'>Quantity</th>
-              <th className='px-4 py-3 text-center text-xs font-semibold uppercase tracking-wider text-purple-900 dark:text-purple-100'>Price</th>
-              <th className='px-4 py-3 text-center text-xs font-semibold uppercase tracking-wider text-purple-900 dark:text-purple-100'>Action</th>
+              <th className='px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-purple-900 dark:text-purple-100'>
+                Name
+              </th>
+              <th className='px-4 py-3 text-center text-xs font-semibold uppercase tracking-wider text-purple-900 dark:text-purple-100'>
+                Variant
+              </th>
+              <th className='px-4 py-3 text-center text-xs font-semibold uppercase tracking-wider text-purple-900 dark:text-purple-100'>
+                Quantity
+              </th>
+              <th className='px-4 py-3 text-center text-xs font-semibold uppercase tracking-wider text-purple-900 dark:text-purple-100'>
+                Price
+              </th>
+              <th className='px-4 py-3 text-center text-xs font-semibold uppercase tracking-wider text-purple-900 dark:text-purple-100'>
+                Action
+              </th>
             </tr>
           </thead>
           <tbody className='divide-y divide-border/30'>
@@ -255,11 +283,18 @@ const DialogForRecord = ({
                     <div className='relative mb-4'>
                       <div className='absolute inset-0 bg-purple-500/20 rounded-full blur-xl'></div>
                       <div className='relative p-4 bg-gradient-to-br from-purple-500/10 to-indigo-500/10 rounded-2xl'>
-                        <Package className='w-12 h-12 text-purple-600' strokeWidth={1.5} />
+                        <Package
+                          className='w-12 h-12 text-purple-600'
+                          strokeWidth={1.5}
+                        />
                       </div>
                     </div>
-                    <p className='text-base font-semibold text-foreground'>No Products Added</p>
-                    <p className='text-sm text-muted-foreground mt-1'>Search and add products to create a record</p>
+                    <p className='text-base font-semibold text-foreground'>
+                      No Products Added
+                    </p>
+                    <p className='text-sm text-muted-foreground mt-1'>
+                      Search and add products to create a record
+                    </p>
                   </div>
                 </td>
               </tr>
@@ -270,16 +305,24 @@ const DialogForRecord = ({
                 <tr
                   className='hover:bg-purple-50/50 dark:hover:bg-purple-950/10 transition-colors duration-150'
                   key={product.variant?.id || product.id}>
-                  <td className='px-4 py-3 text-sm font-medium'>{product.name}</td>
+                  <td className='px-4 py-3 text-sm font-medium'>
+                    {product.name}
+                  </td>
                   <td className='px-4 py-3 text-center'>
                     {!!product.variant ? (
-                      <Badge variant='outline' className='text-xs border-purple-200'>
+                      <Badge
+                        variant='outline'
+                        className='text-xs border-purple-200'>
                         {`${product?.variant.color}${
-                          !!product?.variant?.color && !!product?.variant?.size ? " - " : ""
+                          !!product?.variant?.color && !!product?.variant?.size
+                            ? " - "
+                            : ""
                         }${product?.variant?.size}`}
                       </Badge>
                     ) : (
-                      <Badge variant='secondary' className='text-xs'>N/A</Badge>
+                      <Badge variant='secondary' className='text-xs'>
+                        N/A
+                      </Badge>
                     )}
                   </td>
                   <td className='px-4 py-3'>
@@ -295,7 +338,9 @@ const DialogForRecord = ({
                       <Input
                         type='text'
                         value={product?.quantity}
-                        onChange={(e) => handleInputChange(e?.target?.value, index)}
+                        onChange={(e) =>
+                          handleInputChange(e?.target?.value, index)
+                        }
                         className='text-center w-16 h-8 border-purple-200 focus:border-purple-500 focus:ring-2 focus:ring-purple-500/20 font-semibold'
                       />
                       <Button
@@ -307,14 +352,18 @@ const DialogForRecord = ({
                       </Button>
                     </div>
                   </td>
-                  <td className='px-4 py-3 text-center text-sm font-semibold text-purple-600'>৳{product?.unitPrice}</td>
+                  <td className='px-4 py-3 text-center text-sm font-semibold text-purple-600'>
+                    ৳{product?.unitPrice}
+                  </td>
                   <td className='px-4 py-3 text-center'>
                     <Button
                       variant='outline'
                       size='sm'
                       onClick={() =>
                         setSelectedProducts(
-                          selectedProducts.filter((_: any, i: number) => i !== index)
+                          selectedProducts.filter(
+                            (_: any, i: number) => i !== index
+                          )
                         )
                       }
                       className='h-8 w-8 p-0 border-rose-200 hover:bg-rose-600 hover:text-white hover:border-rose-600 transition-all duration-300'>
@@ -343,7 +392,9 @@ const DialogForRecord = ({
               <Package className='h-5 w-5 text-white' strokeWidth={2.5} />
             </div>
             <div>
-              <AlertDialogTitle className='text-xl font-bold'>Manage Products</AlertDialogTitle>
+              <AlertDialogTitle className='text-xl font-bold'>
+                Manage Products
+              </AlertDialogTitle>
               <AlertDialogDescription className='text-sm mt-1'>
                 Search and add products to create or update a record
               </AlertDialogDescription>
@@ -355,7 +406,9 @@ const DialogForRecord = ({
           {/* Selected Products Table */}
           <div className='space-y-3'>
             <div className='flex items-center justify-between'>
-              <h3 className='text-sm font-semibold text-foreground'>Selected Products</h3>
+              <h3 className='text-sm font-semibold text-foreground'>
+                Selected Products
+              </h3>
               <Badge variant='secondary' className='text-xs'>
                 {selectedProducts?.length || 0} items
               </Badge>
@@ -367,14 +420,20 @@ const DialogForRecord = ({
 
           {/* Product Search */}
           <div className='space-y-3'>
-            <h3 className='text-sm font-semibold text-foreground'>Search Products</h3>
+            <h3 className='text-sm font-semibold text-foreground'>
+              Search Products
+            </h3>
             {renderProductSearch()}
 
             {loading && (
               <div className='flex flex-col justify-center items-center py-16'>
                 <Loader2 className='w-10 h-10 text-purple-600 animate-spin mb-3' />
-                <p className='text-sm font-medium text-foreground'>Searching products...</p>
-                <p className='text-xs text-muted-foreground mt-1'>Please wait a moment</p>
+                <p className='text-sm font-medium text-foreground'>
+                  Searching products...
+                </p>
+                <p className='text-xs text-muted-foreground mt-1'>
+                  Please wait a moment
+                </p>
               </div>
             )}
 
@@ -382,29 +441,45 @@ const DialogForRecord = ({
               <div className='max-h-[45vh] overflow-y-auto pr-2'>
                 {!!products && products.length > 0 ? (
                   <div className='grid grid-cols-1 gap-3 p-2'>
-                    {products.map((result, index) => renderProductButton(result, index))}
+                    {products.map((result, index) =>
+                      renderProductButton(result, index)
+                    )}
                   </div>
                 ) : searchQuery ? (
                   <div className='flex flex-col justify-center items-center py-16 text-center'>
                     <div className='relative mb-4'>
                       <div className='absolute inset-0 bg-purple-500/20 rounded-full blur-xl'></div>
                       <div className='relative p-4 bg-gradient-to-br from-purple-500/10 to-indigo-500/10 rounded-2xl'>
-                        <Bird className='w-12 h-12 text-purple-600' strokeWidth={1.5} />
+                        <Bird
+                          className='w-12 h-12 text-purple-600'
+                          strokeWidth={1.5}
+                        />
                       </div>
                     </div>
-                    <p className='text-base font-semibold text-foreground'>No Products Found</p>
-                    <p className='text-sm text-muted-foreground mt-1'>Try searching with different keywords</p>
+                    <p className='text-base font-semibold text-foreground'>
+                      No Products Found
+                    </p>
+                    <p className='text-sm text-muted-foreground mt-1'>
+                      Try searching with different keywords
+                    </p>
                   </div>
                 ) : (
                   <div className='flex flex-col justify-center items-center py-16 text-center'>
                     <div className='relative mb-4'>
                       <div className='absolute inset-0 bg-purple-500/20 rounded-full blur-xl'></div>
                       <div className='relative p-4 bg-gradient-to-br from-purple-500/10 to-indigo-500/10 rounded-2xl'>
-                        <Search className='w-12 h-12 text-purple-600' strokeWidth={1.5} />
+                        <Search
+                          className='w-12 h-12 text-purple-600'
+                          strokeWidth={1.5}
+                        />
                       </div>
                     </div>
-                    <p className='text-base font-semibold text-foreground'>Start Searching</p>
-                    <p className='text-sm text-muted-foreground mt-1'>Enter product name, SKU, or ID above</p>
+                    <p className='text-base font-semibold text-foreground'>
+                      Start Searching
+                    </p>
+                    <p className='text-sm text-muted-foreground mt-1'>
+                      Enter product name, SKU, or ID above
+                    </p>
                   </div>
                 )}
               </div>

@@ -8,12 +8,13 @@ import {
   orderBulkAction,
 } from "../../../api/order";
 import useLoginAuth from "../../auth/hooks/useLoginAuth";
+import { IOrder } from "../interface";
 
 export const useOrderList = () => {
   const { toast } = useToast();
   const { user } = useLoginAuth();
   const [orderFetching, setOrderFetching] = useState(false);
-  const [orders, setOrders] = useState([]);
+  const [orders, setOrders] = useState<IOrder[]>([]);
   const [selectedStatus, setSelectedStatus] = useState<string>("");
   const [totalOrders, setTotalOrders] = useState(0);
   const [totalPages, setTotalPages] = useState(0);

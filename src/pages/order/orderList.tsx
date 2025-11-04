@@ -33,6 +33,7 @@ import {
   Truck,
   Edit3,
   Filter,
+  PackageCheck,
 } from "lucide-react";
 import { Button } from "../../components/ui/button";
 import { Tabs, TabsList, TabsTrigger } from "../../components/ui/tabs";
@@ -125,6 +126,7 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from "../../components/ui/collapsible";
+import { useCourierActions } from "../delivery/hooks/useCourierActions";
 
 const OrderList = () => {
   const {
@@ -150,6 +152,13 @@ const OrderList = () => {
   const { hasRequiredPermission, hasSomePermissionsForPage } = useRoleCheck();
 
   const { editOrderData, updateOrderStatus } = useOrder();
+
+  const {
+    createCourierOrder,
+    bulkCreateCourierOrders,
+    isCreating,
+    isBulkCreating,
+  } = useCourierActions();
 
   const [isCopied, setIsCopied] = useState(false);
   const [inputValue, setInputValue] = useState<string>("");
@@ -819,6 +828,7 @@ const OrderList = () => {
                             {orders.map((order: IOrder, index: number) => (
                               <SingleItem
                                 key={index}
+                                order={order}
                                 orderNumber={order?.orderNumber}
                                 id={`${order?.id}`}
                                 paid={order?.paid}
@@ -1040,6 +1050,29 @@ const OrderList = () => {
                       <span className='hidden sm:inline'>Invoice</span>
                     </Button>
 
+                    {/* Create Courier Order Button */}
+                    {hasRequiredPermission("order", "edit") && selectedOrder && (
+                      <Button
+                        size='sm'
+                        variant='outline'
+                        disabled={isCreating}
+                        onClick={async () => {
+                          await createCourierOrder(
+                            selectedOrder.orderNumber,
+                            {},
+                            () => {
+                              refresh();
+                            }
+                          );
+                        }}
+                        className='gap-2 border-purple-200 hover:bg-purple-50'>
+                        <PackageCheck className='w-4 h-4 text-purple-600' />
+                        <span className='hidden sm:inline'>
+                          {isCreating ? "Creating..." : "Courier"}
+                        </span>
+                      </Button>
+                    )}
+
                     {/* Status Change Actions */}
                     {!selectedOrder?.status.includes("return") && (
                       <DropdownMenu>
@@ -1127,11 +1160,12 @@ const OrderList = () => {
                         {product?.hasVariation && (
                           <div className='text-sm w-auto'>
                             <Badge className='border-0 bg-orange-100 text-orange-600'>
-                              {product?.variation.color}{" "}
-                              {product?.variation.color &&
+                              {!!product?.variation && product?.variation.color}{" "}
+                              {!!product?.variation &&
+                                product?.variation.color &&
                                 product?.variation.size &&
                                 "•"}{" "}
-                              {product?.variation.size}
+                              {!!product?.variation && product?.variation.size}
                             </Badge>
                           </div>
                         )}
@@ -1313,6 +1347,33 @@ const OrderList = () => {
               </div>
             )}
 
+            {/* Courier Orders */}
+            {hasRequiredPermission("order", "edit") && (
+              <div className='space-y-2'>
+                <div className='text-sm font-medium text-gray-700'>
+                  Courier Service
+                </div>
+                <Button
+                  variant='outline'
+                  className='w-full justify-start gap-2 bg-white hover:bg-gray-50 border-gray-200'
+                  disabled={isBulkCreating}
+                  onClick={async () => {
+                    // Get order numbers from selected orders
+                    const orderNumbers = orders
+                      .filter((o) => bulkOrders.includes(o.id))
+                      .map((o) => o.orderNumber);
+
+                    await bulkCreateCourierOrders(orderNumbers, () => {
+                      setBulkOrders([]);
+                      refresh();
+                    });
+                  }}>
+                  <PackageCheck className='w-4 h-4 text-purple-600' />
+                  {isBulkCreating ? "Creating..." : "Create Courier Orders"}
+                </Button>
+              </div>
+            )}
+
             {/* Status Changes */}
             {hasRequiredPermission("order", "edit") && (
               <div className='space-y-2'>
@@ -1405,6 +1466,26 @@ const OrderList = () => {
                   generateMultipleModernInvoicesAndDownloadZip(bulkOrders);
                 }}>
                 <File className='size-5 text-gray-900 mr-2' /> Generate Invoices
+              </Button>
+            )}
+
+            {hasRequiredPermission("order", "edit") && (
+              <Button
+                variant='secondary'
+                className='w-full'
+                disabled={isBulkCreating}
+                onClick={async () => {
+                  const orderNumbers = orders
+                    .filter((o) => bulkOrders.includes(o.id))
+                    .map((o) => o.orderNumber);
+
+                  await bulkCreateCourierOrders(orderNumbers, () => {
+                    setBulkOrders([]);
+                    refresh();
+                  });
+                }}>
+                <PackageCheck className='size-5 text-gray-900 mr-2' />
+                {isBulkCreating ? "Creating..." : "Create Courier"}
               </Button>
             )}
 

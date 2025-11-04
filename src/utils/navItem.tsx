@@ -2,7 +2,6 @@ import {
   BadgeDollarSign,
   File,
   Home,
-  MessageCircle,
   Package2,
   ShieldCheck,
   Shirt,
@@ -29,6 +28,12 @@ export const navItems = [
     link: "/order",
     active: true,
     id: "order",
+    items: [
+      {
+        title: "Delivery Tracking",
+        url: "/order/delivery",
+      },
+    ],
     roles: ["admin", "manager", "moderator"],
   },
   {

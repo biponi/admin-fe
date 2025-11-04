@@ -24,8 +24,9 @@ import { Button } from "../../../components/ui/button";
 import { useRef } from "react";
 import CustomAlertDialog from "../../../coreComponents/OptionModal";
 import useRoleCheck from "../../auth/hooks/useRoleCheck";
-import { FraudDetection } from "../interface";
+import { FraudDetection, IOrder } from "../interface";
 import FraudDetectionDrawer from "./FraudDetectionDrawer";
+import { DeliveryTimelineBadge } from "./ShippedItem";
 
 interface Props {
   id: string;
@@ -36,6 +37,7 @@ interface Props {
   district: string;
   totalPrice: number;
   paid: number;
+  order: IOrder;
   updatedAt: string;
   remaining: number;
   isBulkAdded: boolean;
@@ -50,6 +52,7 @@ interface Props {
 
 const SingleItem: React.FC<Props> = ({
   id,
+  order,
   orderNumber,
   customerName,
   CustomerPhoneNumber,
@@ -117,30 +120,39 @@ const SingleItem: React.FC<Props> = ({
       <TableCell>{customerName}</TableCell>
       <TableCell className='font-medium'>{CustomerPhoneNumber}</TableCell>
       <TableCell>
-        <Badge
-          variant={
-            ["cancel", "delete"].includes(status) ? "destructive" : "outline"
-          }
-          className={`py-1 px-3 ${
-            status === "processing"
-              ? ""
-              : status === "shipped"
-              ? "bg-blue-400 text-gray-200"
-              : ["cancel", "delete"].includes(status)
-              ? ""
-              : "bg-green-500 text-gray-200"
-          }`}>
-          {status === "processing" ? (
-            <TimerIcon className='w-4 h-4 mr-2  ' />
-          ) : status === "shipped" ? (
-            <Truck className='w-4 h-4 mr-2' />
-          ) : ["cancel", "delete", "fail", "failed"].includes(status) ? (
-            <CircleMinusIcon className='w-4 h-4 mr-2' />
-          ) : (
-            <CircleCheck className='w-4 h-4 mr-2 ' />
-          )}
-          {status.toUpperCase()}
-        </Badge>
+        {status === "shipped" &&
+        !!order?.deliveryTimeline &&
+        order?.deliveryTimeline.length > 0 ? (
+          <div>
+            <p className='text-sm text-slate-600'>Shipped</p>
+            <DeliveryTimelineBadge deliveryTimeline={order?.deliveryTimeline} />
+          </div>
+        ) : (
+          <Badge
+            variant={
+              ["cancel", "delete"].includes(status) ? "destructive" : "outline"
+            }
+            className={`py-1 px-3 ${
+              status === "processing"
+                ? ""
+                : status === "shipped"
+                ? "bg-blue-400 text-gray-200"
+                : ["cancel", "delete"].includes(status)
+                ? ""
+                : "bg-green-500 text-gray-200"
+            }`}>
+            {status === "processing" ? (
+              <TimerIcon className='w-4 h-4 mr-2  ' />
+            ) : status === "shipped" ? (
+              <Truck className='w-4 h-4 mr-2' />
+            ) : ["cancel", "delete", "fail", "failed"].includes(status) ? (
+              <CircleMinusIcon className='w-4 h-4 mr-2' />
+            ) : (
+              <CircleCheck className='w-4 h-4 mr-2 ' />
+            )}
+            {status.toUpperCase()}
+          </Badge>
+        )}
       </TableCell>
       <TableCell className='hidden md:table-cell'>
         <Badge variant='outline' className='py-1 px-3'>

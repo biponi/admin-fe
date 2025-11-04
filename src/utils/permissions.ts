@@ -22,4 +22,5 @@ export const pagePermissions: Record<string, string[]> = {
   Report: ["view", "create", "edit", "delete", "download"],
   Chat: ["view", "reply", "attend", "manage", "delete"],
   Settings: ["view", "edit", "jobs_management"],
+  Delivery: ["view", "edit", "delete", "create"],
 };

@@ -147,6 +147,17 @@ const config = {
     productPerformance: () => `${baseURL}/report/product-performance`,
     export: () => `${baseURL}/report/export`,
   },
+  courier: {
+    createOrder: () => `${baseURL}/courier/create`,
+    bulkCreate: () => `${baseURL}/courier/bulk-create`,
+    status: (identifier: string) => `${baseURL}/courier/status/${identifier}`,
+    dashboard: () => `${baseURL}/courier/dashboard`,
+    orders: () => `${baseURL}/courier/orders`,
+    balance: () => `${baseURL}/courier/balance`,
+    invoice: (consignmentId: string) =>
+      `${baseURL}/courier/invoice/${consignmentId}`,
+    report: () => `${baseURL}/courier/report`,
+  },
 };
 
 export default config;

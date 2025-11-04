@@ -30,6 +30,7 @@ import SingleReserveStore from "./pages/reserve/singleReserveStore";
 import { UserComponent } from "./pages/user";
 import ChatPage from "./pages/chat";
 import ReportPage from "./pages/report";
+import DeliveryPage from "./pages/delivery";
 
 // Hooks
 import useLoginAuth from "./pages/auth/hooks/useLoginAuth";
@@ -332,6 +333,16 @@ const AppContent = () => {
               <ProtectedRoute page='Report' requiredAction='view'>
                 <MainViewComponent title='Reports & Analytics'>
                   <ReportPage />
+                </MainViewComponent>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path='/order/delivery'
+            element={
+              <ProtectedRoute page='order' requiredAction='view'>
+                <MainViewComponent title='Delivery Management'>
+                  <DeliveryPage />
                 </MainViewComponent>
               </ProtectedRoute>
             }
