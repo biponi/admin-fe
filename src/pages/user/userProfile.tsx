@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { useToast } from "../../components/ui/use-toast";
+import { toast } from "sonner";
 import { Input } from "../../components/ui/input";
 import { Button } from "../../components/ui/button";
 import {
@@ -21,11 +21,9 @@ import {
   changeUserPassword,
 } from "../../api/user";
 import useLoginAuth from "../auth/hooks/useLoginAuth";
-import { successToast } from "../../utils/toast";
 import { OTPVerificationDialog } from "../../components/OTPVerificationDialog";
 
 const ProfilePage = () => {
-  const { toast } = useToast();
   const { fetchUserById } = useLoginAuth();
   const [profile, setProfile] = useState({
     name: "",
@@ -63,10 +61,8 @@ const ProfilePage = () => {
           avatar: response.data.avatar,
         }));
       } else {
-        toast({
-          title: "Error",
+        toast("Error", {
           description: response.error || "Failed to fetch profile",
-          variant: "destructive",
         });
       }
     };
@@ -109,7 +105,9 @@ const ProfilePage = () => {
       });
 
       if (response.success) {
-        successToast("Password updated successfully");
+        toast("Success", {
+          description: "Password updated successfully",
+        });
         setEditMode((prev) => ({ ...prev, password: false }));
         // Clear password fields
         setFormData((prev) => ({
@@ -118,18 +116,14 @@ const ProfilePage = () => {
           confirmPassword: "",
         }));
       } else {
-        toast({
-          title: "Error",
+        toast("Error", {
           description: response.error || "Failed to update password",
-          variant: "destructive",
         });
       }
     } catch (error) {
       console.error("Password change error:", error);
-      toast({
-        title: "Error",
+      toast("Error", {
         description: "An unexpected error occurred",
-        variant: "destructive",
       });
     }
   };
@@ -141,20 +135,16 @@ const ProfilePage = () => {
       if (field === "password") {
         // Validate passwords match
         if (formData.newPassword !== formData.confirmPassword) {
-          toast({
-            title: "Error",
+          toast("Error", {
             description: "Passwords don't match",
-            variant: "destructive",
           });
           return;
         }
 
         // Validate password length
         if (formData.newPassword.length < 8) {
-          toast({
-            title: "Error",
+          toast("Error", {
             description: "Password must be at least 8 characters long",
-            variant: "destructive",
           });
           return;
         }
@@ -189,7 +179,9 @@ const ProfilePage = () => {
       }
 
       if (response.success) {
-        successToast(`Profile ${field} updated successfully`);
+        toast("Success", {
+          description: `Profile ${field} updated successfully`,
+        });
         setEditMode((prev) => ({ ...prev, [field]: false }));
 
         // Refresh profile data
@@ -206,18 +198,14 @@ const ProfilePage = () => {
           fetchUserById(profileResponse.data.id);
         }
       } else {
-        toast({
-          title: "Error",
+        toast("Error", {
           description: response.error || `Failed to update ${field}`,
-          variant: "destructive",
         });
       }
     } catch (error) {
       console.error("Update error:", error);
-      toast({
-        title: "Error",
+      toast("Error", {
         description: "An unexpected error occurred",
-        variant: "destructive",
       });
     }
   };

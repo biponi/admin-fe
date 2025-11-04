@@ -117,12 +117,12 @@ export const navItems = [
     id: "customer",
     roles: ["admin", "manager"],
   },
-  {
-    icon: <MessageCircle className='w-5 h-5' />,
-    title: "Live Chat",
-    link: "/chat",
-    active: true,
-    id: "chat",
-    roles: ["admin", "manager", "moderator"],
-  },
+  // {
+  //   icon: <MessageCircle className='w-5 h-5' />,
+  //   title: "Live Chat",
+  //   link: "/chat",
+  //   active: true,
+  //   id: "chat",
+  //   roles: ["admin", "manager", "moderator"],
+  // },
 ];
