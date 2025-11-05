@@ -112,7 +112,7 @@ const CreatePurchaseOrder: React.FC = () => {
       } else {
         setSelectedProducts((prev) => [
           ...prev,
-          { ...product, quantity: 1, unitPrice: 0 },
+          { ...product, quantity: 1, unitPrice: product?.unitPrice },
         ]);
       }
       toast.success(`Added ${product.name} to purchase order`);

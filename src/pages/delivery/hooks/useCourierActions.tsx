@@ -1,5 +1,8 @@
 import { useState, useCallback } from "react";
-import { courierAPI, CreateCourierOrderRequest } from "../../../services/courierApi";
+import {
+  courierAPI,
+  CreateCourierOrderRequest,
+} from "../../../services/courierApi";
 import { toast } from "react-hot-toast";
 
 export const useCourierActions = () => {
@@ -38,7 +41,9 @@ export const useCourierActions = () => {
         }
       } catch (err: any) {
         const errorMessage =
-          err?.response?.data?.error || err.message || "Failed to create courier order";
+          err?.response?.data?.error ||
+          err.message ||
+          "Failed to create courier order";
         setError(errorMessage);
         toast.error(errorMessage);
         return null;
@@ -74,10 +79,9 @@ export const useCourierActions = () => {
           // Show detailed failure messages if any
           if (failed > 0 && response.data.results.failed.length > 0) {
             response.data.results.failed.forEach((failure) => {
-              toast.error(
-                `Order #${failure.orderNumber}: ${failure.error}`,
-                { duration: 4000 }
-              );
+              toast.error(`Order #${failure.orderNumber}: ${failure.error}`, {
+                duration: 4000,
+              });
             });
           }
 
@@ -107,10 +111,15 @@ export const useCourierActions = () => {
   const checkDeliveryStatus = useCallback(
     async (
       identifier: string,
+      provider: "pathao" | "steadfast",
       type: "consignment" | "invoice" | "tracking" = "consignment"
     ) => {
       try {
-        const response = await courierAPI.checkStatus(identifier, type);
+        const response = await courierAPI.checkStatus(
+          identifier,
+          provider,
+          type
+        );
         if (response.success) {
           return response.data;
         } else {

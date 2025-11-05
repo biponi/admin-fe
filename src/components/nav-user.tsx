@@ -102,7 +102,8 @@ export function NavUser({
                 <ComponentPlaceholderIcon />
                 Billing
               </DropdownMenuItem>
-              <DropdownMenuItem>
+              <DropdownMenuItem
+                onClick={() => navigateToRoute("/notifications")}>
                 <Bell />
                 Notifications
               </DropdownMenuItem>

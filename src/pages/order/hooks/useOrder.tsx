@@ -47,16 +47,26 @@ const useOrder = () => {
   const updateOrderStatus = async (
     id: string,
     status: string,
-    callback: any = null
+    callback: any = null,
+    courierProvider?: "steadfast" | "pathao"
   ) => {
     try {
-      const response = await updateOrderStatusData(id, status);
+      const response = await updateOrderStatusData(id, status, courierProvider);
       if (response?.success) {
         if (callback !== null) {
-          toast({
-            title: "Order updated successfully",
-            variant: "default",
-          });
+          // Show warning if present
+          if (response.warning) {
+            toast({
+              title: "Order updated with warning",
+              description: response.warning,
+              variant: "default",
+            });
+          } else {
+            toast({
+              title: "Order updated successfully",
+              variant: "default",
+            });
+          }
           callback(true);
         }
       } else {

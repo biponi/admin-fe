@@ -1,5 +1,9 @@
 import { useState, useEffect, useCallback } from "react";
-import { courierAPI, CourierOrdersListResponse, CourierOrder } from "../../../services/courierApi";
+import {
+  courierAPI,
+  CourierOrdersListResponse,
+  CourierOrder,
+} from "../../../services/courierApi";
 import { toast } from "react-hot-toast";
 import { PaginationInfo } from "../types";
 
@@ -18,6 +22,7 @@ export const useCourierOrders = () => {
   const [currentPage, setCurrentPage] = useState<number>(1);
   const [pageLimit, setPageLimit] = useState<number>(20);
   const [statusFilter, setStatusFilter] = useState<string>("");
+  const [provider, setProvider] = useState<string>("");
   const [searchQuery, setSearchQuery] = useState<string>("");
 
   /**
@@ -33,6 +38,7 @@ export const useCourierOrders = () => {
       };
       if (statusFilter) params.status = statusFilter;
       if (searchQuery) params.search = searchQuery;
+      if (provider) params.provider = provider;
 
       const response: CourierOrdersListResponse = await courierAPI.getOrders(
         params
@@ -45,13 +51,16 @@ export const useCourierOrders = () => {
         throw new Error("Failed to fetch courier orders");
       }
     } catch (err: any) {
-      const errorMessage = err?.response?.data?.error || err.message || "Failed to fetch courier orders";
+      const errorMessage =
+        err?.response?.data?.error ||
+        err.message ||
+        "Failed to fetch courier orders";
       setError(errorMessage);
       toast.error(errorMessage);
     } finally {
       setIsLoading(false);
     }
-  }, [currentPage, pageLimit, statusFilter, searchQuery]);
+  }, [currentPage, pageLimit, statusFilter, searchQuery, provider]);
 
   /**
    * Go to next page
@@ -95,6 +104,14 @@ export const useCourierOrders = () => {
   }, []);
 
   /**
+   * Set provider filter
+   */
+  const filterByProvider = useCallback((provider: string) => {
+    setProvider(provider);
+    setCurrentPage(1); // Reset to first page when filtering
+  }, []);
+
+  /**
    * Set search query
    */
   const search = useCallback((query: string) => {
@@ -109,6 +126,7 @@ export const useCourierOrders = () => {
     setStatusFilter("");
     setSearchQuery("");
     setCurrentPage(1);
+    setProvider("");
   }, []);
 
   /**
@@ -133,6 +151,7 @@ export const useCourierOrders = () => {
     // Filters & Pagination
     currentPage,
     pageLimit,
+    provider,
     statusFilter,
     searchQuery,
 
@@ -144,6 +163,7 @@ export const useCourierOrders = () => {
     goToPage,
     changeLimit,
     filterByStatus,
+    filterByProvider,
     search,
     clearFilters,
   };

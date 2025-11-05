@@ -20,6 +20,7 @@ import ChatPage from "../../pages/chat";
 import { JobsManagement } from "../../pages/settings";
 import ReportPage from "../../pages/report";
 import DeliveryPage from "../../pages/delivery";
+import { NotificationPage } from "../../pages/notifications";
 
 export const ProtectedRoutes = () => {
   const { layoutType } = useSettings();
@@ -174,12 +175,20 @@ export const ProtectedRoutes = () => {
         }
       />
       <Route
-        path='/order/delivery'
+        path='/delivery'
         element={
-          <ProtectedRoute page='order' requiredAction='view'>
+          <ProtectedRoute page='delivery' requiredAction='view'>
             <MainViewComponent title='Delivery Management'>
               <DeliveryPage />
             </MainViewComponent>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path='/notifications'
+        element={
+          <ProtectedRoute page='all'>
+            <NotificationPage />
           </ProtectedRoute>
         }
       />

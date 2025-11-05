@@ -8,6 +8,7 @@ import {
   ShoppingBag,
   ShoppingCart,
   StoreIcon,
+  Truck,
   User2,
   UsersRound,
   Zap,
@@ -28,13 +29,15 @@ export const navItems = [
     link: "/order",
     active: true,
     id: "order",
-    items: [
-      {
-        title: "Delivery Tracking",
-        url: "/order/delivery",
-      },
-    ],
     roles: ["admin", "manager", "moderator"],
+  },
+  {
+    icon: <Truck className='w-5 h-5' />,
+    title: "Delivery",
+    link: "/delivery",
+    active: true,
+    id: "delivery",
+    roles: ["admin"],
   },
   {
     icon: <Shirt className='w-5 h-5' />,
@@ -68,7 +71,7 @@ export const navItems = [
   },
   {
     icon: <ShoppingBag className='w-5 h-5' />,
-    title: "Purchase Order",
+    title: "Purchase",
     link: "/purchase-order/list",
     active: true,
     id: "purchaseorder",
@@ -90,6 +93,7 @@ export const navItems = [
     id: "report",
     roles: ["admin"],
   },
+
   {
     icon: <StoreIcon className='w-5 h-5' />,
     title: "Stores",

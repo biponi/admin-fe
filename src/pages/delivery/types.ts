@@ -91,7 +91,7 @@ export interface PaginationInfo {
 }
 
 // Status color mapping
-export const deliveryStatusColors: Record<DeliveryStatus, string> = {
+export const deliveryStatusColors: Record<DeliveryStatus | string, string> = {
   not_shipped: "bg-gray-500",
   pending: "bg-yellow-500",
   in_transit: "bg-blue-500",
@@ -108,24 +108,25 @@ export const deliveryStatusColors: Record<DeliveryStatus, string> = {
 };
 
 // Status text color mapping for badges
-export const deliveryStatusTextColors: Record<DeliveryStatus, string> = {
-  not_shipped: "text-gray-100",
-  pending: "text-yellow-900",
-  in_transit: "text-blue-100",
-  delivered: "text-green-100",
-  delivered_approval_pending: "text-green-900",
-  partial_delivered: "text-green-900",
-  partial_delivered_approval_pending: "text-green-900",
-  cancelled: "text-red-100",
-  cancelled_approval_pending: "text-red-900",
-  hold: "text-orange-100",
-  in_review: "text-purple-100",
-  unknown: "text-gray-100",
-  unknown_approval_pending: "text-gray-900",
-};
+export const deliveryStatusTextColors: Record<DeliveryStatus | string, string> =
+  {
+    not_shipped: "text-gray-100",
+    pending: "text-yellow-900",
+    in_transit: "text-blue-100",
+    delivered: "text-green-100",
+    delivered_approval_pending: "text-green-900",
+    partial_delivered: "text-green-900",
+    partial_delivered_approval_pending: "text-green-900",
+    cancelled: "text-red-100",
+    cancelled_approval_pending: "text-red-900",
+    hold: "text-orange-100",
+    in_review: "text-purple-100",
+    unknown: "text-gray-100",
+    unknown_approval_pending: "text-gray-900",
+  };
 
 // Status display names
-export const deliveryStatusLabels: Record<DeliveryStatus, string> = {
+export const deliveryStatusLabels: Record<DeliveryStatus | string, string> = {
   not_shipped: "Not Shipped",
   pending: "Pending Pickup",
   in_transit: "In Transit",
@@ -142,13 +143,15 @@ export const deliveryStatusLabels: Record<DeliveryStatus, string> = {
 };
 
 // Helper function to format delivery status
-export const formatDeliveryStatus = (status: DeliveryStatus): string => {
+export const formatDeliveryStatus = (
+  status: DeliveryStatus | string
+): string => {
   return deliveryStatusLabels[status] || status;
 };
 
 // Helper function to get status badge classes
 export const getStatusBadgeClasses = (
-  status: DeliveryStatus
+  status: string
 ): { bg: string; text: string } => {
   return {
     bg: deliveryStatusColors[status] || "bg-gray-500",

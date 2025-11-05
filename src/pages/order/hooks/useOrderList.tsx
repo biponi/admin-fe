@@ -114,7 +114,10 @@ export const useOrderList = () => {
     setCurrentPage(currentPageNum + increaseBy);
   };
 
-  const performOrderBulkUpdate = async (actionType: string) => {
+  const performOrderBulkUpdate = async (
+    actionType: string,
+    courierProvider?: "steadfast" | "pathao"
+  ) => {
     if (!bulkOrders || bulkOrders?.length < 1) {
       toast({
         variant: "destructive",
@@ -122,12 +125,30 @@ export const useOrderList = () => {
       });
       return;
     }
-    const response = await orderBulkAction([...bulkOrders], actionType);
+    const response = await orderBulkAction([...bulkOrders], actionType, courierProvider);
     if (response?.success) {
+      // Handle warning and courier failures
+      let description = response?.data?.message || response?.data;
+
+      if (response.courierOrdersQueued !== undefined && response.courierOrdersTotal !== undefined) {
+        description = `${description}\n\nCourier Orders: ${response.courierOrdersQueued}/${response.courierOrdersTotal} created`;
+      }
+
+      if (response.warning) {
+        description = `${description}\n\n⚠️ ${response.warning}`;
+      }
+
+      if (response.courierFailures && response.courierFailures.length > 0) {
+        const failuresList = response.courierFailures
+          .map(f => `• Order #${f.orderNumber}: ${f.error}`)
+          .join('\n');
+        description = `${description}\n\nFailed Orders:\n${failuresList}`;
+      }
+
       toast({
-        variant: "default",
-        title: "Bulk Action Success",
-        description: response?.data,
+        variant: response.warning ? "default" : "default",
+        title: response.warning ? "Bulk Action Completed with Warnings" : "Bulk Action Success",
+        description: description,
       });
       setCurrentPage(0);
       setBulkOrders([]);

@@ -1,14 +1,20 @@
 import React from "react";
-import { DeliveryTimelineEntry, formatDeliveryStatus, getStatusBadgeClasses } from "../types";
+import {
+  DeliveryTimelineEntry,
+  formatDeliveryStatus,
+  getStatusBadgeClasses,
+} from "../types";
 import { Badge } from "../../../components/ui/badge";
 import { MapPin, Calendar, User } from "lucide-react";
 import dayjs from "dayjs";
 
 interface DeliveryTimelineProps {
+  provider: "pathao" | "steadfast";
   timeline: DeliveryTimelineEntry[];
 }
 
 export const DeliveryTimeline: React.FC<DeliveryTimelineProps> = ({
+  provider,
   timeline,
 }) => {
   if (!timeline || timeline.length === 0) {
@@ -31,6 +37,7 @@ export const DeliveryTimeline: React.FC<DeliveryTimelineProps> = ({
         return (
           <div key={index} className='relative pl-10'>
             {/* Timeline dot */}
+            {/* // {entry.status==='pending'} */}
             <div
               className={`absolute left-0 w-8 h-8 rounded-full border-4 border-white ${
                 isLatest ? statusClasses.bg : "bg-gray-300"
@@ -45,10 +52,25 @@ export const DeliveryTimeline: React.FC<DeliveryTimelineProps> = ({
               }`}>
               {/* Status badge */}
               <div className='flex items-center justify-between mb-2'>
-                <Badge
-                  className={`${statusClasses.bg} ${statusClasses.text} border-0`}>
-                  {formatDeliveryStatus(entry.status)}
-                </Badge>
+                <div className='flex justify-start items-center gap-2'>
+                  {provider.includes("pathao") ? (
+                    <img
+                      className='rounded-full shadow w-8'
+                      src='https://logosandtypes.com/wp-content/uploads/2025/04/Pathao.png'
+                      alt='pathao'
+                    />
+                  ) : (
+                    <img
+                      className='rounded-full shadow w-8'
+                      src='https://play-lh.googleusercontent.com/9OYsIvc-iKHte4jqVe-c4sA0vNL-tljBDVPguou6B-qdxQgSKpj8pZ7ZYh6MYEbawbo=w240-h480-rw'
+                      alt='steadfast'
+                    />
+                  )}
+                  <Badge
+                    className={`${statusClasses.bg} ${statusClasses.text} border-0`}>
+                    {formatDeliveryStatus(entry.status)}
+                  </Badge>
+                </div>
                 {isLatest && (
                   <span className='text-xs font-semibold text-blue-600 uppercase tracking-wide'>
                     Current

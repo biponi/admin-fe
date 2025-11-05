@@ -3,7 +3,6 @@ import { Card, CardContent } from "../../../components/ui/card";
 import { Badge } from "../../../components/ui/badge";
 import { Button } from "../../../components/ui/button";
 import {
-  Package,
   User,
   Phone,
   MapPin,
@@ -13,9 +12,14 @@ import {
   Copy,
 } from "lucide-react";
 import { CourierOrder } from "../../../services/courierApi";
-import { getStatusBadgeClasses, formatDeliveryStatus, DeliveryStatus } from "../types";
+import {
+  getStatusBadgeClasses,
+  formatDeliveryStatus,
+  DeliveryStatus,
+} from "../types";
 import dayjs from "dayjs";
 import { toast } from "react-hot-toast";
+import { Input } from "../../../components/ui/input";
 
 interface CourierOrderCardProps {
   order: CourierOrder;
@@ -26,7 +30,9 @@ export const CourierOrderCard: React.FC<CourierOrderCardProps> = ({
   order,
   onViewDetails,
 }) => {
-  const statusClasses = getStatusBadgeClasses(order.deliveryStatus as DeliveryStatus);
+  const statusClasses = getStatusBadgeClasses(
+    order.deliveryStatus as DeliveryStatus
+  );
 
   const handleCopyTracking = (text: string, label: string) => {
     navigator.clipboard.writeText(text);
@@ -39,16 +45,24 @@ export const CourierOrderCard: React.FC<CourierOrderCardProps> = ({
         {/* Header */}
         <div className='flex items-start justify-between'>
           <div className='flex items-center gap-2'>
-            <div className='w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center'>
-              <Package className='w-5 h-5 text-blue-600' />
-            </div>
+            {order?.provider.includes("pathao") ? (
+              <img
+                className='rounded-lg shadow w-10'
+                src='https://logosandtypes.com/wp-content/uploads/2025/04/Pathao.png'
+                alt='pathao'
+              />
+            ) : (
+              <img
+                className='rounded-lg shadow w-10'
+                src='https://play-lh.googleusercontent.com/9OYsIvc-iKHte4jqVe-c4sA0vNL-tljBDVPguou6B-qdxQgSKpj8pZ7ZYh6MYEbawbo=w240-h480-rw'
+                alt='steadfast'
+              />
+            )}
             <div>
               <h3 className='font-semibold text-gray-900'>
-                Order #{order.orderNumber}
+                Order #{order.orderId}
               </h3>
-              <p className='text-xs text-gray-500'>
-                Invoice: {order.invoice}
-              </p>
+              <p className='text-xs text-gray-500'>Invoice: {order.invoice}</p>
             </div>
           </div>
           <Badge
@@ -88,6 +102,36 @@ export const CourierOrderCard: React.FC<CourierOrderCardProps> = ({
                 className='h-6 w-6 p-0'
                 onClick={() =>
                   handleCopyTracking(order.trackingCode, "Tracking Code")
+                }>
+                <Copy className='w-3 h-3' />
+              </Button>
+            </div>
+          </div>
+          <div className='flex items-center justify-between text-sm'>
+            <span className='text-gray-600'>Tracking Link:</span>
+            <div className='flex items-center gap-2'>
+              <Input
+                disabled
+                type='text'
+                className='w-full overflow-hidden border-gray-300 text-gray-950'
+                value={
+                  order?.provider.includes("pathao")
+                    ? `https://merchant.pathao.com/tracking?consignment_id=${order?.consignmentId}&phone=${order?.recipientPhone}`
+                    : `https://steadfast.com.bd/t/${order?.consignmentId}`
+                }
+                placeholder='courier'
+              />
+              <Button
+                size='sm'
+                variant='ghost'
+                className='h-6 w-6 p-0'
+                onClick={() =>
+                  handleCopyTracking(
+                    order?.provider.includes("pathao")
+                      ? `https://merchant.pathao.com/tracking?consignment_id=${order?.consignmentId}&phone=${order?.recipientPhone}`
+                      : `https://steadfast.com.bd/t/${order?.consignmentId}`,
+                    "Tracking Link"
+                  )
                 }>
                 <Copy className='w-3 h-3' />
               </Button>

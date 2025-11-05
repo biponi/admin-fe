@@ -1,6 +1,4 @@
 "use client";
-
-import { TrendingUp } from "lucide-react";
 import {
   Label,
   PolarGrid,
@@ -32,6 +30,7 @@ const chartConfig = {
   },
 } satisfies ChartConfig;
 interface Props {
+  count: number;
   total: number;
   label: string;
   title: string;
@@ -43,39 +42,43 @@ const RadialChartComponent: React.FC<Props> = ({
   total,
   label,
   title,
+  count,
   subTitle,
   chartData,
   footerSrting,
 }) => {
+  console.log(chartData);
   return (
-    <Card className="group flex flex-col relative overflow-hidden border-0 bg-gradient-to-br from-card via-card/95 to-card/90 shadow-lg hover:shadow-2xl transition-all duration-500 hover:-translate-y-1">
+    <Card className='group flex flex-col relative overflow-hidden border-0 bg-gradient-to-br from-card via-card/95 to-card/90 shadow-lg hover:shadow-2xl transition-all duration-500 hover:-translate-y-1'>
       {/* Decorative background element */}
-      <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+      <div className='absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500'></div>
 
       {/* Animated gradient orb */}
-      <div className="absolute -top-20 -right-20 w-40 h-40 bg-gradient-to-br from-primary/20 via-primary/10 to-transparent rounded-full blur-3xl group-hover:scale-150 transition-transform duration-700"></div>
+      <div className='absolute -top-20 -right-20 w-40 h-40 bg-gradient-to-br from-primary/20 via-primary/10 to-transparent rounded-full blur-3xl group-hover:scale-150 transition-transform duration-700'></div>
 
-      <CardHeader className="items-center pb-0 relative z-10">
-        <CardTitle className="text-base sm:text-lg font-bold bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text text-center">{title}</CardTitle>
-        <CardDescription className="text-xs sm:text-sm text-center line-clamp-2">{subTitle}</CardDescription>
+      <CardHeader className='items-center pb-0 relative z-10'>
+        <CardTitle className='text-base sm:text-lg font-bold bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text text-center'>
+          {title}
+        </CardTitle>
+        <CardDescription className='text-xs sm:text-sm text-center line-clamp-2'>
+          {subTitle}
+        </CardDescription>
       </CardHeader>
-      <CardContent className="flex-1 pb-0 relative z-10">
+      <CardContent className='flex-1 p-0 relative z-10'>
         <ChartContainer
           config={chartConfig}
-          className="mx-auto aspect-square max-h-[250px]"
-        >
+          className='mx-auto aspect-square max-h-[250px]'>
           <RadialBarChart
             data={chartData}
             startAngle={0}
             endAngle={total}
             innerRadius={80}
-            outerRadius={110}
-          >
+            outerRadius={110}>
             <PolarGrid
-              gridType="circle"
+              gridType='circle'
               radialLines={false}
-              stroke="none"
-              className="first:fill-muted last:fill-background"
+              stroke='none'
+              className='first:fill-muted last:fill-background'
               polarRadius={[86, 74]}
             />
             <RadialBar dataKey={label} background cornerRadius={10} />
@@ -87,21 +90,18 @@ const RadialChartComponent: React.FC<Props> = ({
                       <text
                         x={viewBox.cx}
                         y={viewBox.cy}
-                        textAnchor="middle"
-                        dominantBaseline="middle"
-                      >
+                        textAnchor='middle'
+                        dominantBaseline='middle'>
                         <tspan
                           x={viewBox.cx}
                           y={viewBox.cy}
-                          className="fill-foreground text-4xl font-bold"
-                        >
+                          className='fill-foreground text-4xl font-bold'>
                           {chartData[0][label].toLocaleString()}
                         </tspan>
                         <tspan
                           x={viewBox.cx}
                           y={(viewBox.cy || 0) + 24}
-                          className="fill-muted-foreground"
-                        >
+                          className='fill-muted-foreground'>
                           {label}
                         </tspan>
                       </text>
@@ -113,15 +113,14 @@ const RadialChartComponent: React.FC<Props> = ({
           </RadialBarChart>
         </ChartContainer>
       </CardContent>
-      <CardFooter className="flex-col gap-2 text-sm relative z-10 pb-4">
-        <div className="flex items-center gap-2 font-medium leading-none text-primary">
-          Trending data <TrendingUp className="h-4 w-4" />
+      <CardFooter className='flex-col p-1 gap-2 text-sm relative z-10 pb-4'>
+        <div className='flex items-center gap-2 font-medium leading-none text-primary'>
+          {((count / total) * 100).toFixed(2)}% out of {total} orders
         </div>
-        <div className="leading-none text-muted-foreground text-center">{footerSrting}</div>
       </CardFooter>
 
       {/* Bottom accent gradient */}
-      <div className="h-1 w-full bg-gradient-to-r from-primary/40 via-primary/20 to-transparent"></div>
+      <div className='h-1 w-full bg-gradient-to-r from-primary/40 via-primary/20 to-transparent'></div>
     </Card>
   );
 };

@@ -81,6 +81,7 @@ export interface DashboardStats {
 
 export interface CourierOrder {
   orderId: string;
+  provider: "pathao" | "steadfast";
   orderNumber: number;
   consignmentId: string;
   trackingCode: string;
@@ -175,10 +176,11 @@ export const courierAPI = {
    */
   checkStatus: async (
     identifier: string,
+    provider: "pathao" | "steadfast",
     type: "consignment" | "invoice" | "tracking" = "consignment"
   ): Promise<DeliveryStatusResponse> => {
     const response = await axios.get(
-      `${config.courier.status(identifier)}?type=${type}`
+      `${config.courier.status(identifier)}?type=${type}&provider=${provider}`
     );
     return response.data;
   },
@@ -210,12 +212,14 @@ export const courierAPI = {
     limit?: number;
     status?: string;
     search?: string;
+    provider?: string;
   }): Promise<CourierOrdersListResponse> => {
     const queryParams = new URLSearchParams();
     if (params?.page) queryParams.append("page", params.page.toString());
     if (params?.limit) queryParams.append("limit", params.limit.toString());
     if (params?.status) queryParams.append("status", params.status);
     if (params?.search) queryParams.append("search", params.search);
+    if (params?.provider) queryParams.append("provider", params.provider);
 
     const response = await axios.get(
       `${config.courier.orders()}?${queryParams.toString()}`

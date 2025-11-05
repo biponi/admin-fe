@@ -230,7 +230,7 @@ const DashboardPage: React.FC = () => {
     return (
       <>
         {/* Key Metrics Overview - Mobile Optimized */}
-        <div className='grid grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6 mb-4 sm:mb-8'>
+        <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6 mb-4 sm:mb-8'>
           <DynamicCard
             icon={ShoppingCart}
             title='Total Orders'
@@ -270,7 +270,7 @@ const DashboardPage: React.FC = () => {
         </div>
 
         {/* Financial Metrics - Mobile Optimized */}
-        <div className='grid grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6 mb-4 sm:mb-8'>
+        <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6 mb-4 sm:mb-8'>
           <DynamicCard
             icon={HandCoins}
             title='Total Paid'
@@ -322,7 +322,7 @@ const DashboardPage: React.FC = () => {
         </div>
 
         {/* Charts Section - Mobile Optimized */}
-        <div className='grid grid-cols-1 xl:grid-cols-2 gap-4 sm:gap-8 mb-4 sm:mb-8 '>
+        <div className='hidden sm:grid grid-cols-1 xl:grid-cols-2 gap-4 sm:gap-8 mb-4 sm:mb-8 '>
           <InteractiveCardComponent
             title='Purchase Vs Order Amount'
             subTitle={`Showing data from ${
@@ -459,8 +459,8 @@ const DashboardPage: React.FC = () => {
         </div>
 
         {/* Status Analytics - Mobile Optimized */}
-        <div className='hidden mb-4 sm:mb-8'>
-          <h2 className='text-lg sm:text-2xl font-bold mb-3 sm:mb-6 text-foreground'>
+        <div className='sm:hidden mb-4 sm:mb-8'>
+          <h2 className='text-lg text-center sm:text-2xl font-bold mb-3 sm:mb-6 text-foreground w-full px-6 py-2 shadow-2xl bg-white shadow-orange-5 border-orange-300 rounded-2xl'>
             Order Status Analytics
           </h2>
           <div className='grid grid-cols-2 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-3 sm:gap-6'>
@@ -477,6 +477,9 @@ const DashboardPage: React.FC = () => {
                   subTitle={`${dateRange?.start.toDateString() ?? ""} - ${
                     dateRange?.end.toDateString() ?? ""
                   }`}
+                  count={
+                    analysisData?.reports?.processingAndCompleted[0].count ?? 0
+                  }
                   footerSrting={` Showing total ${
                     analysisData?.reports?.processingAndCompleted[0]._id ?? ""
                   } data `}
@@ -509,6 +512,9 @@ const DashboardPage: React.FC = () => {
                   subTitle={`${dateRange?.start.toDateString() ?? ""} - ${
                     dateRange?.end.toDateString() ?? ""
                   }`}
+                  count={
+                    analysisData?.reports?.processingAndCompleted[1].count ?? 0
+                  }
                   footerSrting={` Showing total ${
                     analysisData?.reports?.processingAndCompleted[1]._id ?? ""
                   } data `}
@@ -539,6 +545,9 @@ const DashboardPage: React.FC = () => {
                   subTitle={`${dateRange?.start.toDateString() ?? ""} - ${
                     dateRange?.end.toDateString() ?? ""
                   }`}
+                  count={
+                    analysisData?.reports?.failedAndCancelled[0].count ?? 0
+                  }
                   footerSrting={` Showing total ${
                     analysisData?.reports?.failedAndCancelled[0]._id ?? ""
                   } data`}
@@ -567,6 +576,9 @@ const DashboardPage: React.FC = () => {
                   subTitle={`${dateRange?.start.toDateString() ?? ""} - ${
                     dateRange?.end.toDateString() ?? ""
                   }`}
+                  count={
+                    analysisData?.reports?.failedAndCancelled[1].count ?? 0
+                  }
                   footerSrting={` Showing total ${
                     analysisData?.reports?.failedAndCancelled[1]._id ?? ""
                   } data`}
@@ -595,6 +607,9 @@ const DashboardPage: React.FC = () => {
                   subTitle={`${dateRange?.start.toDateString() ?? ""} - ${
                     dateRange?.end.toDateString() ?? ""
                   }`}
+                  count={
+                    analysisData?.reports?.failedAndCancelled[2].count ?? 0
+                  }
                   footerSrting={` Showing total ${
                     analysisData?.reports?.failedAndCancelled[2]._id ?? ""
                   } data`}

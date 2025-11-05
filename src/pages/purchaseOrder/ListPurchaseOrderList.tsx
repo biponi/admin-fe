@@ -498,7 +498,7 @@ const ListPurchaseOrders: React.FC = () => {
                             onClick={() =>
                               navigate(`/purchase-order/update/${order.id}`)
                             }
-                            className='text-green-600 hover:text-green-700 hover:bg-green-50'
+                            className='text-green-600 bg-green-50 hover:text-green-700 hover:bg-green-50'
                             title='Edit Purchase Order'>
                             <Edit className='w-4 h-4' />
                           </Button>
@@ -511,7 +511,7 @@ const ListPurchaseOrders: React.FC = () => {
                                 variant='ghost'
                                 size='sm'
                                 disabled={isRestoring === order.id}
-                                className='text-blue-600 hover:text-blue-700 hover:bg-blue-50'
+                                className='text-blue-600 bg-blue-50 hover:text-blue-700 hover:bg-blue-50'
                                 title='Restore Purchase Order'>
                                 <ArchiveRestore className='w-4 h-4' />
                               </Button>
@@ -545,7 +545,7 @@ const ListPurchaseOrders: React.FC = () => {
                             size='sm'
                             disabled={isDeleting === order.id}
                             onClick={() => handleDelete(order.id)}
-                            className='text-red-600 hover:text-red-700 hover:bg-red-50'
+                            className='text-red-600 bg-red-50 hover:text-red-700 hover:bg-red-50'
                             title='Delete Purchase Order'>
                             <Trash2 className='w-4 h-4' />
                           </Button>

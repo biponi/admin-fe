@@ -13,15 +13,19 @@ const DashboardV2 = () => {
   const user = useSelector((state: any) => state?.user);
   const userPermissions = user?.permissions || [];
   return hasPagePermission("Dashboard", "view", userPermissions) ? (
-    <Tabs defaultValue='home' className='w-full container'>
-      <TabsList className='ml-12'>
+    <Tabs defaultValue='home' className='w-full md:container'>
+      <TabsList className='md:hidden w-full rounded-none grid grid-cols-2 gap-2'>
+        <TabsTrigger value='home'>Home</TabsTrigger>
+        <TabsTrigger value='dashboard'>Dashboard</TabsTrigger>
+      </TabsList>
+      <TabsList className='hidden md:block ml-12'>
         <TabsTrigger value='home'>Home</TabsTrigger>
         <TabsTrigger value='dashboard'>Dashboard</TabsTrigger>
       </TabsList>
       <TabsContent value='home'>
         <AgentView />
       </TabsContent>
-      <TabsContent value='dashboard' className='container'>
+      <TabsContent value='dashboard' className='md:container'>
         <DashboardPage />
       </TabsContent>
     </Tabs>

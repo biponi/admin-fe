@@ -127,6 +127,7 @@ import {
   CollapsibleTrigger,
 } from "../../components/ui/collapsible";
 import { useCourierActions } from "../delivery/hooks/useCourierActions";
+import { CourierSelector } from "./components/CourierSelector";
 
 const OrderList = () => {
   const {
@@ -168,6 +169,15 @@ const OrderList = () => {
   const [isEditDialogOpen, setEditDialogOpen] = useState<boolean>(false);
   const [selectedOrder, setSelectedOrder] = useState<IOrder | null>(null);
   const [modifyDialogOpen, setModifyDialogOpen] = useState<boolean>(false);
+  const [courierSelectorOpen, setCourierSelectorOpen] = useState<boolean>(false);
+  const [courierSelectorMobile, setCourierSelectorMobile] = useState<boolean>(false);
+  const [pendingStatusChange, setPendingStatusChange] = useState<{
+    orderId: string;
+    status: string;
+  } | null>(null);
+  const [bulkCourierSelectorOpen, setBulkCourierSelectorOpen] = useState<boolean>(false);
+  const [bulkCourierSelectorMobile, setBulkCourierSelectorMobile] = useState<boolean>(false);
+  const [pendingBulkAction, setPendingBulkAction] = useState<string>("");
 
   const debounceHandler = useDebounce(inputValue, 500);
 
@@ -1087,14 +1097,11 @@ const OrderList = () => {
                           {selectedOrder?.status === "processing" && (
                             <DropdownMenuItem
                               onClick={() => {
-                                updateOrderStatus(
-                                  `${selectedOrder?.id}`,
-                                  "shipped",
-                                  () => {
-                                    refresh();
-                                    setShowDetails(false);
-                                  }
-                                );
+                                setPendingStatusChange({
+                                  orderId: `${selectedOrder?.id}`,
+                                  status: "shipped",
+                                });
+                                setCourierSelectorOpen(true);
                               }}
                               className='gap-2'>
                               <Truck className='w-4 h-4 text-purple-600' />
@@ -1384,7 +1391,10 @@ const OrderList = () => {
                   <Button
                     variant='default'
                     className='w-full justify-start gap-2 bg-blue-600 hover:bg-blue-700 text-white'
-                    onClick={() => setBulkAction("shipped")}>
+                    onClick={() => {
+                      setPendingBulkAction("shipped");
+                      setBulkCourierSelectorOpen(true);
+                    }}>
                     <TruckIcon className='w-4 h-4' />
                     Mark as Shipped
                   </Button>
@@ -1493,7 +1503,10 @@ const OrderList = () => {
               <Button
                 variant='default'
                 className='w-full bg-blue-700'
-                onClick={() => setBulkAction("shipped")}>
+                onClick={() => {
+                  setPendingBulkAction("shipped");
+                  setBulkCourierSelectorMobile(true);
+                }}>
                 <TruckIcon className='size-5 text-white mr-2' /> Shipped
               </Button>
             )}
@@ -1711,12 +1724,82 @@ const OrderList = () => {
     }
   };
 
+  const handleCourierSelection = async (courierProvider: "steadfast" | "pathao") => {
+    if (pendingStatusChange) {
+      await updateOrderStatus(
+        pendingStatusChange.orderId,
+        pendingStatusChange.status,
+        () => {
+          refresh();
+          setShowDetails(false);
+        },
+        courierProvider
+      );
+      setPendingStatusChange(null);
+      setCourierSelectorOpen(false);
+      setCourierSelectorMobile(false);
+    }
+  };
+
+  const handleBulkCourierSelection = async (courierProvider: "steadfast" | "pathao") => {
+    if (pendingBulkAction) {
+      await performOrderBulkUpdate(pendingBulkAction, courierProvider);
+      setPendingBulkAction("");
+      setBulkCourierSelectorOpen(false);
+      setBulkCourierSelectorMobile(false);
+    }
+  };
+
   return (
     <>
       {mainView()}
       {renderBulkActionDrawer()}
       {returnModal()}
       {drawerDialog()}
+
+      {/* Courier Selector Dialog for Desktop */}
+      <CourierSelector
+        open={courierSelectorOpen}
+        onOpenChange={(open) => {
+          setCourierSelectorOpen(open);
+          if (!open) setPendingStatusChange(null);
+        }}
+        onConfirm={handleCourierSelection}
+        isMobile={false}
+      />
+
+      {/* Courier Selector Drawer for Mobile */}
+      <CourierSelector
+        open={courierSelectorMobile}
+        onOpenChange={(open) => {
+          setCourierSelectorMobile(open);
+          if (!open) setPendingStatusChange(null);
+        }}
+        onConfirm={handleCourierSelection}
+        isMobile={true}
+      />
+
+      {/* Bulk Courier Selector Dialog for Desktop */}
+      <CourierSelector
+        open={bulkCourierSelectorOpen}
+        onOpenChange={(open) => {
+          setBulkCourierSelectorOpen(open);
+          if (!open) setPendingBulkAction("");
+        }}
+        onConfirm={handleBulkCourierSelection}
+        isMobile={false}
+      />
+
+      {/* Bulk Courier Selector Drawer for Mobile */}
+      <CourierSelector
+        open={bulkCourierSelectorMobile}
+        onOpenChange={(open) => {
+          setBulkCourierSelectorMobile(open);
+          if (!open) setPendingBulkAction("");
+        }}
+        onConfirm={handleBulkCourierSelection}
+        isMobile={true}
+      />
     </>
   );
 };

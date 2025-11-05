@@ -48,11 +48,13 @@ export const CourierOrdersList: React.FC = () => {
     error,
     currentPage,
     pageLimit,
+    provider,
     statusFilter,
     searchQuery,
     nextPage,
     prevPage,
     changeLimit,
+    filterByProvider,
     filterByStatus,
     search,
     clearFilters,
@@ -81,6 +83,7 @@ export const CourierOrdersList: React.FC = () => {
     try {
       const statusData = await checkDeliveryStatus(
         order.consignmentId,
+        order?.provider,
         "consignment"
       );
       setDeliveryStatusData(statusData);
@@ -167,6 +170,22 @@ export const CourierOrdersList: React.FC = () => {
               <SelectItem value='cancelled'>Cancelled</SelectItem>
               <SelectItem value='hold'>On Hold</SelectItem>
               <SelectItem value='in_review'>In Review</SelectItem>
+            </SelectGroup>
+          </SelectContent>
+        </Select>
+
+        <Select
+          value={provider || "all"}
+          onValueChange={(val) => filterByProvider(val === "all" ? "" : val)}>
+          <SelectTrigger className='w-full md:w-[200px]'>
+            <SelectValue placeholder='All Couriers' />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectGroup>
+              <SelectLabel>Couriers</SelectLabel>
+              <SelectItem value='all'>All Couriers</SelectItem>
+              <SelectItem value='pathao'>Pathao</SelectItem>
+              <SelectItem value='steadfast'>Steadfast</SelectItem>
             </SelectGroup>
           </SelectContent>
         </Select>
@@ -365,7 +384,10 @@ export const CourierOrdersList: React.FC = () => {
                     </span>
                   </div>
                 ) : timeline.length > 0 ? (
-                  <DeliveryTimeline timeline={timeline} />
+                  <DeliveryTimeline
+                    timeline={timeline}
+                    provider={selectedOrder?.provider}
+                  />
                 ) : (
                   <div className='text-center text-gray-500 py-8 bg-gray-50 rounded-lg border-2 border-dashed'>
                     <Package className='w-12 h-12 mx-auto mb-3 text-gray-400' />

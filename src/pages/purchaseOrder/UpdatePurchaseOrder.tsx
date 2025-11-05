@@ -197,7 +197,7 @@ const UpdatePurchaseOrder: React.FC = () => {
     } catch (error) {
       console.error("Failed to fetch purchase order:", error);
       toast.error("Failed to load purchase order");
-      navigate("/purchase-orders");
+      navigate("/purchase-order/list");
     } finally {
       setLoading(false);
     }
@@ -458,7 +458,7 @@ const UpdatePurchaseOrder: React.FC = () => {
                 The purchase order you're looking for doesn't exist or has been
                 deleted.
               </p>
-              <Button onClick={() => navigate("/purchase-orders")}>
+              <Button onClick={() => navigate("/purchase-order/list")}>
                 <ArrowLeft className='w-4 h-4 mr-2' />
                 Back to Purchase Orders
               </Button>
@@ -491,7 +491,7 @@ const UpdatePurchaseOrder: React.FC = () => {
               <div className='flex items-center gap-2'>
                 <Button
                   variant='outline'
-                  onClick={() => navigate("/purchase-orders")}
+                  onClick={() => navigate("/purchase-order/list")}
                   disabled={updating}>
                   <ArrowLeft className='w-4 h-4 mr-2' />
                   Back
@@ -872,7 +872,7 @@ const UpdatePurchaseOrder: React.FC = () => {
                   if (hasChanges) {
                     setShowDiscardDialog(true);
                   } else {
-                    navigate("/purchase-orders");
+                    navigate("/purchase-order/list");
                   }
                 }}
                 disabled={updating}>
@@ -894,7 +894,7 @@ const UpdatePurchaseOrder: React.FC = () => {
                 <AlertDialogAction
                   onClick={() => {
                     setShowDiscardDialog(false);
-                    navigate("/purchase-orders");
+                    navigate("/purchase-order/list");
                   }}
                   disabled={updating}
                   className='bg-destructive text-destructive-foreground hover:bg-destructive/90'>

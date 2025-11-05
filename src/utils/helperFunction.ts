@@ -36,3 +36,34 @@ export const hasPagePermission = (
   );
   return permission?.actions.includes(action) ?? false;
 };
+
+export const setTopicsForNotifications = (
+  permissions: Permission[]
+): string[] => {
+  let topics = ["all"];
+  if (hasPagePermission("order", "view", permissions)) {
+    topics.push("order_created");
+    topics.push("order_status_changed");
+  }
+
+  if (hasPagePermission("order", "edit", permissions)) {
+    topics.push("courier_shipped");
+    topics.push("courier_delivered");
+  }
+
+  if (hasPagePermission("product", "view", permissions)) {
+    topics.push("low_stock");
+  }
+
+  if (hasPagePermission("user", "view", permissions)) {
+    //topics.push("custom");
+    topics.push("system_alert");
+    topics.push("user_registered");
+
+    // payment topics
+    topics.push("payment_failed");
+    topics.push("payment_received");
+  }
+
+  return topics;
+};

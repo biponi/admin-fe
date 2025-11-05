@@ -124,8 +124,14 @@ const SingleItem: React.FC<Props> = ({
         !!order?.deliveryTimeline &&
         order?.deliveryTimeline.length > 0 ? (
           <div>
-            <p className='text-sm text-slate-600'>Shipped</p>
-            <DeliveryTimelineBadge deliveryTimeline={order?.deliveryTimeline} />
+            <DeliveryTimelineBadge
+              deliveryTimeline={
+                !!order?.deliveryTimeline
+                  ? order?.deliveryTimeline.reverse()
+                  : []
+              }
+              provider={order?.courier?.provider ?? ""}
+            />
           </div>
         ) : (
           <Badge
