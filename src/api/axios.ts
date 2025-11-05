@@ -24,7 +24,7 @@ const processQueue = (error: any, token: string | null = null) => {
       resolve(token!);
     }
   });
-  
+
   failedQueue = [];
 };
 
@@ -42,8 +42,10 @@ axiosInstance.interceptors.request.use(
 axiosInstance.interceptors.response.use(
   (response: AxiosResponse) => response,
   async (error: AxiosError) => {
-    const originalRequest = error.config as AxiosRequestConfig & { _retry?: boolean };
-    
+    const originalRequest = error.config as AxiosRequestConfig & {
+      _retry?: boolean;
+    };
+
     // Handle 403 Forbidden (token expired or invalid)
     if (error.response?.status === 403 && !originalRequest._retry) {
       if (isRefreshing) {
@@ -67,28 +69,28 @@ axiosInstance.interceptors.response.use(
 
       try {
         console.log("🔄 Token expired, attempting to refresh...");
-        
+
         // Attempt to refresh token
         const tokenResponse = await refreshApiToken();
-        
+
         if (tokenResponse?.success && tokenResponse?.data?.accessToken) {
           const newToken = tokenResponse.data.accessToken;
           const newRefreshToken = tokenResponse.data.refreshToken;
-          
+
           // Update localStorage
           localStorage.setItem("token", newToken);
           localStorage.setItem("refreshToken", newRefreshToken);
-          
+
           console.log("✅ Token refreshed successfully");
-          
+
           // Process queued requests
           processQueue(null, newToken);
-          
+
           // Retry original request with new token
           if (originalRequest.headers) {
             originalRequest.headers["x-access-token"] = newToken;
           }
-          
+
           isRefreshing = false;
           return axiosInstance(originalRequest);
         } else {
@@ -96,17 +98,17 @@ axiosInstance.interceptors.response.use(
         }
       } catch (refreshError) {
         console.error("❌ Token refresh failed:", refreshError);
-        
+
         // Process queued requests with error
         processQueue(refreshError, null);
-        
+
         // Clear tokens and redirect to login
         localStorage.removeItem("token");
         localStorage.removeItem("refreshToken");
-        
+
         // Redirect to login page
         window.location.href = "/login";
-        
+
         isRefreshing = false;
         return Promise.reject(refreshError);
       }

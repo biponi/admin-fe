@@ -16,12 +16,16 @@ export const refreshApiToken = async (): Promise<ApiResponse<any>> => {
     });
     if (response?.status === 200) {
       const newToken = response.data.accessToken;
+      const newRefreshToken = response.data.refreshToken;
+
       localStorage.setItem("token", newToken);
+      localStorage.setItem("refreshToken", newRefreshToken);
+
       return {
         success: true,
         data: {
           accessToken: newToken,
-          refreshToken: response.data.refreshToken,
+          refreshToken: newRefreshToken,
         },
       };
     } else {

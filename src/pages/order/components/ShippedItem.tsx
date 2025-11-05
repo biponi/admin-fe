@@ -1,6 +1,5 @@
 import React, { useState } from "react";
 import {
-  Package,
   MapPin,
   Clock,
   User,
@@ -10,6 +9,7 @@ import {
   Truck,
   Box,
   Home,
+  TruckElectric,
 } from "lucide-react";
 
 import { Badge } from "../../../components/ui/badge";
@@ -31,7 +31,6 @@ interface IDeliveryTimeline {
 
 const getStatusConfig = (status: string) => {
   const statusLower = status.toLowerCase();
-
   if (statusLower.includes("delivered")) {
     return {
       icon: CheckCircle2,
@@ -162,7 +161,7 @@ export const DeliveryTimelineBadge: React.FC<{
       <SheetContent className='max-w-2xl  overflow-y-auto bg-gradient-to-br from-slate-50 to-slate-100 border-0 shadow-2xl'>
         <SheetHeader>
           <SheetTitle className='text-2xl font-bold bg-gradient-to-r from-slate-700 to-slate-900 bg-clip-text text-transparent flex items-center gap-2'>
-            <Package className='w-6 h-6 text-slate-700' />
+            <TruckElectric className='w-6 h-6 text-slate-700' />
             Delivery Timeline
           </SheetTitle>
         </SheetHeader>
@@ -183,12 +182,22 @@ export const DeliveryTimelineBadge: React.FC<{
 
                 {/* Icon container */}
                 <div className='relative z-10 flex-shrink-0'>
-                  <div
-                    className={`${config.color} rounded-full p-3 shadow-lg 
+                  {item.status === "pending" ? (
+                    <img
+                      src='https://is1-ssl.mzstatic.com/image/thumb/Purple221/v4/bc/77/84/bc7784eb-5758-6e3a-6a6a-32048cb878eb/AppIcon-0-0-1x_U007epad-0-85-220.png/1024x1024.jpg'
+                      alt='steadFast'
+                      className='size-14 rounded-full shadow-lg 
+                                 transition-all duration-300 group-hover:scale-110 
+                                 group-hover:shadow-xl backdrop-blur-sm'
+                    />
+                  ) : (
+                    <div
+                      className={`${config.color} rounded-full p-3 shadow-lg 
                                  transition-all duration-300 group-hover:scale-110 
                                  group-hover:shadow-xl backdrop-blur-sm`}>
-                    <Icon className='w-6 h-6 text-white' />
-                  </div>
+                      <Icon className='w-6 h-6 text-white' />
+                    </div>
+                  )}
                   {!isLast && (
                     <div
                       className={`absolute -bottom-4 left-1/2 transform -translate-x-1/2 

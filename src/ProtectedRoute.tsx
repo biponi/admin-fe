@@ -15,10 +15,6 @@ const ProtectedRoute = ({
 }: ProtectedRouteProps) => {
   const user = useSelector((state: any) => state?.user);
 
-  if (!user) {
-    return <Navigate to='/login' />;
-  }
-
   if (page !== "all") {
     const userPermissions = user.permissions || [];
 
