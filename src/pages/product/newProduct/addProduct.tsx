@@ -32,14 +32,6 @@ import {
   SelectValue,
 } from "../../../components/ui/select";
 import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "../../../components/ui/table";
-import {
   Tabs,
   TabsContent,
   TabsList,
@@ -291,44 +283,70 @@ const AddProduct: React.FC<Props> = ({ createProduct, categories }) => {
   const renderV1VariationView = () => {
     return (
       <div className='space-y-4'>
-        <div className='rounded-lg border'>
-          <Table>
-            <TableHeader>
-              <TableRow className='bg-muted/50'>
-                <TableHead className='font-semibold'>SKU</TableHead>
-                <TableHead className='font-semibold'>Stock</TableHead>
-                <TableHead className='font-semibold'>Price</TableHead>
-                <TableHead className='font-semibold'>Color</TableHead>
-                <TableHead className='font-semibold'>Size</TableHead>
-                <TableHead className='font-semibold w-[100px]'>
-                  Actions
-                </TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {!!formData.variation &&
-                formData.variation.map(
-                  (variation: IVariation, index: number) => (
-                    <TableRow key={variation.id} className='hover:bg-muted/30'>
-                      <TableCell className='font-mono text-sm'>
-                        {variation?.sku}
-                      </TableCell>
-                      <TableCell>
+        {/* Variation Cards Grid */}
+        {!!formData.variation && formData.variation.length > 0 ? (
+          <div className='grid gap-4 sm:grid-cols-2 lg:grid-cols-3'>
+            {formData.variation.map((variation: IVariation, index: number) => (
+              <div
+                key={variation.id}
+                className='group relative bg-gradient-to-br from-white to-slate-50/50 dark:from-slate-800 dark:to-slate-800/50 rounded-xl border-2 border-slate-200 dark:border-slate-700 hover:border-indigo-300 dark:hover:border-indigo-600 shadow-sm hover:shadow-lg transition-all duration-300'>
+                {/* Delete Button */}
+                <button
+                  onClick={() => {
+                    updateFormData((prev) => {
+                      return {
+                        ...prev,
+                        variation: prev?.variation.filter((__, i) => i !== index),
+                        quantity: prev?.quantity - variation?.quantity,
+                      };
+                    });
+                  }}
+                  className='absolute top-2 right-2 p-1.5 bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400 rounded-lg opacity-0 group-hover:opacity-100 hover:bg-red-200 dark:hover:bg-red-900/50 transition-all duration-200 z-10'>
+                  <Trash className='h-3.5 w-3.5' />
+                </button>
+
+                <div className='p-4 space-y-3'>
+                  {/* SKU Header */}
+                  <div className='flex items-center gap-2 pb-2 border-b border-slate-200 dark:border-slate-700'>
+                    <div className='p-1.5 bg-indigo-100 dark:bg-indigo-900/30 rounded-lg'>
+                      <Hash className='h-3.5 w-3.5 text-indigo-600 dark:text-indigo-400' />
+                    </div>
+                    <span className='font-mono text-xs font-semibold text-slate-700 dark:text-slate-300 truncate'>
+                      {variation?.sku}
+                    </span>
+                  </div>
+
+                  {/* Inputs Grid */}
+                  <div className='space-y-3'>
+                    {/* Stock & Price */}
+                    <div className='grid grid-cols-2 gap-2'>
+                      <div className='space-y-1.5'>
+                        <Label className='text-[10px] font-semibold text-slate-600 dark:text-slate-400 flex items-center gap-1'>
+                          <Package className='h-3 w-3 text-emerald-500' />
+                          Stock
+                        </Label>
                         <Input
                           name='quantity'
                           onChange={(e) => updateVariationData(index, e)}
                           type='number'
                           value={variation.quantity}
                           min='0'
-                          className='w-20'
+                          className='h-8 text-xs border-slate-300 dark:border-slate-600 focus:border-emerald-400 dark:focus:border-emerald-500'
                           placeholder='0'
                         />
-                      </TableCell>
-                      <TableCell>
+                      </div>
+
+                      <div className='space-y-1.5'>
+                        <Label className='text-[10px] font-semibold text-slate-600 dark:text-slate-400 flex items-center gap-1'>
+                          <Tag className='h-3 w-3 text-green-500' />
+                          Price
+                        </Label>
                         <Input
                           disabled={isSameUnitPrice}
-                          className={`w-24 ${
-                            isSameUnitPrice ? "bg-muted" : "bg-background"
+                          className={`h-8 text-xs border-slate-300 dark:border-slate-600 ${
+                            isSameUnitPrice
+                              ? 'bg-slate-100 dark:bg-slate-900 text-slate-500 cursor-not-allowed'
+                              : 'focus:border-green-400 dark:focus:border-green-500'
                           }`}
                           name='unitPrice'
                           onChange={(e) => updateVariationData(index, e)}
@@ -338,60 +356,59 @@ const AddProduct: React.FC<Props> = ({ createProduct, categories }) => {
                           step='0.01'
                           placeholder='0.00'
                         />
-                      </TableCell>
-                      <TableCell>
+                      </div>
+                    </div>
+
+                    {/* Color & Size */}
+                    <div className='grid grid-cols-2 gap-2'>
+                      <div className='space-y-1.5'>
+                        <Label className='text-[10px] font-semibold text-slate-600 dark:text-slate-400 flex items-center gap-1'>
+                          <Palette className='h-3 w-3 text-purple-500' />
+                          Color
+                        </Label>
                         <Input
                           name='color'
                           onChange={(e) => updateVariationData(index, e)}
                           type='text'
                           value={variation.color}
-                          className='w-24'
-                          placeholder='Color'
+                          className='h-8 text-xs border-slate-300 dark:border-slate-600 focus:border-purple-400 dark:focus:border-purple-500'
+                          placeholder='Enter color'
                         />
-                      </TableCell>
-                      <TableCell>
+                      </div>
+
+                      <div className='space-y-1.5'>
+                        <Label className='text-[10px] font-semibold text-slate-600 dark:text-slate-400 flex items-center gap-1'>
+                          <Ruler className='h-3 w-3 text-blue-500' />
+                          Size
+                        </Label>
                         <Input
                           name='size'
                           onChange={(e) => updateVariationData(index, e)}
                           type='text'
                           value={variation.size}
-                          className='w-24'
-                          placeholder='Size'
+                          className='h-8 text-xs border-slate-300 dark:border-slate-600 focus:border-blue-400 dark:focus:border-blue-500'
+                          placeholder='Enter size'
                         />
-                      </TableCell>
-                      <TableCell>
-                        <Button
-                          variant='destructive'
-                          size='sm'
-                          onClick={() => {
-                            updateFormData((prev) => {
-                              return {
-                                ...prev,
-                                variation: prev?.variation.filter(
-                                  (__, i) => i !== index
-                                ),
-                                quantity: prev?.quantity - variation?.quantity,
-                              };
-                            });
-                          }}>
-                          <Trash className='h-4 w-4' />
-                        </Button>
-                      </TableCell>
-                    </TableRow>
-                  )
-                )}
-              {(!formData.variation || formData.variation.length === 0) && (
-                <TableRow>
-                  <TableCell
-                    colSpan={6}
-                    className='text-center text-muted-foreground py-8'>
-                    No variations added yet. Click "Add Variant" to get started.
-                  </TableCell>
-                </TableRow>
-              )}
-            </TableBody>
-          </Table>
-        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <div className='text-center py-12 bg-gradient-to-br from-slate-50 to-blue-50/30 dark:from-slate-800 dark:to-slate-800/50 rounded-xl border-2 border-dashed border-slate-300 dark:border-slate-600'>
+            <div className='inline-flex items-center justify-center w-16 h-16 rounded-full bg-gradient-to-br from-slate-100 to-slate-200 dark:from-slate-700 dark:to-slate-600 mb-4'>
+              <Box className='w-8 h-8 text-slate-400 dark:text-slate-500' />
+            </div>
+            <p className='text-sm font-medium text-slate-700 dark:text-slate-300 mb-1'>
+              No variations added yet
+            </p>
+            <p className='text-xs text-slate-500 dark:text-slate-400'>
+              Click "Add New Variation" below to get started
+            </p>
+          </div>
+        )}
       </div>
     );
   };
