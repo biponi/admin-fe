@@ -1,6 +1,6 @@
 {
   "name": "prior-admin-fe",
-  "version": "2.0.0",
+  "version": "2.0.1",
   "private": true,
   "engines": {
     "node": ">=20.0.0"
@@ -94,11 +94,10 @@
   "main": "public/electron.js",
   "homepage": "./",
   "scripts": {
-    "start": "node scripts/generate-sw.js && react-scripts start",
-    "build": "node scripts/generate-sw.js && react-scripts build",
+    "start": "react-scripts start",
+    "build": "react-scripts build",
     "test": "react-scripts test",
     "eject": "react-scripts eject",
-    "generate-sw": "node scripts/generate-sw.js",
     "electron": "electron .",
     "electron-dev": "concurrently \"yarn start\" \"wait-on http://localhost:3000 && electron .\"",
     "build-electron": "yarn build && electron-builder",

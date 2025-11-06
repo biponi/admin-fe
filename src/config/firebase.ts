@@ -1,32 +1,75 @@
-import { initializeApp } from 'firebase/app';
+import { initializeApp, FirebaseApp } from 'firebase/app';
 import { getMessaging, getToken, onMessage, Messaging } from 'firebase/messaging';
+import { fetchFirebaseConfig } from '../services/firebaseConfigService';
 
-// Firebase config from environment variables
-const firebaseConfig = {
-  apiKey: process.env.REACT_APP_FIREBASE_API_KEY,
-  authDomain: process.env.REACT_APP_FIREBASE_AUTH_DOMAIN,
-  projectId: process.env.REACT_APP_FIREBASE_PROJECT_ID,
-  storageBucket: process.env.REACT_APP_FIREBASE_STORAGE_BUCKET,
-  messagingSenderId: process.env.REACT_APP_FIREBASE_MESSAGING_SENDER_ID,
-  appId: process.env.REACT_APP_FIREBASE_APP_ID
+// Initialize Firebase app and messaging (will be set after config is fetched)
+let app: FirebaseApp | null = null;
+let messaging: Messaging | null = null;
+let firebaseConfigCache: any = null;
+let initPromise: Promise<void> | null = null;
+
+/**
+ * Initialize Firebase with config from backend
+ */
+const initializeFirebase = async (): Promise<void> => {
+  if (app) return; // Already initialized
+
+  try {
+    // Fetch config from backend
+    const config = await fetchFirebaseConfig();
+    firebaseConfigCache = config;
+
+    // Initialize Firebase
+    app = initializeApp(config);
+
+    // Initialize Messaging
+    try {
+      messaging = getMessaging(app);
+    } catch (error) {
+      console.error('Firebase messaging not supported:', error);
+    }
+
+    console.log('Firebase initialized successfully');
+  } catch (error) {
+    console.error('Failed to initialize Firebase:', error);
+    throw error;
+  }
 };
 
-// Initialize Firebase
-const app = initializeApp(firebaseConfig);
+/**
+ * Get Firebase config (cached or fetch from backend)
+ */
+export const getFirebaseConfig = async () => {
+  if (firebaseConfigCache) return firebaseConfigCache;
+  await ensureFirebaseInitialized();
+  return firebaseConfigCache;
+};
 
-// Initialize Messaging
-let messaging: Messaging | null = null;
-try {
-  messaging = getMessaging(app);
-} catch (error) {
-  console.error('Firebase messaging not supported:', error);
-}
+/**
+ * Ensure Firebase is initialized before use
+ */
+export const ensureFirebaseInitialized = async (): Promise<void> => {
+  if (app) return; // Already initialized
+
+  // If initialization is in progress, wait for it
+  if (initPromise) {
+    await initPromise;
+    return;
+  }
+
+  // Start initialization
+  initPromise = initializeFirebase();
+  await initPromise;
+};
 
 /**
  * Request notification permission and get FCM token
  */
 export const requestNotificationPermission = async (): Promise<string | null> => {
   try {
+    // Ensure Firebase is initialized
+    await ensureFirebaseInitialized();
+
     // Check if notifications are supported
     if (!('Notification' in window)) {
       console.log('This browser does not support notifications');
@@ -39,6 +82,13 @@ export const requestNotificationPermission = async (): Promise<string | null> =>
       return null;
     }
 
+    // Get config for VAPID key
+    const config = await getFirebaseConfig();
+    if (!config?.vapidKey) {
+      console.error('VAPID key not found in Firebase config');
+      return null;
+    }
+
     // Request permission
     const permission = await Notification.requestPermission();
 
@@ -47,7 +97,7 @@ export const requestNotificationPermission = async (): Promise<string | null> =>
 
       // Get FCM token
       const token = await getToken(messaging, {
-        vapidKey: process.env.REACT_APP_FIREBASE_VAPID_KEY
+        vapidKey: config.vapidKey
       });
 
       if (token) {
@@ -70,8 +120,10 @@ export const requestNotificationPermission = async (): Promise<string | null> =>
 /**
  * Handle foreground messages
  */
-export const onMessageListener = () =>
-  new Promise((resolve) => {
+export const onMessageListener = async () => {
+  await ensureFirebaseInitialized();
+
+  return new Promise((resolve) => {
     if (!messaging) {
       return;
     }
@@ -81,6 +133,7 @@ export const onMessageListener = () =>
       resolve(payload);
     });
   });
+};
 
-export { messaging };
+export { messaging, app };
 export default app;
