@@ -14,7 +14,7 @@ export function ModernLayout({ children }: ModernLayoutProps) {
       <AppSidebar />
       <SidebarInset>
         <SiteHeader />
-        <div className='flex md:flex-1 flex-col gap-4  pt-0 max-h-[90vh] md:rounded-xl overflow-auto pb-20 sm:pb-4'>
+        <div className='flex md:flex-1 flex-col gap-4  pt-0 max-h-[90vh] md:rounded-xl overflow-auto pb-20 sm:pb-4 z-20'>
           {children}
         </div>
         <MobileBottomNav />

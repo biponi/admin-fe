@@ -21,6 +21,7 @@ import { JobsManagement } from "../../pages/settings";
 import ReportPage from "../../pages/report";
 import DeliveryPage from "../../pages/delivery";
 import { NotificationPage } from "../../pages/notifications";
+import { AuditDashboard } from "../../pages/admin/components/AuditDashboard";
 
 export const ProtectedRoutes = () => {
   const { layoutType } = useSettings();
@@ -28,6 +29,14 @@ export const ProtectedRoutes = () => {
 
   return (
     <>
+      <Route
+        path='/audit'
+        element={
+          <ProtectedRoute page='audit' requiredAction='view'>
+            <AuditDashboard />
+          </ProtectedRoute>
+        }
+      />
       <Route
         path='/dashboard'
         element={

@@ -23,8 +23,7 @@ export const DeliveryStatsCards: React.FC<DeliveryStatsCardsProps> = ({
   balance,
 }) => {
   // Calculate individual status counts
-  const pending =
-    statusBreakdown.find((s) => s._id === "pending")?.count || 0;
+  const pending = statusBreakdown.find((s) => s._id === "pending")?.count || 0;
   const inTransit =
     statusBreakdown.find((s) => s._id === "in_transit")?.count || 0;
   const delivered =
@@ -81,7 +80,7 @@ export const DeliveryStatsCards: React.FC<DeliveryStatsCardsProps> = ({
       valueColor: "text-white",
     },
     {
-      title: "Account Balance",
+      title: "Account Balance (only steadfast)",
       value: `৳${balance.toLocaleString()}`,
       icon: DollarSign,
       bgColor: "bg-gradient-to-r from-indigo-500 to-indigo-600",

@@ -1,436 +1,313 @@
 import React, { useState, useEffect } from "react";
 import { toast } from "sonner";
-import { Input } from "../../components/ui/input";
-import { Button } from "../../components/ui/button";
+import { Card } from "../../components/ui/card";
 import {
-  Avatar,
-  AvatarImage,
-  AvatarFallback,
-} from "../../components/ui/avatar";
-import {
-  Card,
-  CardHeader,
-  CardTitle,
-  CardContent,
-  CardFooter,
-} from "../../components/ui/card";
-import { Pencil, Save, X, Key, User, Mail, Shield } from "lucide-react";
-import {
-  getUserProfile,
-  updateUserInfo,
-  changeUserPassword,
-} from "../../api/user";
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
+} from "../../components/ui/tabs";
+import { User, Activity, History, Calendar } from "lucide-react";
+import { getUserProfile } from "../../api/user";
 import useLoginAuth from "../auth/hooks/useLoginAuth";
-import { OTPVerificationDialog } from "../../components/OTPVerificationDialog";
+import { UserProfileHeader } from "./components/UserProfileHeader";
+import { UserInformationPanel } from "./components/UserInformationPanel";
+import { UserPerformancePanel } from "./components/UserPerformancePanel";
+import { UserActivityTimeline } from "./components/UserActivityTimeline";
+import dayjs from "dayjs";
+import { useAdminAudit } from "../../hooks/useAdminAudit";
+import { UserPerformanceDetailResponse } from "../../api/adminAudit";
 
 const ProfilePage = () => {
   const { fetchUserById } = useLoginAuth();
   const [profile, setProfile] = useState({
+    id: "",
     name: "",
     email: "",
     avatar: "",
     role: "",
     bio: "",
     whatsapp_number: "",
-  });
-  const [editMode, setEditMode] = useState({
-    name: false,
-    avatar: false,
-    password: false,
-  });
-  const [formData, setFormData] = useState({
-    name: "",
-    newPassword: "",
-    confirmPassword: "",
-    avatar: "",
+    createdAt: "",
   });
 
-  const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
-  const [avatarPreview, setAvatarPreview] = useState("");
-  const [showOTPDialog, setShowOTPDialog] = useState(false);
+  const [dateRange, setDateRange] = useState({
+    startDate: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString(),
+    endDate: new Date().toISOString(),
+  });
+
+  const [isLoadingProfile, setIsLoading] = useState(true);
+
+  const { fetchUserDetail, isLoading, error } = useAdminAudit();
+  const [userDetail, setUserDetail] =
+    useState<UserPerformanceDetailResponse | null>(null);
+
+  useEffect(() => {
+    if (profile?.id) {
+      loadUserDetail();
+    }
+    // eslint-disable-next-line
+  }, [profile?.id, dateRange?.startDate, dateRange?.endDate]);
+
+  const loadUserDetail = async () => {
+    const data = await fetchUserDetail(profile?.id, {
+      startDate: dateRange?.startDate,
+      endDate: dateRange?.endDate,
+    });
+
+    if (data) {
+      setUserDetail(data);
+    }
+  };
 
   // Fetch profile data
   useEffect(() => {
-    const fetchProfile = async () => {
-      const response = await getUserProfile();
-      if (response.success) {
-        setProfile(response.data);
-        setFormData((prev) => ({
-          ...prev,
-          name: response.data.name,
-          avatar: response.data.avatar,
-        }));
-      } else {
-        toast("Error", {
-          description: response.error || "Failed to fetch profile",
-        });
-      }
-    };
     fetchProfile();
-    const handleResize = () => {
-      setIsMobile(window.innerWidth < 768);
-    };
-    window.addEventListener("resize", handleResize);
-    return () => window.removeEventListener("resize", handleResize);
     //eslint-disable-next-line
   }, []);
 
-  // Handle input changes
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
+  const fetchProfile = async () => {
+    setIsLoading(true);
+    const response = await getUserProfile();
+    if (response.success) {
+      setProfile(response.data);
+    } else {
+      toast.error(response.error || "Failed to fetch profile");
+    }
+    setIsLoading(false);
   };
 
-  // Handle avatar upload
-  const handleAvatarUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files[0]) {
-      const file = e.target.files[0];
-      // Store the File object for upload
-      //@ts-ignore
-      setFormData((prev) => ({ ...prev, avatar: file }));
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setAvatarPreview(reader.result as string);
-      };
-      reader.readAsDataURL(file);
+  const handleProfileUpdate = async () => {
+    await fetchProfile();
+    if (profile.id) {
+      const userId = parseInt(profile.id);
+      if (!isNaN(userId)) {
+        fetchUserById(userId);
+      }
     }
   };
 
-  // Function to actually change password after OTP verification
-  const performPasswordChange = async () => {
-    try {
-      const response = await changeUserPassword({
-        oldPassword: "", // You might need to add this field
-        newPassword: formData.newPassword,
-      });
-
-      if (response.success) {
-        toast("Success", {
-          description: "Password updated successfully",
-        });
-        setEditMode((prev) => ({ ...prev, password: false }));
-        // Clear password fields
-        setFormData((prev) => ({
-          ...prev,
-          newPassword: "",
-          confirmPassword: "",
-        }));
-      } else {
-        toast("Error", {
-          description: response.error || "Failed to update password",
-        });
-      }
-    } catch (error) {
-      console.error("Password change error:", error);
-      toast("Error", {
-        description: "An unexpected error occurred",
-      });
-    }
-  };
-
-  const handleSave = async (field: "name" | "avatar" | "password") => {
-    try {
-      let response;
-
-      if (field === "password") {
-        // Validate passwords match
-        if (formData.newPassword !== formData.confirmPassword) {
-          toast("Error", {
-            description: "Passwords don't match",
-          });
-          return;
-        }
-
-        // Validate password length
-        if (formData.newPassword.length < 8) {
-          toast("Error", {
-            description: "Password must be at least 8 characters long",
-          });
-          return;
-        }
-
-        // Trigger OTP verification instead of directly changing password
-        setShowOTPDialog(true);
-        return;
-      } else {
-        // Create FormData only for avatar updates with a file
-        const isAvatarFileUpload =
-          //@ts-ignore
-          field === "avatar" && formData.avatar instanceof File;
-        console.log(typeof formData.avatar);
-        if (isAvatarFileUpload) {
-          const formDataObj = new FormData();
-          formDataObj.append("name", formData.name);
-          formDataObj.append("avatar", formData.avatar);
-
-          // Append other fields if needed
-          if (profile.bio) formDataObj.append("bio", profile.bio);
-          if (profile.whatsapp_number)
-            formDataObj.append("whatsapp_number", profile.whatsapp_number);
-
-          response = await updateUserInfo(formDataObj);
-        } else {
-          // Regular JSON update for name or avatar URL
-          response = await updateUserInfo({
-            name: formData.name,
-            avatar: formData.avatar, // This could be string URL or undefined
-          });
-        }
-      }
-
-      if (response.success) {
-        toast("Success", {
-          description: `Profile ${field} updated successfully`,
-        });
-        setEditMode((prev) => ({ ...prev, [field]: false }));
-
-        // Refresh profile data
-        const profileResponse = await getUserProfile();
-        if (profileResponse.success) {
-          setProfile(profileResponse.data);
-          // Reset form data with updated values
-          setFormData((prev) => ({
-            ...prev,
-            name: profileResponse.data.name,
-            avatar: profileResponse.data.avatar,
-          }));
-
-          fetchUserById(profileResponse.data.id);
-        }
-      } else {
-        toast("Error", {
-          description: response.error || `Failed to update ${field}`,
-        });
-      }
-    } catch (error) {
-      console.error("Update error:", error);
-      toast("Error", {
-        description: "An unexpected error occurred",
-      });
-    }
-  };
+  if (isLoadingProfile) {
+    return (
+      <div className='min-h-screen bg-gradient-to-br from-gray-50 via-blue-50 to-purple-50 py-8 px-4'>
+        <div className='max-w-7xl mx-auto'>
+          <Card className='h-64 animate-pulse bg-gray-200' />
+        </div>
+      </div>
+    );
+  }
 
   return (
-    <div className='max-w-4xl mx-auto py-4 sm:py-8 px-4 sm:px-6 w-[91vw]'>
-      <Card className='overflow-hidden'>
-        <CardHeader className='bg-gradient-to-r from-blue-500 to-purple-600 text-white p-4 sm:p-6'>
-          <div className='flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4'>
-            <CardTitle className='text-xl sm:text-2xl flex items-center'>
-              <User className='w-5 h-5 mr-2' />
-              My Profile
-            </CardTitle>
-            <Button
-              variant='ghost'
-              size={isMobile ? "sm" : "default"}
-              className='text-white hover:bg-white/10 flex items-center'
-              onClick={() =>
-                setEditMode((prev) => ({
-                  ...prev,
-                  password: !prev.password,
-                  name: false,
-                  avatar: false,
-                }))
-              }>
-              <Key className='w-4 h-4 mr-2' />
-              {isMobile ? "Password" : "Change Password"}
-            </Button>
-          </div>
-        </CardHeader>
+    <div className='relative min-h-screen md:rounded-2xl bg-gradient-to-br from-orange-50 via-rose-50 to-cyan-50 py-4 sm:py-8 px-4 w-full'>
+      <div className='absolute md:rounded-t-2xl top-0 left-0 w-full h-40 md:h-[30%] bg-gradient-to-br from-cyan-400 via-orange-300 to-rose-400' />
+      {/* Decorative background circles */}
+      <div className='absolute top-10 left-10 w-32 h-32 sm:w-48 sm:h-48 bg-cyan-300 rounded-full mix-blend-overlay opacity-50' />
+      <div className='absolute top-20 right-20 w-48 h-48 sm:w-64 sm:h-64 bg-rose-300 rounded-full mix-blend-overlay opacity-40' />
+      <div className='absolute bottom-10 left-1/3 w-40 h-40 sm:w-56 sm:h-56 bg-cyan-200 rounded-full mix-blend-overlay opacity-30' />
+      <div className='max-w-7xl mx-auto space-y-6'>
+        {/* Profile Header */}
+        <Card className='shadow-none bg-transparent border-0 mt-6 md:mt-0'>
+          <UserProfileHeader
+            name={profile.name}
+            email={profile.email}
+            avatar={profile.avatar}
+            role={profile.role}
+            phoneNumber={profile?.whatsapp_number ?? "NOT AVAILABLE"}
+            userDetail={userDetail}
+            joinedDate={profile.createdAt}
+          />
+        </Card>
 
-        <CardContent className='p-4 sm:p-6'>
-          <div className='flex flex-col md:flex-row gap-6 md:gap-8'>
-            {/* Left Column - Avatar */}
-            <div className='flex flex-col items-center w-full md:w-auto'>
-              <div className='relative group mb-4'>
-                <Avatar className=' w-32  h-32 sm:w-32 sm:h-32 border-4 border-white shadow-lg'>
-                  <AvatarImage src={avatarPreview || profile?.avatar} />
-                  <AvatarFallback>{profile.name.charAt(0)}</AvatarFallback>
-                </Avatar>
-                {editMode.avatar ? (
-                  <div className='absolute inset-0 flex items-center justify-center bg-black/50 rounded-full'>
-                    <label className='cursor-pointer p-2 bg-white rounded-full'>
-                      <Pencil className='w-4 h-4 sm:w-5 sm:h-5' />
-                      <input
-                        type='file'
-                        accept='image/*'
-                        className='hidden'
-                        onChange={handleAvatarUpload}
-                      />
-                    </label>
-                  </div>
-                ) : (
-                  <button
-                    className='absolute -bottom-2 -right-2 bg-blue-500 text-white p-1.5 sm:p-2 rounded-full shadow-md hover:bg-blue-600 transition-all'
-                    onClick={() =>
-                      setEditMode((prev) => ({ ...prev, avatar: true }))
-                    }>
-                    <Pencil className='w-3 h-3 sm:w-4 sm:h-4' />
-                  </button>
-                )}
+        {/* Main Content - Tabs */}
+        <Tabs defaultValue='information' className='w-full'>
+          <TabsList className='h-11 grid w-full grid-cols-3 lg:w-auto lg:inline-grid gap-2 bg-white px-2 pt-2 pb-4 rounded-lg shadow-md'>
+            <TabsTrigger
+              value='information'
+              className='flex items-center gap-2 data-[state=active]:bg-gradient-to-r data-[state=active]:from-blue-500 data-[state=active]:to-purple-600 data-[state=active]:text-white'>
+              <User className='w-4 h-4' />
+              <span className='hidden sm:inline'>Information</span>
+            </TabsTrigger>
+            <TabsTrigger
+              value='performance'
+              className='flex items-center gap-2 data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-500 data-[state=active]:to-cyan-600 data-[state=active]:text-white'>
+              <Activity className='w-4 h-4' />
+              <span className='hidden sm:inline'>Performance</span>
+            </TabsTrigger>
+            <TabsTrigger
+              value='activity'
+              className='flex items-center gap-2 data-[state=active]:bg-gradient-to-r data-[state=active]:from-green-500 data-[state=active]:to-teal-600 data-[state=active]:text-white'>
+              <History className='w-4 h-4' />
+              <span className='hidden sm:inline'>Activity</span>
+            </TabsTrigger>
+          </TabsList>
+
+          {/* Information Tab */}
+          <TabsContent value='information' className='mt-6'>
+            <div className='grid gap-6 lg:grid-cols-3'>
+              {/* Main Information Panel - Takes 2 columns */}
+              <div className='lg:col-span-2'>
+                <UserInformationPanel
+                  profile={profile}
+                  onProfileUpdate={handleProfileUpdate}
+                />
               </div>
 
-              {editMode.avatar && (
-                <div className='flex flex-col sm:flex-row gap-2 w-full'>
-                  <Button
-                    size='sm'
-                    className='w-full sm:w-auto'
-                    onClick={() => handleSave("avatar")}>
-                    <Save className='w-4 h-4 mr-2' /> Save
-                  </Button>
-                  <Button
-                    variant='outline'
-                    size='sm'
-                    className='w-full sm:w-auto'
-                    onClick={() =>
-                      setEditMode((prev) => ({ ...prev, avatar: false }))
-                    }>
-                    <X className='w-4 h-4 mr-2' /> Cancel
-                  </Button>
-                </div>
-              )}
-            </div>
-
-            {/* Right Column - Profile Info */}
-            <div className='flex-1 space-y-4'>
-              {/* Name Field */}
-              <div className='space-y-1'>
-                <div className='flex items-center text-sm font-medium text-gray-500'>
-                  <User className='w-4 h-4 mr-2' />
-                  Full Name
-                </div>
-                {editMode.name ? (
-                  <div className='flex flex-col sm:flex-row gap-2'>
-                    <Input
-                      name='name'
-                      value={formData.name}
-                      onChange={handleChange}
-                      className='flex-1'
-                    />
-                    <div className='flex gap-2'>
-                      <Button size='sm' onClick={() => handleSave("name")}>
-                        <Save className='w-4 h-4' />
-                        {!isMobile && " Save"}
-                      </Button>
-                      <Button
-                        variant='outline'
-                        size='sm'
-                        onClick={() =>
-                          setEditMode((prev) => ({ ...prev, name: false }))
-                        }>
-                        <X className='w-4 h-4' />
-                        {!isMobile && " Cancel"}
-                      </Button>
-                    </div>
-                  </div>
-                ) : (
-                  <div className='flex justify-between items-center p-2 bg-gray-50 rounded'>
-                    <span>{profile.name}</span>
-                    <button
-                      className='text-blue-500 hover:text-blue-700 p-1'
-                      onClick={() =>
-                        setEditMode((prev) => ({ ...prev, name: true }))
-                      }>
-                      <Pencil className='w-4 h-4' />
-                    </button>
-                  </div>
-                )}
-              </div>
-
-              {/* Email Field (non-editable) */}
-              <div className='space-y-1'>
-                <div className='flex items-center text-sm font-medium text-gray-500'>
-                  <Mail className='w-4 h-4 mr-2' />
-                  Email
-                </div>
-                <div className='p-2 bg-gray-50 rounded'>{profile.email}</div>
-              </div>
-
-              {/* Role Field (non-editable) */}
-              <div className='space-y-1'>
-                <div className='flex items-center text-sm font-medium text-gray-500'>
-                  <Shield className='w-4 h-4 mr-2' />
-                  Role
-                </div>
-                <div className='p-2 bg-gray-50 rounded'>{profile.role}</div>
-              </div>
-
-              {/* Password Change Section */}
-              {editMode.password && (
-                <div className='space-y-4 p-4 bg-gray-50 rounded-lg border border-gray-200 mt-6'>
-                  <h3 className='font-medium flex items-center'>
-                    <Key className='w-4 h-4 mr-2' />
-                    Change Password
+              {/* Quick Stats Sidebar */}
+              <div className='space-y-6'>
+                {/* Date Range Selector */}
+                <Card className='p-4 shadow-md bg-gradient-to-br from-white to-blue-50'>
+                  <h3 className='font-semibold text-gray-900 mb-3 flex items-center gap-2'>
+                    <Calendar className='w-4 h-4 text-blue-600' />
+                    Date Range
                   </h3>
-                  <div className='space-y-3'>
+                  <div className='space-y-2'>
                     <div>
-                      <label className='block text-sm font-medium text-gray-700 mb-1'>
-                        New Password
+                      <label className='text-xs text-gray-600 block mb-1'>
+                        From
                       </label>
-                      <Input
-                        type='password'
-                        name='newPassword'
-                        value={formData.newPassword}
-                        onChange={handleChange}
-                        placeholder='Enter new password'
+                      <input
+                        type='date'
+                        value={dayjs(dateRange.startDate).format("YYYY-MM-DD")}
+                        onChange={(e) =>
+                          setDateRange({
+                            ...dateRange,
+                            startDate: new Date(e.target.value).toISOString(),
+                          })
+                        }
+                        className='w-full px-3 py-2 border rounded-md text-sm'
                       />
                     </div>
                     <div>
-                      <label className='block text-sm font-medium text-gray-700 mb-1'>
-                        Confirm Password
+                      <label className='text-xs text-gray-600 block mb-1'>
+                        To
                       </label>
-                      <Input
-                        type='password'
-                        name='confirmPassword'
-                        value={formData.confirmPassword}
-                        onChange={handleChange}
-                        placeholder='Confirm new password'
+                      <input
+                        type='date'
+                        value={dayjs(dateRange.endDate).format("YYYY-MM-DD")}
+                        onChange={(e) =>
+                          setDateRange({
+                            ...dateRange,
+                            endDate: dayjs(e.target.value)
+                              .endOf("day")
+                              .toISOString(),
+                          })
+                        }
+                        className='w-full px-3 py-2 border rounded-md text-sm'
                       />
-                    </div>
-                    <div className='flex flex-col sm:flex-row justify-end gap-2 pt-2'>
-                      <Button
-                        variant='outline'
-                        className='w-full sm:w-auto'
-                        onClick={() =>
-                          setEditMode((prev) => ({ ...prev, password: false }))
-                        }>
-                        Cancel
-                      </Button>
-                      <Button
-                        className='w-full sm:w-auto'
-                        onClick={() => handleSave("password")}>
-                        Update Password
-                      </Button>
                     </div>
                   </div>
-                </div>
-              )}
+                </Card>
+
+                {/* Account Info */}
+                <Card className='p-4 shadow-md bg-gradient-to-br from-white to-purple-50'>
+                  <h3 className='font-semibold text-gray-900 mb-3'>
+                    Account Info
+                  </h3>
+                  <div className='space-y-2 text-sm'>
+                    <div className='flex justify-between'>
+                      <span className='text-gray-600'>Status:</span>
+                      <span className='font-medium text-green-600'>Active</span>
+                    </div>
+                    <div className='flex justify-between'>
+                      <span className='text-gray-600'>Role:</span>
+                      <span className='font-medium'>{profile.role}</span>
+                    </div>
+                    {profile.createdAt && (
+                      <div className='flex justify-between'>
+                        <span className='text-gray-600'>Joined:</span>
+                        <span className='font-medium'>
+                          {dayjs(profile.createdAt).format("MMM DD, YYYY")}
+                        </span>
+                      </div>
+                    )}
+                  </div>
+                </Card>
+              </div>
             </div>
-          </div>
-        </CardContent>
+          </TabsContent>
 
-        <CardFooter className='bg-gray-50 px-4 sm:px-6 py-3'>
-          <div className='text-xs sm:text-sm text-gray-500'>
-            Last updated: {new Date().toLocaleDateString()}
-          </div>
-        </CardFooter>
-      </Card>
+          {/* Performance Tab */}
+          <TabsContent value='performance' className='mt-6'>
+            {profile.id ? (
+              <UserPerformancePanel
+                isLoading={isLoading}
+                userDetail={userDetail}
+                error={error}
+              />
+            ) : (
+              <Card className='p-8 text-center'>
+                <p className='text-gray-500'>Loading performance data...</p>
+              </Card>
+            )}
+          </TabsContent>
 
-      {/* OTP Verification Dialog for Password Change */}
-      {profile.email && (
-        <OTPVerificationDialog
-          open={showOTPDialog}
-          onOpenChange={setShowOTPDialog}
-          email={profile.email}
-          purpose='password_reset'
-          title='Verify Password Change'
-          description='For security, please verify your email before changing your password'
-          onVerificationSuccess={performPasswordChange}
-          onVerificationFailure={(error) => {
-            console.error("OTP verification failed:", error);
-          }}
-          autoSendOnMount={true}
-        />
-      )}
+          {/* Activity Tab */}
+          <TabsContent value='activity' className='mt-6'>
+            <div className='grid gap-6 lg:grid-cols-3'>
+              {/* Activity Timeline - Takes 2 columns */}
+              <div className='lg:col-span-2'>
+                {profile.id ? (
+                  <UserActivityTimeline
+                    userId={profile.id}
+                    startDate={dateRange.startDate}
+                    endDate={dateRange.endDate}
+                  />
+                ) : (
+                  <Card className='p-8 text-center'>
+                    <p className='text-gray-500'>Loading activity data...</p>
+                  </Card>
+                )}
+              </div>
+
+              {/* Date Range Selector - Repeated for convenience */}
+              <div>
+                <Card className='p-4 shadow-md bg-gradient-to-br from-white to-green-50 sticky top-4'>
+                  <h3 className='font-semibold text-gray-900 mb-3 flex items-center gap-2'>
+                    <Calendar className='w-4 h-4 text-green-600' />
+                    Filter Activities
+                  </h3>
+                  <div className='space-y-2'>
+                    <div>
+                      <label className='text-xs text-gray-600 block mb-1'>
+                        From
+                      </label>
+                      <input
+                        type='date'
+                        value={dayjs(dateRange.startDate).format("YYYY-MM-DD")}
+                        onChange={(e) =>
+                          setDateRange({
+                            ...dateRange,
+                            startDate: new Date(e.target.value).toISOString(),
+                          })
+                        }
+                        className='w-full px-3 py-2 border rounded-md text-sm'
+                      />
+                    </div>
+                    <div>
+                      <label className='text-xs text-gray-600 block mb-1'>
+                        To
+                      </label>
+                      <input
+                        type='date'
+                        value={dayjs(dateRange.endDate).format("YYYY-MM-DD")}
+                        onChange={(e) =>
+                          setDateRange({
+                            ...dateRange,
+                            endDate: dayjs(e.target.value)
+                              .endOf("day")
+                              .toISOString(),
+                          })
+                        }
+                        className='w-full px-3 py-2 border rounded-md text-sm'
+                      />
+                    </div>
+                  </div>
+                </Card>
+              </div>
+            </div>
+          </TabsContent>
+        </Tabs>
+      </div>
     </div>
   );
 };

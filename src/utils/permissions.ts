@@ -24,4 +24,5 @@ export const pagePermissions: Record<string, string[]> = {
   Settings: ["view", "edit", "jobs_management"],
   Delivery: ["view", "edit", "delete", "create"],
   Notifications: ["view", "edit", "delete", "create"],
+  Audit: ["view"],
 };

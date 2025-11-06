@@ -71,7 +71,7 @@ export function SiteHeader({ title }: SiteHeaderProps) {
   return (
     <>
       {/* Desktop Header */}
-      <header className='hidden sm:flex h-16 shrink-0 items-center gap-2 transition-[width,height] ease-linear group-has-[[data-collapsible=icon]]/sidebar-wrapper:h-12'>
+      <header className='hidden sm:flex h-16 shrink-0 items-center gap-2 transition-[width,height] ease-linear group-has-[[data-collapsible=icon]]/sidebar-wrapper:h-12 z-[999999]'>
         <div className='flex items-center gap-2 px-4'>
           <SidebarTrigger className='-ml-1' />
           <Separator orientation='vertical' className='mr-2 h-4' />
@@ -97,10 +97,20 @@ export function SiteHeader({ title }: SiteHeaderProps) {
           </Breadcrumb>
         </div>
 
-        {/* Notification Button */}
-        {hasPagePermission("chat", "view", userState?.permissions) && (
-          <div className='flex items-center gap-2 px-4 ml-auto'>
-            <NotificationBell size='sm' variant='ghost' />
+        {/* Notification Button with glass effect */}
+        {hasPagePermission("notifications", "view", userState?.permissions) && (
+          <div className='relative group/bell ml-auto mr-6'>
+            {/* Button glow on hover */}
+            <div className='absolute inset-0 bg-primary/20 rounded-xl blur-md opacity-0 group-hover/bell:opacity-100 transition-opacity' />
+
+            <button className='relative h-9 w-9 flex items-center justify-center rounded-xl bg-white/50 backdrop-blur-sm border border-white/60 text-gray-700 hover:text-primary hover:bg-white/70 transition-all duration-300 active:scale-95 shadow-lg'>
+              <NotificationBell size='sm' variant='ghost' />
+
+              {/* Notification dot */}
+              <span className='absolute top-1 right-1 h-2 w-2 bg-red-500 rounded-full border-2 border-white shadow-sm'>
+                <span className='absolute inset-0 bg-red-500 rounded-full animate-ping' />
+              </span>
+            </button>
           </div>
         )}
       </header>
@@ -144,7 +154,11 @@ export function SiteHeader({ title }: SiteHeaderProps) {
 
         <div className='relative ml-auto flex items-center gap-2 z-10'>
           {/* Notification Button with glass effect */}
-          {hasPagePermission("chat", "view", userState?.permissions) && (
+          {hasPagePermission(
+            "notifications",
+            "view",
+            userState?.permissions
+          ) && (
             <div className='relative group/bell'>
               {/* Button glow on hover */}
               <div className='absolute inset-0 bg-primary/20 rounded-xl blur-md opacity-0 group-hover/bell:opacity-100 transition-opacity' />

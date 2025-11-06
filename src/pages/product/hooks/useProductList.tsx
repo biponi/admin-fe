@@ -14,10 +14,14 @@ export const useProductList = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [limit, setLimit] = useState(20);
 
-  useEffect(() => {
+  const refreshList = () => {
     if (currentPageNum === 1) return;
     if (selectedCategory === "all") getProductList();
     else getProductListByCategoryId();
+  };
+
+  useEffect(() => {
+    refreshList();
     //eslint-disable-next-line
   }, [currentPageNum]);
 
@@ -112,6 +116,7 @@ export const useProductList = () => {
     setLimit,
     products,
     totalPages,
+    refreshList,
     totalProducts,
     getProductList,
     currentPageNum,

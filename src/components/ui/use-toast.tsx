@@ -3,9 +3,12 @@ import * as React from "react";
 import toast from "react-hot-toast";
 
 import type { ToastActionElement, ToastProps } from "./toast";
+import { OctagonAlert } from "lucide-react";
+import { Alert, AlertDescription, AlertTitle } from "./alert";
 
 type ToasterToast = ToastProps & {
   id: string;
+  variant?: string;
   title?: React.ReactNode;
   description?: React.ReactNode;
   action?: ToastActionElement;
@@ -26,6 +29,22 @@ function notifyListeners() {
 
 type Toast = Omit<ToasterToast, "id">;
 
+function AlertToast({ title, description }: { title: any; description: any }) {
+  return (
+    <Alert className='flex gap-2 justify-start items-center bg-orange-50 '>
+      <div className='bg-orange-200 shadow p-2  inline-block rounded-md'>
+        <OctagonAlert className='h-5 text-orange-600' />
+      </div>
+      <div>
+        <AlertTitle>{title}</AlertTitle>
+        <AlertDescription className='font-bold text-orange-500'>
+          {description}
+        </AlertDescription>
+      </div>
+    </Alert>
+  );
+}
+
 function customToast({ title, description, action, variant, ...props }: Toast) {
   let id: string;
 
@@ -41,6 +60,18 @@ function customToast({ title, description, action, variant, ...props }: Toast) {
   // Map variant to react-hot-toast types
   if (variant === "destructive") {
     id = toast.error(toastContent, { ...props });
+    //@ts-ignore
+  } else if (variant === "alert") {
+    id = toast.custom((t) => {
+      return (
+        <div
+          className={`${
+            t.visible ? "animate-custom-enter" : "animate-custom-leave"
+          } max-w-md w-full bg-white shadow-lg rounded-lg pointer-events-auto flex ring-1 ring-black ring-opacity-5`}>
+          <AlertToast title={title} description={description} />
+        </div>
+      );
+    });
   } else {
     id = toast.success(toastContent, { ...props });
   }

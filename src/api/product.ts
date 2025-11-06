@@ -8,6 +8,13 @@ interface ApiResponse<T> {
   error?: string;
 }
 
+/**
+ * IMPORTANT: Direct product quantity updates are deprecated
+ * Use adjustProductStock() from './productAdjustment' instead
+ *
+ * This ensures proper audit trail and accountability for all stock changes
+ */
+
 // Function to fetch for product
 export const getProductById = async (id: string): Promise<ApiResponse<any>> => {
   try {

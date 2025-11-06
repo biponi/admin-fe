@@ -35,6 +35,12 @@ const config = {
     getProductData: (id: string) => `${baseURL}/product/single/${id}`,
     getProductSummary: () => `${baseURL}/product/summary`,
     searchProductV2: () => `${baseURL}/product/searchv2`,
+
+    // Product Stock Adjustment Endpoints
+    adjustStock: () => `${baseURL}/product/adjust`,
+    getAdjustments: (productId?: string) =>
+      productId ? `${baseURL}/product/adjustments/${productId}` : `${baseURL}/product/adjustments`,
+    getAdjustmentStats: () => `${baseURL}/product/adjustment-stats`,
   },
   order: {
     createOrder: () => `${baseURL}/order/prior/create`,
@@ -51,6 +57,12 @@ const config = {
     getMultiOrderByIds: () => `${baseURL}/order/prior/by/ids`,
     modifyOrderProducts: (id: string) =>
       `${baseURL}/order/prior/${id}/products`,
+
+    // Order Audit Trail Endpoints
+    getOrderAudit: (orderId: string) => `${baseURL}/order/prior/${orderId}/audit`,
+    getAllAudits: () => `${baseURL}/order/audit`,
+    getUserAudits: (userId: string) => `${baseURL}/order/audit/user/${userId}`,
+    getAuditStats: () => `${baseURL}/order/audit/stats`,
   },
   transaction: {
     create: () => `${baseURL}/transection/create`,
@@ -157,6 +169,14 @@ const config = {
     invoice: (consignmentId: string) =>
       `${baseURL}/courier/invoice/${consignmentId}`,
     report: () => `${baseURL}/courier/report`,
+  },
+  admin: {
+    // Admin Audit Dashboard Endpoints
+    auditDashboard: () => `${baseURL}/admin/audit/dashboard`,
+    userPerformanceOverview: () => `${baseURL}/admin/audit/users`,
+    userPerformanceDetail: (userId: string) =>
+      `${baseURL}/admin/audit/users/${userId}`,
+    topPerformers: () => `${baseURL}/admin/audit/top-performers`,
   },
 };
 

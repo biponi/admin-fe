@@ -1,4 +1,20 @@
-import { PlusCircle, Trash, Upload, X, Plus } from "lucide-react";
+import {
+  PlusCircle,
+  Trash,
+  Upload,
+  X,
+  Plus,
+  Save,
+  ShoppingBag,
+  Package,
+  Tag,
+  Palette,
+  Ruler,
+  Hash,
+  Box,
+  BarChart3,
+  XIcon as XCircle,
+} from "lucide-react";
 import { Button } from "../../../components/ui/button";
 import {
   Card,
@@ -35,11 +51,6 @@ import { Input } from "../../../components/ui/input";
 import { Label } from "../../../components/ui/label";
 import { Switch } from "../../../components/ui/switch";
 import PlaceHolderImage from "../../../assets/placeholder.svg";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-} from "../../../components/ui/tooltip";
 import CustomAlertDialog from "../../../coreComponents/OptionModal";
 import { Badge } from "../../../components/ui/badge";
 
@@ -94,6 +105,25 @@ const AddProduct: React.FC<Props> = ({ createProduct, categories }) => {
   const fileRef = useRef(null);
   const fileRef2 = useRef(null);
   const dialogBtn = useRef(null);
+
+  // Calculate total quantity from all variations
+  const totalQuantity =
+    formData?.variation?.reduce(
+      (sum, variant) => sum + (variant.quantity || 0),
+      0
+    ) ||
+    formData?.quantity ||
+    0;
+
+  // Get unique colors and sizes
+  const uniqueColors = formData?.variation
+    ? Array.from(
+        new Set(formData.variation.map((v) => v.color).filter(Boolean))
+      )
+    : [];
+  const uniqueSizes = formData?.variation
+    ? Array.from(new Set(formData.variation.map((v) => v.size).filter(Boolean)))
+    : [];
 
   // Handle form field changes
   //@ts-ignore
@@ -369,19 +399,24 @@ const AddProduct: React.FC<Props> = ({ createProduct, categories }) => {
   const renderV2VariationView = () => {
     return (
       <div className='space-y-6'>
-        <div className='grid gap-6 sm:grid-cols-2'>
+        <div className='grid gap-4 sm:grid-cols-2'>
           {/* Colors Section */}
-          <div className='space-y-4'>
+          <div className='space-y-3'>
             <div className='flex items-center justify-between'>
-              <Label className='text-base font-semibold'>Colors</Label>
-              <span className='text-sm text-muted-foreground'>
-                {v2Colors.length} color{v2Colors.length !== 1 ? "s" : ""}
-              </span>
+              <div className='flex items-center gap-2'>
+                <Palette className='w-4 h-4 text-purple-500' />
+                <Label className='text-base font-semibold'>Colors</Label>
+              </div>
+              <Badge
+                variant='secondary'
+                className='bg-purple-50 text-purple-700 dark:bg-purple-900/30 dark:text-purple-300 border-0'>
+                {v2Colors.length}
+              </Badge>
             </div>
 
             <div className='flex gap-2'>
               <Input
-                placeholder='Add color (e.g., Red, Blue)'
+                placeholder='e.g., Red, Blue, Green'
                 value={newColor}
                 onChange={(e) => setNewColor(e.target.value)}
                 onKeyDown={(e) => {
@@ -390,11 +425,12 @@ const AddProduct: React.FC<Props> = ({ createProduct, categories }) => {
                     addColor();
                   }
                 }}
-                className='flex-1'
+                className='flex-1 h-9 border-purple-200 focus:border-purple-400'
               />
               <Button
                 onClick={addColor}
                 size='sm'
+                className='h-9 bg-purple-500 hover:bg-purple-600'
                 disabled={
                   !newColor.trim() || v2Colors.includes(newColor.trim())
                 }>
@@ -402,25 +438,23 @@ const AddProduct: React.FC<Props> = ({ createProduct, categories }) => {
               </Button>
             </div>
 
-            <div className='flex flex-wrap gap-2 min-h-[80px] p-3 border rounded-lg bg-muted/30'>
+            <div className='flex flex-wrap gap-2 min-h-[70px] p-2.5 rounded-lg bg-gradient-to-br from-purple-50/50 to-pink-50/50 dark:from-purple-900/10 dark:to-pink-900/10 border border-purple-100 dark:border-purple-900/30'>
               {v2Colors.length > 0 ? (
                 v2Colors.map((color) => (
                   <Badge
                     key={color}
-                    variant='secondary'
-                    className='flex items-center gap-1 px-3 py-1'>
+                    className='flex items-center gap-1.5 px-2.5 py-1 bg-white dark:bg-slate-800 border border-purple-200 dark:border-purple-800 text-purple-700 dark:text-purple-300 hover:bg-purple-50 dark:hover:bg-purple-900/20 transition-colors'>
+                    <Palette className='w-3 h-3' />
                     {color}
-                    <Button
-                      variant='ghost'
-                      size='sm'
+                    <button
                       onClick={() => removeColor(color)}
-                      className='h-4 w-4 p-0 ml-1 hover:bg-destructive hover:text-destructive-foreground'>
-                      <X className='h-3 w-3' />
-                    </Button>
+                      className='ml-0.5 hover:bg-red-100 dark:hover:bg-red-900/30 rounded-full p-0.5 transition-colors'>
+                      <X className='h-3 w-3 text-red-500' />
+                    </button>
                   </Badge>
                 ))
               ) : (
-                <p className='text-sm text-muted-foreground flex items-center justify-center w-full h-12'>
+                <p className='text-xs text-slate-500 dark:text-slate-400 flex items-center justify-center w-full h-12'>
                   No colors added yet
                 </p>
               )}
@@ -428,17 +462,22 @@ const AddProduct: React.FC<Props> = ({ createProduct, categories }) => {
           </div>
 
           {/* Sizes Section */}
-          <div className='space-y-4'>
+          <div className='space-y-3'>
             <div className='flex items-center justify-between'>
-              <Label className='text-base font-semibold'>Sizes</Label>
-              <span className='text-sm text-muted-foreground'>
-                {v2Sizes.length} size{v2Sizes.length !== 1 ? "s" : ""}
-              </span>
+              <div className='flex items-center gap-2'>
+                <Ruler className='w-4 h-4 text-blue-500' />
+                <Label className='text-base font-semibold'>Sizes</Label>
+              </div>
+              <Badge
+                variant='secondary'
+                className='bg-blue-50 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300 border-0'>
+                {v2Sizes.length}
+              </Badge>
             </div>
 
             <div className='flex gap-2'>
               <Input
-                placeholder='Add size (e.g., S, M, L)'
+                placeholder='e.g., S, M, L, XL'
                 value={newSize}
                 onChange={(e) => setNewSize(e.target.value)}
                 onKeyDown={(e) => {
@@ -447,35 +486,34 @@ const AddProduct: React.FC<Props> = ({ createProduct, categories }) => {
                     addSize();
                   }
                 }}
-                className='flex-1'
+                className='flex-1 h-9 border-blue-200 focus:border-blue-400'
               />
               <Button
                 onClick={addSize}
                 size='sm'
+                className='h-9 bg-blue-500 hover:bg-blue-600'
                 disabled={!newSize.trim() || v2Sizes.includes(newSize.trim())}>
                 <Plus className='h-4 w-4' />
               </Button>
             </div>
 
-            <div className='flex flex-wrap gap-2 min-h-[80px] p-3 border rounded-lg bg-muted/30'>
+            <div className='flex flex-wrap gap-2 min-h-[70px] p-2.5 rounded-lg bg-gradient-to-br from-blue-50/50 to-cyan-50/50 dark:from-blue-900/10 dark:to-cyan-900/10 border border-blue-100 dark:border-blue-900/30'>
               {v2Sizes.length > 0 ? (
                 v2Sizes.map((size) => (
                   <Badge
                     key={size}
-                    variant='secondary'
-                    className='flex items-center gap-1 px-3 py-1'>
+                    className='flex items-center gap-1.5 px-2.5 py-1 bg-white dark:bg-slate-800 border border-blue-200 dark:border-blue-800 text-blue-700 dark:text-blue-300 hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors'>
+                    <Ruler className='w-3 h-3' />
                     {size}
-                    <Button
-                      variant='ghost'
-                      size='sm'
+                    <button
                       onClick={() => removeSize(size)}
-                      className='h-4 w-4 p-0 ml-1 hover:bg-destructive hover:text-destructive-foreground'>
-                      <X className='h-3 w-3' />
-                    </Button>
+                      className='ml-0.5 hover:bg-red-100 dark:hover:bg-red-900/30 rounded-full p-0.5 transition-colors'>
+                      <X className='h-3 w-3 text-red-500' />
+                    </button>
                   </Badge>
                 ))
               ) : (
-                <p className='text-sm text-muted-foreground flex items-center justify-center w-full h-12'>
+                <p className='text-xs text-slate-500 dark:text-slate-400 flex items-center justify-center w-full h-12'>
                   No sizes added yet
                 </p>
               )}
@@ -485,34 +523,53 @@ const AddProduct: React.FC<Props> = ({ createProduct, categories }) => {
 
         {/* Generated Variations Preview */}
         {formData.variation.length > 0 && (
-          <div className='space-y-4'>
-            <div className='flex items-center justify-between'>
-              <Label className='text-base font-semibold'>
-                Generated Variations
-              </Label>
-              <span className='text-sm text-muted-foreground'>
-                {formData.variation.length} variation
-                {formData.variation.length !== 1 ? "s" : ""}
-              </span>
+          <div className='space-y-3'>
+            <div className='flex items-center justify-between p-2.5 bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-900/10 dark:to-emerald-900/10 rounded-lg border border-green-200 dark:border-green-900/30'>
+              <div className='flex items-center gap-2'>
+                <Box className='w-4 h-4 text-green-600' />
+                <Label className='text-sm font-semibold text-green-700 dark:text-green-300'>
+                  Generated Variations
+                </Label>
+              </div>
+              <Badge className='bg-green-600 text-white border-0 shadow-sm'>
+                {formData.variation.length}
+              </Badge>
             </div>
 
-            <div className='grid gap-4 sm:grid-cols-2 lg:grid-cols-3'>
+            <div className='grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4'>
               {formData.variation.map(
                 (variation: IVariation, index: number) => (
-                  <Card key={variation.id} className='p-4'>
-                    <div className='space-y-3'>
-                      <div className='flex items-center justify-between'>
-                        <h4 className='font-medium'>{variation.name}</h4>
-                        <Badge variant='outline' className='text-xs'>
-                          {variation.sku}
-                        </Badge>
+                  <div
+                    key={variation.id}
+                    className='group p-3 rounded-lg bg-gradient-to-br from-slate-50 to-blue-50/30 dark:from-slate-800 dark:to-blue-900/10 border border-slate-200 dark:border-slate-700 hover:border-blue-300 dark:hover:border-blue-700 hover:shadow-md transition-all duration-200'>
+                    <div className='space-y-2.5'>
+                      {/* Header */}
+                      <div className='flex items-start justify-between gap-2'>
+                        <div className='flex-1 min-w-0'>
+                          <h4 className='font-semibold text-sm text-slate-800 dark:text-slate-200 truncate'>
+                            {variation.name}
+                          </h4>
+                          <p className='text-[10px] font-mono text-slate-500 dark:text-slate-400 truncate mt-0.5'>
+                            {variation.sku}
+                          </p>
+                        </div>
+                        <div className='flex-shrink-0'>
+                          <div className='p-1 bg-white dark:bg-slate-700 rounded-md shadow-sm'>
+                            <Package className='w-3.5 h-3.5 text-blue-500' />
+                          </div>
+                        </div>
                       </div>
 
-                      <div className='grid grid-cols-2 gap-2'>
+                      {/* Inputs */}
+                      <div
+                        className={`grid gap-2 ${
+                          !isSameUnitPrice ? "grid-cols-2" : "grid-cols-1"
+                        }`}>
                         <div>
                           <Label
                             htmlFor={`qty-${variation.id}`}
-                            className='text-xs'>
+                            className='text-[10px] font-semibold text-slate-600 dark:text-slate-400 flex items-center gap-1 mb-1'>
+                            <BarChart3 className='w-3 h-3' />
                             Stock
                           </Label>
                           <Input
@@ -522,7 +579,7 @@ const AddProduct: React.FC<Props> = ({ createProduct, categories }) => {
                             type='number'
                             value={variation.quantity}
                             min='0'
-                            className='h-8'
+                            className='h-8 text-sm border-slate-200 dark:border-slate-600 focus:border-green-400 bg-white dark:bg-slate-900'
                             placeholder='0'
                           />
                         </div>
@@ -531,7 +588,8 @@ const AddProduct: React.FC<Props> = ({ createProduct, categories }) => {
                           <div>
                             <Label
                               htmlFor={`price-${variation.id}`}
-                              className='text-xs'>
+                              className='text-[10px] font-semibold text-slate-600 dark:text-slate-400 flex items-center gap-1 mb-1'>
+                              <Tag className='w-3 h-3' />
                               Price
                             </Label>
                             <Input
@@ -542,14 +600,14 @@ const AddProduct: React.FC<Props> = ({ createProduct, categories }) => {
                               value={variation.unitPrice}
                               min='0'
                               step='0.01'
-                              className='h-8'
+                              className='h-8 text-sm border-slate-200 dark:border-slate-600 focus:border-green-400 bg-white dark:bg-slate-900'
                               placeholder='0.00'
                             />
                           </div>
                         )}
                       </div>
                     </div>
-                  </Card>
+                  </div>
                 )
               )}
             </div>
@@ -589,59 +647,160 @@ const AddProduct: React.FC<Props> = ({ createProduct, categories }) => {
   };
 
   return (
-    <div className='w-full min-h-screen bg-background'>
-      <div className='container mx-auto px-4 py-8'>
+    <div className='w-full min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 dark:from-slate-950 dark:via-slate-900 dark:to-slate-950'>
+      <div className='container mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8 lg:py-12'>
         {/* Header Section */}
-        <div className='mb-8'>
-          <div className='flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between'>
-            <div>
-              <h1 className='text-3xl font-bold tracking-tight text-foreground'>
-                Add New Product
-              </h1>
-              <p className='text-muted-foreground mt-2'>
-                Create a new product with detailed information and variations
-              </p>
-            </div>
+        <div className='mb-6 sm:mb-8'>
+          <div className='flex flex-col gap-3 sm:gap-4'>
+            <div className='flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4'>
+              <div className='flex items-start gap-3 sm:gap-4'>
+                <div className='hidden sm:flex items-center justify-center w-12 h-12 lg:w-14 lg:h-14 rounded-2xl bg-gradient-to-br from-green-500 to-emerald-600 shadow-lg shadow-green-500/30'>
+                  <PlusCircle className='w-6 h-6 lg:w-7 lg:h-7 text-white' />
+                </div>
+                <div className='flex-1'>
+                  <h1 className='text-2xl sm:text-3xl lg:text-4xl font-bold tracking-tight bg-gradient-to-r from-slate-900 to-slate-700 dark:from-white dark:to-slate-300 bg-clip-text text-transparent'>
+                    Add New Product
+                  </h1>
+                  <p className='text-sm sm:text-base text-slate-600 dark:text-slate-400 mt-1 sm:mt-2'>
+                    Create a new product with detailed information and
+                    variations
+                  </p>
+                </div>
+              </div>
 
-            <div className='flex items-center gap-3'>
-              <Button
-                variant='outline'
-                onClick={() => {
-                  if (dialogBtn?.current) {
-                    //@ts-ignore
-                    dialogBtn.current.click();
-                  }
-                }}
-                className='min-w-[100px]'>
-                Discard
-              </Button>
-              <Button
-                onClick={() => createProductAndExit()}
-                className='min-w-[120px]'>
-                Save Product
-              </Button>
-              <Button
-                onClick={() => createProductAndContinue()}
-                variant='secondary'
-                className='min-w-[160px] hidden sm:inline-flex'>
-                Save & Continue
-              </Button>
+              <div className='flex items-center gap-3'>
+                <Button
+                  variant='outline'
+                  onClick={() => {
+                    if (dialogBtn?.current) {
+                      //@ts-ignore
+                      dialogBtn.current.click();
+                    }
+                  }}
+                  className='min-w-[100px] hover:bg-red-50 hover:text-red-600 hover:border-red-300 dark:hover:bg-red-950'>
+                  <XCircle className='w-4 h-4 mr-2' />
+                  Discard
+                </Button>
+                <Button
+                  onClick={() => createProductAndExit()}
+                  className='min-w-[120px] bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700'>
+                  <Save className='w-4 h-4 mr-2' />
+                  Save Product
+                </Button>
+                <Button
+                  onClick={() => createProductAndContinue()}
+                  variant='secondary'
+                  className='min-w-[160px] hidden sm:inline-flex bg-gradient-to-r from-blue-100 to-indigo-100 dark:from-blue-900 dark:to-indigo-900 hover:from-blue-200 hover:to-indigo-200'>
+                  <Save className='w-4 h-4 mr-2' />
+                  Save & Continue
+                </Button>
+              </div>
             </div>
           </div>
         </div>
 
-        <div className='grid gap-8 lg:grid-cols-[2fr_1fr]'>
-          <div className='space-y-8'>
-            <Card>
-              <CardHeader>
-                <CardTitle className='text-xl'>Basic Information</CardTitle>
+        {/* Stats Overview Cards */}
+        <div className='hidden grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 lg:gap-6 mb-6 sm:mb-8'>
+          {/* Total Stock Card */}
+          <Card className='border-none shadow-lg bg-gradient-to-br from-emerald-500 to-teal-600 text-white overflow-hidden relative'>
+            <div className='absolute top-0 right-0 w-24 h-24 sm:w-32 sm:h-32 bg-white/10 rounded-full -mr-8 -mt-8 sm:-mr-12 sm:-mt-12' />
+            <CardContent className='p-4 sm:p-6 relative z-10'>
+              <div className='flex items-center justify-between mb-2 sm:mb-3'>
+                <div className='p-2 sm:p-2.5 bg-white/20 rounded-lg sm:rounded-xl backdrop-blur-sm'>
+                  <Package className='w-5 h-5 sm:w-6 sm:h-6' />
+                </div>
+                <BarChart3 className='w-5 h-5 sm:w-6 sm:h-6 opacity-50' />
+              </div>
+              <p className='text-xs sm:text-sm font-medium opacity-90 mb-1'>
+                Total Stock
+              </p>
+              <p className='text-2xl sm:text-3xl lg:text-4xl font-bold'>
+                {totalQuantity}
+              </p>
+            </CardContent>
+          </Card>
+
+          {/* Total Variations Card */}
+          <Card className='border-none shadow-lg bg-gradient-to-br from-blue-500 to-cyan-600 text-white overflow-hidden relative'>
+            <div className='absolute top-0 right-0 w-24 h-24 sm:w-32 sm:h-32 bg-white/10 rounded-full -mr-8 -mt-8 sm:-mr-12 sm:-mt-12' />
+            <CardContent className='p-4 sm:p-6 relative z-10'>
+              <div className='flex items-center justify-between mb-2 sm:mb-3'>
+                <div className='p-2 sm:p-2.5 bg-white/20 rounded-lg sm:rounded-xl backdrop-blur-sm'>
+                  <Box className='w-5 h-5 sm:w-6 sm:h-6' />
+                </div>
+                <Tag className='w-5 h-5 sm:w-6 sm:h-6 opacity-50' />
+              </div>
+              <p className='text-xs sm:text-sm font-medium opacity-90 mb-1'>
+                Total Variants
+              </p>
+              <p className='text-2xl sm:text-3xl lg:text-4xl font-bold'>
+                {formData?.variation?.length || 0}
+              </p>
+            </CardContent>
+          </Card>
+
+          {/* Colors Card */}
+          <Card className='border-none shadow-lg bg-gradient-to-br from-purple-500 to-pink-600 text-white overflow-hidden relative'>
+            <div className='absolute top-0 right-0 w-24 h-24 sm:w-32 sm:h-32 bg-white/10 rounded-full -mr-8 -mt-8 sm:-mr-12 sm:-mt-12' />
+            <CardContent className='p-4 sm:p-6 relative z-10'>
+              <div className='flex items-center justify-between mb-2 sm:mb-3'>
+                <div className='p-2 sm:p-2.5 bg-white/20 rounded-lg sm:rounded-xl backdrop-blur-sm'>
+                  <Palette className='w-5 h-5 sm:w-6 sm:h-6' />
+                </div>
+                <Palette className='w-5 h-5 sm:w-6 sm:h-6 opacity-50' />
+              </div>
+              <p className='text-xs sm:text-sm font-medium opacity-90 mb-1'>
+                Unique Colors
+              </p>
+              <p className='text-2xl sm:text-3xl lg:text-4xl font-bold'>
+                {uniqueColors.length}
+              </p>
+            </CardContent>
+          </Card>
+
+          {/* Sizes Card */}
+          <Card className='border-none shadow-lg bg-gradient-to-br from-orange-500 to-red-600 text-white overflow-hidden relative'>
+            <div className='absolute top-0 right-0 w-24 h-24 sm:w-32 sm:h-32 bg-white/10 rounded-full -mr-8 -mt-8 sm:-mr-12 sm:-mt-12' />
+            <CardContent className='p-4 sm:p-6 relative z-10'>
+              <div className='flex items-center justify-between mb-2 sm:mb-3'>
+                <div className='p-2 sm:p-2.5 bg-white/20 rounded-lg sm:rounded-xl backdrop-blur-sm'>
+                  <Ruler className='w-5 h-5 sm:w-6 sm:h-6' />
+                </div>
+                <Ruler className='w-5 h-5 sm:w-6 sm:h-6 opacity-50' />
+              </div>
+              <p className='text-xs sm:text-sm font-medium opacity-90 mb-1'>
+                Unique Sizes
+              </p>
+              <p className='text-2xl sm:text-3xl lg:text-4xl font-bold'>
+                {uniqueSizes.length}
+              </p>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Main Content Grid */}
+        <div className='grid gap-6 lg:gap-8 lg:grid-cols-[2fr_1fr]'>
+          {/* Left Column - Editable Fields */}
+          <div className='space-y-6'>
+            {/* Basic Information Card */}
+            <Card className='border-none shadow-xl bg-white/80 dark:bg-slate-900/80 backdrop-blur-sm'>
+              <CardHeader className='border-b border-slate-200 dark:border-slate-700'>
+                <CardTitle className='text-xl flex items-center gap-2'>
+                  <div className='p-2 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-lg shadow-lg'>
+                    <ShoppingBag className='w-5 h-5 text-white' />
+                  </div>
+                  Basic Information
+                </CardTitle>
                 <CardDescription>
                   Provide the essential details about your product
                 </CardDescription>
               </CardHeader>
-              <CardContent className='space-y-6'>
+              <CardContent className='space-y-6 pt-6'>
                 <div className='space-y-2'>
-                  <Label htmlFor='name' className='text-sm font-medium'>
+                  <Label
+                    htmlFor='name'
+                    className='text-sm font-semibold flex items-center gap-2'>
+                    <Tag className='w-4 h-4 text-blue-500' />
                     Product Name *
                   </Label>
                   <Input
@@ -651,13 +810,15 @@ const AddProduct: React.FC<Props> = ({ createProduct, categories }) => {
                     value={formData?.name}
                     onChange={handleChange}
                     placeholder='Enter product name'
-                    className='h-11'
+                    className='h-11 border-2 focus:border-blue-500 transition-colors'
                     required
                   />
                 </div>
 
                 <div className='space-y-2'>
-                  <Label htmlFor='description' className='text-sm font-medium'>
+                  <Label
+                    htmlFor='description'
+                    className='text-sm font-semibold'>
                     Description
                   </Label>
                   <Textarea
@@ -666,19 +827,26 @@ const AddProduct: React.FC<Props> = ({ createProduct, categories }) => {
                     value={formData?.description}
                     onChange={handleChange}
                     placeholder='Describe your product features, benefits, and specifications'
-                    className='min-h-[120px] resize-none'
+                    className='min-h-[120px] resize-none border-2 focus:border-blue-500 transition-colors'
                   />
                 </div>
               </CardContent>
             </Card>
-            <Card>
-              <CardHeader>
-                <CardTitle className='text-xl'>Product Details</CardTitle>
+
+            {/* Product Details Card */}
+            <Card className='border-none shadow-xl bg-white/80 dark:bg-slate-900/80 backdrop-blur-sm'>
+              <CardHeader className='border-b border-slate-200 dark:border-slate-700'>
+                <CardTitle className='text-xl flex items-center gap-2'>
+                  <div className='p-2 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-lg shadow-lg'>
+                    <Package className='w-5 h-5 text-white' />
+                  </div>
+                  Product Details
+                </CardTitle>
                 <CardDescription>
                   Set category, SKU, pricing, and inventory information
                 </CardDescription>
               </CardHeader>
-              <CardContent className='space-y-6'>
+              <CardContent className='space-y-6 pt-6'>
                 <div className='grid gap-6 sm:grid-cols-2'>
                   <div className='space-y-4'>
                     <NestedCategorySelect
@@ -695,7 +863,8 @@ const AddProduct: React.FC<Props> = ({ createProduct, categories }) => {
                     <div className='space-y-2'>
                       <Label
                         htmlFor='product-sku'
-                        className='text-sm font-medium'>
+                        className='text-sm font-semibold flex items-center gap-2'>
+                        <Hash className='w-4 h-4 text-slate-500' />
                         Product SKU *
                       </Label>
                       <Input
@@ -705,10 +874,10 @@ const AddProduct: React.FC<Props> = ({ createProduct, categories }) => {
                         value={formData?.sku}
                         onChange={handleChange}
                         placeholder='Enter unique SKU'
-                        className='h-11 font-mono'
+                        className='h-11 font-mono border-2 focus:border-indigo-500 transition-colors'
                         required
                       />
-                      <p className='text-xs text-muted-foreground'>
+                      <p className='text-xs text-slate-600 dark:text-slate-400'>
                         Stock Keeping Unit - unique identifier
                       </p>
                     </div>
@@ -718,7 +887,8 @@ const AddProduct: React.FC<Props> = ({ createProduct, categories }) => {
                     <div className='space-y-2'>
                       <Label
                         htmlFor='product-unit-price'
-                        className='text-sm font-medium'>
+                        className='text-sm font-semibold flex items-center gap-2'>
+                        <Tag className='w-4 h-4 text-green-500' />
                         Unit Price *
                       </Label>
                       <Input
@@ -728,7 +898,7 @@ const AddProduct: React.FC<Props> = ({ createProduct, categories }) => {
                         value={formData?.unitPrice}
                         onChange={handleChange}
                         placeholder='0.00'
-                        className='h-11'
+                        className='h-11 border-2 focus:border-green-500 transition-colors'
                         min='0'
                         step='0.01'
                         required
@@ -736,7 +906,10 @@ const AddProduct: React.FC<Props> = ({ createProduct, categories }) => {
                     </div>
 
                     <div className='space-y-2'>
-                      <Label htmlFor='quantity' className='text-sm font-medium'>
+                      <Label
+                        htmlFor='quantity'
+                        className='text-sm font-semibold flex items-center gap-2'>
+                        <Package className='w-4 h-4 text-emerald-500' />
                         Total Quantity
                       </Label>
                       <Input
@@ -746,17 +919,17 @@ const AddProduct: React.FC<Props> = ({ createProduct, categories }) => {
                         value={formData?.quantity}
                         onChange={handleChange}
                         placeholder='0'
-                        className={`h-11 ${
+                        className={`h-11 border-2 transition-colors ${
                           hasVariation
-                            ? "bg-muted text-muted-foreground"
-                            : "bg-background"
+                            ? "bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 cursor-not-allowed"
+                            : "focus:border-emerald-500"
                         }`}
                         min='0'
                         disabled={hasVariation}
                       />
                       {hasVariation && (
-                        <p className='text-xs text-muted-foreground'>
-                          Auto-calculated from variations
+                        <p className='text-xs text-amber-600 dark:text-amber-400 font-medium'>
+                          ⚠️ Auto-calculated from variations
                         </p>
                       )}
                     </div>
@@ -764,19 +937,26 @@ const AddProduct: React.FC<Props> = ({ createProduct, categories }) => {
                 </div>
               </CardContent>
             </Card>
-            <Card>
-              <CardHeader>
-                <CardTitle className='text-xl'>Pricing & Discounts</CardTitle>
+
+            {/* Pricing & Discounts Card */}
+            <Card className='border-none shadow-xl bg-white/80 dark:bg-slate-900/80 backdrop-blur-sm'>
+              <CardHeader className='border-b border-slate-200 dark:border-slate-700'>
+                <CardTitle className='text-xl flex items-center gap-2'>
+                  <div className='p-2 bg-gradient-to-br from-green-500 to-emerald-600 rounded-lg shadow-lg'>
+                    <Tag className='w-5 h-5 text-white' />
+                  </div>
+                  Pricing & Discounts
+                </CardTitle>
                 <CardDescription>
                   Configure discount options and promotional pricing
                 </CardDescription>
               </CardHeader>
-              <CardContent className='space-y-6'>
+              <CardContent className='space-y-6 pt-6'>
                 <div className='grid gap-6 sm:grid-cols-2'>
                   <div className='space-y-2'>
                     <Label
                       htmlFor='discount-type'
-                      className='text-sm font-medium'>
+                      className='text-sm font-semibold'>
                       Discount Type
                     </Label>
                     <Select
@@ -787,26 +967,20 @@ const AddProduct: React.FC<Props> = ({ createProduct, categories }) => {
                           discountType: value,
                         });
                       }}>
-                      <SelectTrigger id='discount-type' className='h-11'>
+                      <SelectTrigger
+                        id='discount-type'
+                        className='h-11 border-2'>
                         <SelectValue placeholder='Select discount type' />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value='%'>
-                          <div className='flex items-center gap-2'>
-                            <span>Percentage (%)</span>
-                          </div>
-                        </SelectItem>
-                        <SelectItem value='-'>
-                          <div className='flex items-center gap-2'>
-                            <span>Fixed Amount</span>
-                          </div>
-                        </SelectItem>
+                        <SelectItem value='%'>Percentage (%)</SelectItem>
+                        <SelectItem value='-'>Fixed Amount</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
 
                   <div className='space-y-2'>
-                    <Label htmlFor='discount' className='text-sm font-medium'>
+                    <Label htmlFor='discount' className='text-sm font-semibold'>
                       Discount Value
                     </Label>
                     <Input
@@ -821,12 +995,12 @@ const AddProduct: React.FC<Props> = ({ createProduct, categories }) => {
                         })
                       }
                       placeholder='0'
-                      className='h-11'
+                      className='h-11 border-2 focus:border-green-500 transition-colors'
                       min='0'
                       step={formData?.discountType === "%" ? "1" : "0.01"}
                     />
                     {formData?.discountType && (
-                      <p className='text-xs text-muted-foreground'>
+                      <p className='text-xs text-slate-600 dark:text-slate-400'>
                         {formData?.discountType === "%"
                           ? "Enter percentage (0-100)"
                           : "Enter fixed amount to deduct"}
@@ -836,12 +1010,21 @@ const AddProduct: React.FC<Props> = ({ createProduct, categories }) => {
                 </div>
               </CardContent>
             </Card>
-            <Card>
-              <CardHeader>
+
+            {/* Variations Card */}
+            <Card className='border-none shadow-xl bg-white/80 dark:bg-slate-900/80 backdrop-blur-sm'>
+              <CardHeader className='border-b border-slate-200 dark:border-slate-700'>
                 <CardTitle className='flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2'>
-                  <span>Product Variations</span>
+                  <div className='flex items-center gap-2'>
+                    <div className='p-2 bg-gradient-to-br from-purple-500 to-pink-600 rounded-lg shadow-lg'>
+                      <Box className='w-5 h-5 text-white' />
+                    </div>
+                    <span>Product Variations</span>
+                  </div>
                   {hasVariation && (
-                    <Badge variant='secondary' className='w-fit'>
+                    <Badge
+                      variant='secondary'
+                      className='w-fit bg-gradient-to-r from-purple-100 to-pink-100 dark:from-purple-900 dark:to-pink-900 border-0'>
                       {formData.variation.length} variation
                       {formData.variation.length !== 1 ? "s" : ""}
                     </Badge>
@@ -853,9 +1036,9 @@ const AddProduct: React.FC<Props> = ({ createProduct, categories }) => {
                 </CardDescription>
               </CardHeader>
 
-              <CardContent className='space-y-6'>
+              <CardContent className='space-y-6 pt-6'>
                 {/* Variation Toggle */}
-                <div className='space-y-4 p-4 bg-muted/30 rounded-lg'>
+                <div className='space-y-4 p-4 bg-gradient-to-r from-slate-50 to-blue-50 dark:from-slate-800 dark:to-slate-700 rounded-lg border-2 border-slate-200 dark:border-slate-600'>
                   <div className='flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4'>
                     <div className='flex items-center gap-4'>
                       <Label
@@ -935,7 +1118,7 @@ const AddProduct: React.FC<Props> = ({ createProduct, categories }) => {
                     )}
                   </div>
 
-                  <div className='space-y-1 text-xs text-muted-foreground'>
+                  <div className='space-y-1 text-xs text-slate-700 dark:text-slate-300'>
                     <p id='variation-help'>
                       Enable variations to create different versions of your
                       product with unique combinations of attributes.
@@ -975,7 +1158,7 @@ const AddProduct: React.FC<Props> = ({ createProduct, categories }) => {
 
                     <TabsContent value='v1' className='mt-6'>
                       <div className='space-y-4'>
-                        <div className='text-sm text-muted-foreground bg-blue-50 dark:bg-blue-950/20 p-3 rounded-lg border'>
+                        <div className='text-sm text-slate-700 dark:text-slate-300 bg-blue-50 dark:bg-blue-950/20 p-3 rounded-lg border'>
                           <strong>Advanced Mode:</strong> Manually configure
                           each variation with full control over all properties.
                         </div>
@@ -985,7 +1168,7 @@ const AddProduct: React.FC<Props> = ({ createProduct, categories }) => {
 
                     <TabsContent value='v2' className='mt-6'>
                       <div className='space-y-4'>
-                        <div className='text-sm text-muted-foreground bg-green-50 dark:bg-green-950/20 p-3 rounded-lg border'>
+                        <div className='text-sm text-slate-700 dark:text-slate-300 bg-green-50 dark:bg-green-950/20 p-3 rounded-lg border'>
                           <strong>Simple Mode:</strong> Quick setup for size and
                           color combinations. Variations are auto-generated.
                         </div>
@@ -996,8 +1179,11 @@ const AddProduct: React.FC<Props> = ({ createProduct, categories }) => {
                 )}
 
                 {!hasVariation && (
-                  <div className='text-center py-8 text-muted-foreground'>
-                    <p className='mb-2'>No variations configured</p>
+                  <div className='text-center py-12 text-slate-600 dark:text-slate-400'>
+                    <div className='inline-flex items-center justify-center w-16 h-16 rounded-full bg-gradient-to-br from-slate-100 to-slate-200 dark:from-slate-800 dark:to-slate-700 mb-4'>
+                      <Box className='w-8 h-8 text-slate-400' />
+                    </div>
+                    <p className='mb-2 font-medium'>No variations configured</p>
                     <p className='text-sm'>
                       Enable variations above to add different sizes, colors, or
                       other variants.
@@ -1007,11 +1193,11 @@ const AddProduct: React.FC<Props> = ({ createProduct, categories }) => {
               </CardContent>
 
               {hasVariation && variationTab === "v1" && (
-                <CardFooter className='border-t bg-muted/20'>
+                <CardFooter className='border-t bg-slate-50 dark:bg-slate-800/50'>
                   <Button
                     onClick={addNewVariation}
                     variant='outline'
-                    className='w-full'>
+                    className='w-full hover:bg-blue-50 hover:border-blue-300 dark:hover:bg-blue-950'>
                     <PlusCircle className='h-4 w-4 mr-2' />
                     Add New Variation
                   </Button>
@@ -1019,19 +1205,20 @@ const AddProduct: React.FC<Props> = ({ createProduct, categories }) => {
               )}
             </Card>
           </div>
-          <div className='space-y-8'>
-            <Card>
-              <CardHeader>
-                <CardTitle className='text-xl'>Product Status</CardTitle>
+
+          {/* Right Column - Status & Images */}
+          <div className='space-y-6'>
+            {/* Product Status Card */}
+            <Card className='border-none shadow-xl bg-white/80 dark:bg-slate-900/80 backdrop-blur-sm'>
+              <CardHeader className='border-b border-slate-200 dark:border-slate-700'>
+                <CardTitle className='text-lg'>Product Status</CardTitle>
                 <CardDescription>
                   Set the product visibility and availability
                 </CardDescription>
               </CardHeader>
-              <CardContent>
-                <div className='space-y-2'>
-                  <Label htmlFor='status' className='text-sm font-medium'>
-                    Publication Status
-                  </Label>
+              <CardContent className='pt-6'>
+                <div className='space-y-3'>
+                  <Label className='text-sm font-semibold'>Status</Label>
                   <Select
                     value={formData?.active ? "active" : "inactive"}
                     onValueChange={(value) => {
@@ -1040,192 +1227,194 @@ const AddProduct: React.FC<Props> = ({ createProduct, categories }) => {
                         active: value === "active",
                       });
                     }}>
-                    <SelectTrigger id='status' className='h-11'>
+                    <SelectTrigger id='status' className='h-11 border-2'>
                       <SelectValue placeholder='Select status' />
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value='active'>
                         <div className='flex items-center gap-2'>
-                          <div className='h-2 w-2 rounded-full bg-green-500'></div>
-                          <span>Active</span>
+                          <div className='w-2 h-2 rounded-full bg-green-500'></div>
+                          <span className='font-medium'>Active</span>
                         </div>
                       </SelectItem>
                       <SelectItem value='inactive'>
                         <div className='flex items-center gap-2'>
-                          <div className='h-2 w-2 rounded-full bg-red-500'></div>
-                          <span>Inactive</span>
+                          <div className='w-2 h-2 rounded-full bg-red-500'></div>
+                          <span className='font-medium'>Inactive</span>
                         </div>
                       </SelectItem>
                     </SelectContent>
                   </Select>
-                  <p className='text-xs text-muted-foreground'>
+                  <p className='text-xs text-slate-600 dark:text-slate-400'>
                     {formData?.active
-                      ? "Product will be visible to customers"
-                      : "Product will be hidden from customers"}
+                      ? "✓ Product will be visible to customers"
+                      : "✗ Product will be hidden from customers"}
                   </p>
                 </div>
               </CardContent>
             </Card>
-            <Card className='overflow-hidden'>
-              <CardHeader>
-                <CardTitle className='text-xl flex items-center justify-between'>
-                  <span>Product Images</span>
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <Button
-                        variant='outline'
-                        size='sm'
-                        onClick={() => {
-                          if (fileRef?.current) {
-                            //@ts-ignore
-                            fileRef.current.click();
-                          }
-                        }}>
-                        <Upload className='h-4 w-4 mr-2' />
-                        Upload
-                      </Button>
-                    </TooltipTrigger>
-                    <TooltipContent side='bottom'>
-                      Upload main product image
-                    </TooltipContent>
-                  </Tooltip>
-                </CardTitle>
-                <CardDescription>
-                  Upload high-quality images that showcase your product
-                </CardDescription>
-              </CardHeader>
 
-              <CardContent className='space-y-6'>
-                {/* Hidden file inputs */}
-                <Input
-                  id='main-picture'
-                  type='file'
-                  className='hidden'
-                  ref={fileRef}
-                  name='thumbnail'
-                  accept='.png,.jpg,.jpeg,.webp'
-                  onChange={(e) => {
-                    //@ts-ignore
-                    const file = e.target.files?.[0];
-                    if (file) {
+            {/* Product Images Card */}
+            <Card className='border-none shadow-xl bg-white/80 dark:bg-slate-900/80 backdrop-blur-sm overflow-hidden'>
+              <CardHeader className='border-b border-slate-200 dark:border-slate-700'>
+                <div className='flex justify-between items-center'>
+                  <div>
+                    <CardTitle className='text-lg flex items-center gap-2'>
+                      <Upload className='w-5 h-5 text-blue-500' />
+                      Product Images
+                    </CardTitle>
+                    <CardDescription className='mt-1'>
+                      Main thumbnail and up to 6 additional images
+                    </CardDescription>
+                  </div>
+                  <Input
+                    id='picture-thumbnail'
+                    type='file'
+                    className='hidden'
+                    ref={fileRef}
+                    name='thumbnail'
+                    accept='.png, .jpg, .jpeg'
+                    onChange={(e) => {
+                      //@ts-ignore
+                      const file = e.target.files[0];
                       updateFormData({
                         ...formData,
                         thumbnail: file,
                       });
-                    }
-                  }}
-                />
-
-                <Input
-                  id='gallery-picture'
-                  type='file'
-                  className='hidden'
-                  ref={fileRef2}
-                  name='gallery'
-                  accept='.png,.jpg,.jpeg,.webp'
-                  onChange={(e) => {
-                    //@ts-ignore
-                    const file = e.target.files?.[0];
-                    if (file) {
-                      updateFormData({
-                        ...formData,
-                        images: [...formData?.images, file],
-                      });
-                    }
-                  }}
-                />
-
-                {/* Main Product Image */}
-                <div className='space-y-2'>
-                  <Label className='text-sm font-medium'>Main Image</Label>
+                    }}
+                  />
+                  <Button
+                    variant='outline'
+                    size='sm'
+                    onClick={() => {
+                      if (!!fileRef) {
+                        //@ts-ignore
+                        fileRef.current.click();
+                      }
+                    }}
+                    className='hover:bg-blue-50 hover:border-blue-300 dark:hover:bg-blue-950'>
+                    <Upload className='h-4 w-4 mr-2' />
+                    Upload
+                  </Button>
+                </div>
+              </CardHeader>
+              <CardContent className='pt-6'>
+                <div className='space-y-4'>
+                  {/* Main Thumbnail */}
                   <div className='relative group'>
+                    <div className='absolute -top-2 -left-2 z-10 px-2 py-1 bg-gradient-to-r from-blue-500 to-indigo-600 text-white text-xs font-semibold rounded-md shadow-lg'>
+                      Main Thumbnail
+                    </div>
                     <img
-                      alt='Main product'
-                      className='aspect-square w-full rounded-lg object-cover border-2 border-dashed border-muted-foreground/25 hover:border-muted-foreground/50 transition-colors'
+                      alt='Product_thumbnail'
+                      className='aspect-square w-full rounded-xl object-cover shadow-lg border-2 border-blue-200 dark:border-blue-800'
                       src={
-                        formData?.thumbnail
+                        !!formData?.thumbnail
                           ? URL.createObjectURL(formData.thumbnail)
                           : PlaceHolderImage
                       }
                     />
                     {!formData?.thumbnail && (
-                      <div className='absolute inset-0 flex flex-col items-center justify-center text-muted-foreground'>
+                      <div className='absolute inset-0 flex flex-col items-center justify-center text-slate-400'>
                         <Upload className='h-8 w-8 mb-2' />
                         <p className='text-sm text-center px-2'>
-                          Click "Upload" to add main image
+                          Click "Upload" to add thumbnail
                         </p>
                       </div>
                     )}
                   </div>
-                  <p className='text-xs text-muted-foreground'>
-                    Recommended: 800x800px, under 2MB
-                  </p>
-                </div>
 
-                {/* Gallery Images */}
-                <div className='space-y-3'>
-                  <div className='flex items-center justify-between'>
-                    <Label className='text-sm font-medium'>
-                      Gallery Images
+                  {/* Additional Images */}
+                  <div className='space-y-2'>
+                    <Label className='text-sm font-semibold text-slate-700 dark:text-slate-300'>
+                      Additional Images ({formData?.images?.length || 0}/6)
                     </Label>
-                    <span className='text-xs text-muted-foreground'>
-                      {formData?.images.length}/7 images
-                    </span>
-                  </div>
+                    <div className='grid grid-cols-3 gap-2 sm:gap-3'>
+                      {formData?.images?.map((imgData, index) => (
+                        <div
+                          key={index}
+                          className='group relative aspect-square rounded-lg overflow-hidden border-2 border-slate-200 dark:border-slate-700 hover:border-blue-400 dark:hover:border-blue-500 transition-all'>
+                          <img
+                            alt={`Product_image_${index + 1}`}
+                            className='w-full h-full object-cover'
+                            src={URL.createObjectURL(imgData)}
+                          />
 
-                  <div className='grid grid-cols-3 gap-3'>
-                    {formData?.images.map((imgData, index) => (
-                      <div key={index} className='relative group'>
-                        <img
-                          alt={`Gallery ${index + 1}`}
-                          className='aspect-square w-full rounded-lg object-cover border hover:opacity-75 transition-opacity'
-                          src={URL.createObjectURL(imgData)}
-                        />
-                        <Button
-                          variant='destructive'
-                          size='sm'
-                          className='absolute top-1 right-1 h-6 w-6 p-0 opacity-0 group-hover:opacity-100 transition-opacity'
-                          onClick={() => {
-                            const newImages = formData.images.filter(
-                              (_, i) => i !== index
-                            );
+                          {/* Remove button - appears on hover */}
+                          <button
+                            onClick={() => {
+                              const newImages = formData.images.filter(
+                                (_, i) => i !== index
+                              );
+                              updateFormData({
+                                ...formData,
+                                images: newImages,
+                              });
+                            }}
+                            className='absolute top-1 right-1 sm:top-2 sm:right-2 p-1 sm:p-1.5 bg-red-500 hover:bg-red-600 text-white rounded-full opacity-0 group-hover:opacity-100 transition-all duration-200 shadow-lg hover:scale-110 z-10'>
+                            <X className='w-3 h-3 sm:w-4 sm:h-4' />
+                          </button>
+
+                          {/* Image number badge */}
+                          <div className='absolute bottom-1 left-1 sm:bottom-2 sm:left-2 px-1.5 py-0.5 sm:px-2 sm:py-1 bg-black/60 text-white text-[10px] sm:text-xs font-medium rounded backdrop-blur-sm'>
+                            {index + 1}
+                          </div>
+                        </div>
+                      ))}
+
+                      <Input
+                        id='picture-additional'
+                        type='file'
+                        className='hidden'
+                        ref={fileRef2}
+                        name='images'
+                        accept='.png, .jpg, .jpeg'
+                        onChange={(e) => {
+                          //@ts-ignore
+                          const file = e.target.files?.[0];
+                          if (file) {
                             updateFormData({
                               ...formData,
-                              images: newImages,
+                              images: [...formData?.images, file],
                             });
-                          }}>
-                          <X className='h-3 w-3' />
-                        </Button>
-                      </div>
-                    ))}
-
-                    {formData?.images.length < 7 && (
-                      <button
-                        className='aspect-square w-full flex flex-col items-center justify-center rounded-lg border-2 border-dashed border-muted-foreground/25 hover:border-muted-foreground/50 hover:bg-muted/50 transition-colors text-muted-foreground'
-                        onClick={() => {
-                          if (fileRef2?.current) {
-                            //@ts-ignore
-                            fileRef2.current.click();
                           }
-                        }}>
-                        <Plus className='h-5 w-5 mb-1' />
-                        <span className='text-xs text-center'>Add Image</span>
-                      </button>
+                        }}
+                      />
+
+                      {/* Upload button - show if less than 6 images */}
+                      {(!formData?.images || formData?.images?.length < 6) && (
+                        <button
+                          className='flex aspect-square w-full items-center justify-center rounded-lg border-2 border-dashed border-slate-300 dark:border-slate-600 hover:border-blue-400 hover:bg-blue-50 dark:hover:bg-blue-950 transition-all group'
+                          onClick={() => {
+                            if (!!fileRef2) {
+                              //@ts-ignore
+                              fileRef2.current.click();
+                            }
+                          }}>
+                          <div className='flex flex-col items-center gap-1 sm:gap-2'>
+                            <Upload className='h-5 w-5 sm:h-6 sm:w-6 text-slate-400 group-hover:text-blue-500 transition-colors' />
+                            <span className='text-[10px] sm:text-xs text-slate-500 dark:text-slate-400 font-medium'>
+                              Add
+                            </span>
+                          </div>
+                        </button>
+                      )}
+                    </div>
+
+                    {formData?.images && formData.images.length >= 6 && (
+                      <p className='text-xs text-amber-600 dark:text-amber-400 font-medium'>
+                        ⚠️ Maximum 6 additional images reached
+                      </p>
                     )}
                   </div>
-
-                  {formData?.images.length < 7 && (
-                    <p className='text-xs text-muted-foreground'>
-                      Add up to 7 additional product images
-                    </p>
-                  )}
                 </div>
               </CardContent>
             </Card>
           </div>
         </div>
-        {/* Mobile Actions */}
-        <div className='flex flex-col gap-3 sm:hidden mt-8 p-4 bg-muted/30 rounded-lg'>
+
+        {/* Mobile Action Buttons */}
+        <div className='flex flex-col gap-3 mt-6 sm:mt-8 lg:hidden'>
           <Button
             variant='outline'
             onClick={() => {
@@ -1234,17 +1423,22 @@ const AddProduct: React.FC<Props> = ({ createProduct, categories }) => {
                 dialogBtn.current.click();
               }
             }}
-            className='w-full'>
+            className='w-full hover:bg-red-50 hover:text-red-600 hover:border-red-300'>
+            <XCircle className='w-4 h-4 mr-2' />
             Discard Changes
           </Button>
           <div className='grid grid-cols-2 gap-3'>
-            <Button onClick={() => createProductAndExit()} className='w-full'>
-              Save Product
+            <Button
+              onClick={() => createProductAndExit()}
+              className='w-full bg-gradient-to-r from-green-600 to-emerald-600'>
+              <Save className='w-4 h-4 mr-2' />
+              Save
             </Button>
             <Button
               onClick={() => createProductAndContinue()}
               variant='secondary'
               className='w-full'>
+              <Save className='w-4 h-4 mr-2' />
               Save & Continue
             </Button>
           </div>

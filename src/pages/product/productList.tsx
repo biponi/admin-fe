@@ -361,6 +361,7 @@ const ProductList: React.FC<Props> = ({ handleEditProduct }) => {
     products,
     currentPageNum,
     totalPages,
+    refreshList,
     totalProducts,
     setSearchQuery,
     updateCurrentPage,
@@ -1273,9 +1274,12 @@ const ProductList: React.FC<Props> = ({ handleEditProduct }) => {
                                           ? product.variantList
                                           : ["No Variant"]
                                       }
+                                      variationList={product?.variation}
+                                      hasVariation={product?.hasVariation}
                                       handleUpdateProduct={handleEditProduct}
                                       deleteExistingProduct={deleteProductData}
                                       updatedAt={product?.timestamps?.updatedAt}
+                                      refreshProductList={refreshList}
                                     />
                                   ))}
                                 </TableBody>
@@ -1385,6 +1389,8 @@ const ProductList: React.FC<Props> = ({ handleEditProduct }) => {
                                         variations={
                                           product?.variantList ?? ["No Variant"]
                                         }
+                                        variationList={product?.variation}
+                                        hasVariation={product?.hasVariation}
                                         handleUpdateProduct={handleEditProduct}
                                         deleteExistingProduct={
                                           deleteProductData
@@ -1392,6 +1398,7 @@ const ProductList: React.FC<Props> = ({ handleEditProduct }) => {
                                         updatedAt={
                                           product?.timestamps?.updatedAt
                                         }
+                                        refreshProductList={refreshList}
                                       />
                                     ))}
                                 </TableBody>
@@ -1499,10 +1506,13 @@ const ProductList: React.FC<Props> = ({ handleEditProduct }) => {
                                         variations={
                                           product?.variantList ?? ["No Variant"]
                                         }
+                                        variationList={product?.variation}
+                                        hasVariation={product?.hasVariation}
                                         handleUpdateProduct={handleEditProduct}
                                         deleteExistingProduct={
                                           deleteProductData
                                         }
+                                        refreshProductList={refreshList}
                                         updatedAt={
                                           product?.timestamps?.updatedAt
                                         }
@@ -1614,7 +1624,10 @@ const ProductList: React.FC<Props> = ({ handleEditProduct }) => {
                                         variations={
                                           product?.variantList ?? ["No Variant"]
                                         }
+                                        variationList={product?.variation}
+                                        hasVariation={product?.hasVariation}
                                         handleUpdateProduct={handleEditProduct}
+                                        refreshProductList={refreshList}
                                         deleteExistingProduct={
                                           deleteProductData
                                         }
@@ -1726,6 +1739,8 @@ const ProductList: React.FC<Props> = ({ handleEditProduct }) => {
                                         totalReturned={
                                           product?.totalReturned ?? 0
                                         }
+                                        variationList={product?.variation}
+                                        hasVariation={product?.hasVariation}
                                         variations={
                                           product?.variantList ?? ["No Variant"]
                                         }
@@ -1736,6 +1751,7 @@ const ProductList: React.FC<Props> = ({ handleEditProduct }) => {
                                         updatedAt={
                                           product?.timestamps?.updatedAt
                                         }
+                                        refreshProductList={refreshList}
                                       />
                                     ))}
                                 </TableBody>

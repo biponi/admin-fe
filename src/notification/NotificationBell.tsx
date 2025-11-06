@@ -23,7 +23,7 @@ const NotificationBell: React.FC<NotificationBellProps> = ({
     size === "sm" ? "h-4 w-4" : size === "lg" ? "h-6 w-6" : "h-5 w-5";
 
   return (
-    <div className={`relative ${className}`}>
+    <div className={`relative z-[9999] ${className}`}>
       {/* Bell Icon */}
       <Button
         onClick={() => setIsOpen(!isOpen)}

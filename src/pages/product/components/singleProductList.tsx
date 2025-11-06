@@ -1,17 +1,18 @@
-import { BoxIcon, MoreHorizontalIcon } from "lucide-react";
+import { BoxIcon, MoreHorizontalIcon, PackageSearch, History } from "lucide-react";
 import { Badge } from "../../../components/ui/badge";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuLabel,
+  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "../../../components/ui/dropdown-menu";
 import dayjs from "dayjs";
 import advancedFormat from "dayjs/plugin/advancedFormat.js"; // note the /plugin path
 import { TableCell, TableRow } from "../../../components/ui/table";
 import { Button } from "../../../components/ui/button";
-import { useRef } from "react";
+import { useRef, useState, memo } from "react";
 import CustomAlertDialog from "../../../coreComponents/OptionModal";
 import {
   Popover,
@@ -32,6 +33,9 @@ import {
 import { Label } from "../../../components/ui/label";
 import { Input } from "../../../components/ui/input";
 import ShareButton from "../../../common/ShareButton";
+import { ProductAdjustmentDialog } from "./ProductAdjustmentDialog";
+import { ProductAdjustmentHistory } from "./ProductAdjustmentHistory";
+import { IVariation } from "../interface";
 
 interface Props {
   id: string;
@@ -45,10 +49,13 @@ interface Props {
   updatedAt: string;
   categoryName: string;
   variations: string[];
+  variationList?: IVariation[];
+  hasVariation?: boolean;
   totalReturned: number;
   totalSold: number;
   handleUpdateProduct: (id: string) => void;
   deleteExistingProduct: (id: string) => void;
+  refreshProductList?: () => void;
 }
 
 dayjs.extend(advancedFormat);
@@ -65,13 +72,18 @@ const SingleItem: React.FC<Props> = ({
   updatedAt,
   totalSold,
   variations,
+  variationList,
+  hasVariation,
   categoryName,
   totalReturned,
   handleUpdateProduct,
   deleteExistingProduct,
+  refreshProductList,
 }) => {
   const { hasRequiredPermission, hasSomePermissionsForPage } = useRoleCheck();
   const dialogBtn = useRef(null);
+  const [adjustDialogOpen, setAdjustDialogOpen] = useState(false);
+  const [historyDialogOpen, setHistoryDialogOpen] = useState(false);
 
   const discardDialog = () => {
     return (
@@ -222,6 +234,16 @@ const SingleItem: React.FC<Props> = ({
                   Edit
                 </DropdownMenuItem>
               )}
+              <DropdownMenuSeparator />
+              <DropdownMenuItem onClick={() => setAdjustDialogOpen(true)}>
+                <PackageSearch className='h-4 w-4 mr-2' />
+                Adjust Stock
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => setHistoryDialogOpen(true)}>
+                <History className='h-4 w-4 mr-2' />
+                View History
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
               {hasRequiredPermission("product", "delete") && (
                 <DropdownMenuItem
                   onClick={() => {
@@ -236,8 +258,31 @@ const SingleItem: React.FC<Props> = ({
         </TableCell>
       )}
       {discardDialog()}
+      {adjustDialogOpen && (
+        <ProductAdjustmentDialog
+          open={adjustDialogOpen}
+          onOpenChange={setAdjustDialogOpen}
+          productId={id}
+          productName={title}
+          productSku={sku}
+          currentStock={quantity}
+          hasVariation={hasVariation}
+          variations={variationList}
+          onSuccess={() => {
+            refreshProductList?.();
+          }}
+        />
+      )}
+      {historyDialogOpen && (
+        <ProductAdjustmentHistory
+          open={historyDialogOpen}
+          onOpenChange={setHistoryDialogOpen}
+          productId={id}
+          productName={title}
+        />
+      )}
     </TableRow>
   );
 };
 
-export default SingleItem;
+export default memo(SingleItem);

@@ -7,6 +7,7 @@ import {
   Shirt,
   ShoppingBag,
   ShoppingCart,
+  SquareActivity,
   StoreIcon,
   Truck,
   User2,
@@ -125,6 +126,14 @@ export const navItems = [
     active: false,
     id: "customer",
     roles: ["admin", "manager"],
+  },
+  {
+    icon: <SquareActivity className='w-5 h-5' />,
+    title: "AUDIT",
+    link: "/audit",
+    active: true,
+    id: "audit",
+    roles: ["admin"],
   },
   // {
   //   icon: <MessageCircle className='w-5 h-5' />,
