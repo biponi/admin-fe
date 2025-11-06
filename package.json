@@ -94,10 +94,11 @@
   "main": "public/electron.js",
   "homepage": "./",
   "scripts": {
-    "start": "react-scripts start",
-    "build": "react-scripts build",
+    "start": "node scripts/generate-sw.js && react-scripts start",
+    "build": "node scripts/generate-sw.js && react-scripts build",
     "test": "react-scripts test",
     "eject": "react-scripts eject",
+    "generate-sw": "node scripts/generate-sw.js",
     "electron": "electron .",
     "electron-dev": "concurrently \"yarn start\" \"wait-on http://localhost:3000 && electron .\"",
     "build-electron": "yarn build && electron-builder",

@@ -153,3 +153,6 @@ yarn-debug.log*
 yarn-error.log*
 mobile-version
 admin-mobile-app
+
+# Auto-generated Firebase service worker (contains environment-specific config)
+/public/firebase-messaging-sw.js
