@@ -146,6 +146,7 @@ const OrderList = () => {
     updateCurrentPage,
     deleteOrderData,
     selectedStatus,
+    orderStatusCount,
     setSelectedStatus,
     performOrderBulkUpdate,
   } = useOrderList();
@@ -169,14 +170,18 @@ const OrderList = () => {
   const [isEditDialogOpen, setEditDialogOpen] = useState<boolean>(false);
   const [selectedOrder, setSelectedOrder] = useState<IOrder | null>(null);
   const [modifyDialogOpen, setModifyDialogOpen] = useState<boolean>(false);
-  const [courierSelectorOpen, setCourierSelectorOpen] = useState<boolean>(false);
-  const [courierSelectorMobile, setCourierSelectorMobile] = useState<boolean>(false);
+  const [courierSelectorOpen, setCourierSelectorOpen] =
+    useState<boolean>(false);
+  const [courierSelectorMobile, setCourierSelectorMobile] =
+    useState<boolean>(false);
   const [pendingStatusChange, setPendingStatusChange] = useState<{
     orderId: string;
     status: string;
   } | null>(null);
-  const [bulkCourierSelectorOpen, setBulkCourierSelectorOpen] = useState<boolean>(false);
-  const [bulkCourierSelectorMobile, setBulkCourierSelectorMobile] = useState<boolean>(false);
+  const [bulkCourierSelectorOpen, setBulkCourierSelectorOpen] =
+    useState<boolean>(false);
+  const [bulkCourierSelectorMobile, setBulkCourierSelectorMobile] =
+    useState<boolean>(false);
   const [pendingBulkAction, setPendingBulkAction] = useState<string>("");
 
   const debounceHandler = useDebounce(inputValue, 500);
@@ -329,11 +334,36 @@ const OrderList = () => {
   const renderStatusTabsView = () => {
     const statusConfig = [
       { key: "", label: "All Orders", icon: Grid3X3, count: totalOrders },
-      { key: "processing", label: "Processing", icon: Clock, count: 0 },
-      { key: "shipped", label: "Shipped", icon: TruckIcon, count: 0 },
-      { key: "completed", label: "Completed", icon: CheckCircle, count: 0 },
-      { key: "cancel", label: "Cancelled", icon: XCircle, count: 0 },
-      { key: "return", label: "Return", icon: RefreshCw, count: 0 },
+      {
+        key: "processing",
+        label: "Processing",
+        icon: Clock,
+        count: orderStatusCount?.processing ?? 0,
+      },
+      {
+        key: "shipped",
+        label: "Shipped",
+        icon: TruckIcon,
+        count: orderStatusCount?.shipped ?? 0,
+      },
+      {
+        key: "completed",
+        label: "Completed",
+        icon: CheckCircle,
+        count: orderStatusCount?.completed ?? 0,
+      },
+      {
+        key: "cancel",
+        label: "Cancelled",
+        icon: XCircle,
+        count: orderStatusCount?.cancel ?? 0,
+      },
+      {
+        key: "return",
+        label: "Return",
+        icon: RefreshCw,
+        count: orderStatusCount?.returnOrderCount ?? 0,
+      },
     ];
 
     return (
@@ -349,7 +379,9 @@ const OrderList = () => {
                 className='flex items-center gap-2 text-sm font-medium data-[state=active]:bg-white data-[state=active]:shadow-sm rounded-lg transition-all duration-200'>
                 <Icon className='w-4 h-4' />
                 <span className='hidden lg:inline'>{label}</span>
-                <span className='lg:hidden'>{label.split(" ")[0]}</span>
+                <span className='font-semibold'>
+                  ({count.toLocaleString()})
+                </span>
               </TabsTrigger>
             ))}
           </TabsList>
@@ -403,6 +435,7 @@ const OrderList = () => {
 
         {/* Mobile Search and Filters */}
         <MobileFilterSearch
+          orderStatusCount={orderStatusCount}
           searchValue={inputValue}
           onSearchChange={setInputValue}
           selectedStatus={selectedStatus}
@@ -1061,27 +1094,28 @@ const OrderList = () => {
                     </Button>
 
                     {/* Create Courier Order Button */}
-                    {hasRequiredPermission("order", "edit") && selectedOrder && (
-                      <Button
-                        size='sm'
-                        variant='outline'
-                        disabled={isCreating}
-                        onClick={async () => {
-                          await createCourierOrder(
-                            selectedOrder.orderNumber,
-                            {},
-                            () => {
-                              refresh();
-                            }
-                          );
-                        }}
-                        className='gap-2 border-purple-200 hover:bg-purple-50'>
-                        <PackageCheck className='w-4 h-4 text-purple-600' />
-                        <span className='hidden sm:inline'>
-                          {isCreating ? "Creating..." : "Courier"}
-                        </span>
-                      </Button>
-                    )}
+                    {hasRequiredPermission("order", "edit") &&
+                      selectedOrder && (
+                        <Button
+                          size='sm'
+                          variant='outline'
+                          disabled={isCreating}
+                          onClick={async () => {
+                            await createCourierOrder(
+                              selectedOrder.orderNumber,
+                              {},
+                              () => {
+                                refresh();
+                              }
+                            );
+                          }}
+                          className='gap-2 border-purple-200 hover:bg-purple-50'>
+                          <PackageCheck className='w-4 h-4 text-purple-600' />
+                          <span className='hidden sm:inline'>
+                            {isCreating ? "Creating..." : "Courier"}
+                          </span>
+                        </Button>
+                      )}
 
                     {/* Status Change Actions */}
                     {!selectedOrder?.status.includes("return") && (
@@ -1724,7 +1758,9 @@ const OrderList = () => {
     }
   };
 
-  const handleCourierSelection = async (courierProvider: "steadfast" | "pathao") => {
+  const handleCourierSelection = async (
+    courierProvider: "steadfast" | "pathao"
+  ) => {
     if (pendingStatusChange) {
       await updateOrderStatus(
         pendingStatusChange.orderId,
@@ -1741,7 +1777,9 @@ const OrderList = () => {
     }
   };
 
-  const handleBulkCourierSelection = async (courierProvider: "steadfast" | "pathao") => {
+  const handleBulkCourierSelection = async (
+    courierProvider: "steadfast" | "pathao"
+  ) => {
     if (pendingBulkAction) {
       await performOrderBulkUpdate(pendingBulkAction, courierProvider);
       setPendingBulkAction("");

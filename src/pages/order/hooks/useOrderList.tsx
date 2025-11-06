@@ -8,7 +8,7 @@ import {
   orderBulkAction,
 } from "../../../api/order";
 import useLoginAuth from "../../auth/hooks/useLoginAuth";
-import { IOrder } from "../interface";
+import { IOrder, IOrderStatusCount } from "../interface";
 
 export const useOrderList = () => {
   const { toast } = useToast();
@@ -27,6 +27,8 @@ export const useOrderList = () => {
   });
   const [bulkOrders, setBulkOrders] = useState<number[]>([]);
   const [limit, setLimit] = useState(50);
+  const [orderStatusCount, setOrderStatusCount] =
+    useState<IOrderStatusCount | null>(null);
 
   useEffect(() => {
     if (currentPageNum === 1) return;
@@ -47,7 +49,15 @@ export const useOrderList = () => {
   const refresh = async () => {
     const response = await getOrders(limit, currentPageNum, selectedStatus);
     if (response?.success && !!response?.data) {
-      const { totalOrders, totalPages, currentPage, orders } = response?.data;
+      const {
+        totalOrders,
+        totalPages,
+        currentPage,
+        orders,
+        statusCounts,
+        returnOrderCount,
+      } = response?.data;
+      setOrderStatusCount({ ...statusCounts, returnOrderCount });
       setTotalPages(totalPages);
       if (currentPageNum !== currentPage) setCurrentPage(Number(currentPage));
       setTotalOrders(totalOrders);
@@ -72,6 +82,8 @@ export const useOrderList = () => {
   const searchOrderByQuery = async () => {
     const response = await searchOrders(searchQuery, selectedStatus);
     if (response?.success) {
+      const { statusCounts, returnOrderCount } = response?.data;
+      setOrderStatusCount({ ...statusCounts, returnOrderCount });
       //@ts-ignore
       setOrders(response.data.orders);
       //@ts-ignore
@@ -125,12 +137,19 @@ export const useOrderList = () => {
       });
       return;
     }
-    const response = await orderBulkAction([...bulkOrders], actionType, courierProvider);
+    const response = await orderBulkAction(
+      [...bulkOrders],
+      actionType,
+      courierProvider
+    );
     if (response?.success) {
       // Handle warning and courier failures
       let description = response?.data?.message || response?.data;
 
-      if (response.courierOrdersQueued !== undefined && response.courierOrdersTotal !== undefined) {
+      if (
+        response.courierOrdersQueued !== undefined &&
+        response.courierOrdersTotal !== undefined
+      ) {
         description = `${description}\n\nCourier Orders: ${response.courierOrdersQueued}/${response.courierOrdersTotal} created`;
       }
 
@@ -140,14 +159,16 @@ export const useOrderList = () => {
 
       if (response.courierFailures && response.courierFailures.length > 0) {
         const failuresList = response.courierFailures
-          .map(f => `• Order #${f.orderNumber}: ${f.error}`)
-          .join('\n');
+          .map((f) => `• Order #${f.orderNumber}: ${f.error}`)
+          .join("\n");
         description = `${description}\n\nFailed Orders:\n${failuresList}`;
       }
 
       toast({
         variant: response.warning ? "default" : "default",
-        title: response.warning ? "Bulk Action Completed with Warnings" : "Bulk Action Success",
+        title: response.warning
+          ? "Bulk Action Completed with Warnings"
+          : "Bulk Action Success",
         description: description,
       });
       setCurrentPage(0);
@@ -178,6 +199,7 @@ export const useOrderList = () => {
     orderFetching,
     selectedStatus,
     deleteOrderData,
+    orderStatusCount,
     setSelectedStatus,
     updateCurrentPage,
     performOrderBulkUpdate,

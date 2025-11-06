@@ -1,6 +1,11 @@
-import { initializeApp, FirebaseApp } from 'firebase/app';
-import { getMessaging, getToken, onMessage, Messaging } from 'firebase/messaging';
-import { fetchFirebaseConfig } from '../services/firebaseConfigService';
+import { initializeApp, FirebaseApp } from "firebase/app";
+import {
+  getMessaging,
+  getToken,
+  onMessage,
+  Messaging,
+} from "firebase/messaging";
+import { fetchFirebaseConfig } from "../services/firebaseConfigService";
 
 // Initialize Firebase app and messaging (will be set after config is fetched)
 let app: FirebaseApp | null = null;
@@ -20,18 +25,19 @@ const initializeFirebase = async (): Promise<void> => {
     firebaseConfigCache = config;
 
     // Initialize Firebase
-    app = initializeApp(config);
+    if (config.success) app = await initializeApp(config?.data);
+    else throw new Error("Api called Failed");
 
     // Initialize Messaging
     try {
-      messaging = getMessaging(app);
+      messaging = await getMessaging(app);
     } catch (error) {
-      console.error('Firebase messaging not supported:', error);
+      console.error("Firebase messaging not supported:", error);
     }
 
-    console.log('Firebase initialized successfully');
+    console.log("Firebase initialized successfully");
   } catch (error) {
-    console.error('Failed to initialize Firebase:', error);
+    console.error("Failed to initialize Firebase:", error);
     throw error;
   }
 };
@@ -65,54 +71,56 @@ export const ensureFirebaseInitialized = async (): Promise<void> => {
 /**
  * Request notification permission and get FCM token
  */
-export const requestNotificationPermission = async (): Promise<string | null> => {
+export const requestNotificationPermission = async (): Promise<
+  string | null
+> => {
   try {
     // Ensure Firebase is initialized
     await ensureFirebaseInitialized();
 
     // Check if notifications are supported
-    if (!('Notification' in window)) {
-      console.log('This browser does not support notifications');
+    if (!("Notification" in window)) {
+      console.log("This browser does not support notifications");
       return null;
     }
 
     // Check if messaging is initialized
     if (!messaging) {
-      console.log('Firebase messaging not initialized');
+      console.log("Firebase messaging not initialized");
       return null;
     }
 
     // Get config for VAPID key
-    const config = await getFirebaseConfig();
+    const response = await getFirebaseConfig();
+    const config = response?.data;
     if (!config?.vapidKey) {
-      console.error('VAPID key not found in Firebase config');
+      console.error("VAPID key not found in Firebase config");
       return null;
     }
 
     // Request permission
     const permission = await Notification.requestPermission();
 
-    if (permission === 'granted') {
-      console.log('Notification permission granted');
+    if (permission === "granted") {
+      console.log("Notification permission granted");
 
       // Get FCM token
       const token = await getToken(messaging, {
-        vapidKey: config.vapidKey
+        vapidKey: config.vapidKey,
       });
 
       if (token) {
-        console.log('FCM Token:', token);
         return token;
       } else {
-        console.log('No registration token available');
+        console.log("No registration token available");
         return null;
       }
     } else {
-      console.log('Notification permission denied');
+      console.log("Notification permission denied");
       return null;
     }
   } catch (error) {
-    console.error('Error getting notification permission:', error);
+    console.error("Error getting notification permission:", error);
     return null;
   }
 };
@@ -129,7 +137,7 @@ export const onMessageListener = async () => {
     }
 
     onMessage(messaging, (payload) => {
-      console.log('Message received:', payload);
+      console.log("Message received:", payload);
       resolve(payload);
     });
   });

@@ -187,6 +187,15 @@ export interface IDeliveryTimeline {
   updatedBy: TimelineUpdatedBy | string;
 }
 
+export interface IOrderStatusCount {
+  cancel?: number;
+  completed: number;
+  failed?: number;
+  processing: number;
+  shipped: number;
+  returnOrderCount: number;
+}
+
 export interface IOrder {
   _id?: string;
   id: number;
@@ -205,7 +214,6 @@ export interface IOrder {
   payment: IPayment[];
   shipping: IShipping;
   products: IOrderProduct[];
-
   // Fraud Detection Fields
   customerRiskLevel: CustomerRiskLevel | string;
   customerRiskScore: number;

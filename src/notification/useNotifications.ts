@@ -145,7 +145,6 @@ export const useNotifications = () => {
       const token = await requestNotificationPermission();
       if (token) {
         store.setFcmToken(token);
-        console.log(topics);
         await registerFCMToken(token);
       }
     } catch (error) {

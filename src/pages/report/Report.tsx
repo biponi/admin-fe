@@ -43,6 +43,7 @@ interface DateRange {
 
 const ReportPage = ({ activeUsers }: { activeUsers: number }) => {
   const { user } = useLoginAuth();
+  const [dateMode, setDateMode] = useState<"single" | "range">("range");
   const [dateRange, setDateRange] = useState<DateRange>({
     from: new Date(new Date().setDate(new Date().getDate() - 30)),
     to: new Date(),
@@ -167,41 +168,87 @@ const ReportPage = ({ activeUsers }: { activeUsers: number }) => {
         </div>
 
         {/* Date Range Picker */}
-        <Popover>
-          <PopoverTrigger asChild>
+        <div className='flex gap-2'>
+          <div className='flex border rounded-md'>
             <Button
-              variant='outline'
-              className={cn(
-                "justify-start text-left font-normal w-[280px]",
-                !dateRange && "text-muted-foreground"
-              )}>
-              <CalendarIcon className='mr-2 h-4 w-4' />
-              {dateRange.from && dateRange.to ? (
-                <>
-                  {format(dateRange.from, "LLL dd, y")} -{" "}
-                  {format(dateRange.to, "LLL dd, y")}
-                </>
-              ) : (
-                <span>Pick a date range</span>
-              )}
+              variant={dateMode === "single" ? "default" : "ghost"}
+              size='sm'
+              onClick={() => setDateMode("single")}
+              className='rounded-r-none'>
+              Single Date
             </Button>
-          </PopoverTrigger>
-          <PopoverContent className='w-auto p-0' align='end'>
-            <Calendar
-              mode='range'
-              selected={{
-                from: dateRange.from,
-                to: dateRange.to,
-              }}
-              onSelect={(range: any) => {
-                if (range?.from && range?.to) {
-                  setDateRange({ from: range.from, to: range.to });
-                }
-              }}
-              numberOfMonths={2}
-            />
-          </PopoverContent>
-        </Popover>
+            <Button
+              variant={dateMode === "range" ? "default" : "ghost"}
+              size='sm'
+              onClick={() => setDateMode("range")}
+              className='rounded-l-none'>
+              Date Range
+            </Button>
+          </div>
+
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button
+                variant='outline'
+                className={cn(
+                  "justify-start text-left font-normal w-[280px]",
+                  !dateRange && "text-muted-foreground"
+                )}>
+                <CalendarIcon className='mr-2 h-4 w-4' />
+                {dateRange.from && dateRange.to ? (
+                  dateMode === "single" &&
+                  format(dateRange.from, "yyyy-MM-dd") ===
+                    format(dateRange.to, "yyyy-MM-dd") ? (
+                    <>{format(dateRange.from, "LLL dd, y")}</>
+                  ) : (
+                    <>
+                      {format(dateRange.from, "LLL dd, y")} -{" "}
+                      {format(dateRange.to, "LLL dd, y")}
+                    </>
+                  )
+                ) : (
+                  <span>Pick a date</span>
+                )}
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className='w-auto p-0' align='end'>
+              {dateMode === "single" ? (
+                <Calendar
+                  mode='single'
+                  selected={dateRange.from}
+                  onSelect={(date: Date | undefined) => {
+                    if (date) {
+                      // Set time to 00:00:00 for start of day
+                      const startOfDay = new Date(date);
+                      startOfDay.setHours(0, 0, 0, 0);
+
+                      // Set time to 23:59:59 for end of day
+                      const endOfDay = new Date(date);
+                      endOfDay.setHours(23, 59, 59, 999);
+
+                      setDateRange({ from: startOfDay, to: endOfDay });
+                    }
+                  }}
+                  numberOfMonths={1}
+                />
+              ) : (
+                <Calendar
+                  mode='range'
+                  selected={{
+                    from: dateRange.from,
+                    to: dateRange.to,
+                  }}
+                  onSelect={(range: any) => {
+                    if (range?.from && range?.to) {
+                      setDateRange({ from: range.from, to: range.to });
+                    }
+                  }}
+                  numberOfMonths={2}
+                />
+              )}
+            </PopoverContent>
+          </Popover>
+        </div>
       </div>
 
       {/* Loading State */}

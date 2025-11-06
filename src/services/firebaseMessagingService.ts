@@ -3,9 +3,9 @@
  * Handles Firebase Cloud Messaging registration and setup
  */
 
-import { getMessaging, getToken, onMessage } from 'firebase/messaging';
-import { initializeApp, FirebaseApp } from 'firebase/app';
-import { getFirebaseConfig } from './firebaseConfigService';
+import { getMessaging, getToken, onMessage } from "firebase/messaging";
+import { initializeApp, FirebaseApp } from "firebase/app";
+import { getFirebaseConfig } from "./firebaseConfigService";
 
 let firebaseApp: FirebaseApp | null = null;
 let messaging: any = null;
@@ -24,15 +24,15 @@ export const initializeFirebaseMessaging = async () => {
     }
 
     // Check if service workers are supported
-    if (!('serviceWorker' in navigator)) {
-      console.warn('Service Workers are not supported in this browser');
+    if (!("serviceWorker" in navigator)) {
+      console.warn("Service Workers are not supported in this browser");
       return null;
     }
 
     // Register service worker with Firebase config
     const registration = await navigator.serviceWorker.register(
-      '/firebase-messaging-sw.js',
-      { scope: '/' }
+      "/firebase-messaging-sw.js",
+      { scope: "/" }
     );
 
     // Wait for service worker to be ready
@@ -41,7 +41,7 @@ export const initializeFirebaseMessaging = async () => {
     // Send Firebase config to service worker
     if (registration.active) {
       registration.active.postMessage({
-        type: 'FIREBASE_CONFIG',
+        type: "FIREBASE_CONFIG",
         config: config,
       });
     }
@@ -49,10 +49,10 @@ export const initializeFirebaseMessaging = async () => {
     // Initialize messaging
     messaging = getMessaging(firebaseApp);
 
-    console.log('✅ Firebase Messaging initialized successfully');
+    console.log("✅ Firebase Messaging initialized successfully");
     return messaging;
   } catch (error) {
-    console.error('❌ Error initializing Firebase Messaging:', error);
+    console.error("❌ Error initializing Firebase Messaging:", error);
     return null;
   }
 };
@@ -60,19 +60,21 @@ export const initializeFirebaseMessaging = async () => {
 /**
  * Request notification permission and get FCM token
  */
-export const requestNotificationPermission = async (): Promise<string | null> => {
+export const requestNotificationPermission = async (): Promise<
+  string | null
+> => {
   try {
     // Check if notifications are supported
-    if (!('Notification' in window)) {
-      console.warn('This browser does not support notifications');
+    if (!("Notification" in window)) {
+      console.warn("This browser does not support notifications");
       return null;
     }
 
     // Request permission
     const permission = await Notification.requestPermission();
 
-    if (permission !== 'granted') {
-      console.log('Notification permission denied');
+    if (permission !== "granted") {
+      console.log("Notification permission denied");
       return null;
     }
 
@@ -82,7 +84,7 @@ export const requestNotificationPermission = async (): Promise<string | null> =>
     }
 
     if (!messaging) {
-      console.error('Messaging not initialized');
+      console.error("Messaging not initialized");
       return null;
     }
 
@@ -95,14 +97,13 @@ export const requestNotificationPermission = async (): Promise<string | null> =>
     });
 
     if (token) {
-      console.log('✅ FCM Token received:', token);
       return token;
     } else {
-      console.log('No registration token available');
+      console.log("No registration token available");
       return null;
     }
   } catch (error) {
-    console.error('Error getting notification permission:', error);
+    console.error("Error getting notification permission:", error);
     return null;
   }
 };
@@ -112,12 +113,14 @@ export const requestNotificationPermission = async (): Promise<string | null> =>
  */
 export const onMessageListener = (callback: (payload: any) => void) => {
   if (!messaging) {
-    console.error('Messaging not initialized. Call initializeFirebaseMessaging first.');
+    console.error(
+      "Messaging not initialized. Call initializeFirebaseMessaging first."
+    );
     return;
   }
 
   return onMessage(messaging, (payload) => {
-    console.log('Foreground message received:', payload);
+    console.log("Foreground message received:", payload);
     callback(payload);
   });
 };
@@ -142,7 +145,7 @@ export const getCurrentToken = async (): Promise<string | null> => {
 
     return token || null;
   } catch (error) {
-    console.error('Error getting current token:', error);
+    console.error("Error getting current token:", error);
     return null;
   }
 };

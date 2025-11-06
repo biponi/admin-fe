@@ -24,9 +24,11 @@ import {
   SheetTitle,
   SheetTrigger,
 } from "../../../components/ui/sheet";
+import { IOrderStatusCount } from "../interface";
 
 interface MobileFilterSearchProps {
   searchValue: string;
+  orderStatusCount: IOrderStatusCount | null;
   onSearchChange: (value: string) => void;
   selectedStatus: string;
   onStatusChange: (status: string) => void;
@@ -36,6 +38,7 @@ interface MobileFilterSearchProps {
 
 const MobileFilterSearch: React.FC<MobileFilterSearchProps> = ({
   searchValue,
+  orderStatusCount,
   onSearchChange,
   selectedStatus,
   onStatusChange,
@@ -57,35 +60,35 @@ const MobileFilterSearch: React.FC<MobileFilterSearchProps> = ({
       label: "Processing",
       icon: Clock,
       color: "bg-blue-100 text-blue-700",
-      count: 0,
+      count: orderStatusCount?.processing ?? 0,
     },
     {
       key: "shipped",
       label: "Shipped",
       icon: Truck,
       color: "bg-purple-100 text-purple-700",
-      count: 0,
+      count: orderStatusCount?.shipped ?? 0,
     },
     {
       key: "completed",
       label: "Completed",
       icon: CheckCircle,
       color: "bg-green-100 text-green-700",
-      count: 0,
+      count: orderStatusCount?.completed ?? 0,
     },
     {
       key: "cancel",
       label: "Cancelled",
       icon: XCircle,
       color: "bg-red-100 text-red-700",
-      count: 0,
+      count: orderStatusCount?.cancel ?? 0,
     },
     {
       key: "return",
       label: "Return",
       icon: RefreshCw,
       color: "bg-orange-100 text-orange-700",
-      count: 0,
+      count: orderStatusCount?.returnOrderCount ?? 0,
     },
   ];
 
@@ -168,24 +171,31 @@ const MobileFilterSearch: React.FC<MobileFilterSearchProps> = ({
                   Order Status
                 </h3>
                 <div className='grid grid-cols-2 gap-3'>
-                  {statusConfig.map(({ key, label, icon: Icon, color }) => (
-                    <Button
-                      key={key}
-                      variant={selectedStatus === key ? "default" : "outline"}
-                      onClick={() => {
-                        onStatusChange(key);
-                        setIsFilterOpen(false);
-                      }}
-                      className={cn(
-                        "h-14 flex flex-col items-center gap-1 transition-all duration-200 rounded-xl",
-                        selectedStatus === key
-                          ? "bg-primary text-white shadow-lg scale-105"
-                          : "bg-white hover:bg-gray-50 border-gray-200"
-                      )}>
-                      <Icon className='h-4 w-4' />
-                      <span className='text-xs font-medium'>{label}</span>
-                    </Button>
-                  ))}
+                  {statusConfig.map(
+                    ({ key, label, icon: Icon, color, count }) => (
+                      <Button
+                        key={key}
+                        variant={selectedStatus === key ? "default" : "outline"}
+                        onClick={() => {
+                          onStatusChange(key);
+                          setIsFilterOpen(false);
+                        }}
+                        className={cn(
+                          "h-14 flex flex-col items-center gap-1 transition-all duration-200 rounded-xl",
+                          selectedStatus === key
+                            ? "bg-primary text-white shadow-lg scale-105"
+                            : "bg-white hover:bg-gray-50 border-gray-200"
+                        )}>
+                        <Icon className='h-4 w-4' />
+                        <span className='text-sm font-medium'>
+                          {label}{" "}
+                          <span className=' text-xs '>
+                            ({count.toLocaleString()})
+                          </span>
+                        </span>
+                      </Button>
+                    )
+                  )}
                 </div>
               </div>
 

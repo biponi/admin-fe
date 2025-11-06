@@ -3,9 +3,10 @@
  * Fetches Firebase configuration from backend API
  */
 
-import axios from 'axios';
+import axios from "axios";
 
-const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || 'http://localhost:7001';
+const API_BASE_URL =
+  process.env.REACT_APP_API_BASE_URL || "http://localhost:7001";
 
 export interface FirebaseConfig {
   apiKey: string;
@@ -22,21 +23,22 @@ export interface FirebaseConfig {
  * Fetch Firebase configuration from backend
  * @returns Firebase configuration object
  */
-export const fetchFirebaseConfig = async (): Promise<FirebaseConfig> => {
+export const fetchFirebaseConfig = async (): Promise<{
+  success: boolean;
+  data: FirebaseConfig;
+}> => {
   try {
-    const response = await axios.get<FirebaseConfig>(
-      `${API_BASE_URL}/api/v1/config/firebase`
-    );
+    const response = await axios.get(`${API_BASE_URL}/api/v1/config/firebase`);
 
     if (!response.data) {
-      throw new Error('Firebase config not found in response');
+      throw new Error("Firebase config not found in response");
     }
 
     return response.data;
   } catch (error) {
-    console.error('Failed to fetch Firebase config from backend:', error);
+    console.error("Failed to fetch Firebase config from backend:", error);
     throw new Error(
-      'Unable to load Firebase configuration. Please ensure your backend API is running and accessible.'
+      "Unable to load Firebase configuration. Please ensure your backend API is running and accessible."
     );
   }
 };
@@ -55,7 +57,9 @@ export const getFirebaseConfig = async (): Promise<FirebaseConfig> => {
     return cachedConfig;
   }
 
-  cachedConfig = await fetchFirebaseConfig();
+  const response = await fetchFirebaseConfig();
+
+  cachedConfig = response?.data;
   return cachedConfig;
 };
 
