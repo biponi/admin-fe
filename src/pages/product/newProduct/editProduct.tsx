@@ -10,6 +10,7 @@ import {
   Upload,
   Save,
   X as XIcon,
+  Trash,
 } from "lucide-react";
 import {
   Card,
@@ -89,6 +90,32 @@ const EditProduct: React.FC<Props> = ({
       ...formData,
       [name]: name === "unitPrice" ? parseFloat(value) : value,
     });
+  };
+
+  // Handle variation field updates (name, color, size - NOT quantity)
+  const updateVariationData = (
+    index: number,
+    e: React.ChangeEvent<HTMLInputElement>
+  ) => {
+    if (!!formData && index < formData?.variation.length) {
+      const { name, value } = e.target;
+      formData.variation[index] = {
+        ...formData?.variation[index],
+        [name]: value,
+      };
+      updateFormData({ ...formData });
+    }
+  };
+
+  // Handle variation deletion
+  const deleteVariation = (index: number) => {
+    if (!!formData && formData.variation) {
+      const updatedVariations = formData.variation.filter((_, i) => i !== index);
+      updateFormData({
+        ...formData,
+        variation: updatedVariations,
+      });
+    }
   };
 
   const discardDialog = () => {
@@ -731,122 +758,102 @@ const EditProduct: React.FC<Props> = ({
                     };
 
                     return (
-                      <Card
+                      <div
                         key={variation.id || index}
-                        className={`group hover:shadow-2xl transition-all duration-300 border-2 ${stockBgColors[stockLevel]} overflow-hidden relative`}>
+                        className={`group relative bg-gradient-to-br from-white to-slate-50/50 dark:from-slate-800 dark:to-slate-800/50 rounded-xl border-2 ${stockBgColors[stockLevel]} hover:shadow-2xl transition-all duration-300`}>
                         {/* Decorative gradient overlay */}
                         <div
                           className={`absolute top-0 left-0 right-0 h-1 bg-gradient-to-r ${stockColors[stockLevel]}`}
                         />
 
-                        <CardContent className='p-4 sm:p-5 lg:p-6 space-y-3 sm:space-y-4'>
-                          {/* Variant Header */}
-                          <div className='flex items-start justify-between gap-2'>
-                            <div className='flex-1 min-w-0'>
-                              <h3 className='font-semibold text-base sm:text-lg text-slate-900 dark:text-white truncate'>
-                                {variation.name ||
-                                  `${variation.color || "N/A"} - ${variation.size || "N/A"}`}
-                              </h3>
-                              {variation.title && variation.title !== variation.name && (
-                                <p className='text-xs sm:text-sm text-slate-600 dark:text-slate-400 mt-0.5 truncate'>
-                                  {variation.title}
-                                </p>
-                              )}
+                        {/* Delete Button */}
+                        <button
+                          onClick={() => deleteVariation(index)}
+                          className='absolute top-2 right-2 p-1.5 bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400 rounded-lg opacity-0 group-hover:opacity-100 hover:bg-red-200 dark:hover:bg-red-900/50 transition-all duration-200 z-10'>
+                          <Trash className='h-3.5 w-3.5' />
+                        </button>
+
+                        <div className='p-4 space-y-3'>
+                          {/* SKU Header (Read-only) */}
+                          <div className='flex items-center gap-2 pb-2 border-b border-slate-200 dark:border-slate-700'>
+                            <div className='p-1.5 bg-indigo-100 dark:bg-indigo-900/30 rounded-lg'>
+                              <Hash className='h-3.5 w-3.5 text-indigo-600 dark:text-indigo-400' />
                             </div>
-                            <div
-                              className={`p-2 sm:p-2.5 rounded-lg bg-gradient-to-br ${stockColors[stockLevel]} shadow-lg group-hover:scale-110 transition-transform duration-300`}>
-                              <Box className='w-4 h-4 sm:w-5 sm:h-5 text-white' />
-                            </div>
+                            <span className='font-mono text-xs font-semibold text-slate-700 dark:text-slate-300 truncate'>
+                              {variation?.sku}
+                            </span>
                           </div>
 
-                          {/* Variant Details Grid */}
-                          <div className='grid grid-cols-2 gap-2 sm:gap-3'>
-                            {/* Color */}
-                            {variation.color && (
-                              <div className='bg-white dark:bg-slate-800 rounded-lg sm:rounded-xl p-2.5 sm:p-3 border border-slate-200 dark:border-slate-700'>
-                                <div className='flex items-center gap-1.5 sm:gap-2 mb-1 sm:mb-1.5'>
-                                  <Palette className='w-3 h-3 sm:w-3.5 sm:h-3.5 text-purple-500' />
-                                  <p className='text-[10px] sm:text-xs font-medium text-slate-600 dark:text-slate-400 uppercase tracking-wide'>
-                                    Color
-                                  </p>
-                                </div>
-                                <Badge
-                                  variant='secondary'
-                                  className='w-full justify-center text-xs sm:text-sm font-semibold bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300 border-0 py-1'>
-                                  {variation.color}
-                                </Badge>
-                              </div>
-                            )}
-
-                            {/* Size */}
-                            {variation.size && (
-                              <div className='bg-white dark:bg-slate-800 rounded-lg sm:rounded-xl p-2.5 sm:p-3 border border-slate-200 dark:border-slate-700'>
-                                <div className='flex items-center gap-1.5 sm:gap-2 mb-1 sm:mb-1.5'>
-                                  <Ruler className='w-3 h-3 sm:w-3.5 sm:h-3.5 text-orange-500' />
-                                  <p className='text-[10px] sm:text-xs font-medium text-slate-600 dark:text-slate-400 uppercase tracking-wide'>
-                                    Size
-                                  </p>
-                                </div>
-                                <Badge
-                                  variant='secondary'
-                                  className='w-full justify-center text-xs sm:text-sm font-semibold bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-300 border-0 py-1'>
-                                  {variation.size}
-                                </Badge>
-                              </div>
-                            )}
-                          </div>
-
-                          {/* SKU */}
-                          {variation.sku && (
-                            <div className='bg-gradient-to-r from-slate-50 to-slate-100 dark:from-slate-800 dark:to-slate-700 rounded-lg sm:rounded-xl p-2.5 sm:p-3 border border-slate-200 dark:border-slate-600'>
-                              <div className='flex items-center gap-1.5 sm:gap-2 mb-1 sm:mb-1.5'>
-                                <Hash className='w-3 h-3 sm:w-3.5 sm:h-3.5 text-slate-500' />
-                                <p className='text-[10px] sm:text-xs font-medium text-slate-600 dark:text-slate-400 uppercase tracking-wide'>
-                                  SKU
-                                </p>
-                              </div>
-                              <p className='font-mono text-xs sm:text-sm font-semibold text-slate-700 dark:text-slate-200 truncate'>
-                                {variation.sku}
-                              </p>
+                          {/* Inputs Grid */}
+                          <div className='space-y-3'>
+                            {/* Variant Name (Editable) */}
+                            <div className='space-y-1.5'>
+                              <Label className='text-[10px] font-semibold text-slate-600 dark:text-slate-400 flex items-center gap-1'>
+                                <Tag className='h-3 w-3 text-blue-500' />
+                                Variant Name
+                              </Label>
+                              <Input
+                                name='name'
+                                onChange={(e) => updateVariationData(index, e)}
+                                type='text'
+                                value={variation.name || ''}
+                                className='h-8 text-xs border-slate-300 dark:border-slate-600 focus:border-blue-400 dark:focus:border-blue-500'
+                                placeholder='e.g., Red - Large'
+                              />
                             </div>
-                          )}
 
-                          {/* Stock Quantity - Prominent Display */}
-                          <div
-                            className={`bg-gradient-to-br ${stockColors[stockLevel]} rounded-lg sm:rounded-xl p-3 sm:p-4 shadow-lg border-2 border-white dark:border-slate-800`}>
-                            <div className='flex items-center justify-between'>
-                              <div>
-                                <div className='flex items-center gap-1.5 sm:gap-2 mb-1'>
-                                  <Package className='w-3.5 h-3.5 sm:w-4 sm:h-4 text-white' />
-                                  <p className='text-[10px] sm:text-xs font-medium text-white/90 uppercase tracking-wide'>
-                                    In Stock
-                                  </p>
-                                </div>
-                                <p className='text-2xl sm:text-3xl lg:text-4xl font-bold text-white'>
-                                  {variation.quantity}
-                                </p>
+                            {/* Stock (Read-only - Disabled) */}
+                            <div className='space-y-1.5'>
+                              <Label className='text-[10px] font-semibold text-slate-600 dark:text-slate-400 flex items-center gap-1'>
+                                <Package className='h-3 w-3 text-emerald-500' />
+                                Stock (Read-only)
+                              </Label>
+                              <div className={`h-8 flex items-center px-3 rounded-md text-xs font-semibold border-2 ${
+                                stockLevel === "out"
+                                  ? "bg-red-50 dark:bg-red-950/20 border-red-200 dark:border-red-900 text-red-700 dark:text-red-300"
+                                  : stockLevel === "low"
+                                  ? "bg-amber-50 dark:bg-amber-950/20 border-amber-200 dark:border-amber-900 text-amber-700 dark:text-amber-300"
+                                  : "bg-emerald-50 dark:bg-emerald-950/20 border-emerald-200 dark:border-emerald-900 text-emerald-700 dark:text-emerald-300"
+                              }`}>
+                                {variation.quantity} units
                               </div>
-                              <div className='text-right'>
-                                <Badge
-                                  variant='secondary'
-                                  className={`px-2 sm:px-3 py-0.5 sm:py-1 text-[10px] sm:text-xs font-bold ${
-                                    stockLevel === "out"
-                                      ? "bg-white/90 text-red-700"
-                                      : stockLevel === "low"
-                                      ? "bg-white/90 text-amber-700"
-                                      : "bg-white/90 text-emerald-700"
-                                  }`}>
-                                  {stockLevel === "out"
-                                    ? "Out of Stock"
-                                    : stockLevel === "low"
-                                    ? "Low Stock"
-                                    : "In Stock"}
-                                </Badge>
+                            </div>
+
+                            {/* Color & Size (Editable) */}
+                            <div className='grid grid-cols-2 gap-2'>
+                              <div className='space-y-1.5'>
+                                <Label className='text-[10px] font-semibold text-slate-600 dark:text-slate-400 flex items-center gap-1'>
+                                  <Palette className='h-3 w-3 text-purple-500' />
+                                  Color
+                                </Label>
+                                <Input
+                                  name='color'
+                                  onChange={(e) => updateVariationData(index, e)}
+                                  type='text'
+                                  value={variation.color || ''}
+                                  className='h-8 text-xs border-slate-300 dark:border-slate-600 focus:border-purple-400 dark:focus:border-purple-500'
+                                  placeholder='Enter color'
+                                />
+                              </div>
+
+                              <div className='space-y-1.5'>
+                                <Label className='text-[10px] font-semibold text-slate-600 dark:text-slate-400 flex items-center gap-1'>
+                                  <Ruler className='h-3 w-3 text-orange-500' />
+                                  Size
+                                </Label>
+                                <Input
+                                  name='size'
+                                  onChange={(e) => updateVariationData(index, e)}
+                                  type='text'
+                                  value={variation.size || ''}
+                                  className='h-8 text-xs border-slate-300 dark:border-slate-600 focus:border-orange-400 dark:focus:border-orange-500'
+                                  placeholder='Enter size'
+                                />
                               </div>
                             </div>
                           </div>
-                        </CardContent>
-                      </Card>
+                        </div>
+                      </div>
                     );
                   })}
                 </div>

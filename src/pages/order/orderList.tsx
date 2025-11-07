@@ -155,12 +155,7 @@ const OrderList = () => {
 
   const { editOrderData, updateOrderStatus } = useOrder();
 
-  const {
-    createCourierOrder,
-    bulkCreateCourierOrders,
-    isCreating,
-    isBulkCreating,
-  } = useCourierActions();
+  const { bulkCreateCourierOrders, isBulkCreating } = useCourierActions();
 
   const [isCopied, setIsCopied] = useState(false);
   const [inputValue, setInputValue] = useState<string>("");
@@ -1016,8 +1011,6 @@ const OrderList = () => {
       }
     };
 
-    console.log("Selected Order: wowow");
-
     return (
       <Sheet
         open={showDetails}
@@ -1095,90 +1088,68 @@ const OrderList = () => {
 
                     {/* Create Courier Order Button */}
                     {hasRequiredPermission("order", "edit") &&
-                      selectedOrder && (
-                        <Button
-                          size='sm'
-                          variant='outline'
-                          disabled={isCreating}
-                          onClick={async () => {
-                            await createCourierOrder(
-                              selectedOrder.orderNumber,
-                              {},
-                              () => {
-                                refresh();
-                              }
-                            );
-                          }}
-                          className='gap-2 border-purple-200 hover:bg-purple-50'>
-                          <PackageCheck className='w-4 h-4 text-purple-600' />
-                          <span className='hidden sm:inline'>
-                            {isCreating ? "Creating..." : "Courier"}
-                          </span>
-                        </Button>
+                      selectedOrder &&
+                      !selectedOrder?.status.includes("return") && (
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button size='sm' variant='outline'>
+                              <MoreVertical className='w-4 h-4' />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align='end' className='w-48'>
+                            <DropdownMenuLabel>Change Status</DropdownMenuLabel>
+                            <DropdownMenuSeparator />
+                            {selectedOrder?.status === "processing" && (
+                              <DropdownMenuItem
+                                onClick={() => {
+                                  setPendingStatusChange({
+                                    orderId: `${selectedOrder?.id}`,
+                                    status: "shipped",
+                                  });
+                                  setCourierSelectorOpen(true);
+                                }}
+                                className='gap-2'>
+                                <Truck className='w-4 h-4 text-purple-600' />
+                                Mark as Shipped
+                              </DropdownMenuItem>
+                            )}
+                            {selectedOrder?.status === "shipped" && (
+                              <DropdownMenuItem
+                                onClick={() => {
+                                  updateOrderStatus(
+                                    `${selectedOrder?.id}`,
+                                    "completed",
+                                    () => {
+                                      refresh();
+                                      setShowDetails(false);
+                                    }
+                                  );
+                                }}
+                                className='gap-2'>
+                                <CheckCircle className='w-4 h-4 text-green-600' />
+                                Mark as Completed
+                              </DropdownMenuItem>
+                            )}
+                            {selectedOrder?.status !== "processing" && (
+                              <DropdownMenuItem
+                                onClick={() => {
+                                  updateOrderStatus(
+                                    `${selectedOrder?.id}`,
+                                    "processing",
+                                    () => {
+                                      refresh();
+                                      setShowDetails(false);
+                                    }
+                                  );
+                                }}
+                                className='gap-2'>
+                                <Clock className='w-4 h-4 text-blue-600' />
+                                Reset to Processing
+                              </DropdownMenuItem>
+                            )}
+                          </DropdownMenuContent>
+                        </DropdownMenu>
                       )}
-
-                    {/* Status Change Actions */}
-                    {!selectedOrder?.status.includes("return") && (
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button size='sm' variant='outline'>
-                            <MoreVertical className='w-4 h-4' />
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align='end' className='w-48'>
-                          <DropdownMenuLabel>Change Status</DropdownMenuLabel>
-                          <DropdownMenuSeparator />
-                          {selectedOrder?.status === "processing" && (
-                            <DropdownMenuItem
-                              onClick={() => {
-                                setPendingStatusChange({
-                                  orderId: `${selectedOrder?.id}`,
-                                  status: "shipped",
-                                });
-                                setCourierSelectorOpen(true);
-                              }}
-                              className='gap-2'>
-                              <Truck className='w-4 h-4 text-purple-600' />
-                              Mark as Shipped
-                            </DropdownMenuItem>
-                          )}
-                          {selectedOrder?.status === "shipped" && (
-                            <DropdownMenuItem
-                              onClick={() => {
-                                updateOrderStatus(
-                                  `${selectedOrder?.id}`,
-                                  "completed",
-                                  () => {
-                                    refresh();
-                                    setShowDetails(false);
-                                  }
-                                );
-                              }}
-                              className='gap-2'>
-                              <CheckCircle className='w-4 h-4 text-green-600' />
-                              Mark as Completed
-                            </DropdownMenuItem>
-                          )}
-                          {selectedOrder?.status !== "processing" && (
-                            <DropdownMenuItem
-                              onClick={() => {
-                                updateOrderStatus(
-                                  `${selectedOrder?.id}`,
-                                  "processing",
-                                  () => {
-                                    refresh();
-                                    setShowDetails(false);
-                                  }
-                                );
-                              }}
-                              className='gap-2'>
-                              <Clock className='w-4 h-4 text-blue-600' />
-                              Reset to Processing
-                            </DropdownMenuItem>
-                          )}
-                        </DropdownMenuContent>
-                      </DropdownMenu>
-                    )}
                   </div>
                 </div>
               </div>

@@ -156,7 +156,9 @@ const SingleItem: React.FC<Props> = ({
             ) : (
               <CircleCheck className='w-4 h-4 mr-2 ' />
             )}
-            {status.toUpperCase()}
+            {status === "shipped" && !!order?.courier?.provider
+              ? `${status.toUpperCase()} (${order?.courier?.provider})`
+              : status.toUpperCase()}
           </Badge>
         )}
       </TableCell>
