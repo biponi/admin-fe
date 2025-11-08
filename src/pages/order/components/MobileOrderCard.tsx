@@ -195,7 +195,8 @@ const MobileOrderCard: React.FC<Props> = ({
               statusConfig.color
             )}>
             <StatusIcon className='h-3 w-3' />
-            {statusConfig.label} {!!provider ? `(${provider})` : ""}
+            {statusConfig.label}{" "}
+            {!!provider && status === "shipped" ? `(${provider})` : ""}
           </Badge>
 
           {hasSomePermissionsForPage("order", ["edit", "delete"]) && (
