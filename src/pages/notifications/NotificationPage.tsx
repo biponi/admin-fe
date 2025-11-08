@@ -1,5 +1,13 @@
 import React, { useState } from "react";
-import { Plus, Bell, BellOff, Trash2, CheckCheck, Filter, Check } from "lucide-react";
+import {
+  Plus,
+  Bell,
+  BellOff,
+  Trash2,
+  CheckCheck,
+  Filter,
+  Check,
+} from "lucide-react";
 import { useNotifications } from "../../notification/useNotifications";
 import { formatDistanceToNow } from "date-fns";
 import { Button } from "../../components/ui/button";
@@ -11,9 +19,12 @@ import {
   CardHeader,
   CardTitle,
 } from "../../components/ui/card";
+
 import { ScrollArea } from "../../components/ui/scroll-area";
 import CreateNotificationModal from "./CreateNotificationModal";
 import { cn } from "../../lib/utils";
+import { hasPagePermission } from "../../utils/helperFunction";
+import { useSelector } from "react-redux";
 
 const NotificationPage: React.FC = () => {
   const {
@@ -27,6 +38,7 @@ const NotificationPage: React.FC = () => {
     loadMore,
     fetchNotifications,
   } = useNotifications();
+  const userState = useSelector((state: any) => state?.user);
 
   const [activeTab, setActiveTab] = useState<"all" | "unread" | "read">("all");
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
@@ -51,34 +63,104 @@ const NotificationPage: React.FC = () => {
   const uniqueTopics = Array.from(new Set(notifications.map((n) => n.topic)));
 
   // Get notification icon based on topic
-  const getTopicIcon = (topic: string): { emoji: string; bg: string; ring: string } => {
+  const getTopicIcon = (
+    topic: string
+  ): { emoji: string; bg: string; ring: string } => {
     const icons: Record<string, { emoji: string; bg: string; ring: string }> = {
-      order_created: { emoji: "🛒", bg: "bg-gradient-to-br from-blue-500 to-blue-600", ring: "ring-blue-200" },
-      order_status_changed: { emoji: "📦", bg: "bg-gradient-to-br from-indigo-500 to-indigo-600", ring: "ring-indigo-200" },
-      courier_shipped: { emoji: "🚚", bg: "bg-gradient-to-br from-purple-500 to-purple-600", ring: "ring-purple-200" },
-      courier_delivered: { emoji: "✅", bg: "bg-gradient-to-br from-green-500 to-green-600", ring: "ring-green-200" },
-      payment_received: { emoji: "💰", bg: "bg-gradient-to-br from-emerald-500 to-emerald-600", ring: "ring-emerald-200" },
-      payment_failed: { emoji: "❌", bg: "bg-gradient-to-br from-red-500 to-red-600", ring: "ring-red-200" },
-      low_stock: { emoji: "⚠️", bg: "bg-gradient-to-br from-yellow-500 to-yellow-600", ring: "ring-yellow-200" },
-      user_registered: { emoji: "👤", bg: "bg-gradient-to-br from-cyan-500 to-cyan-600", ring: "ring-cyan-200" },
-      system_alert: { emoji: "🔔", bg: "bg-gradient-to-br from-orange-500 to-orange-600", ring: "ring-orange-200" },
-      custom: { emoji: "📨", bg: "bg-gradient-to-br from-gray-500 to-gray-600", ring: "ring-gray-200" },
-      new_ticket: { emoji: "🎫", bg: "bg-gradient-to-br from-pink-500 to-pink-600", ring: "ring-pink-200" },
-      new_message: { emoji: "💬", bg: "bg-gradient-to-br from-violet-500 to-violet-600", ring: "ring-violet-200" },
-      ticket_assigned: { emoji: "👥", bg: "bg-gradient-to-br from-teal-500 to-teal-600", ring: "ring-teal-200" },
-      ticket_transferred: { emoji: "↔️", bg: "bg-gradient-to-br from-sky-500 to-sky-600", ring: "ring-sky-200" },
-      agent_requested: { emoji: "🆘", bg: "bg-gradient-to-br from-rose-500 to-rose-600", ring: "ring-rose-200" },
+      order_created: {
+        emoji: "🛒",
+        bg: "bg-gradient-to-br from-blue-500 to-blue-600",
+        ring: "ring-blue-200",
+      },
+      order_status_changed: {
+        emoji: "📦",
+        bg: "bg-gradient-to-br from-indigo-500 to-indigo-600",
+        ring: "ring-indigo-200",
+      },
+      courier_shipped: {
+        emoji: "🚚",
+        bg: "bg-gradient-to-br from-purple-500 to-purple-600",
+        ring: "ring-purple-200",
+      },
+      courier_delivered: {
+        emoji: "✅",
+        bg: "bg-gradient-to-br from-green-500 to-green-600",
+        ring: "ring-green-200",
+      },
+      payment_received: {
+        emoji: "💰",
+        bg: "bg-gradient-to-br from-emerald-500 to-emerald-600",
+        ring: "ring-emerald-200",
+      },
+      payment_failed: {
+        emoji: "❌",
+        bg: "bg-gradient-to-br from-red-500 to-red-600",
+        ring: "ring-red-200",
+      },
+      low_stock: {
+        emoji: "⚠️",
+        bg: "bg-gradient-to-br from-yellow-500 to-yellow-600",
+        ring: "ring-yellow-200",
+      },
+      user_registered: {
+        emoji: "👤",
+        bg: "bg-gradient-to-br from-cyan-500 to-cyan-600",
+        ring: "ring-cyan-200",
+      },
+      system_alert: {
+        emoji: "🔔",
+        bg: "bg-gradient-to-br from-orange-500 to-orange-600",
+        ring: "ring-orange-200",
+      },
+      custom: {
+        emoji: "📨",
+        bg: "bg-gradient-to-br from-gray-500 to-gray-600",
+        ring: "ring-gray-200",
+      },
+      new_ticket: {
+        emoji: "🎫",
+        bg: "bg-gradient-to-br from-pink-500 to-pink-600",
+        ring: "ring-pink-200",
+      },
+      new_message: {
+        emoji: "💬",
+        bg: "bg-gradient-to-br from-violet-500 to-violet-600",
+        ring: "ring-violet-200",
+      },
+      ticket_assigned: {
+        emoji: "👥",
+        bg: "bg-gradient-to-br from-teal-500 to-teal-600",
+        ring: "ring-teal-200",
+      },
+      ticket_transferred: {
+        emoji: "↔️",
+        bg: "bg-gradient-to-br from-sky-500 to-sky-600",
+        ring: "ring-sky-200",
+      },
+      agent_requested: {
+        emoji: "🆘",
+        bg: "bg-gradient-to-br from-rose-500 to-rose-600",
+        ring: "ring-rose-200",
+      },
     };
-    return icons[topic] || { emoji: "📨", bg: "bg-gradient-to-br from-gray-500 to-gray-600", ring: "ring-gray-200" };
+    return (
+      icons[topic] || {
+        emoji: "📨",
+        bg: "bg-gradient-to-br from-gray-500 to-gray-600",
+        ring: "ring-gray-200",
+      }
+    );
   };
 
   // Get priority badge color
   const getPriorityColor = (priority: string): string => {
     const colors: Record<string, string> = {
       low: "bg-gradient-to-r from-gray-100 to-gray-200 text-gray-700 border-gray-300",
-      normal: "bg-gradient-to-r from-blue-100 to-blue-200 text-blue-700 border-blue-300",
+      normal:
+        "bg-gradient-to-r from-blue-100 to-blue-200 text-blue-700 border-blue-300",
       high: "bg-gradient-to-r from-orange-100 to-orange-200 text-orange-700 border-orange-300",
-      urgent: "bg-gradient-to-r from-red-100 to-red-200 text-red-700 border-red-300 animate-pulse",
+      urgent:
+        "bg-gradient-to-r from-red-100 to-red-200 text-red-700 border-red-300 animate-pulse",
     };
     return colors[priority] || colors.normal;
   };
@@ -129,12 +211,18 @@ const NotificationPage: React.FC = () => {
                 Mark All Read
               </Button>
             )}
-            <Button
-              onClick={() => setIsCreateModalOpen(true)}
-              className='flex items-center gap-2 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 shadow-lg hover:shadow-xl hover:scale-105 transition-all duration-300'>
-              <Plus className='h-4 w-4' />
-              Create Notification
-            </Button>
+            {hasPagePermission(
+              "notifications",
+              "create",
+              userState?.permissions
+            ) && (
+              <Button
+                onClick={() => setIsCreateModalOpen(true)}
+                className='flex items-center gap-2 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 shadow-lg hover:shadow-xl hover:scale-105 transition-all duration-300'>
+                <Plus className='h-4 w-4' />
+                Create Notification
+              </Button>
+            )}
           </div>
         </div>
       </div>
@@ -211,15 +299,21 @@ const NotificationPage: React.FC = () => {
               onValueChange={(v) => setActiveTab(v as any)}
               className='w-full sm:w-auto'>
               <TabsList className='bg-white shadow-md border'>
-                <TabsTrigger value='all' className='flex items-center gap-2 data-[state=active]:bg-gradient-to-r data-[state=active]:from-blue-600 data-[state=active]:to-purple-600 data-[state=active]:text-white'>
+                <TabsTrigger
+                  value='all'
+                  className='flex items-center gap-2 data-[state=active]:bg-gradient-to-r data-[state=active]:from-blue-600 data-[state=active]:to-purple-600 data-[state=active]:text-white'>
                   <Bell className='h-4 w-4' />
                   All ({notifications.length})
                 </TabsTrigger>
-                <TabsTrigger value='unread' className='flex items-center gap-2 data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-600 data-[state=active]:to-pink-600 data-[state=active]:text-white'>
+                <TabsTrigger
+                  value='unread'
+                  className='flex items-center gap-2 data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-600 data-[state=active]:to-pink-600 data-[state=active]:text-white'>
                   <Bell className='h-4 w-4' />
                   Unread ({unreadCount})
                 </TabsTrigger>
-                <TabsTrigger value='read' className='flex items-center gap-2 data-[state=active]:bg-gradient-to-r data-[state=active]:from-emerald-600 data-[state=active]:to-teal-600 data-[state=active]:text-white'>
+                <TabsTrigger
+                  value='read'
+                  className='flex items-center gap-2 data-[state=active]:bg-gradient-to-r data-[state=active]:from-emerald-600 data-[state=active]:to-teal-600 data-[state=active]:text-white'>
                   <BellOff className='h-4 w-4' />
                   Read ({notifications.length - unreadCount})
                 </TabsTrigger>
@@ -254,7 +348,9 @@ const NotificationPage: React.FC = () => {
                   <div className='animate-spin rounded-full h-16 w-16 border-4 border-gray-200 border-t-blue-600'></div>
                   <div className='absolute inset-0 rounded-full bg-gradient-to-br from-blue-400 to-purple-400 blur-lg opacity-30 animate-pulse'></div>
                 </div>
-                <p className='mt-4 text-gray-600 font-medium'>Loading notifications...</p>
+                <p className='mt-4 text-gray-600 font-medium'>
+                  Loading notifications...
+                </p>
               </div>
             ) : displayNotifications.length === 0 ? (
               <div className='text-center py-16'>
@@ -302,10 +398,11 @@ const NotificationPage: React.FC = () => {
                       <div className='flex items-start gap-5'>
                         {/* Icon with gradient background */}
                         <div className='flex-shrink-0 relative'>
-                          <div className={cn(
-                            "w-14 h-14 rounded-xl shadow-lg flex items-center justify-center text-2xl transition-all duration-300 group-hover:scale-110 group-hover:shadow-xl",
-                            iconData.bg
-                          )}>
+                          <div
+                            className={cn(
+                              "w-14 h-14 rounded-xl shadow-lg flex items-center justify-center text-2xl transition-all duration-300 group-hover:scale-110 group-hover:shadow-xl",
+                              iconData.bg
+                            )}>
                             {iconData.emoji}
                           </div>
                           {isUnread && (
@@ -318,14 +415,17 @@ const NotificationPage: React.FC = () => {
                           {/* Header */}
                           <div className='flex items-start justify-between gap-3 mb-2'>
                             <div className='flex-1'>
-                              <h3 className={cn(
-                                "text-base font-bold mb-2 transition-colors",
-                                isUnread ? "text-gray-900" : "text-gray-700"
-                              )}>
+                              <h3
+                                className={cn(
+                                  "text-base font-bold mb-2 transition-colors",
+                                  isUnread ? "text-gray-900" : "text-gray-700"
+                                )}>
                                 {notification.subject}
                               </h3>
                               <div className='flex flex-wrap items-center gap-2'>
-                                <Badge variant='outline' className='text-xs font-semibold bg-white/80 backdrop-blur-sm shadow-sm'>
+                                <Badge
+                                  variant='outline'
+                                  className='text-xs font-semibold bg-white/80 backdrop-blur-sm shadow-sm'>
                                   {notification.topic.replace(/_/g, " ")}
                                 </Badge>
                                 {notification.priority &&
@@ -370,7 +470,9 @@ const NotificationPage: React.FC = () => {
                                 size='sm'
                                 onClick={(e) => {
                                   e.stopPropagation();
-                                  if (window.confirm("Delete this notification?")) {
+                                  if (
+                                    window.confirm("Delete this notification?")
+                                  ) {
                                     deleteNotification(notification._id);
                                   }
                                 }}
@@ -392,7 +494,8 @@ const NotificationPage: React.FC = () => {
                               <span
                                 onClick={(e) => {
                                   e.stopPropagation();
-                                  window.location.href = notification.actionUrl!;
+                                  window.location.href =
+                                    notification.actionUrl!;
                                 }}
                                 className='inline-flex items-center gap-1.5 text-sm text-blue-600 hover:text-blue-700 font-semibold group-hover:gap-2 transition-all duration-200 cursor-pointer'>
                                 {notification.actionText || "View Details"}
@@ -413,7 +516,9 @@ const NotificationPage: React.FC = () => {
                       <div className='animate-spin rounded-full h-10 w-10 border-4 border-gray-200 border-t-blue-600'></div>
                       <div className='absolute inset-0 rounded-full bg-gradient-to-br from-blue-400 to-purple-400 blur-lg opacity-30 animate-pulse'></div>
                     </div>
-                    <p className='mt-3 text-sm text-gray-600 font-medium'>Loading more...</p>
+                    <p className='mt-3 text-sm text-gray-600 font-medium'>
+                      Loading more...
+                    </p>
                   </div>
                 )}
 
@@ -422,7 +527,9 @@ const NotificationPage: React.FC = () => {
                   <div className='text-center py-6'>
                     <div className='inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-gray-100 to-gray-200 rounded-full shadow-sm'>
                       <CheckCheck size={16} className='text-gray-600' />
-                      <span className='text-sm text-gray-600 font-medium'>You've reached the end</span>
+                      <span className='text-sm text-gray-600 font-medium'>
+                        You've reached the end
+                      </span>
                     </div>
                   </div>
                 )}

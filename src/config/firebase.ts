@@ -31,6 +31,25 @@ const initializeFirebase = async (): Promise<void> => {
     // Initialize Messaging
     try {
       messaging = await getMessaging(app);
+
+      // Register service worker and send Firebase config to it
+      if ('serviceWorker' in navigator) {
+        const registration = await navigator.serviceWorker.register(
+          '/firebase-messaging-sw.js',
+          { scope: '/' }
+        );
+
+        await navigator.serviceWorker.ready;
+
+        // Send Firebase config to service worker
+        if (registration.active) {
+          registration.active.postMessage({
+            type: 'FIREBASE_CONFIG',
+            config: config?.data,
+          });
+          console.log("✅ Firebase config sent to service worker");
+        }
+      }
     } catch (error) {
       console.error("Firebase messaging not supported:", error);
     }

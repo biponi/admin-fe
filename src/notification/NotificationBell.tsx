@@ -9,18 +9,47 @@ interface NotificationBellProps {
   className?: string;
   size?: "sm" | "md" | "lg";
   variant?: "ghost" | "default" | "outline";
+  asChild?: boolean; // New prop to render as child without button wrapper
 }
 
 const NotificationBell: React.FC<NotificationBellProps> = ({
   className = "",
   size = "sm",
   variant = "ghost",
+  asChild = false,
 }) => {
   const { unreadCount } = useNotifications();
   const [isOpen, setIsOpen] = useState(false);
 
   const iconSize =
     size === "sm" ? "h-4 w-4" : size === "lg" ? "h-6 w-6" : "h-5 w-5";
+
+  // If asChild is true, render just the icon without button wrapper
+  if (asChild) {
+    return (
+      <div className={`relative z-[9999] ${className}`}>
+        {unreadCount > 0 ? (
+          <BellRing className={iconSize} />
+        ) : (
+          <Bell className={iconSize} />
+        )}
+
+        {/* Badge */}
+        {unreadCount > 0 && (
+          <Badge
+            variant='destructive'
+            className='absolute -top-2 -right-2 h-5 w-5 p-0 flex items-center justify-center text-xs'>
+            {unreadCount > 99 ? "99+" : unreadCount}
+          </Badge>
+        )}
+
+        {/* Notification Panel */}
+        {isOpen && (
+          <NotificationPanel isOpen={isOpen} onClose={() => setIsOpen(false)} />
+        )}
+      </div>
+    );
+  }
 
   return (
     <div className={`relative z-[9999] ${className}`}>

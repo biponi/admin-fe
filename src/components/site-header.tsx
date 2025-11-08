@@ -103,14 +103,11 @@ export function SiteHeader({ title }: SiteHeaderProps) {
             {/* Button glow on hover */}
             <div className='absolute inset-0 bg-primary/20 rounded-xl blur-md opacity-0 group-hover/bell:opacity-100 transition-opacity' />
 
-            <button className='relative h-9 w-9 flex items-center justify-center rounded-xl bg-white/50 backdrop-blur-sm border border-white/60 text-gray-700 hover:text-primary hover:bg-white/70 transition-all duration-300 active:scale-95 shadow-lg'>
-              <NotificationBell size='sm' variant='ghost' />
-
-              {/* Notification dot */}
-              <span className='absolute top-1 right-1 h-2 w-2 bg-red-500 rounded-full border-2 border-white shadow-sm'>
-                <span className='absolute inset-0 bg-red-500 rounded-full animate-ping' />
-              </span>
-            </button>
+            <NotificationBell
+              size='sm'
+              variant='ghost'
+              className='relative h-9 w-9 rounded-xl bg-transparent  text-gray-700 hover:text-primary '
+            />
           </div>
         )}
       </header>
@@ -163,14 +160,7 @@ export function SiteHeader({ title }: SiteHeaderProps) {
               {/* Button glow on hover */}
               <div className='absolute inset-0 bg-primary/20 rounded-xl blur-md opacity-0 group-hover/bell:opacity-100 transition-opacity' />
 
-              <button className='relative h-9 w-9 flex items-center justify-center rounded-xl bg-white/50 backdrop-blur-sm border border-white/60 text-gray-700 hover:text-primary hover:bg-white/70 transition-all duration-300 active:scale-95 shadow-sm'>
-                <NotificationBell size='sm' variant='ghost' />
-
-                {/* Notification dot */}
-                <span className='absolute top-1 right-1 h-2 w-2 bg-red-500 rounded-full border-2 border-white shadow-sm'>
-                  <span className='absolute inset-0 bg-red-500 rounded-full animate-ping' />
-                </span>
-              </button>
+              <NotificationBell size='sm' variant='ghost' />
             </div>
           )}
         </div>

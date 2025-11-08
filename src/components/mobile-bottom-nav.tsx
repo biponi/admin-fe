@@ -2,21 +2,44 @@ import { useLocation, useNavigate } from "react-router-dom";
 import { navItems } from "../utils/navItem";
 import useRoleCheck from "../pages/auth/hooks/useRoleCheck";
 import { cn } from "../utils/functions";
-import { Menu } from "lucide-react";
+import BrandLogo from "../assets/Biponi-lg.png";
 import MobileDrawerNav from "./MobileDrawerNav";
+import { hasPagePermission } from "../utils/helperFunction";
+import { useSelector } from "react-redux";
+import { Bell } from "lucide-react";
+import { useNotifications } from "../notification/useNotifications";
 
 export function MobileBottomNav() {
   const { hasRequiredPermission } = useRoleCheck();
   const navigate = useNavigate();
   const pathName = useLocation().pathname;
+  const userState = useSelector((state: any) => state?.user);
+  const { unreadCount } = useNotifications();
 
-  // Filter and split nav items: 2 left, 2 right (total 4)
-  const filteredNavItems = navItems
-    .filter((nav) => nav.active && hasRequiredPermission(nav.id, "view"))
-    .slice(0, 4);
+  // Filter nav items
+  const filteredNavItems = navItems.filter(
+    (nav) => nav.active && hasRequiredPermission(nav.id, "view")
+  );
 
-  const leftNavItems = filteredNavItems.slice(0, 2);
-  const rightNavItems = filteredNavItems.slice(2, 4);
+  // Check if notification permission exists
+  const hasNotificationPermission = hasPagePermission(
+    "notifications",
+    "view",
+    userState?.permissions
+  );
+
+  // Calculate total items (nav items + notification if available)
+  const totalItems =
+    filteredNavItems.length + (hasNotificationPermission ? 1 : 0);
+
+  // If total items < 6, show all items on left and floating button on right
+  // Otherwise, split: 3 left, center button, 2-3 right
+  const showCenterButton = totalItems >= 6;
+
+  const leftNavItems = showCenterButton
+    ? filteredNavItems.slice(0, 3)
+    : filteredNavItems;
+  const rightNavItems = showCenterButton ? filteredNavItems.slice(3, 5) : [];
 
   const navigateToRoute = (link: string) => {
     navigate(link);
@@ -30,22 +53,22 @@ export function MobileBottomNav() {
 
   return (
     <div className='fixed bottom-0 left-0 right-0 z-50 sm:hidden pb-safe'>
-      {/* Glassmorphic Navigation Container */}
+      {/* Navigation Container */}
       <div className='relative mx-2 mb-1'>
-        {/* Glow effect behind nav */}
-        <div className='absolute inset-0 bg-gradient-to-t from-primary/20 via-primary/10 to-transparent blur-2xl -z-10' />
-
-        {/* Main nav bar with glassmorphism */}
-        <div className='relative backdrop-blur-sm bg-white/10 dark:bg-black/20 border border-white/20 dark:border-white/10 rounded-3xl shadow-2xl overflow-hidden'>
-          {/* Gradient overlay for depth */}
-          <div className='absolute inset-0 bg-gradient-to-b from-white/5 to-transparent pointer-events-none' />
-
-          {/* Shimmer effect */}
-          <div className='absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent -translate-x-full animate-shimmer pointer-events-none' />
-
+        {/* Main nav bar with black background and SVG cutout */}
+        <div
+          className='relative bg-black shadow-2xl'
+          style={{
+            borderRadius: "24px",
+            clipPath: "url(#notch-clip)",
+          }}>
           <nav className='relative flex items-center justify-between px-6 py-3'>
             {/* Left Nav Items */}
-            <div className='flex items-center gap-2 flex-1'>
+            <div
+              className={cn(
+                "flex items-center gap-2",
+                showCenterButton ? "flex-1" : ""
+              )}>
               {leftNavItems.map((item) => {
                 const isActive = pathName.includes(item.link);
                 return (
@@ -54,16 +77,11 @@ export function MobileBottomNav() {
                     className={cn(
                       "relative flex flex-col items-center gap-1 py-2 px-3 rounded-2xl transition-all duration-300 active:scale-90",
                       isActive
-                        ? "text-primary"
-                        : "text-muted-foreground/80 hover:text-foreground active:bg-white/10"
+                        ? "text-orange-500"
+                        : "text-white/80 hover:text-white"
                     )}
                     onClick={() => navigateToRoute(item.link)}
                     style={{ WebkitTapHighlightColor: "transparent" }}>
-                    {/* Active background glow */}
-                    {isActive && (
-                      <div className='absolute inset-0 bg-primary/20 rounded-2xl blur-md' />
-                    )}
-
                     <div
                       className={cn(
                         "relative flex items-center justify-center h-6 w-6 transition-all duration-300",
@@ -75,94 +93,169 @@ export function MobileBottomNav() {
                     <span
                       className={cn(
                         "text-[9px] font-semibold leading-tight transition-all duration-200",
-                        isActive ? "text-primary opacity-100" : "opacity-70"
+                        isActive ? "text-orange-500" : "text-white/80"
                       )}>
                       {item.title}
                     </span>
 
                     {/* Active indicator dot */}
                     {isActive && (
-                      <div className='absolute -bottom-0.5 left-1/2 transform -translate-x-1/2 w-1 h-1 bg-primary rounded-full shadow-lg shadow-primary/50' />
+                      <div className='absolute -bottom-0.5 left-1/2 transform -translate-x-1/2 w-1 h-1 bg-orange-500 rounded-full shadow-lg shadow-orange-500/50' />
                     )}
                   </button>
                 );
               })}
+
+              {/* Notification Bell - show on left when items < 6 */}
+              {!showCenterButton && hasNotificationPermission && (
+                <button
+                  onClick={() => navigate("/notifications")}
+                  className={cn(
+                    "relative flex flex-col items-center gap-1 py-2 px-3 rounded-2xl transition-all duration-300 active:scale-90",
+                    pathName.includes("/notifications")
+                      ? "text-orange-500"
+                      : "text-white/80 hover:text-white"
+                  )}
+                  style={{ WebkitTapHighlightColor: "transparent" }}>
+                  <div className='relative flex items-center justify-center h-6 w-6'>
+                    <Bell className='h-5 w-5' />
+
+                    {/* Notification dot with ping effect */}
+                    {unreadCount > 0 && (
+                      <span className='absolute -top-0.5 -right-0.5 h-2 w-2 bg-red-500 rounded-full border border-black'>
+                        <span className='absolute inset-0 bg-red-500 rounded-full animate-ping' />
+                      </span>
+                    )}
+                  </div>
+
+                  <span
+                    className={cn(
+                      "text-[9px] font-semibold leading-tight transition-all duration-200",
+                      pathName.includes("/notifications")
+                        ? "text-orange-500"
+                        : "text-white/80"
+                    )}>
+                    Alerts
+                  </span>
+
+                  {/* Active indicator dot */}
+                  {pathName.includes("/notifications") && (
+                    <div className='absolute -bottom-0.5 left-1/2 transform -translate-x-1/2 w-1 h-1 bg-orange-500 rounded-full shadow-lg shadow-orange-500/50' />
+                  )}
+                </button>
+              )}
             </div>
 
-            {/* Center Floating Button Placeholder */}
-            <div className='w-14' />
+            {/* Center Floating Button Placeholder - only when items >= 6 */}
+            {showCenterButton && <div className='w-14' />}
 
-            {/* Right Nav Items */}
-            <div className='flex items-center gap-2 flex-1 justify-end'>
-              {rightNavItems.map((item) => {
-                const isActive = pathName.includes(item.link);
-                return (
+            {/* Right Nav Items - only when items >= 6 */}
+            {showCenterButton && (
+              <div className='flex items-center gap-2 flex-1 justify-end'>
+                {rightNavItems.map((item) => {
+                  const isActive = pathName.includes(item.link);
+                  return (
+                    <button
+                      key={item.link}
+                      className={cn(
+                        "relative flex flex-col items-center gap-1 py-2 px-3 rounded-2xl transition-all duration-300 active:scale-90",
+                        isActive
+                          ? "text-orange-500"
+                          : "text-white/80 hover:text-white"
+                      )}
+                      onClick={() => navigateToRoute(item.link)}
+                      style={{ WebkitTapHighlightColor: "transparent" }}>
+                      <div
+                        className={cn(
+                          "relative flex items-center justify-center h-6 w-6 transition-all duration-300",
+                          isActive && "scale-110"
+                        )}>
+                        {item.icon}
+                      </div>
+
+                      <span
+                        className={cn(
+                          "text-[9px] font-semibold leading-tight transition-all duration-200",
+                          isActive ? "text-orange-500" : "text-white/80"
+                        )}>
+                        {item.title}
+                      </span>
+
+                      {/* Active indicator dot */}
+                      {isActive && (
+                        <div className='absolute -bottom-0.5 left-1/2 transform -translate-x-1/2 w-1 h-1 bg-orange-500 rounded-full shadow-lg shadow-orange-500/50' />
+                      )}
+                    </button>
+                  );
+                })}
+
+                {/* Notification Bell - show on right when items >= 6 */}
+                {hasNotificationPermission && (
                   <button
-                    key={item.link}
+                    onClick={() => navigate("/notifications")}
                     className={cn(
                       "relative flex flex-col items-center gap-1 py-2 px-3 rounded-2xl transition-all duration-300 active:scale-90",
-                      isActive
-                        ? "text-primary"
-                        : "text-muted-foreground/80 hover:text-foreground active:bg-white/10"
+                      pathName.includes("/notifications")
+                        ? "text-orange-500"
+                        : "text-white/80 hover:text-white"
                     )}
-                    onClick={() => navigateToRoute(item.link)}
                     style={{ WebkitTapHighlightColor: "transparent" }}>
-                    {isActive && (
-                      <div className='absolute inset-0 bg-primary/20 rounded-2xl blur-md' />
-                    )}
+                    <div className='relative flex items-center justify-center h-6 w-6'>
+                      <Bell className='h-5 w-5' />
 
-                    <div
-                      className={cn(
-                        "relative flex items-center justify-center h-6 w-6 transition-all duration-300",
-                        isActive && "scale-110"
-                      )}>
-                      {item.icon}
+                      {/* Notification dot with ping effect */}
+                      {unreadCount > 0 && (
+                        <span className='absolute -top-0.5 -right-0.5 h-2 w-2 bg-red-500 rounded-full border border-black'>
+                          <span className='absolute inset-0 bg-red-500 rounded-full animate-ping' />
+                        </span>
+                      )}
                     </div>
 
                     <span
                       className={cn(
                         "text-[9px] font-semibold leading-tight transition-all duration-200",
-                        isActive ? "text-primary opacity-100" : "opacity-70"
+                        pathName.includes("/notifications")
+                          ? "text-orange-500"
+                          : "text-white/80"
                       )}>
-                      {item.title}
+                      Alerts
                     </span>
 
-                    {isActive && (
-                      <div className='absolute -bottom-0.5 left-1/2 transform -translate-x-1/2 w-1 h-1 bg-primary rounded-full shadow-lg shadow-primary/50' />
+                    {/* Active indicator dot */}
+                    {pathName.includes("/notifications") && (
+                      <div className='absolute -bottom-0.5 left-1/2 transform -translate-x-1/2 w-1 h-1 bg-orange-500 rounded-full shadow-lg shadow-orange-500/50' />
                     )}
                   </button>
-                );
-              })}
-            </div>
+                )}
+              </div>
+            )}
           </nav>
         </div>
 
-        {/* Floating Center Button */}
+        {/* Floating Center Button - only when items >= 6 */}
+
         <MobileDrawerNav>
           <button
             onClick={handleCenterButtonClick}
-            className='absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 group shadow-md rounded-full '
+            className={`absolute ${
+              showCenterButton ? "left-1/2 " : "right-[5%]"
+            } -top-8 -translate-x-1/2 group z-10`}
             style={{ WebkitTapHighlightColor: "transparent" }}>
-            {/* Outer glow ring */}
+            {/* Outer black ring that creates the "cut" effect */}
+            <div className='rounded-full bg-black p-[10px]'>
+              {/* Button container */}
+              <div className='relative h-[60px] w-[60px] rounded-full bg-orange-500 group-active:scale-95 transition-all duration-200 shadow-2xl'>
+                {/* Glass overlay for depth */}
+                <div className='absolute inset-0 rounded-full bg-gradient-to-b from-white/30 via-white/10 to-transparent' />
 
-            {/* Button container */}
-            <div className='relative h-14 w-14 rounded-full bg-gradient-to-br  shadow-md shadow-gray-500 group-active:scale-90 transition-transform duration-200'>
-              {/* Glass overlay */}
-              <div className='absolute inset-0 rounded-full bg-gradient-to-b from-gray-900 to-gray-900 shadow-lg' />
+                {/* Icon/Logo container */}
+                <div className='absolute inset-0 flex items-center justify-center'>
+                  <img src={BrandLogo} className='h-8 w-auto' alt='main-logo' />
+                </div>
 
-              {/* Inner shadow for depth */}
-              <div className='absolute inset-0 rounded-full shadow-inner' />
-
-              {/* Icon container */}
-              <div className='absolute inset-0 flex items-center justify-center text-white'>
-                <Menu className='w-5 h-5 font-bold' />
+                {/* Bottom highlight for 3D effect */}
+                <div className='absolute bottom-0 left-1/2 -translate-x-1/2 w-4/5 h-1 bg-white/20 rounded-full blur-sm' />
               </div>
-
-              {/* Pulse animation ring */}
-              {/* <div
-              className='absolute inset-0 rounded-full border-2 border-white/30 animate-ping'
-              style={{ animationDuration: "2s" }}
-            /> */}
             </div>
           </button>
         </MobileDrawerNav>

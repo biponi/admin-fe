@@ -6,6 +6,12 @@ import React, {
   useEffect,
 } from "react";
 import { socketService } from "../services/socketService";
+import {
+  ensureFirebaseInitialized,
+  requestNotificationPermission as requestFCMPermission,
+  onMessageListener,
+} from "../config/firebase";
+import { registerFCMToken } from "../notification/notificationService";
 
 export interface Notification {
   _id: string;
@@ -284,9 +290,32 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({
 
   // Request notification permission with proper handling
   const handleRequestNotificationPermission = useCallback(async () => {
-    const permission = await requestNotificationPermission();
-    setNotificationPermission(permission);
-    return permission;
+    try {
+      // First, request browser notification permission
+      const permission = await requestNotificationPermission();
+      setNotificationPermission(permission);
+
+      // If granted, also request FCM token for push notifications
+      if (permission === "granted") {
+        const fcmToken = await requestFCMPermission();
+        if (fcmToken) {
+          console.log("✅ FCM Token obtained:", fcmToken);
+
+          // Send token to backend to save it
+          try {
+            await registerFCMToken(fcmToken);
+            console.log("✅ FCM Token registered with backend");
+          } catch (error) {
+            console.error("❌ Failed to register FCM token with backend:", error);
+          }
+        }
+      }
+
+      return permission;
+    } catch (error) {
+      console.error("Error requesting notification permission:", error);
+      return "denied";
+    }
   }, []);
 
   // Setup socket listeners
@@ -309,6 +338,48 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({
     };
 
     socketService.setCallbacks(socketCallbacks);
+
+    // Initialize Firebase and setup foreground message listener
+    const initializeFirebase = async () => {
+      try {
+        await ensureFirebaseInitialized();
+        console.log("✅ Firebase initialized in NotificationContext");
+
+        // Listen for foreground messages from Firebase (continuous listener)
+        const handleFCMMessage = async () => {
+          try {
+            while (true) {
+              const payload: any = await onMessageListener();
+              console.log("📬 Foreground FCM message received:", payload);
+
+              // Convert FCM payload to Notification format
+              const notification: Notification = {
+                _id: payload.data?.notificationId || Date.now().toString(),
+                type: payload.data?.type || "system",
+                title: payload.notification?.title || payload.data?.subject || "New Notification",
+                message: payload.notification?.body || payload.data?.message || "",
+                priority: payload.data?.priority || "normal",
+                read: false,
+                createdAt: new Date(),
+                relatedData: payload.data?.relatedData ? JSON.parse(payload.data.relatedData) : undefined,
+              };
+
+              handleNewNotification(notification);
+            }
+          } catch (error) {
+            console.error("Error in FCM listener loop:", error);
+          }
+        };
+
+        // Start listening
+        handleFCMMessage();
+
+      } catch (error) {
+        console.error("Failed to initialize Firebase:", error);
+      }
+    };
+
+    initializeFirebase();
 
     // Request browser notification permission only if supported
     if (
