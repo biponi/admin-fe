@@ -1,87 +1,68 @@
-// Firebase Cloud Messaging Service Worker (Dynamic Config)
-// This service worker receives Firebase config from the main app at runtime
-
 // Import Firebase scripts
 importScripts(
-  'https://www.gstatic.com/firebasejs/9.0.0/firebase-app-compat.js'
+  "https://www.gstatic.com/firebasejs/9.0.0/firebase-app-compat.js"
 );
 importScripts(
-  'https://www.gstatic.com/firebasejs/9.0.0/firebase-messaging-compat.js'
+  "https://www.gstatic.com/firebasejs/9.0.0/firebase-messaging-compat.js"
 );
 
-// Firebase config - will be set dynamically
-let firebaseConfig = null;
-let messaging = null;
+// Firebase config (replace with your actual config values)
+// Note: These values should match your .env file
+const randomConfig = {
+  apiKey: "AIzaSyAXELs62hTNVbpvh0KNWIoLZ_WUWlFjjO8",
+  authDomain: "prior-website.firebaseapp.com",
+  projectId: "prior-website",
+  storageBucket: "prior-website.firebasestorage.app",
+  messagingSenderId: "44621397665",
+  appId: "1:44621397665:web:adc30500e3ce6ee2f3bae0",
+  measurementId: "G-YYGTZPDKPM",
+};
 
-// Listen for config from main app
-self.addEventListener('message', (event) => {
-  if (event.data && event.data.type === 'FIREBASE_CONFIG') {
-    console.log('📥 Received Firebase config from main app');
+// Initialize Firebase in service worker
+firebase.initializeApp(randomConfig);
 
-    firebaseConfig = event.data.config;
+// Get messaging instance
+const messaging = firebase.messaging();
 
-    // Initialize Firebase with received config
-    if (!messaging && firebaseConfig) {
-      try {
-        firebase.initializeApp(firebaseConfig);
-        messaging = firebase.messaging();
-        console.log('✅ Firebase initialized in service worker');
+// Handle background messages
+messaging.onBackgroundMessage((payload) => {
+  console.log("Received background message:", payload);
 
-        // Set up background message handler
-        setupMessageHandler();
-      } catch (error) {
-        console.error('❌ Error initializing Firebase in service worker:', error);
-      }
-    }
-  }
+  const notificationTitle =
+    payload.notification?.title || payload.data?.subject || "New Notification";
+  const notificationOptions = {
+    body:
+      payload.notification?.body ||
+      payload.data?.message ||
+      "You have a new notification",
+    icon: "/logo192.png", // Your app icon
+    badge: "/logo192.png", // Small badge icon
+    tag: payload.data?.notificationId || "notification",
+    data: payload.data,
+    requireInteraction: false,
+    vibrate: [200, 100, 200],
+  };
+
+  // Show notification
+  self.registration.showNotification(notificationTitle, notificationOptions);
 });
 
-// Setup background message handler
-function setupMessageHandler() {
-  if (!messaging) return;
-
-  messaging.onBackgroundMessage((payload) => {
-    console.log('📬 Received background message:', payload);
-
-    const notificationTitle =
-      payload.notification?.title ||
-      payload.data?.subject ||
-      'New Notification';
-
-    const notificationOptions = {
-      body:
-        payload.notification?.body ||
-        payload.data?.message ||
-        'You have a new notification',
-      icon: '/logo192.png',
-      badge: '/logo192.png',
-      tag: payload.data?.notificationId || 'notification',
-      data: payload.data,
-      requireInteraction: false,
-      vibrate: [200, 100, 200],
-    };
-
-    // Show notification
-    self.registration.showNotification(notificationTitle, notificationOptions);
-  });
-}
-
 // Handle notification click
-self.addEventListener('notificationclick', (event) => {
-  console.log('🔔 Notification clicked:', event);
+self.addEventListener("notificationclick", (event) => {
+  console.log("Notification clicked:", event);
 
   event.notification.close();
 
   // Open app or navigate to specific page
-  const urlToOpen = event.notification.data?.actionUrl || '/';
+  const urlToOpen = event.notification.data?.actionUrl || "/";
 
   event.waitUntil(
     clients
-      .matchAll({ type: 'window', includeUncontrolled: true })
+      .matchAll({ type: "window", includeUncontrolled: true })
       .then((clientList) => {
         // Check if app is already open
         for (const client of clientList) {
-          if (client.url.includes(urlToOpen) && 'focus' in client) {
+          if (client.url === urlToOpen && "focus" in client) {
             return client.focus();
           }
         }
@@ -93,11 +74,3 @@ self.addEventListener('notificationclick', (event) => {
       })
   );
 });
-
-// Service worker activation
-self.addEventListener('activate', (event) => {
-  console.log('🚀 Service worker activated');
-  event.waitUntil(clients.claim());
-});
-
-console.log('📝 Firebase Messaging Service Worker loaded (Dynamic Config Mode)');
