@@ -450,6 +450,7 @@ const OrderList = () => {
                     key={index}
                     orderNumber={order?.orderNumber}
                     id={`${order?.id}`}
+                    provider={order?.courier?.provider ?? ""}
                     customerName={order?.customer?.name}
                     customerPhoneNumber={order?.customer?.phoneNumber}
                     status={order?.status}
@@ -565,7 +566,14 @@ const OrderList = () => {
           onSelectAll={() =>
             setBulkOrders(orders?.map((order: IOrder) => order?.id) || [])
           }
-          onBulkAction={setBulkAction}
+          onBulkAction={(action) => {
+            if (action === "shipped") {
+              setPendingBulkAction("shipped");
+              setBulkCourierSelectorMobile(true);
+            } else {
+              setBulkAction(action);
+            }
+          }}
           onGenerateInvoices={() =>
             generateMultipleModernInvoicesAndDownloadZip(bulkOrders)
           }
@@ -1619,9 +1627,7 @@ const OrderList = () => {
         open={
           !!bulkOrders &&
           bulkOrders?.length > 0 &&
-          ["shipped", "complete", "processing", "delete", "cancel"].includes(
-            bulkAction
-          )
+          ["complete", "processing", "delete", "cancel"].includes(bulkAction)
         }>
         <DrawerContent className='p-20'>
           <DrawerHeader className='mx-auto'>
@@ -1748,9 +1754,7 @@ const OrderList = () => {
     }
   };
 
-  const handleBulkCourierSelection = async (
-    courierProvider: "steadfast" | "pathao"
-  ) => {
+  const handleBulkCourierSelection = async (courierProvider: string) => {
     if (pendingBulkAction) {
       await performOrderBulkUpdate(pendingBulkAction, courierProvider);
       setPendingBulkAction("");

@@ -128,7 +128,7 @@ export const useOrderList = () => {
 
   const performOrderBulkUpdate = async (
     actionType: string,
-    courierProvider?: "steadfast" | "pathao"
+    courierProvider?: string
   ) => {
     if (!bulkOrders || bulkOrders?.length < 1) {
       toast({
