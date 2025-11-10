@@ -89,12 +89,6 @@ import UpdateProductData from "./updateProductData";
 import { Badge } from "../../components/ui/badge";
 import AdjustReturnProduct from "./orderReturn";
 import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "../../components/ui/dialog";
-import {
   Select,
   SelectContent,
   SelectGroup,
@@ -128,8 +122,10 @@ import {
 } from "../../components/ui/collapsible";
 import { useCourierActions } from "../delivery/hooks/useCourierActions";
 import { CourierSelector } from "./components/CourierSelector";
+import { useIsMobile } from "../../hooks/use-mobile";
 
 const OrderList = () => {
+  const isMobile = useIsMobile();
   const {
     limit,
     refresh,
@@ -1659,15 +1655,52 @@ const OrderList = () => {
   };
 
   const returnModal = () => {
+    if (isMobile) {
+      return (
+        <Drawer
+          open={isReturnProduct && !!selectedOrder}
+          onOpenChange={(open) => setIsReturnProduct(open)}>
+          <DrawerContent>
+            <DrawerHeader>
+              <DrawerTitle>Return Product</DrawerTitle>
+              <DrawerDescription>
+                Process product returns and manage returned items
+              </DrawerDescription>
+            </DrawerHeader>
+            <ScrollArea className='h-[60vh] px-4'>
+              <div className='w-auto pb-4'>
+                <AdjustReturnProduct
+                  // @ts-ignore
+                  order={selectedOrder}
+                  handleClose={() => {
+                    refresh();
+                    setIsReturnProduct(false);
+                  }}
+                />
+              </div>
+            </ScrollArea>
+            <DrawerFooter>
+              <DrawerClose asChild>
+                <Button variant='outline'>Close</Button>
+              </DrawerClose>
+            </DrawerFooter>
+          </DrawerContent>
+        </Drawer>
+      );
+    }
+
     return (
-      <Dialog
+      <Sheet
         open={isReturnProduct && !!selectedOrder}
         onOpenChange={(open) => setIsReturnProduct(open)}>
-        <DialogContent className='sm:max-w-[425px]'>
-          <DialogHeader>
-            <DialogTitle>Return Product</DialogTitle>
-          </DialogHeader>
-          <div className='w-auto'>
+        <SheetContent className='overflow-y-auto w-full sm:max-w-2xl'>
+          <SheetHeader>
+            <SheetTitle>Return Product</SheetTitle>
+            <SheetDescription>
+              Process product returns and manage returned items
+            </SheetDescription>
+          </SheetHeader>
+          <div className='w-auto mt-4'>
             <AdjustReturnProduct
               // @ts-ignore
               order={selectedOrder}
@@ -1677,8 +1710,8 @@ const OrderList = () => {
               }}
             />
           </div>
-        </DialogContent>
-      </Dialog>
+        </SheetContent>
+      </Sheet>
     );
   };
 
