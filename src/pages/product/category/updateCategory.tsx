@@ -8,14 +8,14 @@ import {
   CardTitle,
 } from "../../../components/ui/card";
 import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "../../../components/ui/dialog";
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetFooter,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
+} from "../../../components/ui/sheet";
 import {
   Select,
   SelectContent,
@@ -430,21 +430,23 @@ const UpdateCategory: React.FC<Props> = ({
     );
 
   return (
-    <Dialog open={open} onOpenChange={(open) => handleOpenChange(open)}>
-      {!!children && <DialogTrigger asChild>{children}</DialogTrigger>}
-      <DialogContent className=' overflow-y-auto'>
-        <DialogHeader>
-          <DialogTitle>
+    <Sheet open={open} onOpenChange={(open) => handleOpenChange(open)}>
+      {!!children && <SheetTrigger asChild>{children}</SheetTrigger>}
+      <SheetContent className='overflow-y-auto w-full sm:max-w-2xl'>
+        <SheetHeader>
+          <SheetTitle>
             {isNewCategory ? "Create Category" : "Update Category"}
-          </DialogTitle>
-          <DialogDescription>
+          </SheetTitle>
+          <SheetDescription>
             {`Configure your category settings. Categories can be nested to create hierarchical organization. Click ${
               isNewCategory ? "create" : "update"
             } when you're done.`}
-          </DialogDescription>
-        </DialogHeader>
-        {renderFormView()}
-        <DialogFooter>
+          </SheetDescription>
+        </SheetHeader>
+        <div className='mt-4'>
+          {renderFormView()}
+        </div>
+        <SheetFooter className='mt-6'>
           <Button variant='outline' onClick={() => handleOpenChange(false)}>
             Cancel
           </Button>
@@ -457,9 +459,9 @@ const UpdateCategory: React.FC<Props> = ({
               ? "Create Category"
               : "Update Category"}
           </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
+        </SheetFooter>
+      </SheetContent>
+    </Sheet>
   );
 };
 
