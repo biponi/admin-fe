@@ -59,6 +59,7 @@ const defaultCategory = {
   img: "",
   description: "",
   discount: 0.0,
+  discountType: "percentage",
   active: true,
   parentId: null,
   google_category_type: "",
@@ -264,15 +265,40 @@ const UpdateCategory: React.FC<Props> = ({
                 </div>
               </div>
 
+              {/* Discount Type */}
+              <div className='grid w-full items-center gap-1.5 my-5'>
+                <Label htmlFor='discountType'>Discount Type</Label>
+                <Select
+                  value={existingCategory?.discountType || "percentage"}
+                  onValueChange={(value) => {
+                    if (!!existingCategory) {
+                      setExistingCategory({
+                        ...existingCategory,
+                        discountType: value,
+                      });
+                    }
+                  }}>
+                  <SelectTrigger>
+                    <SelectValue placeholder='Select discount type' />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value='percentage'>Percentage (%)</SelectItem>
+                    <SelectItem value='fixed'>Fixed Amount</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
               {/* Discount */}
               <div className='grid w-full items-center gap-1.5 my-5'>
-                <Label htmlFor='discount'>Discount (%)</Label>
+                <Label htmlFor='discount'>
+                  Discount {existingCategory?.discountType === "percentage" ? "(%)" : "(Amount)"}
+                </Label>
                 <Input
                   type='number'
                   name='discount'
                   placeholder='0.00'
                   min='0'
-                  max='100'
+                  max={existingCategory?.discountType === "percentage" ? '100' : undefined}
                   step='0.01'
                   onChange={handleChange}
                   value={existingCategory?.discount ?? ""}
