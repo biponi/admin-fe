@@ -163,13 +163,16 @@ const OrderProductList: React.FC<Props> = ({
           const existingCount = selectedProducts.filter(
             (p) => p.id === product.id
           ).length;
+          const priceToUse = product.discount > 0 && product.updatedPrice
+            ? product.updatedPrice
+            : availableVariant.unitPrice;
           setSelectedProducts([
             ...selectedProducts,
             {
               ...product,
               selectedQuantity: 1,
               selectedVariant: availableVariant,
-              totalPrice: availableVariant.unitPrice * 1,
+              totalPrice: priceToUse * 1,
             },
           ]);
           toast.success(
@@ -400,8 +403,11 @@ const OrderProductList: React.FC<Props> = ({
           selectedProduct.selectedQuantity,
           selectedVariant.quantity
         );
+        const priceToUse = selectedProduct.discount > 0 && selectedProduct.updatedPrice
+          ? selectedProduct.updatedPrice
+          : selectedVariant.unitPrice;
         selectedProduct.totalPrice =
-          selectedProduct.selectedQuantity * selectedVariant.unitPrice;
+          selectedProduct.selectedQuantity * priceToUse;
         setSelectedProducts([...selectedProducts]);
       } else {
         toast.error("This variant is out of stock");
@@ -459,11 +465,12 @@ const OrderProductList: React.FC<Props> = ({
       if (newQuantity > 0 && newQuantity <= maxQuantity) {
         const updatedProducts = [...selectedProducts];
         updatedProducts[index].selectedQuantity = newQuantity;
-        updatedProducts[index].totalPrice =
-          newQuantity *
-          (product?.hasVariation
+        const priceToUse = product?.discount > 0 && product?.updatedPrice
+          ? product.updatedPrice
+          : (product?.hasVariation
             ? product?.selectedVariant?.unitPrice ?? 0
             : product?.unitPrice);
+        updatedProducts[index].totalPrice = newQuantity * priceToUse;
         setSelectedProducts(updatedProducts);
       }
     };

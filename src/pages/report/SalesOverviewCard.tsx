@@ -105,7 +105,7 @@ const SalesOverviewCard: React.FC<SalesOverviewCardProps> = ({
 
   const id = "pie-interactive";
   const [activeStatus, setActiveStatus] = React.useState(
-    chartData[0].name ?? ""
+    chartData && chartData.length > 0 ? chartData[0]?.name ?? "" : ""
   );
   const activeIndex = React.useMemo(
     () =>
@@ -300,7 +300,9 @@ const SalesOverviewCard: React.FC<SalesOverviewCardProps> = ({
                                   x={viewBox.cx}
                                   y={viewBox.cy}
                                   className='fill-foreground text-3xl font-bold'>
-                                  {chartData[activeIndex].value || 0}
+                                  {chartData && chartData.length > 0
+                                    ? chartData[activeIndex].value || 0
+                                    : 0}
                                 </tspan>
                                 <tspan
                                   x={viewBox.cx}
@@ -319,10 +321,18 @@ const SalesOverviewCard: React.FC<SalesOverviewCardProps> = ({
               </CardContent>
               <CardFooter className='flex-col items-center justify-center gap-2 text-sm mt-2'>
                 <div className='flex items-center gap-2 leading-none font-semibold text-base'>
-                  {chartData[activeIndex].name}: {chartData[activeIndex].value}{" "}
+                  {chartData && chartData.length > 0
+                    ? chartData[activeIndex].name
+                    : ""}
+                  :{" "}
+                  {chartData && chartData.length > 0
+                    ? chartData[activeIndex].value
+                    : ""}{" "}
                   orders (
-                  {(chartData[activeIndex].percent ?? 0 * 100).toFixed(2)}% of
-                  total volume)
+                  {chartData && chartData.length > 0
+                    ? (chartData[activeIndex].percent ?? 0 * 100).toFixed(2)
+                    : "0.00"}
+                  % of total volume)
                 </div>
                 <div className='text-muted-foreground leading-none'>
                   Total Orders: {totalOrders}
