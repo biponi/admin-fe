@@ -2,6 +2,7 @@
 import axios from "../../../api/axios";
 import { ProductListResponse, ProductSearchResponse } from "../interface";
 import config from "../../../utils/config";
+import { modifyOrder, ModifyOrderPayload } from "../../../api/order";
 
 export const fetchPurchaseOrders = async (): Promise<ProductListResponse> => {
   const response = await axios.get(config.purchaseOrder.purchaseList());
@@ -17,21 +18,36 @@ export const searchProducts = async (
   return response.data;
 };
 
+/**
+ * Modify order products using the new production-ready API
+ * Migrated from old endpoint to use new /api/v1/order/modify/:orderId
+ */
 export const modifyOrderProducts = async (
   orderId: string,
   products: ProductSearchResponse[]
-): Promise<void> => {
-  const orderProducts = products.map((p) => ({
-    sku: p.sku,
+): Promise<any> => {
+  // Transform products to new API format
+  // Old format: { sku, productId, selectedQuantity, unitPrice, variantId }
+  // New format: { productId, quantity, variationId? }
+  const transformedProducts = products.map((p) => ({
     productId: p.id,
-    selectedQuantity: parseInt(`${p.quantity}`),
-    unitPrice: p.unitPrice,
-    variantId: p.variant?.id,
+    quantity: parseInt(`${p.quantity}`),
+    ...(p.variant?.id && { variationId: p.variant.id }),
   }));
 
-  await axios.put(config.order.modifyOrderProducts(orderId), {
-    products: orderProducts,
-  });
+  // Build payload for new API
+  const payload: ModifyOrderPayload = {
+    products: transformedProducts,
+  };
+
+  // Call new API endpoint
+  const response = await modifyOrder(orderId, payload);
+
+  if (!response.success) {
+    throw new Error(response.error || "Failed to modify order");
+  }
+
+  return response.data;
 };
 
 export const deletePurchaseOrder = async (id: string): Promise<void> => {

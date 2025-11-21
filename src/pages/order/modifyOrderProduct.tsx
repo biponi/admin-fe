@@ -1,4 +1,20 @@
-import React, { useEffect, useState } from "react";
+/**
+ * ModifyOrder Component
+ *
+ * This component uses the NEW production-ready modify order API.
+ *
+ * API Migration:
+ * - Endpoint: POST /api/v1/order/prior/modify/:orderId (new)
+ * - Old endpoint: PUT /api/v1/order/prior/:orderId/products (deprecated)
+ *
+ * Key differences:
+ * 1. Products only need: productId, quantity, variationId (optional)
+ * 2. No need to send: sku, unitPrice, selectedQuantity
+ * 3. Prices are auto-calculated on the backend
+ * 4. Returns detailed summary with stock operations
+ * 5. Better error messages with available stock info
+ */
+import { useEffect, useState } from "react";
 import { searchProducts, modifyOrderProducts } from "./services/orderApi";
 import { ProductSearchResponse } from "./interface";
 import { Input } from "../../components/ui/input";
@@ -19,6 +35,7 @@ import {
   CheckCircle2,
   ArrowLeft,
   Loader2,
+  Clock,
 } from "lucide-react";
 import { toast } from "react-hot-toast";
 import axios from "../../api/axios";
@@ -30,6 +47,14 @@ import {
   SheetHeader,
   SheetTitle,
 } from "../../components/ui/sheet";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "../../components/ui/dialog";
 import { Separator } from "../../components/ui/separator";
 import config from "../../utils/config";
 import { useNavigate, useParams } from "react-router-dom";
@@ -67,6 +92,9 @@ const ModifyOrder = () => {
     deliveryCarge: 0,
     paid: 0,
   });
+  const [validationDialog, setValidationDialog] = useState(false);
+  const [validationData, setValidationData] = useState<any>(null);
+  const [validating, setValidating] = useState(false);
 
   // Fetch the existing order's products
   useEffect(() => {
@@ -154,21 +182,80 @@ const ModifyOrder = () => {
     }
   };
 
-  // Update the order
+  // Validate modification before applying
+  const handleValidateModification = async () => {
+    if (!orderId) return;
+    setValidating(true);
+
+    try {
+      // Import validation function
+      const { validateModification } = await import("../../api/order");
+
+      // Transform products to API format
+      const transformedProducts = selectedProducts.map((p) => ({
+        productId: p.id,
+        quantity: parseInt(`${p.quantity}`),
+        ...(p.variant?.id && { variationId: p.variant.id }),
+      }));
+
+      console.log("Validation payload:", { products: transformedProducts });
+      const payload = { products: transformedProducts };
+      const response = await validateModification(orderId, payload);
+
+      if (response.success && response.data) {
+        setValidationData(response.data);
+        setValidationDialog(true);
+      } else {
+        console.error("Validation failed:", response.error);
+        toast.error(response.error || "Validation failed");
+      }
+    } catch (error) {
+      console.error("Validation error:", error);
+      if (error instanceof Error) {
+        toast.error(`Validation error: ${error.message}`);
+      } else {
+        toast.error("Failed to validate modification");
+      }
+    } finally {
+      setValidating(false);
+    }
+  };
+
+  // Update the order after validation
   const handleUpdateOrder = () => {
     setLoading(true);
+    setValidationDialog(false);
     if (!orderId) return;
     modifyOrderProducts(orderId, selectedProducts)
-      .then(() => {
+      .then((response) => {
         setLoading(false);
         setSelectedProducts([]);
-        toast.success("Order Modified successfully!");
+
+        // Show detailed summary from new API
+        if (response?.summary) {
+          const { summary } = response;
+          toast.success(
+            `Order modified successfully!\n` +
+              `Products: ${summary.oldProductCount} → ${summary.newProductCount}\n` +
+              `Price: ৳${summary.oldTotalPrice} → ৳${summary.newTotalPrice}\n` +
+              `${summary.priceDifference > 0 ? "+" : ""}৳${
+                summary.priceDifference
+              } difference`,
+            { duration: 5000 }
+          );
+        } else {
+          toast.success("Order modified successfully!");
+        }
+
         navigate("/order");
       })
       .catch((error) => {
         if (isAxiosError(error) && error.response) {
-          console.error("API error:", error.response.data.message); // Logs "Product with ID 123 not found."
-          toast.error(error.response.data.message);
+          console.error("API error:", error.response.data.message);
+          // New API provides more detailed error messages with stock info
+          toast.error(error.response.data.message || error.response.data.error);
+        } else if (error instanceof Error) {
+          toast.error(error.message);
         } else {
           toast.error("Something went wrong. Please try again later.");
         }
@@ -829,7 +916,7 @@ const ModifyOrder = () => {
         <div className='max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8'>
           {/* Header */}
           <div className='mb-8'>
-            <div className='flex items-center gap-4 mb-2'>
+            <div className='flex items-center justify-between gap-4 mb-4'>
               <Button
                 variant='ghost'
                 size='sm'
@@ -837,6 +924,14 @@ const ModifyOrder = () => {
                 className='text-gray-600 hover:text-gray-900'>
                 <ArrowLeft className='w-4 h-4 mr-2' />
                 Back to Orders
+              </Button>
+              <Button
+                variant='outline'
+                size='sm'
+                onClick={() => navigate(`/order/${orderId}/history`)}
+                className='border-purple-200 text-purple-700 hover:bg-purple-50'>
+                <Clock className='w-4 h-4 mr-2' />
+                View History
               </Button>
             </div>
             <div className='flex items-center gap-4'>
@@ -949,19 +1044,21 @@ const ModifyOrder = () => {
                     </Alert>
 
                     <Button
-                      onClick={handleUpdateOrder}
-                      disabled={selectedProducts.length < 1 || loading}
+                      onClick={handleValidateModification}
+                      disabled={
+                        selectedProducts.length < 1 || loading || validating
+                      }
                       className='w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-medium py-3 rounded-lg transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed'
                       size='lg'>
-                      {loading ? (
+                      {validating ? (
                         <>
                           <Loader2 className='w-4 h-4 mr-2 animate-spin' />
-                          Updating...
+                          Validating...
                         </>
                       ) : (
                         <>
                           <CheckCircle2 className='w-4 h-4 mr-2' />
-                          Update Order
+                          Preview Changes
                         </>
                       )}
                     </Button>
@@ -1000,7 +1097,192 @@ const ModifyOrder = () => {
     );
   };
 
-  return <>{loading ? renderLoading() : renderMainView()}</>;
+  // Render validation dialog
+  const renderValidationDialog = () => {
+    if (!validationData) return null;
+
+    const hasErrors = !validationData.valid;
+    const estimatedChanges = validationData.estimatedChanges;
+
+    return (
+      <Dialog
+        open={validationDialog}
+        onOpenChange={(val) => {
+          console.log("Dialog changed:", val);
+          setValidationDialog(val);
+        }}>
+        <DialogContent className='max-w-2xl max-h-[80vh] overflow-y-auto'>
+          <DialogHeader>
+            <DialogTitle className='flex items-center gap-2'>
+              {hasErrors ? (
+                <>
+                  <AlertTriangle className='w-5 h-5 text-amber-600' />
+                  Validation Issues Found
+                </>
+              ) : (
+                <>
+                  <CheckCircle2 className='w-5 h-5 text-green-600' />
+                  Ready to Apply Changes
+                </>
+              )}
+            </DialogTitle>
+            <DialogDescription>
+              {hasErrors
+                ? "Some products have validation issues. Please review before proceeding."
+                : "All products are valid. Review the changes below."}
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className='space-y-6 my-4'>
+            {/* Show message if available */}
+            {validationData.message && (
+              <Alert
+                className={
+                  hasErrors
+                    ? "bg-amber-50 border-amber-200"
+                    : "bg-blue-50 border-blue-200"
+                }>
+                <AlertDescription
+                  className={hasErrors ? "text-amber-800" : "text-blue-800"}>
+                  {validationData.message}
+                </AlertDescription>
+              </Alert>
+            )}
+
+            {/* Estimated Changes - only show if data is available */}
+            {estimatedChanges && (
+              <div className='bg-blue-50 border border-blue-200 rounded-lg p-4'>
+                <h3 className='font-semibold text-blue-900 mb-3 flex items-center gap-2'>
+                  <Package className='w-4 h-4' />
+                  Estimated Changes
+                </h3>
+                <div className='grid grid-cols-2 gap-4 text-sm'>
+                  <div>
+                    <span className='text-blue-700'>Products:</span>
+                    <span className='font-medium text-blue-900 ml-2'>
+                      {estimatedChanges.oldProductCount} →{" "}
+                      {estimatedChanges.newProductCount}
+                    </span>
+                  </div>
+                  <div>
+                    <span className='text-blue-700'>Price:</span>
+                    <span className='font-medium text-blue-900 ml-2'>
+                      ৳{estimatedChanges.oldTotalPrice} → ৳
+                      {estimatedChanges.newTotalPrice}
+                    </span>
+                  </div>
+                  <div className='col-span-2'>
+                    <span className='text-blue-700'>Difference:</span>
+                    <span
+                      className={`font-bold ml-2 ${
+                        estimatedChanges.priceDifference > 0
+                          ? "text-green-700"
+                          : estimatedChanges.priceDifference < 0
+                          ? "text-red-700"
+                          : "text-blue-900"
+                      }`}>
+                      {estimatedChanges.priceDifference > 0 ? "+" : ""}৳
+                      {estimatedChanges.priceDifference}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Validation Results */}
+            <div>
+              <h3 className='font-semibold text-gray-900 mb-3'>
+                Product Validation
+              </h3>
+              <div className='space-y-2'>
+                {validationData.validationResults &&
+                  validationData.validationResults.map(
+                    (result: any, index: number) => (
+                      <div
+                        key={index}
+                        className={`p-3 rounded-lg border ${
+                          result.valid
+                            ? "bg-green-50 border-green-200"
+                            : "bg-red-50 border-red-200"
+                        }`}>
+                        <div className='flex items-start justify-between'>
+                          <div className='flex-1'>
+                            <div className='font-medium text-gray-900 flex items-center gap-2'>
+                              {result.valid ? (
+                                <CheckCircle2 className='w-4 h-4 text-green-600' />
+                              ) : (
+                                <AlertTriangle className='w-4 h-4 text-red-600' />
+                              )}
+                              {result.productName}
+                            </div>
+                            {result.variationDetails && (
+                              <div className='text-sm text-gray-600 ml-6 mt-1'>
+                                {result.variationDetails}
+                              </div>
+                            )}
+                            <div className='text-sm ml-6 mt-1'>
+                              <span
+                                className={
+                                  result.valid
+                                    ? "text-green-700"
+                                    : "text-red-700"
+                                }>
+                                Requested: {result.requestedQuantity}
+                              </span>
+                              <span className='text-gray-500 mx-2'>•</span>
+                              <span className='text-gray-700'>
+                                Available: {result.availableStock}
+                              </span>
+                            </div>
+                            {result.error && (
+                              <div className='text-sm text-red-700 ml-6 mt-1 font-medium'>
+                                {result.error}
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    )
+                  )}
+              </div>
+            </div>
+          </div>
+
+          <DialogFooter>
+            <Button
+              variant='outline'
+              onClick={() => setValidationDialog(false)}
+              disabled={loading}>
+              Cancel
+            </Button>
+            <Button
+              onClick={handleUpdateOrder}
+              disabled={hasErrors || loading}
+              className='bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white'>
+              {loading ? (
+                <>
+                  <Loader2 className='w-4 h-4 mr-2 animate-spin' />
+                  Updating...
+                </>
+              ) : (
+                <>
+                  <CheckCircle2 className='w-4 h-4 mr-2' />
+                  Confirm & Update
+                </>
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    );
+  };
+
+  return (
+    <>
+      {loading ? renderLoading() : renderMainView()}
+      {renderValidationDialog()}
+    </>
+  );
 };
 
 export default ModifyOrder;

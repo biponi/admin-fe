@@ -8,15 +8,11 @@ import { createOrder } from "../../api/order";
 import { useNavigate } from "react-router-dom";
 import { Card, CardContent } from "../../components/ui/card";
 import { Button } from "../../components/ui/button";
-import { Progress } from "../../components/ui/progress";
-import { Badge } from "../../components/ui/badge";
 import {
   CheckCircle2,
   ShoppingCart,
   User,
   ArrowLeft,
-  Package2,
-  Sparkles,
   Loader2,
   Clock,
   Send,
@@ -105,10 +101,6 @@ const CreateOrder = () => {
     if (currentStep > 0) {
       setCurrentStep(currentStep - 1);
     }
-  };
-
-  const getProgressPercentage = () => {
-    return ((currentStep + 1) / steps.length) * 100;
   };
 
   const handleSubmitCreateOrder = async () => {
@@ -215,80 +207,71 @@ const CreateOrder = () => {
 
   const renderModernStepper = () => {
     return (
-      <Card className='md:mb-3 mb-2 border-2 shadow-none bg-white border-dotted '>
+      <Card className='mb-6 border border-gray-200 shadow-sm bg-white'>
         <CardContent className='p-4'>
-          {/* Progress Bar */}
-          <div className='mb-6'>
-            <div className='flex justify-between items-center mb-2'>
-              <span className='text-sm font-medium text-gray-600'>
-                Progress
-              </span>
-              <span className='text-sm font-medium text-blue-600'>
-                Step {currentStep + 1} of {steps.length}
-              </span>
-            </div>
-            <Progress value={getProgressPercentage()} className='h-2 ' />
-          </div>
-
           {/* Steps */}
-          <div className='grid grid-cols-1 md:grid-cols-3 gap-4'>
+          <div className='grid grid-cols-1 md:grid-cols-3 gap-3'>
             {orderSteps.map((step) => {
               const Icon = step.icon;
               return (
                 <div
                   key={step.id}
-                  className={`relative flex items-center p-4 rounded-xl transition-all duration-300 ${
+                  className={`relative flex items-center p-3 rounded-lg transition-all duration-300 border ${
                     step.status === "complete"
-                      ? "bg-green-100 border-2 border-green-300"
+                      ? "bg-violet-50 border-violet-200"
                       : step.status === "in-progress"
-                      ? "bg-blue-100 border-2 border-blue-300 shadow-md"
-                      : "bg-gray-100 border-2 border-gray-200"
+                      ? "bg-violet-50 border-violet-300 shadow-sm"
+                      : "bg-gray-50 border-gray-200"
                   }`}>
                   <div
-                    className={`w-12 h-12 rounded-full flex items-center justify-center mr-4 ${
+                    className={`w-10 h-10 rounded-full flex items-center justify-center mr-3 flex-shrink-0 ${
                       step.status === "complete"
-                        ? "bg-green-500 text-white"
+                        ? "bg-violet-600 text-white"
                         : step.status === "in-progress"
-                        ? "bg-blue-500 text-white"
-                        : "bg-gray-400 text-white"
+                        ? "bg-violet-600 text-white"
+                        : "bg-gray-300 text-white"
                     }`}>
                     {step.status === "complete" ? (
-                      <CheckCircle2 className='w-6 h-6' />
+                      <CheckCircle2 className='w-5 h-5' />
                     ) : (
-                      <Icon className='w-6 h-6' />
+                      <Icon className='w-5 h-5' />
                     )}
                   </div>
-                  <div className='flex-1'>
+                  <div className='flex-1 min-w-0'>
                     <h3
-                      className={`font-semibold ${
+                      className={`font-medium text-sm md:text-base truncate ${
                         step.status === "complete"
-                          ? "text-green-800"
+                          ? "text-violet-900"
                           : step.status === "in-progress"
-                          ? "text-blue-800"
-                          : "text-gray-600"
+                          ? "text-violet-900"
+                          : "text-gray-500"
                       }`}>
                       {step.name}
                     </h3>
                     <p
-                      className={`text-sm ${
+                      className={`text-xs hidden md:block ${
                         step.status === "complete"
-                          ? "text-green-600"
+                          ? "text-violet-600"
                           : step.status === "in-progress"
-                          ? "text-blue-600"
-                          : "text-gray-500"
+                          ? "text-violet-600"
+                          : "text-gray-400"
                       }`}>
                       {step.description}
                     </p>
                   </div>
                   {step.status === "complete" && (
-                    <Badge className='bg-green-500 text-white border-0'>
-                      ✓ Done
-                    </Badge>
+                    <div className='ml-2 hidden md:block'>
+                      <span className='text-xs font-medium text-violet-600'>
+                        ✓
+                      </span>
+                    </div>
                   )}
                   {step.status === "in-progress" && (
-                    <Badge className='bg-blue-500 text-white border-0'>
-                      Active
-                    </Badge>
+                    <div className='ml-2 hidden md:block'>
+                      <span className='text-xs font-medium text-violet-600'>
+                        Active
+                      </span>
+                    </div>
                   )}
                 </div>
               );
@@ -361,7 +344,7 @@ const CreateOrder = () => {
 
                 <div className='mt-6 p-4 bg-yellow-50 rounded-lg border border-yellow-200'>
                   <p className='text-sm text-yellow-800 flex items-center gap-2'>
-                    <Sparkles className='w-4 h-4' />
+                    <Clock className='w-4 h-4' />
                     <strong>Almost done!</strong> Your order is being created...
                   </p>
                 </div>
@@ -404,43 +387,37 @@ const CreateOrder = () => {
         <div className='h-safe-bottom bg-gray-50' />
       </div>
 
-      {/* Desktop View */}
-      <div className='hidden sm:block min-h-screen bg-white'>
-        <div className=' container max-w-full mx-auto px-4 sm:px-6 lg:px-8 py-8'>
-          {/* Header */}
+      {/* Desktop View - Medusa Style */}
+      <div className='hidden sm:block min-h-screen bg-gray-50'>
+        <div className='max-w-[1600px] mx-auto px-6 py-8'>
+          {/* Header - Medusa style */}
           <div className='mb-8'>
-            <div className='flex items-center justify-between'>
-              <div className='flex items-center gap-4'>
-                <div className='w-14 h-14 bg-gradient-to-r from-blue-500 to-purple-600 rounded-2xl flex items-center justify-center'>
-                  <Package2 className='w-8 h-8 text-white' />
-                </div>
-                <div>
-                  <h1 className='text-4xl font-bold text-gray-900'>
-                    Create New Order
-                  </h1>
-                  <p className='text-gray-600 mt-1 flex items-center gap-2'>
-                    <Sparkles className='w-4 h-4' />
-                    Build amazing orders with our streamlined process
-                  </p>
-                </div>
+            <div className='flex items-center justify-between mb-2'>
+              <div>
+                <h1 className='text-2xl font-semibold text-gray-900'>
+                  Create Order
+                </h1>
+                <p className='text-sm text-gray-500 mt-1'>
+                  Create a new order for your customer
+                </p>
               </div>
 
               <Button
                 variant='outline'
                 onClick={() => navigate("/order")}
-                className='flex items-center gap-2 border-gray-300 hover:bg-gray-50'
+                className='h-10 px-4 text-sm font-medium border-gray-300 hover:bg-gray-50'
                 disabled={isCreating}>
-                <ArrowLeft className='w-4 h-4' />
+                <ArrowLeft className='w-4 h-4 mr-2' />
                 Back to Orders
               </Button>
             </div>
           </div>
 
-          {/* Modern Stepper */}
+          {/* Medusa Stepper */}
           {renderModernStepper()}
 
           {/* Step Content */}
-          <div className='mb-8'>{renderStepContent()}</div>
+          <div>{renderStepContent()}</div>
         </div>
       </div>
     </>

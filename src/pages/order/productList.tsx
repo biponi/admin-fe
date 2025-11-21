@@ -6,37 +6,24 @@ import {
   CardContent,
   CardHeader,
   CardTitle,
-  CardFooter,
   CardDescription,
 } from "../../components/ui/card";
 import { IOrderProduct, IProduct } from "../product/interface";
 import PlaceHolderImage from "../../assets/placeholder.svg";
 import { Button } from "../../components/ui/button";
-import { Badge } from "../../components/ui/badge";
 import { Input } from "../../components/ui/input";
 import { Label } from "../../components/ui/label";
-import { Separator } from "../../components/ui/separator";
 import {
   Search,
   Trash2,
   Plus,
   Minus,
   Package,
-  DollarSign,
-  Calculator,
   ArrowRight,
   CheckCircle2,
-  AlertCircle,
-  Truck,
-  Receipt,
-  CreditCard,
   RotateCcw,
   Loader2,
   ShoppingBag,
-  Tag,
-  Filter,
-  Clock,
-  Coins,
 } from "lucide-react";
 import { ITransection } from "./interface";
 import SelectDemo from "./components/SelectDemo";
@@ -94,7 +81,7 @@ const OrderProductList: React.FC<Props> = ({
         remaining:
           totalPrice +
           Number(deliveryCharge) -
-          (Number(transection.paid) || 0 + Number(discount) || 0),
+          ((Number(transection.paid) || 0) + (Number(discount) || 0)),
       });
     }
     //eslint-disable-next-line
@@ -163,9 +150,7 @@ const OrderProductList: React.FC<Props> = ({
           const existingCount = selectedProducts.filter(
             (p) => p.id === product.id
           ).length;
-          const priceToUse = product.discount > 0 && product.updatedPrice
-            ? product.updatedPrice
-            : availableVariant.unitPrice;
+          const priceToUse = availableVariant.unitPrice;
           setSelectedProducts([
             ...selectedProducts,
             {
@@ -244,8 +229,8 @@ const OrderProductList: React.FC<Props> = ({
     }
 
     return (
-      <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 max-h-[60vh] overflow-y-auto pr-2'>
-        {products.map((product: IProduct, index: number) => {
+      <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 max-h-[calc(100vh-400px)] overflow-y-auto pr-2'>
+        {products.map((product: IProduct) => {
           // For products with variations, check if all available variants are selected
           // For products without variations, show as selected if already in cart
           let isSelected = false;
@@ -276,29 +261,28 @@ const OrderProductList: React.FC<Props> = ({
           return (
             <Card
               key={product?.id}
-              className={`group transition-all duration-300 hover:shadow-lg border-2 ${
+              className={`group transition-all duration-200 hover:shadow-sm border ${
                 isSelected
-                  ? "border-green-300 bg-green-50"
-                  : "border-gray-200 hover:border-blue-300"
+                  ? "border-violet-200 bg-violet-50"
+                  : "border-gray-200 hover:border-gray-300"
               }`}>
-              <CardContent className='p-4'>
+              <CardContent className='p-3'>
                 <div className='relative mb-3'>
-                  <div className='aspect-square rounded-lg overflow-hidden bg-gray-100 relative'>
+                  <div className='aspect-square rounded-md overflow-hidden bg-gray-50 relative border border-gray-100'>
                     <img
                       alt={product?.name}
-                      className='w-full h-full object-cover transition-transform group-hover:scale-105'
+                      className='w-full h-full object-cover'
                       src={product?.thumbnail || PlaceHolderImage}
                     />
                     {isSelected && (
-                      <div className='absolute top-2 right-2 w-6 h-6 bg-green-500 rounded-full flex items-center justify-center'>
-                        <CheckCircle2 className='w-4 h-4 text-white' />
+                      <div className='absolute top-2 right-2 w-5 h-5 bg-violet-600 rounded-full flex items-center justify-center'>
+                        <CheckCircle2 className='w-3 h-3 text-white' />
                       </div>
                     )}
-                    {/* Show count of selected variations */}
                     {product.hasVariation &&
                       selectedProducts.filter((p) => p.id === product.id)
                         .length > 0 && (
-                        <div className='absolute top-2 left-2 px-2 py-1 bg-blue-500 text-white text-xs rounded-full font-semibold'>
+                        <div className='absolute top-2 left-2 px-2 py-0.5 bg-gray-900 text-white text-xs rounded font-medium'>
                           {
                             selectedProducts.filter((p) => p.id === product.id)
                               .length
@@ -306,81 +290,51 @@ const OrderProductList: React.FC<Props> = ({
                         </div>
                       )}
                     {!isAvailable && (
-                      <div className='absolute inset-0 bg-gray-900/60 flex items-center justify-center'>
-                        <Badge variant='destructive' className='text-xs'>
-                          {!product?.active ? "Inactive" : "Out Of Stock"}
-                        </Badge>
+                      <div className='absolute inset-0 bg-gray-900/70 flex items-center justify-center'>
+                        <span className='text-xs text-white font-medium'>
+                          {!product?.active ? "Inactive" : "Out of stock"}
+                        </span>
                       </div>
                     )}
                   </div>
                 </div>
 
                 <div className='space-y-2'>
-                  <div className='flex items-start justify-between'>
-                    <h4 className='font-semibold text-gray-900 leading-tight line-clamp-2'>
-                      {product?.name}
-                    </h4>
+                  <h4 className='font-medium text-sm text-gray-900 leading-tight line-clamp-2 min-h-[2.5rem]'>
+                    {product?.name}
+                  </h4>
+
+                  <div className='flex items-center justify-between text-xs text-gray-500'>
+                    <span>{product?.quantity} in stock</span>
+                    <span className='font-semibold text-gray-900'>
+                      ৳{product?.unitPrice}
+                    </span>
                   </div>
 
-                  <div className='flex items-center gap-2 text-sm text-gray-600'>
-                    <div className='flex items-center gap-1 text-sm'>
-                      <Package className='w-3 h-3 text-gray-500' />
-                      <span
-                        className={`font-medium ${
-                          product?.quantity > 10
-                            ? "text-green-600"
-                            : product?.quantity > 0
-                            ? "text-yellow-600"
-                            : "text-red-600"
-                        }`}>
-                        {product?.quantity} in stock
-                      </span>
-                    </div>
-                  </div>
-
-                  <div className='flex items-center justify-between'>
-                    <div className='flex items-center gap-1'>
-                      <Coins className='w-3 h-3 text-gray-500' />
-                      <span className='font-bold text-blue-600'>
-                        ৳{product?.unitPrice}
-                      </span>
-                    </div>
-                  </div>
-
-                  <div className='pt-2'>
-                    <Button
-                      onClick={() => handleSelect(product)}
-                      disabled={!isAvailable || isSelected}
-                      className={`w-full transition-all ${
-                        isSelected
-                          ? "bg-green-600 hover:bg-green-700 text-white"
-                          : isAvailable
-                          ? "bg-blue-600 hover:bg-blue-700 text-white"
-                          : "bg-gray-300 text-gray-500 cursor-not-allowed"
-                      }`}
-                      size='sm'>
-                      {isSelected ? (
-                        <>
-                          <CheckCircle2 className='w-4 h-4 mr-2' />
-                          {product.hasVariation
-                            ? "All Variants Added"
-                            : "Selected"}
-                        </>
-                      ) : isAvailable ? (
-                        <>
-                          <Plus className='w-4 h-4 mr-2' />
-                          {product.hasVariation
-                            ? "Add Variation"
-                            : "Add to Order"}
-                        </>
-                      ) : (
-                        <>
-                          <AlertCircle className='w-4 h-4 mr-2' />
-                          Unavailable
-                        </>
-                      )}
-                    </Button>
-                  </div>
+                  <Button
+                    onClick={() => handleSelect(product)}
+                    disabled={!isAvailable || isSelected}
+                    className={`w-full h-9 text-sm font-medium transition-colors ${
+                      isSelected
+                        ? "bg-violet-600 hover:bg-violet-700 text-white"
+                        : isAvailable
+                        ? "bg-gray-900 hover:bg-gray-800 text-white"
+                        : "bg-gray-100 text-gray-400 cursor-not-allowed"
+                    }`}>
+                    {isSelected ? (
+                      <>
+                        <CheckCircle2 className='w-4 h-4 mr-2' />
+                        {product.hasVariation ? "Added" : "Selected"}
+                      </>
+                    ) : isAvailable ? (
+                      <>
+                        <Plus className='w-4 h-4 mr-2' />
+                        Add
+                      </>
+                    ) : (
+                      "Unavailable"
+                    )}
+                  </Button>
                 </div>
               </CardContent>
             </Card>
@@ -403,9 +357,7 @@ const OrderProductList: React.FC<Props> = ({
           selectedProduct.selectedQuantity,
           selectedVariant.quantity
         );
-        const priceToUse = selectedProduct.discount > 0 && selectedProduct.updatedPrice
-          ? selectedProduct.updatedPrice
-          : selectedVariant.unitPrice;
+        const priceToUse = selectedVariant.unitPrice;
         selectedProduct.totalPrice =
           selectedProduct.selectedQuantity * priceToUse;
         setSelectedProducts([...selectedProducts]);
@@ -465,11 +417,7 @@ const OrderProductList: React.FC<Props> = ({
       if (newQuantity > 0 && newQuantity <= maxQuantity) {
         const updatedProducts = [...selectedProducts];
         updatedProducts[index].selectedQuantity = newQuantity;
-        const priceToUse = product?.discount > 0 && product?.updatedPrice
-          ? product.updatedPrice
-          : (product?.hasVariation
-            ? product?.selectedVariant?.unitPrice ?? 0
-            : product?.unitPrice);
+        const priceToUse = product?.unitPrice;
         updatedProducts[index].totalPrice = newQuantity * priceToUse;
         setSelectedProducts(updatedProducts);
       }
@@ -481,362 +429,146 @@ const OrderProductList: React.FC<Props> = ({
     };
 
     return (
-      <Card
+      <div
         key={`${product?.id}-${index}`}
-        className='border-l-4 border-l-sidebar hover:shadow-md transition-shadow rounded-md'>
-        <CardContent className='p-4'>
-          <div className='flex gap-4'>
-            {/* Product Image */}
-            <div className='w-16 h-16 rounded-lg overflow-hidden bg-gray-100 flex-shrink-0'>
-              <img
-                alt={product?.name}
-                className='w-full h-full object-cover'
-                src={product?.thumbnail || PlaceHolderImage}
-              />
-            </div>
+        className='flex items-start gap-4 py-3 border-b border-gray-200 last:border-0'>
+        {/* Product Image */}
+        <div className='w-16 h-16 rounded-md overflow-hidden bg-gray-50 flex-shrink-0 border border-gray-200'>
+          <img
+            alt={product?.name}
+            className='w-full h-full object-cover'
+            src={product?.thumbnail || PlaceHolderImage}
+          />
+        </div>
 
-            {/* Product Details */}
-            <div className='flex-1 min-w-0'>
-              <div className='flex items-start justify-between mb-2'>
-                <h4 className='font-semibold text-gray-900 truncate pr-2'>
-                  {product?.name}
-                  {productCount > 1 && product.hasVariation && (
-                    <span className='ml-2 text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded-full'>
-                      #{productInstanceNumber}
-                    </span>
-                  )}
-                </h4>
+        {/* Product Details */}
+        <div className='flex-1 min-w-0'>
+          <div className='flex items-start justify-between mb-2'>
+            <h4 className='font-medium text-sm text-gray-900 truncate pr-2'>
+              {product?.name}
+              {productCount > 1 && product.hasVariation && (
+                <span className='ml-2 text-xs text-gray-500'>
+                  (#{productInstanceNumber})
+                </span>
+              )}
+            </h4>
+            <Button
+              variant='ghost'
+              size='sm'
+              onClick={handleRemoveProduct}
+              className='text-gray-400 hover:text-red-600 h-8 w-8 p-0 -mt-1'>
+              <Trash2 className='w-4 h-4' />
+            </Button>
+          </div>
+
+          {/* Variants */}
+          {product?.hasVariation && (
+            <div className='flex gap-2 mb-2'>
+              {uniqueColors.length > 0 && (
+                <div className='flex-1'>
+                  <Label className='text-xs text-gray-500 mb-1'>Color</Label>
+                  {renderVariantMenu("color", index, uniqueColors)}
+                </div>
+              )}
+              {uniqueSizes.length > 0 && (
+                <div className='flex-1'>
+                  <Label className='text-xs text-gray-500 mb-1'>Size</Label>
+                  {renderVariantMenu("size", index, uniqueSizes)}
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Quantity and Price */}
+          <div className='flex items-center justify-between'>
+            <div className='flex items-center gap-2'>
+              <div className='flex items-center border border-gray-300 rounded-md'>
                 <Button
                   variant='ghost'
                   size='sm'
-                  onClick={handleRemoveProduct}
-                  className='text-red-500 hover:text-red-700 hover:bg-red-50 p-1 h-8 w-8'>
-                  <Trash2 className='w-4 h-4' />
+                  onClick={() =>
+                    handleQuantityChange(product.selectedQuantity - 1)
+                  }
+                  disabled={product.selectedQuantity <= 1}
+                  className='h-8 w-8 p-0 hover:bg-gray-100'>
+                  <Minus className='w-3 h-3' />
+                </Button>
+                <span className='w-10 text-center text-sm font-medium text-gray-900'>
+                  {product?.selectedQuantity}
+                </span>
+                <Button
+                  variant='ghost'
+                  size='sm'
+                  onClick={() =>
+                    handleQuantityChange(product.selectedQuantity + 1)
+                  }
+                  disabled={product.selectedQuantity >= maxQuantity}
+                  className='h-8 w-8 p-0 hover:bg-gray-100'>
+                  <Plus className='w-3 h-3' />
                 </Button>
               </div>
+              <span className='text-xs text-gray-500'>
+                {maxQuantity} available
+              </span>
+            </div>
 
-              {/* Variants */}
-              {product?.hasVariation && (
-                <div className='grid grid-cols-1 sm:grid-cols-2 gap-2 mb-3'>
-                  {uniqueColors.length > 0 && (
-                    <div className='space-y-1'>
-                      <Label className='text-xs text-gray-600'>Color</Label>
-                      {renderVariantMenu("color", index, uniqueColors)}
-                    </div>
-                  )}
-                  {uniqueSizes.length > 0 && (
-                    <div className='space-y-1'>
-                      <Label className='text-xs text-gray-600'>Size</Label>
-                      {renderVariantMenu("size", index, uniqueSizes)}
-                    </div>
-                  )}
+            <div className='text-right'>
+              {product?.discount > 0 ? (
+                <div className='font-semibold text-gray-900'>
+                  <del className='text-red-600'>
+                    ৳{product?.unitPrice * product?.selectedQuantity}
+                  </del>
+                  <span className='font-semibold text-gray-900 ml-1'>
+                    ৳{product?.updatedPrice * product?.selectedQuantity}
+                  </span>
+                </div>
+              ) : (
+                <div className='font-semibold text-gray-900'>
+                  ৳{product?.unitPrice * product?.selectedQuantity}
                 </div>
               )}
-
-              {/* Quantity and Price */}
-              <div className='flex items-center justify-between'>
-                <div className='flex items-center gap-2'>
-                  <Label className='text-sm font-medium'>Qty:</Label>
-                  <div className='flex items-center gap-1'>
-                    <Button
-                      variant='outline'
-                      size='sm'
-                      onClick={() =>
-                        handleQuantityChange(product.selectedQuantity - 1)
-                      }
-                      disabled={product.selectedQuantity <= 1}
-                      className='h-8 w-8 p-0'>
-                      <Minus className='w-3 h-3' />
-                    </Button>
-                    <Input
-                      type='number'
-                      min='1'
-                      max={maxQuantity}
-                      value={product?.selectedQuantity}
-                      onChange={(e) =>
-                        handleQuantityChange(Number(e.target.value))
-                      }
-                      className='h-8 w-16 text-center'
-                    />
-                    <Button
-                      variant='outline'
-                      size='sm'
-                      onClick={() =>
-                        handleQuantityChange(product.selectedQuantity + 1)
-                      }
-                      disabled={product.selectedQuantity >= maxQuantity}
-                      className='h-8 w-8 p-0'>
-                      <Plus className='w-3 h-3' />
-                    </Button>
-                  </div>
+              {product?.discount > 0 ? (
+                <div className='text-xs text-gray-500'>
+                  <del className='text-red-600'>
+                    {" "}
+                    ৳{(product?.unitPrice).toFixed(2)}
+                  </del>{" "}
+                  ৳{(product?.updatedPrice).toFixed(2)} each
                 </div>
-
-                <div className='text-right'>
-                  <div className='text-sm text-gray-600'>Total</div>
-                  <div className='font-bold text-blue-600'>
-                    ৳{product?.totalPrice}
-                  </div>
+              ) : (
+                <div className='text-xs text-gray-500'>
+                  ৳{(product?.unitPrice).toFixed(2)} each
                 </div>
-              </div>
-
-              {/* Stock Info */}
-              <div className='mt-2 text-xs text-gray-500'>
-                {maxQuantity} available
-              </div>
+              )}
             </div>
           </div>
-        </CardContent>
-      </Card>
+        </div>
+      </div>
     );
   };
 
   const renderSelectedProductList = () => {
     if (!selectedProducts || selectedProducts.length === 0) {
       return (
-        <div className='flex flex-col items-center justify-center py-12 px-4 text-center'>
-          <div className='w-20 h-20 bg-gradient-to-r from-orange-100 to-red-100 rounded-full flex items-center justify-center mb-4'>
-            <ShoppingBag className='w-10 h-10 text-gray-400' />
-          </div>
-          <h3 className='text-lg font-semibold text-gray-700 mb-2'>
-            No products selected
-          </h3>
-          <p className='text-gray-500 max-w-sm'>
-            Search and select products from the left panel to add them to your
-            order.
+        <div className='flex flex-col items-center justify-center py-12 text-center'>
+          <ShoppingBag className='w-12 h-12 text-gray-200 mb-3' />
+          <p className='text-sm font-medium text-gray-500'>
+            No items added yet
+          </p>
+          <p className='text-xs text-gray-400 mt-1'>
+            Search and select products to add them to the order
           </p>
         </div>
       );
     }
 
     return (
-      <div className='space-y-3 max-h-[50vh] overflow-y-auto pr-2'>
-        {selectedProducts.map((product: IOrderProduct, index) =>
-          renderSelectedProductCard(product, index)
-        )}
-      </div>
-    );
-  };
-
-  const renderTransectionData = () => {
-    const isDisabled = transection.totalPrice < 1;
-    const grandTotal =
-      transection.totalPrice +
-      transection.deliveryCharge -
-      transection.discount;
-
-    return (
-      <div className='space-y-5'>
-        {/* Summary Header */}
-        <div className='flex items-center gap-3 pb-3 border-b border-slate-200'>
-          <div className='w-8 h-8 bg-gradient-to-r from-slate-100 to-slate-200 rounded-full flex items-center justify-center'>
-            <Calculator className='w-4 h-4 text-slate-600' />
-          </div>
-          <h3 className='font-semibold text-slate-800'>Order Summary</h3>
+      <div className='max-h-[calc(100vh-450px)] overflow-y-auto -mx-4'>
+        <div className='px-4'>
+          {selectedProducts.map((product: IOrderProduct, index) =>
+            renderSelectedProductCard(product, index)
+          )}
         </div>
-
-        {/* Subtotal */}
-        <div className='flex items-center justify-between p-4 bg-gradient-to-r from-slate-50 to-slate-100 rounded-xl border border-slate-200'>
-          <span className='font-medium text-slate-700'>Subtotal</span>
-          <span className='text-lg font-bold text-slate-800'>
-            ৳{transection.totalPrice.toFixed(2)}
-          </span>
-        </div>
-
-        {/* Discount */}
-        <div className='space-y-3'>
-          <Label className='flex items-center gap-2 text-sm font-medium text-slate-700'>
-            <div className='w-6 h-6 bg-amber-100 rounded-full flex items-center justify-center'>
-              <Tag className='w-3 h-3 text-amber-600' />
-            </div>
-            Discount Amount
-          </Label>
-          <div className='relative'>
-            <DollarSign className='absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-slate-400' />
-            <Input
-              type='number'
-              min='0'
-              max={transection.totalPrice}
-              disabled={isDisabled}
-              value={transection.discount}
-              onChange={(e) => {
-                const discount = Math.max(
-                  0,
-                  Math.min(Number(e.target.value), transection.totalPrice)
-                );
-                setTransection({
-                  ...transection,
-                  discount,
-                  remaining: Math.max(
-                    transection.totalPrice +
-                      transection?.deliveryCharge -
-                      (transection.paid + discount),
-                    0
-                  ),
-                });
-              }}
-              className='pl-10 bg-white border-slate-200 focus:border-amber-400 focus:ring-amber-100'
-              placeholder='0.00'
-            />
-          </div>
-        </div>
-
-        {/* Delivery Charge */}
-        <div className='space-y-3'>
-          <Label className='flex items-center gap-2 text-sm font-medium text-slate-700'>
-            <div className='w-6 h-6 bg-blue-100 rounded-full flex items-center justify-center'>
-              <Truck className='w-3 h-3 text-blue-600' />
-            </div>
-            Delivery Charge
-          </Label>
-          <div className='relative'>
-            <DollarSign className='absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-slate-400' />
-            <Input
-              type='number'
-              min='0'
-              disabled={isDisabled}
-              value={transection.deliveryCharge}
-              onChange={(e) => {
-                const deliveryCharge = Math.max(0, Number(e.target.value));
-                setTransection({
-                  ...transection,
-                  deliveryCharge,
-                  remaining: Math.max(
-                    transection.totalPrice +
-                      deliveryCharge -
-                      (transection.paid + transection.discount),
-                    0
-                  ),
-                });
-              }}
-              className='pl-10 bg-white border-slate-200 focus:border-blue-400 focus:ring-blue-100'
-              placeholder='0.00'
-            />
-          </div>
-        </div>
-
-        {/* Paid Amount */}
-        <div className='space-y-3'>
-          <Label className='flex items-center gap-2 text-sm font-medium text-slate-700'>
-            <div className='w-6 h-6 bg-emerald-100 rounded-full flex items-center justify-center'>
-              <CreditCard className='w-3 h-3 text-emerald-600' />
-            </div>
-            Paid Amount
-          </Label>
-          <div className='relative'>
-            <DollarSign className='absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-slate-400' />
-            <Input
-              type='number'
-              min='0'
-              max={transection.totalPrice + transection.deliveryCharge}
-              value={transection.paid}
-              disabled={isDisabled}
-              onChange={(e) => {
-                const paid = Math.max(0, Number(e.target.value));
-                const maxPayable =
-                  transection.totalPrice + transection.deliveryCharge;
-                const finalPaid = Math.min(paid, maxPayable);
-
-                setTransection({
-                  ...transection,
-                  paid: finalPaid,
-                  remaining: Math.max(
-                    transection.totalPrice +
-                      transection?.deliveryCharge -
-                      (finalPaid + transection.discount),
-                    0
-                  ),
-                });
-              }}
-              className='pl-10 bg-white border-slate-200 focus:border-emerald-400 focus:ring-emerald-100'
-              placeholder='0.00'
-            />
-          </div>
-        </div>
-
-        <Separator className='my-5 border-slate-200' />
-
-        {/* Summary Cards */}
-        <div className='space-y-3'>
-          <div className='flex items-center justify-between p-4 bg-gradient-to-r from-slate-50 via-blue-50 to-slate-50 rounded-xl border border-slate-200 shadow-sm'>
-            <div className='flex items-center gap-2'>
-              <div className='w-6 h-6 bg-blue-100 rounded-full flex items-center justify-center'>
-                <Receipt className='w-3 h-3 text-blue-600' />
-              </div>
-              <span className='font-semibold text-slate-700'>Grand Total</span>
-            </div>
-            <span className='text-xl font-bold text-slate-800'>
-              ৳{grandTotal.toFixed(2)}
-            </span>
-          </div>
-
-          <div
-            className={`flex items-center justify-between p-4 rounded-xl border shadow-sm ${
-              transection.remaining > 0
-                ? "bg-gradient-to-r from-rose-50 via-orange-50 to-rose-50 border-rose-200"
-                : "bg-gradient-to-r from-emerald-50 via-green-50 to-emerald-50 border-emerald-200"
-            }`}>
-            <div className='flex items-center gap-2'>
-              <div
-                className={`w-6 h-6 rounded-full flex items-center justify-center ${
-                  transection.remaining > 0 ? "bg-orange-100" : "bg-emerald-100"
-                }`}>
-                {transection.remaining > 0 ? (
-                  <AlertCircle className='w-3 h-3 text-orange-600' />
-                ) : (
-                  <CheckCircle2 className='w-3 h-3 text-emerald-600' />
-                )}
-              </div>
-              <span className='font-semibold text-slate-700'>
-                {transection.remaining > 0 ? "Due Amount" : "Fully Paid"}
-              </span>
-            </div>
-            <span
-              className={`text-xl font-bold ${
-                transection.remaining > 0
-                  ? "text-orange-700"
-                  : "text-emerald-700"
-              }`}>
-              ৳{transection.remaining.toFixed(2)}
-            </span>
-          </div>
-        </div>
-
-        {/* Payment Status Indicator */}
-        {transection.totalPrice > 0 && (
-          <div
-            className={`p-3 rounded-lg border-l-4 ${
-              transection.remaining === 0
-                ? "bg-emerald-50 border-l-emerald-500 border border-emerald-200"
-                : transection.paid > 0
-                ? "bg-amber-50 border-l-amber-500 border border-amber-200"
-                : "bg-slate-50 border-l-slate-400 border border-slate-200"
-            }`}>
-            <div className='flex items-center gap-2'>
-              {transection.remaining === 0 ? (
-                <>
-                  <CheckCircle2 className='w-4 h-4 text-emerald-600' />
-                  <span className='text-sm font-medium text-emerald-800'>
-                    Payment Complete
-                  </span>
-                </>
-              ) : transection.paid > 0 ? (
-                <>
-                  <AlertCircle className='w-4 h-4 text-amber-600' />
-                  <span className='text-sm font-medium text-amber-800'>
-                    Partial Payment
-                  </span>
-                </>
-              ) : (
-                <>
-                  <Clock className='w-4 h-4 text-slate-500' />
-                  <span className='text-sm font-medium text-slate-600'>
-                    Pending Payment
-                  </span>
-                </>
-              )}
-            </div>
-          </div>
-        )}
       </div>
     );
   };
@@ -844,47 +576,37 @@ const OrderProductList: React.FC<Props> = ({
   return (
     <div className='space-y-6'>
       <div className='grid grid-cols-1 lg:grid-cols-2 gap-6'>
-        {/* Product Search Section */}
-        <Card className='border-2 border-blue-200 shadow-lg rounded-lg'>
-          <CardHeader className='bg-gradient-to-r from-blue-50 to-purple-50 border-b rounded-lg'>
-            <CardTitle className='flex items-center gap-2 text-xl text-gray-800'>
-              <Search className='w-6 h-6 text-blue-600' />
-              Product Catalog
+        {/* Product Search Section - Medusa Style */}
+        <Card className='border border-gray-200 shadow-sm rounded-lg bg-white'>
+          <CardHeader className='border-b border-gray-200 p-4'>
+            <CardTitle className='text-base font-medium text-gray-900'>
+              Products
             </CardTitle>
-            <CardDescription className='text-gray-600'>
-              Search and select products for your order
+            <CardDescription className='text-sm text-gray-500 mt-1'>
+              Search and select products for the order
             </CardDescription>
           </CardHeader>
-          <CardContent className='p-6'>
-            {/* Search Input */}
-            <div className='relative mb-6'>
-              <Search className='absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400' />
+          <CardContent className='p-4'>
+            {/* Search Input - Medusa Style */}
+            <div className='relative mb-4'>
+              <Search className='absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400' />
               <Input
                 type='text'
-                placeholder='Search products by name, SKU, or category...'
+                placeholder='Search products...'
                 value={query}
                 onChange={(event) => setQuery(event.target.value)}
-                className='pl-12 pr-4 h-12 text-lg border-2 border-gray-200 focus:border-blue-500 bg-white'
+                className='pl-10 h-10 text-sm border-gray-300 focus:border-violet-500 focus:ring-violet-500'
               />
               {isSearching && (
-                <Loader2 className='absolute right-3 top-1/2 transform -translate-y-1/2 w-5 h-5 animate-spin text-blue-600' />
+                <Loader2 className='absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 animate-spin text-violet-600' />
               )}
             </div>
 
             {/* Results Summary */}
-            {query && !isSearching && (
-              <div className='mb-4 p-3 bg-blue-50 rounded-lg border border-blue-200'>
-                <div className='flex items-center gap-2 text-sm text-blue-700'>
-                  <Filter className='w-4 h-4' />
-                  <span>
-                    {products.length > 0
-                      ? `Found ${products.length} product${
-                          products.length !== 1 ? "s" : ""
-                        }`
-                      : "No products found"}{" "}
-                    for "{query}"
-                  </span>
-                </div>
+            {query && !isSearching && products.length > 0 && (
+              <div className='mb-4 text-xs text-gray-500'>
+                {products.length} product{products.length !== 1 ? "s" : ""}{" "}
+                found
               </div>
             )}
 
@@ -893,85 +615,60 @@ const OrderProductList: React.FC<Props> = ({
           </CardContent>
         </Card>
 
-        {/* Selected Products Section */}
-        <Card className='border-2 border-green-200 shadow-lg'>
-          <CardHeader className='bg-gradient-to-r from-green-50 to-blue-50 border-b rounded-lg'>
-            <CardTitle className='flex items-center justify-between text-xl text-gray-800'>
-              <div className='flex items-center gap-2'>
-                <ShoppingBag className='w-6 h-6 text-green-600' />
-                Selected Products
+        {/* Selected Products Section - Medusa Style */}
+        <Card className='border border-gray-200 shadow-sm bg-white'>
+          <CardHeader className='border-b border-gray-200 p-4'>
+            <div className='flex items-center justify-between'>
+              <div>
+                <CardTitle className='text-base font-medium text-gray-900'>
+                  Items
+                </CardTitle>
+                <CardDescription className='text-sm text-gray-500 mt-1'>
+                  {selectedProducts.length > 0
+                    ? `${selectedProducts.length} item${
+                        selectedProducts.length !== 1 ? "s" : ""
+                      } selected`
+                    : "No items selected"}
+                </CardDescription>
               </div>
-              {selectedProducts.length > 0 && (
-                <Badge className='bg-green-600 text-white'>
-                  {selectedProducts.length} item
-                  {selectedProducts.length !== 1 ? "s" : ""}
-                </Badge>
-              )}
-            </CardTitle>
-            <CardDescription className='text-gray-600'>
-              Review and manage your selected products
-            </CardDescription>
+            </div>
           </CardHeader>
-          <CardContent className='p-6'>
+          <CardContent className='p-4'>
             {renderSelectedProductList()}
           </CardContent>
         </Card>
       </div>
 
-      {/* Order Summary Section */}
-      <Card className='border-2 border-slate-200 shadow-lg bg-white'>
-        <CardHeader className='hidden bg-gradient-to-r from-slate-50 via-blue-50 to-slate-50 border-b border-slate-200 rounded-lg'>
-          <CardTitle className='flex items-center gap-3 text-xl text-slate-800'>
-            <div className='w-8 h-8 bg-gradient-to-r from-slate-100 to-blue-100 rounded-full flex items-center justify-center'>
-              <Receipt className='w-5 h-5 text-slate-600' />
-            </div>
-            Order Summary & Calculations
-          </CardTitle>
-          <CardDescription className='text-slate-600 ml-11'>
-            Review pricing details and proceed to next step
-          </CardDescription>
-        </CardHeader>
-        <CardContent className='hidden p-6 bg-gradient-to-b from-white to-slate-50'>
-          {renderTransectionData()}
-        </CardContent>
-        <CardFooter className='bg-gray-50 border-t p-6'>
-          <div className='flex flex-col sm:flex-row gap-3 w-full'>
-            <Button
-              variant='outline'
-              onClick={() => {
-                setSelectedProducts([]);
-                setTransection(defaultTransaction);
-                setQuery("");
-                setProducts([]);
-                toast.success("Order cleared successfully");
-              }}
-              className='flex items-center gap-2 border-gray-300 hover:bg-gray-50'
-              disabled={selectedProducts.length === 0}>
-              <RotateCcw className='w-4 h-4' />
-              Clear Order
-            </Button>
+      {/* Action Buttons - Medusa Style */}
+      <div className='flex items-center justify-between pt-4'>
+        <Button
+          variant='outline'
+          onClick={() => {
+            setSelectedProducts([]);
+            setTransection(defaultTransaction);
+            setQuery("");
+            setProducts([]);
+            toast.success("Order cleared successfully");
+          }}
+          className='h-10 px-4 text-sm font-medium border-gray-300 hover:bg-gray-50'
+          disabled={selectedProducts.length === 0}>
+          <RotateCcw className='w-4 h-4 mr-2' />
+          Clear
+        </Button>
 
-            <Button
-              disabled={!selectedProducts || selectedProducts.length < 1}
-              onClick={() => {
-                handleProductDataSubmit(selectedProducts, transection);
-                toast.success(
-                  `Proceeding with ${selectedProducts.length} products! 🚀`
-                );
-              }}
-              className='flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white flex-1 sm:flex-none sm:ml-auto'
-              size='lg'>
-              <ArrowRight className='w-5 h-5' />
-              Continue to Customer Details
-              {selectedProducts.length > 0 && (
-                <Badge className='bg-white/20 text-white ml-2'>
-                  {selectedProducts.length}
-                </Badge>
-              )}
-            </Button>
-          </div>
-        </CardFooter>
-      </Card>
+        <Button
+          disabled={!selectedProducts || selectedProducts.length < 1}
+          onClick={() => {
+            handleProductDataSubmit(selectedProducts, transection);
+            toast.success(
+              `Proceeding with ${selectedProducts.length} products! 🚀`
+            );
+          }}
+          className='h-10 px-6 text-sm font-medium bg-violet-600 hover:bg-violet-700 text-white'>
+          Continue
+          <ArrowRight className='w-4 h-4 ml-2' />
+        </Button>
+      </div>
     </div>
   );
 };
