@@ -341,10 +341,11 @@ const ReportPage = ({ activeUsers }: { activeUsers: number }) => {
         <OTPVerificationDialog
           open={showOTPDialog}
           onOpenChange={(val) => setShowOTPDialog(val)}
-          email={user.email}
+          mobile_number={user.mobile_number || ""}
+          email={user.email || ""}
           purpose='account_verification'
           title='Verify to Download Report'
-          description='For security purposes, please verify your email to download the report'
+          description='For security purposes, please verify your phone number to download the report'
           onVerificationSuccess={handleDownloadAfterVerification}
           autoSendOnMount={true}
         />

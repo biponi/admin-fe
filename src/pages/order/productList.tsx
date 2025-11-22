@@ -392,7 +392,7 @@ const OrderProductList: React.FC<Props> = ({
     const distinctColors = new Set<string>();
     const distinctSizes = new Set<string>();
 
-    if (!!product?.variation) {
+    if (product.hasVariation && product?.variation.length > 0) {
       const variations = product.variation.filter((v) => v?.quantity > 0);
       if (variations.length === 0) {
         toast.error(

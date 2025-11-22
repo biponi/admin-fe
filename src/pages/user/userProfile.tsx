@@ -27,6 +27,7 @@ const ProfilePage = () => {
     avatar: "",
     role: "",
     bio: "",
+    mobile_number: "",
     whatsapp_number: "",
     createdAt: "",
   });

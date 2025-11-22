@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { Button } from "../../components/ui/button";
 import { Input } from "../../components/ui/input";
@@ -164,6 +164,7 @@ const UpdatePurchaseOrderSkeleton: React.FC = () => (
 const UpdatePurchaseOrder: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const submitLockRef = useRef(false);
 
   // State
   const [purchaseOrder, setPurchaseOrder] = useState<PurchaseOrder | null>(
@@ -179,6 +180,11 @@ const UpdatePurchaseOrder: React.FC = () => {
   const [inventoryWarnings, setInventoryWarnings] = useState<string[]>([]);
   const [hasChanges, setHasChanges] = useState(false);
   const [showDiscardDialog, setShowDiscardDialog] = useState(false);
+
+  // History management for undo/redo
+  const [history, setHistory] = useState<PurchaseOrderProduct[][]>([]);
+  const [historyIndex, setHistoryIndex] = useState(-1);
+  const maxHistorySize = 20;
 
   // Fetch purchase order data
   const fetchData = useCallback(async () => {
@@ -206,6 +212,51 @@ const UpdatePurchaseOrder: React.FC = () => {
   useEffect(() => {
     fetchData();
   }, [fetchData]);
+
+  // Add to history and manage undo/redo stack
+  const addToHistory = useCallback(
+    (newProducts: PurchaseOrderProduct[]) => {
+      setHistory((prev) => {
+        // Slice to current history index to remove any "future" history
+        const newHistory = prev.slice(0, historyIndex + 1);
+        newHistory.push(JSON.parse(JSON.stringify(newProducts))); // Deep copy
+        if (newHistory.length > maxHistorySize) {
+          newHistory.shift();
+        }
+        return newHistory;
+      });
+      setHistoryIndex((prev) => prev + 1);
+    },
+    [historyIndex, maxHistorySize]
+  );
+
+  // Initialize history when products are loaded
+  useEffect(() => {
+    if (products.length > 0 && history.length === 0) {
+      setHistory([JSON.parse(JSON.stringify(products))]);
+      setHistoryIndex(0);
+    }
+  }, [products, history.length]);
+
+  // Undo operation
+  const handleUndo = useCallback(() => {
+    if (historyIndex > 0) {
+      setHistoryIndex((prev) => prev - 1);
+      setProducts(history[historyIndex - 1]);
+      setHasChanges(true);
+      toast.success("Changes undone");
+    }
+  }, [history, historyIndex]);
+
+  // Redo operation
+  const handleRedo = useCallback(() => {
+    if (historyIndex < history.length - 1) {
+      setHistoryIndex((prev) => prev + 1);
+      setProducts(history[historyIndex + 1]);
+      setHasChanges(true);
+      toast.success("Changes redone");
+    }
+  }, [history, historyIndex]);
 
   // Real-time total calculation
   const calculateTotal = useCallback(() => {
@@ -251,7 +302,7 @@ const UpdatePurchaseOrder: React.FC = () => {
       if (!Number.isInteger(product.quantity)) {
         errors.push({
           field: "quantity",
-          message: "Quantity must be a whole number",
+          message: "Quantity must be a whole number (no decimals)",
           productIndex: index,
         });
       }
@@ -265,11 +316,19 @@ const UpdatePurchaseOrder: React.FC = () => {
         });
       }
 
+      if (isNaN(product.unitPrice)) {
+        errors.push({
+          field: "unitPrice",
+          message: "Unit price must be a valid number",
+          productIndex: index,
+        });
+      }
+
       // SKU validation
       if (!product.sku || product.sku.trim() === "") {
         errors.push({
           field: "sku",
-          message: "SKU is required",
+          message: "SKU is required and cannot be empty",
           productIndex: index,
         });
       }
@@ -323,19 +382,22 @@ const UpdatePurchaseOrder: React.FC = () => {
         quantity: value === "" ? 0 : parseInt(value),
       };
       setProducts(newProducts);
+      addToHistory(newProducts);
       setHasChanges(true);
     }
   };
 
   // Handle unit price change
   const handleUnitPriceChange = (index: number, value: string) => {
-    if (value === "" || /^\d*\.?\d*$/.test(value)) {
+    // Allow empty, whole numbers, or decimals with proper format
+    if (value === "" || /^\d+(\.\d{0,2})?$/.test(value)) {
       const newProducts = [...products];
       newProducts[index] = {
         ...newProducts[index],
         unitPrice: value === "" ? 0 : parseFloat(value) || 0,
       };
       setProducts(newProducts);
+      addToHistory(newProducts);
       setHasChanges(true);
     }
   };
@@ -348,6 +410,7 @@ const UpdatePurchaseOrder: React.FC = () => {
       quantity: (newProducts[index].quantity || 0) + 1,
     };
     setProducts(newProducts);
+    addToHistory(newProducts);
     setHasChanges(true);
   };
 
@@ -359,13 +422,16 @@ const UpdatePurchaseOrder: React.FC = () => {
       quantity: Math.max(0, (newProducts[index].quantity || 0) - 1),
     };
     setProducts(newProducts);
+    addToHistory(newProducts);
     setHasChanges(true);
   };
 
   // Remove product
   const removeProduct = (index: number) => {
     const productName = products[index].name;
-    setProducts((prev) => prev.filter((_, i) => i !== index));
+    const newProducts = products.filter((_, i) => i !== index);
+    setProducts(newProducts);
+    addToHistory(newProducts);
     setHasChanges(true);
     toast.success(`Removed ${productName} from purchase order`);
   };
@@ -373,6 +439,12 @@ const UpdatePurchaseOrder: React.FC = () => {
   // Handle form submission
   const handleUpdate = async () => {
     if (!purchaseOrder) return;
+
+    // Prevent duplicate submissions
+    if (submitLockRef.current) {
+      toast.error("Please wait for the previous update to complete");
+      return;
+    }
 
     // Validate form
     const errors = validateForm();
@@ -383,7 +455,9 @@ const UpdatePurchaseOrder: React.FC = () => {
       return;
     }
 
+    submitLockRef.current = true;
     setUpdating(true);
+
     try {
       // Prepare API payload
       const payload = {
@@ -413,18 +487,40 @@ const UpdatePurchaseOrder: React.FC = () => {
     } catch (error: any) {
       console.error("Failed to update purchase order:", error);
 
-      // Handle specific error types
+      // Handle specific error types with better messages
       if (error.response?.status === 400) {
         // Validation errors from backend
         const backendErrors = error.response.data.errors || [];
-        setValidationErrors(backendErrors);
+        setValidationErrors(
+          backendErrors.length > 0
+            ? backendErrors
+            : [
+                {
+                  field: "general",
+                  message:
+                    error.response.data.message ||
+                    "Validation failed. Please check your input.",
+                },
+              ]
+        );
         toast.error("Validation failed. Please check the form.");
       } else if (error.response?.status === 404) {
-        toast.error("Purchase order or product not found");
+        toast.error(
+          "Purchase order or product not found. It may have been deleted."
+        );
+        setTimeout(() => navigate("/purchase-order/list"), 2000);
+      } else if (error.response?.status === 409) {
+        toast.error(
+          "Conflict: This purchase order has been modified by another user. Please refresh and try again."
+        );
       } else {
-        toast.error("Failed to update purchase order. Please try again.");
+        toast.error(
+          error.response?.data?.message ||
+            "Failed to update purchase order. Please try again."
+        );
       }
     } finally {
+      submitLockRef.current = false;
       setUpdating(false);
     }
   };
@@ -433,6 +529,34 @@ const UpdatePurchaseOrder: React.FC = () => {
   useEffect(() => {
     checkInventoryWarnings();
   }, [checkInventoryWarnings]);
+
+  // Keyboard shortcuts
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Ctrl+Z or Cmd+Z for undo
+      if ((e.ctrlKey || e.metaKey) && e.key === "z" && !e.shiftKey) {
+        e.preventDefault();
+        handleUndo();
+      }
+      // Ctrl+Shift+Z or Cmd+Shift+Z for redo
+      if (
+        (e.ctrlKey || e.metaKey) &&
+        (e.key === "z" || e.key === "y") &&
+        e.shiftKey
+      ) {
+        e.preventDefault();
+        handleRedo();
+      }
+      // Ctrl+Y or Cmd+Y for redo
+      if ((e.ctrlKey || e.metaKey) && e.key === "y") {
+        e.preventDefault();
+        handleRedo();
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [handleUndo, handleRedo]);
 
   if (loading) {
     return (
@@ -489,6 +613,22 @@ const UpdatePurchaseOrder: React.FC = () => {
                 </CardDescription>
               </div>
               <div className='flex items-center gap-2'>
+                <Button
+                  variant='outline'
+                  size='sm'
+                  onClick={handleUndo}
+                  disabled={historyIndex <= 0 || updating}
+                  title='Undo (Ctrl+Z)'>
+                  ↶ Undo
+                </Button>
+                <Button
+                  variant='outline'
+                  size='sm'
+                  onClick={handleRedo}
+                  disabled={historyIndex >= history.length - 1 || updating}
+                  title='Redo (Ctrl+Y)'>
+                  ↷ Redo
+                </Button>
                 <Button
                   variant='outline'
                   onClick={() => navigate("/purchase-order/list")}
@@ -706,7 +846,8 @@ const UpdatePurchaseOrder: React.FC = () => {
                                   !product.quantity ||
                                   product.quantity <= 0
                                 }
-                                className='h-8 w-8 p-0'>
+                                className='h-8 w-8 p-0'
+                                aria-label={`Decrease quantity for ${product.name}`}>
                                 <Minus className='h-3 w-3' />
                               </Button>
                               <Input
@@ -720,18 +861,28 @@ const UpdatePurchaseOrder: React.FC = () => {
                                 }`}
                                 placeholder='0'
                                 disabled={updating}
+                                aria-label={`Quantity for ${product.name}`}
+                                aria-describedby={
+                                  hasQuantityError
+                                    ? `qty-error-${index}`
+                                    : undefined
+                                }
                               />
                               <Button
                                 variant='outline'
                                 size='sm'
                                 onClick={() => handleQuantityIncrement(index)}
                                 disabled={updating}
-                                className='h-8 w-8 p-0'>
+                                className='h-8 w-8 p-0'
+                                aria-label={`Increase quantity for ${product.name}`}>
                                 <Plus className='h-3 w-3' />
                               </Button>
                             </div>
                             {hasQuantityError && (
-                              <div className='text-xs text-red-500 mt-1 text-center'>
+                              <div
+                                className='text-xs text-red-500 mt-1 text-center'
+                                id={`qty-error-${index}`}
+                                role='alert'>
                                 {
                                   validationErrors.find(
                                     (e) =>
@@ -755,9 +906,18 @@ const UpdatePurchaseOrder: React.FC = () => {
                               }`}
                               placeholder='0.00'
                               disabled={updating}
+                              aria-label={`Unit price for ${product.name}`}
+                              aria-describedby={
+                                hasPriceError
+                                  ? `price-error-${index}`
+                                  : undefined
+                              }
                             />
                             {hasPriceError && (
-                              <div className='text-xs text-red-500 mt-1 text-center'>
+                              <div
+                                className='text-xs text-red-500 mt-1 text-center'
+                                id={`price-error-${index}`}
+                                role='alert'>
                                 {
                                   validationErrors.find(
                                     (e) =>
@@ -783,7 +943,8 @@ const UpdatePurchaseOrder: React.FC = () => {
                                   variant='ghost'
                                   size='sm'
                                   disabled={updating}
-                                  className='h-8 w-8 p-0 text-destructive hover:text-destructive'>
+                                  className='h-8 w-8 p-0 text-destructive hover:text-destructive'
+                                  aria-label={`Remove ${product.name} from purchase order`}>
                                   <Trash2 className='h-4 w-4' />
                                 </Button>
                               </AlertDialogTrigger>

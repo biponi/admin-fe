@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import Swal from "sweetalert2";
 import { useToast } from "../../../components/ui/use-toast";
 import {
   getOrders,
@@ -114,10 +115,38 @@ export const useOrderList = () => {
       getOrderList();
       getAnalytics();
     } else {
-      toast({
-        variant: "destructive",
-        title: "Order Error",
-        description: response?.error,
+      Swal.fire({
+        html: `
+    <div 
+      style="
+        background: #fef3c7;
+        padding: 18px;
+        border-radius: 12px;
+        border: 1px solid #fcd34d;
+        display: flex;
+        gap: 12px;
+        align-items: flex-start;
+        font-size: 16px;
+        line-height: 1.6;
+        color: #854d0e;
+      "
+    >
+      <div>
+        <strong style="font-size: 17px;">Warning</strong><br/>
+        <span>${response?.error}</span>
+      </div>
+    </div>
+  `,
+        icon: "warning",
+        confirmButtonText: "Okay",
+        confirmButtonColor: "#6366f1",
+        width: 600,
+        padding: "1.5rem 1.2rem",
+        backdrop: `
+    rgba(0,0,0,0.4)
+    left top
+    no-repeat
+  `,
       });
     }
   };

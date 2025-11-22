@@ -93,6 +93,7 @@ export enum CourierProvider {
   REDX = "redx",
   ECOURIER = "ecourier",
   MANUAL = "manual",
+  SELF = "self",
 }
 
 export enum DeliveryStatus {
@@ -201,6 +202,7 @@ export interface IOrder {
   id: number;
   active: boolean;
   notes?: string;
+  creatorAvatar?: string;
   orderCreatedBy: string;
   orderNumber: number;
   customer: ICustomer;
@@ -228,6 +230,12 @@ export interface IOrder {
   courierResponse?: any;
   estimatedDeliveryDate?: Date | null;
 
+  // Return Order Fields
+  isReturn?: boolean;
+  returnReason?: string;
+  returnReasonDetails?: string;
+  returnedAt?: string | Date;
+
   // Virtual fields (if needed)
   ageInDays?: number;
   statusDisplay?: string;
@@ -237,6 +245,7 @@ export interface IOrder {
 export interface ICreateOrderDTO {
   notes?: string;
   orderCreatedBy?: string;
+  creatorAvatar: string;
   customer: ICustomer;
   status?: OrderStatus | string;
   totalPrice?: number;
@@ -313,6 +322,7 @@ export interface IOrderFilter {
   courierProvider?: CourierProvider | string;
   customerRiskLevel?: CustomerRiskLevel | string;
   requiresManualReview?: boolean;
+  isReturn?: boolean;
 }
 
 export interface IPaginationParams {

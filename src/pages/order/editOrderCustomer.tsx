@@ -1,5 +1,4 @@
-// Updated EditCustomerInformation Component for Sheet Layout
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo, useCallback } from "react";
 import {
   Card,
   CardContent,
@@ -15,7 +14,6 @@ import {
 } from "../../components/ui/select";
 import { Label } from "../../components/ui/label";
 import { Input } from "../../components/ui/input";
-import { BDDistrictList, BDDivisions } from "../../utils/contents";
 import { Textarea } from "../../components/ui/textarea";
 import { Button } from "../../components/ui/button";
 import { Badge } from "../../components/ui/badge";
@@ -35,23 +33,37 @@ import {
   Save,
   X,
 } from "lucide-react";
+import { BDDistrictList, BDDivisions } from "../../utils/contents";
 import { getLocationByFormattedString } from "../../utils/functions";
+import { ICustomer } from "./interface";
 
-const defaultPersonalInformation = {
-  name: "",
-  email: "",
-  phoneNumber: "",
-};
+// ─────────────────────────────────────────────────────────────────────────────
+// Types
+// ─────────────────────────────────────────────────────────────────────────────
 
-const defaultShippingAddress = {
-  division: {},
-  district: {},
-  address: "",
-};
+interface Location {
+  id: string;
+  name: string;
+  bn_name: string;
+  division_id?: string;
+}
+
+interface ShippingAddress {
+  division: any;
+  district: any;
+  address: string;
+}
+
+interface PaymentInfo {
+  totalPrice: number;
+  deliveryCharge: number;
+  discount: number;
+  paid: number;
+}
 
 interface Props {
-  shipping: any;
-  customerInfo: any;
+  shipping: { division?: string; district?: string; address?: string };
+  customerInfo: ICustomer;
   deliveryCharge: number;
   totalPrice: number;
   paid: number;
@@ -59,14 +71,156 @@ interface Props {
   discount: number;
   notes: string;
   handleClose: () => void;
-  handleCustomerDataChange: (information: any) => void;
+  handleCustomerDataChange: (data: any) => void | Promise<void>;
 }
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Reusable Components
+// ─────────────────────────────────────────────────────────────────────────────
+
+const SectionCard = ({
+  icon: Icon,
+  iconBg,
+  iconColor,
+  title,
+  children,
+}: {
+  icon: React.ElementType;
+  iconBg: string;
+  iconColor: string;
+  title: string;
+  children: React.ReactNode;
+}) => (
+  <Card className='border-slate-200/60 shadow-none border-x-0 border-t-0 rounded-none'>
+    <CardHeader className='px-0 pb-3'>
+      <CardTitle className='flex items-center gap-2 text-slate-700 text-base'>
+        <div className={`p-1 rounded ${iconBg}`}>
+          <Icon className={`h-3.5 w-3.5 ${iconColor}`} />
+        </div>
+        {title}
+      </CardTitle>
+    </CardHeader>
+    <CardContent className='px-0 space-y-3'>{children}</CardContent>
+  </Card>
+);
+
+const FormField = ({
+  label,
+  icon: Icon,
+  children,
+}: {
+  label: string;
+  icon?: React.ElementType;
+  children: React.ReactNode;
+}) => (
+  <div className='space-y-2'>
+    <Label className='text-xs font-medium text-slate-700 flex items-center gap-1'>
+      {Icon && <Icon className='h-3 w-3' />}
+      {label}
+    </Label>
+    {children}
+  </div>
+);
+
+const SearchableSelect = ({
+  value,
+  onValueChange,
+  options,
+  placeholder,
+  query,
+  onQueryChange,
+  colorClass = "green",
+}: {
+  value: string;
+  onValueChange: (value: string) => void;
+  options: Location[];
+  placeholder: string;
+  query: string;
+  onQueryChange: (query: string) => void;
+  colorClass?: string;
+}) => {
+  const filtered = options.filter(
+    (opt) =>
+      opt.name.toLowerCase().includes(query.toLowerCase()) ||
+      opt.bn_name.includes(query)
+  );
+
+  return (
+    <Select value={value} onValueChange={onValueChange}>
+      <SelectTrigger
+        className={`h-9 text-sm focus:ring-1 focus:ring-${colorClass}-500/30`}>
+        <SelectValue placeholder={placeholder} />
+      </SelectTrigger>
+      <SelectContent>
+        <div className='relative'>
+          <Search className='absolute left-2 top-2 h-3 w-3 text-gray-400' />
+          <Input
+            type='text'
+            className={`h-7 pl-7 text-xs border-0 border-b rounded-none focus:border-${colorClass}-500 focus:ring-0`}
+            placeholder='Search...'
+            value={query}
+            onChange={(e) => onQueryChange(e.target.value)}
+          />
+        </div>
+        {filtered.map((opt) => (
+          <SelectItem
+            key={opt.id}
+            value={opt.id}
+            className={`text-xs cursor-pointer hover:bg-${colorClass}-50`}>
+            {`${opt.name} (${opt.bn_name})`}
+          </SelectItem>
+        ))}
+      </SelectContent>
+    </Select>
+  );
+};
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Custom Hooks
+// ─────────────────────────────────────────────────────────────────────────────
+
+const usePaymentCalculations = (initial: PaymentInfo) => {
+  const [payment, setPayment] = useState(initial);
+
+  const remaining = useMemo(
+    () =>
+      payment.totalPrice +
+      payment.deliveryCharge -
+      payment.discount -
+      payment.paid,
+    [payment]
+  );
+
+  const finalAmount = useMemo(
+    () => payment.totalPrice + payment.deliveryCharge - payment.discount,
+    [payment]
+  );
+
+  const updateField = useCallback((field: keyof PaymentInfo, value: number) => {
+    setPayment((prev) => ({ ...prev, [field]: value }));
+  }, []);
+
+  useEffect(() => {
+    setPayment(initial);
+    //eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [
+    initial.totalPrice,
+    initial.deliveryCharge,
+    initial.discount,
+    initial.paid,
+  ]);
+
+  return { payment, remaining, finalAmount, updateField };
+};
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Main Component
+// ─────────────────────────────────────────────────────────────────────────────
 
 const EditCustomerInformation: React.FC<Props> = ({
   paid,
   totalPrice,
   shipping,
-  remaining,
   discount,
   notes,
   handleClose,
@@ -74,475 +228,246 @@ const EditCustomerInformation: React.FC<Props> = ({
   deliveryCharge,
   handleCustomerDataChange,
 }) => {
-  const [personalInformation, setPersonalInformation] = useState(
-    defaultPersonalInformation
-  );
-  const [shippingAddress, setShippingAddress] = useState(
-    defaultShippingAddress
-  );
-
-  const [tp, setTp] = useState(totalPrice ?? 0);
-  const [spaid, setPaid] = useState(paid ?? 0);
-  const [sdeliveryCharge, setDeliveryCharge] = useState(deliveryCharge ?? 0);
-  const [sremaining, setRemaining] = useState(remaining ?? 0);
-  const [sdiscount, setDiscount] = useState(discount ?? 0);
-  const [updatedNotes, setUpdatedNotes] = useState(notes ?? "");
-
+  const [personalInfo, setPersonalInfo] = useState<ICustomer>({
+    name: "",
+    email: "",
+    phoneNumber: "",
+  });
+  const [shippingAddress, setShippingAddress] = useState<ShippingAddress>({
+    division: null,
+    district: null,
+    address: "",
+  });
+  const [updatedNotes, setUpdatedNotes] = useState(notes);
   const [divisionQuery, setDivisionQuery] = useState("");
   const [districtQuery, setDistrictQuery] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // Calculate final amount
-  const finalAmount = Number(tp) + Number(sdeliveryCharge) - Number(sdiscount);
+  const { payment, remaining, finalAmount, updateField } =
+    usePaymentCalculations({
+      totalPrice,
+      deliveryCharge,
+      discount,
+      paid,
+    });
 
+  // Sync props to state
+  useEffect(() => setPersonalInfo(customerInfo), [customerInfo]);
+  useEffect(() => setUpdatedNotes(notes), [notes]);
   useEffect(() => {
     setShippingAddress({
-      ...shippingAddress,
-      address: shipping?.address,
+      address: shipping?.address ?? "",
       district:
-        getLocationByFormattedString(BDDistrictList, shipping.district) ?? {},
+        getLocationByFormattedString(
+          BDDistrictList,
+          shipping?.district ?? ""
+        ) ?? null,
       division:
-        getLocationByFormattedString(BDDivisions, shipping.division) ?? {},
+        getLocationByFormattedString(BDDivisions, shipping?.division ?? "") ??
+        null,
     });
-    //eslint-disable-next-line
   }, [shipping]);
 
-  useEffect(() => {
-    setTp(totalPrice);
-    setPaid(paid);
-    setDeliveryCharge(deliveryCharge);
-    setRemaining(remaining);
-    setDiscount(discount);
-  }, [paid, totalPrice, deliveryCharge, remaining, discount]);
-
-  useEffect(() => {
-    setPersonalInformation({
-      ...customerInfo,
-    });
-    //eslint-disable-next-line
-  }, [customerInfo]);
-
-  useEffect(() => {
-    setUpdatedNotes(notes);
-    //eslint-disable-next-line
-  }, [notes]);
-
-  const handlePersonalInformationChange = (
-    e: React.ChangeEvent<HTMLInputElement>
-  ) => {
-    setPersonalInformation({
-      ...personalInformation,
-      [e.target.name]: e.target.value,
-    });
+  const handlePersonalChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setPersonalInfo((prev) => ({ ...prev, [e.target.name]: e.target.value }));
   };
 
-  const handleShippingDivChange = (id: string, name: string) => {
-    if (name === "division") {
-      const filteredDivision = BDDivisions.filter(
-        (division) => division?.id === id
-      );
-      if (filteredDivision.length > 0)
-        setShippingAddress({
-          ...shippingAddress,
-          division: filteredDivision[0],
-          district: {}, // Reset district when division changes
-        });
-    } else {
-      const filteredDistrict = BDDistrictList.filter(
-        (District) => District?.id === id
-      );
-      if (filteredDistrict.length > 0)
-        setShippingAddress({
-          ...shippingAddress,
-          district: filteredDistrict[0],
-        });
-    }
+  const handleDivisionChange = (id: string) => {
+    const division = BDDivisions.find((d) => d.id === id) ?? null;
+    setShippingAddress((prev) => ({ ...prev, division, district: null }));
+    setDistrictQuery("");
   };
 
-  const handleSubmit = async () => {
+  const handleDistrictChange = (id: string) => {
+    const district = BDDistrictList.find((d) => d.id === id) ?? null;
+    setShippingAddress((prev) => ({ ...prev, district }));
+  };
+
+  const formatLocation = (loc: Location | null) =>
+    loc ? `${loc.name}(${loc.bn_name})` : "";
+
+  const handleSubmit = () => {
     setIsSubmitting(true);
     try {
-      await handleCustomerDataChange({
+      handleCustomerDataChange({
         notes: updatedNotes,
-        customer: personalInformation,
+        customer: personalInfo,
         shipping: {
-          address: shippingAddress?.address,
-          //@ts-ignore
-          district: `${shippingAddress?.district?.name ?? ""}(${
-            //@ts-ignore
-            shippingAddress?.district?.bn_name ?? ""
-          })`,
-          //@ts-ignore
-          division: `${shippingAddress?.division?.name ?? ""}(${
-            //@ts-ignore
-            shippingAddress?.division?.bn_name ?? ""
-          })`,
+          address: shippingAddress.address,
+          district: formatLocation(shippingAddress.district),
+          division: formatLocation(shippingAddress.division),
         },
-        discount: sdiscount,
-        remaining: sremaining,
-        paid: spaid,
-        deliveryCharge: sdeliveryCharge,
+        discount: payment.discount,
+        remaining,
+        paid: payment.paid,
+        deliveryCharge: payment.deliveryCharge,
       });
     } finally {
       setIsSubmitting(false);
     }
   };
 
-  const renderCustomerPersonalInformation = () => {
-    return (
-      <Card className='border-slate-200/60 shadow-none border-x-0 border-t-0 rounded-none'>
-        <CardHeader className='px-0 pb-3'>
-          <CardTitle className='flex items-center gap-2 text-slate-700 text-base'>
-            <div className='p-1 rounded bg-blue-100'>
-              <User className='h-3.5 w-3.5 text-blue-600' />
-            </div>
-            Customer Information
-          </CardTitle>
-        </CardHeader>
-        <CardContent className='px-0 space-y-3'>
-          <div className='space-y-2'>
-            <Label
-              htmlFor='name'
-              className='text-xs font-medium text-slate-700 flex items-center gap-1'>
-              <User className='h-3 w-3' />
-              Customer Name
-            </Label>
+  const filteredDistricts = useMemo(
+    () =>
+      BDDistrictList.filter(
+        (d) => d.division_id === shippingAddress.division?.id
+      ),
+    [shippingAddress.division?.id]
+  );
+
+  return (
+    <div className='flex flex-col h-full'>
+      <div className='flex-1 overflow-y-auto px-6 py-4 space-y-4'>
+        {/* Customer Information */}
+        <SectionCard
+          icon={User}
+          iconBg='bg-blue-100'
+          iconColor='text-blue-600'
+          title='Customer Information'>
+          <FormField label='Customer Name' icon={User}>
             <Input
-              type='text'
-              id='name'
               name='name'
+              value={personalInfo.name}
+              onChange={handlePersonalChange}
               placeholder='Enter customer name'
-              value={personalInformation.name}
-              onChange={handlePersonalInformationChange}
-              className='h-9 text-sm transition-all duration-200 focus:ring-1 focus:ring-blue-500/30'
+              className='h-9 text-sm'
             />
-          </div>
+          </FormField>
 
           <div className='grid grid-cols-1 sm:grid-cols-2 gap-3'>
-            <div className='space-y-2'>
-              <Label
-                htmlFor='email'
-                className='text-xs font-medium text-slate-700 flex items-center gap-1'>
-                <Mail className='h-3 w-3' />
-                Email
-              </Label>
+            <FormField label='Email' icon={Mail}>
               <Input
-                type='email'
-                id='email'
                 name='email'
+                type='email'
+                value={personalInfo.email}
+                onChange={handlePersonalChange}
                 placeholder='email@example.com'
-                value={personalInformation.email}
-                onChange={handlePersonalInformationChange}
-                className='h-9 text-sm transition-all duration-200 focus:ring-1 focus:ring-blue-500/30'
+                className='h-9 text-sm'
               />
-            </div>
-
-            <div className='space-y-2'>
-              <Label
-                htmlFor='phone-number'
-                className='text-xs font-medium text-slate-700 flex items-center gap-1'>
-                <Phone className='h-3 w-3' />
-                Phone
-              </Label>
+            </FormField>
+            <FormField label='Phone' icon={Phone}>
               <Input
-                type='text'
-                id='phone-number'
                 name='phoneNumber'
+                value={personalInfo.phoneNumber}
+                onChange={handlePersonalChange}
                 placeholder='017XXXXXXXXX'
-                value={personalInformation.phoneNumber}
-                onChange={handlePersonalInformationChange}
-                className='h-9 text-sm transition-all duration-200 focus:ring-1 focus:ring-blue-500/30'
+                className='h-9 text-sm'
               />
-            </div>
+            </FormField>
           </div>
 
-          <div className='space-y-2'>
-            <Label
-              htmlFor='notes'
-              className='text-xs font-medium text-slate-700 flex items-center gap-1'>
-              <FileText className='h-3 w-3' />
-              Notes
-            </Label>
+          <FormField label='Notes' icon={FileText}>
             <Textarea
               rows={2}
-              id='notes'
-              name='notes'
-              placeholder='Special instructions...'
               value={updatedNotes}
               onChange={(e) => setUpdatedNotes(e.target.value)}
-              className='text-sm transition-all duration-200 focus:ring-1 focus:ring-blue-500/30 resize-none'
+              placeholder='Special instructions...'
+              className='text-sm resize-none'
             />
-          </div>
-        </CardContent>
-      </Card>
-    );
-  };
+          </FormField>
+        </SectionCard>
 
-  const renderCustomerShippingInformation = () => {
-    return (
-      <Card className='border-slate-200/60 shadow-none border-x-0 border-t-0 rounded-none'>
-        <CardHeader className='px-0 pb-3'>
-          <CardTitle className='flex items-center gap-2 text-slate-700 text-base'>
-            <div className='p-1 rounded bg-green-100'>
-              <MapPin className='h-3.5 w-3.5 text-green-600' />
-            </div>
-            Shipping Address
-          </CardTitle>
-        </CardHeader>
-        <CardContent className='px-0 space-y-3'>
+        {/* Shipping Address */}
+        <SectionCard
+          icon={MapPin}
+          iconBg='bg-green-100'
+          iconColor='text-green-600'
+          title='Shipping Address'>
           <div className='grid grid-cols-1 sm:grid-cols-2 gap-3'>
-            <div className='space-y-2'>
-              <Label
-                htmlFor='division'
-                className='text-xs font-medium text-slate-700'>
-                Division
-              </Label>
-              <Select
-                value={
-                  //@ts-ignore
-                  !!shippingAddress?.division?.id
-                    ? //@ts-ignore
-                      shippingAddress?.division?.id
-                    : ""
-                }
-                onValueChange={(value: string) => {
-                  handleShippingDivChange(value, "division");
-                  setDistrictQuery("");
-                }}>
-                <SelectTrigger className='h-9 text-sm transition-all duration-200 focus:ring-1 focus:ring-green-500/30'>
-                  <SelectValue placeholder='Select division' />
-                </SelectTrigger>
-                <SelectContent>
-                  <div className='relative'>
-                    <Search className='absolute left-2 top-2 h-3 w-3 text-gray-400' />
-                    <Input
-                      type='text'
-                      className='h-7 pl-7 text-xs border-0 border-b border-gray-200 rounded-none focus:border-green-500 focus:ring-0'
-                      placeholder='Search...'
-                      value={divisionQuery}
-                      onChange={(e) => setDivisionQuery(e.target.value)}
-                    />
-                  </div>
-                  {BDDivisions.filter(
-                    (division) =>
-                      division.name
-                        .toLowerCase()
-                        .includes(divisionQuery.toLowerCase()) ||
-                      division.bn_name.includes(divisionQuery)
-                  ).map((division, index: number) => (
-                    <SelectItem
-                      key={index}
-                      value={division?.id}
-                      className='text-xs cursor-pointer hover:bg-green-50'>
-                      {`${division?.name} (${division?.bn_name})`}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
+            <FormField label='Division'>
+              <SearchableSelect
+                value={shippingAddress.division?.id ?? ""}
+                onValueChange={handleDivisionChange}
+                options={BDDivisions}
+                placeholder='Select division'
+                query={divisionQuery}
+                onQueryChange={setDivisionQuery}
+              />
+            </FormField>
 
-            {!!shippingAddress?.division && (
-              <div className='space-y-2 animate-in slide-in-from-right-2 duration-300'>
-                <Label
-                  htmlFor='district'
-                  className='text-xs font-medium text-slate-700'>
-                  District
-                </Label>
-                <Select
-                  //@ts-ignore
-                  value={
-                    //@ts-ignore
-                    !!shippingAddress?.district?.id
-                      ? //@ts-ignore
-                        shippingAddress?.district?.id
-                      : ""
-                  }
-                  onValueChange={(value: string) => {
-                    handleShippingDivChange(value, "district");
-                  }}>
-                  <SelectTrigger className='h-9 text-sm transition-all duration-200 focus:ring-1 focus:ring-green-500/30'>
-                    <SelectValue placeholder='Select district' />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <div className='relative'>
-                      <Search className='absolute left-2 top-2 h-3 w-3 text-gray-400' />
-                      <Input
-                        type='text'
-                        className='h-7 pl-7 text-xs border-0 border-b border-gray-200 rounded-none focus:border-green-500 focus:ring-0'
-                        placeholder='Search...'
-                        value={districtQuery}
-                        onChange={(e) => setDistrictQuery(e.target.value)}
-                      />
-                    </div>
-                    {BDDistrictList.filter(
-                      (district) =>
-                        !!shippingAddress.division &&
-                        //@ts-ignore
-                        shippingAddress?.division.id === district.division_id &&
-                        (district.name
-                          .toLowerCase()
-                          .includes(districtQuery.toLowerCase()) ||
-                          district.bn_name.includes(districtQuery))
-                    ).map((district, index: number) => (
-                      <SelectItem
-                        key={index}
-                        value={district?.id}
-                        className='text-xs cursor-pointer hover:bg-green-50'>
-                        {`${district?.name} (${district?.bn_name})`}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
+            {shippingAddress.division && (
+              <FormField label='District'>
+                <SearchableSelect
+                  value={shippingAddress.district?.id ?? ""}
+                  onValueChange={handleDistrictChange}
+                  options={filteredDistricts}
+                  placeholder='Select district'
+                  query={districtQuery}
+                  onQueryChange={setDistrictQuery}
+                />
+              </FormField>
             )}
           </div>
 
-          <div className='space-y-2'>
-            <Label
-              htmlFor='address'
-              className='text-xs font-medium text-slate-700'>
-              Complete Address
-            </Label>
+          <FormField label='Complete Address'>
             <Textarea
-              id='address'
-              name='address'
-              placeholder='House/Flat no., Street, Area...'
-              value={shippingAddress.address}
-              onChange={(e) => {
-                setShippingAddress({
-                  ...shippingAddress,
-                  address: e.target.value,
-                });
-              }}
               rows={2}
-              className='text-sm transition-all duration-200 focus:ring-1 focus:ring-green-500/30 resize-none'
+              value={shippingAddress.address}
+              onChange={(e) =>
+                setShippingAddress((prev) => ({
+                  ...prev,
+                  address: e.target.value,
+                }))
+              }
+              placeholder='House/Flat no., Street, Area...'
+              className='text-sm resize-none'
             />
-          </div>
-        </CardContent>
-      </Card>
-    );
-  };
+          </FormField>
+        </SectionCard>
 
-  const renderPaymentDetails = () => {
-    return (
-      <Card className='border-slate-200/60 shadow-none border-x-0 border-t-0 rounded-none'>
-        <CardHeader className='px-0 pb-3'>
-          <CardTitle className='flex items-center gap-2 text-slate-700 text-base'>
-            <div className='p-1 rounded bg-amber-100'>
-              <CreditCard className='h-3.5 w-3.5 text-amber-600' />
-            </div>
-            Payment Details
-          </CardTitle>
-        </CardHeader>
-        <CardContent className='px-0 space-y-4'>
+        {/* Payment Details */}
+        <SectionCard
+          icon={CreditCard}
+          iconBg='bg-amber-100'
+          iconColor='text-amber-600'
+          title='Payment Details'>
           <div className='grid grid-cols-2 gap-3'>
-            <div className='space-y-2'>
-              <Label
-                htmlFor='total'
-                className='text-xs font-medium text-slate-700 flex items-center gap-1'>
-                <Calculator className='h-3 w-3' />
-                Total Price
-              </Label>
+            <FormField label='Total Price' icon={Calculator}>
               <Input
                 type='number'
-                min={0}
-                id='total'
-                value={tp}
-                placeholder='0.00'
+                value={payment.totalPrice}
                 disabled
-                className='h-9 text-sm bg-slate-50 text-slate-600'
+                className='h-9 text-sm bg-slate-50'
               />
-            </div>
-
-            <div className='space-y-2'>
-              <Label
-                htmlFor='dc'
-                className='text-xs font-medium text-slate-700 flex items-center gap-1'>
-                <Truck className='h-3 w-3' />
-                Delivery
-              </Label>
+            </FormField>
+            <FormField label='Delivery' icon={Truck}>
               <Input
                 type='number'
                 min={0}
-                id='dc'
-                value={sdeliveryCharge}
-                onChange={(e) => {
-                  const newDeliveryCharge = Number(e.target.value);
-                  setRemaining(
-                    Number(tp) +
-                      newDeliveryCharge -
-                      Number(spaid) -
-                      Number(sdiscount)
-                  );
-                  setDeliveryCharge(newDeliveryCharge);
-                }}
-                placeholder='0.00'
-                className='h-9 text-sm transition-all duration-200 focus:ring-1 focus:ring-amber-500/30'
+                value={payment.deliveryCharge}
+                onChange={(e) =>
+                  updateField("deliveryCharge", Number(e.target.value))
+                }
+                className='h-9 text-sm'
               />
-            </div>
-
-            <div className='space-y-2'>
-              <Label
-                htmlFor='discount'
-                className='text-xs font-medium text-slate-700 flex items-center gap-1'>
-                <Tag className='h-3 w-3' />
-                Discount
-              </Label>
+            </FormField>
+            <FormField label='Discount' icon={Tag}>
               <Input
                 type='number'
                 min={0}
-                id='discount'
-                placeholder='0.00'
-                value={sdiscount}
-                onChange={(e) => {
-                  const newDiscount = Number(e.target.value);
-                  setRemaining(
-                    Number(tp) +
-                      Number(sdeliveryCharge) -
-                      newDiscount -
-                      Number(spaid)
-                  );
-                  setDiscount(newDiscount);
-                }}
-                className='h-9 text-sm transition-all duration-200 focus:ring-1 focus:ring-amber-500/30'
+                value={payment.discount}
+                onChange={(e) =>
+                  updateField("discount", Number(e.target.value))
+                }
+                className='h-9 text-sm'
               />
-            </div>
-
-            <div className='space-y-2'>
-              <Label
-                htmlFor='paid'
-                className='text-xs font-medium text-slate-700 flex items-center gap-1'>
-                <Wallet className='h-3 w-3' />
-                Paid
-              </Label>
+            </FormField>
+            <FormField label='Paid' icon={Wallet}>
               <Input
                 type='number'
                 min={0}
-                id='paid'
-                placeholder='0.00'
-                value={spaid}
-                onChange={(e) => {
-                  const newPaid = Number(e.target.value);
-                  setRemaining(
-                    Number(tp) +
-                      Number(sdeliveryCharge) -
-                      newPaid -
-                      Number(sdiscount)
-                  );
-                  setPaid(newPaid);
-                }}
-                className='h-9 text-sm transition-all duration-200 focus:ring-1 focus:ring-amber-500/30'
+                value={payment.paid}
+                onChange={(e) => updateField("paid", Number(e.target.value))}
+                className='h-9 text-sm'
               />
-            </div>
+            </FormField>
           </div>
 
           <Separator className='my-3' />
 
-          {/* Compact Payment Summary */}
-          <div className='bg-slate-50 p-3 rounded-md space-y-2'>
-            <h4 className='text-xs font-medium text-slate-700 flex items-center gap-1'>
-              <Calculator className='h-3 w-3' />
-              Summary
+          <div className='bg-slate-50 p-3 rounded-md'>
+            <h4 className='text-xs font-medium text-slate-700 flex items-center gap-1 mb-2'>
+              <Calculator className='h-3 w-3' /> Summary
             </h4>
             <div className='grid grid-cols-2 gap-2 text-xs'>
               <div className='flex justify-between'>
@@ -554,55 +479,40 @@ const EditCustomerInformation: React.FC<Props> = ({
               <div className='flex justify-between items-center'>
                 <span className='text-slate-600'>Due:</span>
                 <Badge
-                  variant={sremaining > 0 ? "destructive" : "secondary"}
+                  variant={remaining > 0 ? "destructive" : "secondary"}
                   className='text-xs h-5 px-2'>
-                  ৳{sremaining.toLocaleString()}
+                  ৳{remaining.toLocaleString()}
                 </Badge>
               </div>
             </div>
           </div>
-        </CardContent>
-      </Card>
-    );
-  };
-
-  return (
-    <div className='flex flex-col h-full'>
-      {/* Scrollable Content */}
-      <div className='flex-1 overflow-y-auto px-6 py-4 space-y-4'>
-        {renderCustomerPersonalInformation()}
-        {renderCustomerShippingInformation()}
-        {renderPaymentDetails()}
+        </SectionCard>
       </div>
 
-      {/* Fixed Footer */}
-      <div className='border-t bg-slate-50/80 backdrop-blur-sm p-4'>
-        <div className='flex gap-3'>
-          <Button
-            variant='outline'
-            onClick={handleClose}
-            disabled={isSubmitting}
-            className='flex-1 h-9 text-sm transition-all duration-200 hover:bg-slate-100'>
-            <X className='h-3.5 w-3.5 mr-1' />
-            Cancel
-          </Button>
-          <Button
-            onClick={handleSubmit}
-            disabled={isSubmitting}
-            className='flex-1 h-9 text-sm bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 transition-all duration-200'>
-            {isSubmitting ? (
-              <>
-                <div className='w-3.5 h-3.5 border border-white border-t-transparent rounded-full animate-spin mr-1' />
-                Saving...
-              </>
-            ) : (
-              <>
-                <Save className='h-3.5 w-3.5 mr-1' />
-                Save Changes
-              </>
-            )}
-          </Button>
-        </div>
+      {/* Footer */}
+      <div className='border-t bg-slate-50/80 backdrop-blur-sm p-4 flex gap-3'>
+        <Button
+          variant='outline'
+          onClick={handleClose}
+          disabled={isSubmitting}
+          className='flex-1 h-9 text-sm'>
+          <X className='h-3.5 w-3.5 mr-1' /> Cancel
+        </Button>
+        <Button
+          onClick={handleSubmit}
+          disabled={isSubmitting}
+          className='flex-1 h-9 text-sm bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800'>
+          {isSubmitting ? (
+            <>
+              <div className='w-3.5 h-3.5 border border-white border-t-transparent rounded-full animate-spin mr-1' />{" "}
+              Saving...
+            </>
+          ) : (
+            <>
+              <Save className='h-3.5 w-3.5 mr-1' /> Save Changes
+            </>
+          )}
+        </Button>
       </div>
     </div>
   );

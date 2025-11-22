@@ -1,6 +1,3 @@
-// BACKUP VERSION - Use this if Bengali font still causes issues
-// This version disables Bengali font and uses Helvetica for all text
-
 import React from "react";
 import {
   Document,
@@ -14,8 +11,17 @@ import {
 } from "@react-pdf/renderer";
 import { IOrder } from "../pages/order/interface";
 
-// NO FONT REGISTRATION - Using default Helvetica for everything
+// Register Bengali font
+// Using Hind Siliguri as it has simpler glyph positioning than Noto Sans Bengali
+// This font is specifically optimized for digital displays and has fewer OpenType conflicts
+Font.register({
+  family: "BengaliFont",
+  src: "https://fonts.gstatic.com/s/hindsiliguri/v12/ijwOs5juQtsyLLR5jN4cxBEoRDf44uEfKiGvxts.ttf",
+  fontStyle: "normal",
+  fontWeight: 400,
+});
 
+// Create styles - Optimized for compactness
 const styles = StyleSheet.create({
   page: {
     flexDirection: "column",
@@ -24,8 +30,9 @@ const styles = StyleSheet.create({
     fontSize: 9,
     padding: 0,
   },
+  // Header Styles - Compact
   header: {
-    backgroundColor: "#F5F5F5",
+    backgroundColor: "#F5F5F5", // Light gray background
     height: 100,
     flexDirection: "row",
     alignItems: "center",
@@ -56,10 +63,12 @@ const styles = StyleSheet.create({
     fontSize: 9,
     marginBottom: 1,
   },
+  // Content Styles - Compact
   content: {
     padding: 15,
     flex: 1,
   },
+  // Information Sections - Compact
   infoSection: {
     flexDirection: "row",
     marginBottom: 12,
@@ -85,9 +94,17 @@ const styles = StyleSheet.create({
     backgroundColor: "#FAFAFA",
   },
   infoText: {
-    fontSize: 9,
+    fontSize: 12,
     marginBottom: 2,
     lineHeight: 1.2,
+    color: "#333333",
+  },
+  bengaliText: {
+    fontFamily: "BengaliFont",
+    fontSize: 12,
+    fontWeight: "normal",
+    marginBottom: 2,
+    lineHeight: 1.5,
     color: "#333333",
   },
   boldText: {
@@ -97,6 +114,7 @@ const styles = StyleSheet.create({
   extraMargin: {
     marginTop: 5,
   },
+  // Special Notes Section - Compact
   notesSection: {
     backgroundColor: "#F5F5F5",
     border: "1px solid #F0C14B",
@@ -115,6 +133,7 @@ const styles = StyleSheet.create({
     fontSize: 8,
     lineHeight: 1.2,
   },
+  // Order Details Section - Compact
   orderDetailsSection: {
     backgroundColor: "#F5F5F5",
     borderRadius: 3,
@@ -140,6 +159,7 @@ const styles = StyleSheet.create({
     color: "#333333",
     fontWeight: "bold",
   },
+  // Table Styles - Highly Compact
   table: {
     marginTop: 12,
     border: "1px solid #E0E0E0",
@@ -154,7 +174,7 @@ const styles = StyleSheet.create({
   tableHeaderCell: {
     color: "#333333",
     fontWeight: "bold",
-    fontSize: 14,
+    fontSize: 13,
     textAlign: "center",
   },
   tableRow: {
@@ -172,7 +192,7 @@ const styles = StyleSheet.create({
     textAlign: "center",
     paddingHorizontal: 2,
     color: "#333333",
-    fontWeight: "bold",
+    fontWeight: "500",
   },
   tableCellLeft: {
     textAlign: "left",
@@ -180,6 +200,7 @@ const styles = StyleSheet.create({
   tableCellRight: {
     textAlign: "right",
   },
+  // Summary Rows - Compact
   summaryRow: {
     flexDirection: "row",
     padding: 5,
@@ -199,14 +220,14 @@ const styles = StyleSheet.create({
   },
   summaryLabel: {
     fontSize: 12,
-    fontWeight: "bold",
+    fontWeight: "600",
     width: 70,
     textAlign: "right",
     marginRight: 10,
   },
   summaryValue: {
     fontSize: 12,
-    fontWeight: "bold",
+    fontWeight: "500",
     width: 60,
     textAlign: "right",
   },
@@ -216,6 +237,7 @@ const styles = StyleSheet.create({
   summaryValueWhite: {
     color: "#333333",
   },
+  // Footer Styles - Compact
   footer: {
     backgroundColor: "#F5F5F5",
     padding: 20,
@@ -252,7 +274,7 @@ const styles = StyleSheet.create({
     textAlign: "right",
   },
   pageNumber: {
-    backgroundColor: "#2980B9",
+    backgroundColor: "#ffffff",
     color: "#333333",
     padding: 4,
     borderRadius: 2,
@@ -262,6 +284,41 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
   },
 });
+
+// Helper function to detect Bengali text
+const isBengaliText = (text: string): boolean => {
+  const bengaliRegex = /[\u0980-\u09FF]/;
+  return bengaliRegex.test(text);
+};
+
+// Text component that automatically handles Bengali font
+const SmartText = ({ children, style, ...props }: any) => {
+  if (!children) return null;
+
+  const text = String(children);
+  const hasBengali = isBengaliText(text);
+
+  // For Bengali text, use the Bengali font with explicit normal weight
+  // Remove any fontWeight from style to prevent conflicts
+  const cleanStyle = style ? (Array.isArray(style) ? style : [style]) : [];
+  const styleWithoutWeight = cleanStyle.map((s: any) => {
+    if (s && typeof s === "object") {
+      const { fontWeight, ...rest } = s;
+      return rest;
+    }
+    return s;
+  });
+
+  const textStyle = hasBengali
+    ? [styles.bengaliText, ...styleWithoutWeight]
+    : [styles.infoText, style];
+
+  return (
+    <Text style={textStyle} {...props}>
+      {text}
+    </Text>
+  );
+};
 
 interface InvoiceDocumentProps {
   order: IOrder;
@@ -281,6 +338,7 @@ const InvoiceDocument: React.FC<InvoiceDocumentProps> = ({ order }) => {
   return (
     <Document>
       <Page size='A4' style={styles.page}>
+        {/* Header - Compact */}
         <View style={styles.header}>
           <View style={styles.logoContainer}>
             <Image
@@ -296,22 +354,29 @@ const InvoiceDocument: React.FC<InvoiceDocumentProps> = ({ order }) => {
         </View>
 
         <View style={styles.content}>
+          {/* Customer and Shipping Information - Compact */}
           <View style={styles.infoSection}>
+            {/* Billing Information */}
             <View style={styles.infoBox}>
               <View style={styles.infoHeader}>
                 <Text style={styles.infoTitle}>BILLING INFORMATION</Text>
               </View>
               <View style={styles.infoContent}>
-                <Text style={[styles.infoText, styles.boldText]}>
+                <SmartText style={{ color: "#1A1A1A" }}>
                   {order.customer?.name}
-                </Text>
-                <Text style={[styles.infoText, styles.boldText]}>
+                </SmartText>
+                <SmartText style={{ color: "#1A1A1A" }}>
                   {order.customer?.phoneNumber}
-                </Text>
-                <Text style={styles.infoText}>
-                  {`${order.shipping?.address}, ${order.shipping?.district}, ${order.shipping?.division}`}
-                </Text>
-                <Text style={[styles.infoText, styles.boldText, styles.extraMargin]}>
+                </SmartText>
+                <SmartText>
+                  {`${order.shipping?.address},\n ${order.shipping?.district}, ${order.shipping?.division}`}
+                </SmartText>
+                <Text
+                  style={[
+                    styles.infoText,
+                    styles.boldText,
+                    styles.extraMargin,
+                  ]}>
                   Payment Method:{" "}
                   {order.payment && order.payment.length > 0
                     ? order.payment[0].paymentType
@@ -320,29 +385,32 @@ const InvoiceDocument: React.FC<InvoiceDocumentProps> = ({ order }) => {
               </View>
             </View>
 
+            {/* Shipping Information */}
             <View style={styles.infoBox}>
               <View style={styles.infoHeader}>
                 <Text style={styles.infoTitle}>SHIPPING INFORMATION</Text>
               </View>
               <View style={styles.infoContent}>
-                <Text style={[styles.infoText, styles.boldText]}>
+                <SmartText style={{ color: "#1A1A1A" }}>
                   {order.customer?.name}
-                </Text>
-                <Text style={styles.infoText}>{order.customer?.phoneNumber}</Text>
-                <Text style={styles.infoText}>
-                  {`${order.shipping?.address}, ${order.shipping?.district}, ${order.shipping?.division}`}
-                </Text>
+                </SmartText>
+                <SmartText>{order.customer?.phoneNumber}</SmartText>
+                <SmartText>
+                  {`${order.shipping?.address},\n ${order.shipping?.district}, ${order.shipping?.division}`}
+                </SmartText>
               </View>
             </View>
           </View>
 
+          {/* Special Notes - Compact */}
           {order.notes && (
             <View style={styles.notesSection}>
               <Text style={styles.notesTitle}>SPECIAL NOTES</Text>
-              <Text style={styles.notesText}>{order.notes}</Text>
+              <SmartText style={styles.notesText}>{order.notes}</SmartText>
             </View>
           )}
 
+          {/* Order Details - Compact */}
           <View style={styles.orderDetailsSection}>
             <Text style={styles.orderDetailsTitle}>ORDER DETAILS</Text>
             <View style={styles.orderDetailsContent}>
@@ -355,7 +423,9 @@ const InvoiceDocument: React.FC<InvoiceDocumentProps> = ({ order }) => {
             </View>
           </View>
 
+          {/* Products Table - Highly Compact */}
           <View style={styles.table}>
+            {/* Table Header */}
             <View style={styles.tableHeader}>
               <Text style={[styles.tableHeaderCell, { width: "6%" }]}>SL</Text>
               <Text style={[styles.tableHeaderCell, { width: "40%" }]}>
@@ -376,6 +446,7 @@ const InvoiceDocument: React.FC<InvoiceDocumentProps> = ({ order }) => {
               </Text>
             </View>
 
+            {/* Table Body */}
             {order.products.map((product, index) => (
               <View
                 key={index}
@@ -386,9 +457,19 @@ const InvoiceDocument: React.FC<InvoiceDocumentProps> = ({ order }) => {
                 <Text style={[styles.tableCell, { width: "6%" }]}>
                   {index + 1}
                 </Text>
-                <Text style={[styles.tableCell, { width: "40%" }]}>
-                  {product.name}
-                </Text>
+                <SmartText
+                  style={[
+                    {
+                      width: "40%",
+                      fontSize: 12,
+                      textAlign: "center",
+                      paddingHorizontal: 2,
+                      color: "#333333",
+                      fontWeight: "bold",
+                    },
+                  ]}>
+                  {product.name.toUpperCase()}
+                </SmartText>
                 <Text style={[styles.tableCell, { width: "16%" }]}>
                   {!product?.variation
                     ? "N/A"
@@ -431,6 +512,7 @@ const InvoiceDocument: React.FC<InvoiceDocumentProps> = ({ order }) => {
               </View>
             ))}
 
+            {/* Summary Rows - Compact */}
             <View style={[styles.summaryRow, styles.summaryRowRegular]}>
               <Text style={styles.summaryLabel}>Subtotal:</Text>
               <Text style={styles.summaryValue}>
@@ -474,6 +556,7 @@ const InvoiceDocument: React.FC<InvoiceDocumentProps> = ({ order }) => {
           </View>
         </View>
 
+        {/* Footer - Compact */}
         <View style={styles.footer}>
           <View style={styles.footerContent}>
             <View style={styles.footerLeft}>
@@ -488,9 +571,6 @@ const InvoiceDocument: React.FC<InvoiceDocumentProps> = ({ order }) => {
               <Text style={styles.footerText}>www.priorbd.com</Text>
             </View>
             <View style={styles.footerRight}>
-              <Text style={styles.thankYouText}>
-                Thank you for your shopping!
-              </Text>
               <Text
                 style={styles.pageNumber}
                 render={({ pageNumber, totalPages }) =>
@@ -505,6 +585,7 @@ const InvoiceDocument: React.FC<InvoiceDocumentProps> = ({ order }) => {
   );
 };
 
+// Export functions to generate and download PDF
 export const generateReactPdfInvoice = async (order: IOrder) => {
   const blob = await pdf(<InvoiceDocument order={order} />).toBlob();
   const url = URL.createObjectURL(blob);
