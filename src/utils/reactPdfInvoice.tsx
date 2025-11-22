@@ -12,6 +12,8 @@ import {
 import { IOrder } from "../pages/order/interface";
 
 // Register Bengali font
+// Using Hind Siliguri as it has simpler glyph positioning than Noto Sans Bengali
+// This font is specifically optimized for digital displays and has fewer OpenType conflicts
 Font.register({
   family: "BengaliFont",
   src: "https://fonts.gstatic.com/s/hindsiliguri/v12/ijwOs5juQtsyLLR5jN4cxBEoRDf44uEfKiGvxts.ttf",
@@ -19,301 +21,266 @@ Font.register({
   fontWeight: 400,
 });
 
+// Create styles - Optimized for compactness
 const styles = StyleSheet.create({
   page: {
     flexDirection: "column",
     backgroundColor: "#FFFFFF",
     fontFamily: "Helvetica",
     fontSize: 9,
-    paddingBottom: 60,
+    padding: 0,
   },
-  // Header
+  // Header Styles - Compact
   header: {
+    backgroundColor: "#F5F5F5", // Light gray background
+    height: 100,
     flexDirection: "row",
+    alignItems: "center",
     justifyContent: "space-between",
-    alignItems: "flex-start",
-    padding: 25,
-    paddingBottom: 20,
-    borderBottom: "2pt solid #000000",
+    paddingHorizontal: 20,
+    borderBottom: "1px solid #DDDDDD",
   },
-  logoSection: {
-    flexDirection: "column",
+  logoContainer: {
+    flexDirection: "row",
+    alignItems: "center",
   },
   logo: {
-    width: 90,
-    height: 50,
+    width: 100,
+    height: 60,
     objectFit: "contain",
-    marginBottom: 5,
   },
-  companyInfo: {
-    marginTop: 0,
-  },
-  companyName: {
-    fontSize: 10,
-    fontWeight: "bold",
-    letterSpacing: 1,
-    marginBottom: 3,
-  },
-  companyDetail: {
-    fontSize: 7,
-    color: "#333333",
-    marginBottom: 1,
-    lineHeight: 1.3,
-  },
-  invoiceSection: {
+  headerRight: {
     alignItems: "flex-end",
   },
   invoiceTitle: {
-    fontSize: 28,
+    fontSize: 20,
     fontWeight: "bold",
-    letterSpacing: 3,
-    marginBottom: 10,
-  },
-  invoiceMeta: {
-    alignItems: "flex-end",
-  },
-  invoiceMetaRow: {
-    flexDirection: "row",
-    marginBottom: 3,
-  },
-  invoiceMetaLabel: {
-    fontSize: 8,
-    fontWeight: "bold",
-    width: 70,
-    textAlign: "right",
-  },
-  invoiceMetaValue: {
-    fontSize: 8,
-    width: 80,
-    textAlign: "right",
-  },
-  // Content
-  content: {
-    padding: 25,
-    paddingTop: 20,
-    flex: 1,
-  },
-  // Addresses Section
-  addressSection: {
-    flexDirection: "row",
-    marginBottom: 20,
-    gap: 20,
-  },
-  addressBox: {
-    flex: 1,
-  },
-  addressTitle: {
-    fontSize: 8,
-    fontWeight: "bold",
-    letterSpacing: 1,
-    borderBottom: "1pt solid #000000",
-    paddingBottom: 4,
-    marginBottom: 8,
-  },
-  addressText: {
-    fontSize: 9,
-    lineHeight: 1.4,
+    color: "#333333",
     marginBottom: 2,
   },
-  addressTextBold: {
+  invoiceDetails: {
+    color: "#666666",
+    fontSize: 9,
+    marginBottom: 1,
+  },
+  // Content Styles - Compact
+  content: {
+    padding: 15,
+    flex: 1,
+  },
+  // Information Sections - Compact
+  infoSection: {
+    flexDirection: "row",
+    marginBottom: 12,
+    gap: 10,
+  },
+  infoBox: {
+    flex: 1,
+    border: "1px solid #E0E0E0",
+    borderRadius: 3,
+    overflow: "hidden",
+  },
+  infoHeader: {
+    backgroundColor: "#F5F5F5",
+    padding: 6,
+  },
+  infoTitle: {
     fontSize: 10,
     fontWeight: "bold",
-    marginBottom: 3,
+    color: "#333333",
+  },
+  infoContent: {
+    padding: 8,
+    backgroundColor: "#FAFAFA",
+  },
+  infoText: {
+    fontSize: 12,
+    marginBottom: 2,
+    lineHeight: 1.2,
+    color: "#333333",
   },
   bengaliText: {
     fontFamily: "BengaliFont",
-    fontSize: 10,
+    fontSize: 12,
+    fontWeight: "normal",
+    marginBottom: 2,
     lineHeight: 1.5,
-    marginBottom: 2,
+    color: "#333333",
   },
-  // Order Info Bar
-  orderInfoBar: {
-    flexDirection: "row",
-    backgroundColor: "#3d3d3d",
-    padding: 10,
-    marginBottom: 15,
-  },
-  orderInfoItem: {
-    flex: 1,
-    alignItems: "center",
-  },
-  orderInfoLabel: {
-    fontSize: 7,
-    color: "#FFFFFF",
-    letterSpacing: 0.5,
-    marginBottom: 2,
-  },
-  orderInfoValue: {
-    fontSize: 9,
+  boldText: {
     fontWeight: "bold",
-    color: "#FFFFFF",
+    color: "#1A1A1A",
   },
-  orderInfoDivider: {
-    width: 1,
-    backgroundColor: "#444444",
-    marginHorizontal: 10,
+  extraMargin: {
+    marginTop: 5,
   },
-  // Notes
-  notesBox: {
-    border: "1pt solid #000000",
-    padding: 10,
-    marginBottom: 15,
+  // Special Notes Section - Compact
+  notesSection: {
+    backgroundColor: "#F5F5F5",
+    border: "1px solid #F0C14B",
+    borderRadius: 3,
+    padding: 8,
+    marginVertical: 8,
   },
   notesTitle: {
-    fontSize: 7,
+    color: "#B7791F",
     fontWeight: "bold",
-    letterSpacing: 1,
-    marginBottom: 5,
+    fontSize: 9,
+    marginBottom: 3,
   },
   notesText: {
+    color: "#B7791F",
     fontSize: 8,
-    lineHeight: 1.4,
-    fontStyle: "italic",
+    lineHeight: 1.2,
   },
-  // Table
+  // Order Details Section - Compact
+  orderDetailsSection: {
+    backgroundColor: "#F5F5F5",
+    borderRadius: 3,
+    padding: 8,
+    marginVertical: 8,
+  },
+  orderDetailsTitle: {
+    color: "#333333",
+    fontWeight: "bold",
+    fontSize: 10,
+    textAlign: "center",
+    marginBottom: 5,
+  },
+  orderDetailsContent: {
+    flexDirection: "row",
+    justifyContent: "space-around",
+    backgroundColor: "#ffffff",
+    borderRadius: 2,
+    padding: 5,
+  },
+  orderDetailsText: {
+    fontSize: 12,
+    color: "#333333",
+    fontWeight: "bold",
+  },
+  // Table Styles - Highly Compact
   table: {
-    marginBottom: 15,
+    marginTop: 12,
+    border: "1px solid #E0E0E0",
+    borderRadius: 3,
+    overflow: "hidden",
   },
   tableHeader: {
     flexDirection: "row",
-    backgroundColor: "#3d3d3d",
-    padding: 8,
+    backgroundColor: "#F5F5F5",
+    padding: 6,
   },
   tableHeaderCell: {
-    color: "#FFFFFF",
-    fontSize: 7,
+    color: "#333333",
     fontWeight: "bold",
-    letterSpacing: 0.5,
+    fontSize: 13,
     textAlign: "center",
   },
   tableRow: {
     flexDirection: "row",
-    borderBottom: "0.5pt solid #CCCCCC",
-    padding: 8,
-    minHeight: 28,
+    borderBottom: "1px solid #F0F0F0",
+    padding: 5,
+    minHeight: 20,
     alignItems: "center",
   },
-  tableRowAlt: {
-    backgroundColor: "#F5F5F5",
+  tableRowEven: {
+    backgroundColor: "#F9F9F9",
   },
   tableCell: {
-    fontSize: 8,
+    fontSize: 12,
     textAlign: "center",
+    paddingHorizontal: 2,
+    color: "#333333",
+    fontWeight: "500",
   },
-  tableCellProduct: {
-    fontSize: 9,
-    fontWeight: "bold",
+  tableCellLeft: {
     textAlign: "left",
   },
   tableCellRight: {
     textAlign: "right",
   },
-  // Summary
-  summaryContainer: {
-    flexDirection: "row",
-    justifyContent: "flex-end",
-  },
-  summaryBox: {
-    width: 220,
-    border: "1pt solid #000000",
-  },
+  // Summary Rows - Compact
   summaryRow: {
     flexDirection: "row",
-    justifyContent: "space-between",
-    padding: 8,
-    borderBottom: "0.5pt solid #CCCCCC",
+    padding: 5,
+    justifyContent: "flex-end",
+    alignItems: "center",
+    minHeight: 18,
   },
-  summaryRowLast: {
-    borderBottom: "none",
+  summaryRowRegular: {
+    backgroundColor: "#F9F9F9",
+    borderBottom: "1px solid #E9ECEF",
   },
-  summaryRowTotal: {
-    backgroundColor: "#3d3d3d",
-    borderBottom: "none",
+  summaryRowSubtotal: {
+    backgroundColor: "#F0F0F0",
+  },
+  summaryRowDue: {
+    backgroundColor: "#F9F9F9",
   },
   summaryLabel: {
-    fontSize: 8,
-    fontWeight: "bold",
+    fontSize: 12,
+    fontWeight: "600",
+    width: 70,
+    textAlign: "right",
+    marginRight: 10,
   },
   summaryValue: {
-    fontSize: 8,
+    fontSize: 12,
+    fontWeight: "500",
+    width: 60,
+    textAlign: "right",
   },
-  summaryLabelTotal: {
-    fontSize: 10,
-    fontWeight: "bold",
-    color: "#FFFFFF",
+  summaryLabelWhite: {
+    color: "#333333",
   },
-  summaryValueTotal: {
-    fontSize: 10,
-    fontWeight: "bold",
-    color: "#FFFFFF",
+  summaryValueWhite: {
+    color: "#333333",
   },
-  // Payment Info
-  paymentSection: {
-    marginTop: 20,
-    flexDirection: "row",
-    gap: 20,
-  },
-  paymentBox: {
-    flex: 1,
-    border: "1pt solid #000000",
-    padding: 12,
-  },
-  paymentTitle: {
-    fontSize: 7,
-    fontWeight: "bold",
-    letterSpacing: 1,
-    marginBottom: 8,
-    borderBottom: "0.5pt solid #000000",
-    paddingBottom: 4,
-  },
-  paymentRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    marginBottom: 4,
-  },
-  paymentLabel: {
-    fontSize: 8,
-  },
-  paymentValue: {
-    fontSize: 8,
-    fontWeight: "bold",
-  },
-  // Footer
+  // Footer Styles - Compact
   footer: {
-    position: "absolute",
-    bottom: 0,
-    left: 0,
-    right: 0,
-    borderTop: "1pt solid #000000",
-    padding: 15,
-    paddingHorizontal: 25,
+    backgroundColor: "#F5F5F5",
+    padding: 20,
+    marginTop: "auto",
+  },
+  footerContent: {
     flexDirection: "row",
     justifyContent: "space-between",
-    alignItems: "center",
+    alignItems: "flex-start",
   },
   footerLeft: {
     flex: 1,
   },
-  footerText: {
-    fontSize: 7,
-    color: "#666666",
-    marginBottom: 1,
-  },
-  footerCenter: {
-    flex: 1,
-    alignItems: "center",
-  },
-  thankYou: {
-    fontSize: 9,
-    fontWeight: "bold",
-    letterSpacing: 1,
-  },
   footerRight: {
-    flex: 1,
     alignItems: "flex-end",
   },
-  pageNumber: {
+  footerTitle: {
+    color: "#333333",
+    fontWeight: "bold",
+    fontSize: 10,
+    marginBottom: 4,
+  },
+  footerText: {
+    color: "#333333",
+    fontSize: 7,
+    marginBottom: 1,
+    lineHeight: 1.2,
+  },
+  thankYouText: {
+    color: "#F39C12",
+    fontStyle: "italic",
     fontSize: 8,
+    marginBottom: 8,
+    textAlign: "right",
+  },
+  pageNumber: {
+    backgroundColor: "#ffffff",
+    color: "#333333",
+    padding: 4,
+    borderRadius: 2,
+    fontSize: 7,
+    textAlign: "center",
+    minWidth: 30,
     fontWeight: "bold",
   },
 });
@@ -324,11 +291,15 @@ const isBengaliText = (text: string): boolean => {
   return bengaliRegex.test(text);
 };
 
-// Smart Text component for Bengali support
+// Text component that automatically handles Bengali font
 const SmartText = ({ children, style, ...props }: any) => {
   if (!children) return null;
+
   const text = String(children);
   const hasBengali = isBengaliText(text);
+
+  // For Bengali text, use the Bengali font with explicit normal weight
+  // Remove any fontWeight from style to prevent conflicts
   const cleanStyle = style ? (Array.isArray(style) ? style : [style]) : [];
   const styleWithoutWeight = cleanStyle.map((s: any) => {
     if (s && typeof s === "object") {
@@ -337,9 +308,11 @@ const SmartText = ({ children, style, ...props }: any) => {
     }
     return s;
   });
+
   const textStyle = hasBengali
     ? [styles.bengaliText, ...styleWithoutWeight]
-    : [styles.addressText, style];
+    : [styles.infoText, style];
+
   return (
     <Text style={textStyle} {...props}>
       {text}
@@ -360,159 +333,154 @@ const InvoiceDocument: React.FC<InvoiceDocumentProps> = ({ order }) => {
       day: "numeric",
     }
   );
-  const invoiceNumber = `INV-${order.orderNumber}`;
-  const subtotal = order.totalPrice;
-  const discount = order.discount || 0;
-  const shipping = order.deliveryCharge;
-  const total = subtotal + shipping - discount;
-  const paid = order.paid;
-  const due = order.remaining;
+  const invoiceNumber = `#${order.id.toString().slice(-4)}`;
 
   return (
     <Document>
       <Page size='A4' style={styles.page}>
-        {/* Header */}
+        {/* Header - Compact */}
         <View style={styles.header}>
-          <View style={styles.logoSection}>
+          <View style={styles.logoContainer}>
             <Image
               style={styles.logo}
               src='https://res.cloudinary.com/emerging-it/image/upload/v1755976159/2193d5ff-ffb3-4fb7-ae67-c7a79e89c3f6__1_-removebg-preview_sobjwy.png'
             />
-            <View style={styles.companyInfo}>
-              <Text style={styles.companyDetail}>Shop 134, Genetic Plaza</Text>
-              <Text style={styles.companyDetail}>Dhanmondi-27, Dhaka</Text>
-              <Text style={styles.companyDetail}>+880 1700-534317</Text>
-              <Text style={styles.companyDetail}>www.priorbd.com</Text>
-            </View>
           </View>
-          <View style={styles.invoiceSection}>
+          <View style={styles.headerRight}>
             <Text style={styles.invoiceTitle}>INVOICE</Text>
-            <View style={styles.invoiceMeta}>
-              <View style={styles.invoiceMetaRow}>
-                <Text style={styles.invoiceMetaLabel}>Invoice No:</Text>
-                <Text style={styles.invoiceMetaValue}>{invoiceNumber}</Text>
-              </View>
-              <View style={styles.invoiceMetaRow}>
-                <Text style={styles.invoiceMetaLabel}>Date:</Text>
-                <Text style={styles.invoiceMetaValue}>{orderDate}</Text>
-              </View>
-              <View style={styles.invoiceMetaRow}>
-                <Text style={styles.invoiceMetaLabel}>Payment:</Text>
-                <Text style={styles.invoiceMetaValue}>
-                  {order.payment?.[0]?.paymentType || "Cash On Delivery"}
-                </Text>
-              </View>
-            </View>
+            <Text style={styles.invoiceDetails}>{invoiceNumber}</Text>
+            <Text style={styles.invoiceDetails}>Date: {orderDate}</Text>
           </View>
         </View>
 
         <View style={styles.content}>
-          {/* Address Section */}
-          <View style={styles.addressSection}>
-            <View style={styles.addressBox}>
-              <Text style={styles.addressTitle}>BILL TO</Text>
-              <SmartText style={styles.addressTextBold}>
-                {order.customer?.name}
-              </SmartText>
-              <Text style={styles.addressText}>
-                {order.customer?.phoneNumber}
-              </Text>
-              <SmartText>{order.shipping?.address}</SmartText>
-              <SmartText>{`${order.shipping?.district}, ${order.shipping?.division}`}</SmartText>
+          {/* Customer and Shipping Information - Compact */}
+          <View style={styles.infoSection}>
+            {/* Billing Information */}
+            <View style={styles.infoBox}>
+              <View style={styles.infoHeader}>
+                <Text style={styles.infoTitle}>BILLING INFORMATION</Text>
+              </View>
+              <View style={styles.infoContent}>
+                <SmartText style={{ color: "#1A1A1A" }}>
+                  {order.customer?.name}
+                </SmartText>
+                <SmartText style={{ color: "#1A1A1A" }}>
+                  {order.customer?.phoneNumber}
+                </SmartText>
+                <SmartText>
+                  {`${order.shipping?.address},\n ${order.shipping?.district}, ${order.shipping?.division}`}
+                </SmartText>
+                <Text
+                  style={[
+                    styles.infoText,
+                    styles.boldText,
+                    styles.extraMargin,
+                  ]}>
+                  Payment Method:{" "}
+                  {order.payment && order.payment.length > 0
+                    ? order.payment[0].paymentType
+                    : "Cash On Delivery"}
+                </Text>
+              </View>
             </View>
-            <View style={styles.addressBox}>
-              <Text style={styles.addressTitle}>SHIP TO</Text>
-              <SmartText style={styles.addressTextBold}>
-                {order.customer?.name}
-              </SmartText>
-              <Text style={styles.addressText}>
-                {order.customer?.phoneNumber}
-              </Text>
-              <SmartText>{order.shipping?.address}</SmartText>
-              <SmartText>{`${order.shipping?.district}, ${order.shipping?.division}`}</SmartText>
+
+            {/* Shipping Information */}
+            <View style={styles.infoBox}>
+              <View style={styles.infoHeader}>
+                <Text style={styles.infoTitle}>SHIPPING INFORMATION</Text>
+              </View>
+              <View style={styles.infoContent}>
+                <SmartText style={{ color: "#1A1A1A" }}>
+                  {order.customer?.name}
+                </SmartText>
+                <SmartText>{order.customer?.phoneNumber}</SmartText>
+                <SmartText>
+                  {`${order.shipping?.address},\n ${order.shipping?.district}, ${order.shipping?.division}`}
+                </SmartText>
+              </View>
             </View>
           </View>
-          {/* Order Info Bar */}
-          <View style={styles.orderInfoBar}>
-            <View style={styles.orderInfoItem}>
-              <Text style={styles.orderInfoLabel}>ORDER NUMBER</Text>
-              <Text style={styles.orderInfoValue}>{order.orderNumber}</Text>
-            </View>
-            <View style={styles.orderInfoDivider} />
-            <View style={styles.orderInfoItem}>
-              <Text style={styles.orderInfoLabel}>TRACKING ID</Text>
-              <Text style={styles.orderInfoValue}>{order.id}</Text>
-            </View>
-            <View style={styles.orderInfoDivider} />
-            <View style={styles.orderInfoItem}>
-              <Text style={styles.orderInfoLabel}>ORDER DATE</Text>
-              <Text style={styles.orderInfoValue}>{orderDate}</Text>
-            </View>
-          </View>
-          {/* Special Notes */}
+
+          {/* Special Notes - Compact */}
           {order.notes && (
-            <View style={styles.notesBox}>
-              <Text style={styles.notesTitle}>SPECIAL INSTRUCTIONS</Text>
+            <View style={styles.notesSection}>
+              <Text style={styles.notesTitle}>SPECIAL NOTES</Text>
               <SmartText style={styles.notesText}>{order.notes}</SmartText>
             </View>
           )}
-          {/* Products Table */}
-          <View style={styles.table}>
-            <View style={styles.tableHeader}>
-              <Text style={[styles.tableHeaderCell, { width: "5%" }]}>#</Text>
-              <Text
-                style={[
-                  styles.tableHeaderCell,
-                  { width: "35%", textAlign: "left" },
-                ]}>
-                ITEM DESCRIPTION
+
+          {/* Order Details - Compact */}
+          <View style={styles.orderDetailsSection}>
+            <Text style={styles.orderDetailsTitle}>ORDER DETAILS</Text>
+            <View style={styles.orderDetailsContent}>
+              <Text style={styles.orderDetailsText}>
+                Order ID: {order.orderNumber}
               </Text>
-              <Text style={[styles.tableHeaderCell, { width: "18%" }]}>
-                VARIANT
-              </Text>
-              <Text style={[styles.tableHeaderCell, { width: "8%" }]}>QTY</Text>
-              <Text style={[styles.tableHeaderCell, { width: "12%" }]}>
-                PRICE
-              </Text>
-              <Text style={[styles.tableHeaderCell, { width: "10%" }]}>
-                DISC
-              </Text>
-              <Text style={[styles.tableHeaderCell, { width: "12%" }]}>
-                AMOUNT
+              <Text style={styles.orderDetailsText}>
+                Tracking ID: {order.id}
               </Text>
             </View>
+          </View>
+
+          {/* Products Table - Highly Compact */}
+          <View style={styles.table}>
+            {/* Table Header */}
+            <View style={styles.tableHeader}>
+              <Text style={[styles.tableHeaderCell, { width: "6%" }]}>SL</Text>
+              <Text style={[styles.tableHeaderCell, { width: "40%" }]}>
+                Description
+              </Text>
+              <Text style={[styles.tableHeaderCell, { width: "16%" }]}>
+                Variant
+              </Text>
+              <Text style={[styles.tableHeaderCell, { width: "6%" }]}>Qty</Text>
+              <Text style={[styles.tableHeaderCell, { width: "10%" }]}>
+                Price
+              </Text>
+              <Text style={[styles.tableHeaderCell, { width: "8%" }]}>
+                Disc.
+              </Text>
+              <Text style={[styles.tableHeaderCell, { width: "14%" }]}>
+                Total
+              </Text>
+            </View>
+
+            {/* Table Body */}
             {order.products.map((product, index) => (
               <View
                 key={index}
                 style={[
                   styles.tableRow,
-                  ...(index % 2 === 1 ? [styles.tableRowAlt] : []),
+                  index % 2 === 1 ? styles.tableRowEven : {},
                 ]}>
-                <Text style={[styles.tableCell, { width: "5%" }]}>
+                <Text style={[styles.tableCell, { width: "6%" }]}>
                   {index + 1}
                 </Text>
-                <SmartText style={[styles.tableCellProduct, { width: "35%" }]}>
+                <SmartText
+                  style={[
+                    {
+                      width: "40%",
+                      fontSize: 12,
+                      textAlign: "center",
+                      paddingHorizontal: 2,
+                      color: "#333333",
+                      fontWeight: "bold",
+                    },
+                  ]}>
                   {product.name.toUpperCase()}
                 </SmartText>
-                <Text style={[styles.tableCell, { width: "18%" }]}>
+                <Text style={[styles.tableCell, { width: "16%" }]}>
                   {!product?.variation
-                    ? "—"
+                    ? "N/A"
                     : `${product.variation?.color}${
                         product.variation?.size
-                          ? ` / ${product.variation.size}`
+                          ? ` - ${product.variation.size}`
                           : ""
                       }`}
                 </Text>
-                <Text style={[styles.tableCell, { width: "8%" }]}>
+                <Text style={[styles.tableCell, { width: "6%" }]}>
                   {product.quantity}
-                </Text>
-                <Text
-                  style={[
-                    styles.tableCell,
-                    styles.tableCellRight,
-                    { width: "12%" },
-                  ]}>
-                  Tk {product.unitPrice.toFixed(0)}
                 </Text>
                 <Text
                   style={[
@@ -520,15 +488,22 @@ const InvoiceDocument: React.FC<InvoiceDocumentProps> = ({ order }) => {
                     styles.tableCellRight,
                     { width: "10%" },
                   ]}>
-                  Tk {(product.discount || 0).toFixed(0)}
+                  {product.unitPrice.toFixed(0)}
                 </Text>
                 <Text
                   style={[
                     styles.tableCell,
                     styles.tableCellRight,
-                    { width: "12%" },
+                    { width: "8%" },
                   ]}>
-                  Tk
+                  {(product.discount || 0).toFixed(0)}
+                </Text>
+                <Text
+                  style={[
+                    styles.tableCell,
+                    styles.tableCellRight,
+                    { width: "14%" },
+                  ]}>
                   {(
                     product.quantity * product.unitPrice -
                     (product.discount || 0)
@@ -536,104 +511,73 @@ const InvoiceDocument: React.FC<InvoiceDocumentProps> = ({ order }) => {
                 </Text>
               </View>
             ))}
-          </View>
-          {/* Summary */}
-          <View style={styles.summaryContainer}>
-            <View style={styles.summaryBox}>
-              <View style={styles.summaryRow}>
-                <Text style={styles.summaryLabel}>Subtotal</Text>
-                <Text style={styles.summaryValue}>
-                  Tk {subtotal.toFixed(0)}
-                </Text>
-              </View>
-              <View style={styles.summaryRow}>
-                <Text style={styles.summaryLabel}>Discount</Text>
-                <Text style={styles.summaryValue}>
-                  −Tk {discount.toFixed(0)}
-                </Text>
-              </View>
-              <View style={styles.summaryRow}>
-                <Text style={styles.summaryLabel}>Shipping</Text>
-                <Text style={styles.summaryValue}>
-                  Tk {shipping.toFixed(0)}
-                </Text>
-              </View>
-              <View style={[styles.summaryRow, styles.summaryRowTotal]}>
-                <Text style={styles.summaryLabelTotal}>TOTAL</Text>
-                <Text style={styles.summaryValueTotal}>
-                  Tk {total.toFixed(0)}
-                </Text>
-              </View>
-              <View style={styles.summaryRow}>
-                <Text style={styles.summaryLabel}>Amount Paid</Text>
-                <Text style={styles.summaryValue}>Tk {paid.toFixed(0)}</Text>
-              </View>
-              <View
-                style={[
-                  styles.summaryRow,
-                  styles.summaryRowLast,
-                  styles.summaryRowTotal,
-                ]}>
-                <Text style={[styles.summaryLabelTotal, { fontSize: 10 }]}>
-                  BALANCE DUE
-                </Text>
-                <Text
-                  style={[
-                    styles.summaryValue,
-                    { fontSize: 10, fontWeight: "bold", color: "#FFFFFF" },
-                  ]}>
-                  Tk {due.toFixed(0)}
-                </Text>
-              </View>
+
+            {/* Summary Rows - Compact */}
+            <View style={[styles.summaryRow, styles.summaryRowRegular]}>
+              <Text style={styles.summaryLabel}>Subtotal:</Text>
+              <Text style={styles.summaryValue}>
+                {order.totalPrice.toFixed(0)}
+              </Text>
             </View>
-          </View>
-          ~{/* Payment Terms */}
-          <View style={styles.paymentSection}>
-            <View style={styles.paymentBox}>
-              <Text style={styles.paymentTitle}>PAYMENT INFORMATION</Text>
-              <View style={styles.paymentRow}>
-                <Text style={styles.paymentLabel}>Method</Text>
-                <Text style={styles.paymentValue}>
-                  {order.payment?.[0]?.paymentType || "Cash On Delivery"}
-                </Text>
-              </View>
-              <View style={styles.paymentRow}>
-                <Text style={styles.paymentLabel}>Status</Text>
-                <Text style={styles.paymentValue}>
-                  {due > 0 ? "Partial" : "Paid"}
-                </Text>
-              </View>
+            <View style={[styles.summaryRow, styles.summaryRowRegular]}>
+              <Text style={styles.summaryLabel}>Discount:</Text>
+              <Text style={styles.summaryValue}>
+                {(order.discount || 0).toFixed(0)}
+              </Text>
             </View>
-            <View style={styles.paymentBox}>
-              <Text style={styles.paymentTitle}>TERMS & CONDITIONS</Text>
-              <Text style={[styles.paymentLabel, { lineHeight: 1.4 }]}>
-                • Please inspect items upon delivery{"\n"}• Contact us within
-                24hrs for any issues
+            <View style={[styles.summaryRow, styles.summaryRowRegular]}>
+              <Text style={styles.summaryLabel}>Paid:</Text>
+              <Text style={styles.summaryValue}>{order.paid}</Text>
+            </View>
+            <View style={[styles.summaryRow, styles.summaryRowRegular]}>
+              <Text style={styles.summaryLabel}>Shipping:</Text>
+              <Text style={styles.summaryValue}>{order.deliveryCharge}</Text>
+            </View>
+            <View style={[styles.summaryRow, styles.summaryRowSubtotal]}>
+              <Text style={[styles.summaryLabel, styles.summaryLabelWhite]}>
+                Total (BDT):
+              </Text>
+              <Text style={[styles.summaryValue, styles.summaryValueWhite]}>
+                {(
+                  order.totalPrice +
+                  order.deliveryCharge -
+                  (order.discount || 0)
+                ).toFixed(0)}
+              </Text>
+            </View>
+            <View style={[styles.summaryRow, styles.summaryRowDue]}>
+              <Text style={[styles.summaryLabel, styles.summaryLabelWhite]}>
+                Due (BDT):
+              </Text>
+              <Text style={[styles.summaryValue, styles.summaryValueWhite]}>
+                {order.remaining.toFixed(0)}
               </Text>
             </View>
           </View>
         </View>
 
-        {/* Footer */}
-        <View style={styles.footer} fixed>
-          <View style={styles.footerLeft}>
-            <Text style={styles.footerText}>
-              prior.retailshop.info.bd@gmail.com
-            </Text>
-            <Text style={styles.footerText}>
-              Questions? Contact us at +880 1700-534317
-            </Text>
-          </View>
-          <View style={styles.footerCenter}>
-            <Text style={styles.thankYou}>THANK YOU FOR YOUR ORDER</Text>
-          </View>
-          <View style={styles.footerRight}>
-            <Text
-              style={styles.pageNumber}
-              render={({ pageNumber, totalPages }) =>
-                `Page ${pageNumber} of ${totalPages}`
-              }
-            />
+        {/* Footer - Compact */}
+        <View style={styles.footer}>
+          <View style={styles.footerContent}>
+            <View style={styles.footerLeft}>
+              <Text style={styles.footerTitle}>PRIOR</Text>
+              <Text style={styles.footerText}>
+                Shop 134, Genetic Plaza, Dhanmondi-27, Dhaka
+              </Text>
+              <Text style={styles.footerText}>Phone: +8801700534317</Text>
+              <Text style={styles.footerText}>
+                Email: prior.retailshop.info.bd@gmail.com
+              </Text>
+              <Text style={styles.footerText}>www.priorbd.com</Text>
+            </View>
+            <View style={styles.footerRight}>
+              <Text
+                style={styles.pageNumber}
+                render={({ pageNumber, totalPages }) =>
+                  `${pageNumber}/${totalPages}`
+                }
+              />
+            </View>
           </View>
         </View>
       </Page>
@@ -641,7 +585,7 @@ const InvoiceDocument: React.FC<InvoiceDocumentProps> = ({ order }) => {
   );
 };
 
-// Export functions
+// Export functions to generate and download PDF
 export const generateReactPdfInvoice = async (order: IOrder) => {
   const blob = await pdf(<InvoiceDocument order={order} />).toBlob();
   const url = URL.createObjectURL(blob);
