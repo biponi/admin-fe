@@ -57,6 +57,8 @@ import {
   TooltipTrigger,
 } from "../../../components/ui/tooltip";
 
+import CustomerIcon from "../../../assets/customer.png";
+
 interface OrderTableProps {
   orders: IOrder[];
   selectedIds: Set<string>;
@@ -170,7 +172,11 @@ export const OrderTable: React.FC<OrderTableProps> = ({
                       <TooltipTrigger asChild>
                         <Avatar className='h-8 w-8 rounded-lg'>
                           <AvatarImage
-                            src={order?.creatorAvatar}
+                            src={
+                              order?.orderCreatedBy === "customer"
+                                ? CustomerIcon
+                                : order?.creatorAvatar
+                            }
                             alt={"Creator_Avatar"}
                           />
                           <AvatarFallback className='rounded-lg'>
