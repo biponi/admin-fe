@@ -715,9 +715,7 @@ export const OrderListV2: React.FC = () => {
                     </span>
                   )}
                 </TabsTrigger>
-                <TabsTrigger
-                  value='cancelled'
-                  className='flex items-center gap-2'>
+                <TabsTrigger value='cancel' className='flex items-center gap-2'>
                   Cancelled
                   {statusCounts?.cancel && statusCounts.cancel > 0 && (
                     <span className='bg-red-100 text-red-700 px-2 py-0.5 rounded-full text-xs'>

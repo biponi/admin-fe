@@ -63,7 +63,7 @@ export const OrderManagement: React.FC = () => {
   return (
     <div className='relative h-full w-full'>
       {/* Version Banner (shown for first-time users) */}
-      {showVersionBanner && currentView === "v2" && (
+      {showVersionBanner && currentView === "v2" && !isMobile && (
         <motion.div
           initial={{ y: -100, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
