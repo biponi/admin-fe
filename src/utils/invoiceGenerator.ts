@@ -626,3 +626,93 @@ export const generateMultipleModernInvoicesAndDownloadZip = async (
   // Trigger download
   saveAs(zipBlob, "modern-invoices.zip");
 };
+
+/**
+ * Generate and preview multiple invoices for direct printing
+ * Returns PDF URLs with order numbers for unified preview
+ */
+export const generateInvoicePreviewData = async (
+  orderIds: number[]
+): Promise<{ url: string; orderNumber: number; blob: Blob }[]> => {
+  try {
+    const orders = (await getOrdersById(orderIds)) ?? [];
+
+    if (orders.length === 0) {
+      throw new Error("No orders found to print");
+    }
+
+    // Generate PDFs for all orders
+    const pdfData: { url: string; orderNumber: number; blob: Blob }[] = [];
+
+    for (const order of orders) {
+      const pdfBlob = await generateReactPdfInvoiceBlob(order);
+      const url = URL.createObjectURL(pdfBlob);
+      pdfData.push({
+        url,
+        orderNumber: order.orderNumber,
+        blob: pdfBlob,
+      });
+    }
+
+    return pdfData;
+  } catch (error) {
+    console.error("Error generating invoice previews:", error);
+    throw error;
+  }
+};
+
+/**
+ * Legacy function: Generate and preview multiple invoices for direct printing
+ * Opens all invoices in new tabs for preview and printing
+ * @deprecated Use generateInvoicePreviewData with InvoicePreviewModal instead
+ */
+export const printMultipleInvoicesWithPreview = async (
+  orderIds: number[]
+): Promise<void> => {
+  try {
+    const orders = (await getOrdersById(orderIds)) ?? [];
+
+    if (orders.length === 0) {
+      throw new Error("No orders found to print");
+    }
+
+    // Generate PDFs for all orders
+    const pdfUrls: string[] = [];
+
+    for (const order of orders) {
+      const pdfBlob = await generateReactPdfInvoiceBlob(order);
+      const url = URL.createObjectURL(pdfBlob);
+      pdfUrls.push(url);
+    }
+
+    // Open all PDFs in new tabs with a slight delay to prevent popup blocking
+    pdfUrls.forEach((url, index) => {
+      setTimeout(() => {
+        const printWindow = window.open(url, `_blank_${index}`);
+
+        if (printWindow) {
+          // Wait for content to load
+          printWindow.onload = () => {
+            // Focus the window (helps with print dialog)
+            printWindow.focus();
+
+            // Auto-trigger print dialog after a short delay
+            setTimeout(() => {
+              printWindow.print();
+            }, 500);
+          };
+        }
+      }, index * 300); // Stagger the opening to avoid popup blockers
+    });
+
+    // Clean up URLs after some time (10 seconds)
+    setTimeout(() => {
+      pdfUrls.forEach(url => URL.revokeObjectURL(url));
+    }, 10000);
+
+    return Promise.resolve();
+  } catch (error) {
+    console.error("Error printing invoices:", error);
+    throw error;
+  }
+};

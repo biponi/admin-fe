@@ -13,12 +13,20 @@ import {
   X,
   Loader2,
   Eye,
+  Printer,
+  ChevronDown,
 } from 'lucide-react';
 import { cn } from '../lib/utils';
 import { slideInFromBottom, fabVariants } from '../lib/animations';
 import { Button } from '../../../components/ui/button';
 import { Progress } from '../../../components/ui/progress';
 import { Badge } from '../../../components/ui/badge';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '../../../components/ui/dropdown-menu';
 import type { BulkActionProgress } from '../types';
 
 interface BulkActionsBarProps {
@@ -31,6 +39,7 @@ interface BulkActionsBarProps {
   onComplete: () => void;
   onCancel: () => void;
   onGenerateInvoices: () => void;
+  onPrintInvoices?: () => void;
   onViewSelectedOrders: () => void;
   progress?: BulkActionProgress | null;
   className?: string;
@@ -46,6 +55,7 @@ export const BulkActionsBar: React.FC<BulkActionsBarProps> = ({
   onComplete,
   onCancel,
   onGenerateInvoices,
+  onPrintInvoices,
   onViewSelectedOrders,
   progress,
   className,
@@ -173,17 +183,31 @@ export const BulkActionsBar: React.FC<BulkActionsBarProps> = ({
                   <span className="sm:hidden">Complete</span>
                 </Button>
 
-                {/* Generate Invoices */}
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={onGenerateInvoices}
-                  className="h-9"
-                >
-                  <Download className="mr-2 h-4 w-4" />
-                  <span className="hidden sm:inline">Download Invoices</span>
-                  <span className="sm:hidden">Invoices</span>
-                </Button>
+                {/* Generate Invoices - Dropdown with Print and Download */}
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="h-9"
+                    >
+                      <Download className="mr-2 h-4 w-4" />
+                      <span className="hidden sm:inline">Invoices</span>
+                      <span className="sm:hidden">Inv</span>
+                      <ChevronDown className="ml-1.5 h-3.5 w-3.5" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="start" className="w-48">
+                    <DropdownMenuItem onClick={onPrintInvoices}>
+                      <Printer className="mr-2 h-4 w-4" />
+                      Print with Preview
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={onGenerateInvoices}>
+                      <Download className="mr-2 h-4 w-4" />
+                      Download as ZIP
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
 
                 {/* Cancel Orders */}
                 <Button

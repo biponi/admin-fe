@@ -32,6 +32,7 @@ import { FloatingHelpButton } from "./components/FloatingHelpButton";
 import { OnboardingTour } from "./components/OnboardingTour";
 import { FraudDetectionContent } from "./components/FraudDetectionContent";
 import { ReturnOrderSheet } from "./components/ReturnOrderSheet";
+import { InvoicePreviewModal } from "./components/InvoicePreviewModal";
 import { Button } from "../../components/ui/button";
 import { Tabs, TabsList, TabsTrigger } from "../../components/ui/tabs";
 import {
@@ -56,7 +57,7 @@ import { fadeIn } from "./lib/animations";
 import { useKeyboardShortcuts } from "./hooks/useKeyboardShortcuts";
 import { orderBulkAction } from "../../api/order";
 import { useToast } from "../../components/ui/use-toast";
-import { generateMultipleModernInvoicesAndDownloadZip } from "../../utils/invoiceGenerator";
+import { generateMultipleModernInvoicesAndDownloadZip, generateInvoicePreviewData } from "../../utils/invoiceGenerator";
 import type {
   OrderStatus,
   KeyboardShortcut,
@@ -136,6 +137,10 @@ export const OrderListV2: React.FC = () => {
   const [isGeneratingInvoices, setIsGeneratingInvoices] = useState(false);
   const [showOnboarding, setShowOnboarding] = useState(false);
   const [returnDialogOpen, setReturnDialogOpen] = useState(false);
+  const [invoicePreviewOpen, setInvoicePreviewOpen] = useState(false);
+  const [invoicePreviewData, setInvoicePreviewData] = useState<
+    { url: string; orderNumber: number; blob: Blob }[]
+  >([]);
 
   // Check if user has seen onboarding
   useEffect(() => {
@@ -484,6 +489,107 @@ export const OrderListV2: React.FC = () => {
       });
     } finally {
       setIsGeneratingInvoices(false);
+    }
+  };
+
+  const printBulkInvoices = async () => {
+    setIsGeneratingInvoices(true);
+
+    try {
+      const selectedOrderIds = Array.from(selection.selectedIds)
+        .map((id) => {
+          const order = orders.find((o) => o._id === id);
+          return order?.id;
+        })
+        .filter((id): id is number => id !== undefined);
+
+      if (selectedOrderIds.length === 0) {
+        toast({
+          variant: "destructive",
+          title: "No orders selected",
+          description: "Please select at least one order to print invoices.",
+        });
+        setIsGeneratingInvoices(false);
+        return;
+      }
+
+      toast({
+        title: "Generating invoices...",
+        description: `Preparing ${selectedOrderIds.length} invoice${selectedOrderIds.length > 1 ? 's' : ''} for preview`,
+      });
+
+      // Generate preview data
+      const previewData = await generateInvoicePreviewData(selectedOrderIds);
+
+      setInvoicePreviewData(previewData);
+      setInvoicePreviewOpen(true);
+
+      toast({
+        title: "Invoices Ready",
+        description: `${selectedOrderIds.length} invoice${selectedOrderIds.length > 1 ? 's' : ''} ready for preview`,
+      });
+    } catch (error: any) {
+      toast({
+        variant: "destructive",
+        title: "Failed to prepare invoices",
+        description:
+          error.message || "An error occurred while preparing invoices for print.",
+      });
+    } finally {
+      setIsGeneratingInvoices(false);
+    }
+  };
+
+  const handleInvoicePreviewClose = () => {
+    setInvoicePreviewOpen(false);
+    // Clean up blob URLs
+    invoicePreviewData.forEach(data => URL.revokeObjectURL(data.url));
+    setInvoicePreviewData([]);
+    clearSelection();
+  };
+
+  const handlePrintAllInvoices = () => {
+    toast({
+      title: "Printing invoices...",
+      description: "Opening print dialogs for all invoices",
+    });
+  };
+
+  const handlePrintCurrentInvoice = () => {
+    toast({
+      title: "Printing invoice...",
+      description: "Opening print dialog",
+    });
+  };
+
+  const handleDownloadAllInvoices = async () => {
+    try {
+      const selectedOrderIds = Array.from(selection.selectedIds)
+        .map((id) => {
+          const order = orders.find((o) => o._id === id);
+          return order?.id;
+        })
+        .filter((id): id is number => id !== undefined);
+
+      toast({
+        title: "Downloading invoices...",
+        description: "Creating ZIP file",
+      });
+
+      await generateMultipleModernInvoicesAndDownloadZip(selectedOrderIds);
+
+      toast({
+        title: "Download complete",
+        description: "Invoices downloaded as ZIP file",
+      });
+
+      handleInvoicePreviewClose();
+    } catch (error: any) {
+      toast({
+        variant: "destructive",
+        title: "Download failed",
+        description: error.message || "Failed to download invoices",
+      });
     }
   };
 
@@ -867,6 +973,7 @@ export const OrderListV2: React.FC = () => {
         onComplete={handleBulkComplete}
         onCancel={handleBulkCancel}
         onGenerateInvoices={handleBulkInvoiceDownload}
+        onPrintInvoices={printBulkInvoices}
         onViewSelectedOrders={() => setSelectedOrdersViewerOpen(true)}
         progress={bulkActionProgress}
       />
@@ -1241,6 +1348,16 @@ export const OrderListV2: React.FC = () => {
       <FloatingHelpButton
         onShowKeyboardShortcuts={toggleKeyboardShortcutsModal}
         onShowOnboarding={() => setShowOnboarding(true)}
+      />
+
+      {/* Invoice Preview Modal */}
+      <InvoicePreviewModal
+        open={invoicePreviewOpen}
+        onOpenChange={handleInvoicePreviewClose}
+        pdfUrls={invoicePreviewData}
+        onPrintAll={handlePrintAllInvoices}
+        onPrintCurrent={handlePrintCurrentInvoice}
+        onDownloadAll={handleDownloadAllInvoices}
       />
     </div>
   );
