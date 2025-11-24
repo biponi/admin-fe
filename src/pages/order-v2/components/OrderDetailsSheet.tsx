@@ -361,6 +361,25 @@ export const OrderDetailsSheet: React.FC<OrderDetailsSheetProps> = ({
                           {product.quantity} ×{" "}
                           {formatCurrency(product.unitPrice)}
                         </span>
+                        {/* Variant badges */}
+                        {product.hasVariation && product.variation && (
+                          <>
+                            {product.variation.size && (
+                              <Badge
+                                variant='outline'
+                                className='text-[10px] h-5 px-1.5 bg-blue-50 border-blue-200 text-blue-700 font-medium'>
+                                Size: {product.variation.size}
+                              </Badge>
+                            )}
+                            {product.variation.color && (
+                              <Badge
+                                variant='outline'
+                                className='text-[10px] h-5 px-1.5 bg-purple-50 border-purple-200 text-purple-700 font-medium'>
+                                Color: {product.variation.color}
+                              </Badge>
+                            )}
+                          </>
+                        )}
                       </div>
                     </div>
                     <div className='text-right flex-shrink-0'>
