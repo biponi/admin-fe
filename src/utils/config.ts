@@ -23,8 +23,8 @@ const config = {
       `${baseURL}/user/member/delete/${memberId}`,
   },
   product: {
-    createProduct: () => `${baseURL}/product/create`,
-    updateProduct: () => `${baseURL}/product/update`,
+    createProduct: () => `${baseURL}/products/create`,
+    updateProduct: () => `${baseURL}/products/update`,
     editProduct: () => `${baseURL}/product/edit`,
     searchProduct: () => `${baseURL}/product/search`,
     multiProducts: () => `${baseURL}/product/multi`,

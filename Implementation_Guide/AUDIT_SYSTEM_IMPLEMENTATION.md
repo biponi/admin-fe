@@ -1,6 +1,7 @@
 # Audit & Admin Dashboard System - Frontend Implementation
 
 ## Overview
+
 This document describes the complete frontend implementation for the Product Stock Adjustment, Order Audit Trail, and Admin Audit Dashboard systems. All systems follow your project's established patterns and conventions.
 
 ---
@@ -43,6 +44,7 @@ src/
 All endpoints have been added to [src/utils/config.ts](src/utils/config.ts):
 
 ### Product Adjustment Endpoints
+
 ```typescript
 product: {
   // ... existing endpoints
@@ -55,6 +57,7 @@ product: {
 ```
 
 ### Order Audit Endpoints
+
 ```typescript
 order: {
   // ... existing endpoints
@@ -66,6 +69,7 @@ order: {
 ```
 
 ### Admin Dashboard Endpoints
+
 ```typescript
 admin: {
   auditDashboard: () => `${baseURL}/admin/audit/dashboard`,
@@ -82,24 +86,26 @@ admin: {
 ### 1. Product Stock Adjustment
 
 #### Using the Hook
+
 ```typescript
-import { useProductAdjustment } from '@/hooks/useProductAdjustment';
+import { useProductAdjustment } from "@/hooks/useProductAdjustment";
 
 const ProductManager = ({ productId }) => {
-  const { adjustStock, fetchAdjustmentHistory, isLoading, error } = useProductAdjustment();
+  const { adjustStock, fetchAdjustmentHistory, isLoading, error } =
+    useProductAdjustment();
 
   const handleAdjustment = async () => {
     const result = await adjustStock({
       productId: productId,
-      adjustmentType: 'add',
+      adjustmentType: "add",
       quantity: 50,
-      reason: 'Received new stock from supplier XYZ',
-      notes: 'Invoice #INV-2024-001',
-      referenceNumber: 'PO-2024-001'
+      reason: "Received new stock from supplier XYZ",
+      notes: "Invoice #INV-2024-001",
+      referenceNumber: "PO-2024-001",
     });
 
     if (result) {
-      console.log('New quantity:', result.product.newQuantity);
+      console.log("New quantity:", result.product.newQuantity);
     }
   };
 
@@ -108,15 +114,16 @@ const ProductManager = ({ productId }) => {
       <button onClick={handleAdjustment} disabled={isLoading}>
         Adjust Stock
       </button>
-      {error && <div className="error">{error}</div>}
+      {error && <div className='error'>{error}</div>}
     </div>
   );
 };
 ```
 
 #### Using the Component
+
 ```typescript
-import { ProductAdjustmentForm } from '@/pages/product/components/ProductAdjustmentForm';
+import { ProductAdjustmentForm } from "@/pages/product/components/ProductAdjustmentForm";
 
 const ProductDetail = ({ product }) => {
   const [showForm, setShowForm] = useState(false);
@@ -145,8 +152,9 @@ const ProductDetail = ({ product }) => {
 ### 2. Order Audit Trail
 
 #### Using the Hook
+
 ```typescript
-import { useOrderAudit } from '@/hooks/useOrderAudit';
+import { useOrderAudit } from "@/hooks/useOrderAudit";
 
 const OrderDetails = ({ orderId }) => {
   const { fetchOrderAudit, isLoading } = useOrderAudit();
@@ -165,7 +173,7 @@ const OrderDetails = ({ orderId }) => {
 
   return (
     <div>
-      {auditLogs.map(log => (
+      {auditLogs.map((log) => (
         <div key={log.id}>
           {log.performedBy.userName} - {log.operation}
         </div>
@@ -176,8 +184,9 @@ const OrderDetails = ({ orderId }) => {
 ```
 
 #### Using the Component
+
 ```typescript
-import { OrderAuditTimeline } from '@/pages/order/components/OrderAuditTimeline';
+import { OrderAuditTimeline } from "@/pages/order/components/OrderAuditTimeline";
 
 const OrderPage = ({ orderId }) => {
   return (
@@ -195,8 +204,9 @@ const OrderPage = ({ orderId }) => {
 ### 3. Admin Audit Dashboard
 
 #### Using the Hook
+
 ```typescript
-import { useAdminAudit } from '@/hooks/useAdminAudit';
+import { useAdminAudit } from "@/hooks/useAdminAudit";
 
 const AdminDashboard = () => {
   const { fetchDashboard, fetchTopPerformers, isLoading } = useAdminAudit();
@@ -209,13 +219,13 @@ const AdminDashboard = () => {
 
   const loadData = async () => {
     const dashboard = await fetchDashboard({
-      startDate: '2025-01-01',
-      endDate: '2025-11-06'
+      startDate: "2025-01-01",
+      endDate: "2025-11-06",
     });
 
     const performers = await fetchTopPerformers({
       limit: 10,
-      metric: 'total'
+      metric: "total",
     });
 
     if (dashboard) setDashboardData(dashboard);
@@ -232,9 +242,10 @@ const AdminDashboard = () => {
 ```
 
 #### Using the Components
+
 ```typescript
-import { AuditDashboard } from '@/pages/admin/components/AuditDashboard';
-import { UserPerformanceTable } from '@/pages/admin/components/UserPerformanceTable';
+import { AuditDashboard } from "@/pages/admin/components/AuditDashboard";
+import { UserPerformanceTable } from "@/pages/admin/components/UserPerformanceTable";
 
 const AdminPage = () => {
   return (
@@ -243,10 +254,7 @@ const AdminPage = () => {
       <AuditDashboard />
 
       {/* User Performance */}
-      <UserPerformanceTable
-        limit={50}
-        showTopPerformers={true}
-      />
+      <UserPerformanceTable limit={50} showTopPerformers={true} />
     </div>
   );
 };
@@ -280,32 +288,35 @@ No additional authentication setup is required for the new endpoints.
 All TypeScript interfaces are properly typed and exported:
 
 ### Product Adjustment Types
+
 ```typescript
 import {
   AdjustmentType,
   ProductAdjustmentRequest,
   AdjustmentHistoryItem,
-  AdjustmentStatsResponse
-} from '@/types/audit.types';
+  AdjustmentStatsResponse,
+} from "@/types/audit.types";
 ```
 
 ### Order Audit Types
+
 ```typescript
 import {
   AuditOperation,
   AuditLogEntry,
-  OrderAuditResponse
-} from '@/types/audit.types';
+  OrderAuditResponse,
+} from "@/types/audit.types";
 ```
 
 ### Admin Dashboard Types
+
 ```typescript
 import {
   DashboardOverview,
   UserPerformanceSummary,
   TopPerformer,
-  PerformanceMetric
-} from '@/types/adminAudit.types';
+  PerformanceMetric,
+} from "@/types/adminAudit.types";
 ```
 
 ---
@@ -315,12 +326,14 @@ import {
 The components include detailed CSS examples in their comments. Key styling classes:
 
 ### Product Adjustment Form
+
 - `.product-adjustment-form`
 - `.form-group`
 - `.form-actions`
 - `.error-message`
 
 ### Order Audit Timeline
+
 - `.order-audit-timeline`
 - `.timeline-container`
 - `.timeline-entry`
@@ -328,6 +341,7 @@ The components include detailed CSS examples in their comments. Key styling clas
 - `.timeline-connector`
 
 ### Admin Dashboard
+
 - `.audit-dashboard`
 - `.stats-grid`
 - `.stat-card`
@@ -335,6 +349,7 @@ The components include detailed CSS examples in their comments. Key styling clas
 - `.hourly-chart`
 
 ### User Performance Table
+
 - `.user-performance-container`
 - `.performance-table`
 - `.leaderboard`
@@ -345,15 +360,17 @@ The components include detailed CSS examples in their comments. Key styling clas
 ## 🚀 Integration Steps
 
 ### Step 1: Import the Hook
+
 ```typescript
-import { useProductAdjustment } from '@/hooks/useProductAdjustment';
+import { useProductAdjustment } from "@/hooks/useProductAdjustment";
 // or
-import { useOrderAudit } from '@/hooks/useOrderAudit';
+import { useOrderAudit } from "@/hooks/useOrderAudit";
 // or
-import { useAdminAudit } from '@/hooks/useAdminAudit';
+import { useAdminAudit } from "@/hooks/useAdminAudit";
 ```
 
 ### Step 2: Use the Hook in Your Component
+
 ```typescript
 const MyComponent = () => {
   const { adjustStock, isLoading, error } = useProductAdjustment();
@@ -363,12 +380,14 @@ const MyComponent = () => {
 ```
 
 ### Step 3: Handle Loading and Error States
+
 ```typescript
 if (isLoading) return <div>Loading...</div>;
-if (error) return <div className="error">{error}</div>;
+if (error) return <div className='error'>{error}</div>;
 ```
 
 ### Step 4: Call API Functions
+
 ```typescript
 const handleAction = async () => {
   const result = await adjustStock(data);
@@ -383,6 +402,7 @@ const handleAction = async () => {
 ## 🔍 Best Practices
 
 ### Product Stock Adjustments
+
 1. **Always provide clear reasons** (minimum 5 characters)
 2. **Include reference numbers** for traceability (PO numbers, invoice numbers)
 3. **Use `add` type** for receiving stock
@@ -390,6 +410,7 @@ const handleAction = async () => {
 5. **Use `set` type** only for physical inventory counts
 
 ### Order Audits
+
 1. **Regularly review audit logs** for unusual patterns
 2. **Use date filters** for performance (don't query all logs at once)
 3. **Implement pagination** on frontend for large datasets
@@ -397,6 +418,7 @@ const handleAction = async () => {
 5. **Monitor high-risk operations** (bulk actions, deletions)
 
 ### Admin Dashboard
+
 1. **Implement role-based access** control
 2. **Use date range filters** to limit data
 3. **Cache dashboard metrics** (1-5 minutes)
@@ -409,7 +431,7 @@ const handleAction = async () => {
 
 ### Deprecated Endpoint Warning
 
-The direct product update endpoint (`PUT /v1/product/update`) is deprecated. A notice has been added to [src/api/product.ts](src/api/product.ts):
+The direct product update endpoint (`PUT /v1/products/update`) is deprecated. A notice has been added to [src/api/product.ts](src/api/product.ts):
 
 ```typescript
 /**
@@ -442,6 +464,7 @@ Always use the new adjustment API for stock changes.
 ## 📚 Component API Reference
 
 ### ProductAdjustmentForm Props
+
 ```typescript
 interface ProductAdjustmentFormProps {
   productId: string;
@@ -453,6 +476,7 @@ interface ProductAdjustmentFormProps {
 ```
 
 ### OrderAuditTimeline Props
+
 ```typescript
 interface OrderAuditTimelineProps {
   orderId: string;
@@ -461,6 +485,7 @@ interface OrderAuditTimelineProps {
 ```
 
 ### UserPerformanceTable Props
+
 ```typescript
 interface UserPerformanceTableProps {
   limit?: number;
@@ -473,20 +498,24 @@ interface UserPerformanceTableProps {
 ## 🔗 Related Files
 
 ### Core API Files
+
 - [src/api/productAdjustment.ts](src/api/productAdjustment.ts) - Product adjustment API
 - [src/api/orderAudit.ts](src/api/orderAudit.ts) - Order audit API
 - [src/api/adminAudit.ts](src/api/adminAudit.ts) - Admin dashboard API
 
 ### Type Definitions
+
 - [src/types/audit.types.ts](src/types/audit.types.ts) - Audit system types
 - [src/types/adminAudit.types.ts](src/types/adminAudit.types.ts) - Admin dashboard types
 
 ### Custom Hooks
+
 - [src/hooks/useProductAdjustment.ts](src/hooks/useProductAdjustment.ts)
 - [src/hooks/useOrderAudit.ts](src/hooks/useOrderAudit.ts)
 - [src/hooks/useAdminAudit.ts](src/hooks/useAdminAudit.ts)
 
 ### Components
+
 - [src/pages/product/components/ProductAdjustmentForm.tsx](src/pages/product/components/ProductAdjustmentForm.tsx)
 - [src/pages/order/components/OrderAuditTimeline.tsx](src/pages/order/components/OrderAuditTimeline.tsx)
 - [src/pages/admin/components/AuditDashboard.tsx](src/pages/admin/components/AuditDashboard.tsx)
@@ -497,6 +526,7 @@ interface UserPerformanceTableProps {
 ## 🆘 Support
 
 For questions or issues:
+
 1. Check this documentation
 2. Review component comments and examples
 3. Verify API endpoint configuration in `config.ts`
@@ -508,11 +538,13 @@ For questions or issues:
 ## ✅ Implementation Complete
 
 All systems are ready for integration:
+
 - ✅ Product Stock Adjustment System
 - ✅ Order Audit Trail System
 - ✅ Admin Audit Dashboard System
 
 **Next Steps:**
+
 1. Import components into your pages
 2. Add routing for admin dashboard
 3. Apply custom styling

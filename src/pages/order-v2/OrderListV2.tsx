@@ -57,7 +57,10 @@ import { fadeIn } from "./lib/animations";
 import { useKeyboardShortcuts } from "./hooks/useKeyboardShortcuts";
 import { orderBulkAction } from "../../api/order";
 import { useToast } from "../../components/ui/use-toast";
-import { generateMultipleModernInvoicesAndDownloadZip, generateInvoicePreviewData } from "../../utils/invoiceGenerator";
+import {
+  generateMultipleModernInvoicesAndDownloadZip,
+  generateInvoicePreviewData,
+} from "../../utils/invoiceGenerator";
 import type {
   OrderStatus,
   KeyboardShortcut,
@@ -141,6 +144,10 @@ export const OrderListV2: React.FC = () => {
   const [invoicePreviewData, setInvoicePreviewData] = useState<
     { url: string; orderNumber: number; blob: Blob }[]
   >([]);
+  // Store full order data for selected orders to prevent data loss on pagination
+  const [selectedOrdersData, setSelectedOrdersData] = useState<
+    Map<number, IOrder>
+  >(new Map());
 
   // Check if user has seen onboarding
   useEffect(() => {
@@ -156,6 +163,59 @@ export const OrderListV2: React.FC = () => {
   const handleOnboardingComplete = () => {
     localStorage.setItem("orderV2OnboardingComplete", "true");
     setShowOnboarding(false);
+  };
+
+  // Enhanced selection handler that stores full order data
+  const handleOrderSelection = (orderId: number) => {
+    setSelectedOrdersData((prev) => {
+      const newMap = new Map(prev);
+      if (selection.selectedIds.has(orderId)) {
+        // Removing selection - delete from map
+        newMap.delete(orderId);
+      } else {
+        // Adding selection - find order and store full order data
+        const order = orders.find((o) => o.id === orderId);
+        if (order) {
+          newMap.set(orderId, order);
+        }
+      }
+      return newMap;
+    });
+
+    // Call the original toggle function
+    toggleOrderSelection(orderId);
+  };
+
+  // Enhanced select all handler
+  const handleSelectAll = () => {
+    if (selection.isAllSelected) {
+      // Clear all
+      setSelectedOrdersData(new Map());
+      clearSelection();
+    } else {
+      // Select all current orders
+      setSelectedOrdersData((prev) => {
+        const newMap = new Map(prev);
+        orders.forEach((order) => {
+          if (order.id) {
+            newMap.set(order.id, order);
+          }
+        });
+        return newMap;
+      });
+      selectAll();
+    }
+  };
+
+  // Enhanced clear selection handler
+  const handleClearSelection = () => {
+    setSelectedOrdersData(new Map());
+    clearSelection();
+  };
+
+  // Get selected orders from our stored data
+  const getSelectedOrders = (): IOrder[] => {
+    return Array.from(selectedOrdersData.values());
   };
 
   // Fetch data on mount
@@ -332,11 +392,9 @@ export const OrderListV2: React.FC = () => {
     actionType: string,
     courierProvider?: CourierProvider
   ) => {
-    const selectedOrderIds = Array.from(selection.selectedIds)
-      .map((id) => {
-        const order = orders.find((o) => o._id === id);
-        return order?.id;
-      })
+    // Use selectedOrdersData Map to get order IDs
+    const selectedOrderIds = Array.from(selectedOrdersData.values())
+      .map((order) => order.id)
       .filter((id): id is number => id !== undefined);
 
     if (selectedOrderIds.length === 0) {
@@ -450,11 +508,9 @@ export const OrderListV2: React.FC = () => {
     setIsGeneratingInvoices(true);
 
     try {
-      const selectedOrderIds = Array.from(selection.selectedIds)
-        .map((id) => {
-          const order = orders.find((o) => o._id === id);
-          return order?.id;
-        })
+      // Use selectedOrdersData Map to get order IDs
+      const selectedOrderIds = Array.from(selectedOrdersData.values())
+        .map((order) => order.id)
         .filter((id): id is number => id !== undefined);
 
       if (selectedOrderIds.length === 0) {
@@ -496,11 +552,9 @@ export const OrderListV2: React.FC = () => {
     setIsGeneratingInvoices(true);
 
     try {
-      const selectedOrderIds = Array.from(selection.selectedIds)
-        .map((id) => {
-          const order = orders.find((o) => o._id === id);
-          return order?.id;
-        })
+      // Use selectedOrdersData Map to get order IDs
+      const selectedOrderIds = Array.from(selectedOrdersData.values())
+        .map((order) => order.id)
         .filter((id): id is number => id !== undefined);
 
       if (selectedOrderIds.length === 0) {
@@ -515,7 +569,9 @@ export const OrderListV2: React.FC = () => {
 
       toast({
         title: "Generating invoices...",
-        description: `Preparing ${selectedOrderIds.length} invoice${selectedOrderIds.length > 1 ? 's' : ''} for preview`,
+        description: `Preparing ${selectedOrderIds.length} invoice${
+          selectedOrderIds.length > 1 ? "s" : ""
+        } for preview`,
       });
 
       // Generate preview data
@@ -526,14 +582,17 @@ export const OrderListV2: React.FC = () => {
 
       toast({
         title: "Invoices Ready",
-        description: `${selectedOrderIds.length} invoice${selectedOrderIds.length > 1 ? 's' : ''} ready for preview`,
+        description: `${selectedOrderIds.length} invoice${
+          selectedOrderIds.length > 1 ? "s" : ""
+        } ready for preview`,
       });
     } catch (error: any) {
       toast({
         variant: "destructive",
         title: "Failed to prepare invoices",
         description:
-          error.message || "An error occurred while preparing invoices for print.",
+          error.message ||
+          "An error occurred while preparing invoices for print.",
       });
     } finally {
       setIsGeneratingInvoices(false);
@@ -543,7 +602,7 @@ export const OrderListV2: React.FC = () => {
   const handleInvoicePreviewClose = () => {
     setInvoicePreviewOpen(false);
     // Clean up blob URLs
-    invoicePreviewData.forEach(data => URL.revokeObjectURL(data.url));
+    invoicePreviewData.forEach((data) => URL.revokeObjectURL(data.url));
     setInvoicePreviewData([]);
     clearSelection();
   };
@@ -564,11 +623,9 @@ export const OrderListV2: React.FC = () => {
 
   const handleDownloadAllInvoices = async () => {
     try {
-      const selectedOrderIds = Array.from(selection.selectedIds)
-        .map((id) => {
-          const order = orders.find((o) => o._id === id);
-          return order?.id;
-        })
+      // Use selectedOrdersData Map to get order IDs
+      const selectedOrderIds = Array.from(selectedOrdersData.values())
+        .map((order) => order.id)
         .filter((id): id is number => id !== undefined);
 
       toast({
@@ -861,15 +918,9 @@ export const OrderListV2: React.FC = () => {
             <div className='hidden md:block'>
               <OrderTable
                 orders={orders}
-                onSelectAll={(isChecked) => {
-                  if (isChecked) {
-                    selectAll();
-                  } else {
-                    clearSelection();
-                  }
-                }}
+                onSelectAll={handleSelectAll}
                 selectedIds={selection.selectedIds}
-                onSelect={toggleOrderSelection}
+                onSelect={handleOrderSelection}
                 onView={handleViewOrder}
                 onEdit={handleEditOrder}
                 onModify={handleModifyOrder}
@@ -885,7 +936,7 @@ export const OrderListV2: React.FC = () => {
               <MobileOrderList
                 orders={orders}
                 selectedIds={selection.selectedIds}
-                onSelect={toggleOrderSelection}
+                onSelect={handleOrderSelection}
                 onView={handleViewOrder}
                 onEdit={handleEditOrder}
                 onDelete={handleDeleteOrder}
@@ -967,8 +1018,8 @@ export const OrderListV2: React.FC = () => {
         selectedCount={selection.selectedIds.size}
         totalCount={orders.length}
         isAllSelected={selection.isAllSelected}
-        onClearSelection={clearSelection}
-        onSelectAll={selectAll}
+        onClearSelection={handleClearSelection}
+        onSelectAll={handleSelectAll}
         onShipped={handleBulkShipped}
         onComplete={handleBulkComplete}
         onCancel={handleBulkCancel}
@@ -1269,13 +1320,13 @@ export const OrderListV2: React.FC = () => {
           </SheetHeader>
           <ScrollArea className='h-[calc(100vh-200px)] mt-4'>
             <div className='space-y-2'>
-              {Array.from(selection.selectedIds).map((orderId) => {
-                const order = orders.find((o) => o._id === orderId);
-                if (!order) return null;
+              {getSelectedOrders().map((order, index) => {
+                const orderId = order.id;
+                if (!orderId) return null;
 
                 return (
                   <motion.div
-                    key={orderId}
+                    key={index}
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
                     className='flex items-center justify-between p-3 bg-gradient-to-r from-blue-50 to-purple-50 rounded-lg border border-blue-200 hover:shadow-md transition-all'>
@@ -1295,7 +1346,7 @@ export const OrderListV2: React.FC = () => {
                       variant='ghost'
                       size='sm'
                       onClick={() => {
-                        toggleOrderSelection(orderId);
+                        handleOrderSelection(orderId);
                         if (selection.selectedIds.size === 1) {
                           setSelectedOrdersViewerOpen(false);
                         }
@@ -1313,7 +1364,7 @@ export const OrderListV2: React.FC = () => {
               variant='outline'
               className='flex-1'
               onClick={() => {
-                clearSelection();
+                handleClearSelection();
                 setSelectedOrdersViewerOpen(false);
               }}>
               Clear All

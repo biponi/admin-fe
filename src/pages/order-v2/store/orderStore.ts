@@ -62,24 +62,24 @@ interface OrderState {
   applyFilter: (id: string) => void;
 
   // Actions - Selection
-  selectOrder: (orderId: string) => void;
-  deselectOrder: (orderId: string) => void;
+  selectOrder: (orderId: number) => void;
+  deselectOrder: (orderId: number) => void;
   selectAll: () => void;
   clearSelection: () => void;
-  toggleOrderSelection: (orderId: string) => void;
+  toggleOrderSelection: (orderId: number) => void;
 
   // Actions - Bulk operations
   startBulkAction: (total: number) => void;
   updateBulkProgress: (
     completed: number,
     failed: number,
-    errors?: Array<{ orderId: string; error: string }>
+    errors?: Array<{ orderId: number; error: string }>
   ) => void;
   finishBulkAction: () => void;
 
   // Actions - Order updates
-  updateOrder: (orderId: string, updates: Partial<IOrder>) => void;
-  removeOrder: (orderId: string) => void;
+  updateOrder: (orderId: number, updates: Partial<IOrder>) => void;
+  removeOrder: (orderId: number) => void;
 
   // Actions - Reset
   reset: () => void;
@@ -97,9 +97,9 @@ const initialState = {
   savedFilters: [],
   activeFilterId: null,
   selection: {
-    selectedIds: new Set<string>(),
+    selectedIds: new Set<number>(),
     isAllSelected: false,
-    excludedIds: new Set<string>(),
+    excludedIds: new Set<number>(),
   },
   isLoading: false,
   isRefreshing: false,
@@ -296,7 +296,7 @@ export const useOrderStore = create<OrderState>()(
         selectAll: () => {
           set((state) => ({
             selection: {
-              selectedIds: new Set(state.orders.map((o) => o._id || "")),
+              selectedIds: new Set(state.orders.map((o) => o.id).filter((id): id is number => id !== undefined)),
               isAllSelected: true,
               excludedIds: new Set(),
             },
@@ -358,14 +358,14 @@ export const useOrderStore = create<OrderState>()(
         updateOrder: (orderId, updates) => {
           set((state) => ({
             orders: state.orders.map((order) =>
-              order._id === orderId ? { ...order, ...updates } : order
+              order.id === orderId ? { ...order, ...updates } : order
             ),
           }));
         },
 
         removeOrder: (orderId) => {
           set((state) => ({
-            orders: state.orders.filter((order) => order._id !== orderId),
+            orders: state.orders.filter((order) => order.id !== orderId),
             totalOrders: state.totalOrders - 1,
           }));
         },

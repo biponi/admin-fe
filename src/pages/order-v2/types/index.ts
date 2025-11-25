@@ -69,13 +69,13 @@ export interface BulkActionProgress {
   completed: number;
   failed: number;
   inProgress: boolean;
-  errors: Array<{ orderId: string; error: string }>;
+  errors: Array<{ orderId: number; error: string }>;
 }
 
 export interface OrderSelectionState {
-  selectedIds: Set<string>;
+  selectedIds: Set<number>;
   isAllSelected: boolean;
-  excludedIds: Set<string>;
+  excludedIds: Set<number>;
 }
 
 // Command palette types

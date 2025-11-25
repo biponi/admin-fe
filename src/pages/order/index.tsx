@@ -5,7 +5,7 @@ import OrderList from "./orderList";
 const OrderPage = () => {
   //   const navigate = useNavigate();
   //   const handleEditProduct = (id: string) => {
-  //     navigate(`/product/update/${id}`);
+  //     navigate(`/products/update/${id}`);
   //   };
   const renderOrderListView = () => {
     return <OrderList />;

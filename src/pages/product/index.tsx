@@ -5,7 +5,7 @@ import ProductList from "./productList";
 const ProductPage = () => {
   const navigate = useNavigate();
   const handleEditProduct = (id: string) => {
-    navigate(`/product/update/${id}`);
+    navigate(`/products/update/${id}`);
   };
   const renderProductListView = () => {
     return <ProductList handleEditProduct={handleEditProduct} />;

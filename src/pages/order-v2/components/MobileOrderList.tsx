@@ -39,8 +39,8 @@ import { listItem } from '../lib/animations';
 
 interface MobileOrderListProps {
   orders: IOrder[];
-  selectedIds: Set<string>;
-  onSelect?: (orderId: string) => void;
+  selectedIds: Set<number>;
+  onSelect?: (orderId: number) => void;
   onView?: (order: IOrder) => void;
   onEdit?: (order: IOrder) => void;
   onDelete?: (order: IOrder) => void;
@@ -72,13 +72,15 @@ export const MobileOrderList: React.FC<MobileOrderListProps> = ({
   return (
     <div className="space-y-3">
       {orders.map((order, index) => {
-        const isSelected = selectedIds.has(order._id || '');
+        const orderId = order.id;
+        if (!orderId) return null;
+        const isSelected = selectedIds.has(orderId);
         const paymentStatus = getPaymentStatus(order);
         const hasHighRisk = order.customerRiskLevel === 'red' || order.requiresManualReview;
 
         return (
           <motion.div
-            key={order._id}
+            key={orderId}
             variants={listItem}
             custom={index}
             className={cn(
@@ -94,7 +96,7 @@ export const MobileOrderList: React.FC<MobileOrderListProps> = ({
                 <div onClick={(e) => e.stopPropagation()}>
                   <Checkbox
                     checked={isSelected}
-                    onCheckedChange={() => onSelect(order._id || '')}
+                    onCheckedChange={() => onSelect(orderId)}
                   />
                 </div>
               )}

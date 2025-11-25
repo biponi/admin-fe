@@ -49,7 +49,7 @@ export const navItems = [
     items: [
       {
         title: "Add Product",
-        url: "/product/create",
+        url: "/products/create",
       },
     ],
     roles: ["admin", "manager"],

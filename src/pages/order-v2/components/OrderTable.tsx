@@ -61,9 +61,9 @@ import CustomerIcon from "../../../assets/customer.png";
 
 interface OrderTableProps {
   orders: IOrder[];
-  selectedIds: Set<string>;
+  selectedIds: Set<number>;
   onSelectAll?: (selected: boolean) => void;
-  onSelect?: (orderId: string) => void;
+  onSelect?: (orderId: number) => void;
   onView?: (order: IOrder) => void;
   onEdit?: (order: IOrder) => void;
   onModify?: (order: IOrder) => void;
@@ -131,14 +131,16 @@ export const OrderTable: React.FC<OrderTableProps> = ({
             </TableRow>
           ) : (
             orders.map((order, index) => {
-              const isSelected = selectedIds.has(order._id || "");
+              const orderId = order.id;
+              if (!orderId) return null;
+              const isSelected = selectedIds.has(orderId);
               const paymentStatus = getPaymentStatus(order);
               const hasHighRisk =
                 order.customerRiskLevel === "red" || order.requiresManualReview;
 
               return (
                 <motion.tr
-                  key={order._id}
+                  key={orderId}
                   variants={listItem}
                   custom={index}
                   className={cn(
@@ -151,7 +153,7 @@ export const OrderTable: React.FC<OrderTableProps> = ({
                     {onSelect && (
                       <Checkbox
                         checked={isSelected}
-                        onCheckedChange={() => onSelect(order._id || "")}
+                        onCheckedChange={() => onSelect(orderId)}
                       />
                     )}
                   </TableCell>

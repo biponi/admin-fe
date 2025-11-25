@@ -16,8 +16,8 @@ export const publicRoutes = (
   <>
     <Route path='/unauthorize' element={<AccessDeniedPage />} />
     <Route path='/products' element={<ProductPage />} />
-    <Route path='/product/update/:id' element={<UpdateProduct />} />
-    <Route path='/product/create' element={<CreateNewProduct />} />
+    <Route path='/products/update/:id' element={<UpdateProduct />} />
+    <Route path='/products/create' element={<CreateNewProduct />} />
     <Route path='/category' element={<Category />} />
     <Route path='/order' element={<OrderManagement />} />
     <Route path='/order/create' element={<CreateOrder />} />
