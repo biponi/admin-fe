@@ -174,9 +174,9 @@ interface NotificationContextType {
   removeNotification: (notificationId: string) => void;
   refreshNotifications: () => void;
   isBrowserNotificationSupported: boolean;
-  notificationPermission: NotificationPermission | "unsupported";
+  notificationPermission: NotificationPermission | "unsupported" | "not";
   requestNotificationPermission: () => Promise<
-    NotificationPermission | "unsupported"
+    NotificationPermission | "unsupported" | "not"
   >;
 }
 
@@ -203,7 +203,7 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({
 }) => {
   const [state, dispatch] = useReducer(notificationReducer, initialState);
   const [notificationPermission, setNotificationPermission] = React.useState<
-    NotificationPermission | "unsupported"
+    NotificationPermission | "unsupported" | "not"
   >(getNotificationPermission());
 
   // Play notification sound
@@ -414,6 +414,7 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({
     refreshNotifications,
     isBrowserNotificationSupported: isBrowserNotificationSupported(),
     notificationPermission,
+    //@ts-ignore
     requestNotificationPermission: handleRequestNotificationPermission,
   };
 
