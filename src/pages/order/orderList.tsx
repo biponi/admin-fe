@@ -58,7 +58,7 @@ import SingleItem from "./components/SingleOrderItem";
 import { useEffect, useState } from "react";
 import { Input } from "../../components/ui/input";
 import useDebounce from "../../customHook/useDebounce";
-import { IOrder } from "./interface";
+import { CourierProvider, IOrder } from "./interface";
 import { useNavigate } from "react-router-dom";
 import { Separator } from "../../components/ui/separator";
 import EditCustomerInformation from "./editOrderCustomer";
@@ -1768,9 +1768,7 @@ const OrderList = () => {
     }
   };
 
-  const handleCourierSelection = async (
-    courierProvider: "steadfast" | "pathao"
-  ) => {
+  const handleCourierSelection = async (courierProvider: CourierProvider) => {
     if (pendingStatusChange) {
       await updateOrderStatus(
         pendingStatusChange.orderId,

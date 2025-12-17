@@ -1,7 +1,7 @@
 import axios from "./axios";
 import config from "../utils/config";
 import { handleApiError } from ".";
-import { IOrder } from "../pages/order/interface";
+import { CourierProvider, IOrder } from "../pages/order/interface";
 
 interface ApiResponse<T> {
   success: boolean;
@@ -174,7 +174,7 @@ export const updateOrder = async (order: IOrder): Promise<ApiResponse<any>> => {
 export const updateOrderStatusData = async (
   orderId: string,
   status: string,
-  courierProvider?: "steadfast" | "pathao"
+  courierProvider?: CourierProvider
 ): Promise<ApiResponse<any>> => {
   try {
     const payload: any = {
@@ -292,10 +292,11 @@ export const modifyOrder = async (
   payload: ModifyOrderPayload
 ): Promise<ApiResponse<ModifyOrderResponse>> => {
   try {
-    const response = await axios.post<{ success: boolean; data?: ModifyOrderResponse; error?: string }>(
-      config.order.modifyOrder(orderId),
-      payload
-    );
+    const response = await axios.post<{
+      success: boolean;
+      data?: ModifyOrderResponse;
+      error?: string;
+    }>(config.order.modifyOrder(orderId), payload);
     if (response.status === 200 && response.data.success) {
       return { success: true, data: response.data.data };
     } else {
@@ -341,10 +342,11 @@ export const validateModification = async (
   payload: ModifyOrderPayload
 ): Promise<ApiResponse<ValidationResponse>> => {
   try {
-    const response = await axios.post<{ success: boolean; data?: ValidationResponse; error?: string }>(
-      config.order.validateModification(orderId),
-      payload
-    );
+    const response = await axios.post<{
+      success: boolean;
+      data?: ValidationResponse;
+      error?: string;
+    }>(config.order.validateModification(orderId), payload);
     if (response.status === 200 && response.data.success) {
       return { success: true, data: response.data.data };
     } else {
@@ -406,9 +408,11 @@ export const getModificationHistory = async (
   orderId: string
 ): Promise<ApiResponse<ModificationHistoryResponse>> => {
   try {
-    const response = await axios.get<{ success: boolean; data?: ModificationHistoryResponse; error?: string }>(
-      config.order.getModificationHistory(orderId)
-    );
+    const response = await axios.get<{
+      success: boolean;
+      data?: ModificationHistoryResponse;
+      error?: string;
+    }>(config.order.getModificationHistory(orderId));
     if (response.status === 200 && response.data.success) {
       return { success: true, data: response.data.data };
     } else {

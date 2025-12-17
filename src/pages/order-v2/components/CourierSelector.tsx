@@ -39,7 +39,7 @@ export const CourierSelector: React.FC<CourierSelectorProps> = ({
   isMobile = false,
 }) => {
   const [selectedCourier, setSelectedCourier] = useState<CourierProvider>(
-    CourierProvider.STEADFAST
+    CourierProvider.SELF
   );
 
   const handleConfirm = () => {
@@ -54,6 +54,7 @@ export const CourierSelector: React.FC<CourierSelectorProps> = ({
       icon: Package,
       color: "text-blue-600",
       bgColor: "bg-blue-50",
+      disabled: true,
     },
     {
       value: CourierProvider.PATHAO,
@@ -62,6 +63,7 @@ export const CourierSelector: React.FC<CourierSelectorProps> = ({
       icon: Truck,
       color: "text-green-600",
       bgColor: "bg-green-50",
+      disabled: true,
     },
     {
       value: CourierProvider.MANUAL,
@@ -70,6 +72,7 @@ export const CourierSelector: React.FC<CourierSelectorProps> = ({
       icon: TreePalm,
       color: "text-cyan-600",
       bgColor: "bg-cyan-50",
+      disabled: false,
     },
     {
       value: CourierProvider.SELF,
@@ -78,6 +81,7 @@ export const CourierSelector: React.FC<CourierSelectorProps> = ({
       icon: Panda,
       color: "text-orange-600",
       bgColor: "bg-orange-50",
+      disabled: false,
     },
   ];
 
@@ -106,6 +110,7 @@ export const CourierSelector: React.FC<CourierSelectorProps> = ({
                   value={option.value}
                   id={option.value}
                   className='peer sr-only'
+                  disabled={option.disabled}
                 />
                 <Label
                   htmlFor={option.value}

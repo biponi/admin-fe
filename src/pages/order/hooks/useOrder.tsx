@@ -2,7 +2,7 @@ import { getProductsById, searchProducts } from "../../../api";
 import { updateOrder, updateOrderStatusData } from "../../../api/order";
 import { toast } from "../../../components/ui/use-toast";
 import { IProduct } from "../../product/interface";
-import { IOrder } from "../interface";
+import { CourierProvider, IOrder } from "../interface";
 
 const useOrder = () => {
   const getProductByQuery = async (query: string) => {
@@ -48,7 +48,7 @@ const useOrder = () => {
     id: string,
     status: string,
     callback: any = null,
-    courierProvider?: "steadfast" | "pathao"
+    courierProvider?: CourierProvider
   ) => {
     try {
       const response = await updateOrderStatusData(id, status, courierProvider);
