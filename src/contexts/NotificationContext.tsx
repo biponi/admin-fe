@@ -75,21 +75,21 @@ const getNotificationPermission = ():
 };
 
 // Helper function to request notification permission safely
-const requestNotificationPermission = async (): Promise<
-  NotificationPermission | "unsupported"
-> => {
-  if (!isBrowserNotificationSupported()) {
-    return "unsupported";
-  }
+// const requestNotificationPermission = async (): Promise<
+//   NotificationPermission | "unsupported"
+// > => {
+//   if (!isBrowserNotificationSupported()) {
+//     return "unsupported";
+//   }
 
-  try {
-    const permission = await Notification.requestPermission();
-    return permission;
-  } catch (error) {
-    console.warn("Failed to request notification permission:", error);
-    return "denied";
-  }
-};
+//   try {
+//     const permission = await Notification.requestPermission();
+//     return permission;
+//   } catch (error) {
+//     console.warn("Failed to request notification permission:", error);
+//     return "denied";
+//   }
+// };
 
 function notificationReducer(
   state: NotificationState,
