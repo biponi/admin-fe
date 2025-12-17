@@ -21,7 +21,14 @@ import { Label } from "../../../components/ui/label";
 import { RadioGroup, RadioGroupItem } from "../../../components/ui/radio-group";
 import { Truck, Package, AlertCircle, Panda, TreePalm } from "lucide-react";
 import { Alert, AlertDescription } from "../../../components/ui/alert";
-import { CourierProvider } from "../interface";
+export enum CourierProvider {
+  STEADFAST = "steadfast",
+  PATHAO = "pathao",
+  REDX = "redx",
+  ECOURIER = "ecourier",
+  MANUAL = "manual",
+  SELF = "self",
+}
 
 interface CourierSelectorProps {
   open: boolean;
