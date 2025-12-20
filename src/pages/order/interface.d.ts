@@ -92,7 +92,7 @@ export enum CourierProvider {
   PATHAO = "pathao",
   REDX = "redx",
   ECOURIER = "ecourier",
-  MANUAL = "manual",
+  MANUAL = "custom",
   SELF = "self",
 }
 

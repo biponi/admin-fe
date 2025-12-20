@@ -38,8 +38,8 @@ export const CourierSelector: React.FC<CourierSelectorProps> = ({
   isMobile = false,
 }) => {
   const [selectedCourier, setSelectedCourier] = useState<
-    "steadfast" | "pathao"
-  >("steadfast");
+    "steadfast" | "pathao" 
+  >("");
 
   const handleConfirm = () => {
     onConfirm(selectedCourier);
