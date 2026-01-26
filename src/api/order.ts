@@ -1,7 +1,7 @@
 import axios from "./axios";
 import config from "../utils/config";
 import { handleApiError } from ".";
-import { IOrder } from "../pages/order/interface";
+import { CourierProvider, IOrder } from "../pages/order/interface";
 
 interface ApiResponse<T> {
   success: boolean;
@@ -19,12 +19,12 @@ interface ApiResponse<T> {
 
 // Function to create a new product
 export const createOrder = async (
-  orderData: any
+  orderData: any,
 ): Promise<ApiResponse<any>> => {
   try {
     const response = await axios.post<any>(
       config.order.createOrder(),
-      orderData
+      orderData,
     );
     if (response.status === 200) {
       return { success: true, data: response.data.data };
@@ -41,12 +41,12 @@ export const createOrder = async (
 };
 
 export const updateOrderProductData = async (
-  orderData: any
+  orderData: any,
 ): Promise<ApiResponse<any>> => {
   try {
     const response = await axios.patch<any>(
       config.order.updateOrderProduct(),
-      orderData
+      orderData,
     );
     if (response.status === 200) {
       return { success: true, data: response.data.data };
@@ -66,7 +66,7 @@ export const updateOrderProductData = async (
 export const getOrders = async (
   limit = 20,
   page = 1,
-  status = "processing"
+  status = "processing",
 ): Promise<ApiResponse<any>> => {
   try {
     const response = await axios.get<any>(config.order.getOrders(), {
@@ -91,7 +91,7 @@ export const searchOrders = async (
   query: string,
   status: string = "processing",
   limit = 50,
-  page = 1
+  page = 1,
 ): Promise<ApiResponse<any>> => {
   try {
     const response = await axios.post<any>(config.order.searchOrder(), {
@@ -174,7 +174,7 @@ export const updateOrder = async (order: IOrder): Promise<ApiResponse<any>> => {
 export const updateOrderStatusData = async (
   orderId: string,
   status: string,
-  courierProvider?: "steadfast" | "pathao"
+  courierProvider?: CourierProvider,
 ): Promise<ApiResponse<any>> => {
   try {
     const payload: any = {
@@ -189,7 +189,7 @@ export const updateOrderStatusData = async (
 
     const response = await axios.put<any>(
       config.order.updateOrderStatus(),
-      payload
+      payload,
     );
     if (response.status === 200) {
       return {
@@ -212,7 +212,7 @@ export const updateOrderStatusData = async (
 export const orderBulkAction = async (
   orderIds: number[],
   actionType: string,
-  courierProvider?: string
+  courierProvider?: string,
 ): Promise<ApiResponse<any>> => {
   try {
     const payload: any = {
@@ -227,7 +227,7 @@ export const orderBulkAction = async (
 
     const response = await axios.post<any>(
       config.order.orderBulkAction(),
-      payload
+      payload,
     );
     if (response.status === 200) {
       return {
@@ -289,13 +289,14 @@ export interface ModifyOrderResponse {
 
 export const modifyOrder = async (
   orderId: string,
-  payload: ModifyOrderPayload
+  payload: ModifyOrderPayload,
 ): Promise<ApiResponse<ModifyOrderResponse>> => {
   try {
-    const response = await axios.post<{ success: boolean; data?: ModifyOrderResponse; error?: string }>(
-      config.order.modifyOrder(orderId),
-      payload
-    );
+    const response = await axios.post<{
+      success: boolean;
+      data?: ModifyOrderResponse;
+      error?: string;
+    }>(config.order.modifyOrder(orderId), payload);
     if (response.status === 200 && response.data.success) {
       return { success: true, data: response.data.data };
     } else {
@@ -338,13 +339,14 @@ export interface ValidationResponse {
 // Validate modification before applying (dry-run)
 export const validateModification = async (
   orderId: string,
-  payload: ModifyOrderPayload
+  payload: ModifyOrderPayload,
 ): Promise<ApiResponse<ValidationResponse>> => {
   try {
-    const response = await axios.post<{ success: boolean; data?: ValidationResponse; error?: string }>(
-      config.order.validateModification(orderId),
-      payload
-    );
+    const response = await axios.post<{
+      success: boolean;
+      data?: ValidationResponse;
+      error?: string;
+    }>(config.order.validateModification(orderId), payload);
     if (response.status === 200 && response.data.success) {
       return { success: true, data: response.data.data };
     } else {
@@ -403,12 +405,14 @@ export interface ModificationHistoryResponse {
 
 // Get modification history for an order
 export const getModificationHistory = async (
-  orderId: string
+  orderId: string,
 ): Promise<ApiResponse<ModificationHistoryResponse>> => {
   try {
-    const response = await axios.get<{ success: boolean; data?: ModificationHistoryResponse; error?: string }>(
-      config.order.getModificationHistory(orderId)
-    );
+    const response = await axios.get<{
+      success: boolean;
+      data?: ModificationHistoryResponse;
+      error?: string;
+    }>(config.order.getModificationHistory(orderId));
     if (response.status === 200 && response.data.success) {
       return { success: true, data: response.data.data };
     } else {

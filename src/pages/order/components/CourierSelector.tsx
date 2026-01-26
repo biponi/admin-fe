@@ -21,11 +21,12 @@ import { Label } from "../../../components/ui/label";
 import { RadioGroup, RadioGroupItem } from "../../../components/ui/radio-group";
 import { Truck, Package, AlertCircle, Panda, TreePalm } from "lucide-react";
 import { Alert, AlertDescription } from "../../../components/ui/alert";
+import { CourierProvider } from "../interface.d";
 
 interface CourierSelectorProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onConfirm: (courierProvider: "steadfast" | "pathao") => void;
+  onConfirm: (courierProvider: CourierProvider) => void;
   isLoading?: boolean;
   isMobile?: boolean;
 }
@@ -37,9 +38,9 @@ export const CourierSelector: React.FC<CourierSelectorProps> = ({
   isLoading = false,
   isMobile = false,
 }) => {
-  const [selectedCourier, setSelectedCourier] = useState<
-    "steadfast" | "pathao" 
-  >("");
+  const [selectedCourier, setSelectedCourier] = useState<CourierProvider>(
+    CourierProvider.MANUAL,
+  );
 
   const handleConfirm = () => {
     onConfirm(selectedCourier);
@@ -63,8 +64,8 @@ export const CourierSelector: React.FC<CourierSelectorProps> = ({
       bgColor: "bg-green-50",
     },
     {
-      value: "custom",
-      label: "Custom",
+      value: "manual",
+      label: "Manual Delivery",
       description: "using Other Delivery Service",
       icon: TreePalm,
       color: "text-cyan-600",
@@ -94,7 +95,7 @@ export const CourierSelector: React.FC<CourierSelectorProps> = ({
         <RadioGroup
           value={selectedCourier}
           onValueChange={(value) =>
-            setSelectedCourier(value as "steadfast" | "pathao")
+            setSelectedCourier(value as CourierProvider)
           }
           className='space-y-3'>
           {courierOptions.map((option) => {

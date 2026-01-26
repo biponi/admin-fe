@@ -58,7 +58,7 @@ import SingleItem from "./components/SingleOrderItem";
 import { useEffect, useState } from "react";
 import { Input } from "../../components/ui/input";
 import useDebounce from "../../customHook/useDebounce";
-import { IOrder } from "./interface";
+import { CourierProvider, IOrder } from "./interface";
 import { useNavigate } from "react-router-dom";
 import { Separator } from "../../components/ui/separator";
 import EditCustomerInformation from "./editOrderCustomer";
@@ -411,7 +411,7 @@ const OrderList = () => {
             orders
               ? orders.reduce(
                   (sum: number, order: IOrder) => sum + (order.totalPrice || 0),
-                  0
+                  0,
                 )
               : 0
           }
@@ -461,7 +461,7 @@ const OrderList = () => {
                       val
                         ? setBulkOrders([...bulkOrders, order?.id])
                         : setBulkOrders(
-                            bulkOrders.filter((b) => b !== order?.id)
+                            bulkOrders.filter((b) => b !== order?.id),
                           );
                     }}
                     handleViewDetails={() => {
@@ -651,7 +651,7 @@ const OrderList = () => {
                                   .reduce(
                                     (sum: number, order: IOrder) =>
                                       sum + (order.totalPrice || 0),
-                                    0
+                                    0,
                                   )
                                   .toLocaleString()
                               : 0}
@@ -673,8 +673,8 @@ const OrderList = () => {
                             {orders
                               ? new Set(
                                   orders.map(
-                                    (o: IOrder) => o.customer?.phoneNumber
-                                  )
+                                    (o: IOrder) => o.customer?.phoneNumber,
+                                  ),
                                 ).size
                               : 0}
                           </p>
@@ -800,9 +800,9 @@ const OrderList = () => {
                                       setBulkOrders(
                                         check
                                           ? orders?.map(
-                                              (order: IOrder) => order?.id
+                                              (order: IOrder) => order?.id,
                                             )
-                                          : []
+                                          : [],
                                       );
                                     }}
                                   />
@@ -882,8 +882,8 @@ const OrderList = () => {
                                     ? setBulkOrders([...bulkOrders, order?.id])
                                     : setBulkOrders(
                                         bulkOrders.filter(
-                                          (b) => b !== order?.id
-                                        )
+                                          (b) => b !== order?.id,
+                                        ),
                                       );
                                 }}
                                 district={order?.shipping.district}
@@ -928,7 +928,7 @@ const OrderList = () => {
                             {(Number(currentPageNum) - 1) * limit + 1}-
                             {Math.min(
                               Number(currentPageNum) * limit,
-                              totalOrders
+                              totalOrders,
                             )}
                           </span>{" "}
                           of{" "}
@@ -1029,7 +1029,7 @@ const OrderList = () => {
                     <div className='flex items-center gap-3'>
                       <div
                         className={`w-10 h-10 ${getStatusColor(
-                          selectedOrder?.status || ""
+                          selectedOrder?.status || "",
                         )} rounded-xl flex items-center justify-center`}>
                         <Package className='w-5 h-5 text-white' />
                       </div>
@@ -1040,13 +1040,13 @@ const OrderList = () => {
                         <div className='flex items-center gap-2 mt-1'>
                           <Badge
                             className={`${getStatusColor(
-                              selectedOrder?.status || ""
+                              selectedOrder?.status || "",
                             )} text-white border-0`}>
                             {selectedOrder?.status?.toUpperCase()}
                           </Badge>
                           <span className='text-sm text-gray-500'>
                             {dayjs(selectedOrder?.timestamps.createdAt).format(
-                              "MMM D, YYYY"
+                              "MMM D, YYYY",
                             )}
                           </span>
                         </div>
@@ -1126,7 +1126,7 @@ const OrderList = () => {
                                     () => {
                                       refresh();
                                       setShowDetails(false);
-                                    }
+                                    },
                                   );
                                 }}
                                 className='gap-2'>
@@ -1143,7 +1143,7 @@ const OrderList = () => {
                                     () => {
                                       refresh();
                                       setShowDetails(false);
-                                    }
+                                    },
                                   );
                                 }}
                                 className='gap-2'>
@@ -1320,7 +1320,7 @@ const OrderList = () => {
                   <Clock className='w-3 h-3' />
                   Last updated{" "}
                   {dayjs(selectedOrder?.timestamps.updatedAt).format(
-                    "MMM D, YYYY [at] h:mm A"
+                    "MMM D, YYYY [at] h:mm A",
                   )}
                 </div>
               </div>
@@ -1606,7 +1606,7 @@ const OrderList = () => {
                     { ...data, id: selectedOrder.id },
                     (success: boolean) => {
                       if (success) refresh();
-                    }
+                    },
                   );
                 }
               }}
@@ -1768,9 +1768,7 @@ const OrderList = () => {
     }
   };
 
-  const handleCourierSelection = async (
-    courierProvider: "steadfast" | "pathao"
-  ) => {
+  const handleCourierSelection = async (courierProvider: CourierProvider) => {
     if (pendingStatusChange) {
       await updateOrderStatus(
         pendingStatusChange.orderId,
@@ -1779,7 +1777,7 @@ const OrderList = () => {
           refresh();
           setShowDetails(false);
         },
-        courierProvider
+        courierProvider,
       );
       setPendingStatusChange(null);
       setCourierSelectorOpen(false);
