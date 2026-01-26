@@ -21,11 +21,19 @@ import { Label } from "../../../components/ui/label";
 import { RadioGroup, RadioGroupItem } from "../../../components/ui/radio-group";
 import { Truck, Package, AlertCircle, Panda, TreePalm } from "lucide-react";
 import { Alert, AlertDescription } from "../../../components/ui/alert";
+export enum CourierProvider {
+  STEADFAST = "steadfast",
+  PATHAO = "pathao",
+  REDX = "redx",
+  ECOURIER = "ecourier",
+  MANUAL = "manual",
+  SELF = "self",
+}
 
 interface CourierSelectorProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onConfirm: (courierProvider: "steadfast" | "pathao") => void;
+  onConfirm: (courierProvider: CourierProvider) => void;
   isLoading?: boolean;
   isMobile?: boolean;
 }
@@ -37,9 +45,9 @@ export const CourierSelector: React.FC<CourierSelectorProps> = ({
   isLoading = false,
   isMobile = false,
 }) => {
-  const [selectedCourier, setSelectedCourier] = useState<
-    "steadfast" | "pathao"
-  >("steadfast");
+  const [selectedCourier, setSelectedCourier] = useState<CourierProvider>(
+    CourierProvider.SELF
+  );
 
   const handleConfirm = () => {
     onConfirm(selectedCourier);
@@ -47,36 +55,40 @@ export const CourierSelector: React.FC<CourierSelectorProps> = ({
 
   const courierOptions = [
     {
-      value: "steadfast",
+      value: CourierProvider.STEADFAST,
       label: "Steadfast",
       description: "Reliable delivery service with extensive coverage",
       icon: Package,
       color: "text-blue-600",
       bgColor: "bg-blue-50",
+      disabled: true,
     },
     {
-      value: "pathao",
+      value: CourierProvider.PATHAO,
       label: "Pathao",
       description: "Fast delivery service for major cities",
       icon: Truck,
       color: "text-green-600",
       bgColor: "bg-green-50",
+      disabled: true,
     },
     {
-      value: "custom",
+      value: CourierProvider.MANUAL,
       label: "Custom",
       description: "using Other Delivery Service",
       icon: TreePalm,
       color: "text-cyan-600",
       bgColor: "bg-cyan-50",
+      disabled: false,
     },
     {
-      value: "self",
+      value: CourierProvider.SELF,
       label: "By Hand",
       description: "Self delivery like a panda 🥲",
       icon: Panda,
       color: "text-orange-600",
       bgColor: "bg-orange-50",
+      disabled: false,
     },
   ];
 
@@ -94,7 +106,7 @@ export const CourierSelector: React.FC<CourierSelectorProps> = ({
         <RadioGroup
           value={selectedCourier}
           onValueChange={(value) =>
-            setSelectedCourier(value as "steadfast" | "pathao")
+            setSelectedCourier(value as CourierProvider)
           }
           className='space-y-3'>
           {courierOptions.map((option) => {
@@ -105,6 +117,7 @@ export const CourierSelector: React.FC<CourierSelectorProps> = ({
                   value={option.value}
                   id={option.value}
                   className='peer sr-only'
+                  disabled={option.disabled}
                 />
                 <Label
                   htmlFor={option.value}

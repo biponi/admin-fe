@@ -8,14 +8,14 @@ import {
   CardTitle,
 } from "../../../components/ui/card";
 import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "../../../components/ui/dialog";
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetFooter,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
+} from "../../../components/ui/sheet";
 import {
   Select,
   SelectContent,
@@ -59,6 +59,7 @@ const defaultCategory = {
   img: "",
   description: "",
   discount: 0.0,
+  discountType: "percentage",
   active: true,
   parentId: null,
   google_category_type: "",
@@ -264,15 +265,40 @@ const UpdateCategory: React.FC<Props> = ({
                 </div>
               </div>
 
+              {/* Discount Type */}
+              <div className='grid w-full items-center gap-1.5 my-5'>
+                <Label htmlFor='discountType'>Discount Type</Label>
+                <Select
+                  value={existingCategory?.discountType || "percentage"}
+                  onValueChange={(value) => {
+                    if (!!existingCategory) {
+                      setExistingCategory({
+                        ...existingCategory,
+                        discountType: value,
+                      });
+                    }
+                  }}>
+                  <SelectTrigger>
+                    <SelectValue placeholder='Select discount type' />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value='percentage'>Percentage (%)</SelectItem>
+                    <SelectItem value='fixed'>Fixed Amount</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
               {/* Discount */}
               <div className='grid w-full items-center gap-1.5 my-5'>
-                <Label htmlFor='discount'>Discount (%)</Label>
+                <Label htmlFor='discount'>
+                  Discount {existingCategory?.discountType === "percentage" ? "(%)" : "(Amount)"}
+                </Label>
                 <Input
                   type='number'
                   name='discount'
                   placeholder='0.00'
                   min='0'
-                  max='100'
+                  max={existingCategory?.discountType === "percentage" ? '100' : undefined}
                   step='0.01'
                   onChange={handleChange}
                   value={existingCategory?.discount ?? ""}
@@ -404,21 +430,23 @@ const UpdateCategory: React.FC<Props> = ({
     );
 
   return (
-    <Dialog open={open} onOpenChange={(open) => handleOpenChange(open)}>
-      {!!children && <DialogTrigger asChild>{children}</DialogTrigger>}
-      <DialogContent className=' overflow-y-auto'>
-        <DialogHeader>
-          <DialogTitle>
+    <Sheet open={open} onOpenChange={(open) => handleOpenChange(open)}>
+      {!!children && <SheetTrigger asChild>{children}</SheetTrigger>}
+      <SheetContent className='overflow-y-auto w-full sm:max-w-2xl'>
+        <SheetHeader>
+          <SheetTitle>
             {isNewCategory ? "Create Category" : "Update Category"}
-          </DialogTitle>
-          <DialogDescription>
+          </SheetTitle>
+          <SheetDescription>
             {`Configure your category settings. Categories can be nested to create hierarchical organization. Click ${
               isNewCategory ? "create" : "update"
             } when you're done.`}
-          </DialogDescription>
-        </DialogHeader>
-        {renderFormView()}
-        <DialogFooter>
+          </SheetDescription>
+        </SheetHeader>
+        <div className='mt-4'>
+          {renderFormView()}
+        </div>
+        <SheetFooter className='mt-6'>
           <Button variant='outline' onClick={() => handleOpenChange(false)}>
             Cancel
           </Button>
@@ -431,9 +459,9 @@ const UpdateCategory: React.FC<Props> = ({
               ? "Create Category"
               : "Update Category"}
           </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
+        </SheetFooter>
+      </SheetContent>
+    </Sheet>
   );
 };
 

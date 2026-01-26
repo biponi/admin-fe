@@ -32,14 +32,14 @@ export function MobileBottomNav() {
   const totalItems =
     filteredNavItems.length + (hasNotificationPermission ? 1 : 0);
 
-  // If total items < 6, show all items on left and floating button on right
+  // If total items < 4, show all items on left and floating button on right
   // Otherwise, split: 3 left, center button, 2-3 right
-  const showCenterButton = totalItems >= 6;
+  const showCenterButton = totalItems >= 4;
 
   const leftNavItems = showCenterButton
-    ? filteredNavItems.slice(0, 3)
+    ? filteredNavItems.slice(0, 2)
     : filteredNavItems;
-  const rightNavItems = showCenterButton ? filteredNavItems.slice(3, 5) : [];
+  const rightNavItems = showCenterButton ? filteredNavItems.slice(3, 4) : [];
 
   const navigateToRoute = (link: string) => {
     navigate(link);
@@ -62,7 +62,7 @@ export function MobileBottomNav() {
             borderRadius: "24px",
             clipPath: "url(#notch-clip)",
           }}>
-          <nav className='relative flex items-center justify-between px-6 py-3'>
+          <nav className='relative flex items-center justify-between px-4 py-3'>
             {/* Left Nav Items */}
             <div
               className={cn(
@@ -106,7 +106,7 @@ export function MobileBottomNav() {
                 );
               })}
 
-              {/* Notification Bell - show on left when items < 6 */}
+              {/* Notification Bell - show on left when items < 4 */}
               {!showCenterButton && hasNotificationPermission && (
                 <button
                   onClick={() => navigate("/notifications")}
@@ -146,10 +146,10 @@ export function MobileBottomNav() {
               )}
             </div>
 
-            {/* Center Floating Button Placeholder - only when items >= 6 */}
+            {/* Center Floating Button Placeholder - only when items >= 4 */}
             {showCenterButton && <div className='w-14' />}
 
-            {/* Right Nav Items - only when items >= 6 */}
+            {/* Right Nav Items - only when items >= 4 */}
             {showCenterButton && (
               <div className='flex items-center gap-2 flex-1 justify-end'>
                 {rightNavItems.map((item) => {
@@ -189,7 +189,7 @@ export function MobileBottomNav() {
                   );
                 })}
 
-                {/* Notification Bell - show on right when items >= 6 */}
+                {/* Notification Bell - show on right when items >= 4 */}
                 {hasNotificationPermission && (
                   <button
                     onClick={() => navigate("/notifications")}
@@ -232,7 +232,7 @@ export function MobileBottomNav() {
           </nav>
         </div>
 
-        {/* Floating Center Button - only when items >= 6 */}
+        {/* Floating Center Button - only when items >= 4 */}
 
         <MobileDrawerNav>
           <button

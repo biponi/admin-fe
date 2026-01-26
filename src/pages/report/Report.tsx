@@ -21,10 +21,12 @@ import {
   exportReportPDF,
 } from "../../api/report";
 import { CalendarIcon, Loader2 } from "lucide-react";
-import { format } from "date-fns";
+import { format, startOfDay, endOfDay } from "date-fns";
 import { cn } from "../../lib/utils";
 import { toast } from "react-hot-toast";
 import useLoginAuth from "../auth/hooks/useLoginAuth";
+import { DateRangePicker } from "../../coreComponents/DateRangePicker";
+import { DateRange } from "react-day-picker";
 
 // Import report components
 import SalesOverviewCard from "./SalesOverviewCard";
@@ -36,17 +38,12 @@ import PaymentMethodsCard from "./PaymentMethodsCard";
 import GeographicDistributionCard from "./GeographicDistributionCard";
 import { Badge } from "../../components/ui/badge";
 
-interface DateRange {
-  from: Date;
-  to: Date;
-}
-
 const ReportPage = ({ activeUsers }: { activeUsers: number }) => {
   const { user } = useLoginAuth();
   const [dateMode, setDateMode] = useState<"single" | "range">("range");
-  const [dateRange, setDateRange] = useState<DateRange>({
-    from: new Date(new Date().setDate(new Date().getDate() - 30)),
-    to: new Date(),
+  const [dateRange, setDateRange] = useState<{ from: Date; to: Date }>({
+    from: startOfDay(new Date(new Date().setDate(new Date().getDate() - 30))),
+    to: endOfDay(new Date()),
   });
 
   const [salesOverview, setSalesOverview] = useState<any>(null);
@@ -73,8 +70,17 @@ const ReportPage = ({ activeUsers }: { activeUsers: number }) => {
 
   const fetchAllReports = async () => {
     setIsLoadingReports(true);
-    const startDate = format(dateRange.from, "yyyy-MM-dd");
-    const endDate = format(dateRange.to, "yyyy-MM-dd");
+    const formatLocalDateTime = (date: Date) => {
+      const year = date.getFullYear();
+      const month = String(date.getMonth() + 1).padStart(2, "0");
+      const day = String(date.getDate()).padStart(2, "0");
+      const hours = String(date.getHours()).padStart(2, "0");
+      const minutes = String(date.getMinutes()).padStart(2, "0");
+      const seconds = String(date.getSeconds()).padStart(2, "0");
+      return `${year}-${month}-${day}T${hours}:${minutes}:${seconds}`;
+    };
+    const startDate = formatLocalDateTime(dateRange?.from);
+    const endDate = formatLocalDateTime(dateRange?.to);
 
     try {
       const [overview, trend, customer, product, fulfillment, payment] =
@@ -169,85 +175,90 @@ const ReportPage = ({ activeUsers }: { activeUsers: number }) => {
 
         {/* Date Range Picker */}
         <div className='flex gap-2'>
-          <div className='flex border rounded-md'>
+          <div className='inline-flex items-center bg-muted p-1 rounded-lg gap-1'>
             <Button
               variant={dateMode === "single" ? "default" : "ghost"}
               size='sm'
-              onClick={() => setDateMode("single")}
-              className='rounded-r-none'>
+              onClick={() => {
+                setDateMode("single");
+                // Set to today with full day time range
+                const today = new Date();
+                setDateRange({
+                  from: startOfDay(today),
+                  to: endOfDay(today),
+                });
+              }}
+              className={`rounded-md transition-all duration-200 ${
+                dateMode === "single"
+                  ? "shadow-sm"
+                  : "hover:bg-background/50"
+              }`}>
               Single Date
             </Button>
             <Button
               variant={dateMode === "range" ? "default" : "ghost"}
               size='sm'
               onClick={() => setDateMode("range")}
-              className='rounded-l-none'>
+              className={`rounded-md transition-all duration-200 ${
+                dateMode === "range"
+                  ? "shadow-sm"
+                  : "hover:bg-background/50"
+              }`}>
               Date Range
             </Button>
           </div>
 
-          <Popover>
-            <PopoverTrigger asChild>
-              <Button
-                variant='outline'
-                className={cn(
-                  "justify-start text-left font-normal w-[280px]",
-                  !dateRange && "text-muted-foreground"
-                )}>
-                <CalendarIcon className='mr-2 h-4 w-4' />
-                {dateRange.from && dateRange.to ? (
-                  dateMode === "single" &&
-                  format(dateRange.from, "yyyy-MM-dd") ===
-                    format(dateRange.to, "yyyy-MM-dd") ? (
-                    <>{format(dateRange.from, "LLL dd, y")}</>
+          {dateMode === "single" ? (
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button
+                  variant='outline'
+                  className={cn(
+                    "justify-start text-left font-normal w-[280px]",
+                    !dateRange && "text-muted-foreground"
+                  )}>
+                  <CalendarIcon className='mr-2 h-4 w-4' />
+                  {dateRange.from ? (
+                    format(dateRange.from, "LLL dd, y")
                   ) : (
-                    <>
-                      {format(dateRange.from, "LLL dd, y")} -{" "}
-                      {format(dateRange.to, "LLL dd, y")}
-                    </>
-                  )
-                ) : (
-                  <span>Pick a date</span>
-                )}
-              </Button>
-            </PopoverTrigger>
-            <PopoverContent className='w-auto p-0' align='end'>
-              {dateMode === "single" ? (
+                    <span>Pick a date</span>
+                  )}
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className='w-auto p-0' align='end'>
                 <Calendar
                   mode='single'
                   selected={dateRange.from}
                   onSelect={(date: Date | undefined) => {
                     if (date) {
-                      // Set time to 00:00:00 for start of day
-                      const startOfDay = new Date(date);
-                      startOfDay.setHours(0, 0, 0, 0);
-
-                      // Set time to 23:59:59 for end of day
-                      const endOfDay = new Date(date);
-                      endOfDay.setHours(23, 59, 59, 999);
-
-                      setDateRange({ from: startOfDay, to: endOfDay });
+                      setDateRange({
+                        from: startOfDay(date),
+                        to: endOfDay(date),
+                      });
                     }
                   }}
                   numberOfMonths={1}
                 />
-              ) : (
-                <Calendar
-                  mode='range'
-                  selected={{
-                    from: dateRange.from,
-                    to: dateRange.to,
-                  }}
-                  onSelect={(range: any) => {
-                    if (range?.from && range?.to) {
-                      setDateRange({ from: range.from, to: range.to });
-                    }
-                  }}
-                  numberOfMonths={2}
-                />
-              )}
-            </PopoverContent>
-          </Popover>
+              </PopoverContent>
+            </Popover>
+          ) : (
+            <DateRangePicker
+              key={dateMode}
+              initialDateFrom={dateRange.from}
+              initialDateTo={dateRange.to}
+              showCompare={false}
+              onUpdate={(values: {
+                range: DateRange;
+                rangeCompare?: DateRange | undefined;
+              }) => {
+                // For range mode, set from to 00:00 and to to 23:59
+                setDateRange({
+                  from: startOfDay(values.range.from || new Date()),
+                  to: endOfDay(values.range.to || new Date()),
+                });
+              }}
+            />
+          )}
         </div>
       </div>
 
@@ -332,10 +343,11 @@ const ReportPage = ({ activeUsers }: { activeUsers: number }) => {
         <OTPVerificationDialog
           open={showOTPDialog}
           onOpenChange={(val) => setShowOTPDialog(val)}
-          email={user.email}
+          mobile_number={user.mobile_number || ""}
+          email={user.email || ""}
           purpose='account_verification'
           title='Verify to Download Report'
-          description='For security purposes, please verify your email to download the report'
+          description='For security purposes, please verify your phone number to download the report'
           onVerificationSuccess={handleDownloadAfterVerification}
           autoSendOnMount={true}
         />

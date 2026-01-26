@@ -58,7 +58,7 @@ import SingleItem from "./components/SingleOrderItem";
 import { useEffect, useState } from "react";
 import { Input } from "../../components/ui/input";
 import useDebounce from "../../customHook/useDebounce";
-import { IOrder } from "./interface";
+import { CourierProvider, IOrder } from "./interface";
 import { useNavigate } from "react-router-dom";
 import { Separator } from "../../components/ui/separator";
 import EditCustomerInformation from "./editOrderCustomer";
@@ -88,12 +88,6 @@ import {
 import UpdateProductData from "./updateProductData";
 import { Badge } from "../../components/ui/badge";
 import AdjustReturnProduct from "./orderReturn";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "../../components/ui/dialog";
 import {
   Select,
   SelectContent,
@@ -128,8 +122,10 @@ import {
 } from "../../components/ui/collapsible";
 import { useCourierActions } from "../delivery/hooks/useCourierActions";
 import { CourierSelector } from "./components/CourierSelector";
+import { useIsMobile } from "../../hooks/use-mobile";
 
 const OrderList = () => {
+  const isMobile = useIsMobile();
   const {
     limit,
     refresh,
@@ -450,6 +446,7 @@ const OrderList = () => {
                     key={index}
                     orderNumber={order?.orderNumber}
                     id={`${order?.id}`}
+                    provider={order?.courier?.provider ?? ""}
                     customerName={order?.customer?.name}
                     customerPhoneNumber={order?.customer?.phoneNumber}
                     status={order?.status}
@@ -565,7 +562,14 @@ const OrderList = () => {
           onSelectAll={() =>
             setBulkOrders(orders?.map((order: IOrder) => order?.id) || [])
           }
-          onBulkAction={setBulkAction}
+          onBulkAction={(action) => {
+            if (action === "shipped") {
+              setPendingBulkAction("shipped");
+              setBulkCourierSelectorMobile(true);
+            } else {
+              setBulkAction(action);
+            }
+          }}
           onGenerateInvoices={() =>
             generateMultipleModernInvoicesAndDownloadZip(bulkOrders)
           }
@@ -1619,9 +1623,7 @@ const OrderList = () => {
         open={
           !!bulkOrders &&
           bulkOrders?.length > 0 &&
-          ["shipped", "complete", "processing", "delete", "cancel"].includes(
-            bulkAction
-          )
+          ["complete", "processing", "delete", "cancel"].includes(bulkAction)
         }>
         <DrawerContent className='p-20'>
           <DrawerHeader className='mx-auto'>
@@ -1653,15 +1655,52 @@ const OrderList = () => {
   };
 
   const returnModal = () => {
+    if (isMobile) {
+      return (
+        <Drawer
+          open={isReturnProduct && !!selectedOrder}
+          onOpenChange={(open) => setIsReturnProduct(open)}>
+          <DrawerContent>
+            <DrawerHeader>
+              <DrawerTitle>Return Product</DrawerTitle>
+              <DrawerDescription>
+                Process product returns and manage returned items
+              </DrawerDescription>
+            </DrawerHeader>
+            <ScrollArea className='h-[60vh] px-4'>
+              <div className='w-auto pb-4'>
+                <AdjustReturnProduct
+                  // @ts-ignore
+                  order={selectedOrder}
+                  handleClose={() => {
+                    refresh();
+                    setIsReturnProduct(false);
+                  }}
+                />
+              </div>
+            </ScrollArea>
+            <DrawerFooter>
+              <DrawerClose asChild>
+                <Button variant='outline'>Close</Button>
+              </DrawerClose>
+            </DrawerFooter>
+          </DrawerContent>
+        </Drawer>
+      );
+    }
+
     return (
-      <Dialog
+      <Sheet
         open={isReturnProduct && !!selectedOrder}
         onOpenChange={(open) => setIsReturnProduct(open)}>
-        <DialogContent className='sm:max-w-[425px]'>
-          <DialogHeader>
-            <DialogTitle>Return Product</DialogTitle>
-          </DialogHeader>
-          <div className='w-auto'>
+        <SheetContent className='overflow-y-auto w-full sm:max-w-2xl'>
+          <SheetHeader>
+            <SheetTitle>Return Product</SheetTitle>
+            <SheetDescription>
+              Process product returns and manage returned items
+            </SheetDescription>
+          </SheetHeader>
+          <div className='w-auto mt-4'>
             <AdjustReturnProduct
               // @ts-ignore
               order={selectedOrder}
@@ -1671,8 +1710,8 @@ const OrderList = () => {
               }}
             />
           </div>
-        </DialogContent>
-      </Dialog>
+        </SheetContent>
+      </Sheet>
     );
   };
 
@@ -1729,9 +1768,7 @@ const OrderList = () => {
     }
   };
 
-  const handleCourierSelection = async (
-    courierProvider: "steadfast" | "pathao"
-  ) => {
+  const handleCourierSelection = async (courierProvider: CourierProvider) => {
     if (pendingStatusChange) {
       await updateOrderStatus(
         pendingStatusChange.orderId,
@@ -1748,9 +1785,7 @@ const OrderList = () => {
     }
   };
 
-  const handleBulkCourierSelection = async (
-    courierProvider: "steadfast" | "pathao"
-  ) => {
+  const handleBulkCourierSelection = async (courierProvider: string) => {
     if (pendingBulkAction) {
       await performOrderBulkUpdate(pendingBulkAction, courierProvider);
       setPendingBulkAction("");

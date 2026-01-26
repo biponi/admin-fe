@@ -31,13 +31,13 @@ type Toast = Omit<ToasterToast, "id">;
 
 function AlertToast({ title, description }: { title: any; description: any }) {
   return (
-    <Alert className='flex gap-2 justify-start items-center bg-orange-50 '>
-      <div className='bg-orange-200 shadow p-2  inline-block rounded-md'>
-        <OctagonAlert className='h-5 text-orange-600' />
+    <Alert className='flex gap-2 justify-start items-start bg-black border border-purple-200/50 text-purple-700'>
+      <div className='bg-purple-200 shadow p-2  inline-block rounded-md'>
+        <OctagonAlert className='h-5 text-purple-600' />
       </div>
       <div>
         <AlertTitle>{title}</AlertTitle>
-        <AlertDescription className='font-bold text-orange-500'>
+        <AlertDescription className='font-bold text-purple-500'>
           {description}
         </AlertDescription>
       </div>
@@ -67,7 +67,7 @@ function customToast({ title, description, action, variant, ...props }: Toast) {
         <div
           className={`${
             t.visible ? "animate-custom-enter" : "animate-custom-leave"
-          } max-w-md w-full bg-white shadow-lg rounded-lg pointer-events-auto flex ring-1 ring-black ring-opacity-5`}>
+          } max-w-3xl w-full bg-white shadow-lg rounded-lg pointer-events-auto flex ring-1 ring-black ring-opacity-5`}>
           <AlertToast title={title} description={description} />
         </div>
       );

@@ -29,12 +29,14 @@ interface VerifyOTPResponse {
 
 // Send OTP to email
 export const sendOTP = async (
-  email: string,
+  email?: string,
+  mobile_number?: string,
   purpose: string = "verification"
 ): Promise<ApiResponse<SendOTPResponse>> => {
   try {
     const response = await axios.post<any>(`${baseURL}/otp/send`, {
       email,
+      phoneNumber: mobile_number,
       purpose,
     });
 
@@ -90,11 +92,13 @@ export const verifyOTP = async (
 // Resend OTP
 export const resendOTP = async (
   email: string,
+  mobile_number?: string,
   purpose: string = "verification"
 ): Promise<ApiResponse<SendOTPResponse>> => {
   try {
     const response = await axios.post<any>(`${baseURL}/otp/resend`, {
       email,
+      phoneNumber: mobile_number,
       purpose,
     });
 

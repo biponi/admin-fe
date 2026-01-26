@@ -344,27 +344,27 @@ const CustomerInformation: React.FC<Props> = ({
 
   const renderCustomerPersonalInformation = () => {
     return (
-      <Card className='border-2 border-blue-200 shadow-lg'>
-        <CardHeader className='bg-gradient-to-r from-blue-50 to-purple-50 border-b rounded-lg '>
-          <CardTitle className='flex items-center gap-2 text-xl text-gray-800'>
-            <User className='w-6 h-6 text-blue-600' />
+      <Card className='border  shadow-sm'>
+        <CardHeader className='bg-gradient-to-r from-blue-50 to-purple-50 border-b p-3 rounded-xl mx-2 mt-2 shadow'>
+          <CardTitle className='flex items-center gap-2 text-base text-gray-800'>
+            <User className='w-5 h-5 text-blue-600' />
             Customer Information
           </CardTitle>
-          <CardDescription className='text-gray-600'>
+          <CardDescription className='text-xs text-gray-600'>
             Enter customer details for order processing
           </CardDescription>
         </CardHeader>
-        <CardContent className='p-6 space-y-6'>
+        <CardContent className='p-3 space-y-4'>
           {/* Customer Name */}
-          <div className='space-y-2'>
+          <div className='space-y-1.5'>
             <Label
               htmlFor='name'
-              className='flex items-center gap-2 font-medium'>
-              <UserCheck className='w-4 h-4 text-blue-600' />
+              className='flex items-center gap-1.5 font-medium text-sm'>
+              <UserCheck className='w-3.5 h-3.5 text-blue-600' />
               Customer Name *
             </Label>
             <div className='relative'>
-              <User className='absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400' />
+              <User className='absolute left-2.5 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400' />
               <Input
                 type='text'
                 id='name'
@@ -372,20 +372,20 @@ const CustomerInformation: React.FC<Props> = ({
                 placeholder='Enter customer full name'
                 value={personalInfomation.name}
                 onChange={handlePersonalInfomationChange}
-                className={`pl-10 h-12 ${
+                className={`pl-9 h-9 text-sm ${
                   errors.name
                     ? "border-red-500 focus:border-red-500"
                     : "border-gray-200 focus:border-blue-500"
                 }`}
               />
               {personalInfomation.name && !errors.name && (
-                <CheckCircle2 className='absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-green-500' />
+                <CheckCircle2 className='absolute right-2.5 top-1/2 transform -translate-y-1/2 w-4 h-4 text-green-500' />
               )}
             </div>
             {errors.name && (
-              <Alert className='border-red-200 bg-red-50'>
-                <AlertCircle className='w-4 h-4 text-red-500' />
-                <AlertDescription className='text-red-700 text-sm'>
+              <Alert className='border-red-200 bg-red-50 py-1.5 px-2.5'>
+                <AlertCircle className='w-3.5 h-3.5 text-red-500' />
+                <AlertDescription className='text-red-700 text-xs'>
                   {errors.name}
                 </AlertDescription>
               </Alert>
@@ -393,18 +393,18 @@ const CustomerInformation: React.FC<Props> = ({
           </div>
 
           {/* Email */}
-          <div className='space-y-2'>
+          <div className='space-y-1.5'>
             <Label
               htmlFor='email'
-              className='flex items-center gap-2 font-medium'>
-              <Mail className='w-4 h-4 text-blue-600' />
+              className='flex items-center gap-1.5 font-medium text-sm'>
+              <Mail className='w-3.5 h-3.5 text-blue-600' />
               Email Address
-              <Badge variant='outline' className='text-xs'>
+              <Badge variant='outline' className='text-xs px-1.5 py-0'>
                 Optional
               </Badge>
             </Label>
             <div className='relative'>
-              <Mail className='absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400' />
+              <Mail className='absolute left-2.5 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400' />
               <Input
                 type='email'
                 id='email'
@@ -412,20 +412,20 @@ const CustomerInformation: React.FC<Props> = ({
                 placeholder='customer@example.com'
                 value={personalInfomation.email}
                 onChange={handlePersonalInfomationChange}
-                className={`pl-10 h-12 ${
+                className={`pl-9 h-9 text-sm ${
                   errors.email
                     ? "border-red-500 focus:border-red-500"
                     : "border-gray-200 focus:border-blue-500"
                 }`}
               />
               {personalInfomation.email && !errors.email && (
-                <CheckCircle2 className='absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-green-500' />
+                <CheckCircle2 className='absolute right-2.5 top-1/2 transform -translate-y-1/2 w-4 h-4 text-green-500' />
               )}
             </div>
             {errors.email && (
-              <Alert className='border-red-200 bg-red-50'>
-                <AlertCircle className='w-4 h-4 text-red-500' />
-                <AlertDescription className='text-red-700 text-sm'>
+              <Alert className='border-red-200 bg-red-50 py-1.5 px-2.5'>
+                <AlertCircle className='w-3.5 h-3.5 text-red-500' />
+                <AlertDescription className='text-red-700 text-xs'>
                   {errors.email}
                 </AlertDescription>
               </Alert>
@@ -433,15 +433,15 @@ const CustomerInformation: React.FC<Props> = ({
           </div>
 
           {/* Phone Number */}
-          <div className='space-y-2'>
+          <div className='space-y-1.5'>
             <Label
               htmlFor='phone-number'
-              className='flex items-center gap-2 font-medium'>
-              <Phone className='w-4 h-4 text-blue-600' />
+              className='flex items-center gap-1.5 font-medium text-sm'>
+              <Phone className='w-3.5 h-3.5 text-blue-600' />
               Phone Number *
             </Label>
             <div className='relative'>
-              <Phone className='absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400' />
+              <Phone className='absolute left-2.5 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400' />
               <Input
                 type='tel'
                 id='phone-number'
@@ -449,7 +449,7 @@ const CustomerInformation: React.FC<Props> = ({
                 placeholder='01712345678'
                 value={personalInfomation.phoneNumber}
                 onChange={handlePersonalInfomationChange}
-                className={`pl-10 h-12 ${
+                className={`pl-9 h-9 text-sm ${
                   errors.phoneNumber
                     ? "border-red-500 focus:border-red-500"
                     : "border-gray-200 focus:border-blue-500"
@@ -460,13 +460,13 @@ const CustomerInformation: React.FC<Props> = ({
                 isValidBangladeshiMobileNumber(
                   personalInfomation.phoneNumber
                 ) && (
-                  <CheckCircle2 className='absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-green-500' />
+                  <CheckCircle2 className='absolute right-2.5 top-1/2 transform -translate-y-1/2 w-4 h-4 text-green-500' />
                 )}
             </div>
             {errors.phoneNumber && (
-              <Alert className='border-red-200 bg-red-50'>
-                <AlertCircle className='w-4 h-4 text-red-500' />
-                <AlertDescription className='text-red-700 text-sm'>
+              <Alert className='border-red-200 bg-red-50 py-1.5 px-2.5'>
+                <AlertCircle className='w-3.5 h-3.5 text-red-500' />
+                <AlertDescription className='text-red-700 text-xs'>
                   {errors.phoneNumber}
                 </AlertDescription>
               </Alert>
@@ -474,7 +474,7 @@ const CustomerInformation: React.FC<Props> = ({
             {!errors.phoneNumber && (
               <p className='text-xs text-gray-500 flex items-center gap-1'>
                 <Globe className='w-3 h-3' />
-                Bangladesh mobile number format (11 digits starting with 01)
+                BD mobile format (11 digits, starts with 01)
               </p>
             )}
           </div>
@@ -489,17 +489,17 @@ const CustomerInformation: React.FC<Props> = ({
     const selectedDistrict = shippingAddress?.district?.id || "";
 
     return (
-      <Card className='border-2 border-green-200 shadow-lg'>
-        <CardHeader className='bg-gradient-to-r from-green-50 to-blue-50 border-b rounded-lg'>
-          <CardTitle className='flex items-center gap-2 text-xl text-gray-800'>
-            <Truck className='w-6 h-6 text-green-600' />
+      <Card className=' shadow-sm rounded-xl'>
+        <CardHeader className='bg-gradient-to-r from-green-50 to-blue-50 border-b p-3 rounded-xl mx-2 mt-2 shadow'>
+          <CardTitle className='flex items-center gap-2 text-base text-gray-800'>
+            <Truck className='w-5 h-5 text-green-600' />
             Shipping Information
           </CardTitle>
-          <CardDescription className='text-gray-600'>
+          <CardDescription className='text-xs text-gray-600'>
             Select delivery location and address details
           </CardDescription>
         </CardHeader>
-        <CardContent className='p-6 space-y-6'>
+        <CardContent className='p-3 space-y-4'>
           {/* Division Selection */}
           <div className='space-y-2'>
             <Label
@@ -1151,18 +1151,18 @@ const CustomerInformation: React.FC<Props> = ({
   };
 
   return (
-    <div className='space-y-6'>
+    <div className='space-y-3'>
       {/* Form Progress Indicator */}
-      <div className='bg-white rounded-lg p-4 border-2 border-gray-200 hidden md:block'>
-        <div className='flex items-center gap-4'>
-          <div className='w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center'>
-            <User className='w-6 h-6 text-blue-600' />
+      <div className='bg-white rounded-lg p-3 border border-gray-200 hidden md:block'>
+        <div className='flex items-center gap-3'>
+          <div className='w-9 h-9 bg-blue-100 rounded-full flex items-center justify-center'>
+            <User className='w-5 h-5 text-blue-600' />
           </div>
           <div>
-            <h2 className='text-2xl font-bold text-gray-900'>
+            <h2 className='text-xl font-bold text-gray-900'>
               Customer Details
             </h2>
-            <p className='text-gray-600'>
+            <p className='text-xs text-gray-600'>
               Complete customer and shipping information
             </p>
           </div>
@@ -1170,7 +1170,7 @@ const CustomerInformation: React.FC<Props> = ({
       </div>
 
       {/* Form Content */}
-      <div className='grid grid-cols-1 lg:grid-cols-2 gap-6'>
+      <div className='grid grid-cols-1 lg:grid-cols-2 gap-3'>
         <div>{renderCustomerPersonalInformation()}</div>
         <div>{renderCustomerShippingInformation()}</div>
       </div>
@@ -1179,9 +1179,9 @@ const CustomerInformation: React.FC<Props> = ({
       {renderTransactionControls()}
 
       {/* Action Buttons */}
-      <Card className='border-2 border-gray-200'>
-        <CardFooter className='bg-gray-50 border-t p-6 rounded-lg'>
-          <div className='flex flex-col sm:flex-row gap-3 w-full'>
+      <Card className='border border-gray-200 shadow-sm'>
+        <CardFooter className='bg-gray-50 border-t p-3 rounded-lg'>
+          <div className='flex flex-col sm:flex-row gap-2 w-full'>
             <Button
               variant='outline'
               onClick={() => {
@@ -1192,9 +1192,9 @@ const CustomerInformation: React.FC<Props> = ({
                 setDistrictQuery("");
                 toast.success("Form reset successfully");
               }}
-              className='flex items-center gap-2 border-gray-300 hover:bg-gray-50'
+              className='flex items-center gap-1.5 border-gray-300 hover:bg-gray-50 h-9 text-sm'
               disabled={isValidating}>
-              <RotateCcw className='w-4 h-4' />
+              <RotateCcw className='w-3.5 h-3.5' />
               Reset Form
             </Button>
 
@@ -1203,25 +1203,24 @@ const CustomerInformation: React.FC<Props> = ({
               onClick={() => {
                 handleBack();
               }}
-              className='flex items-center gap-2 border-gray-300 hover:bg-gray-50'
+              className='flex items-center gap-1.5 border-gray-300 hover:bg-gray-50 h-9 text-sm'
               disabled={isValidating}>
-              <ArrowLeft className='w-4 h-4' />
+              <ArrowLeft className='w-3.5 h-3.5' />
               Back to Products
             </Button>
 
             <Button
               onClick={() => handleSubmit()}
               disabled={isValidating}
-              className='flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white flex-1 sm:flex-none sm:ml-auto'
-              size='lg'>
+              className='flex items-center gap-1.5 bg-blue-600 hover:bg-blue-700 text-white flex-1 sm:flex-none sm:ml-auto h-9 text-sm'>
               {isValidating ? (
                 <>
-                  <div className='w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin' />
+                  <div className='w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin' />
                   Validating...
                 </>
               ) : (
                 <>
-                  <ArrowRight className='w-5 h-5' />
+                  <ArrowRight className='w-4 h-4' />
                   Continue to Review
                 </>
               )}

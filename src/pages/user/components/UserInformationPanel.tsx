@@ -8,7 +8,11 @@ import {
 } from "../../../components/ui/card";
 import { Input } from "../../../components/ui/input";
 import { Button } from "../../../components/ui/button";
-import { Avatar, AvatarImage, AvatarFallback } from "../../../components/ui/avatar";
+import {
+  Avatar,
+  AvatarImage,
+  AvatarFallback,
+} from "../../../components/ui/avatar";
 import { Badge } from "../../../components/ui/badge";
 import {
   Pencil,
@@ -32,6 +36,7 @@ interface UserInformationPanelProps {
     email: string;
     avatar: string;
     role: string;
+    mobile_number?: string;
     whatsapp_number?: string;
     id?: string;
   };
@@ -140,7 +145,11 @@ export const UserInformationPanel: React.FC<UserInformationPanelProps> = ({
       }
 
       if (response.success) {
-        toast.success(`${field.charAt(0).toUpperCase() + field.slice(1)} updated successfully`);
+        toast.success(
+          `${
+            field.charAt(0).toUpperCase() + field.slice(1)
+          } updated successfully`
+        );
         setEditMode((prev) => ({ ...prev, [field]: false }));
         setAvatarPreview("");
         onProfileUpdate();
@@ -156,10 +165,10 @@ export const UserInformationPanel: React.FC<UserInformationPanelProps> = ({
 
   return (
     <>
-      <Card className="h-full">
+      <Card className='h-full'>
         <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <User className="w-5 h-5" />
+          <CardTitle className='flex items-center gap-2'>
+            <User className='w-5 h-5' />
             Personal Information
           </CardTitle>
           <CardDescription>
@@ -167,63 +176,65 @@ export const UserInformationPanel: React.FC<UserInformationPanelProps> = ({
           </CardDescription>
         </CardHeader>
 
-        <CardContent className="space-y-6">
+        <CardContent className='space-y-6'>
           {/* Avatar Section */}
-          <div className="flex items-center gap-4 p-4 bg-gradient-to-r from-blue-50 to-purple-50 rounded-lg">
-            <div className="relative group">
-              <Avatar className="w-20 h-20 border-4 border-white shadow-lg">
+          <div className='flex items-center gap-4 p-4 bg-gradient-to-r from-blue-50 to-purple-50 rounded-lg'>
+            <div className='relative group'>
+              <Avatar className='w-20 h-20 border-4 border-white shadow-lg'>
                 <AvatarImage src={avatarPreview || profile.avatar} />
-                <AvatarFallback className="text-2xl bg-gradient-to-br from-blue-400 to-purple-600 text-white">
+                <AvatarFallback className='text-2xl bg-gradient-to-br from-blue-400 to-purple-600 text-white'>
                   {profile.name.charAt(0)}
                 </AvatarFallback>
               </Avatar>
               {editMode.avatar && (
-                <label className="absolute inset-0 flex items-center justify-center bg-black/60 rounded-full cursor-pointer opacity-0 group-hover:opacity-100 transition-opacity">
-                  <Upload className="w-6 h-6 text-white" />
+                <label className='absolute inset-0 flex items-center justify-center bg-black/60 rounded-full cursor-pointer opacity-0 group-hover:opacity-100 transition-opacity'>
+                  <Upload className='w-6 h-6 text-white' />
                   <input
-                    type="file"
-                    accept="image/*"
-                    className="hidden"
+                    type='file'
+                    accept='image/*'
+                    className='hidden'
                     onChange={handleAvatarUpload}
                   />
                 </label>
               )}
             </div>
-            <div className="flex-1">
-              <h4 className="font-semibold text-gray-900">Profile Picture</h4>
-              <p className="text-sm text-gray-500 mb-2">
+            <div className='flex-1'>
+              <h4 className='font-semibold text-gray-900'>Profile Picture</h4>
+              <p className='text-sm text-gray-500 mb-2'>
                 JPG, PNG or GIF. Max size 2MB
               </p>
               {editMode.avatar ? (
-                <div className="flex gap-2">
+                <div className='flex gap-2'>
                   <Button
-                    size="sm"
+                    size='sm'
                     onClick={() => handleSave("avatar")}
                     disabled={isLoading}>
                     {isLoading ? (
-                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                      <Loader2 className='w-4 h-4 mr-2 animate-spin' />
                     ) : (
-                      <Save className="w-4 h-4 mr-2" />
+                      <Save className='w-4 h-4 mr-2' />
                     )}
                     Save
                   </Button>
                   <Button
-                    variant="outline"
-                    size="sm"
+                    variant='outline'
+                    size='sm'
                     onClick={() => {
                       setEditMode((prev) => ({ ...prev, avatar: false }));
                       setAvatarPreview("");
                     }}>
-                    <X className="w-4 h-4 mr-2" />
+                    <X className='w-4 h-4 mr-2' />
                     Cancel
                   </Button>
                 </div>
               ) : (
                 <Button
-                  size="sm"
-                  variant="outline"
-                  onClick={() => setEditMode((prev) => ({ ...prev, avatar: true }))}>
-                  <Pencil className="w-4 h-4 mr-2" />
+                  size='sm'
+                  variant='outline'
+                  onClick={() =>
+                    setEditMode((prev) => ({ ...prev, avatar: true }))
+                  }>
+                  <Pencil className='w-4 h-4 mr-2' />
                   Change Avatar
                 </Button>
               )}
@@ -231,75 +242,77 @@ export const UserInformationPanel: React.FC<UserInformationPanelProps> = ({
           </div>
 
           {/* Name Field */}
-          <div className="space-y-2">
-            <label className="flex items-center text-sm font-medium text-gray-700">
-              <User className="w-4 h-4 mr-2 text-gray-500" />
+          <div className='space-y-2'>
+            <label className='flex items-center text-sm font-medium text-gray-700'>
+              <User className='w-4 h-4 mr-2 text-gray-500' />
               Full Name
             </label>
             {editMode.name ? (
-              <div className="flex gap-2">
+              <div className='flex gap-2'>
                 <Input
-                  name="name"
+                  name='name'
                   value={formData.name}
                   onChange={handleChange}
-                  className="flex-1"
-                  placeholder="Enter your name"
+                  className='flex-1'
+                  placeholder='Enter your name'
                 />
                 <Button
-                  size="sm"
+                  size='sm'
                   onClick={() => handleSave("name")}
                   disabled={isLoading}>
                   {isLoading ? (
-                    <Loader2 className="w-4 h-4 animate-spin" />
+                    <Loader2 className='w-4 h-4 animate-spin' />
                   ) : (
-                    <Save className="w-4 h-4" />
+                    <Save className='w-4 h-4' />
                   )}
                 </Button>
                 <Button
-                  variant="outline"
-                  size="sm"
+                  variant='outline'
+                  size='sm'
                   onClick={() =>
                     setEditMode((prev) => ({ ...prev, name: false }))
                   }>
-                  <X className="w-4 h-4" />
+                  <X className='w-4 h-4' />
                 </Button>
               </div>
             ) : (
-              <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg border border-gray-200 hover:border-gray-300 transition-colors">
-                <span className="font-medium text-gray-900">{profile.name}</span>
+              <div className='flex items-center justify-between p-3 bg-gray-50 rounded-lg border border-gray-200 hover:border-gray-300 transition-colors'>
+                <span className='font-medium text-gray-900'>
+                  {profile.name}
+                </span>
                 <button
-                  className="text-blue-600 hover:text-blue-700 p-2 hover:bg-blue-50 rounded-lg transition-all"
+                  className='text-blue-600 hover:text-blue-700 p-2 hover:bg-blue-50 rounded-lg transition-all'
                   onClick={() =>
                     setEditMode((prev) => ({ ...prev, name: true }))
                   }>
-                  <Pencil className="w-4 h-4" />
+                  <Pencil className='w-4 h-4' />
                 </button>
               </div>
             )}
           </div>
 
           {/* Email Field */}
-          <div className="space-y-2">
-            <label className="flex items-center text-sm font-medium text-gray-700">
-              <Mail className="w-4 h-4 mr-2 text-gray-500" />
+          <div className='space-y-2'>
+            <label className='flex items-center text-sm font-medium text-gray-700'>
+              <Mail className='w-4 h-4 mr-2 text-gray-500' />
               Email Address
             </label>
-            <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg border border-gray-200">
-              <span className="text-gray-900">{profile.email}</span>
-              <Badge variant="secondary" className="text-xs">
+            <div className='flex items-center justify-between p-3 bg-gray-50 rounded-lg border border-gray-200'>
+              <span className='text-gray-900'>{profile.email}</span>
+              <Badge variant='secondary' className='text-xs'>
                 Verified
               </Badge>
             </div>
           </div>
 
           {/* Role Field */}
-          <div className="space-y-2">
-            <label className="flex items-center text-sm font-medium text-gray-700">
-              <Shield className="w-4 h-4 mr-2 text-gray-500" />
+          <div className='space-y-2'>
+            <label className='flex items-center text-sm font-medium text-gray-700'>
+              <Shield className='w-4 h-4 mr-2 text-gray-500' />
               Role
             </label>
-            <div className="p-3 bg-gradient-to-r from-purple-50 to-pink-50 rounded-lg border border-purple-200">
-              <Badge variant="default" className="text-sm">
+            <div className='p-3 bg-gradient-to-r from-purple-50 to-pink-50 rounded-lg border border-purple-200'>
+              <Badge variant='default' className='text-sm'>
                 {profile.role}
               </Badge>
             </div>
@@ -307,76 +320,76 @@ export const UserInformationPanel: React.FC<UserInformationPanelProps> = ({
 
           {/* WhatsApp Number */}
           {profile.whatsapp_number && (
-            <div className="space-y-2">
-              <label className="flex items-center text-sm font-medium text-gray-700">
-                <Phone className="w-4 h-4 mr-2 text-gray-500" />
+            <div className='space-y-2'>
+              <label className='flex items-center text-sm font-medium text-gray-700'>
+                <Phone className='w-4 h-4 mr-2 text-gray-500' />
                 WhatsApp Number
               </label>
-              <div className="p-3 bg-gray-50 rounded-lg border border-gray-200">
-                <span className="text-gray-900">{profile.whatsapp_number}</span>
+              <div className='p-3 bg-gray-50 rounded-lg border border-gray-200'>
+                <span className='text-gray-900'>{profile.whatsapp_number}</span>
               </div>
             </div>
           )}
 
           {/* Password Section */}
-          <div className="pt-4 border-t">
+          <div className='pt-4 border-t'>
             <Button
-              variant="outline"
-              className="w-full justify-start"
+              variant='outline'
+              className='w-full justify-start'
               onClick={() =>
                 setEditMode((prev) => ({
                   ...prev,
                   password: !prev.password,
                 }))
               }>
-              <Key className="w-4 h-4 mr-2" />
+              <Key className='w-4 h-4 mr-2' />
               Change Password
             </Button>
 
             {editMode.password && (
-              <div className="mt-4 p-4 space-y-4 bg-gradient-to-br from-orange-50 to-red-50 rounded-lg border border-orange-200">
+              <div className='mt-4 p-4 space-y-4 bg-gradient-to-br from-orange-50 to-red-50 rounded-lg border border-orange-200'>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className='block text-sm font-medium text-gray-700 mb-2'>
                     New Password
                   </label>
                   <Input
-                    type="password"
-                    name="newPassword"
+                    type='password'
+                    name='newPassword'
                     value={formData.newPassword}
                     onChange={handleChange}
-                    placeholder="Enter new password (min 8 characters)"
+                    placeholder='Enter new password (min 8 characters)'
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className='block text-sm font-medium text-gray-700 mb-2'>
                     Confirm Password
                   </label>
                   <Input
-                    type="password"
-                    name="confirmPassword"
+                    type='password'
+                    name='confirmPassword'
                     value={formData.confirmPassword}
                     onChange={handleChange}
-                    placeholder="Re-enter new password"
+                    placeholder='Re-enter new password'
                   />
                 </div>
-                <div className="flex gap-2 pt-2">
+                <div className='flex gap-2 pt-2'>
                   <Button
-                    className="flex-1"
+                    className='flex-1'
                     onClick={() => handleSave("password")}
                     disabled={isLoading}>
                     {isLoading ? (
-                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                      <Loader2 className='w-4 h-4 mr-2 animate-spin' />
                     ) : (
-                      <Key className="w-4 h-4 mr-2" />
+                      <Key className='w-4 h-4 mr-2' />
                     )}
                     Update Password
                   </Button>
                   <Button
-                    variant="outline"
+                    variant='outline'
                     onClick={() =>
                       setEditMode((prev) => ({ ...prev, password: false }))
                     }>
-                    <X className="w-4 h-4" />
+                    <X className='w-4 h-4' />
                   </Button>
                 </div>
               </div>
@@ -390,10 +403,11 @@ export const UserInformationPanel: React.FC<UserInformationPanelProps> = ({
         <OTPVerificationDialog
           open={showOTPDialog}
           onOpenChange={setShowOTPDialog}
-          email={profile.email}
-          purpose="password_reset"
-          title="Verify Password Change"
-          description="For security, please verify your email before changing your password"
+          mobile_number={profile.mobile_number || ""}
+          email={profile.email || ""}
+          purpose='password_reset'
+          title='Verify Password Change'
+          description='For security, please verify your phone number before changing your password'
           onVerificationSuccess={performPasswordChange}
           onVerificationFailure={(error) => {
             console.error("OTP verification failed:", error);

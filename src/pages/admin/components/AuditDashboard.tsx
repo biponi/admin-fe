@@ -12,6 +12,11 @@ import { Badge } from "../../../components/ui/badge";
 import { Skeleton } from "../../../components/ui/skeleton";
 import { Alert, AlertDescription } from "../../../components/ui/alert";
 import {
+  Avatar,
+  AvatarFallback,
+  AvatarImage,
+} from "../../../components/ui/avatar";
+import {
   Package,
   ShoppingCart,
   Users,
@@ -325,7 +330,20 @@ export const AuditDashboard: React.FC = () => {
                           </Badge>
                         </div>
                         <div className='flex items-center gap-2 text-xs text-muted-foreground'>
-                          <User className='h-3 w-3' />
+                          {action.performedBy.userAvatar ? (
+                            <Avatar className='h-5 w-5'>
+                              <AvatarImage src={action.performedBy.userAvatar} />
+                              <AvatarFallback>
+                                {action.performedBy.userName
+                                  .split(" ")
+                                  .map((n) => n[0])
+                                  .join("")
+                                  .toUpperCase()}
+                              </AvatarFallback>
+                            </Avatar>
+                          ) : (
+                            <User className='h-3 w-3' />
+                          )}
                           <span>{action.performedBy.userName}</span>
                           <Clock className='h-3 w-3 ml-2' />
                           <span>
@@ -389,7 +407,20 @@ export const AuditDashboard: React.FC = () => {
                           </Badge>
                         </div>
                         <div className='flex items-center gap-2 text-xs text-muted-foreground'>
-                          <User className='h-3 w-3' />
+                          {adjustment.adjustedBy.userAvatar ? (
+                            <Avatar className='h-5 w-5'>
+                              <AvatarImage src={adjustment.adjustedBy.userAvatar} />
+                              <AvatarFallback>
+                                {adjustment.adjustedBy.userName
+                                  .split(" ")
+                                  .map((n) => n[0])
+                                  .join("")
+                                  .toUpperCase()}
+                              </AvatarFallback>
+                            </Avatar>
+                          ) : (
+                            <User className='h-3 w-3' />
+                          )}
                           <span>{adjustment.adjustedBy.userName}</span>
                           <Clock className='h-3 w-3 ml-2' />
                           <span>

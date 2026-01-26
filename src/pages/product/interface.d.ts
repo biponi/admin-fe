@@ -87,6 +87,7 @@ export interface ICategory {
   slug?: string;
   description?: string;
   discount: number;
+  discountType?: string;
   active: boolean;
   google_category_type?: string;
   img?: string;
@@ -116,6 +117,7 @@ export interface ICreateCategory {
   name: string;
   description?: string;
   discount?: number;
+  discountType?: string;
   active?: boolean;
   google_category_type?: string;
   img?: File | string;

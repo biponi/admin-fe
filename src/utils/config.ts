@@ -39,7 +39,9 @@ const config = {
     // Product Stock Adjustment Endpoints
     adjustStock: () => `${baseURL}/product/adjust`,
     getAdjustments: (productId?: string) =>
-      productId ? `${baseURL}/product/adjustments/${productId}` : `${baseURL}/product/adjustments`,
+      productId
+        ? `${baseURL}/product/adjustments/${productId}`
+        : `${baseURL}/product/adjustments`,
     getAdjustmentStats: () => `${baseURL}/product/adjustment-stats`,
   },
   order: {
@@ -58,8 +60,20 @@ const config = {
     modifyOrderProducts: (id: string) =>
       `${baseURL}/order/prior/${id}/products`,
 
+    // New modify order API endpoint (Production-ready)
+    modifyOrder: (orderId: string) =>
+      `${baseURL}/order/prior/modify/${orderId}`,
+
+    // Validate modification before applying (dry-run)
+    validateModification: (orderId: string) =>
+      `${baseURL}/order/prior/validate-modification/${orderId}`,
+
+    // Get modification history for an order
+    getModificationHistory: (orderId: string) =>
+      `${baseURL}/order/prior/modifications/${orderId}/history`,
     // Order Audit Trail Endpoints
-    getOrderAudit: (orderId: string) => `${baseURL}/order/prior/${orderId}/audit`,
+    getOrderAudit: (orderId: string) =>
+      `${baseURL}/order/prior/${orderId}/audit`,
     getAllAudits: () => `${baseURL}/order/audit`,
     getUserAudits: (userId: string) => `${baseURL}/order/audit/user/${userId}`,
     getAuditStats: () => `${baseURL}/order/audit/stats`,

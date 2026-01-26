@@ -66,29 +66,30 @@ const isBrowserNotificationSupported = (): boolean => {
 // Helper function to get notification permission safely
 const getNotificationPermission = ():
   | NotificationPermission
-  | "unsupported" => {
-  if (!isBrowserNotificationSupported()) {
-    return "unsupported";
-  }
-  return Notification.permission;
+  | "unsupported"
+  | "not" => {
+  // if (!isBrowserNotificationSupported()) {
+  //   return "unsupported";
+  // }
+  return "not"; //Notification.permission;
 };
 
 // Helper function to request notification permission safely
-const requestNotificationPermission = async (): Promise<
-  NotificationPermission | "unsupported"
-> => {
-  if (!isBrowserNotificationSupported()) {
-    return "unsupported";
-  }
+// const requestNotificationPermission = async (): Promise<
+//   NotificationPermission | "unsupported"
+// > => {
+//   if (!isBrowserNotificationSupported()) {
+//     return "unsupported";
+//   }
 
-  try {
-    const permission = await Notification.requestPermission();
-    return permission;
-  } catch (error) {
-    console.warn("Failed to request notification permission:", error);
-    return "denied";
-  }
-};
+//   try {
+//     const permission = await Notification.requestPermission();
+//     return permission;
+//   } catch (error) {
+//     console.warn("Failed to request notification permission:", error);
+//     return "denied";
+//   }
+// };
 
 function notificationReducer(
   state: NotificationState,
@@ -173,9 +174,9 @@ interface NotificationContextType {
   removeNotification: (notificationId: string) => void;
   refreshNotifications: () => void;
   isBrowserNotificationSupported: boolean;
-  notificationPermission: NotificationPermission | "unsupported";
+  notificationPermission: NotificationPermission | "unsupported" | "not";
   requestNotificationPermission: () => Promise<
-    NotificationPermission | "unsupported"
+    NotificationPermission | "unsupported" | "not"
   >;
 }
 
@@ -202,7 +203,7 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({
 }) => {
   const [state, dispatch] = useReducer(notificationReducer, initialState);
   const [notificationPermission, setNotificationPermission] = React.useState<
-    NotificationPermission | "unsupported"
+    NotificationPermission | "unsupported" | "not"
   >(getNotificationPermission());
 
   // Play notification sound
@@ -292,8 +293,8 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({
   const handleRequestNotificationPermission = useCallback(async () => {
     try {
       // First, request browser notification permission
-      const permission = await requestNotificationPermission();
-      setNotificationPermission(permission);
+      const permission = null; //await requestNotificationPermission();
+      if (permission !== null) setNotificationPermission(permission);
 
       // If granted, also request FCM token for push notifications
       if (permission === "granted") {
@@ -306,7 +307,10 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({
             await registerFCMToken(fcmToken);
             console.log("✅ FCM Token registered with backend");
           } catch (error) {
-            console.error("❌ Failed to register FCM token with backend:", error);
+            console.error(
+              "❌ Failed to register FCM token with backend:",
+              error
+            );
           }
         }
       }
@@ -356,12 +360,18 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({
               const notification: Notification = {
                 _id: payload.data?.notificationId || Date.now().toString(),
                 type: payload.data?.type || "system",
-                title: payload.notification?.title || payload.data?.subject || "New Notification",
-                message: payload.notification?.body || payload.data?.message || "",
+                title:
+                  payload.notification?.title ||
+                  payload.data?.subject ||
+                  "New Notification",
+                message:
+                  payload.notification?.body || payload.data?.message || "",
                 priority: payload.data?.priority || "normal",
                 read: false,
                 createdAt: new Date(),
-                relatedData: payload.data?.relatedData ? JSON.parse(payload.data.relatedData) : undefined,
+                relatedData: payload.data?.relatedData
+                  ? JSON.parse(payload.data.relatedData)
+                  : undefined,
               };
 
               handleNewNotification(notification);
@@ -373,7 +383,6 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({
 
         // Start listening
         handleFCMMessage();
-
       } catch (error) {
         console.error("Failed to initialize Firebase:", error);
       }
@@ -405,6 +414,7 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({
     refreshNotifications,
     isBrowserNotificationSupported: isBrowserNotificationSupported(),
     notificationPermission,
+    //@ts-ignore
     requestNotificationPermission: handleRequestNotificationPermission,
   };
 

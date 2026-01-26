@@ -46,6 +46,7 @@ export interface RecentActivity {
     reason: string;
     performedBy: {
       userName: string;
+      userAvatar?: string;
     };
     timestamps: {
       createdAt: string;
@@ -59,6 +60,7 @@ export interface RecentActivity {
     quantityChange: number;
     adjustedBy: {
       userName: string;
+      userAvatar?: string;
     };
     timestamps: {
       createdAt: string;

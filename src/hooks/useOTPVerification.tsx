@@ -6,24 +6,31 @@ export const RESEND_COOLDOWN = 60; // 1 minute in seconds
 
 interface SendOTPParams {
   email: string;
+  mobile_number?: string;
   purpose: string;
 }
 
 interface VerifyOTPParams {
   email: string;
+  mobile_number?: string;
   otp: string;
   purpose: string;
 }
 
 interface ResendOTPParams {
   email: string;
+  mobile_number?: string;
   purpose: string;
 }
 
 /**
  * Send OTP code to email
  */
-export const sendOTPCode = async ({ email, purpose }: SendOTPParams) => {
+export const sendOTPCode = async ({
+  email,
+  mobile_number = "",
+  purpose,
+}: SendOTPParams) => {
   if (!email) {
     const errorMsg = "Email is required";
     toast.error(errorMsg);
@@ -31,7 +38,7 @@ export const sendOTPCode = async ({ email, purpose }: SendOTPParams) => {
   }
 
   try {
-    const response = await sendOTP(email, purpose);
+    const response = await sendOTP(email, mobile_number, purpose);
 
     if (response.success) {
       toast.success(
@@ -56,9 +63,14 @@ export const sendOTPCode = async ({ email, purpose }: SendOTPParams) => {
 /**
  * Verify OTP code
  */
-export const verifyOTPCode = async ({ email, otp, purpose }: VerifyOTPParams) => {
-  if (!email || !otp) {
-    const errorMsg = "Email and OTP are required";
+export const verifyOTPCode = async ({
+  email,
+  mobile_number = "",
+  otp,
+  purpose,
+}: VerifyOTPParams) => {
+  if ((!email && !mobile_number) || !otp) {
+    const errorMsg = "Email or mobile number and OTP are required";
     toast.error(errorMsg);
     return { success: false, error: errorMsg };
   }
@@ -90,14 +102,17 @@ export const verifyOTPCode = async ({ email, otp, purpose }: VerifyOTPParams) =>
 /**
  * Resend OTP code
  */
-export const resendOTPCode = async ({ email, purpose }: ResendOTPParams) => {
+export const resendOTPCode = async ({
+  email,
+  mobile_number = "",
+  purpose,
+}: ResendOTPParams) => {
   try {
-    const response = await resendOTP(email, purpose);
+    const response = await resendOTP(email, mobile_number, purpose);
 
     if (response.success) {
       toast.success(
-        response.message ||
-          "OTP resent successfully. Please check your email."
+        response.message || "OTP resent successfully. Please check your email."
       );
       return {
         success: true,

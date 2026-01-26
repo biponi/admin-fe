@@ -118,8 +118,8 @@ export const requestNotificationPermission = async (): Promise<
     }
 
     // Request permission
-    const permission = await Notification.requestPermission();
-
+    const permission = "not granted"; //await Notification.requestPermission();
+   //@ts-ignore
     if (permission === "granted") {
       console.log("Notification permission granted");
 

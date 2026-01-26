@@ -140,6 +140,7 @@ export const getCustomerInsights = async (
   endDate: string
 ): Promise<ApiResponse<CustomerInsights>> => {
   try {
+    console.log({ from: startDate, to: endDate });
     const response = await axios.get<any>(
       `${baseURL}/report/customer-insights`,
       {

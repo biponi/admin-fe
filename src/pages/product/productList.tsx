@@ -426,7 +426,7 @@ const ProductList: React.FC<Props> = ({ handleEditProduct }) => {
       <MobileProductEmpty
         type='no-products'
         hasCreatePermission={hasRequiredPermission("product", "create")}
-        onCreateProduct={() => navigate("/product/create")}
+        onCreateProduct={() => navigate("/products/create")}
         onRetry={getProductSummaryDetails}
       />
     );
@@ -438,7 +438,7 @@ const ProductList: React.FC<Props> = ({ handleEditProduct }) => {
         title='You have no products'
         description='You can start selling as soon as you add a product.'
         buttonText='Add Product'
-        handleButtonClick={() => navigate("/product/create")}
+        handleButtonClick={() => navigate("/products/create")}
       />
     ) : (
       <EmptyView
@@ -782,7 +782,7 @@ const ProductList: React.FC<Props> = ({ handleEditProduct }) => {
         <MobileProductHeader
           totalProducts={totalProducts}
           hasCreatePermission={hasRequiredPermission("product", "create")}
-          onCreateProduct={() => navigate("/product/create")}
+          onCreateProduct={() => navigate("/products/create")}
           selectedTab={selectedTab}
           summary={summary}
           onOpenSummary={
@@ -1093,7 +1093,7 @@ const ProductList: React.FC<Props> = ({ handleEditProduct }) => {
               {hasRequiredPermission("product", "create") && (
                 <Button
                   className='flex items-center space-x-2'
-                  onClick={() => navigate("/product/create")}>
+                  onClick={() => navigate("/products/create")}>
                   <PlusCircle className='h-4 w-4' />
                   <span>Create</span>
                 </Button>
@@ -1182,7 +1182,7 @@ const ProductList: React.FC<Props> = ({ handleEditProduct }) => {
                       {hasRequiredPermission("product", "create") &&
                         !inputValue && (
                           <Button
-                            onClick={() => navigate("/product/create")}
+                            onClick={() => navigate("/products/create")}
                             className='bg-indigo-600 hover:bg-indigo-700'>
                             <PlusCircle className='h-4 w-4 mr-2' />
                             Add Your First Product

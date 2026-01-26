@@ -8,6 +8,7 @@ import {
   Plus,
   Warehouse,
   MapPin,
+  DownloadCloud,
 } from "lucide-react";
 import { IRecord, IStoreReserve } from "./interface";
 import { Button } from "../../components/ui/button";
@@ -41,6 +42,7 @@ import {
 } from "../../components/ui/alert-dialog";
 import useRoleCheck from "../auth/hooks/useRoleCheck";
 import { Card, CardContent } from "../../components/ui/card";
+import { generateInventoryPDF } from "../../utils/reactPdfStorerecord";
 
 // Skeleton loader for table rows
 const TableRowSkeleton: React.FC = () => (
@@ -176,7 +178,7 @@ const SingleReserveStore: React.FC = () => {
         toast.success("Record removed successfully");
       } else {
         toast.error(
-          deleted?.error ?? "Server was unable to delete the record."
+          deleted?.error ?? "Server was unable to delete the record.",
         );
       }
     } catch (error) {
@@ -336,6 +338,13 @@ const SingleReserveStore: React.FC = () => {
                             Edit
                           </th>
                         )}
+                        {hasRequiredPermission("ReserveRecord", "edit") && (
+                          <th
+                            scope='col'
+                            className='px-3 py-4 pr-6 text-center text-xs font-semibold uppercase tracking-wider text-purple-900 dark:text-purple-100'>
+                            Download PDF
+                          </th>
+                        )}
                       </tr>
                     </thead>
                     <tbody className='divide-y divide-border/30 bg-card'>
@@ -357,7 +366,7 @@ const SingleReserveStore: React.FC = () => {
                               </td>
                               <td className='whitespace-nowrap px-3 py-4 text-sm text-muted-foreground'>
                                 {dayjs(record?.created_at).format(
-                                  "DD-MM-YYYY HH:mm:ss"
+                                  "DD-MM-YYYY HH:mm:ss",
                                 )}
                               </td>
                               <td className='whitespace-nowrap px-3 py-4 text-sm font-medium'>
@@ -412,7 +421,7 @@ const SingleReserveStore: React.FC = () => {
                               </td>
                               {hasRequiredPermission(
                                 "ReserveRecord",
-                                "delete"
+                                "delete",
                               ) && (
                                 <td className='whitespace-nowrap px-3 py-4 text-center'>
                                   <AlertDialog>
@@ -456,7 +465,7 @@ const SingleReserveStore: React.FC = () => {
                                         <AlertDialogAction
                                           onClick={() =>
                                             handleDeleteRecord(
-                                              record?._id ?? ""
+                                              record?._id ?? "",
                                             )
                                           }
                                           className='bg-gradient-to-r from-rose-600 to-red-600 hover:from-rose-700 hover:to-red-700 text-white'>
@@ -469,7 +478,7 @@ const SingleReserveStore: React.FC = () => {
                               )}
                               {hasRequiredPermission(
                                 "ReserveRecord",
-                                "edit"
+                                "edit",
                               ) && (
                                 <td className='whitespace-nowrap px-3 py-4 pr-6 text-center'>
                                   <Button
@@ -487,8 +496,29 @@ const SingleReserveStore: React.FC = () => {
                                   </Button>
                                 </td>
                               )}
+                              {hasRequiredPermission(
+                                "ReserveRecord",
+                                "edit",
+                              ) && (
+                                <td className='whitespace-nowrap px-3 py-4 pr-6 text-center'>
+                                  <Button
+                                    variant='outline'
+                                    size='sm'
+                                    onClick={() => {
+                                      generateInventoryPDF(
+                                        storeInformation?.name,
+                                        record?.created_by,
+                                        record?.created_at,
+                                        record?.products,
+                                      );
+                                    }}
+                                    className='border-purple-200 hover:bg-purple-600 hover:text-white hover:border-purple-600 transition-all duration-300'>
+                                    <DownloadCloud className='w-4 h-4' />
+                                  </Button>
+                                </td>
+                              )}
                             </tr>
-                          )
+                          ),
                         )
                       ) : (
                         <tr>

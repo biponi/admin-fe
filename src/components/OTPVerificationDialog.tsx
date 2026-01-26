@@ -24,7 +24,7 @@ import {
   OTP_EXPIRY_TIME,
   RESEND_COOLDOWN,
 } from "../hooks/useOTPVerification";
-import { Loader2, Mail, Clock, RefreshCw } from "lucide-react";
+import { Loader2, Clock, RefreshCw, MessageCircleCode } from "lucide-react";
 import { Alert, AlertDescription } from "./ui/alert";
 import { useIsMobile } from "./hooks/use-mobile";
 
@@ -32,6 +32,7 @@ interface OTPVerificationDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   email: string;
+  mobile_number?: string;
   purpose?: string;
   title?: string;
   readonly?: boolean;
@@ -45,10 +46,11 @@ export const OTPVerificationDialog: React.FC<OTPVerificationDialogProps> = ({
   open,
   onOpenChange,
   email,
+  mobile_number = "",
   readonly = false,
   purpose = "verification",
-  title = "Email Verification",
-  description = "Please enter the 6-digit code sent to your email",
+  title = "Phone Number Verification",
+  description = "Please enter the 6-digit code sent to your phone number",
   onVerificationSuccess,
   onVerificationFailure,
   autoSendOnMount = false,
@@ -146,7 +148,7 @@ export const OTPVerificationDialog: React.FC<OTPVerificationDialogProps> = ({
     setIsSending(true);
     setError(null);
 
-    const result = await sendOTPCode({ email, purpose });
+    const result = await sendOTPCode({ email, mobile_number, purpose });
 
     if (result.success) {
       setOtpSent(true);
@@ -157,7 +159,7 @@ export const OTPVerificationDialog: React.FC<OTPVerificationDialogProps> = ({
     }
 
     setIsSending(false);
-  }, [email, purpose]);
+  }, [email, mobile_number, purpose]);
 
   const handleClose = useCallback(() => {
     setOtpValue("");
@@ -171,7 +173,12 @@ export const OTPVerificationDialog: React.FC<OTPVerificationDialogProps> = ({
     setIsVerifying(true);
     setError(null);
 
-    const result = await verifyOTPCode({ email, otp: otpValue, purpose });
+    const result = await verifyOTPCode({
+      email,
+      mobile_number,
+      otp: otpValue,
+      purpose,
+    });
 
     if (result.success) {
       setIsVerified(true);
@@ -183,6 +190,7 @@ export const OTPVerificationDialog: React.FC<OTPVerificationDialogProps> = ({
     }
 
     setIsVerifying(false);
+    //eslint-disable-next-line
   }, [
     otpValue,
     isVerifying,
@@ -200,7 +208,7 @@ export const OTPVerificationDialog: React.FC<OTPVerificationDialogProps> = ({
     setIsResending(true);
     setError(null);
 
-    const result = await resendOTPCode({ email, purpose });
+    const result = await resendOTPCode({ email, mobile_number, purpose });
 
     if (result.success) {
       setRemainingTime(result.expiresIn || OTP_EXPIRY_TIME);
@@ -210,6 +218,7 @@ export const OTPVerificationDialog: React.FC<OTPVerificationDialogProps> = ({
     }
 
     setIsResending(false);
+    //eslint-disable-next-line
   }, [canResend, email, purpose]);
 
   const formatTime = (seconds: number): string => {
@@ -225,7 +234,7 @@ export const OTPVerificationDialog: React.FC<OTPVerificationDialogProps> = ({
           <DialogContent className='sm:max-w-md'>
             <DialogHeader>
               <DialogTitle className='flex items-center gap-2'>
-                <Mail className='h-5 w-5' />
+                <MessageCircleCode className='h-5 w-5' />
                 {title}
               </DialogTitle>
               <DialogDescription>{description}</DialogDescription>
@@ -233,8 +242,8 @@ export const OTPVerificationDialog: React.FC<OTPVerificationDialogProps> = ({
 
             <div className='flex flex-col gap-4 py-4'>
               <div className='flex items-center gap-2 p-3 bg-muted rounded-md'>
-                <Mail className='h-4 w-4 text-muted-foreground' />
-                <span className='text-sm font-medium'>{email}</span>
+                <MessageCircleCode className='h-4 w-4 text-muted-foreground' />
+                <span className='text-sm font-medium'>{mobile_number}</span>
               </div>
 
               {!otpSent ? (
@@ -249,7 +258,7 @@ export const OTPVerificationDialog: React.FC<OTPVerificationDialogProps> = ({
                     </>
                   ) : (
                     <>
-                      <Mail className='mr-2 h-4 w-4' />
+                      <MessageCircleCode className='mr-2 h-4 w-4' />
                       Send OTP Code
                     </>
                   )}
@@ -344,7 +353,7 @@ export const OTPVerificationDialog: React.FC<OTPVerificationDialogProps> = ({
           <DrawerContent>
             <DrawerHeader>
               <DrawerTitle className='flex items-center justify-center gap-2'>
-                <Mail className='h-5 w-5' />
+                <MessageCircleCode className='h-5 w-5' />
                 {title}
               </DrawerTitle>
               <DrawerDescription>{description}</DrawerDescription>
@@ -353,8 +362,8 @@ export const OTPVerificationDialog: React.FC<OTPVerificationDialogProps> = ({
             <div className='w-full px-4'>
               <div className='flex flex-col gap-4 py-4'>
                 <div className='flex items-center gap-2 p-3 bg-muted rounded-md'>
-                  <Mail className='h-4 w-4 text-muted-foreground' />
-                  <span className='text-sm font-medium'>{email}</span>
+                  <MessageCircleCode className='h-4 w-4 text-muted-foreground' />
+                  <span className='text-sm font-medium'>{mobile_number}</span>
                 </div>
 
                 {!otpSent ? (
@@ -369,7 +378,7 @@ export const OTPVerificationDialog: React.FC<OTPVerificationDialogProps> = ({
                       </>
                     ) : (
                       <>
-                        <Mail className='mr-2 h-4 w-4' />
+                        <MessageCircleCode className='mr-2 h-4 w-4' />
                         Send OTP Code
                       </>
                     )}
