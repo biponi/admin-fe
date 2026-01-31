@@ -6,7 +6,7 @@ import {
   View,
   StyleSheet,
   Font,
-  Image,
+  Image as PDFImage,
   pdf,
 } from "@react-pdf/renderer";
 import { IOrder } from "../pages/order/interface";
@@ -25,25 +25,25 @@ const styles = StyleSheet.create({
     backgroundColor: "#FFFFFF",
     fontFamily: "Helvetica",
     fontSize: 9,
-    paddingBottom: 60,
+    paddingBottom: 50,
   },
   // Header
   header: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "flex-start",
-    padding: 25,
-    paddingBottom: 20,
+    padding: 20,
+    paddingBottom: 12,
     borderBottom: "2pt solid #000000",
   },
   logoSection: {
     flexDirection: "column",
   },
   logo: {
-    width: 90,
-    height: 50,
+    width: 70,
+    height: 40,
     objectFit: "contain",
-    marginBottom: 5,
+    marginBottom: 4,
   },
   companyInfo: {
     marginTop: 0,
@@ -64,17 +64,17 @@ const styles = StyleSheet.create({
     alignItems: "flex-end",
   },
   invoiceTitle: {
-    fontSize: 28,
+    fontSize: 20,
     fontWeight: "bold",
-    letterSpacing: 3,
-    marginBottom: 10,
+    letterSpacing: 2,
+    marginBottom: 5,
   },
   invoiceMeta: {
     alignItems: "flex-end",
   },
   invoiceMetaRow: {
     flexDirection: "row",
-    marginBottom: 3,
+    marginBottom: 2,
   },
   invoiceMetaLabel: {
     fontSize: 8,
@@ -89,49 +89,49 @@ const styles = StyleSheet.create({
   },
   // Content
   content: {
-    padding: 25,
-    paddingTop: 20,
+    padding: 20,
+    paddingTop: 12,
     flex: 1,
   },
   // Addresses Section
   addressSection: {
     flexDirection: "row",
-    marginBottom: 20,
-    gap: 20,
+    marginBottom: 12,
+    gap: 15,
   },
   addressBox: {
     flex: 1,
   },
   addressTitle: {
-    fontSize: 8,
+    fontSize: 7,
     fontWeight: "bold",
     letterSpacing: 1,
     borderBottom: "1pt solid #000000",
-    paddingBottom: 4,
-    marginBottom: 8,
+    paddingBottom: 3,
+    marginBottom: 5,
   },
   addressText: {
-    fontSize: 9,
-    lineHeight: 1.4,
-    marginBottom: 2,
+    fontSize: 8,
+    lineHeight: 1.3,
+    marginBottom: 1,
   },
   addressTextBold: {
-    fontSize: 10,
+    fontSize: 9,
     fontWeight: "bold",
-    marginBottom: 3,
+    marginBottom: 2,
   },
   bengaliText: {
     fontFamily: "BengaliFont",
-    fontSize: 10,
-    lineHeight: 1.5,
-    marginBottom: 2,
+    fontSize: 9,
+    lineHeight: 1.4,
+    marginBottom: 1,
   },
   // Order Info Bar
   orderInfoBar: {
     flexDirection: "row",
     backgroundColor: "#dcdde1",
-    padding: 10,
-    marginBottom: 15,
+    padding: 6,
+    marginBottom: 10,
   },
   orderInfoItem: {
     flex: 1,
@@ -144,40 +144,40 @@ const styles = StyleSheet.create({
     marginBottom: 2,
   },
   orderInfoValue: {
-    fontSize: 9,
+    fontSize: 8,
     fontWeight: "bold",
     color: "#1e272e",
   },
   orderInfoDivider: {
     width: 1,
     backgroundColor: "#444444",
-    marginHorizontal: 10,
+    marginHorizontal: 8,
   },
   // Notes
   notesBox: {
     border: "1pt solid #000000",
-    padding: 10,
-    marginBottom: 15,
+    padding: 6,
+    marginBottom: 10,
   },
   notesTitle: {
     fontSize: 7,
     fontWeight: "bold",
     letterSpacing: 1,
-    marginBottom: 5,
+    marginBottom: 3,
   },
   notesText: {
-    fontSize: 8,
-    lineHeight: 1.4,
+    fontSize: 7,
+    lineHeight: 1.3,
     fontStyle: "italic",
   },
-  // Table
+  // Table - OPTIMIZED FOR SPACE
   table: {
-    marginBottom: 15,
+    marginBottom: 10,
   },
   tableHeader: {
     flexDirection: "row",
     backgroundColor: "#dcdde1",
-    padding: 8,
+    padding: 5,
   },
   tableHeaderCell: {
     color: "#1e272e",
@@ -189,19 +189,20 @@ const styles = StyleSheet.create({
   tableRow: {
     flexDirection: "row",
     borderBottom: "0.5pt solid #CCCCCC",
-    padding: 8,
-    minHeight: 28,
+    padding: 2,
+    paddingVertical: 2,
+    minHeight: 10,
     alignItems: "center",
   },
   tableRowAlt: {
     backgroundColor: "#F5F5F5",
   },
   tableCell: {
-    fontSize: 8,
+    fontSize: 7,
     textAlign: "center",
   },
   tableCellProduct: {
-    fontSize: 9,
+    fontSize: 8,
     fontWeight: "bold",
     textAlign: "left",
   },
@@ -209,8 +210,8 @@ const styles = StyleSheet.create({
     textAlign: "right",
   },
   productImage: {
-    width: 32,
-    height: 32,
+    width: 24,
+    height: 24,
     objectFit: "contain",
   },
   // Summary
@@ -219,13 +220,13 @@ const styles = StyleSheet.create({
     justifyContent: "flex-end",
   },
   summaryBox: {
-    width: 220,
+    width: 200,
     border: "1pt solid #000000",
   },
   summaryRow: {
     flexDirection: "row",
     justifyContent: "space-between",
-    padding: 8,
+    padding: 5,
     borderBottom: "0.5pt solid #CCCCCC",
   },
   summaryRowLast: {
@@ -244,44 +245,44 @@ const styles = StyleSheet.create({
     fontSize: 8,
   },
   summaryLabelTotal: {
-    fontSize: 10,
+    fontSize: 9,
     fontWeight: "bold",
     color: "#1e272e",
   },
   summaryValueTotal: {
-    fontSize: 10,
+    fontSize: 9,
     fontWeight: "bold",
     color: "#1e272e",
   },
   // Payment Info
   paymentSection: {
-    marginTop: 20,
+    marginTop: 12,
     flexDirection: "row",
-    gap: 20,
+    gap: 15,
   },
   paymentBox: {
     flex: 1,
     border: "1pt solid #000000",
-    padding: 12,
+    padding: 8,
   },
   paymentTitle: {
     fontSize: 7,
     fontWeight: "bold",
     letterSpacing: 1,
-    marginBottom: 8,
+    marginBottom: 5,
     borderBottom: "0.5pt solid #000000",
-    paddingBottom: 4,
+    paddingBottom: 3,
   },
   paymentRow: {
     flexDirection: "row",
     justifyContent: "space-between",
-    marginBottom: 4,
+    marginBottom: 3,
   },
   paymentLabel: {
-    fontSize: 8,
+    fontSize: 7,
   },
   paymentValue: {
-    fontSize: 8,
+    fontSize: 7,
     fontWeight: "bold",
   },
   // Footer
@@ -291,8 +292,8 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     borderTop: "1pt solid #000000",
-    padding: 15,
-    paddingHorizontal: 25,
+    padding: 10,
+    paddingHorizontal: 20,
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
@@ -301,7 +302,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   footerText: {
-    fontSize: 7,
+    fontSize: 6,
     color: "#666666",
     marginBottom: 1,
   },
@@ -310,7 +311,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   thankYou: {
-    fontSize: 9,
+    fontSize: 8,
     fontWeight: "bold",
     letterSpacing: 1,
   },
@@ -319,33 +320,42 @@ const styles = StyleSheet.create({
     alignItems: "flex-end",
   },
   pageNumber: {
-    fontSize: 8,
+    fontSize: 7,
     fontWeight: "bold",
   },
 });
 
 // Helper function to fetch and convert image to base64
 const fetchImageAsBase64 = async (url: string): Promise<string> => {
-  try {
-    const response = await fetch(url, {
-      cache: "force-cache",
-    });
+  return new Promise((resolve) => {
+    const img = document.createElement("img");
 
-    if (!response.ok) {
-      return url;
-    }
+    img.onload = () => {
+      try {
+        const canvas = document.createElement("canvas");
+        canvas.width = img.width;
+        canvas.height = img.height;
+        const ctx = canvas.getContext("2d");
+        if (!ctx) {
+          resolve(url);
+          return;
+        }
+        ctx.drawImage(img, 0, 0);
+        const dataURL = canvas.toDataURL("image/png");
+        resolve(dataURL);
+      } catch (error) {
+        console.error("Canvas error:", error);
+        resolve(url);
+      }
+    };
 
-    const blob = await response.blob();
+    img.onerror = () => {
+      console.error("Image load error:", url);
+      resolve(url); // Fallback to original URL
+    };
 
-    return new Promise<string>((resolve, reject) => {
-      const reader = new FileReader();
-      reader.onloadend = () => resolve(reader.result as string);
-      reader.onerror = reject;
-      reader.readAsDataURL(blob);
-    });
-  } catch (error) {
-    return url; // Return original URL if fetch fails
-  }
+    img.src = url;
+  });
 };
 
 // Helper function to detect Bengali text
@@ -408,7 +418,7 @@ const InvoiceDocument: React.FC<InvoiceDocumentProps> = ({
         {/* Header */}
         <View style={styles.header}>
           <View style={styles.logoSection}>
-            <Image
+            <PDFImage
               style={styles.logo}
               src={
                 logoImage ||
@@ -535,7 +545,7 @@ const InvoiceDocument: React.FC<InvoiceDocumentProps> = ({
                 <Text style={[styles.tableCell, { width: "5%" }]}>
                   {index + 1}
                 </Text>
-                <Image
+                <PDFImage
                   style={[styles.productImage, { width: "15%" }]}
                   src={product?.thumbnail}
                 />
@@ -622,20 +632,20 @@ const InvoiceDocument: React.FC<InvoiceDocumentProps> = ({
                   styles.summaryRowLast,
                   styles.summaryRowTotal,
                 ]}>
-                <Text style={[styles.summaryLabelTotal, { fontSize: 10 }]}>
+                <Text style={[styles.summaryLabelTotal, { fontSize: 9 }]}>
                   BALANCE DUE
                 </Text>
                 <Text
                   style={[
                     styles.summaryValue,
-                    { fontSize: 10, fontWeight: "bold", color: "#1e272e" },
+                    { fontSize: 9, fontWeight: "bold", color: "#1e272e" },
                   ]}>
                   Tk {due.toFixed(0)}
                 </Text>
               </View>
             </View>
           </View>
-          ~{/* Payment Terms */}
+          {/* Payment Terms */}
           <View style={styles.paymentSection}>
             <View style={styles.paymentBox}>
               <Text style={styles.paymentTitle}>PAYMENT INFORMATION</Text>
@@ -654,7 +664,7 @@ const InvoiceDocument: React.FC<InvoiceDocumentProps> = ({
             </View>
             <View style={styles.paymentBox}>
               <Text style={styles.paymentTitle}>TERMS & CONDITIONS</Text>
-              <Text style={[styles.paymentLabel, { lineHeight: 1.4 }]}>
+              <Text style={[styles.paymentLabel, { lineHeight: 1.3 }]}>
                 • Please inspect items upon delivery{"\n"}• Contact us within
                 24hrs for any issues
               </Text>
@@ -695,7 +705,12 @@ const preloadOrderImages = async (order: IOrder) => {
     "https://res.cloudinary.com/emerging-it/image/upload/v1755976159/2193d5ff-ffb3-4fb7-ae67-c7a79e89c3f6__1_-removebg-preview_sobjwy.png";
 
   // Preload logo
+  console.log("Fetching logo:", logoUrl);
   const logoBase64 = await fetchImageAsBase64(logoUrl);
+  console.log(
+    "Logo loaded:",
+    logoBase64.startsWith("data:") ? "success" : "failed",
+  );
 
   // Preload product thumbnails
   const productImagesMap: Record<string, string> = {};
@@ -703,7 +718,12 @@ const preloadOrderImages = async (order: IOrder) => {
     .filter((p) => p.thumbnail)
     .map(async (product) => {
       if (product.thumbnail) {
+        console.log("Fetching product image:", product.thumbnail);
         const base64 = await fetchImageAsBase64(product.thumbnail);
+        console.log(
+          "Product image loaded:",
+          base64.startsWith("data:") ? "success" : "failed",
+        );
         productImagesMap[product.id] = base64;
       }
     });
