@@ -616,7 +616,7 @@ const InvoiceDocument: React.FC<InvoiceDocumentProps> = ({
                 <SmartText
                   style={[
                     styles.tableCellProduct,
-                    { width: "20%", textAlign: "center" },
+                    { width: "20%", textAlign: "left" },
                   ]}>
                   {product.name.toUpperCase()}
                 </SmartText>
