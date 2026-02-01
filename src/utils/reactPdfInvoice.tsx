@@ -201,6 +201,14 @@ const styles = StyleSheet.create({
     fontSize: 7,
     textAlign: "center",
   },
+  quantityText: {
+    textAlign: "center",
+    padding: "4px",
+    borderRadius: "10px",
+    backgroundColor: "#ffffff",
+    fontWeight: "bold",
+    border: "1px solid #cccccc",
+  },
   tableCellProduct: {
     fontSize: 8,
     fontWeight: "bold",
@@ -213,6 +221,7 @@ const styles = StyleSheet.create({
     width: 24,
     height: 24,
     objectFit: "contain",
+    marginLeft: 0,
   },
   // Summary
   summaryContainer: {
@@ -325,37 +334,72 @@ const styles = StyleSheet.create({
   },
 });
 
-// Helper function to fetch and convert image to base64
+// Helper function to fetch and convert image to base64 for PDF
 const fetchImageAsBase64 = async (url: string): Promise<string> => {
-  return new Promise((resolve) => {
-    const img = document.createElement("img");
+  try {
+    // Fetch the image with proper CORS
+    const response = await fetch(url, {
+      mode: "cors",
+      credentials: "omit",
+    });
 
-    img.onload = () => {
-      try {
-        const canvas = document.createElement("canvas");
-        canvas.width = img.width;
-        canvas.height = img.height;
-        const ctx = canvas.getContext("2d");
-        if (!ctx) {
-          resolve(url);
-          return;
+    if (!response.ok) {
+      return url;
+    }
+
+    const blob = await response.blob();
+
+    // Convert blob to base64 using FileReader
+    return new Promise((resolve) => {
+      const reader = new FileReader();
+
+      reader.onload = () => {
+        const result = reader.result as string;
+
+        // If it's WebP, we need to convert it to PNG via canvas
+        if (blob.type === "image/webp") {
+          const img = new Image();
+
+          img.onload = () => {
+            try {
+              const canvas = document.createElement("canvas");
+              canvas.width = img.width;
+              canvas.height = img.height;
+              const ctx = canvas.getContext("2d");
+
+              if (!ctx) {
+                resolve(result);
+                return;
+              }
+
+              ctx.drawImage(img, 0, 0);
+              const pngDataUrl = canvas.toDataURL("image/png");
+              resolve(pngDataUrl);
+            } catch {
+              resolve(result);
+            }
+          };
+
+          img.onerror = () => {
+            resolve(result);
+          };
+
+          img.src = result;
+        } else {
+          // Not WebP, return as-is
+          resolve(result);
         }
-        ctx.drawImage(img, 0, 0);
-        const dataURL = canvas.toDataURL("image/png");
-        resolve(dataURL);
-      } catch (error) {
-        console.error("Canvas error:", error);
+      };
+
+      reader.onerror = () => {
         resolve(url);
-      }
-    };
+      };
 
-    img.onerror = () => {
-      console.error("Image load error:", url);
-      resolve(url); // Fallback to original URL
-    };
-
-    img.src = url;
-  });
+      reader.readAsDataURL(blob);
+    });
+  } catch {
+    return url;
+  }
 };
 
 // Helper function to detect Bengali text
@@ -519,19 +563,31 @@ const InvoiceDocument: React.FC<InvoiceDocumentProps> = ({
                   styles.tableHeaderCell,
                   { width: "20%", textAlign: "left" },
                 ]}>
-                ITEM DESCRIPTION
+                PRODUCT TITLE
               </Text>
               <Text style={[styles.tableHeaderCell, { width: "18%" }]}>
                 VARIANT
               </Text>
               <Text style={[styles.tableHeaderCell, { width: "8%" }]}>QTY</Text>
-              <Text style={[styles.tableHeaderCell, { width: "12%" }]}>
+              <Text
+                style={[
+                  styles.tableHeaderCell,
+                  { width: "12%", textAlign: "right" },
+                ]}>
                 PRICE
               </Text>
-              <Text style={[styles.tableHeaderCell, { width: "10%" }]}>
+              <Text
+                style={[
+                  styles.tableHeaderCell,
+                  { width: "10%", textAlign: "right" },
+                ]}>
                 DISC
               </Text>
-              <Text style={[styles.tableHeaderCell, { width: "12%" }]}>
+              <Text
+                style={[
+                  styles.tableHeaderCell,
+                  { width: "12%", textAlign: "right" },
+                ]}>
                 AMOUNT
               </Text>
             </View>
@@ -545,11 +601,23 @@ const InvoiceDocument: React.FC<InvoiceDocumentProps> = ({
                 <Text style={[styles.tableCell, { width: "5%" }]}>
                   {index + 1}
                 </Text>
-                <PDFImage
-                  style={[styles.productImage, { width: "15%" }]}
-                  src={product?.thumbnail}
-                />
-                <SmartText style={[styles.tableCellProduct, { width: "20%" }]}>
+                <View
+                  style={{
+                    width: "15%",
+                    alignItems: "flex-start",
+                    justifyContent: "center",
+                    paddingLeft: 2,
+                  }}>
+                  <PDFImage
+                    style={styles.productImage}
+                    src={product?.thumbnail}
+                  />
+                </View>
+                <SmartText
+                  style={[
+                    styles.tableCellProduct,
+                    { width: "20%", textAlign: "center" },
+                  ]}>
                   {product.name.toUpperCase()}
                 </SmartText>
                 <Text style={[styles.tableCell, { width: "18%" }]}>
@@ -561,8 +629,13 @@ const InvoiceDocument: React.FC<InvoiceDocumentProps> = ({
                           : ""
                       }`}
                 </Text>
-                <Text style={[styles.tableCell, { width: "8%" }]}>
-                  {product.quantity}
+                <Text
+                  style={[
+                    styles.tableCell,
+                    styles.quantityText,
+                    { width: "8%" },
+                  ]}>
+                  {"x " + product.quantity}
                 </Text>
                 <Text
                   style={[
@@ -586,7 +659,7 @@ const InvoiceDocument: React.FC<InvoiceDocumentProps> = ({
                     styles.tableCellRight,
                     { width: "12%" },
                   ]}>
-                  Tk
+                  Tk{" "}
                   {(
                     product.quantity * product.unitPrice -
                     (product.discount || 0)
@@ -705,12 +778,7 @@ const preloadOrderImages = async (order: IOrder) => {
     "https://res.cloudinary.com/emerging-it/image/upload/v1755976159/2193d5ff-ffb3-4fb7-ae67-c7a79e89c3f6__1_-removebg-preview_sobjwy.png";
 
   // Preload logo
-  console.log("Fetching logo:", logoUrl);
   const logoBase64 = await fetchImageAsBase64(logoUrl);
-  console.log(
-    "Logo loaded:",
-    logoBase64.startsWith("data:") ? "success" : "failed",
-  );
 
   // Preload product thumbnails
   const productImagesMap: Record<string, string> = {};
@@ -718,12 +786,7 @@ const preloadOrderImages = async (order: IOrder) => {
     .filter((p) => p.thumbnail)
     .map(async (product) => {
       if (product.thumbnail) {
-        console.log("Fetching product image:", product.thumbnail);
         const base64 = await fetchImageAsBase64(product.thumbnail);
-        console.log(
-          "Product image loaded:",
-          base64.startsWith("data:") ? "success" : "failed",
-        );
         productImagesMap[product.id] = base64;
       }
     });
@@ -750,12 +813,24 @@ export const generateReactPdfInvoice = async (order: IOrder) => {
   const blob = await pdf(
     <InvoiceDocument order={orderWithBase64Images} logoImage={logoBase64} />,
   ).toBlob();
+
+  // Cleanup object URLs after PDF is generated
+  const objectUrlsToClean = [
+    logoBase64,
+    ...Object.values(productImagesMap),
+  ].filter((url) => url.startsWith("blob:"));
+
   const url = URL.createObjectURL(blob);
   const link = document.createElement("a");
   link.href = url;
   link.download = `invoice-${order.orderNumber}.pdf`;
   link.click();
   URL.revokeObjectURL(url);
+
+  // Clean up image object URLs
+  objectUrlsToClean.forEach((objectUrl) => {
+    URL.revokeObjectURL(objectUrl);
+  });
 };
 
 export const generateReactPdfInvoiceBlob = async (
@@ -773,9 +848,25 @@ export const generateReactPdfInvoiceBlob = async (
     })),
   };
 
-  return await pdf(
+  const blob = await pdf(
     <InvoiceDocument order={orderWithBase64Images} logoImage={logoBase64} />,
   ).toBlob();
+
+  // Note: We can't clean up object URLs here immediately since the caller might
+  // still be using the blob. The caller is responsible for cleanup.
+  // However, since react-pdf processes images immediately, we could clean up after a delay.
+  setTimeout(() => {
+    const objectUrlsToClean = [
+      logoBase64,
+      ...Object.values(productImagesMap),
+    ].filter((url) => url.startsWith("blob:"));
+
+    objectUrlsToClean.forEach((objectUrl) => {
+      URL.revokeObjectURL(objectUrl);
+    });
+  }, 5000);
+
+  return blob;
 };
 
 export default InvoiceDocument;
