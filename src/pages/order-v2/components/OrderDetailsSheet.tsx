@@ -33,6 +33,7 @@ import {
   RotateCcw,
   FileText,
   Clock,
+  Box,
 } from "lucide-react";
 import { Badge } from "../../../components/ui/badge";
 import { Separator } from "../../../components/ui/separator";
@@ -51,6 +52,7 @@ import type { IOrder } from "../types";
 import InvoiceDocument, {
   generateReactPdfInvoice,
 } from "../../../utils/reactPdfInvoice";
+import { generateReactPdfPackingSlip } from "../../../utils/reactPdfPackingSlip";
 import { pdf } from "@react-pdf/renderer";
 import { toast } from "sonner";
 
@@ -112,6 +114,13 @@ export const OrderDetailsSheet: React.FC<OrderDetailsSheetProps> = ({
 
     // Note: For PDF generation, you would need a library like jsPDF or html2pdf
     // For now, downloading as HTML which can be opened and saved as PDF by the browser
+  };
+
+  const handleDownloadPackingSlip = () => {
+    // Generate packing slip
+    generateReactPdfPackingSlip(order);
+
+    toast.success("Packing slip downloaded successfully!");
   };
 
   const handleShare = async () => {
@@ -207,6 +216,18 @@ export const OrderDetailsSheet: React.FC<OrderDetailsSheetProps> = ({
                   className='h-8 w-8 p-0'
                   title='Download Invoice'>
                   <Download className='h-4 w-4' />
+                </Button>
+              </motion.div>
+              <motion.div
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}>
+                <Button
+                  variant='ghost'
+                  size='sm'
+                  onClick={handleDownloadPackingSlip}
+                  className='h-8 w-8 p-0'
+                  title='Download Packing Slip'>
+                  <Box className='h-4 w-4' />
                 </Button>
               </motion.div>
               {order.customer.email && (
@@ -706,6 +727,15 @@ export const OrderDetailsSheet: React.FC<OrderDetailsSheetProps> = ({
                 onClick={handleDownloadInvoice}>
                 <Download className='h-4 w-4' />
                 Invoice
+              </Button>
+            </motion.div>
+            <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
+              <Button
+                variant='outline'
+                className='gap-2 border-orange-300 hover:bg-orange-50 text-orange-700'
+                onClick={handleDownloadPackingSlip}>
+                <Box className='h-4 w-4' />
+                Packing Slip
               </Button>
             </motion.div>
             {onEdit && (

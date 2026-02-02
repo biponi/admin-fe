@@ -33,6 +33,7 @@ import { OnboardingTour } from "./components/OnboardingTour";
 import { FraudDetectionContent } from "./components/FraudDetectionContent";
 import { ReturnOrderSheet } from "./components/ReturnOrderSheet";
 import { InvoicePreviewModal } from "./components/InvoicePreviewModal";
+import { PackingSlipPreviewModal } from "./components/PackingSlipPreviewModal";
 import { Button } from "../../components/ui/button";
 import { Tabs, TabsList, TabsTrigger } from "../../components/ui/tabs";
 import {
@@ -60,6 +61,8 @@ import { useToast } from "../../components/ui/use-toast";
 import {
   generateMultipleModernInvoicesAndDownloadZip,
   generateInvoicePreviewData,
+  generateMultiplePackingSlipsAndDownloadZip,
+  generatePackingSlipPreviewData,
 } from "../../utils/invoiceGenerator";
 import type {
   OrderStatus,
@@ -142,6 +145,10 @@ export const OrderListV2: React.FC = () => {
   const [returnDialogOpen, setReturnDialogOpen] = useState(false);
   const [invoicePreviewOpen, setInvoicePreviewOpen] = useState(false);
   const [invoicePreviewData, setInvoicePreviewData] = useState<
+    { url: string; orderNumber: number; blob: Blob }[]
+  >([]);
+  const [packingSlipPreviewOpen, setPackingSlipPreviewOpen] = useState(false);
+  const [packingSlipPreviewData, setPackingSlipPreviewData] = useState<
     { url: string; orderNumber: number; blob: Blob }[]
   >([]);
   // Store full order data for selected orders to prevent data loss on pagination
@@ -650,6 +657,102 @@ export const OrderListV2: React.FC = () => {
     }
   };
 
+  // Packing Slip Handlers
+  const printBulkPackingSlips = async () => {
+    setIsGeneratingInvoices(true); // Reuse the same loading state
+
+    try {
+      // Use selectedOrdersData Map to get order IDs
+      const selectedOrderIds = Array.from(selectedOrdersData.values())
+        .map((order) => order.id)
+        .filter((id): id is number => id !== undefined);
+
+      if (selectedOrderIds.length === 0) {
+        toast({
+          variant: "destructive",
+          title: "No orders selected",
+          description: "Please select at least one order to print packing slips.",
+        });
+        setIsGeneratingInvoices(false);
+        return;
+      }
+
+      toast({
+        title: "Generating packing slips...",
+        description: `Preparing ${selectedOrderIds.length} packing slip${
+          selectedOrderIds.length > 1 ? "s" : ""
+        } for preview`,
+      });
+
+      // Generate preview data
+      const previewData = await generatePackingSlipPreviewData(selectedOrderIds);
+
+      setPackingSlipPreviewData(previewData);
+      setPackingSlipPreviewOpen(true);
+
+      toast({
+        title: "Packing Slips Ready",
+        description: `${selectedOrderIds.length} packing slip${
+          selectedOrderIds.length > 1 ? "s" : ""
+        } ready for preview`,
+      });
+    } catch (error: any) {
+      toast({
+        variant: "destructive",
+        title: "Failed to prepare packing slips",
+        description:
+          error.message ||
+          "An error occurred while preparing packing slips for print.",
+      });
+    } finally {
+      setIsGeneratingInvoices(false);
+    }
+  };
+
+  const handlePackingSlipPreviewClose = () => {
+    setPackingSlipPreviewOpen(false);
+    // Clean up blob URLs
+    packingSlipPreviewData.forEach((data) => URL.revokeObjectURL(data.url));
+    setPackingSlipPreviewData([]);
+    clearSelection();
+  };
+
+  const handleBulkPackingSlipDownload = async () => {
+    try {
+      // Use selectedOrdersData Map to get order IDs
+      const selectedOrderIds = Array.from(selectedOrdersData.values())
+        .map((order) => order.id)
+        .filter((id): id is number => id !== undefined);
+
+      if (selectedOrderIds.length === 0) {
+        toast({
+          variant: "destructive",
+          title: "No orders selected",
+          description: "Please select at least one order to download packing slips.",
+        });
+        return;
+      }
+
+      toast({
+        title: "Downloading packing slips...",
+        description: "Creating ZIP file",
+      });
+
+      await generateMultiplePackingSlipsAndDownloadZip(selectedOrderIds);
+
+      toast({
+        title: "Download complete",
+        description: "Packing slips downloaded as ZIP file",
+      });
+    } catch (error: any) {
+      toast({
+        variant: "destructive",
+        title: "Download failed",
+        description: error.message || "Failed to download packing slips",
+      });
+    }
+  };
+
   // Order action handlers
   const handleViewOrder = (order: IOrder) => {
     setSelectedOrder(order);
@@ -1025,6 +1128,8 @@ export const OrderListV2: React.FC = () => {
         onCancel={handleBulkCancel}
         onGenerateInvoices={handleBulkInvoiceDownload}
         onPrintInvoices={printBulkInvoices}
+        onGeneratePackingSlips={handleBulkPackingSlipDownload}
+        onPrintPackingSlips={printBulkPackingSlips}
         onViewSelectedOrders={() => setSelectedOrdersViewerOpen(true)}
         progress={bulkActionProgress}
       />
@@ -1409,6 +1514,16 @@ export const OrderListV2: React.FC = () => {
         onPrintAll={handlePrintAllInvoices}
         onPrintCurrent={handlePrintCurrentInvoice}
         onDownloadAll={handleDownloadAllInvoices}
+      />
+
+      {/* Packing Slip Preview Modal */}
+      <PackingSlipPreviewModal
+        open={packingSlipPreviewOpen}
+        onOpenChange={handlePackingSlipPreviewClose}
+        pdfUrls={packingSlipPreviewData}
+        onPrintAll={handlePrintAllInvoices} // Reuse same handler
+        onPrintCurrent={handlePrintCurrentInvoice} // Reuse same handler
+        onDownloadAll={handleBulkPackingSlipDownload}
       />
     </div>
   );

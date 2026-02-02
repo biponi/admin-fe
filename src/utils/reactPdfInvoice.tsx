@@ -11,10 +11,10 @@ import {
 } from "@react-pdf/renderer";
 import { IOrder } from "../pages/order/interface";
 
-// Register Bengali font
+// Register Bengali font using jsDelivr CDN (more reliable)
 Font.register({
   family: "BengaliFont",
-  src: "https://fonts.gstatic.com/s/hindsiliguri/v12/ijwOs5juQtsyLLR5jN4cxBEoRDf44uEfKiGvxts.ttf",
+  src: "https://cdn.jsdelivr.net/gh/googlefonts/noto-fonts@main/hinted/ttf/NotoSansBengali/NotoSansBengali-Regular.ttf",
   fontStyle: "normal",
   fontWeight: 400,
 });
@@ -23,7 +23,7 @@ const styles = StyleSheet.create({
   page: {
     flexDirection: "column",
     backgroundColor: "#FFFFFF",
-    fontFamily: "Helvetica",
+    fontFamily: "BengaliFont",
     fontSize: 9,
     paddingBottom: 50,
   },
@@ -155,20 +155,24 @@ const styles = StyleSheet.create({
   },
   // Notes
   notesBox: {
+    flex: 1, // Take all available width
     border: "1pt solid #000000",
     padding: 6,
-    marginBottom: 10,
   },
   notesTitle: {
     fontSize: 7,
     fontWeight: "bold",
-    letterSpacing: 1,
-    marginBottom: 3,
+    letterSpacing: 0.5,
+    marginBottom: 3, // Reduced spacing
+    borderBottom: "0.5pt solid #000000",
+    paddingBottom: 2,
+    width: "100%",
   },
   notesText: {
     fontSize: 7,
-    lineHeight: 1.3,
-    fontStyle: "italic",
+    lineHeight: 1.15, // Very tight line height
+    fontWeight: "normal",
+    textAlign: "left", // Ensure left alignment
   },
   // Table - OPTIMIZED FOR SPACE
   table: {
@@ -226,10 +230,11 @@ const styles = StyleSheet.create({
   // Summary
   summaryContainer: {
     flexDirection: "row",
-    justifyContent: "flex-end",
+    gap: 15,
   },
   summaryBox: {
     width: 200,
+    flexShrink: 0, // Prevent shrinking
     border: "1pt solid #000000",
   },
   summaryRow: {
@@ -540,13 +545,7 @@ const InvoiceDocument: React.FC<InvoiceDocumentProps> = ({
               <Text style={styles.orderInfoValue}>{orderDate}</Text>
             </View>
           </View>
-          {/* Special Notes */}
-          {order.notes && (
-            <View style={styles.notesBox}>
-              <Text style={styles.notesTitle}>SPECIAL INSTRUCTIONS</Text>
-              <SmartText style={styles.notesText}>{order.notes}</SmartText>
-            </View>
-          )}
+
           {/* Products Table */}
           <View style={styles.table}>
             <View style={styles.tableHeader}>
@@ -610,7 +609,7 @@ const InvoiceDocument: React.FC<InvoiceDocumentProps> = ({
                   }}>
                   <PDFImage
                     style={styles.productImage}
-                    src={product?.thumbnail}
+                    src={product.thumbnail}
                   />
                 </View>
                 <SmartText
@@ -670,6 +669,13 @@ const InvoiceDocument: React.FC<InvoiceDocumentProps> = ({
           </View>
           {/* Summary */}
           <View style={styles.summaryContainer}>
+            {/* Special Notes */}
+            {order.notes && (
+              <View style={styles.notesBox}>
+                <Text style={styles.notesTitle}>SPECIAL INSTRUCTIONS</Text>
+                <Text style={styles.notesText}>{order.notes.trim()}</Text>
+              </View>
+            )}
             <View style={styles.summaryBox}>
               <View style={styles.summaryRow}>
                 <Text style={styles.summaryLabel}>Subtotal</Text>
