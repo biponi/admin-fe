@@ -15,6 +15,7 @@ import {
   Eye,
   Printer,
   ChevronDown,
+  Package,
 } from 'lucide-react';
 import { cn } from '../lib/utils';
 import { slideInFromBottom, fabVariants } from '../lib/animations';
@@ -40,6 +41,8 @@ interface BulkActionsBarProps {
   onCancel: () => void;
   onGenerateInvoices: () => void;
   onPrintInvoices?: () => void;
+  onGeneratePackingSlips?: () => void;
+  onPrintPackingSlips?: () => void;
   onViewSelectedOrders: () => void;
   progress?: BulkActionProgress | null;
   className?: string;
@@ -56,6 +59,8 @@ export const BulkActionsBar: React.FC<BulkActionsBarProps> = ({
   onCancel,
   onGenerateInvoices,
   onPrintInvoices,
+  onGeneratePackingSlips,
+  onPrintPackingSlips,
   onViewSelectedOrders,
   progress,
   className,
@@ -203,6 +208,32 @@ export const BulkActionsBar: React.FC<BulkActionsBarProps> = ({
                       Print with Preview
                     </DropdownMenuItem>
                     <DropdownMenuItem onClick={onGenerateInvoices}>
+                      <Download className="mr-2 h-4 w-4" />
+                      Download as ZIP
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+
+                {/* Generate Packing Slips - Dropdown with Print and Download */}
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="h-9"
+                    >
+                      <Package className="mr-2 h-4 w-4" />
+                      <span className="hidden sm:inline">Packing Slips</span>
+                      <span className="sm:hidden">Slip</span>
+                      <ChevronDown className="ml-1.5 h-3.5 w-3.5" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="start" className="w-48">
+                    <DropdownMenuItem onClick={onPrintPackingSlips}>
+                      <Printer className="mr-2 h-4 w-4" />
+                      Print with Preview
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={onGeneratePackingSlips}>
                       <Download className="mr-2 h-4 w-4" />
                       Download as ZIP
                     </DropdownMenuItem>

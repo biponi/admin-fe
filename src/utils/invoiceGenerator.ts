@@ -6,6 +6,10 @@ import { saveAs } from "file-saver";
 import axiosInstance from "../api/axios";
 import config from "./config";
 import { generateReactPdfInvoice, generateReactPdfInvoiceBlob } from "./reactPdfInvoice";
+import {
+  generateReactPdfPackingSlip,
+  generateReactPdfPackingSlipBlob,
+} from "./reactPdfPackingSlip";
 
 const removeBanglaAndBrackets = (input: string): string => {
   // Define the Unicode range for Bangla characters (U+0980 to U+09FF)
@@ -713,6 +717,128 @@ export const printMultipleInvoicesWithPreview = async (
     return Promise.resolve();
   } catch (error) {
     console.error("Error printing invoices:", error);
+    throw error;
+  }
+};
+
+// ============================================================================
+// PACKING SLIP FUNCTIONS
+// ============================================================================
+
+/**
+ * Generate a single packing slip for download
+ */
+export const generatePackingSlip = async (order: IOrder) => {
+  await generateReactPdfPackingSlip(order);
+};
+
+/**
+ * Generate multiple packing slips and download as ZIP
+ */
+export const generateMultiplePackingSlipsAndDownloadZip = async (
+  orderIds: number[]
+) => {
+  const zip = new JSZip();
+  const orders = (await getOrdersById(orderIds)) ?? [];
+
+  for (const order of orders) {
+    const pdfBlob = await generateReactPdfPackingSlipBlob(order);
+    zip.file(`packing-slip-${order.orderNumber}.pdf`, pdfBlob);
+  }
+
+  // Generate the ZIP file
+  const zipBlob = await zip.generateAsync({ type: "blob" });
+
+  // Trigger download
+  saveAs(zipBlob, "packing-slips.zip");
+};
+
+/**
+ * Generate packing slip preview data for printing
+ * Returns PDF URLs with order numbers for unified preview
+ */
+export const generatePackingSlipPreviewData = async (
+  orderIds: number[]
+): Promise<{ url: string; orderNumber: number; blob: Blob }[]> => {
+  try {
+    const orders = (await getOrdersById(orderIds)) ?? [];
+
+    if (orders.length === 0) {
+      throw new Error("No orders found to print");
+    }
+
+    // Generate PDFs for all orders
+    const pdfData: { url: string; orderNumber: number; blob: Blob }[] = [];
+
+    for (const order of orders) {
+      const pdfBlob = await generateReactPdfPackingSlipBlob(order);
+      const url = URL.createObjectURL(pdfBlob);
+      pdfData.push({
+        url,
+        orderNumber: order.orderNumber,
+        blob: pdfBlob,
+      });
+    }
+
+    return pdfData;
+  } catch (error) {
+    console.error("Error generating packing slip previews:", error);
+    throw error;
+  }
+};
+
+/**
+ * Legacy function: Print multiple packing slips with preview
+ * Opens all packing slips in new tabs for preview and printing
+ * @deprecated Use generatePackingSlipPreviewData with a preview modal instead
+ */
+export const printMultiplePackingSlipsWithPreview = async (
+  orderIds: number[]
+): Promise<void> => {
+  try {
+    const orders = (await getOrdersById(orderIds)) ?? [];
+
+    if (orders.length === 0) {
+      throw new Error("No orders found to print");
+    }
+
+    // Generate PDFs for all orders
+    const pdfUrls: string[] = [];
+
+    for (const order of orders) {
+      const pdfBlob = await generateReactPdfPackingSlipBlob(order);
+      const url = URL.createObjectURL(pdfBlob);
+      pdfUrls.push(url);
+    }
+
+    // Open all PDFs in new tabs with a slight delay to prevent popup blocking
+    pdfUrls.forEach((url, index) => {
+      setTimeout(() => {
+        const printWindow = window.open(url, `_blank_${index}`);
+
+        if (printWindow) {
+          // Wait for content to load
+          printWindow.onload = () => {
+            // Focus the window (helps with print dialog)
+            printWindow.focus();
+
+            // Auto-trigger print dialog after a short delay
+            setTimeout(() => {
+              printWindow.print();
+            }, 500);
+          };
+        }
+      }, index * 300); // Stagger the opening to avoid popup blockers
+    });
+
+    // Clean up URLs after some time (10 seconds)
+    setTimeout(() => {
+      pdfUrls.forEach((url) => URL.revokeObjectURL(url));
+    }, 10000);
+
+    return Promise.resolve();
+  } catch (error) {
+    console.error("Error printing packing slips:", error);
     throw error;
   }
 };
