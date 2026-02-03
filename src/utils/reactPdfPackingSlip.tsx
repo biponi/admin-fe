@@ -36,10 +36,21 @@ const styles = StyleSheet.create({
   },
   // Header
   header: {
-    textAlign: "left",
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "flex-start",
     borderBottom: "2pt solid #000000",
     paddingBottom: 4,
     marginBottom: 4,
+  },
+  headerLeft: {
+    flex: 1,
+    textAlign: "left",
+  },
+  headerRight: {
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "flex-end",
   },
   title: {
     fontSize: 14,
@@ -49,6 +60,11 @@ const styles = StyleSheet.create({
   subtitle: {
     fontSize: 8,
     fontWeight: "bold",
+  },
+  barcodeInHeader: {
+    width: 150,
+    height: 33,
+    objectFit: "fill",
   },
   // Order Info
   orderInfo: {
@@ -183,94 +199,143 @@ const styles = StyleSheet.create({
   },
 });
 
-// Helper function to detect Bengali text
-const isBengaliText = (text: string): boolean => {
-  const bengaliRegex = /[\u0980-\u09FF]/;
-  return bengaliRegex.test(text);
-};
+// // Helper function to detect Bengali text
+// const isBengaliText = (text: string): boolean => {
+//   const bengaliRegex = /[\u0980-\u09FF]/;
+//   return bengaliRegex.test(text);
+// };
 
-// Helper function to fetch and convert image to base64
-const fetchImageAsBase64 = async (url: string): Promise<string> => {
+// // Helper function to fetch and convert image to base64
+// const fetchImageAsBase64 = async (url: string): Promise<string> => {
+//   try {
+//     const response = await fetch(url, {
+//       mode: "cors",
+//       credentials: "omit",
+//     });
+
+//     if (!response.ok) {
+//       return url;
+//     }
+
+//     const blob = await response.blob();
+
+//     return new Promise((resolve) => {
+//       const reader = new FileReader();
+
+//       reader.onload = () => {
+//         const result = reader.result as string;
+
+//         if (blob.type === "image/webp") {
+//           const img = new Image();
+
+//           img.onload = () => {
+//             try {
+//               const canvas = document.createElement("canvas");
+//               canvas.width = img.width;
+//               canvas.height = img.height;
+//               const ctx = canvas.getContext("2d");
+
+//               if (!ctx) {
+//                 resolve(result);
+//                 return;
+//               }
+
+//               ctx.drawImage(img, 0, 0);
+//               const pngDataUrl = canvas.toDataURL("image/png");
+//               resolve(pngDataUrl);
+//             } catch {
+//               resolve(result);
+//             }
+//           };
+
+//           img.onerror = () => {
+//             resolve(result);
+//           };
+
+//           img.src = result;
+//         } else {
+//           resolve(result);
+//         }
+//       };
+
+//       reader.onerror = () => {
+//         resolve(url);
+//       };
+
+//       reader.readAsDataURL(blob);
+//     });
+//   } catch {
+//     return url;
+//   }
+// };
+
+// // Helper function to generate QR code as data URL
+// const generateQRCodeDataUrl = async (data: string): Promise<string> => {
+//   const QRCode = require("qrcode");
+//   return await QRCode.toDataURL(data, {
+//     width: 200,
+//     margin: 1,
+//     errorCorrectionLevel: "M",
+//   });
+// };
+
+// Helper function to fetch barcode from API
+const fetchBarcodeFromApi = async (
+  orderNumber: number,
+): Promise<string | undefined> => {
   try {
-    const response = await fetch(url, {
-      mode: "cors",
-      credentials: "omit",
+    const token = localStorage.getItem("token");
+    const apiBase = process.env.REACT_APP_API_URL || "/api/v1";
+
+    const response = await fetch(`${apiBase}/package/barcode/${orderNumber}`, {
+      method: "GET",
+      headers: {
+        "x-access-token": token || "",
+      },
     });
 
-    if (!response.ok) {
-      return url;
-    }
+    if (response.ok) {
+      // Check if response is JSON or image
+      const contentType = response.headers.get("content-type");
 
-    const blob = await response.blob();
-
-    return new Promise((resolve) => {
-      const reader = new FileReader();
-
-      reader.onload = () => {
-        const result = reader.result as string;
-
-        if (blob.type === "image/webp") {
-          const img = new Image();
-
-          img.onload = () => {
-            try {
-              const canvas = document.createElement("canvas");
-              canvas.width = img.width;
-              canvas.height = img.height;
-              const ctx = canvas.getContext("2d");
-
-              if (!ctx) {
-                resolve(result);
-                return;
-              }
-
-              ctx.drawImage(img, 0, 0);
-              const pngDataUrl = canvas.toDataURL("image/png");
-              resolve(pngDataUrl);
-            } catch {
-              resolve(result);
-            }
-          };
-
-          img.onerror = () => {
-            resolve(result);
-          };
-
-          img.src = result;
-        } else {
-          resolve(result);
+      if (contentType && contentType.includes("application/json")) {
+        // JSON response - extract barcode from data.barcode
+        const result = await response.json();
+        if (result.success && result.data?.barcode) {
+          return result.data.barcode;
         }
-      };
-
-      reader.onerror = () => {
-        resolve(url);
-      };
-
-      reader.readAsDataURL(blob);
-    });
-  } catch {
-    return url;
+      } else {
+        // Direct image response - convert to base64
+        const blob = await response.blob();
+        const base64 = await new Promise<string>((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onloadend = () => {
+            const result = reader.result as string;
+            resolve(result); // Keep the full data URL
+          };
+          reader.onerror = reject;
+          reader.readAsDataURL(blob);
+        });
+        return base64;
+      }
+    }
+    return undefined;
+  } catch (error) {
+    console.error("Error fetching barcode:", error);
+    return undefined;
   }
-};
-
-// Helper function to generate QR code as data URL
-const generateQRCodeDataUrl = async (data: string): Promise<string> => {
-  const QRCode = require("qrcode");
-  return await QRCode.toDataURL(data, {
-    width: 200,
-    margin: 1,
-    errorCorrectionLevel: "M",
-  });
 };
 
 interface PackingSlipDocumentProps {
   order: IOrder;
   qrCodeImage?: string;
+  barcodeImage?: string; // Add barcode image prop
 }
 
 const PackingSlipDocument: React.FC<PackingSlipDocumentProps> = ({
   order,
   qrCodeImage,
+  barcodeImage,
 }) => {
   const orderDate = new Date(order.timestamps.createdAt).toLocaleDateString(
     "en-US",
@@ -281,7 +346,7 @@ const PackingSlipDocument: React.FC<PackingSlipDocumentProps> = ({
     },
   );
 
-  const total = order.totalPrice + order.deliveryCharge - (order.discount || 0);
+  //const total = order.totalPrice + order.deliveryCharge - (order.discount || 0);
   const due = order.remaining;
 
   // Format product name with variant
@@ -308,8 +373,15 @@ const PackingSlipDocument: React.FC<PackingSlipDocumentProps> = ({
         style={styles.page}>
         {/* Header */}
         <View style={styles.header}>
-          <Text style={styles.title}>Order #{order.orderNumber}</Text>
-          <Text style={styles.subtitle}>PriorBD • +8801700534317</Text>
+          <View style={styles.headerLeft}>
+            <Text style={styles.title}>Order #{order.orderNumber}</Text>
+            <Text style={styles.subtitle}>PriorBD • +8801700534317</Text>
+          </View>
+          {barcodeImage && (
+            <View style={styles.headerRight}>
+              <PDFImage style={styles.barcodeInHeader} src={barcodeImage} />
+            </View>
+          )}
         </View>
 
         {/* Order Info */}
@@ -427,16 +499,23 @@ const preloadPackingSlipImages = async (order: IOrder) => {
     errorCorrectionLevel: "M",
   });
 
-  return { qrCodeBase64 };
+  // Fetch barcode from API
+  const barcodeBase64 = await fetchBarcodeFromApi(order.orderNumber);
+
+  return { qrCodeBase64, barcodeBase64 };
 };
 
 // Export functions
 export const generateReactPdfPackingSlip = async (order: IOrder) => {
   // Preload images and generate QR code
-  const { qrCodeBase64 } = await preloadPackingSlipImages(order);
+  const { qrCodeBase64, barcodeBase64 } = await preloadPackingSlipImages(order);
 
   const blob = await pdf(
-    <PackingSlipDocument order={order} qrCodeImage={qrCodeBase64} />,
+    <PackingSlipDocument
+      order={order}
+      qrCodeImage={qrCodeBase64}
+      barcodeImage={barcodeBase64}
+    />,
   ).toBlob();
 
   // Cleanup
@@ -458,10 +537,14 @@ export const generateReactPdfPackingSlipBlob = async (
   order: IOrder,
 ): Promise<Blob> => {
   // Preload images and generate QR code
-  const { qrCodeBase64 } = await preloadPackingSlipImages(order);
+  const { qrCodeBase64, barcodeBase64 } = await preloadPackingSlipImages(order);
 
   const blob = await pdf(
-    <PackingSlipDocument order={order} qrCodeImage={qrCodeBase64} />,
+    <PackingSlipDocument
+      order={order}
+      qrCodeImage={qrCodeBase64}
+      barcodeImage={barcodeBase64}
+    />,
   ).toBlob();
 
   // Cleanup after delay

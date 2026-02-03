@@ -192,6 +192,24 @@ const config = {
       `${baseURL}/admin/audit/users/${userId}`,
     topPerformers: () => `${baseURL}/admin/audit/top-performers`,
   },
+  package: {
+    // Package & Shipping Workflow Endpoints
+    create: () => `${baseURL}/package/request`,
+    downloadSlip: (orderNumber: number) =>
+      `${baseURL}/package/slip/${orderNumber}`,
+    markPacked: () => `${baseURL}/package/mark-packed`,
+    requestShipping: () => `${baseURL}/package/request-shipping`,
+    bulkShippingRequest: () => `${baseURL}/package/bulk-shipping-request`,
+    getPackage: (orderNumber: number) => `${baseURL}/package/${orderNumber}`,
+    getByStatus: (status: string) => `${baseURL}/package/status/${status}`,
+    cancel: (orderNumber: number) => `${baseURL}/package/${orderNumber}/cancel`,
+    getActivities: (orderNumber: number) =>
+      `${baseURL}/package/${orderNumber}/activities`,
+    getBarcode: (orderNumber: number) =>
+      `${baseURL}/package/barcode/${orderNumber}`,
+    validateBarcodes: () => `${baseURL}/package/validate-barcodes`,
+    getDashboard: () => `${baseURL}/package/dashboard`,
+  },
 };
 
 export default config;
