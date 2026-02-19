@@ -3,6 +3,7 @@ import {
   File,
   Home,
   Package2,
+  Package,
   ShieldCheck,
   Shirt,
   ShoppingBag,
@@ -13,6 +14,9 @@ import {
   User2,
   UsersRound,
   Zap,
+  CheckCircle2,
+  Megaphone,
+  Ticket,
 } from "lucide-react";
 
 export const navItems = [
@@ -30,6 +34,28 @@ export const navItems = [
     link: "/order",
     active: true,
     id: "order",
+    items: [
+      {
+        title: "Order Confirmation",
+        url: "/order/confirmation",
+      },
+    ],
+    roles: ["admin", "manager", "moderator"],
+  },
+  {
+    icon: <CheckCircle2 className='w-5 h-5' />,
+    title: "Order Confirmation",
+    link: "/order/confirmation",
+    active: true,
+    id: "order-confirmation",
+    roles: ["admin", "manager", "moderator"],
+  },
+  {
+    icon: <Package className='w-5 h-5' />,
+    title: "Packages",
+    link: "/packages",
+    active: true,
+    id: "Package",
     roles: ["admin", "manager", "moderator"],
   },
   {
@@ -122,9 +148,15 @@ export const navItems = [
   {
     icon: <User2 className='w-5 h-5' />,
     title: "Customers",
-    link: "/customers",
-    active: false,
+    link: "/customers/analytics",
+    active: true,
     id: "customer",
+    items: [
+      {
+        title: "Customer Analytics",
+        url: "/customers/analytics",
+      },
+    ],
     roles: ["admin", "manager"],
   },
   {
@@ -134,6 +166,46 @@ export const navItems = [
     active: true,
     id: "audit",
     roles: ["admin"],
+  },
+  {
+    icon: <Megaphone className='w-5 h-5' />,
+    title: "Bulk Communication",
+    link: "/bulk-communication/sms",
+    active: true,
+    id: "bulkcommunication",
+    items: [
+      {
+        title: "Bulk SMS",
+        url: "/bulk-communication/sms",
+      },
+      {
+        title: "Bulk Email",
+        url: "/bulk-communication/email",
+      },
+    ],
+    roles: ["admin", "manager"],
+  },
+  {
+    icon: <Ticket className='w-5 h-5' />,
+    title: "Coupons",
+    link: "/coupons",
+    active: true,
+    id: "coupon",
+    items: [
+      {
+        title: "Global Coupons",
+        url: "/coupons/global",
+      },
+      {
+        title: "Customer Coupons",
+        url: "/coupons/customer",
+      },
+      {
+        title: "Analytics",
+        url: "/coupons/analytics",
+      },
+    ],
+    roles: ["admin", "manager"],
   },
   // {
   //   icon: <MessageCircle className='w-5 h-5' />,

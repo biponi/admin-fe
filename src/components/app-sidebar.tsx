@@ -32,6 +32,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       url: item.link,
       icon: item.icon.type,
       isActive: pathName.includes(item.link),
+      items: item.items,
     }));
 
   // const navSecondary = [
@@ -41,6 +42,8 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   //     icon: LifeBuoy,
   //   },
   // ];
+
+  console.log("Filtered Nav Items:", filteredNavItems);
 
   return (
     <Sidebar variant='inset' {...props}>

@@ -9,6 +9,7 @@ import IOSErrorBoundary from "./components/IOSErrorBoundary";
 import { AuthGuard } from "./main/components/auth/AuthGuard";
 import { AppRoutes } from "./main/routes/AppRoutes";
 import { LoadingScreen } from "./main/components/auth/LoadingScreen";
+import { GlobalOrderModal } from "./components/order/GlobalOrderModal";
 
 const App = () => {
   return (
@@ -21,6 +22,7 @@ const App = () => {
                 <AppRoutes />
               </Suspense>
             </AuthGuard>
+            <GlobalOrderModal />
             <Toaster />
             <Toaster2 position='top-center' richColors />
           </NotificationProvider>

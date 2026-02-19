@@ -27,6 +27,34 @@ export interface PackageCourier {
   invoice: string;
 }
 
+// Order Summary (embedded in package response)
+export interface OrderSummary {
+  id: string;
+  orderNumber: number;
+  status: string;
+  totalPrice: number;
+  paid: number;
+  remaining: number;
+  quantity: number;
+  notes?: string;
+  customer: {
+    name: string;
+    phoneNumber: string;
+    email?: string;
+    address?: string;
+  };
+  shipping: {
+    address: string;
+    division?: string;
+    district?: string;
+    postalCode?: string;
+  };
+  timestamps: {
+    createdAt: string;
+    updatedAt: string;
+  };
+}
+
 // Package
 export interface Package {
   _id: string;
@@ -43,6 +71,7 @@ export interface Package {
     updatedAt: string;
   };
   ageInDays?: number;
+  order?: OrderSummary; // NEW: Order information embedded in response
 }
 
 // Activity Log
@@ -149,7 +178,4 @@ export interface BarcodeResponse {
 // Packaging Slip Response
 export interface PackagingSlipResponse {
   package: Package;
-  barcode: string; // base64 encoded PNG
-  slipUrl: string;
-  downloadUrl: string;
 }

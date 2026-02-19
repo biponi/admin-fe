@@ -122,11 +122,11 @@ export const OrderListV2: React.FC = () => {
 
   // Local state
   const [activeTab, setActiveTab] = useState<OrderStatus | "all" | "return">(
-    "all"
+    "all",
   );
   const [courierSelectorOpen, setCourierSelectorOpen] = useState(false);
   const [pendingBulkAction, setPendingBulkAction] = useState<"shipped" | null>(
-    null
+    null,
   );
   const [selectedOrder, setSelectedOrder] = useState<IOrder | null>(null);
   const [orderDetailsOpen, setOrderDetailsOpen] = useState(false);
@@ -157,14 +157,14 @@ export const OrderListV2: React.FC = () => {
   >(new Map());
 
   // Check if user has seen onboarding
-  useEffect(() => {
-    const hasSeenOnboarding = localStorage.getItem("orderV2OnboardingComplete");
-    if (!hasSeenOnboarding) {
-      // Show onboarding after a short delay
-      const timer = setTimeout(() => setShowOnboarding(true), 1000);
-      return () => clearTimeout(timer);
-    }
-  }, []);
+  // useEffect(() => {
+  //   const hasSeenOnboarding = localStorage.getItem("orderV2OnboardingComplete");
+  //   if (!hasSeenOnboarding) {
+  //     // Show onboarding after a short delay
+  //     const timer = setTimeout(() => setShowOnboarding(true), 1000);
+  //     return () => clearTimeout(timer);
+  //   }
+  // }, []);
 
   // Handle onboarding completion
   const handleOnboardingComplete = () => {
@@ -270,7 +270,7 @@ export const OrderListV2: React.FC = () => {
       description: "Focus search",
       action: () => {
         const searchInput = document.querySelector(
-          'input[type="text"]'
+          'input[type="text"]',
         ) as HTMLInputElement;
         searchInput?.focus();
       },
@@ -390,14 +390,14 @@ export const OrderListV2: React.FC = () => {
     } else if (value === "return") {
       setFilters({ isReturn: true });
     } else {
-      setFilters({ status: value as OrderStatus });
+      setFilters({ isReturn: false, status: value as OrderStatus });
     }
   };
 
   // Bulk actions handlers
   const performBulkAction = async (
     actionType: string,
-    courierProvider?: CourierProvider
+    courierProvider?: CourierProvider,
   ) => {
     // Use selectedOrdersData Map to get order IDs
     const selectedOrderIds = Array.from(selectedOrdersData.values())
@@ -417,7 +417,7 @@ export const OrderListV2: React.FC = () => {
       const response = await orderBulkAction(
         selectedOrderIds,
         actionType,
-        courierProvider
+        courierProvider,
       );
 
       if (response.success) {
@@ -671,7 +671,8 @@ export const OrderListV2: React.FC = () => {
         toast({
           variant: "destructive",
           title: "No orders selected",
-          description: "Please select at least one order to print packing slips.",
+          description:
+            "Please select at least one order to print packing slips.",
         });
         setIsGeneratingInvoices(false);
         return;
@@ -685,7 +686,8 @@ export const OrderListV2: React.FC = () => {
       });
 
       // Generate preview data
-      const previewData = await generatePackingSlipPreviewData(selectedOrderIds);
+      const previewData =
+        await generatePackingSlipPreviewData(selectedOrderIds);
 
       setPackingSlipPreviewData(previewData);
       setPackingSlipPreviewOpen(true);
@@ -728,7 +730,8 @@ export const OrderListV2: React.FC = () => {
         toast({
           variant: "destructive",
           title: "No orders selected",
-          description: "Please select at least one order to download packing slips.",
+          description:
+            "Please select at least one order to download packing slips.",
         });
         return;
       }
@@ -881,7 +884,7 @@ export const OrderListV2: React.FC = () => {
                         refreshOrders();
                         setEditDialogOpen(false);
                       }
-                    }
+                    },
                   );
                 }
               }}
@@ -1008,7 +1011,7 @@ export const OrderListV2: React.FC = () => {
 
       {/* Order Table */}
       <div className='flex-1 overflow-auto px-4 sm:px-6 lg:px-8 py-6'>
-        {isLoading && orders.length === 0 ? (
+        {isLoading ? (
           <div className='flex items-center justify-center h-64'>
             <div className='text-center'>
               <Loader2 className='h-8 w-8 animate-spin text-blue-600 mx-auto mb-4' />
@@ -1230,7 +1233,7 @@ export const OrderListV2: React.FC = () => {
                             "w-3 h-3 rounded-full",
                             index === 0
                               ? "bg-blue-500 ring-4 ring-blue-100"
-                              : "bg-gray-300"
+                              : "bg-gray-300",
                           )}
                         />
                         {index < selectedOrder.deliveryTimeline.length - 1 && (
@@ -1242,7 +1245,7 @@ export const OrderListV2: React.FC = () => {
                           <p
                             className={cn(
                               "font-semibold text-sm",
-                              index === 0 ? "text-blue-600" : "text-gray-900"
+                              index === 0 ? "text-blue-600" : "text-gray-900",
                             )}>
                             {timeline.status}
                           </p>
@@ -1396,7 +1399,7 @@ export const OrderListV2: React.FC = () => {
                 pendingBulkActionType === "cancel" &&
                   "bg-red-600 hover:bg-red-700",
                 pendingBulkActionType === "invoice" &&
-                  "bg-blue-600 hover:bg-blue-700"
+                  "bg-blue-600 hover:bg-blue-700",
               )}>
               {isGeneratingInvoices && pendingBulkActionType === "invoice" && (
                 <Loader2 className='h-4 w-4 mr-2 animate-spin' />

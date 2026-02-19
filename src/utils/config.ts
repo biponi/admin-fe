@@ -43,12 +43,22 @@ const config = {
         ? `${baseURL}/product/adjustments/${productId}`
         : `${baseURL}/product/adjustments`,
     getAdjustmentStats: () => `${baseURL}/product/adjustment-stats`,
+
+    // Product Analytics Endpoints
+    getProductOrderHistory: (id: string) =>
+      `${baseURL}/product/analytics/order-history/${id}`,
+    getProductPurchaseHistory: (id: string) =>
+      `${baseURL}/product/analytics/purchase-history/${id}`,
+    getProductAdjustmentHistory: (id: string) =>
+      `${baseURL}/product/analytics/adjustment-history/${id}`,
+    bulkCustomerAction: () => `${baseURL}/product/analytics/bulk-customer-action`,
   },
   order: {
     createOrder: () => `${baseURL}/order/prior/create`,
     updateOrderProduct: () => `${baseURL}/order/prior/update/product`,
     getOrderAnalytics: () => `${baseURL}/order/prior/analytics`,
     getOrders: () => `${baseURL}/order/prior/all`,
+    getOrderDetails: (id: string) => `${baseURL}/order/prior/details/${id}`,
     getOrderProducts: (id: string) => `${baseURL}/order/prior/${id}/products`,
     editOrder: () => `${baseURL}/order/prior/edit`,
     updateOrderStatus: () => `${baseURL}/order/prior/updateStatus`,
@@ -77,6 +87,14 @@ const config = {
     getAllAudits: () => `${baseURL}/order/audit`,
     getUserAudits: (userId: string) => `${baseURL}/order/audit/user/${userId}`,
     getAuditStats: () => `${baseURL}/order/audit/stats`,
+
+    // Order Confirmation Panel Endpoints
+    getProcessingOrders: () => `${baseURL}/order/prior/processing`,
+    confirmOrder: (orderId: string) =>
+      `${baseURL}/order/prior/${orderId}/confirm`,
+    cancelOrder: (orderId: string) =>
+      `${baseURL}/order/prior/${orderId}/cancel`,
+    getProcessingOrderCount: () => `${baseURL}/order/prior/processing/count`,
   },
   transaction: {
     create: () => `${baseURL}/transection/create`,
@@ -198,6 +216,8 @@ const config = {
     downloadSlip: (orderNumber: number) =>
       `${baseURL}/package/slip/${orderNumber}`,
     markPacked: () => `${baseURL}/package/mark-packed`,
+    updateStatus: (orderNumber: number) =>
+      `${baseURL}/package/${orderNumber}/status`,
     requestShipping: () => `${baseURL}/package/request-shipping`,
     bulkShippingRequest: () => `${baseURL}/package/bulk-shipping-request`,
     getPackage: (orderNumber: number) => `${baseURL}/package/${orderNumber}`,
@@ -209,6 +229,30 @@ const config = {
       `${baseURL}/package/barcode/${orderNumber}`,
     validateBarcodes: () => `${baseURL}/package/validate-barcodes`,
     getDashboard: () => `${baseURL}/package/dashboard`,
+  },
+  coupon: {
+    // Global Coupon Endpoints
+    createGlobal: () => `${baseURL}/coupons/global`,
+    getAllGlobal: () => `${baseURL}/coupons/global`,
+    getGlobalByCode: (code: string) => `${baseURL}/coupons/global/${code}`,
+    updateGlobal: (code: string) => `${baseURL}/coupons/global/${code}`,
+    disableGlobal: (code: string) => `${baseURL}/coupons/global/${code}/disable`,
+    deleteGlobal: (code: string) => `${baseURL}/coupons/global/${code}`,
+    getGlobalStats: () => `${baseURL}/coupons/global/stats`,
+
+    // Customer-Specific Coupon Endpoints
+    assignToCustomer: () => `${baseURL}/coupons/customer/assign`,
+    bulkAssign: () => `${baseURL}/coupons/customer/bulk-assign`,
+    getCustomerCoupons: (phone: string) => `${baseURL}/coupons/customer/${phone}`,
+    getCustomerHistory: (phone: string) => `${baseURL}/coupons/customer/${phone}/history`,
+    getCustomerCouponById: (id: string) => `${baseURL}/coupons/customer/details/${id}`,
+    updateCustomerCoupon: (id: string) => `${baseURL}/coupons/customer/${id}`,
+    disableCustomerCoupon: (id: string) => `${baseURL}/coupons/customer/${id}/disable`,
+    deleteCustomerCoupon: (id: string) => `${baseURL}/coupons/customer/${id}`,
+
+    // Analytics Endpoints
+    getSegmentSummary: () => `${baseURL}/coupons/analytics/segments`,
+    getUsageHistory: () => `${baseURL}/coupons/analytics/usage`,
   },
 };
 

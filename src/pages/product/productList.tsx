@@ -256,7 +256,7 @@ const ProductVariationDrawer: React.FC<{
                       </div>
                       <Badge
                         className={`${getStockStatusColor(
-                          variation.quantity
+                          variation.quantity,
                         )} text-xs`}>
                         {getStockStatusText(variation.quantity)}
                       </Badge>
@@ -384,6 +384,10 @@ const ProductList: React.FC<Props> = ({ handleEditProduct }) => {
   const [selectedProductForVariations, setSelectedProductForVariations] =
     useState<IProduct | null>(null);
 
+  const handleViewProductDetails = (id: string) => {
+    navigate(`/products/${id}`);
+  };
+
   const getProductSummaryDetails = async () => {
     const response = await getProductSummary();
     if (response?.success) {
@@ -391,7 +395,7 @@ const ProductList: React.FC<Props> = ({ handleEditProduct }) => {
     } else {
       errorToast(
         response?.error ?? "Something went wrong. Please try again",
-        "top-center"
+        "top-center",
       );
       setSummary(null);
     }
@@ -489,7 +493,7 @@ const ProductList: React.FC<Props> = ({ handleEditProduct }) => {
     return (
       <div className='grid grid-cols-8 gap-8  w-full'>
         {products.map((product: IProduct, index: number) =>
-          renderMobileProductView(product, index)
+          renderMobileProductView(product, index),
         )}
       </div>
     );
@@ -604,7 +608,7 @@ const ProductList: React.FC<Props> = ({ handleEditProduct }) => {
                                       {formatNumber(
                                         res[
                                           key as keyof CategoryStockSummary
-                                        ] as number
+                                        ] as number,
                                       )}
                                     </span>
                                   </div>
@@ -629,7 +633,7 @@ const ProductList: React.FC<Props> = ({ handleEditProduct }) => {
                                     % of total
                                   </div>
                                 </div>
-                              )
+                              ),
                             )
                           )}
                         </div>
@@ -663,7 +667,7 @@ const ProductList: React.FC<Props> = ({ handleEditProduct }) => {
                 iconColor,
                 textColor,
               },
-              cardIndex
+              cardIndex,
             ) => (
               <Card
                 key={cardIndex}
@@ -687,7 +691,7 @@ const ProductList: React.FC<Props> = ({ handleEditProduct }) => {
                   </div>
                 </CardContent>
               </Card>
-            )
+            ),
           )}
         </div>
 
@@ -705,7 +709,7 @@ const ProductList: React.FC<Props> = ({ handleEditProduct }) => {
                 iconColor,
                 textColor,
               },
-              cardIndex
+              cardIndex,
             ) => (
               <Card
                 key={cardIndex}
@@ -729,7 +733,7 @@ const ProductList: React.FC<Props> = ({ handleEditProduct }) => {
                   </div>
                 </CardContent>
               </Card>
-            )
+            ),
           )}
         </div>
 
@@ -743,7 +747,7 @@ const ProductList: React.FC<Props> = ({ handleEditProduct }) => {
       const activeProducts = products.filter((p: IProduct) => p.active);
       const inStockProducts = products.filter((p: IProduct) => p.quantity > 0);
       const outOfStockProducts = products.filter(
-        (p: IProduct) => p.quantity <= 0
+        (p: IProduct) => p.quantity <= 0,
       );
 
       return {
@@ -930,7 +934,7 @@ const ProductList: React.FC<Props> = ({ handleEditProduct }) => {
       const activeProducts = products.filter((p: IProduct) => p.active);
       const inStockProducts = products.filter((p: IProduct) => p.quantity > 0);
       const outOfStockProducts = products.filter(
-        (p: IProduct) => p.quantity <= 0
+        (p: IProduct) => p.quantity <= 0,
       );
 
       return {
@@ -1195,7 +1199,7 @@ const ProductList: React.FC<Props> = ({ handleEditProduct }) => {
                       <div className='md:hidden'>
                         <div className='grid grid-cols-2 gap-3 sm:grid-cols-3 max-h-[500px] overflow-y-auto'>
                           {products.map((product: IProduct, index: number) =>
-                            renderMobileProductView(product, index)
+                            renderMobileProductView(product, index),
                           )}
                         </div>
                       </div>
@@ -1280,6 +1284,9 @@ const ProductList: React.FC<Props> = ({ handleEditProduct }) => {
                                       deleteExistingProduct={deleteProductData}
                                       updatedAt={product?.timestamps?.updatedAt}
                                       refreshProductList={refreshList}
+                                      handleViewProductDetails={
+                                        handleViewProductDetails
+                                      }
                                     />
                                   ))}
                                 </TableBody>
@@ -1312,7 +1319,7 @@ const ProductList: React.FC<Props> = ({ handleEditProduct }) => {
                         {products
                           .filter((p: IProduct) => p.active)
                           .map((product: IProduct, index: number) =>
-                            renderMobileProductView(product, index)
+                            renderMobileProductView(product, index),
                           )}
                       </div>
 
@@ -1399,6 +1406,9 @@ const ProductList: React.FC<Props> = ({ handleEditProduct }) => {
                                           product?.timestamps?.updatedAt
                                         }
                                         refreshProductList={refreshList}
+                                        handleViewProductDetails={
+                                          handleViewProductDetails
+                                        }
                                       />
                                     ))}
                                 </TableBody>
@@ -1430,7 +1440,7 @@ const ProductList: React.FC<Props> = ({ handleEditProduct }) => {
                         {products
                           .filter((p: IProduct) => !p.active)
                           .map((product: IProduct, index: number) =>
-                            renderMobileProductView(product, index)
+                            renderMobileProductView(product, index),
                           )}
                       </div>
                       {/* Desktop View */}
@@ -1516,6 +1526,9 @@ const ProductList: React.FC<Props> = ({ handleEditProduct }) => {
                                         updatedAt={
                                           product?.timestamps?.updatedAt
                                         }
+                                        handleViewProductDetails={
+                                          handleViewProductDetails
+                                        }
                                       />
                                     ))}
                                 </TableBody>
@@ -1548,7 +1561,7 @@ const ProductList: React.FC<Props> = ({ handleEditProduct }) => {
                         {products
                           .filter((p: IProduct) => p.quantity > 0)
                           .map((product: IProduct, index: number) =>
-                            renderMobileProductView(product, index)
+                            renderMobileProductView(product, index),
                           )}
                       </div>
                       {/* Desktop View */}
@@ -1634,6 +1647,9 @@ const ProductList: React.FC<Props> = ({ handleEditProduct }) => {
                                         updatedAt={
                                           product?.timestamps?.updatedAt
                                         }
+                                        handleViewProductDetails={
+                                          handleViewProductDetails
+                                        }
                                       />
                                     ))}
                                 </TableBody>
@@ -1666,7 +1682,7 @@ const ProductList: React.FC<Props> = ({ handleEditProduct }) => {
                         {products
                           .filter((p: IProduct) => p.quantity <= 0)
                           .map((product: IProduct, index: number) =>
-                            renderMobileProductView(product, index)
+                            renderMobileProductView(product, index),
                           )}
                       </div>
                       {/* Desktop View */}
@@ -1752,6 +1768,9 @@ const ProductList: React.FC<Props> = ({ handleEditProduct }) => {
                                           product?.timestamps?.updatedAt
                                         }
                                         refreshProductList={refreshList}
+                                        handleViewProductDetails={
+                                          handleViewProductDetails
+                                        }
                                       />
                                     ))}
                                 </TableBody>

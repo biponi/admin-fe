@@ -57,6 +57,7 @@ export type ProductSearchResponse = {
   discount: number | string;
   quantity: number;
   maxQuantity: number;
+  updatedPrice: number;
   image?: string;
   variant: {
     id: string;
@@ -165,6 +166,7 @@ export interface IOrderProduct {
   title?: string;
   variantId?: string;
   variation?: IProductVariation;
+  variant?: { id: string; size?: string; color?: string };
 }
 
 export interface ITimestamps {
@@ -353,8 +355,9 @@ export interface IApiResponse<T> {
 }
 
 export interface IOrderResponse extends IApiResponse<IOrder> {}
-export interface IOrdersResponse
-  extends IApiResponse<IPaginatedResponse<IOrder>> {}
+export interface IOrdersResponse extends IApiResponse<
+  IPaginatedResponse<IOrder>
+> {}
 export interface IOrderSummaryResponse extends IApiResponse<IOrderSummary> {}
 export interface IOrderStatsResponse extends IApiResponse<IOrderStats> {}
 
@@ -368,13 +371,13 @@ export const isValidPaymentType = (type: string): type is PaymentType => {
 };
 
 export const isValidCourierProvider = (
-  provider: string
+  provider: string,
 ): provider is CourierProvider => {
   return Object.values(CourierProvider).includes(provider as CourierProvider);
 };
 
 export const isValidDeliveryStatus = (
-  status: string
+  status: string,
 ): status is DeliveryStatus => {
   return Object.values(DeliveryStatus).includes(status as DeliveryStatus);
 };
