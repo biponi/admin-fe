@@ -1,6 +1,5 @@
 import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
 import { ScrollArea } from "../ui/scroll-area";
-import { Badge } from "../ui/badge";
 import { formatDistanceToNow } from "date-fns";
 import type { PackageActivity } from "../../pages/package/interface";
 import { PackageStatusBadge } from "./PackageStatusBadge";

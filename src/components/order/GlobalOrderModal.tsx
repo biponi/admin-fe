@@ -10,7 +10,6 @@ import {
   Drawer,
   DrawerContent,
   DrawerHeader,
-  DrawerTitle,
 } from '../ui/drawer';
 import { Button } from '../ui/button';
 import { Tabs, TabsContent as UITabsContent, TabsList, TabsTrigger } from '../ui/tabs';

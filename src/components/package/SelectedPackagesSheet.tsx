@@ -3,7 +3,7 @@ import { ScrollArea } from "../ui/scroll-area";
 import { Badge } from "../ui/badge";
 import { PackageStatusBadge } from "./PackageStatusBadge";
 import type { Package } from "../../pages/package/interface";
-import { FileText, User, MapPin, DollarSign } from "lucide-react";
+import { User, MapPin, DollarSign } from "lucide-react";
 
 interface SelectedPackagesSheetProps {
   packages: Package[];

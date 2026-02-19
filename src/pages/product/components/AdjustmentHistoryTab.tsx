@@ -73,7 +73,7 @@ const AdjustmentHistoryTab = ({ productId }: AdjustmentHistoryTabProps) => {
 
   useEffect(() => {
     fetchAdjustmentHistory();
-  }, []);
+  }, [fetchAdjustmentHistory]);
 
   const handleFilter = () => {
     fetchAdjustmentHistory({

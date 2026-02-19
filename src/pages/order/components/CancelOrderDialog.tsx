@@ -21,7 +21,6 @@ import { AlertTriangle } from "lucide-react";
 import { IOrder } from "../interface";
 import {
   cancellationReasons,
-  CancellationReason,
 } from "../hooks/useOrderConfirmation";
 
 interface CancelOrderDialogProps {

@@ -42,6 +42,7 @@ export const useOrderConfirmation = () => {
   // Fetch processing orders on page change
   useEffect(() => {
     fetchProcessingOrders();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentPage, limit]);
 
   // Fetch processing order count

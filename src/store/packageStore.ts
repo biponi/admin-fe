@@ -206,7 +206,7 @@ export const usePackageStore = create<PackageStore>((set, get) => ({
 
   // Refresh packages
   refreshPackages: async () => {
-    const { currentPage, pageSize, searchQuery } = get();
+    const { currentPage, searchQuery } = get();
     if (searchQuery) {
       await get().searchPackages(searchQuery, currentPage);
     } else {

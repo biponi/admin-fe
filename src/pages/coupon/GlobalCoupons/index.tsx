@@ -18,7 +18,12 @@ import {
   TableRow,
 } from "../../../components/ui/table";
 import { Badge } from "../../../components/ui/badge";
-import { Card, CardContent, CardHeader, CardTitle } from "../../../components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from "../../../components/ui/card";
 import { Plus, Search, Edit, Trash2, Power } from "lucide-react";
 import Swal from "sweetalert2";
 import * as couponAPI from "../../../api/coupon";
@@ -36,6 +41,7 @@ export default function GlobalCouponsPage() {
 
   useEffect(() => {
     fetchCoupons();
+    //eslint-disable-next-line react-hooks/exhaustive-deps
   }, [filters]);
 
   const fetchCoupons = async () => {
@@ -43,7 +49,8 @@ export default function GlobalCouponsPage() {
     try {
       const params: any = {};
       if (filters.status !== "all") params.status = filters.status;
-      if (filters.discountType !== "all") params.discountType = filters.discountType;
+      if (filters.discountType !== "all")
+        params.discountType = filters.discountType;
 
       const response = await couponAPI.getAllGlobalCoupons(params);
       if (response.success && response.data) {
@@ -153,26 +160,31 @@ export default function GlobalCouponsPage() {
     }
   };
 
-  const filteredCoupons = coupons.filter((coupon) =>
-    coupon.code.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    coupon.name.toLowerCase().includes(searchQuery.toLowerCase())
+  const filteredCoupons = coupons.filter(
+    (coupon) =>
+      coupon.code.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      coupon.name.toLowerCase().includes(searchQuery.toLowerCase()),
   );
 
   if (loading) {
-    return <div className="flex justify-center items-center h-64">Loading...</div>;
+    return (
+      <div className='flex justify-center items-center h-64'>Loading...</div>
+    );
   }
 
   return (
-    <div className="space-y-6">
-      <div className="flex justify-between items-center">
+    <div className='space-y-6'>
+      <div className='flex justify-between items-center'>
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Global Coupons</h1>
-          <p className="text-muted-foreground mt-2">
+          <h1 className='text-3xl font-bold tracking-tight'>Global Coupons</h1>
+          <p className='text-muted-foreground mt-2'>
             Manage public coupons available to all customers
           </p>
         </div>
-        <Button onClick={() => navigate("/coupons/global/create")} className="gap-2">
-          <Plus className="w-4 h-4" />
+        <Button
+          onClick={() => navigate("/coupons/global/create")}
+          className='gap-2'>
+          <Plus className='w-4 h-4' />
           Create Coupon
         </Button>
       </div>
@@ -182,56 +194,56 @@ export default function GlobalCouponsPage() {
           <CardTitle>Filters</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="flex gap-4">
-            <div className="flex-1">
-              <label className="text-sm font-medium mb-2 block">Status</label>
+          <div className='flex gap-4'>
+            <div className='flex-1'>
+              <label className='text-sm font-medium mb-2 block'>Status</label>
               <Select
                 value={filters.status}
                 onValueChange={(value) =>
                   setFilters({ ...filters, status: value as any })
-                }
-              >
+                }>
                 <SelectTrigger>
-                  <SelectValue placeholder="Select status" />
+                  <SelectValue placeholder='Select status' />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">All Statuses</SelectItem>
-                  <SelectItem value="active">Active</SelectItem>
-                  <SelectItem value="expired">Expired</SelectItem>
-                  <SelectItem value="disabled">Disabled</SelectItem>
-                  <SelectItem value="scheduled">Scheduled</SelectItem>
+                  <SelectItem value='all'>All Statuses</SelectItem>
+                  <SelectItem value='active'>Active</SelectItem>
+                  <SelectItem value='expired'>Expired</SelectItem>
+                  <SelectItem value='disabled'>Disabled</SelectItem>
+                  <SelectItem value='scheduled'>Scheduled</SelectItem>
                 </SelectContent>
               </Select>
             </div>
 
-            <div className="flex-1">
-              <label className="text-sm font-medium mb-2 block">Discount Type</label>
+            <div className='flex-1'>
+              <label className='text-sm font-medium mb-2 block'>
+                Discount Type
+              </label>
               <Select
                 value={filters.discountType}
                 onValueChange={(value) =>
                   setFilters({ ...filters, discountType: value as any })
-                }
-              >
+                }>
                 <SelectTrigger>
-                  <SelectValue placeholder="Select type" />
+                  <SelectValue placeholder='Select type' />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">All Types</SelectItem>
-                  <SelectItem value="fixed">Fixed Amount</SelectItem>
-                  <SelectItem value="percentage">Percentage</SelectItem>
+                  <SelectItem value='all'>All Types</SelectItem>
+                  <SelectItem value='fixed'>Fixed Amount</SelectItem>
+                  <SelectItem value='percentage'>Percentage</SelectItem>
                 </SelectContent>
               </Select>
             </div>
 
-            <div className="flex-1">
-              <label className="text-sm font-medium mb-2 block">Search</label>
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+            <div className='flex-1'>
+              <label className='text-sm font-medium mb-2 block'>Search</label>
+              <div className='relative'>
+                <Search className='absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground' />
                 <Input
-                  placeholder="Search by code or name..."
+                  placeholder='Search by code or name...'
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="pl-10"
+                  className='pl-10'
                 />
               </div>
             </div>
@@ -240,7 +252,7 @@ export default function GlobalCouponsPage() {
       </Card>
 
       <Card>
-        <CardContent className="p-0">
+        <CardContent className='p-0'>
           <Table>
             <TableHeader>
               <TableRow>
@@ -251,25 +263,29 @@ export default function GlobalCouponsPage() {
                 <TableHead>Usage</TableHead>
                 <TableHead>Status</TableHead>
                 <TableHead>Auto-Apply</TableHead>
-                <TableHead className="text-right">Actions</TableHead>
+                <TableHead className='text-right'>Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {filteredCoupons.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={8} className="text-center py-8 text-muted-foreground">
+                  <TableCell
+                    colSpan={8}
+                    className='text-center py-8 text-muted-foreground'>
                     No coupons found. Create your first coupon to get started.
                   </TableCell>
                 </TableRow>
               ) : (
                 filteredCoupons.map((coupon) => (
                   <TableRow key={coupon._id}>
-                    <TableCell className="font-mono font-medium">{coupon.code}</TableCell>
+                    <TableCell className='font-mono font-medium'>
+                      {coupon.code}
+                    </TableCell>
                     <TableCell>
                       <div>
-                        <div className="font-medium">{coupon.name}</div>
+                        <div className='font-medium'>{coupon.name}</div>
                         {coupon.description && (
-                          <div className="text-sm text-muted-foreground truncate max-w-xs">
+                          <div className='text-sm text-muted-foreground truncate max-w-xs'>
                             {coupon.description}
                           </div>
                         )}
@@ -277,28 +293,34 @@ export default function GlobalCouponsPage() {
                     </TableCell>
                     <TableCell>
                       <div>
-                        <div className="font-medium">
+                        <div className='font-medium'>
                           {coupon.discountType === "fixed"
                             ? `${coupon.discountValue} BDT`
                             : `${coupon.discountValue}%`}
                         </div>
                         {coupon.maxDiscountAmount && (
-                          <div className="text-xs text-muted-foreground">
+                          <div className='text-xs text-muted-foreground'>
                             Max: {coupon.maxDiscountAmount} BDT
                           </div>
                         )}
                       </div>
                     </TableCell>
                     <TableCell>
-                      <div className="text-sm">
-                        <div>From: {new Date(coupon.validFrom).toLocaleDateString()}</div>
-                        <div>Until: {new Date(coupon.validUntil).toLocaleDateString()}</div>
+                      <div className='text-sm'>
+                        <div>
+                          From:{" "}
+                          {new Date(coupon.validFrom).toLocaleDateString()}
+                        </div>
+                        <div>
+                          Until:{" "}
+                          {new Date(coupon.validUntil).toLocaleDateString()}
+                        </div>
                       </div>
                     </TableCell>
                     <TableCell>
-                      <div className="text-sm">
+                      <div className='text-sm'>
                         <div>{coupon.usedCount} used</div>
-                        <div className="text-muted-foreground">
+                        <div className='text-muted-foreground'>
                           {coupon.totalUsageLimit
                             ? `${coupon.totalUsageLimit} total`
                             : "Unlimited"}
@@ -306,43 +328,48 @@ export default function GlobalCouponsPage() {
                       </div>
                     </TableCell>
                     <TableCell>
-                      <Badge className={getStatusColor(coupon.status)} variant="outline">
+                      <Badge
+                        className={getStatusColor(coupon.status)}
+                        variant='outline'>
                         {coupon.status}
                       </Badge>
                     </TableCell>
                     <TableCell>
                       {coupon.autoApply ? (
-                        <Badge variant="outline" className="bg-green-50 text-green-700 border-green-300">
+                        <Badge
+                          variant='outline'
+                          className='bg-green-50 text-green-700 border-green-300'>
                           Priority: {coupon.priority}
                         </Badge>
                       ) : (
-                        <span className="text-muted-foreground text-sm">No</span>
+                        <span className='text-muted-foreground text-sm'>
+                          No
+                        </span>
                       )}
                     </TableCell>
-                    <TableCell className="text-right">
-                      <div className="flex justify-end gap-2">
+                    <TableCell className='text-right'>
+                      <div className='flex justify-end gap-2'>
                         <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => navigate(`/coupons/global/edit/${coupon.code}`)}
-                        >
-                          <Edit className="w-4 h-4" />
+                          variant='ghost'
+                          size='sm'
+                          onClick={() =>
+                            navigate(`/coupons/global/edit/${coupon.code}`)
+                          }>
+                          <Edit className='w-4 h-4' />
                         </Button>
                         {coupon.status === "active" && (
                           <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => handleDisable(coupon.code)}
-                          >
-                            <Power className="w-4 h-4" />
+                            variant='ghost'
+                            size='sm'
+                            onClick={() => handleDisable(coupon.code)}>
+                            <Power className='w-4 h-4' />
                           </Button>
                         )}
                         <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => handleDelete(coupon.code)}
-                        >
-                          <Trash2 className="w-4 h-4 text-red-600" />
+                          variant='ghost'
+                          size='sm'
+                          onClick={() => handleDelete(coupon.code)}>
+                          <Trash2 className='w-4 h-4 text-red-600' />
                         </Button>
                       </div>
                     </TableCell>

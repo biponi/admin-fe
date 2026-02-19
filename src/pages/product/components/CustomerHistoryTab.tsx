@@ -32,7 +32,6 @@ import {
   Phone,
   MapPin,
   User,
-  ShoppingBag,
   CheckCircle2,
   X,
 } from "lucide-react";

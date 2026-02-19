@@ -66,6 +66,7 @@ const OrderHistoryTab = ({ productId }: OrderHistoryTabProps) => {
   const { orderHistory, loading, fetchOrderHistory, orderParams } =
     useProductAnalytics(productId);
 
+  //eslint-disable-next-line
   const [selectedOrder, setSelectedOrder] = useState<any>(null);
   const [showDetails, setShowDetails] = useState(false);
   const [startDate, setStartDate] = useState("");

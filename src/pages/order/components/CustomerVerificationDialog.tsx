@@ -11,7 +11,6 @@ import { Button } from "../../../components/ui/button";
 import { Checkbox } from "../../../components/ui/checkbox";
 import { Label } from "../../../components/ui/label";
 import { Textarea } from "../../../components/ui/textarea";
-import { Badge } from "../../../components/ui/badge";
 import { Separator } from "../../../components/ui/separator";
 import { Phone, MapPin, Package, AlertCircle } from "lucide-react";
 import { IOrder } from "../interface";
@@ -76,12 +75,6 @@ export const CustomerVerificationDialog: React.FC<
   if (!order) return null;
 
   const fraudRisk = order.fraudDetection;
-  const riskColor =
-    fraudRisk?.riskLevel === "red"
-      ? "text-red-600 bg-red-50"
-      : fraudRisk?.riskLevel === "yellow"
-        ? "text-yellow-600 bg-yellow-50"
-        : "text-green-600 bg-green-50";
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
