@@ -29,13 +29,24 @@ const handleResponse = <T>(response: any): ApiResponse<T> => {
 
 /**
  * Get package by order number
+ * Response structure: { package: Package, order: OrderSummary }
  */
 export const getPackage = async (
   orderNumber: number,
 ): Promise<ApiResponse<Package>> => {
   try {
     const response = await axios.get<any>(config.package.getPackage(orderNumber));
-    return handleResponse<Package>(response);
+    if (response.status === 200 && response.data?.success) {
+      // Merge package and order data
+      const { package: pkg, order } = response.data.data;
+      const mergedPackage = { ...pkg, order };
+      return { success: true, data: mergedPackage };
+    } else {
+      return {
+        success: false,
+        error: response.data?.error || "Operation failed",
+      };
+    }
   } catch (error: any) {
     console.error("Error fetching package:", error.message);
     return handleApiError(error);
@@ -44,6 +55,8 @@ export const getPackage = async (
 
 /**
  * Get packages by status
+ * Response structure: { packages: Package[], pagination: {...} }
+ * Each package now includes embedded order data
  */
 export const getPackagesByStatus = async (
   status: PackageStatus,
@@ -54,7 +67,15 @@ export const getPackagesByStatus = async (
     const response = await axios.get<any>(config.package.getByStatus(status), {
       params: { page, limit },
     });
-    return handleResponse<PaginatedResponse<Package>>(response);
+    if (response.status === 200 && response.data?.success) {
+      // Order data is already embedded in each package by the backend
+      return { success: true, data: response.data.data };
+    } else {
+      return {
+        success: false,
+        error: response.data?.error || "Operation failed",
+      };
+    }
   } catch (error: any) {
     console.error("Error fetching packages by status:", error.message);
     return handleApiError(error);
@@ -170,6 +191,24 @@ export const markPackageAsPacked = async (
     return handleResponse<Package>(response);
   } catch (error: any) {
     console.error("Error marking package as packed:", error.message);
+    return handleApiError(error);
+  }
+};
+
+/**
+ * Update package status
+ */
+export const updatePackageStatus = async (
+  orderNumber: number,
+  status: PackageStatus,
+): Promise<ApiResponse<Package>> => {
+  try {
+    const response = await axios.put<any>(config.package.updateStatus(orderNumber), {
+      status,
+    });
+    return handleResponse<Package>(response);
+  } catch (error: any) {
+    console.error("Error updating package status:", error.message);
     return handleApiError(error);
   }
 };

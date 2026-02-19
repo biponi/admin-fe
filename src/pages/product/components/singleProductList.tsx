@@ -1,4 +1,9 @@
-import { BoxIcon, MoreHorizontalIcon, PackageSearch, History } from "lucide-react";
+import {
+  BoxIcon,
+  MoreHorizontalIcon,
+  PackageSearch,
+  History,
+} from "lucide-react";
 import { Badge } from "../../../components/ui/badge";
 import {
   DropdownMenu,
@@ -56,6 +61,7 @@ interface Props {
   handleUpdateProduct: (id: string) => void;
   deleteExistingProduct: (id: string) => void;
   refreshProductList?: () => void;
+  handleViewProductDetails: (id: string) => void;
 }
 
 dayjs.extend(advancedFormat);
@@ -76,9 +82,10 @@ const SingleItem: React.FC<Props> = ({
   hasVariation,
   categoryName,
   totalReturned,
+  refreshProductList,
   handleUpdateProduct,
   deleteExistingProduct,
-  refreshProductList,
+  handleViewProductDetails,
 }) => {
   const { hasRequiredPermission, hasSomePermissionsForPage } = useRoleCheck();
   const dialogBtn = useRef(null);
@@ -232,6 +239,11 @@ const SingleItem: React.FC<Props> = ({
               {hasRequiredPermission("product", "edit") && (
                 <DropdownMenuItem onClick={() => handleUpdateProduct(id)}>
                   Edit
+                </DropdownMenuItem>
+              )}
+              {hasRequiredPermission("product", "analytics") && (
+                <DropdownMenuItem onClick={() => handleViewProductDetails(id)}>
+                  View Details
                 </DropdownMenuItem>
               )}
               <DropdownMenuSeparator />

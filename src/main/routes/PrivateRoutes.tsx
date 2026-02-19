@@ -22,6 +22,24 @@ import ReportPage from "../../pages/report";
 import DeliveryPage from "../../pages/delivery";
 import { NotificationPage } from "../../pages/notifications";
 import { AuditDashboard } from "../../pages/admin/components/AuditDashboard";
+import { PackageManagementPage } from "../../pages/package/PackageManagement";
+import { PackageDashboardPage } from "../../pages/package";
+import { PackageDetailsPage } from "../../pages/package/PackageDetails";
+import { BarcodeScannerPage } from "../../pages/package/BarcodeScanner";
+import OrderConfirmation from "../../pages/order/OrderConfirmation";
+import OrderDetails from "../../pages/order/OrderDetails";
+import ProductDetails from "../../pages/product/ProductDetails";
+import SMSPage from "../../pages/bulk-communication/SMSPage";
+import EmailPage from "../../pages/bulk-communication/EmailPage";
+import CreateSMSCampaign from "../../pages/bulk-communication/components/CreateSMSCampaign";
+import CreateEmailCampaign from "../../pages/bulk-communication/components/CreateEmailCampaign";
+import CampaignDetails from "../../pages/bulk-communication/components/CampaignDetails";
+import CustomerAnalytics from "../../pages/customers/CustomerAnalytics";
+import CouponDashboard from "../../pages/coupon";
+import GlobalCouponsPage from "../../pages/coupon/GlobalCoupons";
+import CreateGlobalCoupon from "../../pages/coupon/GlobalCoupons/CreateGlobalCoupon";
+import CustomerCouponsPage from "../../pages/coupon/CustomerCoupons";
+import CouponAnalyticsPage from "../../pages/coupon/Analytics";
 
 export const ProtectedRoutes = () => {
   const { layoutType } = useSettings();
@@ -198,6 +216,170 @@ export const ProtectedRoutes = () => {
         element={
           <ProtectedRoute page='all'>
             <NotificationPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path='/packages'
+        element={
+          <ProtectedRoute page='Package'>
+            <MainViewComponent title='Package Management'>
+              <PackageManagementPage />
+            </MainViewComponent>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path='/packages/dashboard'
+        element={
+          <ProtectedRoute page='Package'>
+            <MainViewComponent title='Package Dashboard'>
+              <PackageDashboardPage />
+            </MainViewComponent>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path='/packages/:orderNumber'
+        element={
+          <ProtectedRoute page='Package'>
+            <MainViewComponent title='Package Details'>
+              <PackageDetailsPage />
+            </MainViewComponent>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path='/packages/scan'
+        element={
+          <ProtectedRoute page='Package'>
+            <MainViewComponent title='Barcode Scanner'>
+              <BarcodeScannerPage />
+            </MainViewComponent>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path='/order/confirmation'
+        element={
+          <ProtectedRoute page='order' requiredAction='edit'>
+            <OrderConfirmation />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path='/order/:orderId'
+        element={
+          <ProtectedRoute page='order' requiredAction='view'>
+            <OrderDetails />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path='/products/:id'
+        element={
+          <ProtectedRoute page='Product' requiredAction='view'>
+            <ProductDetails />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path='/bulk-communication/sms'
+        element={
+          <ProtectedRoute page='BulkCommunication' requiredAction='view'>
+            <SMSPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path='/bulk-communication/sms/create'
+        element={
+          <ProtectedRoute page='BulkCommunication' requiredAction='create'>
+            <CreateSMSCampaign />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path='/bulk-communication/email'
+        element={
+          <ProtectedRoute page='BulkCommunication' requiredAction='view'>
+            <EmailPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path='/bulk-communication/email/create'
+        element={
+          <ProtectedRoute page='BulkCommunication' requiredAction='create'>
+            <CreateEmailCampaign />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path='/bulk-communication/:type/:campaignId'
+        element={
+          <ProtectedRoute page='BulkCommunication' requiredAction='view'>
+            <CampaignDetails />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path='/customers/analytics'
+        element={
+          <ProtectedRoute page='CustomerAnalytics' requiredAction='view'>
+            <MainViewComponent title='Customer Analytics'>
+              <CustomerAnalytics />
+            </MainViewComponent>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path='/coupons'
+        element={
+          <ProtectedRoute page='Coupon' requiredAction='view'>
+            <MainViewComponent title='Coupon Management'>
+              <CouponDashboard />
+            </MainViewComponent>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path='/coupons/global'
+        element={
+          <ProtectedRoute page='Coupon' requiredAction='view'>
+            <MainViewComponent title='Global Coupons'>
+              <GlobalCouponsPage />
+            </MainViewComponent>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path='/coupons/global/create'
+        element={
+          <ProtectedRoute page='Coupon' requiredAction='create'>
+            <MainViewComponent title='Create Global Coupon'>
+              <CreateGlobalCoupon />
+            </MainViewComponent>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path='/coupons/customer'
+        element={
+          <ProtectedRoute page='Coupon' requiredAction='assign'>
+            <MainViewComponent title='Customer Coupons'>
+              <CustomerCouponsPage />
+            </MainViewComponent>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path='/coupons/analytics'
+        element={
+          <ProtectedRoute page='Coupon' requiredAction='analytics'>
+            <MainViewComponent title='Coupon Analytics'>
+              <CouponAnalyticsPage />
+            </MainViewComponent>
           </ProtectedRoute>
         }
       />

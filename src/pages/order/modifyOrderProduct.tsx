@@ -102,7 +102,7 @@ const ModifyOrder = () => {
       if (!orderId) return;
       try {
         const { data } = await axios.get(
-          config.order.getOrderProducts(orderId)
+          config.order.getOrderProducts(orderId),
         );
         setSelectedProducts(data?.data?.products);
         setorderData({
@@ -156,7 +156,7 @@ const ModifyOrder = () => {
     const existingProduct = selectedProducts.find((p) =>
       product.variant?.id
         ? p.id === product.id && p.variant?.id === product.variant.id
-        : p.id === product.id
+        : p.id === product.id,
     );
 
     if (existingProduct) {
@@ -170,9 +170,9 @@ const ModifyOrder = () => {
           p.id === product.id && p.variant?.id === product.variant?.id
             ? { ...p, quantity: p.quantity + 1 }
             : !p.variant && p.id === product.id
-            ? { ...p, quantity: p.quantity + 1 }
-            : p
-        )
+              ? { ...p, quantity: p.quantity + 1 }
+              : p,
+        ),
       );
     } else {
       setSelectedProducts((prev) => [
@@ -241,7 +241,7 @@ const ModifyOrder = () => {
               `${summary.priceDifference > 0 ? "+" : ""}৳${
                 summary.priceDifference
               } difference`,
-            { duration: 5000 }
+            { duration: 5000 },
           );
         } else {
           toast.success("Order modified successfully!");
@@ -273,8 +273,8 @@ const ModifyOrder = () => {
         return toast.error("Enter valid quantity");
       setSelectedProducts((prev) =>
         prev.map((p, i) =>
-          i === index ? { ...indexProduct, quantity: value } : p
-        )
+          i === index ? { ...indexProduct, quantity: value } : p,
+        ),
       );
     }
   };
@@ -287,8 +287,8 @@ const ModifyOrder = () => {
     const newQuantity = (indexProduct?.quantity || 0) + 1;
     setSelectedProducts((prev) =>
       prev.map((p, i) =>
-        i === index ? { ...indexProduct, quantity: newQuantity } : p
-      )
+        i === index ? { ...indexProduct, quantity: newQuantity } : p,
+      ),
     );
   };
 
@@ -301,22 +301,22 @@ const ModifyOrder = () => {
       const newQuantity = quantity - 1;
       setSelectedProducts((prev) =>
         prev.map((p, i) =>
-          i === index ? { ...indexProduct, quantity: newQuantity } : p
-        )
+          i === index ? { ...indexProduct, quantity: newQuantity } : p,
+        ),
       );
     }
   };
 
   const renderProductButton = (
     product: ProductSearchResponse,
-    index: number
+    index: number,
   ) => {
     if (!selectedProducts || !Array.isArray(selectedProducts)) return;
 
     const existingProduct = selectedProducts.find((p) =>
       product.variant?.id
         ? p.id === product.id && p.variant?.id === product.variant.id
-        : p.id === product.id
+        : p.id === product.id,
     );
 
     const isOutOfStock = product?.quantity <= 0;
@@ -329,8 +329,8 @@ const ModifyOrder = () => {
           isOutOfStock
             ? "border-red-200 bg-red-50/50 opacity-60"
             : isAlreadyAdded
-            ? "border-green-200 bg-green-50/50 hover:border-green-300"
-            : "border-gray-200 hover:border-blue-300 hover:shadow-lg hover:-translate-y-1"
+              ? "border-green-200 bg-green-50/50 hover:border-green-300"
+              : "border-gray-200 hover:border-blue-300 hover:shadow-lg hover:-translate-y-1"
         }`}
         onClick={() => {
           if (isOutOfStock) {
@@ -370,10 +370,32 @@ const ModifyOrder = () => {
             <div className='flex-1 min-w-0'>
               <div className='space-y-2'>
                 <div className='flex items-start justify-between'>
-                  <h3 className='font-semibold text-gray-900 text-base leading-tight line-clamp-2 group-hover:text-blue-600 transition-colors'>
-                    {product?.name}
-                  </h3>
-                  {product?.unitPrice && (
+                  <div className='flex flex-col justify-start items-start gap-1'>
+                    <h3 className='font-semibold text-gray-900 text-left text-base leading-tight line-clamp-2 group-hover:text-blue-600 transition-colors'>
+                      {product?.name.toUpperCase()}{" "}
+                    </h3>
+                    <span className='text-xs  text-green-500'>
+                      {typeof product?.discount === "number" &&
+                      product?.discount > 0
+                        ? `Discount: ${product?.discount} TK Off`
+                        : typeof product?.discount === "string" &&
+                            product?.discount !== "0"
+                          ? `Discount: ${product?.discount} TK Off`
+                          : ""}
+                    </span>
+                  </div>
+                  {product?.unitPrice &&
+                  product?.updatedPrice &&
+                  product?.updatedPrice !== product?.unitPrice ? (
+                    <div className='flex items-center gap-2'>
+                      <span className='text-lg font-bold text-gray-900 ml-2'>
+                        ৳{product?.updatedPrice}
+                      </span>
+                      <span className='text-sm font-medium text-red-600 line-through'>
+                        ৳{product?.unitPrice}
+                      </span>
+                    </div>
+                  ) : (
                     <span className='text-lg font-bold text-gray-900 ml-2'>
                       ৳{product?.unitPrice}
                     </span>
@@ -503,7 +525,7 @@ const ModifyOrder = () => {
                   {!!products && products.length > 0 ? (
                     <div className='space-y-3'>
                       {products.map((result, index) =>
-                        renderProductButton(result, index)
+                        renderProductButton(result, index),
                       )}
                     </div>
                   ) : searchQuery ? (
@@ -583,7 +605,7 @@ const ModifyOrder = () => {
                   {!!products && products.length > 0 ? (
                     <div className='space-y-3'>
                       {products.map((result, index) =>
-                        renderProductButton(result, index)
+                        renderProductButton(result, index),
                       )}
                     </div>
                   ) : searchQuery ? (
@@ -698,7 +720,7 @@ const ModifyOrder = () => {
                   size='sm'
                   onClick={() =>
                     setSelectedProducts(
-                      selectedProducts.filter((_, i) => i !== index)
+                      selectedProducts.filter((_, i) => i !== index),
                     )
                   }
                   className='text-red-500 hover:text-red-700 hover:bg-red-50 p-2'>
@@ -738,7 +760,7 @@ const ModifyOrder = () => {
                   <p className='text-xs text-gray-500'>
                     Total: ৳
                     {(product?.quantity * Number(product?.unitPrice)).toFixed(
-                      2
+                      2,
                     )}
                   </p>
                 </div>
@@ -880,13 +902,29 @@ const ModifyOrder = () => {
                     </div>
                   </td>
                   <td className='px-6 py-4 text-right text-sm font-medium text-gray-900'>
-                    ৳{product?.unitPrice}
+                    {product?.unitPrice &&
+                    product?.updatedPrice &&
+                    product?.updatedPrice !== product?.unitPrice ? (
+                      <div className='flex items-center gap-2'>
+                        <span className='text-sm font-bold text-gray-900 ml-2'>
+                          ৳{product?.updatedPrice}
+                        </span>
+                        <span className='text-sm font-medium text-red-600 line-through'>
+                          ৳{product?.unitPrice}
+                        </span>
+                      </div>
+                    ) : (
+                      <span className='text-sm font-bold text-gray-900 ml-2'>
+                        ৳{product?.unitPrice}
+                      </span>
+                    )}
                   </td>
                   <td className='px-6 py-4 text-right text-sm font-bold text-gray-900'>
                     ৳
-                    {(product?.quantity * Number(product?.unitPrice)).toFixed(
-                      2
-                    )}
+                    {(
+                      product?.quantity *
+                      Number(product?.updatedPrice || product?.unitPrice)
+                    ).toFixed(2)}
                   </td>
                   <td className='px-6 py-4 text-center'>
                     <Button
@@ -894,7 +932,7 @@ const ModifyOrder = () => {
                       size='sm'
                       onClick={() =>
                         setSelectedProducts(
-                          selectedProducts.filter((_, i) => i !== index)
+                          selectedProducts.filter((_, i) => i !== index),
                         )
                       }
                       className='text-red-500 hover:text-red-700 hover:bg-red-50 p-2'>
@@ -1015,8 +1053,11 @@ const ModifyOrder = () => {
                             .reduce(
                               (sum, item) =>
                                 sum +
-                                item?.quantity * Number(item?.unitPrice || 0),
-                              0
+                                item?.quantity *
+                                  Number(
+                                    item?.updatedPrice || item?.unitPrice || 0,
+                                  ),
+                              0,
                             )
                             .toFixed(2)}
                         </span>
@@ -1028,9 +1069,45 @@ const ModifyOrder = () => {
                         </span>
                       </div>
                       <div className='flex justify-between items-center py-2 border-b border-gray-100'>
+                        <span className='text-gray-600'>Subtotal</span>
+                        <span className='font-semibold text-gray-900'>
+                          ৳
+                          {(
+                            selectedProducts.reduce(
+                              (sum, item) =>
+                                sum +
+                                item?.quantity *
+                                  Number(
+                                    item?.updatedPrice || item?.unitPrice || 0,
+                                  ),
+                              0,
+                            ) + orderData.deliveryCarge
+                          ).toFixed(2)}
+                        </span>
+                      </div>
+                      <div className='flex justify-between items-center py-2 border-b border-gray-100'>
                         <span className='text-gray-600'>Paid Amount</span>
                         <span className='font-semibold text-green-600'>
                           ৳{orderData.paid}
+                        </span>
+                      </div>
+                      <div className='flex justify-between items-center py-2 border-b border-gray-100'>
+                        <span className='text-gray-600'>Remaining amount</span>
+                        <span className='font-semibold text-green-600'>
+                          ৳
+                          {(
+                            selectedProducts.reduce(
+                              (sum, item) =>
+                                sum +
+                                item?.quantity *
+                                  Number(
+                                    item?.updatedPrice || item?.unitPrice || 0,
+                                  ),
+                              0,
+                            ) +
+                            orderData.deliveryCarge -
+                            orderData.paid
+                          ).toFixed(2)}
                         </span>
                       </div>
                     </div>
@@ -1178,8 +1255,8 @@ const ModifyOrder = () => {
                         estimatedChanges.priceDifference > 0
                           ? "text-green-700"
                           : estimatedChanges.priceDifference < 0
-                          ? "text-red-700"
-                          : "text-blue-900"
+                            ? "text-red-700"
+                            : "text-blue-900"
                       }`}>
                       {estimatedChanges.priceDifference > 0 ? "+" : ""}৳
                       {estimatedChanges.priceDifference}
@@ -1242,7 +1319,7 @@ const ModifyOrder = () => {
                           </div>
                         </div>
                       </div>
-                    )
+                    ),
                   )}
               </div>
             </div>

@@ -426,3 +426,197 @@ export const getModificationHistory = async (
     return handleApiError(error);
   }
 };
+
+// ============================================
+// Order Confirmation Panel API Functions
+// ============================================
+
+// Interface for processing orders response
+export interface ProcessingOrdersResponse {
+  orders: IOrder[];
+  totalCount: number;
+  currentPage: number;
+  totalPages: number;
+}
+
+// Interface for confirm order request
+export interface ConfirmOrderRequest {
+  orderNumber: string;
+}
+
+// Interface for confirm order response
+export interface ConfirmOrderResponse {
+  order: IOrder;
+  confirmation: {
+    confirmedAt: string;
+    confirmedBy: string;
+    orderNumber: string;
+  };
+}
+
+// Interface for cancel order request
+export interface CancelOrderRequest {
+  reason: string;
+}
+
+// Interface for cancel order response
+export interface CancelOrderResponse {
+  order: IOrder;
+  cancellation: {
+    cancelledAt: string;
+    cancelledBy: string;
+    reason: string;
+  };
+  inventoryRestored?: {
+    items: Array<{
+      productId: string;
+      quantityRestored: number;
+    }>;
+  };
+}
+
+/**
+ * Get processing orders sorted in ascending order
+ * @param limit - Number of orders per page (default: 10)
+ * @param page - Page number (default: 0)
+ * @param sortBy - Field to sort by (default: "createdAt")
+ * @param sortOrder - Sort order "asc" or "desc" (default: "asc")
+ */
+export const getProcessingOrders = async (
+  limit = 10,
+  page = 0,
+  sortBy = "orderNumber",
+  sortOrder = "asc",
+): Promise<ApiResponse<ProcessingOrdersResponse>> => {
+  try {
+    const response = await axios.get<{
+      success: boolean;
+      data?: ProcessingOrdersResponse;
+      error?: string;
+    }>(config.order.getProcessingOrders(), {
+      params: { limit, page, sortBy, sortOrder },
+    });
+    if (response.status === 200 && response.data.success) {
+      return { success: true, data: response.data.data };
+    } else {
+      return {
+        success: false,
+        error: response.data?.error || "Failed to get processing orders",
+      };
+    }
+  } catch (error: any) {
+    console.error("Error getting processing orders:", error.message);
+    return handleApiError(error);
+  }
+};
+
+/**
+ * Confirm a processing order for packaging
+ * @param orderId - Order ID
+ * @param orderNumber - Order number for confirmation verification
+ */
+export const confirmOrder = async (
+  orderId: string,
+  orderNumber: string,
+): Promise<ApiResponse<ConfirmOrderResponse>> => {
+  try {
+    const response = await axios.post<{
+      success: boolean;
+      data?: ConfirmOrderResponse;
+      error?: string;
+    }>(config.order.confirmOrder(orderId), { orderNumber });
+    if (response.status === 200 && response.data.success) {
+      return { success: true, data: response.data.data };
+    } else {
+      return {
+        success: false,
+        error: response.data?.error || "Failed to confirm order",
+      };
+    }
+  } catch (error: any) {
+    console.error("Error confirming order:", error.message);
+    return handleApiError(error);
+  }
+};
+
+/**
+ * Cancel a processing order from the confirmation panel
+ * @param orderId - Order ID
+ * @param reason - Cancellation reason
+ */
+export const cancelOrderFromConfirmation = async (
+  orderId: string,
+  reason: string,
+): Promise<ApiResponse<CancelOrderResponse>> => {
+  try {
+    const response = await axios.post<{
+      success: boolean;
+      data?: CancelOrderResponse;
+      error?: string;
+    }>(config.order.cancelOrder(orderId), { reason });
+    if (response.status === 200 && response.data.success) {
+      return { success: true, data: response.data.data };
+    } else {
+      return {
+        success: false,
+        error: response.data?.error || "Failed to cancel order",
+      };
+    }
+  } catch (error: any) {
+    console.error("Error cancelling order:", error.message);
+    return handleApiError(error);
+  }
+};
+
+/**
+ * Get processing order count
+ */
+export const getProcessingOrderCount = async (): Promise<
+  ApiResponse<{ processingCount: number }>
+> => {
+  try {
+    const response = await axios.get<{
+      success: boolean;
+      data?: { processingCount: number };
+      error?: string;
+    }>(config.order.getProcessingOrderCount());
+    if (response.status === 200 && response.data.success) {
+      return { success: true, data: response.data.data };
+    } else {
+      return {
+        success: false,
+        error: response.data?.error || "Failed to get processing order count",
+      };
+    }
+  } catch (error: any) {
+    console.error("Error getting processing order count:", error.message);
+    return handleApiError(error);
+  }
+};
+
+/**
+ * Get Order details by order id or orderNumber
+ * @param identifier - Order ID or Order Number
+ */
+export const getOrderDetails = async (
+  identifier: string,
+): Promise<ApiResponse<IOrder>> => {
+  try {
+    const response = await axios.get<{
+      success: boolean;
+      data?: IOrder;
+      error?: string;
+    }>(config.order.getOrderDetails(identifier));
+    if (response.status === 200 && response.data.success) {
+      return { success: true, data: response.data.data };
+    } else {
+      return {
+        success: false,
+        error: response.data?.error || "Failed to get order details",
+      };
+    }
+  } catch (error: any) {
+    console.error("Error getting order details:", error.message);
+    return handleApiError(error);
+  }
+};

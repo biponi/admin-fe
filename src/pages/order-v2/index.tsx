@@ -34,7 +34,7 @@ export const OrderManagement: React.FC = () => {
     return (saved as ViewVersion) || "v2"; // Default to V2
   });
 
-  const [showVersionBanner, setShowVersionBanner] = useState(true);
+  const [showVersionBanner, setShowVersionBanner] = useState(false);
 
   useEffect(() => {
     // Save preference
@@ -49,13 +49,13 @@ export const OrderManagement: React.FC = () => {
 
     window.addEventListener(
       "orderViewChanged",
-      handleOrderViewChange as EventListener
+      handleOrderViewChange as EventListener,
     );
 
     return () => {
       window.removeEventListener(
         "orderViewChanged",
-        handleOrderViewChange as EventListener
+        handleOrderViewChange as EventListener,
       );
     };
   }, []);

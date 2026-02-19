@@ -10,7 +10,8 @@ export const pagePermissions: Record<string, string[]> = {
     "bulk_action",
     "documents",
   ],
-  Product: ["view", "create", "edit", "delete", "summary"],
+  OrderConfirmation: ["view", "confirm", "cancel"],
+  Product: ["view", "create", "edit", "delete", "summary", "analytics"],
   Category: ["view", "create", "edit", "delete"],
   Campaign: ["view", "create", "edit", "delete"],
   PurchaseOrder: ["view", "create", "edit", "delete"],
@@ -25,4 +26,8 @@ export const pagePermissions: Record<string, string[]> = {
   Delivery: ["view", "edit", "delete", "create"],
   Notifications: ["view", "edit", "delete", "create"],
   Audit: ["view"],
+  Package: ["view", "create", "edit", "delete"],
+  BulkCommunication: ["view", "create", "delete", "cancel"],
+  Customer: ["view", "edit"],
+  Coupon: ["view", "create", "edit", "delete", "assign", "analytics"],
 };
