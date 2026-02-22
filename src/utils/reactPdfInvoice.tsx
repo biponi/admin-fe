@@ -11,12 +11,14 @@ import {
 } from "@react-pdf/renderer";
 import { IOrder } from "../pages/order/interface";
 
-// Register Bengali font using jsDelivr CDN (more reliable)
+// IMPORTANT: Download NotoSansBengali-Regular.ttf from Google Fonts
+// and place it in public/fonts/NotoSansBengali-Regular.ttf
+// Download link: https://fonts.google.com/noto/specimen/Noto+Sans+Bengali
+
+// Register the font from your local public folder
 Font.register({
   family: "BengaliFont",
-  src: "https://cdn.jsdelivr.net/gh/googlefonts/noto-fonts@main/hinted/ttf/NotoSansBengali/NotoSansBengali-Regular.ttf",
-  fontStyle: "normal",
-  fontWeight: 400,
+  src: "/fonts/NotoSansBengali-Regular.ttf",
 });
 
 const styles = StyleSheet.create({
@@ -48,12 +50,6 @@ const styles = StyleSheet.create({
   companyInfo: {
     marginTop: 0,
   },
-  companyName: {
-    fontSize: 10,
-    fontWeight: "bold",
-    letterSpacing: 1,
-    marginBottom: 3,
-  },
   companyDetail: {
     fontSize: 7,
     color: "#333333",
@@ -65,7 +61,6 @@ const styles = StyleSheet.create({
   },
   invoiceTitle: {
     fontSize: 20,
-    fontWeight: "bold",
     letterSpacing: 2,
     marginBottom: 5,
   },
@@ -78,7 +73,6 @@ const styles = StyleSheet.create({
   },
   invoiceMetaLabel: {
     fontSize: 8,
-    fontWeight: "bold",
     width: 70,
     textAlign: "right",
   },
@@ -104,7 +98,6 @@ const styles = StyleSheet.create({
   },
   addressTitle: {
     fontSize: 7,
-    fontWeight: "bold",
     letterSpacing: 1,
     borderBottom: "1pt solid #000000",
     paddingBottom: 3,
@@ -117,14 +110,7 @@ const styles = StyleSheet.create({
   },
   addressTextBold: {
     fontSize: 9,
-    fontWeight: "bold",
     marginBottom: 2,
-  },
-  bengaliText: {
-    fontFamily: "BengaliFont",
-    fontSize: 9,
-    lineHeight: 1.4,
-    marginBottom: 1,
   },
   // Order Info Bar
   orderInfoBar: {
@@ -145,7 +131,6 @@ const styles = StyleSheet.create({
   },
   orderInfoValue: {
     fontSize: 8,
-    fontWeight: "bold",
     color: "#1e272e",
   },
   orderInfoDivider: {
@@ -155,26 +140,24 @@ const styles = StyleSheet.create({
   },
   // Notes
   notesBox: {
-    flex: 1, // Take all available width
+    flex: 1,
     border: "1pt solid #000000",
     padding: 6,
   },
   notesTitle: {
     fontSize: 7,
-    fontWeight: "bold",
     letterSpacing: 0.5,
-    marginBottom: 3, // Reduced spacing
+    marginBottom: 3,
     borderBottom: "0.5pt solid #000000",
     paddingBottom: 2,
     width: "100%",
   },
   notesText: {
     fontSize: 7,
-    lineHeight: 1.15, // Very tight line height
-    fontWeight: "normal",
-    textAlign: "left", // Ensure left alignment
+    lineHeight: 1.15,
+    textAlign: "left",
   },
-  // Table - OPTIMIZED FOR SPACE
+  // Table
   table: {
     marginBottom: 10,
   },
@@ -186,7 +169,6 @@ const styles = StyleSheet.create({
   tableHeaderCell: {
     color: "#1e272e",
     fontSize: 7,
-    fontWeight: "bold",
     letterSpacing: 0.5,
     textAlign: "center",
   },
@@ -202,20 +184,18 @@ const styles = StyleSheet.create({
     backgroundColor: "#F5F5F5",
   },
   tableCell: {
-    fontSize: 7,
+    fontSize: 8,
     textAlign: "center",
   },
   quantityText: {
     textAlign: "center",
-    padding: "4px",
-    borderRadius: "10px",
+    padding: 4,
+    borderRadius: 10,
     backgroundColor: "#ffffff",
-    fontWeight: "bold",
     border: "1px solid #cccccc",
   },
   tableCellProduct: {
     fontSize: 8,
-    fontWeight: "bold",
     textAlign: "left",
   },
   tableCellRight: {
@@ -234,7 +214,7 @@ const styles = StyleSheet.create({
   },
   summaryBox: {
     width: 200,
-    flexShrink: 0, // Prevent shrinking
+    flexShrink: 0,
     border: "1pt solid #000000",
   },
   summaryRow: {
@@ -253,19 +233,16 @@ const styles = StyleSheet.create({
   },
   summaryLabel: {
     fontSize: 8,
-    fontWeight: "bold",
   },
   summaryValue: {
     fontSize: 8,
   },
   summaryLabelTotal: {
     fontSize: 9,
-    fontWeight: "bold",
     color: "#1e272e",
   },
   summaryValueTotal: {
     fontSize: 9,
-    fontWeight: "bold",
     color: "#1e272e",
   },
   // Payment Info
@@ -281,7 +258,6 @@ const styles = StyleSheet.create({
   },
   paymentTitle: {
     fontSize: 7,
-    fontWeight: "bold",
     letterSpacing: 1,
     marginBottom: 5,
     borderBottom: "0.5pt solid #000000",
@@ -297,7 +273,6 @@ const styles = StyleSheet.create({
   },
   paymentValue: {
     fontSize: 7,
-    fontWeight: "bold",
   },
   // Footer
   footer: {
@@ -326,7 +301,6 @@ const styles = StyleSheet.create({
   },
   thankYou: {
     fontSize: 8,
-    fontWeight: "bold",
     letterSpacing: 1,
   },
   footerRight: {
@@ -335,14 +309,12 @@ const styles = StyleSheet.create({
   },
   pageNumber: {
     fontSize: 7,
-    fontWeight: "bold",
   },
 });
 
 // Helper function to fetch and convert image to base64 for PDF
 const fetchImageAsBase64 = async (url: string): Promise<string> => {
   try {
-    // Fetch the image with proper CORS
     const response = await fetch(url, {
       mode: "cors",
       credentials: "omit",
@@ -354,14 +326,12 @@ const fetchImageAsBase64 = async (url: string): Promise<string> => {
 
     const blob = await response.blob();
 
-    // Convert blob to base64 using FileReader
     return new Promise((resolve) => {
       const reader = new FileReader();
 
       reader.onload = () => {
         const result = reader.result as string;
 
-        // If it's WebP, we need to convert it to PNG via canvas
         if (blob.type === "image/webp") {
           const img = new Image();
 
@@ -391,7 +361,6 @@ const fetchImageAsBase64 = async (url: string): Promise<string> => {
 
           img.src = result;
         } else {
-          // Not WebP, return as-is
           resolve(result);
         }
       };
@@ -405,35 +374,6 @@ const fetchImageAsBase64 = async (url: string): Promise<string> => {
   } catch {
     return url;
   }
-};
-
-// Helper function to detect Bengali text
-const isBengaliText = (text: string): boolean => {
-  const bengaliRegex = /[\u0980-\u09FF]/;
-  return bengaliRegex.test(text);
-};
-
-// Smart Text component for Bengali support
-const SmartText = ({ children, style, ...props }: any) => {
-  if (!children) return null;
-  const text = String(children);
-  const hasBengali = isBengaliText(text);
-  const cleanStyle = style ? (Array.isArray(style) ? style : [style]) : [];
-  const styleWithoutWeight = cleanStyle.map((s: any) => {
-    if (s && typeof s === "object") {
-      const { fontWeight, ...rest } = s;
-      return rest;
-    }
-    return s;
-  });
-  const textStyle = hasBengali
-    ? [styles.bengaliText, ...styleWithoutWeight]
-    : [styles.addressText, style];
-  return (
-    <Text style={textStyle} {...props}>
-      {text}
-    </Text>
-  );
 };
 
 interface InvoiceDocumentProps {
@@ -507,27 +447,40 @@ const InvoiceDocument: React.FC<InvoiceDocumentProps> = ({
           <View style={styles.addressSection}>
             <View style={styles.addressBox}>
               <Text style={styles.addressTitle}>BILL TO</Text>
-              <SmartText style={styles.addressTextBold}>
-                {order.customer?.name}
-              </SmartText>
-              <Text style={styles.addressText}>
-                {order.customer?.phoneNumber}
+              <Text style={styles.addressTextBold}>
+                {order.customer?.name || ""}
               </Text>
-              <SmartText>{order.shipping?.address}</SmartText>
-              <SmartText>{`${order.shipping?.district}, ${order.shipping?.division}`}</SmartText>
+              <Text style={styles.addressText}>
+                {order.customer?.phoneNumber || ""}
+              </Text>
+              <Text style={styles.addressText}>
+                {order.shipping?.address || ""}
+              </Text>
+              <Text style={styles.addressText}>
+                {order.shipping?.district && order.shipping?.division
+                  ? `${order.shipping.district}, ${order.shipping.division}`
+                  : ""}
+              </Text>
             </View>
             <View style={styles.addressBox}>
               <Text style={styles.addressTitle}>SHIP TO</Text>
-              <SmartText style={styles.addressTextBold}>
-                {order.customer?.name}
-              </SmartText>
-              <Text style={styles.addressText}>
-                {order.customer?.phoneNumber}
+              <Text style={styles.addressTextBold}>
+                {order.customer?.name || ""}
               </Text>
-              <SmartText>{order.shipping?.address}</SmartText>
-              <SmartText>{`${order.shipping?.district}, ${order.shipping?.division}`}</SmartText>
+              <Text style={styles.addressText}>
+                {order.customer?.phoneNumber || ""}
+              </Text>
+              <Text style={styles.addressText}>
+                {order.shipping?.address || ""}
+              </Text>
+              <Text style={styles.addressText}>
+                {order.shipping?.district && order.shipping?.division
+                  ? `${order.shipping.district}, ${order.shipping.division}`
+                  : ""}
+              </Text>
             </View>
           </View>
+
           {/* Order Info Bar */}
           <View style={styles.orderInfoBar}>
             <View style={styles.orderInfoItem}>
@@ -595,7 +548,7 @@ const InvoiceDocument: React.FC<InvoiceDocumentProps> = ({
                 key={index}
                 style={[
                   styles.tableRow,
-                  ...(index % 2 === 1 ? [styles.tableRowAlt] : []),
+                  index % 2 === 1 ? styles.tableRowAlt : {},
                 ]}>
                 <Text style={[styles.tableCell, { width: "5%" }]}>
                   {index + 1}
@@ -607,22 +560,24 @@ const InvoiceDocument: React.FC<InvoiceDocumentProps> = ({
                     justifyContent: "center",
                     paddingLeft: 2,
                   }}>
-                  <PDFImage
-                    style={styles.productImage}
-                    src={product.thumbnail}
-                  />
+                  {product.thumbnail && (
+                    <PDFImage
+                      style={styles.productImage}
+                      src={product.thumbnail}
+                    />
+                  )}
                 </View>
-                <SmartText
+                <Text
                   style={[
                     styles.tableCellProduct,
                     { width: "20%", textAlign: "left" },
                   ]}>
-                  {product.name.toUpperCase()}
-                </SmartText>
+                  {product.name ? product.name.toUpperCase() : ""}
+                </Text>
                 <Text style={[styles.tableCell, { width: "18%" }]}>
                   {!product?.variation
                     ? "—"
-                    : `${product.variation?.color}${
+                    : `${product.variation?.color || ""}${
                         product.variation?.size
                           ? ` / ${product.variation.size}`
                           : ""
@@ -634,7 +589,7 @@ const InvoiceDocument: React.FC<InvoiceDocumentProps> = ({
                     styles.quantityText,
                     { width: "8%" },
                   ]}>
-                  {"x " + product.quantity}
+                  {` ${product.quantity || 0}`}
                 </Text>
                 <Text
                   style={[
@@ -642,7 +597,7 @@ const InvoiceDocument: React.FC<InvoiceDocumentProps> = ({
                     styles.tableCellRight,
                     { width: "12%" },
                   ]}>
-                  Tk {product.unitPrice.toFixed(0)}
+                  {`Tk ${(product.unitPrice || 0).toFixed(0)}`}
                 </Text>
                 <Text
                   style={[
@@ -650,7 +605,7 @@ const InvoiceDocument: React.FC<InvoiceDocumentProps> = ({
                     styles.tableCellRight,
                     { width: "10%" },
                   ]}>
-                  Tk {(product.discount || 0).toFixed(0)}
+                  {`Tk ${(product.discount || 0).toFixed(0)}`}
                 </Text>
                 <Text
                   style={[
@@ -658,15 +613,15 @@ const InvoiceDocument: React.FC<InvoiceDocumentProps> = ({
                     styles.tableCellRight,
                     { width: "12%" },
                   ]}>
-                  Tk{" "}
-                  {(
-                    product.quantity * product.unitPrice -
+                  {`Tk ${(
+                    (product.quantity || 0) * (product.unitPrice || 0) -
                     (product.discount || 0)
-                  ).toFixed(0)}
+                  ).toFixed(0)}`}
                 </Text>
               </View>
             ))}
           </View>
+
           {/* Summary */}
           <View style={styles.summaryContainer}>
             {/* Special Notes */}
@@ -680,30 +635,32 @@ const InvoiceDocument: React.FC<InvoiceDocumentProps> = ({
               <View style={styles.summaryRow}>
                 <Text style={styles.summaryLabel}>Subtotal</Text>
                 <Text style={styles.summaryValue}>
-                  Tk {subtotal.toFixed(0)}
+                  {`Tk ${subtotal.toFixed(0)}`}
                 </Text>
               </View>
               <View style={styles.summaryRow}>
                 <Text style={styles.summaryLabel}>Discount</Text>
                 <Text style={styles.summaryValue}>
-                  −Tk {discount.toFixed(0)}
+                  {`−Tk ${discount.toFixed(0)}`}
                 </Text>
               </View>
               <View style={styles.summaryRow}>
                 <Text style={styles.summaryLabel}>Shipping</Text>
                 <Text style={styles.summaryValue}>
-                  Tk {shipping.toFixed(0)}
+                  {`Tk ${shipping.toFixed(0)}`}
                 </Text>
               </View>
               <View style={[styles.summaryRow, styles.summaryRowTotal]}>
                 <Text style={styles.summaryLabelTotal}>TOTAL</Text>
                 <Text style={styles.summaryValueTotal}>
-                  Tk {total.toFixed(0)}
+                  {`Tk ${total.toFixed(0)}`}
                 </Text>
               </View>
               <View style={styles.summaryRow}>
                 <Text style={styles.summaryLabel}>Amount Paid</Text>
-                <Text style={styles.summaryValue}>Tk {paid.toFixed(0)}</Text>
+                <Text style={styles.summaryValue}>
+                  {`Tk ${paid.toFixed(0)}`}
+                </Text>
               </View>
               <View
                 style={[
@@ -717,13 +674,14 @@ const InvoiceDocument: React.FC<InvoiceDocumentProps> = ({
                 <Text
                   style={[
                     styles.summaryValue,
-                    { fontSize: 9, fontWeight: "bold", color: "#1e272e" },
+                    { fontSize: 9, color: "#1e272e" },
                   ]}>
-                  Tk {due.toFixed(0)}
+                  {`Tk ${due.toFixed(0)}`}
                 </Text>
               </View>
             </View>
           </View>
+
           {/* Payment Terms */}
           <View style={styles.paymentSection}>
             <View style={styles.paymentBox}>
@@ -744,8 +702,7 @@ const InvoiceDocument: React.FC<InvoiceDocumentProps> = ({
             <View style={styles.paymentBox}>
               <Text style={styles.paymentTitle}>TERMS & CONDITIONS</Text>
               <Text style={[styles.paymentLabel, { lineHeight: 1.3 }]}>
-                • Please inspect items upon delivery{"\n"}• Contact us within
-                24hrs for any issues
+                {`• Please inspect items upon delivery\n• Contact us within 24hrs for any issues`}
               </Text>
             </View>
           </View>
@@ -783,10 +740,8 @@ const preloadOrderImages = async (order: IOrder) => {
   const logoUrl =
     "https://res.cloudinary.com/emerging-it/image/upload/v1755976159/2193d5ff-ffb3-4fb7-ae67-c7a79e89c3f6__1_-removebg-preview_sobjwy.png";
 
-  // Preload logo
   const logoBase64 = await fetchImageAsBase64(logoUrl);
 
-  // Preload product thumbnails
   const productImagesMap: Record<string, string> = {};
   const imagePromises = order.products
     .filter((p) => p.thumbnail)
@@ -804,10 +759,8 @@ const preloadOrderImages = async (order: IOrder) => {
 
 // Export functions
 export const generateReactPdfInvoice = async (order: IOrder) => {
-  // Preload images before generating PDF
   const { logoBase64, productImagesMap } = await preloadOrderImages(order);
 
-  // Create modified order with base64 images
   const orderWithBase64Images = {
     ...order,
     products: order.products.map((product) => ({
@@ -820,7 +773,6 @@ export const generateReactPdfInvoice = async (order: IOrder) => {
     <InvoiceDocument order={orderWithBase64Images} logoImage={logoBase64} />,
   ).toBlob();
 
-  // Cleanup object URLs after PDF is generated
   const objectUrlsToClean = [
     logoBase64,
     ...Object.values(productImagesMap),
@@ -833,7 +785,6 @@ export const generateReactPdfInvoice = async (order: IOrder) => {
   link.click();
   URL.revokeObjectURL(url);
 
-  // Clean up image object URLs
   objectUrlsToClean.forEach((objectUrl) => {
     URL.revokeObjectURL(objectUrl);
   });
@@ -842,10 +793,8 @@ export const generateReactPdfInvoice = async (order: IOrder) => {
 export const generateReactPdfInvoiceBlob = async (
   order: IOrder,
 ): Promise<Blob> => {
-  // Preload images before generating PDF
   const { logoBase64, productImagesMap } = await preloadOrderImages(order);
 
-  // Create modified order with base64 images
   const orderWithBase64Images = {
     ...order,
     products: order.products.map((product) => ({
@@ -858,9 +807,6 @@ export const generateReactPdfInvoiceBlob = async (
     <InvoiceDocument order={orderWithBase64Images} logoImage={logoBase64} />,
   ).toBlob();
 
-  // Note: We can't clean up object URLs here immediately since the caller might
-  // still be using the blob. The caller is responsible for cleanup.
-  // However, since react-pdf processes images immediately, we could clean up after a delay.
   setTimeout(() => {
     const objectUrlsToClean = [
       logoBase64,
