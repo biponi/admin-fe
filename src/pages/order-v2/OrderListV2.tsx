@@ -920,7 +920,7 @@ export const OrderListV2: React.FC = () => {
           <div className='flex items-center justify-between mb-4'>
             <div>
               <h1 className='text-2xl sm:text-3xl font-bold text-gray-900 bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent'>
-                Orders V2 (Beta 1.7)
+                Orders V2 (Beta 2.1)
               </h1>
               <p className='text-sm text-gray-600 mt-1'>
                 {totalOrders} total orders
