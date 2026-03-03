@@ -150,19 +150,26 @@ export const OrderTable: React.FC<OrderTableProps> = ({
                   )}>
                   {/* Checkbox */}
                   <TableCell onClick={(e) => e.stopPropagation()}>
-                    {onSelect && (
-                      <Checkbox
-                        disabled={[
-                          "cancel",
-                          "cancelled",
-                          "fail",
-                          "failed",
-                          "delete",
-                        ].includes(order.status)}
-                        checked={isSelected}
-                        onCheckedChange={() => onSelect(orderId)}
-                      />
-                    )}
+                    {![
+                      "cancel",
+                      "cancelled",
+                      "fail",
+                      "failed",
+                      "delete",
+                    ].includes(order.status) &&
+                      onSelect && (
+                        <Checkbox
+                          disabled={[
+                            "cancel",
+                            "cancelled",
+                            "fail",
+                            "failed",
+                            "delete",
+                          ].includes(order.status)}
+                          checked={isSelected}
+                          onCheckedChange={() => onSelect(orderId)}
+                        />
+                      )}
                   </TableCell>
 
                   {/* Order Number */}
