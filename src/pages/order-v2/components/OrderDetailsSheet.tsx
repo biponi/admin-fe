@@ -194,42 +194,48 @@ export const OrderDetailsSheet: React.FC<OrderDetailsSheetProps> = ({
                   <Share2 className='h-4 w-4' />
                 </Button>
               </motion.div>
-              <motion.div
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}>
-                <Button
-                  variant='ghost'
-                  size='sm'
-                  onClick={handlePrint}
-                  className='h-8 w-8 p-0'
-                  title='Print'>
-                  <Printer className='h-4 w-4' />
-                </Button>
-              </motion.div>
-              <motion.div
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}>
-                <Button
-                  variant='ghost'
-                  size='sm'
-                  onClick={handleDownloadInvoice}
-                  className='h-8 w-8 p-0'
-                  title='Download Invoice'>
-                  <Download className='h-4 w-4' />
-                </Button>
-              </motion.div>
-              <motion.div
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}>
-                <Button
-                  variant='ghost'
-                  size='sm'
-                  onClick={handleDownloadPackingSlip}
-                  className='h-8 w-8 p-0'
-                  title='Download Packing Slip'>
-                  <Box className='h-4 w-4' />
-                </Button>
-              </motion.div>
+              {!["cancel", "cancelled", "fail", "failed", "delete"].includes(
+                order.status,
+              ) && (
+                <>
+                  <motion.div
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}>
+                    <Button
+                      variant='ghost'
+                      size='sm'
+                      onClick={handlePrint}
+                      className='h-8 w-8 p-0'
+                      title='Print'>
+                      <Printer className='h-4 w-4' />
+                    </Button>
+                  </motion.div>
+                  <motion.div
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}>
+                    <Button
+                      variant='ghost'
+                      size='sm'
+                      onClick={handleDownloadInvoice}
+                      className='h-8 w-8 p-0'
+                      title='Download Invoice'>
+                      <Download className='h-4 w-4' />
+                    </Button>
+                  </motion.div>
+                  <motion.div
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}>
+                    <Button
+                      variant='ghost'
+                      size='sm'
+                      onClick={handleDownloadPackingSlip}
+                      className='h-8 w-8 p-0'
+                      title='Download Packing Slip'>
+                      <Box className='h-4 w-4' />
+                    </Button>
+                  </motion.div>
+                </>
+              )}
               {order.customer.email && (
                 <motion.div
                   whileHover={{ scale: 1.05 }}
@@ -285,7 +291,7 @@ export const OrderDetailsSheet: React.FC<OrderDetailsSheetProps> = ({
                   order.fraudDetection.riskLevel === "yellow" &&
                     "bg-yellow-50 hover:bg-yellow-100 border border-yellow-200",
                   order.fraudDetection.riskLevel === "red" &&
-                    "bg-red-50 hover:bg-red-100 border border-red-200"
+                    "bg-red-50 hover:bg-red-100 border border-red-200",
                 )}>
                 {order.fraudDetection.riskLevel === "green" && (
                   <ShieldCheck className='h-3 w-3 text-green-600' />
@@ -303,7 +309,7 @@ export const OrderDetailsSheet: React.FC<OrderDetailsSheetProps> = ({
                       "text-green-700",
                     order.fraudDetection.riskLevel === "yellow" &&
                       "text-yellow-700",
-                    order.fraudDetection.riskLevel === "red" && "text-red-700"
+                    order.fraudDetection.riskLevel === "red" && "text-red-700",
                   )}>
                   {order.fraudDetection.riskLevel === "green" && "Low"}
                   {order.fraudDetection.riskLevel === "yellow" && "Medium"}
@@ -501,7 +507,7 @@ export const OrderDetailsSheet: React.FC<OrderDetailsSheetProps> = ({
                     {formatCurrency(
                       order.totalPrice +
                         order.deliveryCharge -
-                        (order.discount || 0)
+                        (order.discount || 0),
                     )}
                   </span>
                 </div>
@@ -589,7 +595,7 @@ export const OrderDetailsSheet: React.FC<OrderDetailsSheetProps> = ({
                             .split("_")
                             .map(
                               (word) =>
-                                word.charAt(0).toUpperCase() + word.slice(1)
+                                word.charAt(0).toUpperCase() + word.slice(1),
                             )
                             .join(" ")
                         : "Not specified"}
