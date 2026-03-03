@@ -79,7 +79,7 @@ export const OrderDetailsSheet: React.FC<OrderDetailsSheetProps> = ({
 
   const handleCopyOrderNumber = async () => {
     await navigator.clipboard.writeText(
-      `https://priorbd.com/order/${order?.orderNumber}`
+      `https://priorbd.com/order/${order?.orderNumber}`,
     );
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
@@ -135,7 +135,7 @@ export const OrderDetailsSheet: React.FC<OrderDetailsSheetProps> = ({
     } else {
       // Fallback: copy link to clipboard
       await navigator.clipboard.writeText(
-        `https://priorbd.com/order/${order?.orderNumber}`
+        `https://priorbd.com/order/${order?.orderNumber}`,
       );
       toast.success("Link copied to clipboard!");
     }
@@ -717,33 +717,45 @@ export const OrderDetailsSheet: React.FC<OrderDetailsSheetProps> = ({
                 Close
               </Button>
             </motion.div>
-            <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
-              <Button
-                variant='outline'
-                className='gap-2 border-blue-300 hover:bg-blue-50 text-blue-700'
-                onClick={handlePrint}>
-                <Printer className='h-4 w-4' />
-                Print
-              </Button>
-            </motion.div>
-            <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
-              <Button
-                variant='outline'
-                className='gap-2 border-green-300 hover:bg-green-50 text-green-700'
-                onClick={handleDownloadInvoice}>
-                <Download className='h-4 w-4' />
-                Invoice
-              </Button>
-            </motion.div>
-            <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
-              <Button
-                variant='outline'
-                className='gap-2 border-orange-300 hover:bg-orange-50 text-orange-700'
-                onClick={handleDownloadPackingSlip}>
-                <Box className='h-4 w-4' />
-                Packing Slip
-              </Button>
-            </motion.div>
+            {!["cancel", "cancelled", "fail", "failed", "delete"].includes(
+              order?.status,
+            ) && (
+              <>
+                <motion.div
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}>
+                  <Button
+                    variant='outline'
+                    className='gap-2 border-blue-300 hover:bg-blue-50 text-blue-700'
+                    onClick={handlePrint}>
+                    <Printer className='h-4 w-4' />
+                    Print
+                  </Button>
+                </motion.div>
+                <motion.div
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}>
+                  <Button
+                    variant='outline'
+                    className='gap-2 border-green-300 hover:bg-green-50 text-green-700'
+                    onClick={handleDownloadInvoice}>
+                    <Download className='h-4 w-4' />
+                    Invoice
+                  </Button>
+                </motion.div>
+                <motion.div
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}>
+                  <Button
+                    variant='outline'
+                    className='gap-2 border-orange-300 hover:bg-orange-50 text-orange-700'
+                    onClick={handleDownloadPackingSlip}>
+                    <Box className='h-4 w-4' />
+                    Packing Slip
+                  </Button>
+                </motion.div>
+              </>
+            )}
             {onEdit && (
               <motion.div
                 whileHover={{ scale: 1.02 }}
