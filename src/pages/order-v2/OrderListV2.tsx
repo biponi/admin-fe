@@ -182,7 +182,12 @@ export const OrderListV2: React.FC = () => {
       } else {
         // Adding selection - find order and store full order data
         const order = orders.find((o) => o.id === orderId);
-        if (order) {
+        if (
+          order &&
+          !["cancel", "cancelled", "fail", "failed", "delete"].includes(
+            order.status,
+          )
+        ) {
           newMap.set(orderId, order);
         }
       }
@@ -203,11 +208,18 @@ export const OrderListV2: React.FC = () => {
       // Select all current orders
       setSelectedOrdersData((prev) => {
         const newMap = new Map(prev);
-        orders.forEach((order) => {
-          if (order.id) {
-            newMap.set(order.id, order);
-          }
-        });
+        orders
+          .filter(
+            (order) =>
+              !["cancel", "cancelled", "fail", "failed", "delete"].includes(
+                order.status,
+              ),
+          )
+          .forEach((order) => {
+            if (order.id) {
+              newMap.set(order.id, order);
+            }
+          });
         return newMap;
       });
       selectAll();

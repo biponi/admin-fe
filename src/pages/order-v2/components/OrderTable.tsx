@@ -92,7 +92,7 @@ export const OrderTable: React.FC<OrderTableProps> = ({
     <div
       className={cn(
         "rounded-lg border bg-white shadow-sm overflow-hidden",
-        className
+        className,
       )}>
       <Table>
         <TableHeader>
@@ -146,12 +146,19 @@ export const OrderTable: React.FC<OrderTableProps> = ({
                   className={cn(
                     "group transition-colors hover:bg-blue-50/50 cursor-pointer",
                     isSelected && "bg-blue-50",
-                    hasHighRisk && "border-l-4 border-l-red-500"
+                    hasHighRisk && "border-l-4 border-l-red-500",
                   )}>
                   {/* Checkbox */}
                   <TableCell onClick={(e) => e.stopPropagation()}>
                     {onSelect && (
                       <Checkbox
+                        disabled={[
+                          "cancel",
+                          "cancelled",
+                          "fail",
+                          "failed",
+                          "delete",
+                        ].includes(order.status)}
                         checked={isSelected}
                         onCheckedChange={() => onSelect(orderId)}
                       />
@@ -275,7 +282,7 @@ export const OrderTable: React.FC<OrderTableProps> = ({
                           order.fraudDetection.riskLevel === "yellow" &&
                             "bg-yellow-50 hover:bg-yellow-100 border border-yellow-200",
                           order.fraudDetection.riskLevel === "red" &&
-                            "bg-red-50 hover:bg-red-100 border border-red-200"
+                            "bg-red-50 hover:bg-red-100 border border-red-200",
                         )}
                         onClick={(e) => {
                           e.stopPropagation();
@@ -298,7 +305,7 @@ export const OrderTable: React.FC<OrderTableProps> = ({
                             order.fraudDetection.riskLevel === "yellow" &&
                               "text-yellow-700",
                             order.fraudDetection.riskLevel === "red" &&
-                              "text-red-700"
+                              "text-red-700",
                           )}>
                           {order.fraudDetection.riskLevel === "green" && "Low"}
                           {order.fraudDetection.riskLevel === "yellow" &&
@@ -321,7 +328,7 @@ export const OrderTable: React.FC<OrderTableProps> = ({
                     <span
                       className={cn(
                         "font-medium",
-                        order.paid > 0 ? "text-green-600" : "text-gray-400"
+                        order.paid > 0 ? "text-green-600" : "text-gray-400",
                       )}>
                       {formatCurrency(order.paid)}
                     </span>
