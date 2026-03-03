@@ -17,6 +17,7 @@ import {
   ShieldAlert,
   ShieldCheck,
   Shield,
+  MinusSquare,
 } from "lucide-react";
 import {
   cn,
@@ -150,26 +151,27 @@ export const OrderTable: React.FC<OrderTableProps> = ({
                   )}>
                   {/* Checkbox */}
                   <TableCell onClick={(e) => e.stopPropagation()}>
-                    {![
+                    {[
                       "cancel",
                       "cancelled",
                       "fail",
                       "failed",
                       "delete",
-                    ].includes(order.status) &&
-                      onSelect && (
-                        <Checkbox
-                          disabled={[
-                            "cancel",
-                            "cancelled",
-                            "fail",
-                            "failed",
-                            "delete",
-                          ].includes(order.status)}
-                          checked={isSelected}
-                          onCheckedChange={() => onSelect(orderId)}
-                        />
-                      )}
+                    ].includes(order.status) ? (
+                      <MinusSquare className='w-5 h-5 font-semibold text-red-600' />
+                    ) : (
+                      <Checkbox
+                        disabled={[
+                          "cancel",
+                          "cancelled",
+                          "fail",
+                          "failed",
+                          "delete",
+                        ].includes(order.status)}
+                        checked={isSelected}
+                        onCheckedChange={() => onSelect && onSelect(orderId)}
+                      />
+                    )}
                   </TableCell>
 
                   {/* Order Number */}
