@@ -16,6 +16,7 @@ import {
   DollarSign,
   Hash,
   Edit,
+  Logs,
 } from "lucide-react";
 import toast from "react-hot-toast";
 import { Badge } from "../../components/ui/badge";
@@ -35,12 +36,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "../../components/ui/popover";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from "../../components/ui/card";
+import { Card, CardContent, CardHeader } from "../../components/ui/card";
 import {
   Table,
   TableBody,
@@ -58,9 +54,18 @@ import useRoleCheck from "../auth/hooks/useRoleCheck";
 const Pagination: React.FC<{
   currentPage: number;
   totalPages: number;
+  pageSize: number;
   onPageChange: (page: number) => void;
+  onPageSizeChange: (size: number) => void;
   isLoading?: boolean;
-}> = ({ currentPage, totalPages, onPageChange, isLoading = false }) => {
+}> = ({
+  currentPage,
+  totalPages,
+  pageSize,
+  onPageChange,
+  onPageSizeChange,
+  isLoading = false,
+}) => {
   const getVisiblePages = () => {
     const delta = 2;
     const range = [];
@@ -94,38 +99,57 @@ const Pagination: React.FC<{
   if (totalPages <= 1) return null;
 
   return (
-    <div className='flex items-center justify-center space-x-2 py-4'>
-      <Button
-        variant='outline'
-        size='sm'
-        disabled={currentPage <= 1 || isLoading}
-        onClick={() => onPageChange(currentPage - 1)}>
-        Previous
-      </Button>
+    <div className='flex items-center justify-center space-x-2 py-4 px-4'>
+      {/* <div className='flex items-center space-x-2'>
+        <span className='text-sm text-muted-foreground'>Items per page:</span>
+        <select
+          value={pageSize}
+          onChange={(e) => {
+            const newSize = Number(e.target.value);
+            onPageSizeChange(newSize);
+          }}
+          disabled={isLoading}
+          className='border rounded px-2 py-1 text-sm bg-background'>
+          <option value={10}>10</option>
+          <option value={20}>20</option>
+          <option value={50}>50</option>
+          <option value={100}>100</option>
+        </select>
+      </div> */}
 
-      {getVisiblePages().map((page, index) => (
-        <React.Fragment key={index}>
-          {page === "..." ? (
-            <span className='px-2 text-muted-foreground'>...</span>
-          ) : (
-            <Button
-              variant={currentPage === page ? "default" : "outline"}
-              size='sm'
-              disabled={isLoading}
-              onClick={() => onPageChange(page as number)}>
-              {page}
-            </Button>
-          )}
-        </React.Fragment>
-      ))}
+      <div className='flex items-center space-x-2'>
+        <Button
+          variant='outline'
+          size='sm'
+          disabled={currentPage <= 1 || isLoading}
+          onClick={() => onPageChange(currentPage - 1)}>
+          Previous
+        </Button>
 
-      <Button
-        variant='outline'
-        size='sm'
-        disabled={currentPage >= totalPages || isLoading}
-        onClick={() => onPageChange(currentPage + 1)}>
-        Next
-      </Button>
+        {getVisiblePages().map((page, index) => (
+          <React.Fragment key={index}>
+            {page === "..." ? (
+              <span className='px-2 text-muted-foreground'>...</span>
+            ) : (
+              <Button
+                variant={currentPage === page ? "default" : "outline"}
+                size='sm'
+                disabled={isLoading}
+                onClick={() => onPageChange(page as number)}>
+                {page}
+              </Button>
+            )}
+          </React.Fragment>
+        ))}
+
+        <Button
+          variant='outline'
+          size='sm'
+          disabled={currentPage >= totalPages || isLoading}
+          onClick={() => onPageChange(currentPage + 1)}>
+          Next
+        </Button>
+      </div>
     </div>
   );
 };
@@ -170,34 +194,42 @@ const ListPurchaseOrders: React.FC = () => {
   const { hasRequiredPermission, hasSomePermissionsForPage } = useRoleCheck();
 
   const [allPurchaseOrders, setAllPurchaseOrders] = useState<PurchaseOrder[]>(
-    []
+    [],
   );
   const [isLoading, setIsLoading] = useState(true);
   const [currentPage, setCurrentPage] = useState(1);
   const [isDeleting, setIsDeleting] = useState<string | null>(null);
   const [isRestoring, setIsRestoring] = useState<string | null>(null);
 
-  // Pagination settings
-  const itemsPerPage = 10;
-  const totalPages = Math.ceil(allPurchaseOrders.length / itemsPerPage);
-  const startIndex = (currentPage - 1) * itemsPerPage;
-  const endIndex = startIndex + itemsPerPage;
-  const currentPurchaseOrders = allPurchaseOrders.slice(startIndex, endIndex);
+  // Server-side pagination state
+  const [totalDocs, setTotalDocs] = useState(0);
+  const [totalPages, setTotalPages] = useState(0);
+  const [pageSize, setPageSize] = useState(20);
 
   const fetchData = async () => {
     setIsLoading(true);
     try {
-      const response = await fetchPurchaseOrders();
+      const response = await fetchPurchaseOrders(currentPage, pageSize);
       if (response) {
         // Handle both old and new response formats
         const orders = response.purchaseOrders || response || [];
         setAllPurchaseOrders(orders);
+        setTotalDocs(response.totalDocs || 0);
+        setTotalPages(response.totalPages || 0);
+        // Sync currentPage from response in case it's out of bounds
+        if (response.currentPage && response.currentPage !== currentPage) {
+          setCurrentPage(response.currentPage);
+        }
       } else {
         setAllPurchaseOrders([]);
+        setTotalDocs(0);
+        setTotalPages(0);
       }
     } catch (err) {
       console.error(err);
       setAllPurchaseOrders([]);
+      setTotalDocs(0);
+      setTotalPages(0);
       toast.error("Failed to fetch purchase orders");
     } finally {
       setIsLoading(false);
@@ -206,7 +238,8 @@ const ListPurchaseOrders: React.FC = () => {
 
   useEffect(() => {
     fetchData();
-  }, []);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentPage, pageSize]);
 
   const handlePageChange = (page: number) => {
     setCurrentPage(page);
@@ -214,17 +247,28 @@ const ListPurchaseOrders: React.FC = () => {
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
+  const handlePageSizeChange = (size: number) => {
+    setPageSize(size);
+    setCurrentPage(1); // Reset to first page when changing page size
+    // Scroll to top
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+
   const handleDelete = async (id: string) => {
     setIsDeleting(id);
     try {
       await deletePurchaseOrder(id);
-      setAllPurchaseOrders((prev) => prev.filter((order) => order.id !== id));
 
-      // Adjust current page if needed after deletion
-      const newTotal = allPurchaseOrders.length - 1;
-      const newTotalPages = Math.ceil(newTotal / itemsPerPage);
-      if (currentPage > newTotalPages && newTotalPages > 0) {
-        setCurrentPage(newTotalPages);
+      // Check if we're on the last page and it has only one item
+      const isLastPage = currentPage === totalPages;
+      const isOnlyItem = allPurchaseOrders.length === 1;
+
+      // If deleting the last item on the last page, go to previous page
+      if (isLastPage && isOnlyItem && currentPage > 1) {
+        setCurrentPage(currentPage - 1);
+      } else {
+        // Otherwise refetch current page
+        await fetchData();
       }
 
       toast.success("Purchase order deleted successfully!");
@@ -244,13 +288,17 @@ const ListPurchaseOrders: React.FC = () => {
     setIsRestoring(id);
     try {
       await restorePurchaseOrder(id);
-      setAllPurchaseOrders((prev) => prev.filter((order) => order.id !== id));
 
-      // Adjust current page if needed after restoration
-      const newTotal = allPurchaseOrders.length - 1;
-      const newTotalPages = Math.ceil(newTotal / itemsPerPage);
-      if (currentPage > newTotalPages && newTotalPages > 0) {
-        setCurrentPage(newTotalPages);
+      // Check if we're on the last page and it has only one item
+      const isLastPage = currentPage === totalPages;
+      const isOnlyItem = allPurchaseOrders.length === 1;
+
+      // If restoring the last item on the last page, go to previous page
+      if (isLastPage && isOnlyItem && currentPage > 1) {
+        setCurrentPage(currentPage - 1);
+      } else {
+        // Otherwise refetch current page
+        await fetchData();
       }
 
       toast.success("Purchase order restored successfully!");
@@ -284,12 +332,21 @@ const ListPurchaseOrders: React.FC = () => {
               {remainingProducts.map((product, index) => (
                 <div
                   key={index}
-                  className='flex items-center justify-between p-2 rounded-md bg-muted/50'>
+                  className='flex items-center justify-between p-2 rounded-md bg-primary/10'>
                   <span className='text-sm font-medium truncate'>
-                    {product.title}
+                    {!!product.title
+                      ? product.title.toUpperCase().split(" ")[0]
+                      : product.title}
+                    <Badge
+                      variant='secondary'
+                      className='text-xs bg-sky-100 text-sky-600 mx-1 shadow'>
+                      {!!product.title
+                        ? product.title.split(" ").slice(1).join(" ") || "N/A"
+                        : product.title}
+                    </Badge>
                   </span>
                   <Badge variant='secondary' className='ml-2'>
-                    x{product.quantity}
+                    {product.quantity}
                   </Badge>
                 </div>
               ))}
@@ -322,11 +379,18 @@ const ListPurchaseOrders: React.FC = () => {
   );
 
   return (
-    <div className='container mx-auto p-6 space-y-6 '>
+    <div className='w-full mx-auto p-6 space-y-6 '>
       {/* Header */}
       <div className='flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4'>
         <div>
-          <h1 className='text-3xl font-bold tracking-tight'>Purchase Orders</h1>
+          <h1 className='text-3xl font-bold tracking-tight'>
+            Purchase Orders{" "}
+            <Badge
+              variant={"secondary"}
+              className='text-base font-medium text-orange-500 bg-orange-100'>
+              <Logs className='w-5 h-5 mr-2' /> {totalDocs}
+            </Badge>
+          </h1>
           <p className='text-muted-foreground'>
             Manage your purchase orders and track inventory
           </p>
@@ -340,7 +404,7 @@ const ListPurchaseOrders: React.FC = () => {
       </div>
 
       {/* Stats Cards */}
-      {!isLoading && allPurchaseOrders.length > 0 && (
+      {/* {!isLoading && allPurchaseOrders.length > 0 && (
         <div className='grid grid-cols-1 md:grid-cols-4 gap-4'>
           <Card>
             <CardHeader className='flex flex-row items-center justify-between space-y-0 pb-2'>
@@ -350,9 +414,7 @@ const ListPurchaseOrders: React.FC = () => {
               <Package className='h-4 w-4 text-muted-foreground' />
             </CardHeader>
             <CardContent>
-              <div className='text-2xl font-bold'>
-                {allPurchaseOrders.length}
-              </div>
+              <div className='text-2xl font-bold'>{totalDocs}</div>
             </CardContent>
           </Card>
           <Card>
@@ -375,7 +437,7 @@ const ListPurchaseOrders: React.FC = () => {
             </CardHeader>
             <CardContent>
               <div className='text-2xl font-bold'>
-                {currentPurchaseOrders.length}
+                {allPurchaseOrders.length}
               </div>
             </CardContent>
           </Card>
@@ -385,11 +447,11 @@ const ListPurchaseOrders: React.FC = () => {
               <Hash className='h-4 w-4 text-muted-foreground' />
             </CardHeader>
             <CardContent>
-              <div className='text-2xl font-bold'>{itemsPerPage}</div>
+              <div className='text-2xl font-bold'>{pageSize}</div>
             </CardContent>
           </Card>
         </div>
-      )}
+      )} */}
 
       {/* Content */}
       {isLoading ? (
@@ -434,7 +496,7 @@ const ListPurchaseOrders: React.FC = () => {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {currentPurchaseOrders.map((order) => (
+              {allPurchaseOrders.map((order) => (
                 <TableRow key={order.id} className='group'>
                   <TableCell className='font-mono'>
                     #{order.purchaseNumber}
@@ -447,11 +509,23 @@ const ListPurchaseOrders: React.FC = () => {
                             <div
                               key={index}
                               className='flex items-center gap-2 bg-primary/10 text-primary px-2 py-1 rounded-md text-sm'>
-                              <span className='font-medium truncate max-w-24'>
-                                {product.title}
+                              <span className='font-medium truncate max-w-48'>
+                                {!!product.title
+                                  ? product.title.toUpperCase().split(" ")[0]
+                                  : product.title}
+                                <Badge
+                                  variant='secondary'
+                                  className='text-xs bg-sky-100 text-sky-600 mx-1 shadow'>
+                                  {!!product.title
+                                    ? product.title
+                                        .split(" ")
+                                        .slice(1)
+                                        .join(" ") || "N/A"
+                                    : product.title}
+                                </Badge>
                               </span>
                               <Badge variant='secondary' className='text-xs'>
-                                x{product.quantity}
+                                {product.quantity}
                               </Badge>
                             </div>
                           ))}
@@ -462,11 +536,23 @@ const ListPurchaseOrders: React.FC = () => {
                           <div
                             key={index}
                             className='flex items-center gap-2 bg-primary/10 text-primary px-2 py-1 rounded-md text-sm'>
-                            <span className='font-medium truncate max-w-32'>
-                              {product.title}
+                            <span className='font-medium truncate max-w-48'>
+                              {!!product.title
+                                ? product.title.toUpperCase().split(" ")[0]
+                                : product.title}
+                              <Badge
+                                variant='secondary'
+                                className='text-xs bg-sky-100 text-sky-600 mx-1 shadow'>
+                                {!!product.title
+                                  ? product.title
+                                      .split(" ")
+                                      .slice(1)
+                                      .join(" ") || "N/A"
+                                  : product.title}
+                              </Badge>
                             </span>
                             <Badge variant='secondary' className='text-xs'>
-                              x{product.quantity}
+                              {product.quantity}
                             </Badge>
                           </div>
                         ))
@@ -565,7 +651,9 @@ const ListPurchaseOrders: React.FC = () => {
         <Pagination
           currentPage={currentPage}
           totalPages={totalPages}
+          pageSize={pageSize}
           onPageChange={handlePageChange}
+          onPageSizeChange={handlePageSizeChange}
           isLoading={false}
         />
       )}

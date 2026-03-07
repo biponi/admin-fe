@@ -43,8 +43,6 @@ import {
   Save,
   ArrowLeft,
   Edit,
-  DollarSign,
-  Hash,
   Calendar,
   TrendingUp,
   TrendingDown,
@@ -168,13 +166,13 @@ const UpdatePurchaseOrder: React.FC = () => {
 
   // State
   const [purchaseOrder, setPurchaseOrder] = useState<PurchaseOrder | null>(
-    null
+    null,
   );
   const [products, setProducts] = useState<PurchaseOrderProduct[]>([]);
   const [loading, setLoading] = useState(true);
   const [updating, setUpdating] = useState(false);
   const [validationErrors, setValidationErrors] = useState<ValidationError[]>(
-    []
+    [],
   );
   const [showConfirmDialog, setShowConfirmDialog] = useState(false);
   const [inventoryWarnings, setInventoryWarnings] = useState<string[]>([]);
@@ -198,7 +196,7 @@ const UpdatePurchaseOrder: React.FC = () => {
         purchaseOrder?.products.map((p: any) => ({
           ...p,
           originalQuantity: p.quantity,
-        }))
+        })),
       );
     } catch (error) {
       console.error("Failed to fetch purchase order:", error);
@@ -227,7 +225,7 @@ const UpdatePurchaseOrder: React.FC = () => {
       });
       setHistoryIndex((prev) => prev + 1);
     },
-    [historyIndex, maxHistorySize]
+    [historyIndex, maxHistorySize],
   );
 
   // Initialize history when products are loaded
@@ -278,7 +276,7 @@ const UpdatePurchaseOrder: React.FC = () => {
     const totalItems = products.reduce((sum, p) => sum + (p.quantity || 0), 0);
     const totalProducts = products.length;
     const changedProducts = products.filter(
-      (p) => p.quantity !== p.originalQuantity
+      (p) => p.quantity !== p.originalQuantity,
     ).length;
     const totalAmount = calculateTotal();
 
@@ -355,7 +353,7 @@ const UpdatePurchaseOrder: React.FC = () => {
         warnings.push(`Increasing ${product.name} by ${quantityChange} units`);
       } else if (quantityChange < 0) {
         warnings.push(
-          `Decreasing ${product.name} by ${Math.abs(quantityChange)} units`
+          `Decreasing ${product.name} by ${Math.abs(quantityChange)} units`,
         );
       }
 
@@ -365,7 +363,7 @@ const UpdatePurchaseOrder: React.FC = () => {
         product.quantity > product.availableStock
       ) {
         warnings.push(
-          `${product.name}: Requested quantity (${product.quantity}) exceeds available stock (${product.availableStock})`
+          `${product.name}: Requested quantity (${product.quantity}) exceeds available stock (${product.availableStock})`,
         );
       }
     });
@@ -472,13 +470,13 @@ const UpdatePurchaseOrder: React.FC = () => {
 
       const updatedOrder = await updatePurchaseOrderAPI(
         purchaseOrder.id,
-        payload
+        payload,
       );
 
       // Update local state with response
       setPurchaseOrder(updatedOrder.purchaseOrder || updatedOrder);
       setProducts(
-        updatedOrder.purchaseOrder?.products || updatedOrder.products || []
+        updatedOrder.purchaseOrder?.products || updatedOrder.products || [],
       );
       setHasChanges(false);
       setShowConfirmDialog(false);
@@ -501,22 +499,22 @@ const UpdatePurchaseOrder: React.FC = () => {
                     error.response.data.message ||
                     "Validation failed. Please check your input.",
                 },
-              ]
+              ],
         );
         toast.error("Validation failed. Please check the form.");
       } else if (error.response?.status === 404) {
         toast.error(
-          "Purchase order or product not found. It may have been deleted."
+          "Purchase order or product not found. It may have been deleted.",
         );
         setTimeout(() => navigate("/purchase-order/list"), 2000);
       } else if (error.response?.status === 409) {
         toast.error(
-          "Conflict: This purchase order has been modified by another user. Please refresh and try again."
+          "Conflict: This purchase order has been modified by another user. Please refresh and try again.",
         );
       } else {
         toast.error(
           error.response?.data?.message ||
-            "Failed to update purchase order. Please try again."
+            "Failed to update purchase order. Please try again.",
         );
       }
     } finally {
@@ -600,8 +598,8 @@ const UpdatePurchaseOrder: React.FC = () => {
     <MainView title='Update Purchase Order'>
       <div className='container mx-auto p-6 space-y-6'>
         {/* Header */}
-        <Card>
-          <CardHeader>
+        <Card className='border-0 shadow-none p-0'>
+          <CardHeader className='p-0'>
             <div className='flex justify-between items-start'>
               <div>
                 <CardTitle className='flex items-center gap-2'>
@@ -649,7 +647,7 @@ const UpdatePurchaseOrder: React.FC = () => {
         </Card>
 
         {/* Stats Cards */}
-        <div className='grid grid-cols-1 md:grid-cols-4 gap-4'>
+        {/* <div className='grid grid-cols-1 md:grid-cols-4 gap-4'>
           <Card>
             <CardHeader className='flex flex-row items-center justify-between space-y-0 pb-2'>
               <CardTitle className='text-sm font-medium'>
@@ -704,45 +702,153 @@ const UpdatePurchaseOrder: React.FC = () => {
               )}
             </CardContent>
           </Card>
-        </div>
+        </div> */}
 
         {/* Validation Errors */}
         {hasValidationErrors && (
-          <Alert variant='destructive'>
-            <AlertTriangle className='h-4 w-4' />
-            <AlertDescription>
-              <div className='font-medium mb-2'>
-                Please fix the following errors:
+          <Alert
+            variant='destructive'
+            className='border-l-4 border-red-600 bg-gradient-to-r from-red-50 to-white shadow-md'>
+            <div className='flex gap-3'>
+              <div className='flex-shrink-0'>
+                <div className='rounded-full bg-red-100 p-2'>
+                  <AlertTriangle className='h-5 w-5 text-red-600' />
+                </div>
               </div>
-              <ul className='list-disc list-inside space-y-1'>
-                {validationErrors.map((error, index) => (
-                  <li key={index} className='text-sm'>
-                    {error.productIndex !== undefined
-                      ? `Product ${error.productIndex + 1}: ${error.message}`
-                      : error.message}
-                  </li>
-                ))}
-              </ul>
-            </AlertDescription>
+              <AlertDescription className='flex-1'>
+                <div className='font-semibold text-red-900 mb-3 text-base'>
+                  Please fix the following errors:
+                </div>
+                <ul className='space-y-2'>
+                  {validationErrors.map((error, index) => (
+                    <li
+                      key={index}
+                      className='flex items-start gap-2 text-sm text-red-800'>
+                      <span className='inline-block w-1.5 h-1.5 rounded-full bg-red-500 mt-1.5 flex-shrink-0'></span>
+                      <span>
+                        {error.productIndex !== undefined ? (
+                          <>
+                            <span className='font-medium'>
+                              Product {error.productIndex + 1}:
+                            </span>{" "}
+                            {error.message}
+                          </>
+                        ) : (
+                          error.message
+                        )}
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+              </AlertDescription>
+            </div>
           </Alert>
         )}
 
         {/* Inventory Warnings */}
         {inventoryWarnings.length > 0 && (
-          <Alert>
-            <AlertTriangle className='h-4 w-4' />
-            <AlertDescription>
-              <div className='font-medium mb-2'>Inventory Changes:</div>
-              <ul className='list-disc list-inside space-y-1'>
-                {inventoryWarnings.map((warning, index) => (
-                  <li key={index} className='text-sm'>
-                    {warning}
-                  </li>
-                ))}
-              </ul>
-            </AlertDescription>
+          <Alert className='bg-gradient-to-r from-amber-50 to-yellow-50 border-l-4 border-amber-500 shadow-md'>
+            <div className='flex gap-3'>
+              <div className='flex-shrink-0'>
+                <div className='rounded-full bg-amber-100 p-2'>
+                  <AlertTriangle className='h-5 w-5 text-amber-600' />
+                </div>
+              </div>
+              <AlertDescription className='flex-1'>
+                <div className='font-semibold text-amber-900 mb-3 text-base'>
+                  Inventory Changes:
+                </div>
+                <ul className='space-y-2'>
+                  {inventoryWarnings.map((warning, index) => (
+                    <li
+                      key={index}
+                      className='flex items-start gap-2 text-sm text-amber-800'>
+                      <span className='inline-block w-1.5 h-1.5 rounded-full bg-amber-500 mt-1.5 flex-shrink-0'></span>
+                      <span>{warning}</span>
+                    </li>
+                  ))}
+                </ul>
+              </AlertDescription>
+            </div>
           </Alert>
         )}
+
+        {/* Order Info */}
+        <Card className='border-none shadow-lg bg-gradient-to-br from-white to-slate-50'>
+          <CardHeader className='border-b bg-gradient-to-r from-slate-50 to-white pb-3'>
+            <CardTitle className='text-lg font-bold text-slate-800 flex items-center gap-2'>
+              <div className='w-1 h-5 bg-blue-500 rounded-full'></div>
+              Order Information
+            </CardTitle>
+          </CardHeader>
+          <CardContent className='pt-4'>
+            <div className='grid grid-cols-1 md:grid-cols-4 gap-3'>
+              <div className='space-y-1.5 p-3 rounded-lg bg-white border border-slate-100 hover:border-slate-200 transition-colors'>
+                <Label className='text-xs font-semibold text-slate-500 uppercase tracking-wide'>
+                  Purchase Number
+                </Label>
+                <div className='font-mono text-base font-bold text-slate-900 bg-slate-50 px-2 py-1.5 rounded border border-slate-200'>
+                  {purchaseOrder.purchaseNumber}
+                </div>
+              </div>
+
+              <div className='space-y-1.5 p-3 rounded-lg bg-white border border-slate-100 hover:border-slate-200 transition-colors'>
+                <Label className='text-xs font-semibold text-slate-500 uppercase tracking-wide'>
+                  Original Total
+                </Label>
+                <div className='text-xl font-bold text-emerald-600'>
+                  ৳{purchaseOrder.totalAmount.toLocaleString()}
+                </div>
+              </div>
+
+              <div className='space-y-1.5 p-3 rounded-lg bg-white border border-slate-100 hover:border-slate-200 transition-colors'>
+                <Label className='text-xs font-semibold text-slate-500 uppercase tracking-wide'>
+                  Created At
+                </Label>
+                <div className='flex items-center gap-2 text-slate-700 text-sm'>
+                  <div className='rounded-full bg-blue-100 p-1'>
+                    <Calendar className='h-3.5 w-3.5 text-blue-600' />
+                  </div>
+                  <span className='font-medium'>
+                    {new Date(purchaseOrder.createdAt).toLocaleDateString(
+                      "en-US",
+                      {
+                        year: "numeric",
+                        month: "long",
+                        day: "numeric",
+                        hour: "2-digit",
+                        minute: "2-digit",
+                      },
+                    )}
+                  </span>
+                </div>
+              </div>
+
+              <div className='space-y-1.5 p-3 rounded-lg bg-white border border-slate-100 hover:border-slate-200 transition-colors'>
+                <Label className='text-xs font-semibold text-slate-500 uppercase tracking-wide'>
+                  Last Updated
+                </Label>
+                <div className='flex items-center gap-2 text-slate-700 text-sm'>
+                  <div className='rounded-full bg-purple-100 p-1'>
+                    <Calendar className='h-3.5 w-3.5 text-purple-600' />
+                  </div>
+                  <span className='font-medium'>
+                    {new Date(purchaseOrder.updatedAt).toLocaleDateString(
+                      "en-US",
+                      {
+                        year: "numeric",
+                        month: "long",
+                        day: "numeric",
+                        hour: "2-digit",
+                        minute: "2-digit",
+                      },
+                    )}
+                  </span>
+                </div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
 
         {/* Products Table */}
         <Card>
@@ -781,11 +887,11 @@ const UpdatePurchaseOrder: React.FC = () => {
                     {products.map((product, index) => {
                       const hasQuantityError = validationErrors.some(
                         (e) =>
-                          e.productIndex === index && e.field === "quantity"
+                          e.productIndex === index && e.field === "quantity",
                       );
                       const hasPriceError = validationErrors.some(
                         (e) =>
-                          e.productIndex === index && e.field === "unitPrice"
+                          e.productIndex === index && e.field === "unitPrice",
                       );
                       const hasChanged =
                         product.quantity !== product.originalQuantity;
@@ -887,7 +993,7 @@ const UpdatePurchaseOrder: React.FC = () => {
                                   validationErrors.find(
                                     (e) =>
                                       e.productIndex === index &&
-                                      e.field === "quantity"
+                                      e.field === "quantity",
                                   )?.message
                                 }
                               </div>
@@ -922,7 +1028,7 @@ const UpdatePurchaseOrder: React.FC = () => {
                                   validationErrors.find(
                                     (e) =>
                                       e.productIndex === index &&
-                                      e.field === "unitPrice"
+                                      e.field === "unitPrice",
                                   )?.message
                                 }
                               </div>
@@ -1009,7 +1115,7 @@ const UpdatePurchaseOrder: React.FC = () => {
                           )}
                           ৳
                           {Math.abs(
-                            stats.totalAmount - purchaseOrder.totalAmount
+                            stats.totalAmount - purchaseOrder.totalAmount,
                           ).toLocaleString()}
                         </span>
                       </div>
@@ -1126,68 +1232,6 @@ const UpdatePurchaseOrder: React.FC = () => {
             </AlertDialogContent>
           </AlertDialog>
         </div>
-
-        {/* Order Info */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Order Information</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
-              <div className='space-y-2'>
-                <Label className='text-sm text-muted-foreground'>
-                  Purchase Number
-                </Label>
-                <div className='font-mono'>{purchaseOrder.purchaseNumber}</div>
-              </div>
-
-              <div className='space-y-2'>
-                <Label className='text-sm text-muted-foreground'>
-                  Original Total
-                </Label>
-                <div>৳{purchaseOrder.totalAmount.toLocaleString()}</div>
-              </div>
-
-              <div className='space-y-2'>
-                <Label className='text-sm text-muted-foreground'>
-                  Created At
-                </Label>
-                <div className='flex items-center gap-2'>
-                  <Calendar className='h-4 w-4 text-muted-foreground' />
-                  {new Date(purchaseOrder.createdAt).toLocaleDateString(
-                    "en-US",
-                    {
-                      year: "numeric",
-                      month: "long",
-                      day: "numeric",
-                      hour: "2-digit",
-                      minute: "2-digit",
-                    }
-                  )}
-                </div>
-              </div>
-
-              <div className='space-y-2'>
-                <Label className='text-sm text-muted-foreground'>
-                  Last Updated
-                </Label>
-                <div className='flex items-center gap-2'>
-                  <Calendar className='h-4 w-4 text-muted-foreground' />
-                  {new Date(purchaseOrder.updatedAt).toLocaleDateString(
-                    "en-US",
-                    {
-                      year: "numeric",
-                      month: "long",
-                      day: "numeric",
-                      hour: "2-digit",
-                      minute: "2-digit",
-                    }
-                  )}
-                </div>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
       </div>
     </MainView>
   );

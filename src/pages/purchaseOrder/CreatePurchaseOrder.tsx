@@ -96,7 +96,7 @@ const CreatePurchaseOrder: React.FC = () => {
       const existingProduct = selectedProducts.find((p) =>
         product.variant?.id
           ? p.id === product.id && p.variant?.id === product.variant.id
-          : p.id === product.id
+          : p.id === product.id,
       );
 
       if (existingProduct) {
@@ -105,9 +105,9 @@ const CreatePurchaseOrder: React.FC = () => {
             p.id === product.id && p.variant?.id === product.variant?.id
               ? { ...p, quantity: p.quantity + 1 }
               : !p.variant && p.id === product.id
-              ? { ...p, quantity: p.quantity + 1 }
-              : p
-          )
+                ? { ...p, quantity: p.quantity + 1 }
+                : p,
+          ),
         );
       } else {
         setSelectedProducts((prev) => [
@@ -117,7 +117,7 @@ const CreatePurchaseOrder: React.FC = () => {
       }
       toast.success(`Added ${product.name} to purchase order`);
     },
-    [selectedProducts]
+    [selectedProducts],
   );
 
   const handleCreateOrder = () => {
@@ -127,7 +127,7 @@ const CreatePurchaseOrder: React.FC = () => {
     }
 
     const hasInvalidQuantities = selectedProducts.some(
-      (p) => !p.quantity || p.quantity <= 0
+      (p) => !p.quantity || p.quantity <= 0,
     );
     if (hasInvalidQuantities) {
       toast.error("Please ensure all products have valid quantities");
@@ -159,12 +159,12 @@ const CreatePurchaseOrder: React.FC = () => {
           prev.map((p, i) =>
             i === index
               ? { ...p, quantity: value === "" ? 0 : parseInt(value) }
-              : p
-          )
+              : p,
+          ),
         );
       }
     },
-    []
+    [],
   );
 
   const handleUnitPriceChange = React.useCallback(
@@ -174,27 +174,29 @@ const CreatePurchaseOrder: React.FC = () => {
           prev.map((p, i) =>
             i === index
               ? { ...p, unitPrice: value === "" ? 0 : parseFloat(value) || 0 }
-              : p
-          )
+              : p,
+          ),
         );
       }
     },
-    []
+    [],
   );
 
   const handleQuantityIncrement = React.useCallback((index: number) => {
     setSelectedProducts((prev) =>
       prev.map((p, i) =>
-        i === index ? { ...p, quantity: (p.quantity || 0) + 1 } : p
-      )
+        i === index ? { ...p, quantity: (p.quantity || 0) + 1 } : p,
+      ),
     );
   }, []);
 
   const handleQuantityDecrement = React.useCallback((index: number) => {
     setSelectedProducts((prev) =>
       prev.map((p, i) =>
-        i === index ? { ...p, quantity: Math.max(0, (p.quantity || 0) - 1) } : p
-      )
+        i === index
+          ? { ...p, quantity: Math.max(0, (p.quantity || 0) - 1) }
+          : p,
+      ),
     );
   }, []);
 
@@ -204,7 +206,7 @@ const CreatePurchaseOrder: React.FC = () => {
       setSelectedProducts((prev) => prev.filter((_, i) => i !== index));
       toast.success(`Removed ${productName} from purchase order`);
     },
-    [selectedProducts]
+    [selectedProducts],
   );
 
   const calculateTotal = React.useCallback(() => {
@@ -339,8 +341,8 @@ const CreatePurchaseOrder: React.FC = () => {
     <MainView title='Create Purchase Order'>
       <div className='container mx-auto p-6 space-y-6'>
         {/* Header */}
-        <Card>
-          <CardHeader>
+        <Card className='shadow-none border-0 p-0'>
+          <CardHeader className='p-0'>
             <CardTitle className='flex items-center gap-2'>
               <ShoppingCart className='h-5 w-5' />
               Create Purchase Order
@@ -389,7 +391,7 @@ const CreatePurchaseOrder: React.FC = () => {
         </div>
 
         {/* Selected Products Table */}
-        <Card>
+        <Card className='rounded-sm'>
           <CardHeader>
             <CardTitle>Selected Products</CardTitle>
             <CardDescription>
@@ -538,7 +540,7 @@ const CreatePurchaseOrder: React.FC = () => {
                       <span className='font-medium'>
                         {selectedProducts.reduce(
                           (sum, p) => sum + (p.quantity || 0),
-                          0
+                          0,
                         )}
                       </span>
                     </div>

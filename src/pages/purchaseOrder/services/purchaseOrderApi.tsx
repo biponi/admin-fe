@@ -3,8 +3,13 @@ import axios from "../../../api/axios";
 import { ProductListResponse, ProductSearchResponse } from "../types";
 import config from "../../../utils/config";
 
-export const fetchPurchaseOrders = async (): Promise<ProductListResponse> => {
-  const response = await axios.get(config.purchaseOrder.purchaseList());
+export const fetchPurchaseOrders = async (
+  page = 1,
+  limit = 20
+): Promise<ProductListResponse> => {
+  const response = await axios.get(config.purchaseOrder.purchaseList(), {
+    params: { page, limit },
+  });
   return response.data;
 };
 
