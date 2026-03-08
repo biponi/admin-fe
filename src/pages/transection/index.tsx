@@ -24,6 +24,12 @@ import {
   TabsContent,
 } from "../../components/ui/tabs";
 import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "../../components/ui/dropdown-menu";
+import {
   Table,
   TableBody,
   TableCell,
@@ -65,6 +71,10 @@ import {
   Activity,
   Calendar,
   CalendarRange,
+  Download,
+  FileDown,
+  FileSpreadsheet,
+  ShoppingCart,
 } from "lucide-react";
 import config from "../../utils/config";
 import axios from "../../api/axios";
@@ -74,6 +84,12 @@ import useDebounce from "../../customHook/useDebounce";
 import MainView from "../../coreComponents/mainView";
 import useRoleCheck from "../auth/hooks/useRoleCheck";
 import dayjs from "dayjs";
+import { pathaoIcon, steadfastIcon } from "../../utils/utility";
+import {
+  exportTransactionsToCSV,
+  generateTransactionsPDF,
+} from "../../utils/transactionExport";
+import { showOrderModal } from "../../utils/orderModal";
 
 const defaultParams = {
   intent: "",
@@ -189,6 +205,7 @@ const TransactionsPage: React.FC = () => {
   const { hasRequiredPermission, hasSomePermissionsForPage } = useRoleCheck();
   const [transactions, setTransactions] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
+  const [exportLoading, setExportLoading] = useState(false);
   const [editModalOpen, setEditModalOpen] = useState(false);
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const [formData, setFormData] = useState<any>({});
@@ -215,12 +232,13 @@ const TransactionsPage: React.FC = () => {
         params: {
           ...searchParams,
           limit,
+          source: activeTab,
           offset: currentPageNum - 1,
         },
       });
       setTransactions(response?.data?.transactions || []);
       setTotalPageNum(
-        Math.ceil(response?.data?.totalTransactions / limit) || 0
+        Math.ceil(response?.data?.totalTransactions / limit) || 0,
       );
       setTotalTransactions(response?.data?.totalTransactions || 0);
     } catch (error) {
@@ -244,7 +262,7 @@ const TransactionsPage: React.FC = () => {
       return () => clearTimeout(timeout);
     }
     //eslint-disable-next-line
-  }, [searchParams, limit, currentPageNum]);
+  }, [searchParams, limit, currentPageNum, activeTab]);
 
   // Handle debounce for search input
   useEffect(() => {
@@ -300,17 +318,62 @@ const TransactionsPage: React.FC = () => {
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
+  // Handle export to CSV
+  const handleExportCSV = async () => {
+    setExportLoading(true);
+    try {
+      const result = exportTransactionsToCSV(filteredTransactions);
+      if (result.success) {
+        successToast("CSV exported successfully!");
+      } else {
+        errorToast(result.error || "Failed to export CSV");
+      }
+    } catch (error: any) {
+      errorToast(error.message || "Failed to export CSV");
+    } finally {
+      setExportLoading(false);
+    }
+  };
+
+  // Handle export to PDF
+  const handleExportPDF = async () => {
+    setExportLoading(true);
+    try {
+      const summary = {
+        totalCount: stats.successful + stats.failed,
+        successCount: stats.successful,
+        failedCount: stats.failed,
+        totalAmount: stats.totalAmount,
+      };
+
+      const result = await generateTransactionsPDF(
+        filteredTransactions,
+        summary,
+      );
+      if (result.success) {
+        successToast("PDF exported successfully!");
+      } else {
+        errorToast(result.error || "Failed to export PDF");
+      }
+    } catch (error: any) {
+      errorToast(error.message || "Failed to export PDF");
+    } finally {
+      setExportLoading(false);
+    }
+  };
+
   // Updated filter logic for bKash transactions
   const getFilteredTransactions = () => {
     if (activeTab === "bkash") {
       // A transaction is bKash if vendor_transaction_id is not empty/null
       return transactions.filter(
-        (t) => t.vendor_transaction_id && t.vendor_transaction_id.trim() !== ""
+        (t) => t.vendor_transaction_id && t.vendor_transaction_id.trim() !== "",
       );
     } else if (activeTab === "others") {
       // A transaction is others if vendor_transaction_id is empty/null
       return transactions.filter(
-        (t) => !t.vendor_transaction_id || t.vendor_transaction_id.trim() === ""
+        (t) =>
+          !t.vendor_transaction_id || t.vendor_transaction_id.trim() === "",
       );
     }
     return transactions;
@@ -322,13 +385,13 @@ const TransactionsPage: React.FC = () => {
     const failed = filteredTransactions.filter((t) => !t.success).length;
     const totalAmount = filteredTransactions.reduce(
       (sum, t) => (Number(sum) ?? 0) + Number(t.amount || 0),
-      0
+      0,
     );
     const sales = filteredTransactions.filter(
-      (t) => t.intent === "sale"
+      (t) => t.intent === "sale",
     ).length;
     const purchases = filteredTransactions.filter(
-      (t) => t.intent === "purchase"
+      (t) => t.intent === "purchase",
     ).length;
 
     return { successful, failed, totalAmount, sales, purchases };
@@ -374,17 +437,41 @@ const TransactionsPage: React.FC = () => {
               Manage and monitor all your payment transactions
             </p>
           </div>
-          {hasRequiredPermission("Transaction", "create") && (
-            <Button
-              onClick={() => {
-                setEditingId(null);
-                setFormData({});
-                setEditModalOpen(true);
-              }}>
-              <Plus className='w-4 h-4 mr-2' />
-              Create Transaction
-            </Button>
-          )}
+          <div className='flex items-center gap-2'>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant='outline' disabled={exportLoading || loading}>
+                  <Download className='w-4 h-4 mr-2' />
+                  Export
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align='end'>
+                <DropdownMenuItem
+                  onClick={handleExportCSV}
+                  disabled={exportLoading || loading}>
+                  <FileSpreadsheet className='w-4 h-4 mr-2' />
+                  Export as CSV
+                </DropdownMenuItem>
+                <DropdownMenuItem
+                  onClick={handleExportPDF}
+                  disabled={exportLoading || loading}>
+                  <FileDown className='w-4 h-4 mr-2' />
+                  Export as PDF
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+            {hasRequiredPermission("Transaction", "create") && (
+              <Button
+                onClick={() => {
+                  setEditingId(null);
+                  setFormData({});
+                  setEditModalOpen(true);
+                }}>
+                <Plus className='w-4 h-4 mr-2' />
+                Create Transaction
+              </Button>
+            )}
+          </div>
         </div>
 
         {/* Filters */}
@@ -526,38 +613,40 @@ const TransactionsPage: React.FC = () => {
           value={activeTab}
           onValueChange={setActiveTab}
           className='w-full mt-4'>
-          <TabsList className='grid grid-cols-3 w-full max-w-md mx-auto lg:mx-0'>
+          <TabsList className='grid grid-cols-5 w-full max-w-md mx-auto lg:mx-0'>
             <TabsTrigger value='all' className='flex items-center space-x-2'>
               <CreditCard className='h-4 w-4' />
               <span>All ({transactions.length})</span>
             </TabsTrigger>
             <TabsTrigger value='bkash' className='flex items-center space-x-2'>
-              <img src={bkashIcon} className='h-4 w-4' alt='bKash' />
-              <span>
-                bKash (
-                {
-                  transactions.filter(
-                    (t) =>
-                      t.vendor_transaction_id &&
-                      t.vendor_transaction_id.trim() !== ""
-                  ).length
-                }
-                )
-              </span>
+              <img
+                src={bkashIcon}
+                className='h-4 w-4 rounded-full'
+                alt='bKash'
+              />
+              <span>bKash</span>
+            </TabsTrigger>
+            <TabsTrigger value='pathao' className='flex items-center space-x-2'>
+              <img
+                src={pathaoIcon}
+                className='h-4 w-4 rounded-full'
+                alt='Pathao'
+              />
+              <span>Pathao</span>
+            </TabsTrigger>
+            <TabsTrigger
+              value='steadfast'
+              className='flex items-center space-x-2'>
+              <img
+                src={steadfastIcon}
+                className='h-4 w-4 rounded-full'
+                alt='Steadfast'
+              />
+              <span>Steadfast</span>
             </TabsTrigger>
             <TabsTrigger value='others' className='flex items-center space-x-2'>
               <Wallet className='h-4 w-4' />
-              <span>
-                Others (
-                {
-                  transactions.filter(
-                    (t) =>
-                      !t.vendor_transaction_id ||
-                      t.vendor_transaction_id.trim() === ""
-                  ).length
-                }
-                )
-              </span>
+              <span>Others</span>
             </TabsTrigger>
           </TabsList>
 
@@ -574,7 +663,13 @@ const TransactionsPage: React.FC = () => {
                       <TableHead className='w-32'>
                         <div className='flex items-center gap-2'>
                           <Hash className='w-4 h-4' />
-                          Transaction #
+                          Transaction
+                        </div>
+                      </TableHead>
+                      <TableHead className='w-32'>
+                        <div className='flex items-center gap-2'>
+                          <ShoppingCart className='w-4 h-4' />
+                          Order ID
                         </div>
                       </TableHead>
                       <TableHead>
@@ -635,15 +730,30 @@ const TransactionsPage: React.FC = () => {
                         <TableCell className='font-mono'>
                           <Badge variant='outline'>#{transaction?.id}</Badge>
                         </TableCell>
+                        <TableCell className='font-mono'>
+                          <Badge
+                            variant='outline'
+                            className='cursor-pointer'
+                            onClick={() =>
+                              transaction?.order_id &&
+                              showOrderModal(transaction?.order_id)
+                            }>
+                            <span className='text-blue-500'>
+                              {transaction?.order_id}
+                            </span>
+                          </Badge>
+                        </TableCell>
                         <TableCell>
                           <div className='flex items-center gap-2 bg-primary/10 text-primary px-2 py-1 rounded-md text-sm w-fit'>
-                            {transaction.intent === "sale" ? (
-                              <TrendingUp className='h-3 w-3' />
-                            ) : (
+                            {transaction.intent === "purchase" ? (
                               <TrendingDown className='h-3 w-3' />
+                            ) : (
+                              <TrendingUp className='h-3 w-3' />
                             )}
                             <span className='font-medium capitalize'>
-                              {transaction.intent}
+                              {transaction.intent === "purchase"
+                                ? "Purchase"
+                                : "Sale"}
                             </span>
                           </div>
                         </TableCell>
@@ -680,7 +790,15 @@ const TransactionsPage: React.FC = () => {
                               <HoverCardTrigger asChild>
                                 <div className='cursor-pointer flex items-center justify-start'>
                                   <img
-                                    src={bkashIcon}
+                                    src={
+                                      transaction?.payment_from.toLowerCase() ===
+                                      "pathao"
+                                        ? pathaoIcon
+                                        : transaction?.payment_from.toLowerCase() ===
+                                            "steadfast"
+                                          ? steadfastIcon
+                                          : bkashIcon
+                                    }
                                     className='h-8 w-auto hover:scale-110 transition-transform duration-200'
                                     alt='bKash'
                                   />
@@ -690,12 +808,26 @@ const TransactionsPage: React.FC = () => {
                                 <div className='space-y-3'>
                                   <div className='flex items-center space-x-2'>
                                     <img
-                                      src={bkashIcon}
+                                      src={
+                                        transaction?.payment_from.toLowerCase() ===
+                                        "pathao"
+                                          ? pathaoIcon
+                                          : transaction?.payment_from.toLowerCase() ===
+                                              "steadfast"
+                                            ? steadfastIcon
+                                            : bkashIcon
+                                      }
                                       className='h-6 w-6'
                                       alt='bKash'
                                     />
                                     <h4 className='text-sm font-semibold'>
-                                      bKash Transaction
+                                      {transaction?.payment_from === "pathao"
+                                        ? "Pathao"
+                                        : transaction?.payment_from ===
+                                            "steadfast"
+                                          ? "Steadfast"
+                                          : "BKash"}{" "}
+                                      Transaction
                                     </h4>
                                   </div>
                                   <Separator />
@@ -709,7 +841,7 @@ const TransactionsPage: React.FC = () => {
                                         className='cursor-pointer hover:bg-gray-200 transition-colors font-mono text-xs'
                                         onClick={() =>
                                           handleCopy(
-                                            transaction?.vendor_transaction_id
+                                            transaction?.vendor_transaction_id,
                                           )
                                         }>
                                         {transaction?.vendor_transaction_id}
@@ -720,7 +852,7 @@ const TransactionsPage: React.FC = () => {
                                         className='h-6 w-6 p-0'
                                         onClick={() =>
                                           handleCopy(
-                                            transaction?.vendor_transaction_id
+                                            transaction?.vendor_transaction_id,
                                           )
                                         }>
                                         <Copy className='h-3 w-3' />
@@ -744,12 +876,12 @@ const TransactionsPage: React.FC = () => {
                         </TableCell>
                         <TableCell>
                           {dayjs(transaction?.createdAt ?? "--").format(
-                            "Do MMMM YYYY hh.mm A"
+                            "Do MMMM YYYY hh.mm A",
                           )}
                         </TableCell>
                         <TableCell>
                           {dayjs(transaction?.updatedAt ?? "--").format(
-                            "Do MMMM YYYY hh.mm A"
+                            "Do MMMM YYYY hh.mm A",
                           )}
                         </TableCell>
                         {hasSomePermissionsForPage("Transaction", [
@@ -773,7 +905,7 @@ const TransactionsPage: React.FC = () => {
                               )}
                               {hasRequiredPermission(
                                 "Transaction",
-                                "delete"
+                                "delete",
                               ) && (
                                 <Button
                                   variant='ghost'
