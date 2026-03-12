@@ -39,7 +39,7 @@ const ProductInfoCard = ({ product }: ProductInfoCardProps) => {
     <div className='relative'>
       {/* Decorative background blur elements */}
       <div className='absolute -top-24 -right-24 w-96 h-96 bg-blue-200 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob'></div>
-      <div className='absolute -bottom-24 -left-24 w-96 h-96 bg-purple-200 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob animation-delay-2000'></div>
+      <div className='hidden absolute -bottom-24 -left-24 w-96 h-96 bg-purple-200 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob animation-delay-2000'></div>
 
       <Card className='relative overflow-hidden border-0 transition-all duration-500 bg-white/80 backdrop-blur-sm'>
         {/* Gradient accent line */}

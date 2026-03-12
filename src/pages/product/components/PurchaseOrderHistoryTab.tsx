@@ -36,6 +36,7 @@ import {
   DrawerHeader,
   DrawerTitle,
 } from "../../../components/ui/drawer";
+import { Badge } from "../../../components/ui/badge";
 import { ScrollArea } from "../../../components/ui/scroll-area";
 import {
   Filter,
@@ -244,63 +245,57 @@ const PurchaseOrderHistoryTab = ({
               <TableHeader className='sticky top-0 bg-white border-b z-10'>
                 <TableRow className='bg-sidebar'>
                   <TableHead>Purchase Number</TableHead>
-                  <TableHead>Product Variant</TableHead>
-                  <TableHead className='text-right'>Quantity</TableHead>
-                  <TableHead className='text-right'>Unit Cost</TableHead>
+                  <TableHead>Variants</TableHead>
+                  <TableHead className='text-right'>Total Quantity</TableHead>
                   <TableHead className='text-right'>Total Cost</TableHead>
                   <TableHead>Purchase Date</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {purchaseHistory?.purchaseOrders?.map((purchase) => (
-                  <TableRow
-                    key={purchase.purchaseOrderId}
-                    className='cursor-pointer hover:bg-gray-50'
-                    onClick={() => handlePurchaseClick(purchase)}>
-                    <TableCell className='font-medium text-blue-600 hover:underline'>
-                      #{purchase.purchaseNumber}
-                    </TableCell>
-                    <TableCell>
-                      {purchase.productDetails.variation ? (
-                        <span>
-                          {purchase.productDetails.variation.color && (
-                            <span>
-                              {purchase.productDetails.variation.color}
-                            </span>
-                          )}
-                          {purchase.productDetails.variation.color &&
-                            purchase.productDetails.variation.size && (
-                              <span> - </span>
-                            )}
-                          {purchase.productDetails.variation.size && (
-                            <span>
-                              {purchase.productDetails.variation.size}
-                            </span>
-                          )}
-                        </span>
-                      ) : (
-                        <span className='text-gray-400'>Standard</span>
-                      )}
-                    </TableCell>
-                    <TableCell className='text-right'>
-                      {purchase.productDetails.quantity}
-                    </TableCell>
-                    <TableCell className='text-right'>
-                      ৳{purchase.productDetails.unitPrice}
-                    </TableCell>
-                    <TableCell className='text-right font-semibold'>
-                      ৳{purchase.productDetails.totalCost}
-                    </TableCell>
-                    <TableCell>
-                      {format(new Date(purchase.purchaseDate), "MMM dd, yyyy")}
-                    </TableCell>
-                  </TableRow>
-                ))}
+                {purchaseHistory?.purchaseOrders?.map((purchase) => {
+                  const totalQuantity = purchase.productDetails.reduce(
+                    (sum: number, v: any) => sum + v.quantity,
+                    0,
+                  );
+                  const totalCost = purchase.productDetails.reduce(
+                    (sum: number, v: any) => sum + v.totalCost,
+                    0,
+                  );
+                  const variantCount = purchase.productDetails.length;
+
+                  return (
+                    <TableRow
+                      key={purchase.purchaseOrderId}
+                      className='cursor-pointer hover:bg-gray-50'
+                      onClick={() => handlePurchaseClick(purchase)}>
+                      <TableCell className='font-medium text-blue-600 hover:underline'>
+                        #{purchase.purchaseNumber}
+                      </TableCell>
+                      <TableCell>
+                        <Badge variant='secondary' className='text-xs'>
+                          {variantCount} variant{variantCount > 1 ? "s" : ""}
+                        </Badge>
+                      </TableCell>
+                      <TableCell className='text-right font-semibold'>
+                        {totalQuantity}
+                      </TableCell>
+                      <TableCell className='text-right font-bold text-green-600'>
+                        ৳{totalCost}
+                      </TableCell>
+                      <TableCell>
+                        {format(
+                          new Date(purchase.purchaseDate),
+                          "MMM dd, yyyy hh:mm a",
+                        )}
+                      </TableCell>
+                    </TableRow>
+                  );
+                })}
                 {(!purchaseHistory?.purchaseOrders ||
                   purchaseHistory.purchaseOrders.length === 0) && (
                   <TableRow>
                     <TableCell
-                      colSpan={6}
+                      colSpan={5}
                       className='text-center py-8 text-gray-500'>
                       No purchase orders found
                     </TableCell>
@@ -386,47 +381,63 @@ const PurchaseOrderHistoryTab = ({
               <div className='space-y-4'>
                 <div>
                   <h3 className='font-semibold mb-2'>Product Details</h3>
-                  <div className='space-y-1 text-sm'>
-                    <p>
-                      <span className='text-gray-500'>Title:</span>{" "}
-                      {selectedPurchase?.productDetails.title}
-                    </p>
-                    <p>
-                      <span className='text-gray-500'>SKU:</span>{" "}
-                      {selectedPurchase?.productDetails.sku}
-                    </p>
-                    {selectedPurchase?.productDetails.variation && (
-                      <p>
-                        <span className='text-gray-500'>Variant:</span>{" "}
-                        {selectedPurchase.productDetails.variation.color &&
-                          selectedPurchase.productDetails.variation.color}
-                        {selectedPurchase.productDetails.variation.color &&
-                          selectedPurchase.productDetails.variation.size &&
-                          " - "}
-                        {selectedPurchase.productDetails.variation.size &&
-                          selectedPurchase.productDetails.variation.size}
-                      </p>
-                    )}
+                  <div className='space-y-3'>
+                    <h4 className='font-medium text-sm text-gray-700'>
+                      Product Variants (
+                      {selectedPurchase?.productDetails?.length || 0})
+                    </h4>
+                    <div className='space-y-2'>
+                      {selectedPurchase?.productDetails?.map(
+                        (variant: any, idx: number) => (
+                          <Card key={idx} className='p-3 bg-gray-50'>
+                            <div className='space-y-1 text-sm'>
+                              <p>
+                                <span className='text-gray-500'>Title:</span>{" "}
+                                <span className='font-medium'>
+                                  {variant.title}
+                                </span>
+                              </p>
+                              <p>
+                                <span className='text-gray-500'>SKU:</span>{" "}
+                                <span className='font-mono text-xs'>
+                                  {variant.sku}
+                                </span>
+                              </p>
+                              <div className='grid grid-cols-3 gap-2 mt-2'>
+                                <div>
+                                  <span className='text-gray-500'>Qty:</span>{" "}
+                                  <span className='font-semibold'>
+                                    {variant.quantity}
+                                  </span>
+                                </div>
+                                <div>
+                                  <span className='text-gray-500'>Unit:</span> ৳
+                                  <span className='font-medium'>
+                                    {variant.unitPrice}
+                                  </span>
+                                </div>
+                                <div>
+                                  <span className='text-gray-500'>Cost:</span> ৳
+                                  <span className='font-semibold text-green-600'>
+                                    {variant.totalCost}
+                                  </span>
+                                </div>
+                              </div>
+                            </div>
+                          </Card>
+                        ),
+                      )}
+                    </div>
                   </div>
                 </div>
                 <div>
-                  <h3 className='font-semibold mb-2'>Purchase Information</h3>
+                  <h3 className='font-semibold mb-2'>Order Summary</h3>
                   <div className='space-y-1 text-sm'>
-                    <p>
-                      <span className='text-gray-500'>Quantity:</span>{" "}
-                      {selectedPurchase?.productDetails.quantity}
-                    </p>
-                    <p>
-                      <span className='text-gray-500'>Unit Price:</span> ৳
-                      {selectedPurchase?.productDetails.unitPrice}
-                    </p>
-                    <p>
-                      <span className='text-gray-500'>Total Cost:</span> ৳
-                      {selectedPurchase?.productDetails.totalCost}
-                    </p>
-                    <p>
-                      <span className='text-gray-500'>Total Amount:</span> ৳
-                      {selectedPurchase?.totalAmount}
+                    <p className='text-lg'>
+                      <span className='text-gray-500'>Total Amount:</span>{" "}
+                      <span className='font-bold text-green-600'>
+                        ৳{selectedPurchase?.totalAmount}
+                      </span>
                     </p>
                   </div>
                 </div>
@@ -470,59 +481,57 @@ const PurchaseOrderHistoryTab = ({
                   <h3 className='font-semibold mb-3 text-lg'>
                     Product Details
                   </h3>
-                  <div className='space-y-2 text-sm bg-gray-50 p-4 rounded-lg'>
-                    <p>
-                      <span className='text-gray-500 font-medium'>Title:</span>{" "}
-                      {selectedPurchase?.productDetails.title}
+                  <div className='space-y-2'>
+                    <p className='text-sm text-gray-600'>
+                      {selectedPurchase?.productDetails?.length || 0} variant(s)
+                      in this order
                     </p>
-                    <p>
-                      <span className='text-gray-500 font-medium'>SKU:</span>{" "}
-                      {selectedPurchase?.productDetails.sku}
-                    </p>
-                    {selectedPurchase?.productDetails.variation && (
-                      <p>
-                        <span className='text-gray-500 font-medium'>
-                          Variant:
-                        </span>{" "}
-                        {selectedPurchase.productDetails.variation.color &&
-                          selectedPurchase.productDetails.variation.color}
-                        {selectedPurchase.productDetails.variation.color &&
-                          selectedPurchase.productDetails.variation.size &&
-                          " - "}
-                        {selectedPurchase.productDetails.variation.size &&
-                          selectedPurchase.productDetails.variation.size}
-                      </p>
+                    {selectedPurchase?.productDetails?.map(
+                      (variant: any, idx: number) => (
+                        <Card
+                          key={idx}
+                          className='p-3 bg-blue-50 border-blue-100'>
+                          <div className='space-y-1 text-sm'>
+                            <p className='font-medium text-base'>
+                              {variant.title}
+                            </p>
+                            <p className='text-xs text-gray-600 font-mono'>
+                              {variant.sku}
+                            </p>
+                            <div className='grid grid-cols-3 gap-2 mt-2 pt-2 border-t border-blue-200'>
+                              <div>
+                                <span className='text-gray-600'>Qty:</span>{" "}
+                                <span className='font-semibold'>
+                                  {variant.quantity}
+                                </span>
+                              </div>
+                              <div>
+                                <span className='text-gray-600'>Unit:</span> ৳
+                                <span className='font-medium'>
+                                  {variant.unitPrice}
+                                </span>
+                              </div>
+                              <div>
+                                <span className='text-gray-600'>Cost:</span> ৳
+                                <span className='font-semibold text-green-600'>
+                                  {variant.totalCost}
+                                </span>
+                              </div>
+                            </div>
+                          </div>
+                        </Card>
+                      ),
                     )}
                   </div>
                 </div>
                 <div>
-                  <h3 className='font-semibold mb-3 text-lg'>
-                    Purchase Information
-                  </h3>
-                  <div className='space-y-2 text-sm bg-gray-50 p-4 rounded-lg'>
-                    <p>
-                      <span className='text-gray-500 font-medium'>
-                        Quantity:
-                      </span>{" "}
-                      {selectedPurchase?.productDetails.quantity}
-                    </p>
-                    <p>
-                      <span className='text-gray-500 font-medium'>
-                        Unit Price:
-                      </span>{" "}
-                      ৳{selectedPurchase?.productDetails.unitPrice}
-                    </p>
-                    <p>
-                      <span className='text-gray-500 font-medium'>
-                        Total Cost:
-                      </span>{" "}
-                      ৳{selectedPurchase?.productDetails.totalCost}
-                    </p>
-                    <p>
-                      <span className='text-gray-500 font-medium'>
+                  <h3 className='font-semibold mb-3 text-lg'>Order Summary</h3>
+                  <div className='space-y-2 text-sm bg-green-50 p-4 rounded-lg border border-green-200'>
+                    <p className='text-base'>
+                      <span className='text-gray-600 font-medium'>
                         Total Amount:
                       </span>{" "}
-                      <span className='font-semibold text-lg'>
+                      <span className='font-bold text-lg text-green-700'>
                         ৳{selectedPurchase?.totalAmount}
                       </span>
                     </p>

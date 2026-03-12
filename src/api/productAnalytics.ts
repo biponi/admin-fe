@@ -65,11 +65,19 @@ export interface OrderData {
       size?: string;
       color?: string;
     };
-  };
+  }[];
   orderDate: string;
   status: string;
   orderTotal: number;
-  deliveryStatus: string;
+  deliveryStatus: string | null;
+  paid: number;
+  remaining: number;
+  discount: number;
+  deliveryCharge: number;
+  notes?: string;
+  orderCreatedBy: string;
+  courier?: string;
+  estimatedDeliveryDate?: string | null;
 }
 
 export interface CustomerData {
@@ -125,7 +133,7 @@ export interface PurchaseOrderData {
       size?: string;
       color?: string;
     };
-  };
+  }[];
   purchaseDate: string;
   totalAmount: number;
   createdAt: string;

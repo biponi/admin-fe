@@ -305,93 +305,91 @@ const OrderHistoryTab = ({ productId }: OrderHistoryTabProps) => {
       {/* Orders List - Desktop Table / Mobile Cards */}
       {isMobile ? (
         <div className='space-y-4'>
-          {orderHistory?.orders?.map((order) => (
-            <Card
-              key={order.orderId}
-              className='group relative overflow-hidden border-2 border-gray-100 hover:border-blue-200 transition-all duration-300 hover:shadow-lg cursor-pointer'
-              onClick={() => handleOrderClick(order)}>
-              <div className='absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-blue-400 via-purple-400 to-pink-400 opacity-0 group-hover:opacity-100 transition-opacity duration-300'></div>
-              <CardContent className='p-4'>
-                <div className='space-y-4'>
-                  {/* Header */}
-                  <div className='flex items-start justify-between'>
-                    <div className='space-y-1'>
-                      <div className='flex items-center gap-2'>
-                        <Hash className='h-4 w-4 text-gray-400' />
-                        <span className='font-bold text-blue-600'>
-                          #{order.orderNumber}
-                        </span>
-                      </div>
-                      <div className='flex items-center gap-2 text-xs text-gray-500'>
-                        <Calendar className='h-3 w-3' />
-                        {format(new Date(order.orderDate), "MMM dd, yyyy")}
-                      </div>
-                    </div>
-                    <Badge className={getStatusColor(order.status)}>
-                      {order.status}
-                    </Badge>
-                  </div>
+          {orderHistory?.orders?.map((order) => {
+            const totalQuantity =
+              order.productDetails?.reduce(
+                (sum: number, p: any) => sum + p.quantity,
+                0,
+              ) || 0;
+            const variantCount = order.productDetails?.length || 0;
 
-                  {/* Product Variant */}
-                  {order.productDetails.variation && (
+            return (
+              <Card
+                key={order.orderId}
+                className='group relative overflow-hidden border-2 border-gray-100 hover:border-blue-200 transition-all duration-300 hover:shadow-lg cursor-pointer'
+                onClick={() => handleOrderClick(order)}>
+                <div className='absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-blue-400 via-purple-400 to-pink-400 opacity-0 group-hover:opacity-100 transition-opacity duration-300'></div>
+                <CardContent className='p-4'>
+                  <div className='space-y-4'>
+                    {/* Header */}
+                    <div className='flex items-start justify-between'>
+                      <div className='space-y-1'>
+                        <div className='flex items-center gap-2'>
+                          <Hash className='h-4 w-4 text-gray-400' />
+                          <span className='font-bold text-blue-600'>
+                            #{order.orderNumber}
+                          </span>
+                        </div>
+                        <div className='flex items-center gap-2 text-xs text-gray-500'>
+                          <Calendar className='h-3 w-3' />
+                          {format(new Date(order.orderDate), "MMM dd, yyyy")}
+                        </div>
+                      </div>
+                      <Badge className={getStatusColor(order.status)}>
+                        {order.status}
+                      </Badge>
+                    </div>
+
+                    {/* Product Variants Count */}
                     <div className='flex items-center gap-2 text-sm bg-purple-50 px-3 py-2 rounded-lg border border-purple-100'>
                       <Package className='h-4 w-4 text-purple-600' />
                       <span className='text-purple-700 font-medium'>
-                        {order.productDetails.variation.color && (
-                          <span>{order.productDetails.variation.color}</span>
-                        )}
-                        {order.productDetails.variation.color &&
-                          order.productDetails.variation.size && (
-                            <span> • </span>
-                          )}
-                        {order.productDetails.variation.size && (
-                          <span>{order.productDetails.variation.size}</span>
-                        )}
+                        {variantCount} variant{variantCount > 1 ? "s" : ""}
                       </span>
                     </div>
-                  )}
 
-                  {/* Stats Grid */}
-                  <div className='grid grid-cols-2 gap-3'>
-                    <div className='bg-gradient-to-br from-blue-50 to-indigo-50 p-3 rounded-xl border border-blue-100'>
-                      <p className='text-xs text-blue-600 font-semibold mb-1'>
-                        Quantity
-                      </p>
-                      <p className='text-lg font-black text-blue-700'>
-                        {order.productDetails.quantity}
-                      </p>
+                    {/* Stats Grid */}
+                    <div className='grid grid-cols-2 gap-3'>
+                      <div className='bg-gradient-to-br from-blue-50 to-indigo-50 p-3 rounded-xl border border-blue-100'>
+                        <p className='text-xs text-blue-600 font-semibold mb-1'>
+                          Quantity
+                        </p>
+                        <p className='text-lg font-black text-blue-700'>
+                          {totalQuantity}
+                        </p>
+                      </div>
+                      <div className='bg-gradient-to-br from-emerald-50 to-green-50 p-3 rounded-xl border border-emerald-100'>
+                        <p className='text-xs text-emerald-600 font-semibold mb-1'>
+                          Total Price
+                        </p>
+                        <p className='text-lg font-black text-emerald-700'>
+                          ৳{order.orderTotal?.toLocaleString() || 0}
+                        </p>
+                      </div>
                     </div>
-                    <div className='bg-gradient-to-br from-emerald-50 to-green-50 p-3 rounded-xl border border-emerald-100'>
-                      <p className='text-xs text-emerald-600 font-semibold mb-1'>
-                        Total Price
-                      </p>
-                      <p className='text-lg font-black text-emerald-700'>
-                        ৳{order.productDetails.totalPrice?.toLocaleString()}
-                      </p>
+
+                    {/* Discount if exists */}
+                    {order.discount > 0 && (
+                      <div className='flex items-center justify-between text-sm bg-green-50 px-3 py-2 rounded-lg border border-green-100'>
+                        <span className='text-green-700 font-medium'>
+                          Discount Applied
+                        </span>
+                        <span className='text-green-600 font-bold'>
+                          -৳{order.discount}
+                        </span>
+                      </div>
+                    )}
+
+                    {/* View Details */}
+                    <div className='flex items-center justify-end text-sm text-blue-600 font-medium pt-2 border-t'>
+                      <span>View Details</span>
+                      <ChevronRight className='h-4 w-4 ml-1 group-hover:translate-x-1 transition-transform' />
                     </div>
                   </div>
-
-                  {/* Discount if exists */}
-                  {order.productDetails.discount > 0 && (
-                    <div className='flex items-center justify-between text-sm bg-green-50 px-3 py-2 rounded-lg border border-green-100'>
-                      <span className='text-green-700 font-medium'>
-                        Discount Applied
-                      </span>
-                      <span className='text-green-600 font-bold'>
-                        -৳{order.productDetails.discount}
-                      </span>
-                    </div>
-                  )}
-
-                  {/* View Details */}
-                  <div className='flex items-center justify-end text-sm text-blue-600 font-medium pt-2 border-t'>
-                    <span>View Details</span>
-                    <ChevronRight className='h-4 w-4 ml-1 group-hover:translate-x-1 transition-transform' />
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          ))}
+                </CardContent>
+              </Card>
+            );
+          })}
 
           {(!orderHistory?.orders || orderHistory.orders.length === 0) && (
             <Card className='border-2 border-dashed border-gray-200'>
@@ -439,61 +437,58 @@ const OrderHistoryTab = ({ productId }: OrderHistoryTabProps) => {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {orderHistory?.orders?.map((order) => (
-                    <TableRow
-                      key={order.orderId}
-                      className='cursor-pointer hover:bg-gradient-to-r hover:from-blue-50 hover:to-purple-50 transition-colors duration-200 border-b border-gray-100'
-                      onClick={() => handleOrderClick(order)}>
-                      <TableCell className='font-bold text-blue-600 hover:text-blue-700'>
-                        #{order.orderNumber}
-                      </TableCell>
-                      <TableCell>
-                        {order.productDetails.variation ? (
+                  {orderHistory?.orders?.map((order) => {
+                    const totalQuantity =
+                      order.productDetails?.reduce(
+                        (sum: number, p: any) => sum + p.quantity,
+                        0,
+                      ) || 0;
+                    const variantCount = order.productDetails?.length || 0;
+
+                    return (
+                      <TableRow
+                        key={order.orderId}
+                        className='cursor-pointer hover:bg-gradient-to-r hover:from-blue-50 hover:to-purple-50 transition-colors duration-200 border-b border-gray-100'
+                        onClick={() => handleOrderClick(order)}>
+                        <TableCell className='font-bold text-blue-600 hover:text-blue-700'>
+                          #{order.orderNumber}
+                        </TableCell>
+                        <TableCell>
                           <Badge
                             variant='outline'
                             className='bg-purple-50 text-purple-700 border-purple-200 font-medium'>
-                            {order.productDetails.variation.color && (
-                              <span>
-                                {order.productDetails.variation.color}
-                              </span>
-                            )}
-                            {order.productDetails.variation.color &&
-                              order.productDetails.variation.size && (
-                                <span> • </span>
-                              )}
-                            {order.productDetails.variation.size && (
-                              <span>{order.productDetails.variation.size}</span>
-                            )}
+                            {variantCount} variant{variantCount > 1 ? "s" : ""}
                           </Badge>
-                        ) : (
-                          <span className='text-gray-400 text-sm'>N/A</span>
-                        )}
-                      </TableCell>
-                      <TableCell className='text-right font-semibold text-gray-700'>
-                        {order.productDetails.quantity}
-                      </TableCell>
-                      <TableCell className='text-right'>
-                        {order.productDetails.discount > 0 ? (
-                          <span className='font-semibold text-green-600'>
-                            -৳{order.productDetails.discount}
-                          </span>
-                        ) : (
-                          <span className='text-gray-400'>-</span>
-                        )}
-                      </TableCell>
-                      <TableCell className='text-right font-bold text-gray-800'>
-                        ৳{order.productDetails.totalPrice?.toLocaleString()}
-                      </TableCell>
-                      <TableCell>
-                        <Badge className={getStatusColor(order.status)}>
-                          {order.status}
-                        </Badge>
-                      </TableCell>
-                      <TableCell className='text-gray-600 font-medium'>
-                        {format(new Date(order.orderDate), "MMM dd, yyyy")}
-                      </TableCell>
-                    </TableRow>
-                  ))}
+                        </TableCell>
+                        <TableCell className='text-right font-semibold text-gray-700'>
+                          {totalQuantity}
+                        </TableCell>
+                        <TableCell className='text-right'>
+                          {order.discount > 0 ? (
+                            <span className='font-semibold text-green-600'>
+                              -৳{order.discount}
+                            </span>
+                          ) : (
+                            <span className='text-gray-400'>-</span>
+                          )}
+                        </TableCell>
+                        <TableCell className='text-right font-bold text-gray-800'>
+                          ৳{order.orderTotal?.toLocaleString() || 0}
+                        </TableCell>
+                        <TableCell>
+                          <Badge className={getStatusColor(order.status)}>
+                            {order.status}
+                          </Badge>
+                        </TableCell>
+                        <TableCell className='text-gray-600 font-medium'>
+                          {format(
+                            new Date(order.orderDate),
+                            "MMM dd, yyyy hh:MM a",
+                          )}
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })}
                   {(!orderHistory?.orders ||
                     orderHistory.orders.length === 0) && (
                     <TableRow>

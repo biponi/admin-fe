@@ -78,6 +78,9 @@ const StoreReserveHistoryTab = ({ productId }: StoreReserveHistoryTabProps) => {
 
   const [selectedRecord, setSelectedRecord] =
     useState<StoreReserveHistoryItem | null>(null);
+  const [selectedRecordProducts, setSelectedRecordProducts] = useState<
+    StoreReserveHistoryItem[] | null
+  >(null);
   const [showDetails, setShowDetails] = useState(false);
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
@@ -108,23 +111,24 @@ const StoreReserveHistoryTab = ({ productId }: StoreReserveHistoryTabProps) => {
     resetFilters();
   };
 
-  const handleRecordClick = async (record: StoreReserveHistoryItem) => {
-    setSelectedRecord(record);
+  const handleRecordClick = async (products: StoreReserveHistoryItem[]) => {
+    setSelectedRecord(products[0]);
+    setSelectedRecordProducts(products);
     setShowDetails(true);
     // Fetch detailed record information
-    await fetchRecordDetails(record.recordId);
+    await fetchRecordDetails(products[0].recordId);
   };
 
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat("en-US", {
       style: "currency",
-      currency: "USD",
+      currency: "BDT",
     }).format(amount);
   };
 
   const formatDate = (dateString: string) => {
     try {
-      return format(new Date(dateString), "MMM dd, yyyy HH:mm");
+      return format(new Date(dateString), "MMM dd, yyyy hh:mm a");
     } catch {
       return dateString;
     }
@@ -294,76 +298,114 @@ const StoreReserveHistoryTab = ({ productId }: StoreReserveHistoryTabProps) => {
                     <TableHead>Date</TableHead>
                     <TableHead>Store Name</TableHead>
                     <TableHead>Location</TableHead>
-                    <TableHead>Variation</TableHead>
-                    <TableHead className='text-right'>Quantity</TableHead>
-                    <TableHead className='text-right'>Unit Price</TableHead>
+                    <TableHead>Products</TableHead>
+                    <TableHead className='text-right'>Total Quantity</TableHead>
+                    <TableHead className='text-right'>Total Value</TableHead>
                     <TableHead>Reserved By</TableHead>
                     <TableHead>Record ID</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {historyData?.history && historyData.history.length > 0 ? (
-                    historyData.history.map((record) => (
-                      <TableRow
-                        key={record.recordId}
-                        className='cursor-pointer hover:bg-gray-50'
-                        onClick={() => handleRecordClick(record)}>
-                        <TableCell>
-                          <div className='flex items-center'>
-                            <Calendar className='h-4 w-4 mr-2 text-gray-400' />
-                            <span className='text-sm'>
-                              {formatDate(record.createdAt)}
-                            </span>
-                          </div>
-                        </TableCell>
-                        <TableCell>
-                          <div className='flex items-center'>
-                            <Store className='h-4 w-4 mr-2 text-blue-500' />
-                            <span className='font-medium'>
-                              {record.storeName}
-                            </span>
-                          </div>
-                        </TableCell>
-                        <TableCell>
-                          <div className='flex items-center'>
-                            <MapPin className='h-4 w-4 mr-2 text-gray-400' />
-                            <span className='text-sm'>
-                              {record.storeLocation}
-                            </span>
-                          </div>
-                        </TableCell>
-                        <TableCell>
-                          {record?.productName.split(" ").slice(1).join(" ") ??
-                            record?.productName}
-                        </TableCell>
-                        <TableCell className='text-right'>
-                          <Badge variant='secondary' className='font-semibold'>
-                            {record.quantity}
-                          </Badge>
-                        </TableCell>
+                    // Group records by recordId
+                    Object.values(
+                      historyData.history.reduce((acc: any, record) => {
+                        if (!acc[record.recordId]) {
+                          acc[record.recordId] = {
+                            recordId: record.recordId,
+                            createdAt: record.createdAt,
+                            storeName: record.storeName,
+                            storeLocation: record.storeLocation,
+                            createdBy: record.createdBy,
+                            products: [] as any[],
+                          };
+                        }
+                        acc[record.recordId].products.push(record);
+                        return acc;
+                      }, {}),
+                    ).map((groupedRecord: any) => {
+                      const totalQuantity = groupedRecord.products.reduce(
+                        (sum: number, r: any) => sum + r.quantity,
+                        0,
+                      );
+                      const totalValue = groupedRecord.products.reduce(
+                        (sum: number, r: any) => sum + r.quantity * r.unitPrice,
+                        0,
+                      );
+                      const productCount = groupedRecord.products.length;
 
-                        <TableCell className='text-right font-medium'>
-                          {formatCurrency(record.unitPrice)}
-                        </TableCell>
-                        <TableCell>
-                          <div className='flex items-center'>
-                            <User className='h-4 w-4 mr-2 text-gray-400' />
-                            <span className='text-sm'>{record.createdBy}</span>
-                          </div>
-                        </TableCell>
-                        <TableCell>
-                          <div className='flex items-center'>
-                            <Hash className='h-4 w-4 mr-2 text-gray-400' />
-                            <span className='text-xs text-gray-500 font-mono'>
-                              {record.recordId.slice(0, 8)}...
-                            </span>
-                          </div>
-                        </TableCell>
-                      </TableRow>
-                    ))
+                      return (
+                        <TableRow
+                          key={groupedRecord.recordId}
+                          className='cursor-pointer hover:bg-gray-50'
+                          onClick={() =>
+                            handleRecordClick(groupedRecord.products)
+                          }>
+                          <TableCell>
+                            <div className='flex items-center'>
+                              <Calendar className='h-4 w-4 mr-2 text-gray-400' />
+                              <span className='text-sm'>
+                                {formatDate(groupedRecord.createdAt)}
+                              </span>
+                            </div>
+                          </TableCell>
+                          <TableCell>
+                            <div className='flex items-center'>
+                              <Store className='h-4 w-4 mr-2 text-blue-500' />
+                              <span className='font-medium'>
+                                {groupedRecord.storeName}
+                              </span>
+                            </div>
+                          </TableCell>
+                          <TableCell>
+                            <div className='flex items-center'>
+                              <MapPin className='h-4 w-4 mr-2 text-gray-400' />
+                              <span className='text-sm'>
+                                {groupedRecord.storeLocation}
+                              </span>
+                            </div>
+                          </TableCell>
+                          <TableCell>
+                            <Badge
+                              variant='secondary'
+                              className='text-xs bg-purple-50 text-purple-700 border-purple-200'>
+                              {productCount} variant
+                              {productCount > 1 ? "s" : ""}
+                            </Badge>
+                          </TableCell>
+                          <TableCell className='text-right'>
+                            <Badge
+                              variant='secondary'
+                              className='font-semibold'>
+                              {totalQuantity}
+                            </Badge>
+                          </TableCell>
+
+                          <TableCell className='text-right font-bold text-green-600'>
+                            {formatCurrency(totalValue)}
+                          </TableCell>
+                          <TableCell>
+                            <div className='flex items-center'>
+                              <User className='h-4 w-4 mr-2 text-gray-400' />
+                              <span className='text-sm'>
+                                {groupedRecord.createdBy}
+                              </span>
+                            </div>
+                          </TableCell>
+                          <TableCell>
+                            <div className='flex items-center'>
+                              <Hash className='h-4 w-4 mr-2 text-gray-400' />
+                              <span className='text-xs text-gray-500 font-mono'>
+                                {groupedRecord.recordId.slice(0, 8)}...
+                              </span>
+                            </div>
+                          </TableCell>
+                        </TableRow>
+                      );
+                    })
                   ) : (
                     <TableRow>
-                      <TableCell colSpan={7} className='text-center py-8'>
+                      <TableCell colSpan={8} className='text-center py-8'>
                         <div className='text-center text-gray-500'>
                           <Package className='h-12 w-12 mx-auto mb-2 text-gray-300' />
                           <p>No store reserve history found</p>
@@ -378,42 +420,77 @@ const StoreReserveHistoryTab = ({ productId }: StoreReserveHistoryTabProps) => {
             // Mobile Card View
             <div className='p-4 space-y-4'>
               {historyData?.history && historyData.history.length > 0 ? (
-                historyData.history.map((record) => (
-                  <Card
-                    key={record.recordId}
-                    className='cursor-pointer hover:shadow-md transition-shadow'
-                    onClick={() => handleRecordClick(record)}>
-                    <CardContent className='p-4'>
-                      <div className='space-y-2'>
-                        <div className='flex items-center justify-between'>
-                          <div className='flex items-center'>
-                            <Store className='h-4 w-4 mr-2 text-blue-500' />
-                            <span className='font-semibold'>
-                              {record.storeName}
+                // Group records by recordId for mobile view
+                Object.values(
+                  historyData.history.reduce((acc: any, record) => {
+                    if (!acc[record.recordId]) {
+                      acc[record.recordId] = {
+                        recordId: record.recordId,
+                        createdAt: record.createdAt,
+                        storeName: record.storeName,
+                        storeLocation: record.storeLocation,
+                        createdBy: record.createdBy,
+                        products: [] as any[],
+                      };
+                    }
+                    acc[record.recordId].products.push(record);
+                    return acc;
+                  }, {}),
+                ).map((groupedRecord: any) => {
+                  const totalQuantity = groupedRecord.products.reduce(
+                    (sum: number, r: any) => sum + r.quantity,
+                    0,
+                  );
+                  const totalValue = groupedRecord.products.reduce(
+                    (sum: number, r: any) => sum + r.quantity * r.unitPrice,
+                    0,
+                  );
+                  const productCount = groupedRecord.products.length;
+
+                  return (
+                    <Card
+                      key={groupedRecord.recordId}
+                      className='cursor-pointer hover:shadow-md transition-shadow'
+                      onClick={() => handleRecordClick(groupedRecord.products)}>
+                      <CardContent className='p-4'>
+                        <div className='space-y-2'>
+                          <div className='flex items-center justify-between'>
+                            <div className='flex items-center'>
+                              <Store className='h-4 w-4 mr-2 text-blue-500' />
+                              <span className='font-semibold'>
+                                {groupedRecord.storeName}
+                              </span>
+                            </div>
+                            <Badge variant='secondary'>{totalQuantity}</Badge>
+                          </div>
+                          <div className='text-sm'>
+                            <span className='text-gray-600'>Products: </span>
+                            <Badge variant='outline' className='text-xs'>
+                              {productCount} product
+                              {productCount > 1 ? "s" : ""}
+                            </Badge>
+                          </div>
+                          <div className='flex items-center text-sm text-gray-600'>
+                            <MapPin className='h-4 w-4 mr-2' />
+                            {groupedRecord.storeLocation}
+                          </div>
+                          <div className='flex items-center text-sm text-gray-600'>
+                            <Calendar className='h-4 w-4 mr-2' />
+                            {formatDate(groupedRecord.createdAt)}
+                          </div>
+                          <div className='flex items-center justify-between text-sm'>
+                            <span className='font-bold text-green-600'>
+                              {formatCurrency(totalValue)}
+                            </span>
+                            <span className='text-gray-500'>
+                              by {groupedRecord.createdBy}
                             </span>
                           </div>
-                          <Badge variant='secondary'>{record.quantity}</Badge>
                         </div>
-                        <div className='flex items-center text-sm text-gray-600'>
-                          <MapPin className='h-4 w-4 mr-2' />
-                          {record.storeLocation}
-                        </div>
-                        <div className='flex items-center text-sm text-gray-600'>
-                          <Calendar className='h-4 w-4 mr-2' />
-                          {formatDate(record.createdAt)}
-                        </div>
-                        <div className='flex items-center justify-between text-sm'>
-                          <span className='text-gray-600'>
-                            {formatCurrency(record.unitPrice)}
-                          </span>
-                          <span className='text-gray-500'>
-                            by {record.createdBy}
-                          </span>
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))
+                      </CardContent>
+                    </Card>
+                  );
+                })
               ) : (
                 <div className='text-center text-gray-500 py-8'>
                   <Package className='h-12 w-12 mx-auto mb-2 text-gray-300' />
@@ -495,36 +572,51 @@ const StoreReserveHistoryTab = ({ productId }: StoreReserveHistoryTabProps) => {
                       <Package className='h-5 w-5 mr-2 text-blue-500' />
                       Product Information
                     </h3>
-                    <Card>
-                      <CardContent className='pt-6 space-y-2'>
-                        <div className='flex justify-between'>
-                          <span className='text-sm text-gray-600'>
-                            Product ID:
-                          </span>
-                          <span className='text-sm font-medium'>
-                            {selectedRecord.productId}
-                          </span>
-                        </div>
-                        <div className='flex justify-between'>
-                          <span className='text-sm text-gray-600'>
-                            Product Name:
-                          </span>
-                          <span className='text-sm font-medium'>
-                            {selectedRecord.productName}
-                          </span>
-                        </div>
-                        {selectedRecord.variantId && (
-                          <div className='flex justify-between'>
-                            <span className='text-sm text-gray-600'>
-                              Variant ID:
-                            </span>
-                            <span className='text-sm font-medium'>
-                              {selectedRecord.variantId}
-                            </span>
-                          </div>
-                        )}
-                      </CardContent>
-                    </Card>
+                    <div className='space-y-2'>
+                      <p className='text-sm text-gray-600'>
+                        {selectedRecordProducts?.length || 0} product(s) in this
+                        record
+                      </p>
+                      <div className='text-lg font-semibold text-gray-800 mb-2'>
+                        {selectedRecordProducts?.[0]?.productName.split(
+                          " ",
+                        )[0] || "N/A"}
+                      </div>
+                      {selectedRecordProducts?.map((product, idx) => {
+                        const variantName = product.productName
+                          .split(" ")
+                          .slice(1)
+                          .join(" ");
+                        return (
+                          <Card
+                            key={idx}
+                            className='p-2 bg-gray-50 border-blue-100'>
+                            <CardContent className='pt-2 space-y-1'>
+                              <div className='flex items-center justify-between'>
+                                <span className='text-sm font-medium text-blue-700'>
+                                  Variant: {variantName || "Standard"}
+                                </span>
+                                <Badge
+                                  variant='outline'
+                                  className='text-xs bg-purple-50 text-purple-700 border-purple-200'>
+                                  Qty: {product.quantity}
+                                </Badge>
+                              </div>
+                              <div className='flex items-center justify-between text-sm'>
+                                <span className='text-gray-500'>
+                                  {formatCurrency(product.unitPrice)} each
+                                </span>
+                                <span className='font-semibold text-gray-800'>
+                                  {formatCurrency(
+                                    product.quantity * product.unitPrice,
+                                  )}
+                                </span>
+                              </div>
+                            </CardContent>
+                          </Card>
+                        );
+                      })}
+                    </div>
                   </div>
 
                   {/* Store Information */}
@@ -571,40 +663,45 @@ const StoreReserveHistoryTab = ({ productId }: StoreReserveHistoryTabProps) => {
                     </Card>
                   </div>
 
-                  {/* Quantity and Price */}
+                  {/* Quantity and Price - Summary for all products */}
                   <div className='space-y-3'>
                     <h3 className='text-lg font-semibold flex items-center'>
                       <DollarSign className='h-5 w-5 mr-2 text-green-500' />
-                      Quantity and Price
+                      Record Summary
                     </h3>
                     <Card>
                       <CardContent className='pt-6 space-y-2'>
                         <div className='flex justify-between'>
                           <span className='text-sm text-gray-600'>
-                            Quantity Reserved:
+                            Total Quantity Reserved:
                           </span>
                           <Badge
                             variant='secondary'
                             className='text-base font-semibold'>
-                            {selectedRecord.quantity}
+                            {selectedRecordProducts?.reduce(
+                              (sum, p) => sum + p.quantity,
+                              0,
+                            ) || 0}
                           </Badge>
                         </div>
                         <div className='flex justify-between'>
                           <span className='text-sm text-gray-600'>
-                            Unit Price:
+                            Total Products:
                           </span>
                           <span className='text-sm font-medium'>
-                            {formatCurrency(selectedRecord.unitPrice)}
+                            {selectedRecordProducts?.length || 0}
                           </span>
                         </div>
                         <div className='flex justify-between'>
                           <span className='text-sm text-gray-600'>
-                            Total Value:
+                            Total Record Value:
                           </span>
                           <span className='text-sm font-semibold text-green-600'>
                             {formatCurrency(
-                              selectedRecord.quantity *
-                                selectedRecord.unitPrice,
+                              selectedRecordProducts?.reduce(
+                                (sum, p) => sum + p.quantity * p.unitPrice,
+                                0,
+                              ) || 0,
                             )}
                           </span>
                         </div>
@@ -687,22 +784,48 @@ const StoreReserveHistoryTab = ({ productId }: StoreReserveHistoryTabProps) => {
                     <h3 className='text-md font-semibold mb-2'>
                       Product Information
                     </h3>
-                    <Card>
-                      <CardContent className='pt-4 space-y-2'>
-                        <div className='flex justify-between text-sm'>
-                          <span className='text-gray-600'>Product:</span>
-                          <span className='font-medium'>
-                            {selectedRecord.productName}
-                          </span>
-                        </div>
-                        <div className='flex justify-between text-sm'>
-                          <span className='text-gray-600'>Product ID:</span>
-                          <span className='font-mono text-xs'>
-                            {selectedRecord.productId}
-                          </span>
-                        </div>
-                      </CardContent>
-                    </Card>
+                    <div className='space-y-2'>
+                      <p className='text-sm text-gray-600'>
+                        {selectedRecordProducts?.length || 0} product(s) in this
+                        record
+                      </p>
+                      <div className='text-base font-semibold text-gray-800 mb-2'>
+                        {selectedRecordProducts?.[0]?.productName.split(
+                          " ",
+                        )[0] || "N/A"}
+                      </div>
+                      {selectedRecordProducts?.map((product, idx) => {
+                        const variantName = product.productName
+                          .split(" ")
+                          .slice(1)
+                          .join(" ");
+                        return (
+                          <Card key={idx} className='p-2 bg-gray-50'>
+                            <CardContent className='pt-2 space-y-1'>
+                              <div className='flex items-center justify-between text-sm'>
+                                <span className='font-medium text-gray-700'>
+                                  {variantName || "Standard"}
+                                </span>
+                                <Badge variant='outline' className='text-xs'>
+                                  {product.quantity}
+                                </Badge>
+                              </div>
+                              <div className='flex items-center justify-between text-xs'>
+                                <span className='text-gray-500'>
+                                  ৳{formatCurrency(product.unitPrice)} each
+                                </span>
+                                <span className='font-semibold text-green-600'>
+                                  ৳
+                                  {formatCurrency(
+                                    product.quantity * product.unitPrice,
+                                  )}
+                                </span>
+                              </div>
+                            </CardContent>
+                          </Card>
+                        );
+                      })}
+                    </div>
                   </div>
 
                   {/* Store Information */}
@@ -728,31 +851,36 @@ const StoreReserveHistoryTab = ({ productId }: StoreReserveHistoryTabProps) => {
                     </Card>
                   </div>
 
-                  {/* Quantity and Price */}
+                  {/* Record Summary */}
                   <div>
                     <h3 className='text-md font-semibold mb-2'>
-                      Quantity and Price
+                      Record Summary
                     </h3>
                     <Card>
                       <CardContent className='pt-4 space-y-2'>
                         <div className='flex justify-between text-sm'>
-                          <span className='text-gray-600'>Quantity:</span>
+                          <span className='text-gray-600'>Total Quantity:</span>
                           <Badge variant='secondary'>
-                            {selectedRecord.quantity}
+                            {selectedRecordProducts?.reduce(
+                              (sum, p) => sum + p.quantity,
+                              0,
+                            ) || 0}
                           </Badge>
                         </div>
                         <div className='flex justify-between text-sm'>
-                          <span className='text-gray-600'>Unit Price:</span>
+                          <span className='text-gray-600'>Total Products:</span>
                           <span className='font-medium'>
-                            {formatCurrency(selectedRecord.unitPrice)}
+                            {selectedRecordProducts?.length || 0}
                           </span>
                         </div>
                         <div className='flex justify-between text-sm'>
-                          <span className='text-gray-600'>Total:</span>
+                          <span className='text-gray-600'>Total Value:</span>
                           <span className='font-bold text-green-600'>
                             {formatCurrency(
-                              selectedRecord.quantity *
-                                selectedRecord.unitPrice,
+                              selectedRecordProducts?.reduce(
+                                (sum, p) => sum + p.quantity * p.unitPrice,
+                                0,
+                              ) || 0,
                             )}
                           </span>
                         </div>
