@@ -23,3 +23,22 @@ export interface IStoreReserve extends Document {
   slug: string;
   records: IRecord[];
 }
+
+export interface PaginationInfo {
+  currentPage: number;
+  totalPages: number;
+  totalItems: number;
+  itemsPerPage: number;
+  hasNextPage: boolean;
+  hasPreviousPage: boolean;
+}
+
+export interface IStoreReservePaginated {
+  id: string;
+  name: string;
+  location: string;
+  timestamp: Date;
+  slug: string;
+  records: IRecord[];
+  pagination: PaginationInfo;
+}

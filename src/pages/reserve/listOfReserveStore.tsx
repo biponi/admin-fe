@@ -91,7 +91,7 @@ const ReserveStoresList: React.FC = () => {
     try {
       setIsLoading(true);
       const response = await getReserveStores();
-      setStores(response.data);
+      setStores(response.data.stores || []);
     } catch (error) {
       console.error("Error fetching stores:", error);
       toast.error("Failed to load stores");

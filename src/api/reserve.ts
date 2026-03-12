@@ -31,10 +31,20 @@ export const createReserve = async (
 };
 
 export const getReserveStore = async (
-  id: string
+  id: string,
+  page?: number,
+  limit?: number
 ): Promise<ApiResponse<any>> => {
   try {
-    const response = await axios.get<any>(config.reserve.getReserveStore(id));
+    const params = new URLSearchParams();
+    if (page) params.append('page', page.toString());
+    if (limit) params.append('limit', limit.toString());
+
+    const url = params.toString()
+      ? `${config.reserve.getReserveStore(id)}?${params.toString()}`
+      : config.reserve.getReserveStore(id);
+
+    const response = await axios.get<any>(url);
     if (response.status === 200) {
       return { success: true, data: response.data?.data };
     } else {

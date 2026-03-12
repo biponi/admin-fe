@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import { useParams } from "react-router-dom";
 import {
   Trash,
@@ -9,8 +9,10 @@ import {
   Warehouse,
   MapPin,
   DownloadCloud,
+  ChevronLeft,
+  ChevronRight,
 } from "lucide-react";
-import { IRecord, IStoreReserve } from "./interface";
+import { IRecord } from "./interface";
 import { Button } from "../../components/ui/button";
 import {
   Popover,
@@ -18,10 +20,18 @@ import {
   PopoverTrigger,
 } from "../../components/ui/popover";
 import {
+  Select,
+  SelectContent,
+  SelectGroup,
+  SelectItem,
+  SelectLabel,
+  SelectTrigger,
+  SelectValue,
+} from "../../components/ui/select";
+import {
   addRecord,
   deleteStoreRecord,
   editStoreRecord,
-  getReserveStore,
 } from "../../api/reserve";
 import dayjs from "dayjs";
 import DialogForRecord from "./common/dialogForRecord";
@@ -43,6 +53,8 @@ import {
 import useRoleCheck from "../auth/hooks/useRoleCheck";
 import { Card, CardContent } from "../../components/ui/card";
 import { generateInventoryPDF } from "../../utils/reactPdfStorerecord";
+import { useReserveRecords } from "./hooks/useReserveRecords";
+import Swal from "sweetalert2";
 
 // Skeleton loader for table rows
 const TableRowSkeleton: React.FC = () => (
@@ -74,49 +86,28 @@ const TableRowSkeleton: React.FC = () => (
 const SingleReserveStore: React.FC = () => {
   const { hasRequiredPermission } = useRoleCheck();
   const { storeId } = useParams<{ storeId: string }>();
-  const [id, setId] = useState<string | undefined>(undefined);
-  const [storeInformation, setStoreInformation] =
-    useState<IStoreReserve | null>(null);
+
+  // Use the custom hook for pagination
+  const {
+    records,
+    storeInfo,
+    pagination,
+    isLoading: isLoadingStore,
+    currentPage,
+    pageLimit,
+    setPageLimit,
+    nextPage,
+    prevPage,
+    refreshRecords,
+  } = useReserveRecords(storeId);
 
   const [openCreateDialog, setOpenCreateDialog] = useState(false);
   const [selectedProducs, setSelectedProducts] = useState<any[]>([]);
   const [openEditDialog, setOpenEditDialog] = useState(false);
   const [recordId, setRecordId] = useState("");
-  const [isLoadingStore, setIsLoadingStore] = useState(true);
   const [deletingRecordId, setDeletingRecordId] = useState<string | null>(null);
   const [isEditingRecord, setIsEditingRecord] = useState(false);
   const [isAddingRecord, setIsAddingRecord] = useState(false);
-
-  const getStoreinformation = async () => {
-    if (!id) return;
-    try {
-      setIsLoadingStore(true);
-      const storeData = await getReserveStore(id);
-      if (storeData?.success) {
-        setStoreInformation(storeData?.data);
-      } else {
-        toast.error("Failed to load store information");
-      }
-    } catch (error) {
-      console.error("Error fetching store:", error);
-      toast.error("Failed to load store information");
-    } finally {
-      setIsLoadingStore(false);
-    }
-  };
-
-  useEffect(() => {
-    if (!!storeId) {
-      setId(storeId);
-    }
-  }, [storeId]);
-
-  useEffect(() => {
-    if (!!id) {
-      getStoreinformation();
-    }
-    //eslint-disable-next-line
-  }, [id]);
 
   const handleSaveRecord = async () => {
     try {
@@ -126,15 +117,15 @@ const SingleReserveStore: React.FC = () => {
         storeId,
       });
       if (response?.success) {
-        getStoreinformation();
+        refreshRecords();
         setOpenCreateDialog(false);
         setSelectedProducts([]);
         toast.success("Record added successfully");
       } else {
-        toast.error(response?.error ?? "Record not added");
+        Swal.fire("⚠️", response?.error ?? "Record not added", "warning");
       }
     } catch (error) {
-      toast.error("Failed to add record");
+      Swal.fire("⚠️", "Failed to add record", "warning");
     } finally {
       setIsAddingRecord(false);
     }
@@ -142,7 +133,6 @@ const SingleReserveStore: React.FC = () => {
 
   const handleEditRecord = async () => {
     if (selectedProducs.length < 1) return;
-
     const productList = distinctProducts(selectedProducs);
 
     try {
@@ -153,13 +143,13 @@ const SingleReserveStore: React.FC = () => {
         recordId,
       });
       if (response?.success) {
-        getStoreinformation();
+        refreshRecords();
         setOpenEditDialog(false);
         setSelectedProducts([]);
         setRecordId("");
         toast.success("Record updated successfully");
       } else {
-        toast.error(response?.error ?? "Record not updated");
+        Swal.fire("⚠️", response?.error ?? "Record not updated", "warning");
       }
     } catch (error) {
       toast.error("Failed to update record");
@@ -174,11 +164,13 @@ const SingleReserveStore: React.FC = () => {
       setDeletingRecordId(recordId);
       const deleted = await deleteStoreRecord(storeId, recordId);
       if (deleted?.success) {
-        getStoreinformation();
+        refreshRecords();
         toast.success("Record removed successfully");
       } else {
-        toast.error(
+        Swal.fire(
+          "⚠️",
           deleted?.error ?? "Server was unable to delete the record.",
+          "warning",
         );
       }
     } catch (error) {
@@ -354,172 +346,160 @@ const SingleReserveStore: React.FC = () => {
                           <TableRowSkeleton />
                           <TableRowSkeleton />
                         </>
-                      ) : storeInformation?.records &&
-                        storeInformation.records.length > 0 ? (
-                        storeInformation.records.map(
-                          (record: IRecord, index: number) => (
-                            <tr
-                              key={index}
-                              className='hover:bg-purple-50/50 dark:hover:bg-purple-950/10 transition-colors duration-150'>
-                              <td className='whitespace-nowrap py-4 pl-6 pr-3 text-sm font-semibold text-purple-600'>
-                                {Number(index) + 1}
-                              </td>
-                              <td className='whitespace-nowrap px-3 py-4 text-sm text-muted-foreground'>
-                                {dayjs(record?.created_at).format(
-                                  "DD-MM-YYYY HH:mm:ss",
-                                )}
-                              </td>
-                              <td className='whitespace-nowrap px-3 py-4 text-sm font-medium'>
-                                {record?.created_by}
-                              </td>
-                              <td className='px-3 py-4 text-sm'>
-                                <div className='flex flex-wrap gap-2'>
-                                  {record?.products?.length > 3 ? (
-                                    <>
-                                      {record?.products
-                                        ?.slice(0, 2)
-                                        .map((val, index) => (
-                                          <div
-                                            key={index}
-                                            className='inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-gradient-to-r from-purple-100 to-indigo-100 dark:from-purple-900/30 dark:to-indigo-900/30 border border-purple-200 dark:border-purple-800'>
-                                            <span
-                                              className='text-xs font-medium truncate max-w-[120px]'
-                                              title={val?.name}>
-                                              {val?.name}
-                                            </span>
-                                            <Badge
-                                              variant='secondary'
-                                              className='text-xs font-bold'>
-                                              ×{val?.quantity}
-                                            </Badge>
-                                          </div>
-                                        ))}
-                                      {renderVariationPopover(record)}
-                                    </>
-                                  ) : (
-                                    record?.products?.map((val, index) => (
-                                      <div
-                                        key={index}
-                                        className='inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-gradient-to-r from-purple-100 to-indigo-100 dark:from-purple-900/30 dark:to-indigo-900/30 border border-purple-200 dark:border-purple-800'>
-                                        <span
-                                          className='text-xs font-medium truncate max-w-[120px]'
-                                          title={val?.name}>
-                                          {val?.name}
-                                        </span>
-                                        <Badge
-                                          variant='secondary'
-                                          className='text-xs font-bold'>
-                                          ×{val?.quantity}
-                                        </Badge>
-                                      </div>
-                                    ))
-                                  )}
-                                </div>
-                              </td>
-                              <td className='whitespace-nowrap px-3 py-4 text-sm font-bold text-purple-600'>
-                                ৳{calculateTotalPrice(record?.products)}
-                              </td>
-                              {hasRequiredPermission(
-                                "ReserveRecord",
-                                "delete",
-                              ) && (
-                                <td className='whitespace-nowrap px-3 py-4 text-center'>
-                                  <AlertDialog>
-                                    <AlertDialogTrigger asChild>
-                                      <Button
-                                        variant='outline'
-                                        size='sm'
-                                        disabled={
-                                          deletingRecordId === record?._id
-                                        }
-                                        className='border-rose-200 hover:bg-rose-600 hover:text-white hover:border-rose-600 transition-all duration-300 disabled:opacity-50'>
-                                        {deletingRecordId === record?._id ? (
-                                          <Loader2 className='w-4 h-4 animate-spin' />
-                                        ) : (
-                                          <Trash className='w-4 h-4' />
-                                        )}
-                                      </Button>
-                                    </AlertDialogTrigger>
-                                    <AlertDialogContent>
-                                      <AlertDialogHeader>
-                                        <div className='flex items-center gap-3 mb-2'>
-                                          <div className='p-2 bg-rose-500/10 rounded-lg'>
-                                            <Trash className='h-5 w-5 text-rose-600' />
-                                          </div>
-                                          <AlertDialogTitle className='text-xl'>
-                                            Delete Record
-                                          </AlertDialogTitle>
+                      ) : records && records.length > 0 ? (
+                        records.map((record: IRecord, index: number) => (
+                          <tr
+                            key={index}
+                            className='hover:bg-purple-50/50 dark:hover:bg-purple-950/10 transition-colors duration-150'>
+                            <td className='whitespace-nowrap py-4 pl-6 pr-3 text-sm font-semibold text-purple-600'>
+                              {(currentPage - 1) * pageLimit +
+                                Number(index) +
+                                1}
+                            </td>
+                            <td className='whitespace-nowrap px-3 py-4 text-sm text-muted-foreground'>
+                              {dayjs(record?.created_at).format(
+                                "DD-MM-YYYY HH:mm:ss",
+                              )}
+                            </td>
+                            <td className='whitespace-nowrap px-3 py-4 text-sm font-medium'>
+                              {record?.created_by}
+                            </td>
+                            <td className='px-3 py-4 text-sm'>
+                              <div className='flex flex-wrap gap-2'>
+                                {record?.products?.length > 3 ? (
+                                  <>
+                                    {record?.products
+                                      ?.slice(0, 2)
+                                      .map((val, index) => (
+                                        <div
+                                          key={index}
+                                          className='inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-gradient-to-r from-purple-100 to-indigo-100 dark:from-purple-900/30 dark:to-indigo-900/30 border border-purple-200 dark:border-purple-800'>
+                                          <span
+                                            className='text-xs font-medium truncate max-w-[120px]'
+                                            title={val?.name}>
+                                            {val?.name}
+                                          </span>
+                                          <Badge
+                                            variant='secondary'
+                                            className='text-xs font-bold'>
+                                            ×{val?.quantity}
+                                          </Badge>
                                         </div>
-                                        <AlertDialogDescription className='text-base'>
-                                          Are you sure you want to delete this
-                                          record? This action cannot be undone
-                                          and will permanently remove the record
-                                          and all associated data from the
-                                          system.
-                                        </AlertDialogDescription>
-                                      </AlertDialogHeader>
-                                      <AlertDialogFooter>
-                                        <AlertDialogCancel>
-                                          Cancel
-                                        </AlertDialogCancel>
-                                        <AlertDialogAction
-                                          onClick={() =>
-                                            handleDeleteRecord(
-                                              record?._id ?? "",
-                                            )
-                                          }
-                                          className='bg-gradient-to-r from-rose-600 to-red-600 hover:from-rose-700 hover:to-red-700 text-white'>
+                                      ))}
+                                    {renderVariationPopover(record)}
+                                  </>
+                                ) : (
+                                  record?.products?.map((val, index) => (
+                                    <div
+                                      key={index}
+                                      className='inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-gradient-to-r from-purple-100 to-indigo-100 dark:from-purple-900/30 dark:to-indigo-900/30 border border-purple-200 dark:border-purple-800'>
+                                      <span
+                                        className='text-xs font-medium truncate max-w-[120px]'
+                                        title={val?.name}>
+                                        {val?.name}
+                                      </span>
+                                      <Badge
+                                        variant='secondary'
+                                        className='text-xs font-bold'>
+                                        ×{val?.quantity}
+                                      </Badge>
+                                    </div>
+                                  ))
+                                )}
+                              </div>
+                            </td>
+                            <td className='whitespace-nowrap px-3 py-4 text-sm font-bold text-purple-600'>
+                              ৳{calculateTotalPrice(record?.products)}
+                            </td>
+                            {hasRequiredPermission(
+                              "ReserveRecord",
+                              "delete",
+                            ) && (
+                              <td className='whitespace-nowrap px-3 py-4 text-center'>
+                                <AlertDialog>
+                                  <AlertDialogTrigger asChild>
+                                    <Button
+                                      variant='outline'
+                                      size='sm'
+                                      disabled={
+                                        deletingRecordId === record?._id
+                                      }
+                                      className='border-rose-200 hover:bg-rose-600 hover:text-white hover:border-rose-600 transition-all duration-300 disabled:opacity-50'>
+                                      {deletingRecordId === record?._id ? (
+                                        <Loader2 className='w-4 h-4 animate-spin' />
+                                      ) : (
+                                        <Trash className='w-4 h-4' />
+                                      )}
+                                    </Button>
+                                  </AlertDialogTrigger>
+                                  <AlertDialogContent>
+                                    <AlertDialogHeader>
+                                      <div className='flex items-center gap-3 mb-2'>
+                                        <div className='p-2 bg-rose-500/10 rounded-lg'>
+                                          <Trash className='h-5 w-5 text-rose-600' />
+                                        </div>
+                                        <AlertDialogTitle className='text-xl'>
                                           Delete Record
-                                        </AlertDialogAction>
-                                      </AlertDialogFooter>
-                                    </AlertDialogContent>
-                                  </AlertDialog>
-                                </td>
-                              )}
-                              {hasRequiredPermission(
-                                "ReserveRecord",
-                                "edit",
-                              ) && (
-                                <td className='whitespace-nowrap px-3 py-4 pr-6 text-center'>
-                                  <Button
-                                    variant='outline'
-                                    size='sm'
-                                    onClick={() => {
-                                      setSelectedProducts([
-                                        ...record?.products,
-                                      ]);
-                                      setOpenEditDialog(true);
-                                      setRecordId(record?.id);
-                                    }}
-                                    className='border-purple-200 hover:bg-purple-600 hover:text-white hover:border-purple-600 transition-all duration-300'>
-                                    <Edit className='w-4 h-4' />
-                                  </Button>
-                                </td>
-                              )}
-                              {hasRequiredPermission(
-                                "ReserveRecord",
-                                "edit",
-                              ) && (
-                                <td className='whitespace-nowrap px-3 py-4 pr-6 text-center'>
-                                  <Button
-                                    variant='outline'
-                                    size='sm'
-                                    onClick={() => {
-                                      generateInventoryPDF(
-                                        storeInformation?.name,
-                                        record?.created_by,
-                                        record?.created_at,
-                                        record?.products,
-                                      );
-                                    }}
-                                    className='border-purple-200 hover:bg-purple-600 hover:text-white hover:border-purple-600 transition-all duration-300'>
-                                    <DownloadCloud className='w-4 h-4' />
-                                  </Button>
-                                </td>
-                              )}
-                            </tr>
-                          ),
-                        )
+                                        </AlertDialogTitle>
+                                      </div>
+                                      <AlertDialogDescription className='text-base'>
+                                        Are you sure you want to delete this
+                                        record? This action cannot be undone and
+                                        will permanently remove the record and
+                                        all associated data from the system.
+                                      </AlertDialogDescription>
+                                    </AlertDialogHeader>
+                                    <AlertDialogFooter>
+                                      <AlertDialogCancel>
+                                        Cancel
+                                      </AlertDialogCancel>
+                                      <AlertDialogAction
+                                        onClick={() =>
+                                          handleDeleteRecord(record?._id ?? "")
+                                        }
+                                        className='bg-gradient-to-r from-rose-600 to-red-600 hover:from-rose-700 hover:to-red-700 text-white'>
+                                        Delete Record
+                                      </AlertDialogAction>
+                                    </AlertDialogFooter>
+                                  </AlertDialogContent>
+                                </AlertDialog>
+                              </td>
+                            )}
+                            {hasRequiredPermission("ReserveRecord", "edit") && (
+                              <td className='whitespace-nowrap px-3 py-4 pr-6 text-center'>
+                                <Button
+                                  variant='outline'
+                                  size='sm'
+                                  onClick={() => {
+                                    setSelectedProducts([...record?.products]);
+                                    setOpenEditDialog(true);
+                                    setRecordId(record?.id);
+                                  }}
+                                  className='border-purple-200 hover:bg-purple-600 hover:text-white hover:border-purple-600 transition-all duration-300'>
+                                  <Edit className='w-4 h-4' />
+                                </Button>
+                              </td>
+                            )}
+                            {hasRequiredPermission("ReserveRecord", "edit") && (
+                              <td className='whitespace-nowrap px-3 py-4 pr-6 text-center'>
+                                <Button
+                                  variant='outline'
+                                  size='sm'
+                                  onClick={() => {
+                                    generateInventoryPDF(
+                                      storeInfo?.name || "",
+                                      record?.created_by,
+                                      record?.created_at,
+                                      record?.products,
+                                    );
+                                  }}
+                                  className='border-purple-200 hover:bg-purple-600 hover:text-white hover:border-purple-600 transition-all duration-300'>
+                                  <DownloadCloud className='w-4 h-4' />
+                                </Button>
+                              </td>
+                            )}
+                          </tr>
+                        ))
                       ) : (
                         <tr>
                           <td colSpan={7} className='py-12 text-center'>
@@ -541,6 +521,73 @@ const SingleReserveStore: React.FC = () => {
               </div>
             </div>
           </div>
+
+          {/* Pagination Controls */}
+          {pagination && pagination.totalPages > 1 && (
+            <div className='mt-6 bg-card rounded-xl border border-border/50 p-4 shadow-sm'>
+              {/* Items count */}
+              <div className='text-center text-sm text-muted-foreground mb-4'>
+                Showing{" "}
+                <span className='font-semibold text-foreground'>
+                  {(currentPage - 1) * pageLimit + 1}-
+                  {Math.min(currentPage * pageLimit, pagination.totalItems)}
+                </span>{" "}
+                of{" "}
+                <span className='font-semibold text-foreground'>
+                  {pagination.totalItems}
+                </span>{" "}
+                records
+              </div>
+
+              {/* Pagination Controls */}
+              <div className='flex items-center justify-between gap-4'>
+                <Button
+                  disabled={!pagination.hasPreviousPage}
+                  variant='outline'
+                  size='sm'
+                  onClick={prevPage}
+                  className='flex items-center gap-2'>
+                  <ChevronLeft className='h-4 w-4' />
+                  Previous
+                </Button>
+
+                {/* Page indicator and limit selector */}
+                <div className='flex items-center gap-2'>
+                  <span className='text-sm font-medium text-foreground'>
+                    Page {currentPage} of {pagination.totalPages}
+                  </span>
+                  <Select
+                    value={`${pageLimit}`}
+                    onValueChange={(value: string) =>
+                      setPageLimit(parseInt(value, 10))
+                    }>
+                    <SelectTrigger className='w-16 h-8'>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectGroup>
+                        <SelectLabel>Per page</SelectLabel>
+                        <SelectItem value='10'>10</SelectItem>
+                        <SelectItem value='20'>20</SelectItem>
+                        <SelectItem value='50'>50</SelectItem>
+                        <SelectItem value='100'>100</SelectItem>
+                      </SelectGroup>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <Button
+                  disabled={!pagination.hasNextPage}
+                  variant='outline'
+                  size='sm'
+                  onClick={nextPage}
+                  className='flex items-center gap-2'>
+                  Next
+                  <ChevronRight className='h-4 w-4' />
+                </Button>
+              </div>
+            </div>
+          )}
         </CardContent>
       </Card>
     );
@@ -564,21 +611,21 @@ const SingleReserveStore: React.FC = () => {
                 </div>
                 <div className='flex-1'>
                   <h1 className='text-2xl sm:text-3xl font-bold mb-2'>
-                    {storeInformation?.name || "Store Information"}
+                    {storeInfo?.name || "Store Information"}
                   </h1>
-                  {storeInformation?.location && (
+                  {storeInfo?.location && (
                     <div className='flex items-center gap-2 text-white/90'>
                       <MapPin className='h-4 w-4' />
                       <p className='text-sm sm:text-base'>
-                        {storeInformation.location}
+                        {storeInfo.location}
                       </p>
                     </div>
                   )}
-                  {storeInformation && (
+                  {storeInfo && (
                     <div className='mt-3 inline-flex items-center gap-2 px-3 py-1.5 bg-white/10 backdrop-blur-sm rounded-lg'>
                       <Package className='h-4 w-4' />
                       <span className='text-sm font-medium'>
-                        {storeInformation.records?.length || 0} Records
+                        {pagination?.totalItems || 0} Records
                       </span>
                     </div>
                   )}
@@ -589,7 +636,9 @@ const SingleReserveStore: React.FC = () => {
         </Card>
 
         {/* Table or Empty State */}
-        {!!storeInformation ? renderStoreTable() : renderEmptyStoreData()}
+        {!!storeInfo || isLoadingStore
+          ? renderStoreTable()
+          : renderEmptyStoreData()}
 
         {/* Dialogs */}
         <DialogForRecord

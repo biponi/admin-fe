@@ -47,7 +47,7 @@ const DialogForRecord = ({
     const existingProduct = selectedProducts.find((p: any) =>
       product.variant?.id
         ? p.id === product.id && p.variant?.id === product.variant.id
-        : p.id === product.id
+        : p.id === product.id,
     );
 
     if (existingProduct) {
@@ -61,9 +61,9 @@ const DialogForRecord = ({
           p.id === product.id && p.variant?.id === product.variant?.id
             ? { ...p, quantity: p.quantity + 1 }
             : !p.variant && p.id === product.id
-            ? { ...p, quantity: p.quantity + 1 }
-            : p
-        )
+              ? { ...p, quantity: p.quantity + 1 }
+              : p,
+        ),
       );
     } else {
       setSelectedProducts([
@@ -114,8 +114,8 @@ const DialogForRecord = ({
         return toast.error("Enter valid quantity");
       setSelectedProducts(
         selectedProducts.map((p: any, i: number) =>
-          i === index ? { ...indexProduct, quantity: value } : p
-        )
+          i === index ? { ...indexProduct, quantity: value } : p,
+        ),
       );
     }
   };
@@ -128,8 +128,8 @@ const DialogForRecord = ({
     const newQuantity = (indexProduct?.quantity || 0) + 1;
     setSelectedProducts(
       selectedProducts.map((p: any, i: number) =>
-        i === index ? { ...indexProduct, quantity: newQuantity } : p
-      )
+        i === index ? { ...indexProduct, quantity: newQuantity } : p,
+      ),
     );
   };
 
@@ -142,8 +142,8 @@ const DialogForRecord = ({
       const newQuantity = quantity - 1;
       setSelectedProducts(
         selectedProducts.map((p: any, i: number) =>
-          i === index ? { ...indexProduct, quantity: newQuantity } : p
-        )
+          i === index ? { ...indexProduct, quantity: newQuantity } : p,
+        ),
       );
     }
   };
@@ -180,14 +180,14 @@ const DialogForRecord = ({
 
   const renderProductButton = (
     product: ProductSearchResponse,
-    index: number
+    index: number,
   ) => {
     if (!selectedProducts || !Array.isArray(selectedProducts)) return;
 
     const existingProduct = selectedProducts.find((p) =>
       product.variant?.id
         ? p.id === product.id && p.variant?.id === product.variant.id
-        : p.id === product.id
+        : p.id === product.id,
     );
 
     const isOutOfStock =
@@ -360,10 +360,8 @@ const DialogForRecord = ({
                       variant='outline'
                       size='sm'
                       onClick={() =>
-                        setSelectedProducts(
-                          selectedProducts.filter(
-                            (_: any, i: number) => i !== index
-                          )
+                        setSelectedProducts((prev: any[]) =>
+                          prev.filter((_: any, i: number) => i !== index),
                         )
                       }
                       className='h-8 w-8 p-0 border-rose-200 hover:bg-rose-600 hover:text-white hover:border-rose-600 transition-all duration-300'>
@@ -442,7 +440,7 @@ const DialogForRecord = ({
                 {!!products && products.length > 0 ? (
                   <div className='grid grid-cols-1 gap-3 p-2'>
                     {products.map((result, index) =>
-                      renderProductButton(result, index)
+                      renderProductButton(result, index),
                     )}
                   </div>
                 ) : searchQuery ? (
