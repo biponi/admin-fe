@@ -28,9 +28,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "../../components/ui/select";
-import {
-  deleteStoreRecord,
-} from "../../api/reserve";
+import { deleteStoreRecord } from "../../api/reserve";
 import dayjs from "dayjs";
 import MainView from "../../coreComponents/mainView";
 import toast from "react-hot-toast";
@@ -230,303 +228,292 @@ const SingleReserveStore: React.FC = () => {
           </div>
 
           {/* Table */}
-          <div className='mt-6 flow-root'>
-            <div className='overflow-x-auto'>
-              <div className='inline-block min-w-full align-middle'>
-                <div className='overflow-hidden rounded-xl border border-border/50 shadow-sm'>
-                  <table className='min-w-full divide-y divide-border/50'>
-                    <thead className='bg-gradient-to-r from-purple-50 via-indigo-50 to-purple-50 dark:from-purple-950/20 dark:via-indigo-950/20 dark:to-purple-950/20'>
-                      <tr>
-                        <th
-                          scope='col'
-                          className='py-4 pl-6 pr-3 text-left text-xs font-semibold uppercase tracking-wider text-purple-900 dark:text-purple-100'>
-                          #
-                        </th>
-                        <th
-                          scope='col'
-                          className='px-3 py-4 text-left text-xs font-semibold uppercase tracking-wider text-purple-900 dark:text-purple-100'>
-                          Created At
-                        </th>
-                        <th
-                          scope='col'
-                          className='px-3 py-4 text-left text-xs font-semibold uppercase tracking-wider text-purple-900 dark:text-purple-100'>
-                          Created By
-                        </th>
-                        <th
-                          scope='col'
-                          className='px-3 py-4 text-left text-xs font-semibold uppercase tracking-wider text-purple-900 dark:text-purple-100'>
-                          Products
-                        </th>
-                        <th
-                          scope='col'
-                          className='px-3 py-4 text-left text-xs font-semibold uppercase tracking-wider text-purple-900 dark:text-purple-100'>
-                          Total Amount
-                        </th>
-                        {hasRequiredPermission("ReserveRecord", "delete") && (
-                          <th
-                            scope='col'
-                            className='px-3 py-4 text-center text-xs font-semibold uppercase tracking-wider text-purple-900 dark:text-purple-100'>
-                            Delete
-                          </th>
+          <div className='mt-6 rounded-xl border border-border/50 shadow-sm overflow-hidden max-h-[50vh] overflow-y-auto'>
+            <table className='min-w-full divide-y divide-border/50'>
+              <thead className='sticky top-0 z-10 bg-gradient-to-r from-purple-50 via-indigo-50 to-purple-50 dark:from-purple-950/20 dark:via-indigo-950/20 dark:to-purple-950/50 shadow-sm'>
+                <tr>
+                  <th
+                    scope='col'
+                    className='py-4 pl-6 pr-3 text-left text-xs font-semibold uppercase tracking-wider text-purple-900 dark:text-purple-100'>
+                    #
+                  </th>
+                  <th
+                    scope='col'
+                    className='px-3 py-4 text-left text-xs font-semibold uppercase tracking-wider text-purple-900 dark:text-purple-100'>
+                    Created At
+                  </th>
+                  <th
+                    scope='col'
+                    className='px-3 py-4 text-left text-xs font-semibold uppercase tracking-wider text-purple-900 dark:text-purple-100'>
+                    Created By
+                  </th>
+                  <th
+                    scope='col'
+                    className='px-3 py-4 text-left text-xs font-semibold uppercase tracking-wider text-purple-900 dark:text-purple-100'>
+                    Products
+                  </th>
+                  <th
+                    scope='col'
+                    className='px-3 py-4 text-left text-xs font-semibold uppercase tracking-wider text-purple-900 dark:text-purple-100'>
+                    Total Amount
+                  </th>
+                  {hasRequiredPermission("ReserveRecord", "delete") && (
+                    <th
+                      scope='col'
+                      className='px-3 py-4 text-center text-xs font-semibold uppercase tracking-wider text-purple-900 dark:text-purple-100'>
+                      Delete
+                    </th>
+                  )}
+                  {hasRequiredPermission("ReserveRecord", "edit") && (
+                    <th
+                      scope='col'
+                      className='px-3 py-4 pr-6 text-center text-xs font-semibold uppercase tracking-wider text-purple-900 dark:text-purple-100'>
+                      Edit
+                    </th>
+                  )}
+                  {hasRequiredPermission("ReserveRecord", "edit") && (
+                    <th
+                      scope='col'
+                      className='px-3 py-4 pr-6 text-center text-xs font-semibold uppercase tracking-wider text-purple-900 dark:text-purple-100'>
+                      Download PDF
+                    </th>
+                  )}
+                </tr>
+              </thead>
+              <tbody className='divide-y divide-border/30 bg-card'>
+                {isLoadingStore ? (
+                  <>
+                    <TableRowSkeleton />
+                    <TableRowSkeleton />
+                    <TableRowSkeleton />
+                  </>
+                ) : records && records.length > 0 ? (
+                  records.map((record: IRecord, index: number) => (
+                    <tr
+                      key={index}
+                      className='hover:bg-purple-50/50 dark:hover:bg-purple-950/10 transition-colors duration-150'>
+                      <td className='whitespace-nowrap py-4 pl-6 pr-3 text-sm font-semibold text-purple-600'>
+                        {(currentPage - 1) * pageLimit + Number(index) + 1}
+                      </td>
+                      <td className='whitespace-nowrap px-3 py-4 text-sm text-muted-foreground'>
+                        {dayjs(record?.created_at).format(
+                          "DD-MM-YYYY HH:mm:ss",
                         )}
-                        {hasRequiredPermission("ReserveRecord", "edit") && (
-                          <th
-                            scope='col'
-                            className='px-3 py-4 pr-6 text-center text-xs font-semibold uppercase tracking-wider text-purple-900 dark:text-purple-100'>
-                            Edit
-                          </th>
-                        )}
-                        {hasRequiredPermission("ReserveRecord", "edit") && (
-                          <th
-                            scope='col'
-                            className='px-3 py-4 pr-6 text-center text-xs font-semibold uppercase tracking-wider text-purple-900 dark:text-purple-100'>
-                            Download PDF
-                          </th>
-                        )}
-                      </tr>
-                    </thead>
-                    <tbody className='divide-y divide-border/30 bg-card'>
-                      {isLoadingStore ? (
-                        <>
-                          <TableRowSkeleton />
-                          <TableRowSkeleton />
-                          <TableRowSkeleton />
-                        </>
-                      ) : records && records.length > 0 ? (
-                        records.map((record: IRecord, index: number) => (
-                          <tr
-                            key={index}
-                            className='hover:bg-purple-50/50 dark:hover:bg-purple-950/10 transition-colors duration-150'>
-                            <td className='whitespace-nowrap py-4 pl-6 pr-3 text-sm font-semibold text-purple-600'>
-                              {(currentPage - 1) * pageLimit +
-                                Number(index) +
-                                1}
-                            </td>
-                            <td className='whitespace-nowrap px-3 py-4 text-sm text-muted-foreground'>
-                              {dayjs(record?.created_at).format(
-                                "DD-MM-YYYY HH:mm:ss",
-                              )}
-                            </td>
-                            <td className='whitespace-nowrap px-3 py-4 text-sm font-medium'>
-                              {record?.created_by}
-                            </td>
-                            <td className='px-3 py-4 text-sm'>
-                              <div className='flex flex-wrap gap-2'>
-                                {record?.products?.length > 3 ? (
-                                  <>
-                                    {record?.products
-                                      ?.slice(0, 2)
-                                      .map((val, index) => (
-                                        <div
-                                          key={index}
-                                          className='inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-gradient-to-r from-purple-100 to-indigo-100 dark:from-purple-900/30 dark:to-indigo-900/30 border border-purple-200 dark:border-purple-800'>
-                                          <span
-                                            className='text-xs font-medium truncate max-w-[120px]'
-                                            title={val?.name}>
-                                            {val?.name}
-                                          </span>
-                                          <Badge
-                                            variant='secondary'
-                                            className='text-xs font-bold'>
-                                            ×{val?.quantity}
-                                          </Badge>
-                                        </div>
-                                      ))}
-                                    {renderVariationPopover(record)}
-                                  </>
-                                ) : (
-                                  record?.products?.map((val, index) => (
-                                    <div
-                                      key={index}
-                                      className='inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-gradient-to-r from-purple-100 to-indigo-100 dark:from-purple-900/30 dark:to-indigo-900/30 border border-purple-200 dark:border-purple-800'>
-                                      <span
-                                        className='text-xs font-medium truncate max-w-[120px]'
-                                        title={val?.name}>
-                                        {val?.name}
-                                      </span>
-                                      <Badge
-                                        variant='secondary'
-                                        className='text-xs font-bold'>
-                                        ×{val?.quantity}
-                                      </Badge>
-                                    </div>
-                                  ))
-                                )}
+                      </td>
+                      <td className='whitespace-nowrap px-3 py-4 text-sm font-medium'>
+                        {record?.created_by}
+                      </td>
+                      <td className='px-3 py-4 text-sm'>
+                        <div className='flex flex-wrap gap-2'>
+                          {record?.products?.length > 3 ? (
+                            <>
+                              {record?.products
+                                ?.slice(0, 2)
+                                .map((val, index) => (
+                                  <div
+                                    key={index}
+                                    className='inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-gradient-to-r from-purple-100 to-indigo-100 dark:from-purple-900/30 dark:to-indigo-900/30 border border-purple-200 dark:border-purple-800'>
+                                    <span
+                                      className='text-xs font-medium truncate max-w-[120px]'
+                                      title={val?.name}>
+                                      {val?.name}
+                                    </span>
+                                    <Badge
+                                      variant='secondary'
+                                      className='text-xs font-bold'>
+                                      ×{val?.quantity}
+                                    </Badge>
+                                  </div>
+                                ))}
+                              {renderVariationPopover(record)}
+                            </>
+                          ) : (
+                            record?.products?.map((val, index) => (
+                              <div
+                                key={index}
+                                className='inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-gradient-to-r from-purple-100 to-indigo-100 dark:from-purple-900/30 dark:to-indigo-900/30 border border-purple-200 dark:border-purple-800'>
+                                <span
+                                  className='text-xs font-medium truncate max-w-[120px]'
+                                  title={val?.name}>
+                                  {val?.name}
+                                </span>
+                                <Badge
+                                  variant='secondary'
+                                  className='text-xs font-bold'>
+                                  ×{val?.quantity}
+                                </Badge>
                               </div>
-                            </td>
-                            <td className='whitespace-nowrap px-3 py-4 text-sm font-bold text-purple-600'>
-                              ৳{calculateTotalPrice(record?.products)}
-                            </td>
-                            {hasRequiredPermission(
-                              "ReserveRecord",
-                              "delete",
-                            ) && (
-                              <td className='whitespace-nowrap px-3 py-4 text-center'>
-                                <AlertDialog>
-                                  <AlertDialogTrigger asChild>
-                                    <Button
-                                      variant='outline'
-                                      size='sm'
-                                      disabled={
-                                        deletingRecordId === record?._id
-                                      }
-                                      className='border-rose-200 hover:bg-rose-600 hover:text-white hover:border-rose-600 transition-all duration-300 disabled:opacity-50'>
-                                      {deletingRecordId === record?._id ? (
-                                        <Loader2 className='w-4 h-4 animate-spin' />
-                                      ) : (
-                                        <Trash className='w-4 h-4' />
-                                      )}
-                                    </Button>
-                                  </AlertDialogTrigger>
-                                  <AlertDialogContent>
-                                    <AlertDialogHeader>
-                                      <div className='flex items-center gap-3 mb-2'>
-                                        <div className='p-2 bg-rose-500/10 rounded-lg'>
-                                          <Trash className='h-5 w-5 text-rose-600' />
-                                        </div>
-                                        <AlertDialogTitle className='text-xl'>
-                                          Delete Record
-                                        </AlertDialogTitle>
-                                      </div>
-                                      <AlertDialogDescription className='text-base'>
-                                        Are you sure you want to delete this
-                                        record? This action cannot be undone and
-                                        will permanently remove the record and
-                                        all associated data from the system.
-                                      </AlertDialogDescription>
-                                    </AlertDialogHeader>
-                                    <AlertDialogFooter>
-                                      <AlertDialogCancel>
-                                        Cancel
-                                      </AlertDialogCancel>
-                                      <AlertDialogAction
-                                        onClick={() =>
-                                          handleDeleteRecord(record?._id ?? "")
-                                        }
-                                        className='bg-gradient-to-r from-rose-600 to-red-600 hover:from-rose-700 hover:to-red-700 text-white'>
-                                        Delete Record
-                                      </AlertDialogAction>
-                                    </AlertDialogFooter>
-                                  </AlertDialogContent>
-                                </AlertDialog>
-                              </td>
-                            )}
-                            {hasRequiredPermission("ReserveRecord", "edit") && (
-                              <td className='whitespace-nowrap px-3 py-4 pr-6 text-center'>
-                                <Button
-                                  variant='outline'
-                                  size='sm'
-                                  onClick={() => navigate(`/store/${storeId}/edit-record/${record?.id}`)}
-                                  className='border-purple-200 hover:bg-purple-600 hover:text-white hover:border-purple-600 transition-all duration-300'>
-                                  <Edit className='w-4 h-4' />
-                                </Button>
-                              </td>
-                            )}
-                            {hasRequiredPermission("ReserveRecord", "edit") && (
-                              <td className='whitespace-nowrap px-3 py-4 pr-6 text-center'>
-                                <Button
-                                  variant='outline'
-                                  size='sm'
-                                  onClick={() => {
-                                    generateInventoryPDF(
-                                      storeInfo?.name || "",
-                                      record?.created_by,
-                                      record?.created_at,
-                                      record?.products,
-                                    );
-                                  }}
-                                  className='border-purple-200 hover:bg-purple-600 hover:text-white hover:border-purple-600 transition-all duration-300'>
-                                  <DownloadCloud className='w-4 h-4' />
-                                </Button>
-                              </td>
-                            )}
-                          </tr>
-                        ))
-                      ) : (
-                        <tr>
-                          <td colSpan={7} className='py-12 text-center'>
-                            <div className='flex flex-col items-center'>
-                              <Package
-                                className='h-12 w-12 text-purple-400 mb-3'
-                                strokeWidth={1.5}
-                              />
-                              <p className='text-sm text-muted-foreground'>
-                                No records found
-                              </p>
-                            </div>
-                          </td>
-                        </tr>
+                            ))
+                          )}
+                        </div>
+                      </td>
+                      <td className='whitespace-nowrap px-3 py-4 text-sm font-bold text-purple-600'>
+                        ৳{calculateTotalPrice(record?.products)}
+                      </td>
+                      {hasRequiredPermission("ReserveRecord", "delete") && (
+                        <td className='whitespace-nowrap px-3 py-4 text-center'>
+                          <AlertDialog>
+                            <AlertDialogTrigger asChild>
+                              <Button
+                                variant='outline'
+                                size='sm'
+                                disabled={deletingRecordId === record?._id}
+                                className='border-rose-200 hover:bg-rose-600 hover:text-white hover:border-rose-600 transition-all duration-300 disabled:opacity-50'>
+                                {deletingRecordId === record?._id ? (
+                                  <Loader2 className='w-4 h-4 animate-spin' />
+                                ) : (
+                                  <Trash className='w-4 h-4' />
+                                )}
+                              </Button>
+                            </AlertDialogTrigger>
+                            <AlertDialogContent>
+                              <AlertDialogHeader>
+                                <div className='flex items-center gap-3 mb-2'>
+                                  <div className='p-2 bg-rose-500/10 rounded-lg'>
+                                    <Trash className='h-5 w-5 text-rose-600' />
+                                  </div>
+                                  <AlertDialogTitle className='text-xl'>
+                                    Delete Record
+                                  </AlertDialogTitle>
+                                </div>
+                                <AlertDialogDescription className='text-base'>
+                                  Are you sure you want to delete this record?
+                                  This action cannot be undone and will
+                                  permanently remove the record and all
+                                  associated data from the system.
+                                </AlertDialogDescription>
+                              </AlertDialogHeader>
+                              <AlertDialogFooter>
+                                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                <AlertDialogAction
+                                  onClick={() =>
+                                    handleDeleteRecord(record?._id ?? "")
+                                  }
+                                  className='bg-gradient-to-r from-rose-600 to-red-600 hover:from-rose-700 hover:to-red-700 text-white'>
+                                  Delete Record
+                                </AlertDialogAction>
+                              </AlertDialogFooter>
+                            </AlertDialogContent>
+                          </AlertDialog>
+                        </td>
                       )}
-                    </tbody>
-                  </table>
-                </div>
-              </div>
-            </div>
+                      {hasRequiredPermission("ReserveRecord", "edit") && (
+                        <td className='whitespace-nowrap px-3 py-4 pr-6 text-center'>
+                          <Button
+                            variant='outline'
+                            size='sm'
+                            onClick={() =>
+                              navigate(
+                                `/store/${storeId}/edit-record/${record?.id}`,
+                              )
+                            }
+                            className='border-purple-200 hover:bg-purple-600 hover:text-white hover:border-purple-600 transition-all duration-300'>
+                            <Edit className='w-4 h-4' />
+                          </Button>
+                        </td>
+                      )}
+                      {hasRequiredPermission("ReserveRecord", "edit") && (
+                        <td className='whitespace-nowrap px-3 py-4 pr-6 text-center'>
+                          <Button
+                            variant='outline'
+                            size='sm'
+                            onClick={() => {
+                              generateInventoryPDF(
+                                storeInfo?.name || "",
+                                record?.created_by,
+                                record?.created_at,
+                                record?.products,
+                              );
+                            }}
+                            className='border-purple-200 hover:bg-purple-600 hover:text-white hover:border-purple-600 transition-all duration-300'>
+                            <DownloadCloud className='w-4 h-4' />
+                          </Button>
+                        </td>
+                      )}
+                    </tr>
+                  ))
+                ) : (
+                  <tr>
+                    <td colSpan={7} className='py-12 text-center'>
+                      <div className='flex flex-col items-center'>
+                        <Package
+                          className='h-12 w-12 text-purple-400 mb-3'
+                          strokeWidth={1.5}
+                        />
+                        <p className='text-sm text-muted-foreground'>
+                          No records found
+                        </p>
+                      </div>
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
           </div>
 
           {/* Pagination Controls */}
           {pagination && pagination.totalPages > 1 && (
             <div className='mt-6 bg-card rounded-xl border border-border/50 p-4 shadow-sm'>
-              {/* Items count */}
-              <div className='text-center text-sm text-muted-foreground mb-4'>
-                Showing{" "}
-                <span className='font-semibold text-foreground'>
-                  {(currentPage - 1) * pageLimit + 1}-
-                  {Math.min(currentPage * pageLimit, pagination.totalItems)}
-                </span>{" "}
-                of{" "}
-                <span className='font-semibold text-foreground'>
-                  {pagination.totalItems}
-                </span>{" "}
-                records
-              </div>
-
               {/* Pagination Controls */}
               <div className='flex items-center justify-between gap-4'>
-                <Button
-                  disabled={!pagination.hasPreviousPage}
-                  variant='outline'
-                  size='sm'
-                  onClick={prevPage}
-                  className='flex items-center gap-2'>
-                  <ChevronLeft className='h-4 w-4' />
-                  Previous
-                </Button>
-
-                {/* Page indicator and limit selector */}
-                <div className='flex items-center gap-2'>
-                  <span className='text-sm font-medium text-foreground'>
-                    Page {currentPage} of {pagination.totalPages}
-                  </span>
-                  <Select
-                    value={`${pageLimit}`}
-                    onValueChange={(value: string) =>
-                      setPageLimit(parseInt(value, 10))
-                    }>
-                    <SelectTrigger className='w-16 h-8'>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectGroup>
-                        <SelectLabel>Per page</SelectLabel>
-                        <SelectItem value='10'>10</SelectItem>
-                        <SelectItem value='20'>20</SelectItem>
-                        <SelectItem value='50'>50</SelectItem>
-                        <SelectItem value='100'>100</SelectItem>
-                      </SelectGroup>
-                    </SelectContent>
-                  </Select>
+                {/* Items count */}
+                <div className='text-center text-sm text-muted-foreground'>
+                  Showing{" "}
+                  <span className='font-semibold text-foreground'>
+                    {(currentPage - 1) * pageLimit + 1}-
+                    {Math.min(currentPage * pageLimit, pagination.totalItems)}
+                  </span>{" "}
+                  of{" "}
+                  <span className='font-semibold text-foreground'>
+                    {pagination.totalItems}
+                  </span>{" "}
+                  records
                 </div>
+                <span className='text-sm font-medium text-foreground'>
+                  Page {currentPage} of {pagination.totalPages}
+                </span>
+                <div className='flex justify-between items-center float-right gap-2'>
+                  {/* Page indicator and limit selector */}
+                  <div className='flex items-center gap-2'>
+                    <Select
+                      value={`${pageLimit}`}
+                      onValueChange={(value: string) =>
+                        setPageLimit(parseInt(value, 10))
+                      }>
+                      <SelectTrigger className='w-16 h-8'>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectGroup>
+                          <SelectLabel>Per page</SelectLabel>
+                          <SelectItem value='10'>10</SelectItem>
+                          <SelectItem value='20'>20</SelectItem>
+                          <SelectItem value='50'>50</SelectItem>
+                          <SelectItem value='100'>100</SelectItem>
+                        </SelectGroup>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <Button
+                    disabled={!pagination.hasPreviousPage}
+                    variant='outline'
+                    size='sm'
+                    onClick={prevPage}
+                    className='flex items-center gap-2'>
+                    <ChevronLeft className='h-4 w-4' />
+                    Previous
+                  </Button>
 
-                <Button
-                  disabled={!pagination.hasNextPage}
-                  variant='outline'
-                  size='sm'
-                  onClick={nextPage}
-                  className='flex items-center gap-2'>
-                  Next
-                  <ChevronRight className='h-4 w-4' />
-                </Button>
+                  <Button
+                    disabled={!pagination.hasNextPage}
+                    variant='outline'
+                    size='sm'
+                    onClick={nextPage}
+                    className='flex items-center gap-2'>
+                    Next
+                    <ChevronRight className='h-4 w-4' />
+                  </Button>
+                </div>
               </div>
             </div>
           )}
@@ -540,7 +527,7 @@ const SingleReserveStore: React.FC = () => {
         {/* Store Header Card */}
         <Card className='border-0 shadow-xl bg-gradient-to-br from-purple-600 via-indigo-600 to-purple-700 text-white overflow-hidden'>
           <div className='absolute top-0 right-0 w-64 h-64 bg-gradient-to-br from-white/10 to-transparent rounded-full blur-3xl -translate-y-32 translate-x-32'></div>
-          <CardContent className='p-6 sm:p-8 relative z-10'>
+          <CardContent className='p-4 sm:p-4 relative z-10'>
             {isLoadingStore ? (
               <div className='animate-pulse space-y-3'>
                 <div className='h-8 w-48 bg-white/20 rounded'></div>
@@ -549,10 +536,10 @@ const SingleReserveStore: React.FC = () => {
             ) : (
               <div className='flex items-start gap-4'>
                 <div className='p-3 bg-white/10 backdrop-blur-sm rounded-2xl shadow-lg'>
-                  <Warehouse className='h-8 w-8 text-white' strokeWidth={2.5} />
+                  <Warehouse className='h-5 w-5 text-white' strokeWidth={2.5} />
                 </div>
-                <div className='flex-1'>
-                  <h1 className='text-2xl sm:text-3xl font-bold mb-2'>
+                <div className='flex-1 flex justify-between items-center'>
+                  <h1 className='text-base sm:text-xl font-bold mb-2'>
                     {storeInfo?.name || "Store Information"}
                   </h1>
                   {storeInfo?.location && (
