@@ -10,6 +10,8 @@ import UpdatePurchaseOrder from "../../pages/purchaseOrder/UpdatePurchaseOrder";
 import TransactionsPage from "../../pages/transection";
 import ReserveStore from "../../pages/reserve";
 import SingleReserveStore from "../../pages/reserve/singleReserveStore";
+import AddRecord from "../../pages/reserve/addRecord";
+import EditRecord from "../../pages/reserve/editRecord";
 import { UserComponent } from "../../pages/user";
 import ProfilePage from "../../pages/user/userProfile";
 import RolesListPage from "../../pages/role";
@@ -108,6 +110,22 @@ export const ProtectedRoutes = () => {
         element={
           <ProtectedRoute page='ReserveStore' requiredAction='store_access'>
             <SingleReserveStore />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path='/store/:storeId/add-record'
+        element={
+          <ProtectedRoute page='ReserveRecord' requiredAction='create'>
+            <AddRecord />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path='/store/:storeId/edit-record/:recordId'
+        element={
+          <ProtectedRoute page='ReserveRecord' requiredAction='edit'>
+            <EditRecord />
           </ProtectedRoute>
         }
       />

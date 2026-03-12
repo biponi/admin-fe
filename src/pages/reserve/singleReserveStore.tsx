@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { useParams } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import {
   Trash,
   Loader2,
@@ -29,15 +29,12 @@ import {
   SelectValue,
 } from "../../components/ui/select";
 import {
-  addRecord,
   deleteStoreRecord,
-  editStoreRecord,
 } from "../../api/reserve";
 import dayjs from "dayjs";
-import DialogForRecord from "./common/dialogForRecord";
 import MainView from "../../coreComponents/mainView";
 import toast from "react-hot-toast";
-import { calculateTotalPrice, distinctProducts } from "./utils/functions";
+import { calculateTotalPrice } from "./utils/functions";
 import { Badge } from "../../components/ui/badge";
 import {
   AlertDialog,
@@ -54,7 +51,7 @@ import useRoleCheck from "../auth/hooks/useRoleCheck";
 import { Card, CardContent } from "../../components/ui/card";
 import { generateInventoryPDF } from "../../utils/reactPdfStorerecord";
 import { useReserveRecords } from "./hooks/useReserveRecords";
-import Swal from "sweetalert2";
+import ErrorAlertDialog from "../../components/common/ErrorAlertDialog";
 
 // Skeleton loader for table rows
 const TableRowSkeleton: React.FC = () => (
@@ -86,6 +83,7 @@ const TableRowSkeleton: React.FC = () => (
 const SingleReserveStore: React.FC = () => {
   const { hasRequiredPermission } = useRoleCheck();
   const { storeId } = useParams<{ storeId: string }>();
+  const navigate = useNavigate();
 
   // Use the custom hook for pagination
   const {
@@ -101,62 +99,11 @@ const SingleReserveStore: React.FC = () => {
     refreshRecords,
   } = useReserveRecords(storeId);
 
-  const [openCreateDialog, setOpenCreateDialog] = useState(false);
-  const [selectedProducs, setSelectedProducts] = useState<any[]>([]);
-  const [openEditDialog, setOpenEditDialog] = useState(false);
-  const [recordId, setRecordId] = useState("");
   const [deletingRecordId, setDeletingRecordId] = useState<string | null>(null);
-  const [isEditingRecord, setIsEditingRecord] = useState(false);
-  const [isAddingRecord, setIsAddingRecord] = useState(false);
-
-  const handleSaveRecord = async () => {
-    try {
-      setIsAddingRecord(true);
-      const response = await addRecord({
-        products: [...selectedProducs],
-        storeId,
-      });
-      if (response?.success) {
-        refreshRecords();
-        setOpenCreateDialog(false);
-        setSelectedProducts([]);
-        toast.success("Record added successfully");
-      } else {
-        Swal.fire("⚠️", response?.error ?? "Record not added", "warning");
-      }
-    } catch (error) {
-      Swal.fire("⚠️", "Failed to add record", "warning");
-    } finally {
-      setIsAddingRecord(false);
-    }
-  };
-
-  const handleEditRecord = async () => {
-    if (selectedProducs.length < 1) return;
-    const productList = distinctProducts(selectedProducs);
-
-    try {
-      setIsEditingRecord(true);
-      const response = await editStoreRecord({
-        products: [...productList],
-        storeId,
-        recordId,
-      });
-      if (response?.success) {
-        refreshRecords();
-        setOpenEditDialog(false);
-        setSelectedProducts([]);
-        setRecordId("");
-        toast.success("Record updated successfully");
-      } else {
-        Swal.fire("⚠️", response?.error ?? "Record not updated", "warning");
-      }
-    } catch (error) {
-      toast.error("Failed to update record");
-    } finally {
-      setIsEditingRecord(false);
-    }
-  };
+  const [errorDialog, setErrorDialog] = useState<{
+    isOpen: boolean;
+    message: string;
+  }>({ isOpen: false, message: "" });
 
   const handleDeleteRecord = async (recordId: string) => {
     if (!recordId || !storeId) return;
@@ -167,11 +114,10 @@ const SingleReserveStore: React.FC = () => {
         refreshRecords();
         toast.success("Record removed successfully");
       } else {
-        Swal.fire(
-          "⚠️",
-          deleted?.error ?? "Server was unable to delete the record.",
-          "warning",
-        );
+        setErrorDialog({
+          isOpen: true,
+          message: deleted?.error ?? "Server was unable to delete the record.",
+        });
       }
     } catch (error) {
       toast.error("Failed to delete record");
@@ -203,7 +149,7 @@ const SingleReserveStore: React.FC = () => {
             </p>
             {hasRequiredPermission("ReserveRecord", "create") && (
               <Button
-                onClick={() => setOpenCreateDialog(true)}
+                onClick={() => navigate(`/store/${storeId}/add-record`)}
                 className='bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 shadow-lg'>
                 <Plus className='mr-2 h-4 w-4' /> Add First Record
               </Button>
@@ -275,7 +221,7 @@ const SingleReserveStore: React.FC = () => {
             {hasRequiredPermission("ReserveRecord", "create") && (
               <Button
                 type='button'
-                onClick={() => setOpenCreateDialog(true)}
+                onClick={() => navigate(`/store/${storeId}/add-record`)}
                 className='bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-0.5'>
                 <Plus className='mr-2 h-4 w-4' strokeWidth={2.5} />
                 Add Record
@@ -470,11 +416,7 @@ const SingleReserveStore: React.FC = () => {
                                 <Button
                                   variant='outline'
                                   size='sm'
-                                  onClick={() => {
-                                    setSelectedProducts([...record?.products]);
-                                    setOpenEditDialog(true);
-                                    setRecordId(record?.id);
-                                  }}
+                                  onClick={() => navigate(`/store/${storeId}/edit-record/${record?.id}`)}
                                   className='border-purple-200 hover:bg-purple-600 hover:text-white hover:border-purple-600 transition-all duration-300'>
                                   <Edit className='w-4 h-4' />
                                 </Button>
@@ -640,22 +582,11 @@ const SingleReserveStore: React.FC = () => {
           ? renderStoreTable()
           : renderEmptyStoreData()}
 
-        {/* Dialogs */}
-        <DialogForRecord
-          openDialog={openCreateDialog}
-          setOpenDialog={setOpenCreateDialog}
-          selectedProducts={selectedProducs}
-          setSelectedProducts={setSelectedProducts}
-          handleSubmit={() => handleSaveRecord()}
-          isSubmitting={isAddingRecord}
-        />
-        <DialogForRecord
-          openDialog={openEditDialog}
-          setOpenDialog={setOpenEditDialog}
-          selectedProducts={selectedProducs}
-          setSelectedProducts={setSelectedProducts}
-          handleSubmit={() => handleEditRecord()}
-          isSubmitting={isEditingRecord}
+        {/* Error Alert Dialog */}
+        <ErrorAlertDialog
+          isOpen={errorDialog.isOpen}
+          onClose={() => setErrorDialog({ isOpen: false, message: "" })}
+          message={errorDialog.message}
         />
       </div>
     );
