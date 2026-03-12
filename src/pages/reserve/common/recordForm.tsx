@@ -434,8 +434,8 @@ const RecordForm = ({
                       </Badge>
                     ) : (
                       <Badge variant='secondary' className='text-xs'>
-                        {hasInitialized && initialProducts.length > 0
-                          ? product.name.split(" ").slice(1).join(" ") || "N/A"
+                        {product?.name.includes(" ")
+                          ? product?.name.split(" ").slice(1).join(" ") || "N/A"
                           : "N/A"}
                       </Badge>
                     )}
