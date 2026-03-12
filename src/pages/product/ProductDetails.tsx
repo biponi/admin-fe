@@ -10,6 +10,7 @@ import {
   Users,
   ShoppingCart,
   RefreshCw,
+  History,
 } from "lucide-react";
 import useRoleCheck from "../auth/hooks/useRoleCheck";
 import { getProductById } from "../../api/product";
@@ -26,6 +27,7 @@ import OrderHistoryTab from "./components/OrderHistoryTab";
 import CustomerHistoryTab from "./components/CustomerHistoryTab";
 import PurchaseOrderHistoryTab from "./components/PurchaseOrderHistoryTab";
 import AdjustmentHistoryTab from "./components/AdjustmentHistoryTab";
+import StoreReserveHistoryTab from "./components/StoreReserveHistoryTab";
 
 const ProductDetails = () => {
   const { toast } = useToast();
@@ -130,7 +132,7 @@ const ProductDetails = () => {
 
         {/* Analytics Tabs */}
         <Tabs defaultValue='orders' className='w-full'>
-          <TabsList className='grid w-full grid-cols-4 bg-gradient-to-r from-gray-50 to-blue-50 border-2 border-gray-200 rounded-xl p-1 shadow-sm'>
+          <TabsList className='grid w-full grid-cols-5 bg-gradient-to-r from-gray-50 to-blue-50 border-2 border-gray-200 rounded-xl p-1 shadow-sm'>
             <TabsTrigger
               value='orders'
               className='data-[state=active]:bg-white data-[state=active]:shadow-sm data-[state=active]:border-blue-200 transition-all'>
@@ -155,6 +157,12 @@ const ProductDetails = () => {
               <BarChart3 className='h-4 w-4 mr-2' />
               Adjustments
             </TabsTrigger>
+            <TabsTrigger
+              value='store-reserve'
+              className='data-[state=active]:bg-white data-[state=active]:shadow-sm data-[state=active]:border-blue-200 transition-all'>
+              <History className='h-4 w-4 mr-2' />
+              Store Reserve
+            </TabsTrigger>
           </TabsList>
 
           <TabsContent value='orders' className='mt-6'>
@@ -171,6 +179,10 @@ const ProductDetails = () => {
 
           <TabsContent value='adjustments' className='mt-6'>
             <AdjustmentHistoryTab productId={id} />
+          </TabsContent>
+
+          <TabsContent value='store-reserve' className='mt-6'>
+            <StoreReserveHistoryTab productId={id} />
           </TabsContent>
         </Tabs>
       </div>
