@@ -368,8 +368,8 @@ const RecordForm = ({
   const renderTableView = () => {
     return (
       <div className='rounded-xl border border-border/50 overflow-hidden shadow-sm bg-card'>
-        <Table>
-          <thead className='bg-gradient-to-r from-purple-50 via-indigo-50 to-purple-50 dark:from-purple-950/20 dark:via-indigo-950/20 dark:to-purple-950/20'>
+        <Table divClass='max-h-[55vh] overflow-y-auto'>
+          <thead className='sticky top-0 z-10 bg-gradient-to-r from-purple-50 via-indigo-50 to-purple-50 dark:from-purple-950/20 dark:via-indigo-950/20 dark:to-purple-950/20'>
             <tr>
               <th className='px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-purple-900 dark:text-purple-100'>
                 Name
@@ -388,7 +388,7 @@ const RecordForm = ({
               </th>
             </tr>
           </thead>
-          <tbody className='divide-y divide-border/30'>
+          <tbody className='divide-y divide-border/30 bg-card'>
             {!!selectedProducts && selectedProducts?.length === 0 && (
               <tr>
                 <td colSpan={5}>
@@ -419,7 +419,7 @@ const RecordForm = ({
                   className='hover:bg-purple-50/50 dark:hover:bg-purple-950/10 transition-colors duration-150'
                   key={product.variant?.id || product.id}>
                   <td className='px-4 py-3 text-sm font-medium'>
-                    {product.name}
+                    {product.name.split(" ")[0] ?? product.name}
                   </td>
                   <td className='px-4 py-3 text-center'>
                     {!!product.variant ? (
@@ -434,7 +434,9 @@ const RecordForm = ({
                       </Badge>
                     ) : (
                       <Badge variant='secondary' className='text-xs'>
-                        N/A
+                        {hasInitialized && initialProducts.length > 0
+                          ? product.name.split(" ").slice(1).join(" ") || "N/A"
+                          : "N/A"}
                       </Badge>
                     )}
                   </td>
@@ -503,9 +505,7 @@ const RecordForm = ({
               {selectedProducts?.length || 0} items
             </Badge>
           </div>
-          <div className='max-h-[60vh] overflow-y-auto pr-2'>
-            {renderTableView()}
-          </div>
+          <div className='pr-2'>{renderTableView()}</div>
         </div>
 
         {/* Product Search */}
@@ -528,7 +528,7 @@ const RecordForm = ({
           )}
 
           {!loading && (
-            <div className='max-h-[60vh] overflow-y-auto pr-2'>
+            <div className='max-h-[55vh] overflow-y-auto pr-2'>
               {!!products && products.length > 0 ? (
                 <div className='grid grid-cols-1 gap-3 p-2'>
                   {products.map((result, index) =>

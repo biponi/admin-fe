@@ -13,7 +13,10 @@ import ErrorAlertDialog from "../../components/common/ErrorAlertDialog";
 import { IRecord } from "./interface";
 
 const EditRecord: React.FC = () => {
-  const { storeId, recordId } = useParams<{ storeId: string; recordId: string }>();
+  const { storeId, recordId } = useParams<{
+    storeId: string;
+    recordId: string;
+  }>();
   const navigate = useNavigate();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isLoadingRecord, setIsLoadingRecord] = useState(true);
@@ -34,7 +37,9 @@ const EditRecord: React.FC = () => {
 
         if (response?.success && response?.data) {
           const records = response.data.records || [];
-          const record = records.find((r: IRecord) => r.id === recordId || r._id === recordId);
+          const record = records.find(
+            (r: IRecord) => r.id === recordId || r._id === recordId,
+          );
 
           if (record) {
             setInitialProducts(record.products || []);
@@ -106,13 +111,13 @@ const EditRecord: React.FC = () => {
     return (
       <Card className='border-0 shadow-xl bg-gradient-to-br from-purple-600 via-indigo-600 to-purple-700 text-white overflow-hidden mb-6'>
         <div className='absolute top-0 right-0 w-64 h-64 bg-gradient-to-br from-white/10 to-transparent rounded-full blur-3xl -translate-y-32 translate-x-32'></div>
-        <CardContent className='p-6 sm:p-8 relative z-10'>
+        <CardContent className='p-4 sm:p-4 relative z-10'>
           <div className='flex items-center gap-4'>
             <div className='p-3 bg-white/10 backdrop-blur-sm rounded-2xl shadow-lg'>
-              <Edit className='h-8 w-8 text-white' strokeWidth={2.5} />
+              <Edit className='h-5 w-5 text-white' strokeWidth={2.5} />
             </div>
             <div className='flex-1'>
-              <h1 className='text-2xl sm:text-3xl font-bold mb-2'>
+              <h1 className='text-xl sm:text-2xl font-bold mb-2'>
                 Edit Record
               </h1>
               <p className='text-white/90 text-sm sm:text-base'>

@@ -63,13 +63,13 @@ const AddRecord: React.FC = () => {
     return (
       <Card className='border-0 shadow-xl bg-gradient-to-br from-purple-600 via-indigo-600 to-purple-700 text-white overflow-hidden mb-6'>
         <div className='absolute top-0 right-0 w-64 h-64 bg-gradient-to-br from-white/10 to-transparent rounded-full blur-3xl -translate-y-32 translate-x-32'></div>
-        <CardContent className='p-6 sm:p-8 relative z-10'>
+        <CardContent className='p-4 sm:p-4 relative z-10'>
           <div className='flex items-center gap-4'>
             <div className='p-3 bg-white/10 backdrop-blur-sm rounded-2xl shadow-lg'>
-              <Package className='h-8 w-8 text-white' strokeWidth={2.5} />
+              <Package className='h-5 w-5 text-white' strokeWidth={2.5} />
             </div>
             <div className='flex-1'>
-              <h1 className='text-2xl sm:text-3xl font-bold mb-2'>
+              <h1 className='text-xl sm:text-2xl font-bold mb-2'>
                 Add New Record
               </h1>
               <p className='text-white/90 text-sm sm:text-base'>
