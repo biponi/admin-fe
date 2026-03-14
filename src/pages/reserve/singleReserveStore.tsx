@@ -523,7 +523,7 @@ const SingleReserveStore: React.FC = () => {
   };
   const renderMainView = () => {
     return (
-      <div className='container mx-auto p-4 sm:p-6 space-y-6'>
+      <div className='w-full mx-auto p-4 space-y-4 overflow-x-auto'>
         {/* Store Header Card */}
         <Card className='border-0 shadow-xl bg-gradient-to-br from-purple-600 via-indigo-600 to-purple-700 text-white overflow-hidden'>
           <div className='absolute top-0 right-0 w-64 h-64 bg-gradient-to-br from-white/10 to-transparent rounded-full blur-3xl -translate-y-32 translate-x-32'></div>

@@ -161,7 +161,7 @@ const EditRecord: React.FC = () => {
     }
 
     return (
-      <div className='container mx-auto p-4 sm:p-6'>
+      <div className='w-full mx-auto p-4'>
         {renderHeader()}
         <Card className='border-0 shadow-xl bg-gradient-to-br from-card via-card/98 to-card/95'>
           <CardContent className='p-6'>

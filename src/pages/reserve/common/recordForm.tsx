@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import useDebounce from "../../../customHook/useDebounce";
 import { searchProducts } from "../../order/services/orderApi";
 import { isAxiosError } from "axios";
@@ -45,6 +45,7 @@ const RecordForm = ({
   const [products, setProducts] = useState<any[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [hasInitialized, setHasInitialized] = useState(false);
+  const tableRef = useRef<HTMLDivElement>(null);
 
   // Only sync initial products once on mount for edit mode
   useEffect(() => {
@@ -53,6 +54,13 @@ const RecordForm = ({
       setHasInitialized(true);
     }
   }, [mode, initialProducts, hasInitialized]);
+
+  // Auto-scroll to bottom when products are added
+  useEffect(() => {
+    if (tableRef.current && selectedProducts.length > 0) {
+      tableRef.current.scrollTop = tableRef.current.scrollHeight;
+    }
+  }, [selectedProducts]);
 
   // Add a product to the order
   const handleAddProduct = (product: ProductSearchResponse) => {
@@ -368,125 +376,133 @@ const RecordForm = ({
   const renderTableView = () => {
     return (
       <div className='rounded-xl border border-border/50 overflow-hidden shadow-sm bg-card'>
-        <Table divClass='max-h-[55vh] overflow-y-auto'>
-          <thead className='sticky top-0 z-10 bg-gradient-to-r from-purple-50 via-indigo-50 to-purple-50 dark:from-purple-950/20 dark:via-indigo-950/20 dark:to-purple-950/20'>
-            <tr>
-              <th className='px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-purple-900 dark:text-purple-100'>
-                Name
-              </th>
-              <th className='px-4 py-3 text-center text-xs font-semibold uppercase tracking-wider text-purple-900 dark:text-purple-100'>
-                Variant
-              </th>
-              <th className='px-4 py-3 text-center text-xs font-semibold uppercase tracking-wider text-purple-900 dark:text-purple-100'>
-                Quantity
-              </th>
-              <th className='px-4 py-3 text-center text-xs font-semibold uppercase tracking-wider text-purple-900 dark:text-purple-100'>
-                Price
-              </th>
-              <th className='px-4 py-3 text-center text-xs font-semibold uppercase tracking-wider text-purple-900 dark:text-purple-100'>
-                Action
-              </th>
-            </tr>
-          </thead>
-          <tbody className='divide-y divide-border/30 bg-card'>
-            {!!selectedProducts && selectedProducts?.length === 0 && (
+        <div ref={tableRef} className='max-h-[55vh] overflow-y-auto'>
+          <Table>
+            <thead className='sticky top-0 z-10 bg-gradient-to-r from-purple-50 via-indigo-50 to-purple-50 dark:from-purple-950/20 dark:via-indigo-950/20 dark:to-purple-950/20'>
               <tr>
-                <td colSpan={5}>
-                  <div className='w-full py-16 flex flex-col justify-center items-center'>
-                    <div className='relative mb-4'>
-                      <div className='absolute inset-0 bg-purple-500/20 rounded-full blur-xl'></div>
-                      <div className='relative p-4 bg-gradient-to-br from-purple-500/10 to-indigo-500/10 rounded-2xl'>
-                        <Package
-                          className='w-12 h-12 text-purple-600'
-                          strokeWidth={1.5}
-                        />
-                      </div>
-                    </div>
-                    <p className='text-base font-semibold text-foreground'>
-                      No Products Added
-                    </p>
-                    <p className='text-sm text-muted-foreground mt-1'>
-                      Search and add products to create a record
-                    </p>
-                  </div>
-                </td>
+                <th className='px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-purple-900 dark:text-purple-100'>
+                  #
+                </th>
+                <th className='px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-purple-900 dark:text-purple-100'>
+                  Name
+                </th>
+                <th className='px-4 py-3 text-center text-xs font-semibold uppercase tracking-wider text-purple-900 dark:text-purple-100'>
+                  Variant
+                </th>
+                <th className='px-4 py-3 text-center text-xs font-semibold uppercase tracking-wider text-purple-900 dark:text-purple-100'>
+                  Quantity
+                </th>
+                <th className='px-4 py-3 text-center text-xs font-semibold uppercase tracking-wider text-purple-900 dark:text-purple-100'>
+                  Price
+                </th>
+                <th className='px-4 py-3 text-center text-xs font-semibold uppercase tracking-wider text-purple-900 dark:text-purple-100'>
+                  Action
+                </th>
               </tr>
-            )}
-            {!!selectedProducts &&
-              selectedProducts?.length > 0 &&
-              selectedProducts.reverse().map((product: any, index: number) => (
-                <tr
-                  className='hover:bg-purple-50/50 dark:hover:bg-purple-950/10 transition-colors duration-150'
-                  key={product.variant?.id || product.id}>
-                  <td className='px-4 py-3 text-sm font-medium'>
-                    {product.name.split(" ")[0] ?? product.name}
-                  </td>
-                  <td className='px-4 py-3 text-center'>
-                    {!!product.variant ? (
-                      <Badge
-                        variant='outline'
-                        className='text-xs border-purple-200'>
-                        {`${product?.variant.color}${
-                          !!product?.variant?.color && !!product?.variant?.size
-                            ? " - "
-                            : ""
-                        }${product?.variant?.size}`}
-                      </Badge>
-                    ) : (
-                      <Badge variant='secondary' className='text-xs'>
-                        {product?.name.includes(" ")
-                          ? product?.name.split(" ").slice(1).join(" ") || "N/A"
-                          : "N/A"}
-                      </Badge>
-                    )}
-                  </td>
-                  <td className='px-4 py-3'>
-                    <div className='flex items-center justify-center gap-1'>
-                      <Button
-                        variant='outline'
-                        size='sm'
-                        onClick={() => handleDecrease(index)}
-                        disabled={product?.quantity < 1}
-                        className='h-8 w-8 p-0 rounded-lg border-purple-200 hover:bg-purple-600 hover:text-white hover:border-purple-600 disabled:opacity-50'>
-                        <Minus className='h-3 w-3' />
-                      </Button>
-                      <Input
-                        type='text'
-                        value={product?.quantity}
-                        onChange={(e) =>
-                          handleInputChange(e?.target?.value, index)
-                        }
-                        className='text-center w-16 h-8 border-purple-200 focus:border-purple-500 focus:ring-2 focus:ring-purple-500/20 font-semibold'
-                      />
-                      <Button
-                        variant='outline'
-                        size='sm'
-                        onClick={() => handleIncrease(index)}
-                        className='h-8 w-8 p-0 rounded-lg border-purple-200 hover:bg-purple-600 hover:text-white hover:border-purple-600'>
-                        <Plus className='h-3 w-3' />
-                      </Button>
+            </thead>
+            <tbody className='divide-y divide-border/30 bg-card'>
+              {!!selectedProducts && selectedProducts?.length === 0 && (
+                <tr>
+                  <td colSpan={6}>
+                    <div className='w-full py-16 flex flex-col justify-center items-center'>
+                      <div className='relative mb-4'>
+                        <div className='absolute inset-0 bg-purple-500/20 rounded-full blur-xl'></div>
+                        <div className='relative p-4 bg-gradient-to-br from-purple-500/10 to-indigo-500/10 rounded-2xl'>
+                          <Package
+                            className='w-12 h-12 text-purple-600'
+                            strokeWidth={1.5}
+                          />
+                        </div>
+                      </div>
+                      <p className='text-base font-semibold text-foreground'>
+                        No Products Added
+                      </p>
+                      <p className='text-sm text-muted-foreground mt-1'>
+                        Search and add products to create a record
+                      </p>
                     </div>
-                  </td>
-                  <td className='px-4 py-3 text-center text-sm font-semibold text-purple-600'>
-                    ৳{product?.unitPrice}
-                  </td>
-                  <td className='px-4 py-3 text-center'>
-                    <Button
-                      variant='outline'
-                      size='sm'
-                      onClick={() =>
-                        setSelectedProducts((prev: any[]) =>
-                          prev.filter((_: any, i: number) => i !== index),
-                        )
-                      }
-                      className='h-8 w-8 p-0 border-rose-200 hover:bg-rose-600 hover:text-white hover:border-rose-600 transition-all duration-300'>
-                      <Trash className='h-4 w-4' />
-                    </Button>
                   </td>
                 </tr>
-              ))}
-          </tbody>
-        </Table>
+              )}
+              {!!selectedProducts &&
+                selectedProducts?.length > 0 &&
+                selectedProducts.map((product: any, index: number) => (
+                  <tr
+                    className='hover:bg-purple-50/50 dark:hover:bg-purple-950/10 transition-colors duration-150'
+                    key={product.variant?.id || product.id}>
+                    <td className='px-4 py-3 text-sm font-mono'>{index + 1}</td>
+                    <td className='px-4 py-3 text-sm font-medium uppercase'>
+                      {product.name.split(" ")[0] ?? product.name}
+                    </td>
+                    <td className='px-4 py-3 text-center'>
+                      {!!product.variant ? (
+                        <Badge
+                          variant='outline'
+                          className='text-xs border-purple-200'>
+                          {`${product?.variant.color}${
+                            !!product?.variant?.color &&
+                            !!product?.variant?.size
+                              ? " - "
+                              : ""
+                          }${product?.variant?.size}`}
+                        </Badge>
+                      ) : (
+                        <Badge variant='secondary' className='text-xs'>
+                          {product?.name.includes(" ")
+                            ? product?.name.split(" ").slice(1).join(" ") ||
+                              "N/A"
+                            : "N/A"}
+                        </Badge>
+                      )}
+                    </td>
+                    <td className='px-4 py-3'>
+                      <div className='flex items-center justify-center gap-1'>
+                        <Button
+                          variant='outline'
+                          size='sm'
+                          onClick={() => handleDecrease(index)}
+                          disabled={product?.quantity < 1}
+                          className='h-8 w-8 p-0 rounded-lg border-purple-200 hover:bg-purple-600 hover:text-white hover:border-purple-600 disabled:opacity-50'>
+                          <Minus className='h-3 w-3' />
+                        </Button>
+                        <Input
+                          type='text'
+                          value={product?.quantity}
+                          onChange={(e) =>
+                            handleInputChange(e?.target?.value, index)
+                          }
+                          className='text-center w-16 h-8 border-purple-200 focus:border-purple-500 focus:ring-2 focus:ring-purple-500/20 font-semibold'
+                        />
+                        <Button
+                          variant='outline'
+                          size='sm'
+                          onClick={() => handleIncrease(index)}
+                          className='h-8 w-8 p-0 rounded-lg border-purple-200 hover:bg-purple-600 hover:text-white hover:border-purple-600'>
+                          <Plus className='h-3 w-3' />
+                        </Button>
+                      </div>
+                    </td>
+                    <td className='px-4 py-3 text-center text-sm font-semibold text-purple-600'>
+                      ৳{product?.unitPrice}
+                    </td>
+                    <td className='px-4 py-3 text-center'>
+                      <Button
+                        variant='outline'
+                        size='sm'
+                        onClick={() =>
+                          setSelectedProducts((prev: any[]) =>
+                            prev.filter((_: any, i: number) => i !== index),
+                          )
+                        }
+                        className='h-8 w-8 p-0 border-rose-200 hover:bg-rose-600 hover:text-white hover:border-rose-600 transition-all duration-300'>
+                        <Trash className='h-4 w-4' />
+                      </Button>
+                    </td>
+                  </tr>
+                ))}
+            </tbody>
+          </Table>
+        </div>
       </div>
     );
   };
