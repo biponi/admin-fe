@@ -1,6 +1,5 @@
 import axios from "./axios";
 import type { AxiosProgressEvent } from "axios";
-import config from "../utils/config";
 import { handleApiError } from ".";
 
 /**
@@ -214,7 +213,7 @@ export interface RecentlyUpdatedProduct {
  * @returns Response with report data
  */
 export const fetchInventoryReport = async (
-  params: InventoryReportParams
+  params: InventoryReportParams,
 ): Promise<BaseReportResponse<any>> => {
   try {
     const {
@@ -262,12 +261,12 @@ export const fetchInventoryReport = async (
         onDownloadProgress: (progressEvent: AxiosProgressEvent) => {
           if (onProgress && progressEvent.total) {
             const progress = Math.round(
-              (progressEvent.loaded * 100) / progressEvent.total
+              (progressEvent.loaded * 100) / progressEvent.total,
             );
             onProgress(progress);
           }
         },
-      }
+      },
     );
 
     if (response.status === 200 && response.data?.success) {
