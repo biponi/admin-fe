@@ -8,7 +8,10 @@ import {
 } from "../../../../../components/ui/table";
 import { Badge } from "../../../../../components/ui/badge";
 import { Clock, ShoppingCart } from "lucide-react";
-import { formatNumber, formatRelativeTime } from "../../../../../utils/inventoryReportUtils";
+import {
+  formatNumber,
+  formatRelativeTime,
+} from "../../../../../utils/inventoryReportUtils";
 import { SalesActivityProduct } from "../../../../../api/inventoryReport";
 
 interface SalesActivityTableProps {
@@ -29,18 +32,19 @@ export const SalesActivityTable = ({ data }: SalesActivityTableProps) => {
         <h3 className='text-lg font-semibold text-gray-900 mb-1'>
           No Recent Sales
         </h3>
-        <p className='text-sm text-gray-600'>
-          No sales activity recorded yet
-        </p>
+        <p className='text-sm text-gray-600'>No sales activity recorded yet</p>
       </div>
     );
   }
 
   // Get time-based color indicator
-  const getTimeColor = (lastPurchasedAt: string): { bg: string; text: string; border: string } => {
+  const getTimeColor = (
+    lastPurchasedAt: string,
+  ): { bg: string; text: string; border: string } => {
     const now = new Date();
     const lastPurchase = new Date(lastPurchasedAt);
-    const diffHours = Math.abs(now.getTime() - lastPurchase.getTime()) / (1000 * 60 * 60);
+    const diffHours =
+      Math.abs(now.getTime() - lastPurchase.getTime()) / (1000 * 60 * 60);
 
     if (diffHours <= 24) {
       return {
@@ -109,7 +113,7 @@ export const SalesActivityTable = ({ data }: SalesActivityTableProps) => {
         <Table>
           <TableHeader>
             <TableRow className='bg-gray-50 hover:bg-gray-50'>
-              <TableHead className='w-[35%] font-semibold text-gray-900'>
+              <TableHead className='w-[15%] font-semibold text-gray-900'>
                 Product Name
               </TableHead>
               <TableHead className='w-[15%] font-semibold text-gray-900'>
@@ -134,7 +138,7 @@ export const SalesActivityTable = ({ data }: SalesActivityTableProps) => {
                   className='hover:bg-gray-50 transition-colors'>
                   <TableCell className='font-medium text-gray-900'>
                     <div className='flex items-center gap-2'>
-                      <span className='truncate max-w-[250px]'>
+                      <span className='truncate max-w-[250px] uppercase'>
                         {product.name}
                       </span>
                       {product.active ? (

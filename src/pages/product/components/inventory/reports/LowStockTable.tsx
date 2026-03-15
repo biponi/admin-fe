@@ -55,7 +55,7 @@ export const LowStockTable = ({ data }: LowStockTableProps) => {
       <Table>
         <TableHeader>
           <TableRow className='bg-gray-50 hover:bg-gray-50'>
-            <TableHead className='w-[30%] font-semibold text-gray-900'>
+            <TableHead className='w-[15%] font-semibold text-gray-900'>
               Product Name
             </TableHead>
             <TableHead className='w-[15%] font-semibold text-gray-900'>

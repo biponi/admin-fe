@@ -8,7 +8,11 @@ import {
 } from "../../../../../components/ui/table";
 import { Badge } from "../../../../../components/ui/badge";
 import { AlertTriangle, RotateCcw } from "lucide-react";
-import { formatNumber, formatPercentage, getReturnRateColor } from "../../../../../utils/inventoryReportUtils";
+import {
+  formatNumber,
+  formatPercentage,
+  getReturnRateColor,
+} from "../../../../../utils/inventoryReportUtils";
 import { ReturnRateProduct } from "../../../../../api/inventoryReport";
 
 interface ReturnRateTableProps {
@@ -26,20 +30,20 @@ export const ReturnRateTable = ({ data }: ReturnRateTableProps) => {
         <div className='p-4 rounded-full bg-green-50 mb-4'>
           <RotateCcw className='w-12 h-12 text-green-600' />
         </div>
-        <h3 className='text-lg font-semibold text-gray-900 mb-1'>
-          No Returns
-        </h3>
-        <p className='text-sm text-gray-600'>
-          No product returns recorded
-        </p>
+        <h3 className='text-lg font-semibold text-gray-900 mb-1'>No Returns</h3>
+        <p className='text-sm text-gray-600'>No product returns recorded</p>
       </div>
     );
   }
 
   // Calculate statistics
-  const totalReturns = data.reduce((sum, product) => sum + product.totalReturned, 0);
+  const totalReturns = data.reduce(
+    (sum, product) => sum + product.totalReturned,
+    0,
+  );
   const totalSales = data.reduce((sum, product) => sum + product.totalSold, 0);
-  const avgReturnRate = data.reduce((sum, product) => sum + product.returnRate, 0) / data.length;
+  const avgReturnRate =
+    data.reduce((sum, product) => sum + product.returnRate, 0) / data.length;
   const highReturnCount = data.filter((p) => p.returnRate > 15).length;
 
   // Get severity indicator
@@ -140,7 +144,7 @@ export const ReturnRateTable = ({ data }: ReturnRateTableProps) => {
         <Table>
           <TableHeader>
             <TableRow className='bg-gray-50 hover:bg-gray-50'>
-              <TableHead className='w-[35%] font-semibold text-gray-900'>
+              <TableHead className='w-[15%] font-semibold text-gray-900'>
                 Product Name
               </TableHead>
               <TableHead className='w-[15%] font-semibold text-gray-900'>
@@ -169,7 +173,7 @@ export const ReturnRateTable = ({ data }: ReturnRateTableProps) => {
                   }`}>
                   <TableCell className='font-medium text-gray-900'>
                     <div className='flex items-center gap-2'>
-                      <span className='truncate max-w-[250px]'>
+                      <span className='truncate max-w-[250px] uppercase'>
                         {product.name}
                       </span>
                       {product.active ? (

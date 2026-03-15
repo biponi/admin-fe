@@ -60,7 +60,7 @@ export const OutOfStockTable = ({ data }: OutOfStockTableProps) => {
         <Table>
           <TableHeader>
             <TableRow className='bg-gray-50 hover:bg-gray-50'>
-              <TableHead className='w-[35%] font-semibold text-gray-900'>
+              <TableHead className='w-[15%] font-semibold text-gray-900'>
                 Product Name
               </TableHead>
               <TableHead className='w-[15%] font-semibold text-gray-900'>
@@ -84,7 +84,7 @@ export const OutOfStockTable = ({ data }: OutOfStockTableProps) => {
                 className='hover:bg-gray-50 transition-colors'>
                 <TableCell className='font-medium text-gray-900'>
                   <div className='flex items-center gap-2'>
-                    <span className='truncate max-w-[250px]'>
+                    <span className='truncate max-w-[250px] uppercase'>
                       {product.name}
                     </span>
                     {product.hasVariation && (

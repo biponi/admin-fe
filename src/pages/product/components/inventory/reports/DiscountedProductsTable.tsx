@@ -115,7 +115,7 @@ export const DiscountedProductsTable = ({
         <Table>
           <TableHeader>
             <TableRow className='bg-gray-50 hover:bg-gray-50'>
-              <TableHead className='w-[40%] font-semibold text-gray-900'>
+              <TableHead className='w-[15%] font-semibold text-gray-900'>
                 Product Name
               </TableHead>
               <TableHead className='w-[20%] font-semibold text-gray-900 text-right'>
@@ -148,7 +148,7 @@ export const DiscountedProductsTable = ({
                   <TableCell className='font-medium text-gray-900'>
                     <div className='flex items-center gap-2'>
                       <Tag className='h-4 w-4 text-green-600' />
-                      <span className='truncate max-w-[280px]'>
+                      <span className='truncate max-w-[280px] uppercase'>
                         {product.name}
                       </span>
                     </div>

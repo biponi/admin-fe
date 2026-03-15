@@ -262,7 +262,7 @@ export const RecentlyUpdatedTable = ({ data }: RecentlyUpdatedTableProps) => {
                           1
                         </div>
                       )}
-                      <span className='truncate max-w-[280px]'>
+                      <span className='truncate max-w-[280px] uppercase'>
                         {product.name}
                       </span>
                     </div>

@@ -42,9 +42,12 @@ export const PriceDistributionChart = ({
 
   // Get color based on price range
   const getPriceColor = (
-    range: string,
+    range: string | number | any,
   ): { bg: string; text: string; bar: string; icon: string } => {
-    if (range.includes("0-") || range.includes("<")) {
+    // Convert to string to safely use .includes()
+    const rangeStr = String(range || "");
+
+    if (rangeStr.includes("0-") || rangeStr.includes("<")) {
       return {
         bg: "bg-green-50",
         text: "text-green-700",
@@ -52,7 +55,7 @@ export const PriceDistributionChart = ({
         icon: "💰",
       };
     }
-    if (range.includes("100-") || range.includes("50-")) {
+    if (rangeStr.includes("100-") || rangeStr.includes("50-")) {
       return {
         bg: "bg-blue-50",
         text: "text-blue-700",
@@ -60,7 +63,7 @@ export const PriceDistributionChart = ({
         icon: "💵",
       };
     }
-    if (range.includes("500-") || range.includes("1000")) {
+    if (rangeStr.includes("500-") || rangeStr.includes("1000")) {
       return {
         bg: "bg-purple-50",
         text: "text-purple-700",
@@ -77,10 +80,13 @@ export const PriceDistributionChart = ({
   };
 
   // Extract price range for display
-  const getPriceRangeDisplay = (range: string): string => {
-    if (range.includes("Under")) return range;
-    if (range.includes("to") || range.includes("-")) return range;
-    return range;
+  const getPriceRangeDisplay = (range: string | number | any): string => {
+    // Convert to string to safely use .includes()
+    const rangeStr = String(range || "N/A");
+
+    if (rangeStr.includes("Under")) return rangeStr;
+    if (rangeStr.includes("to") || rangeStr.includes("-")) return rangeStr;
+    return rangeStr;
   };
 
   return (
@@ -219,23 +225,27 @@ export const PriceDistributionChart = ({
               </h4>
               <p className='text-xs text-green-700'>
                 {data
-                  .filter(
-                    (d) =>
-                      d.priceRange.includes("0-") ||
-                      d.priceRange.includes("100-") ||
-                      d.priceRange.includes("Under"),
-                  )
+                  .filter((d) => {
+                    const range = String(d.priceRange || "");
+                    return (
+                      range.includes("0-") ||
+                      range.includes("100-") ||
+                      range.includes("Under")
+                    );
+                  })
                   .reduce((sum, d) => sum + d.numberOfProducts, 0)
                   .toLocaleString()}{" "}
                 products (
                 {(
                   (data
-                    .filter(
-                      (d) =>
-                        d.priceRange.includes("0-") ||
-                        d.priceRange.includes("100-") ||
-                        d.priceRange.includes("Under"),
-                    )
+                    .filter((d) => {
+                      const range = String(d.priceRange || "");
+                      return (
+                        range.includes("0-") ||
+                        range.includes("100-") ||
+                        range.includes("Under")
+                      );
+                    })
                     .reduce((sum, d) => sum + d.numberOfProducts, 0) /
                     totalProducts) *
                   100
@@ -259,23 +269,27 @@ export const PriceDistributionChart = ({
               </h4>
               <p className='text-xs text-blue-700'>
                 {data
-                  .filter(
-                    (d) =>
-                      d.priceRange.includes("500-") ||
-                      d.priceRange.includes("100-") ||
-                      d.priceRange.includes("200"),
-                  )
+                  .filter((d) => {
+                    const range = String(d.priceRange || "");
+                    return (
+                      range.includes("500-") ||
+                      range.includes("100-") ||
+                      range.includes("200")
+                    );
+                  })
                   .reduce((sum, d) => sum + d.numberOfProducts, 0)
                   .toLocaleString()}{" "}
                 products (
                 {(
                   (data
-                    .filter(
-                      (d) =>
-                        d.priceRange.includes("500-") ||
-                        d.priceRange.includes("100-") ||
-                        d.priceRange.includes("200"),
-                    )
+                    .filter((d) => {
+                      const range = String(d.priceRange || "");
+                      return (
+                        range.includes("500-") ||
+                        range.includes("100-") ||
+                        range.includes("200")
+                      );
+                    })
                     .reduce((sum, d) => sum + d.numberOfProducts, 0) /
                     totalProducts) *
                   100
@@ -299,21 +313,19 @@ export const PriceDistributionChart = ({
               </h4>
               <p className='text-xs text-purple-700'>
                 {data
-                  .filter(
-                    (d) =>
-                      d.priceRange.includes("1000") ||
-                      d.priceRange.includes("500+"),
-                  )
+                  .filter((d) => {
+                    const range = String(d.priceRange || "");
+                    return range.includes("1000") || range.includes("500+");
+                  })
                   .reduce((sum, d) => sum + d.numberOfProducts, 0)
                   .toLocaleString()}{" "}
                 products (
                 {(
                   (data
-                    .filter(
-                      (d) =>
-                        d.priceRange.includes("1000") ||
-                        d.priceRange.includes("500+"),
-                    )
+                    .filter((d) => {
+                      const range = String(d.priceRange || "");
+                      return range.includes("1000") || range.includes("500+");
+                    })
                     .reduce((sum, d) => sum + d.numberOfProducts, 0) /
                     totalProducts) *
                   100

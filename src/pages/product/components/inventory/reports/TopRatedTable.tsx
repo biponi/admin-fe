@@ -129,7 +129,7 @@ export const TopRatedTable = ({ data }: TopRatedTableProps) => {
               <TableHead className='w-[10%] font-semibold text-gray-900 text-center'>
                 Rank
               </TableHead>
-              <TableHead className='w-[40%] font-semibold text-gray-900'>
+              <TableHead className='w-[20%] font-semibold text-gray-900'>
                 Product Name
               </TableHead>
               <TableHead className='w-[20%] font-semibold text-gray-900 text-center'>
@@ -161,7 +161,7 @@ export const TopRatedTable = ({ data }: TopRatedTableProps) => {
                   </TableCell>
                   <TableCell className='font-medium text-gray-900'>
                     <div className='flex items-center gap-2'>
-                      <span className='truncate max-w-[280px]'>
+                      <span className='truncate max-w-[280px] uppercase'>
                         {product.name}
                       </span>
                       {product.active ? (

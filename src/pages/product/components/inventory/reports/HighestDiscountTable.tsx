@@ -142,7 +142,7 @@ export const HighestDiscountTable = ({ data }: HighestDiscountTableProps) => {
               <TableHead className='w-[10%] font-semibold text-gray-900 text-center'>
                 Rank
               </TableHead>
-              <TableHead className='w-[40%] font-semibold text-gray-900'>
+              <TableHead className='w-[15%] font-semibold text-gray-900'>
                 Product Name
               </TableHead>
               <TableHead className='w-[20%] font-semibold text-gray-900 text-right'>
@@ -173,7 +173,7 @@ export const HighestDiscountTable = ({ data }: HighestDiscountTableProps) => {
                     {getRankingBadge(index, product.discount)}
                   </TableCell>
                   <TableCell className='font-medium text-gray-900'>
-                    <span className='truncate max-w-[300px] block'>
+                    <span className='truncate max-w-[300px] block uppercase'>
                       {product.name}
                     </span>
                   </TableCell>

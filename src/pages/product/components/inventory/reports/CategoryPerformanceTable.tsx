@@ -167,7 +167,7 @@ export const CategoryPerformanceTable = ({
         <Table>
           <TableHeader>
             <TableRow className='bg-gray-50 hover:bg-gray-50'>
-              <TableHead className='w-[30%] font-semibold text-gray-900'>
+              <TableHead className='w-[25%] font-semibold text-gray-900'>
                 Category Name
               </TableHead>
               <TableHead className='w-[20%] font-semibold text-gray-900 text-right'>

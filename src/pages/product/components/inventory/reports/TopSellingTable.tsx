@@ -108,7 +108,7 @@ export const TopSellingTable = ({ data }: TopSellingTableProps) => {
               <TableHead className='w-[10%] font-semibold text-gray-900 text-center'>
                 Rank
               </TableHead>
-              <TableHead className='w-[35%] font-semibold text-gray-900'>
+              <TableHead className='w-[15%] font-semibold text-gray-900'>
                 Product Name
               </TableHead>
               <TableHead className='w-[15%] font-semibold text-gray-900'>
@@ -144,7 +144,7 @@ export const TopSellingTable = ({ data }: TopSellingTableProps) => {
                     {getRankingBadge(index)}
                   </TableCell>
                   <TableCell className='font-medium text-gray-900'>
-                    <span className='truncate max-w-[250px] block'>
+                    <span className='truncate max-w-[250px] block uppercase'>
                       {product.name}
                     </span>
                   </TableCell>
