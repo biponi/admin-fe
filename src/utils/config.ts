@@ -52,6 +52,9 @@ const config = {
     getProductAdjustmentHistory: (id: string) =>
       `${baseURL}/product/analytics/adjustment-history/${id}`,
     bulkCustomerAction: () => `${baseURL}/product/analytics/bulk-customer-action`,
+
+    // Product Report Endpoints
+    getProductReport: () => `${baseURL}/product/report`,
   },
   order: {
     createOrder: () => `${baseURL}/order/prior/create`,

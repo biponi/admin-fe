@@ -25,7 +25,7 @@ export const useAuthInit = () => {
     refreshToken,
     fetchUserById,
     signOut,
-    navigate
+    navigate,
   );
 
   useEffect(() => {
@@ -106,13 +106,6 @@ export const useAuthInit = () => {
     init();
     lastInitializedUserId.current = user.id;
 
-    // Set up interval
-    const interval = setInterval(fetchUnreadCount, 300000);
-
-    // Cleanup function
-    return () => {
-      clearInterval(interval);
-    };
     //eslint-disable-next-line
   }, [user?.id]);
 
