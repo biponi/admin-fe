@@ -31,6 +31,7 @@ import { BarcodeScannerPage } from "../../pages/package/BarcodeScanner";
 import OrderConfirmation from "../../pages/order/OrderConfirmation";
 import OrderDetails from "../../pages/order/OrderDetails";
 import ProductDetails from "../../pages/product/ProductDetails";
+import ProductAnalytics from "../../pages/product/ProductAnalytics";
 import SMSPage from "../../pages/bulk-communication/SMSPage";
 import EmailPage from "../../pages/bulk-communication/EmailPage";
 import CreateSMSCampaign from "../../pages/bulk-communication/components/CreateSMSCampaign";
@@ -298,6 +299,14 @@ export const ProtectedRoutes = () => {
         element={
           <ProtectedRoute page='Product' requiredAction='view'>
             <ProductDetails />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path='/products/analytics'
+        element={
+          <ProtectedRoute page='product' requiredAction='analytics'>
+            <ProductAnalytics />
           </ProtectedRoute>
         }
       />

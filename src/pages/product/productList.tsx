@@ -22,9 +22,6 @@ import {
   Palette,
   Ruler,
   DollarSign,
-  Download,
-  FileText,
-  FileType,
 } from "lucide-react";
 import { Button } from "../../components/ui/button";
 
@@ -34,14 +31,6 @@ import {
   TabsList,
   TabsTrigger,
 } from "../../components/ui/tabs";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "../../components/ui/dropdown-menu";
 import {
   Card,
   CardContent,
@@ -82,15 +71,7 @@ import {
 import { SkeletonCard } from "../../coreComponents/sekeleton";
 import SingleProductCardItem from "./components/singleProductCard";
 import { getProductSummary } from "../../api/product";
-import { errorToast, successToast } from "../../utils/toast";
-import {
-  downloadPdfFlat,
-  downloadPdfGrouped,
-  downloadPdfSplit,
-  downloadCsvFlat,
-  downloadCsvGrouped,
-  downloadCsvSplit,
-} from "../../utils/productReportExport";
+import { errorToast } from "../../utils/toast";
 import { Progress } from "../../components/ui/progress";
 import {
   Drawer,
@@ -402,7 +383,6 @@ const ProductList: React.FC<Props> = ({ handleEditProduct }) => {
   const [isVariationDrawerOpen, setIsVariationDrawerOpen] = useState(false);
   const [selectedProductForVariations, setSelectedProductForVariations] =
     useState<IProduct | null>(null);
-  const [isDownloadingReport, setIsDownloadingReport] = useState(false);
 
   const handleViewProductDetails = (id: string) => {
     navigate(`/products/${id}`);
@@ -420,68 +400,6 @@ const ProductList: React.FC<Props> = ({ handleEditProduct }) => {
       setSummary(null);
     }
   };
-
-  // Report download handlers
-  const handleReportDownload = async (
-    downloadFunction: () => Promise<any>,
-    reportName: string
-  ) => {
-    setIsDownloadingReport(true);
-    try {
-      const result = await downloadFunction();
-      if (result.success) {
-        successToast(`${reportName} downloaded successfully`, "top-center");
-      } else {
-        errorToast(
-          result.error || "Failed to download report. Please try again.",
-          "top-center"
-        );
-      }
-    } catch (error: any) {
-      errorToast(
-        error.message || "An unexpected error occurred",
-        "top-center"
-      );
-    } finally {
-      setIsDownloadingReport(false);
-    }
-  };
-
-  const handleDownloadPdfFlat = () =>
-    handleReportDownload(
-      () => downloadPdfFlat(selectedCategory, false),
-      "PDF Report (Flat)"
-    );
-
-  const handleDownloadPdfGrouped = () =>
-    handleReportDownload(
-      () => downloadPdfGrouped(selectedCategory, false),
-      "PDF Report (Grouped)"
-    );
-
-  const handleDownloadPdfSplit = () =>
-    handleReportDownload(
-      () => downloadPdfSplit(selectedCategory, false),
-      "PDF Report (Split)"
-    );
-
-  const handleDownloadCsvFlat = () =>
-    handleReportDownload(
-      () => downloadCsvFlat(selectedCategory, false),
-      "CSV Report (Flat)"
-    );
-
-  const handleDownloadCsvGrouped = () =>
-    handleReportDownload(
-      () => downloadCsvGrouped(selectedCategory, false),
-      "CSV Report (Grouped)"
-    );
-
-  const handleDownloadCsvSplit = () =>
-    handleReportDownload(
-      () => downloadCsvSplit(selectedCategory, false),
-      "CSV Report (Split)"
-    );
 
   useEffect(() => {
     fetchCategories();
@@ -1091,9 +1009,6 @@ const ProductList: React.FC<Props> = ({ handleEditProduct }) => {
                         </DrawerContent>
                       </Drawer>
                     </div>
-                    <div className='hidden md:block'>
-                      {renderCategoryBreakdown()}
-                    </div>
                   </div>
                 )}
               </div>
@@ -1176,81 +1091,6 @@ const ProductList: React.FC<Props> = ({ handleEditProduct }) => {
                   <Grid2X2 className='h-4 w-4' />
                 </Button>
               </div>
-
-              {/* Export Report Dropdown */}
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button
-                    variant='outline'
-                    size='sm'
-                    disabled={isDownloadingReport}
-                    className='flex items-center space-x-2'>
-                    <Download className='h-4 w-4' />
-                    <span className='hidden sm:inline'>Export</span>
-                    {isDownloadingReport && (
-                      <span className='ml-2 h-4 w-4 animate-spin rounded-full border-2 border-primary border-t-transparent' />
-                    )}
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align='end' className='w-56'>
-                  <DropdownMenuLabel>Product Reports</DropdownMenuLabel>
-                  <DropdownMenuSeparator />
-
-                  {/* PDF Reports */}
-                  <DropdownMenuLabel className='text-xs text-muted-foreground'>
-                    PDF Format
-                  </DropdownMenuLabel>
-                  <DropdownMenuItem onClick={handleDownloadPdfFlat}>
-                    <FileText className='mr-2 h-4 w-4' />
-                    <span>Flat Version</span>
-                    <span className='ml-auto text-xs text-muted-foreground'>
-                      All items
-                    </span>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onClick={handleDownloadPdfGrouped}>
-                    <FileText className='mr-2 h-4 w-4' />
-                    <span>Grouped Version</span>
-                    <span className='ml-auto text-xs text-muted-foreground'>
-                      Organized
-                    </span>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onClick={handleDownloadPdfSplit}>
-                    <FileText className='mr-2 h-4 w-4' />
-                    <span>Split Version</span>
-                    <span className='ml-auto text-xs text-muted-foreground'>
-                      Sections
-                    </span>
-                  </DropdownMenuItem>
-
-                  <DropdownMenuSeparator />
-
-                  {/* CSV Reports */}
-                  <DropdownMenuLabel className='text-xs text-muted-foreground'>
-                    CSV Format
-                  </DropdownMenuLabel>
-                  <DropdownMenuItem onClick={handleDownloadCsvFlat}>
-                    <FileType className='mr-2 h-4 w-4' />
-                    <span>Flat Version</span>
-                    <span className='ml-auto text-xs text-muted-foreground'>
-                      All items
-                    </span>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onClick={handleDownloadCsvGrouped}>
-                    <FileType className='mr-2 h-4 w-4' />
-                    <span>Grouped Version</span>
-                    <span className='ml-auto text-xs text-muted-foreground'>
-                      Organized
-                    </span>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onClick={handleDownloadCsvSplit}>
-                    <FileType className='mr-2 h-4 w-4' />
-                    <span>Split Version</span>
-                    <span className='ml-auto text-xs text-muted-foreground'>
-                      Sections
-                    </span>
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
 
               {hasRequiredPermission("product", "create") && (
                 <Button
