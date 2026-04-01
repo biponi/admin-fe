@@ -52,6 +52,8 @@ import {
   X,
   ChevronLeft,
   ChevronRight,
+  Ruler,
+  Palette,
 } from "lucide-react";
 import { useStoreReserveHistory } from "../hooks/useStoreReserveHistory";
 import { format } from "date-fns";
@@ -583,30 +585,78 @@ const StoreReserveHistoryTab = ({ productId }: StoreReserveHistoryTabProps) => {
                         )[0] || "N/A"}
                       </div>
                       {selectedRecordProducts?.map((product, idx) => {
-                        const variantName = product.productName
-                          .split(" ")
-                          .slice(1)
-                          .join(" ");
+                        const variantName = product.variantDetails
+                          ? product.variantDetails.color ||
+                            product.variantDetails.size
+                            ? [
+                                product.variantDetails.color,
+                                product.variantDetails.size,
+                              ]
+                                .filter(Boolean)
+                                .join(" - ")
+                            : "Standard"
+                          : product.productName.split(" ").slice(1).join(" ") ||
+                            "Standard";
+
                         return (
                           <Card
                             key={idx}
-                            className='p-2 bg-gray-50 border-blue-100'>
-                            <CardContent className='pt-2 space-y-1'>
-                              <div className='flex items-center justify-between'>
-                                <span className='text-sm font-medium text-blue-700'>
-                                  Variant: {variantName || "Standard"}
-                                </span>
-                                <Badge
-                                  variant='outline'
-                                  className='text-xs bg-purple-50 text-purple-700 border-purple-200'>
-                                  Qty: {product.quantity}
-                                </Badge>
+                            className='p-3 bg-gradient-to-br from-gray-50 to-blue-50 border-blue-100 hover:shadow-md transition-all'>
+                            <CardContent className='p-0 space-y-3'>
+                              {/* Variant Header with Image */}
+                              <div className='flex items-start gap-3'>
+                                {/* Variant Image */}
+                                <div className='w-16 h-16 bg-white rounded-lg overflow-hidden border-2 border-blue-200 flex-shrink-0'>
+                                  {product.variantDetails?.image ? (
+                                    <img
+                                      src={product.variantDetails.image}
+                                      alt={`${variantName} variant`}
+                                      className='w-full h-full object-cover'
+                                    />
+                                  ) : (
+                                    <div className='w-full h-full flex items-center justify-center bg-gradient-to-br from-blue-100 to-purple-100'>
+                                      <Package className='h-6 w-6 text-blue-400' />
+                                    </div>
+                                  )}
+                                </div>
+
+                                {/* Variant Info */}
+                                <div className='flex-1 min-w-0'>
+                                  <div className='flex items-center justify-between mb-1'>
+                                    {/* Size & Color Badges */}
+                                    {product.variantDetails && (
+                                      <div className='flex gap-2 flex-wrap'>
+                                        {product.variantDetails.size && (
+                                          <Badge
+                                            variant='outline'
+                                            className='text-xs border-blue-300 text-blue-700'>
+                                            <Ruler className='h-3 w-3 mr-1' />
+                                            {product.variantDetails.size}
+                                          </Badge>
+                                        )}
+                                        {product.variantDetails.color && (
+                                          <Badge
+                                            variant='outline'
+                                            className='text-xs border-purple-300 text-purple-700'>
+                                            <Palette className='h-3 w-3 mr-1' />
+                                            {product.variantDetails.color}
+                                          </Badge>
+                                        )}
+                                      </div>
+                                    )}
+                                    <Badge className='bg-purple-500 text-white'>
+                                      Qty: {product.quantity}
+                                    </Badge>
+                                  </div>
+                                </div>
                               </div>
-                              <div className='flex items-center justify-between text-sm'>
-                                <span className='text-gray-500'>
+
+                              {/* Price Section */}
+                              <div className='flex items-center justify-between pt-2 border-t border-blue-200'>
+                                <span className='text-sm text-gray-600'>
                                   {formatCurrency(product.unitPrice)} each
                                 </span>
-                                <span className='font-semibold text-gray-800'>
+                                <span className='text-base font-bold text-green-600'>
                                   {formatCurrency(
                                     product.quantity * product.unitPrice,
                                   )}
@@ -795,27 +845,82 @@ const StoreReserveHistoryTab = ({ productId }: StoreReserveHistoryTabProps) => {
                         )[0] || "N/A"}
                       </div>
                       {selectedRecordProducts?.map((product, idx) => {
-                        const variantName = product.productName
-                          .split(" ")
-                          .slice(1)
-                          .join(" ");
+                        const variantName = product.variantDetails
+                          ? product.variantDetails.color ||
+                            product.variantDetails.size
+                            ? [
+                                product.variantDetails.color,
+                                product.variantDetails.size,
+                              ]
+                                .filter(Boolean)
+                                .join(" - ")
+                            : "Standard"
+                          : product.productName.split(" ").slice(1).join(" ") ||
+                            "Standard";
+
                         return (
-                          <Card key={idx} className='p-2 bg-gray-50'>
-                            <CardContent className='pt-2 space-y-1'>
-                              <div className='flex items-center justify-between text-sm'>
-                                <span className='font-medium text-gray-700'>
-                                  {variantName || "Standard"}
-                                </span>
-                                <Badge variant='outline' className='text-xs'>
-                                  {product.quantity}
-                                </Badge>
+                          <Card
+                            key={idx}
+                            className='p-3 bg-gradient-to-br from-gray-50 to-blue-50 hover:shadow-md transition-all'>
+                            <CardContent className='p-0 space-y-3'>
+                              {/* Variant Header with Image */}
+                              <div className='flex items-start gap-3'>
+                                {/* Variant Image */}
+                                <div className='w-16 h-16 bg-white rounded-lg overflow-hidden border-2 border-blue-200 flex-shrink-0'>
+                                  {product.variantDetails?.image ? (
+                                    <img
+                                      src={product.variantDetails.image}
+                                      alt={`${variantName} variant`}
+                                      className='w-full h-full object-cover'
+                                    />
+                                  ) : (
+                                    <div className='w-full h-full flex items-center justify-center bg-gradient-to-br from-blue-100 to-purple-100'>
+                                      <Package className='h-6 w-6 text-blue-400' />
+                                    </div>
+                                  )}
+                                </div>
+
+                                {/* Variant Info */}
+                                <div className='flex-1 min-w-0'>
+                                  <div className='flex items-center justify-between mb-1'>
+                                    <span className='text-sm font-bold text-gray-800'>
+                                      {variantName}
+                                    </span>
+                                    <Badge className='bg-purple-500 text-white'>
+                                      Qty: {product.quantity}
+                                    </Badge>
+                                  </div>
+
+                                  {/* Size & Color Badges */}
+                                  {product.variantDetails && (
+                                    <div className='flex gap-2 flex-wrap'>
+                                      {product.variantDetails.size && (
+                                        <Badge
+                                          variant='outline'
+                                          className='text-xs border-blue-300 text-blue-700'>
+                                          <Ruler className='h-3 w-3 mr-1' />
+                                          {product.variantDetails.size}
+                                        </Badge>
+                                      )}
+                                      {product.variantDetails.color && (
+                                        <Badge
+                                          variant='outline'
+                                          className='text-xs border-purple-300 text-purple-700'>
+                                          <Palette className='h-3 w-3 mr-1' />
+                                          {product.variantDetails.color}
+                                        </Badge>
+                                      )}
+                                    </div>
+                                  )}
+                                </div>
                               </div>
-                              <div className='flex items-center justify-between text-xs'>
-                                <span className='text-gray-500'>
-                                  ৳{formatCurrency(product.unitPrice)} each
+
+                              {/* Price Section */}
+                              <div className='flex items-center justify-between pt-2 border-t border-blue-200'>
+                                <span className='text-sm text-gray-600'>
+                                  {formatCurrency(product.unitPrice)} each
                                 </span>
-                                <span className='font-semibold text-green-600'>
-                                  ৳
+                                <span className='text-base font-bold text-green-600'>
                                   {formatCurrency(
                                     product.quantity * product.unitPrice,
                                   )}

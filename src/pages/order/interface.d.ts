@@ -63,6 +63,7 @@ export type ProductSearchResponse = {
     id: string;
     size: string;
     color: string;
+    image?: string;
   } | null;
 };
 

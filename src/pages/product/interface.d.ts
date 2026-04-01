@@ -42,6 +42,19 @@ export interface IVariation {
   sku: string;
   quantity: number;
   unitPrice: number;
+  images?: (File | string)[]; // Variant images (File for new uploads, string for existing URLs)
+}
+
+// Variant image mapping for upload
+export interface IVariantImageMapping {
+  variantId: string;
+  imageIndexes: number[]; // Indices pointing to the variantImages array
+}
+
+// Variant image removal mapping for edit
+export interface IRemoveVariantImageMapping {
+  variantId: string;
+  imageIndexes: number[]; // Indices to remove from variant.images array
 }
 
 export interface IProductCreateData {
@@ -58,6 +71,8 @@ export interface IProductCreateData {
   sku: string;
   categoryId: string;
   images: File[] | [];
+  variantImages?: File[]; // New variant image files to upload
+  variantImageMappings?: IVariantImageMapping[]; // Maps variantIds to image indices
 }
 
 export interface IProductUpdateData {
@@ -78,6 +93,9 @@ export interface IProductUpdateData {
 
   removeImageIndexes?: string[];
   removeAbleVarations?: string[];
+  variantImages?: File[]; // New variant image files to upload
+  variantImageMappings?: IVariantImageMapping[]; // Maps variantIds to image indices
+  removeVariantImageIndexes?: IRemoveVariantImageMapping[]; // Variant images to remove
 }
 // Updated interfaces for hierarchical categories
 

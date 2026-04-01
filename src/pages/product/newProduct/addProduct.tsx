@@ -49,6 +49,7 @@ import { Badge } from "../../../components/ui/badge";
 import { ICategory, IProductCreateData, IVariation } from "../interface";
 import { useNavigate } from "react-router-dom";
 import NestedCategorySelect from "../../../components/customComponent/NestedCategoryComponent";
+import { VariantImageUploader } from "../../../components/product/VariantImageUploader";
 
 const defaultValue = {
   name: "",
@@ -91,6 +92,9 @@ const AddProduct: React.FC<Props> = ({ createProduct, categories }) => {
   const [v2Sizes, setV2Sizes] = useState<string[]>([]);
   const [newColor, setNewColor] = useState("");
   const [newSize, setNewSize] = useState("");
+  const [variantImages, setVariantImages] = useState<
+    Record<string, (File | string)[]>
+  >({});
 
   const navigate = useNavigate();
 
@@ -102,7 +106,7 @@ const AddProduct: React.FC<Props> = ({ createProduct, categories }) => {
   const totalQuantity =
     formData?.variation?.reduce(
       (sum, variant) => sum + (variant.quantity || 0),
-      0
+      0,
     ) ||
     formData?.quantity ||
     0;
@@ -110,7 +114,7 @@ const AddProduct: React.FC<Props> = ({ createProduct, categories }) => {
   // Get unique colors and sizes
   const uniqueColors = formData?.variation
     ? Array.from(
-        new Set(formData.variation.map((v) => v.color).filter(Boolean))
+        new Set(formData.variation.map((v) => v.color).filter(Boolean)),
       )
     : [];
   const uniqueSizes = formData?.variation
@@ -192,7 +196,7 @@ const AddProduct: React.FC<Props> = ({ createProduct, categories }) => {
 
   const updateVariationData = (
     index: number,
-    e: React.ChangeEvent<HTMLInputElement>
+    e: React.ChangeEvent<HTMLInputElement>,
   ) => {
     if (!!formData && index < formData?.variation.length) {
       const { name, value } = e.target;
@@ -208,7 +212,7 @@ const AddProduct: React.FC<Props> = ({ createProduct, categories }) => {
         (sum, variant) =>
           Number(sum) +
           (isNaN(Number(variant?.quantity)) ? 0 : Number(variant?.quantity)),
-        0
+        0,
       );
       updateFormData({
         ...formData,
@@ -216,6 +220,16 @@ const AddProduct: React.FC<Props> = ({ createProduct, categories }) => {
         quantity: totalQuantity,
       });
     }
+  };
+
+  const handleVariantImagesChange = (
+    variantId: string,
+    images: (File | string)[],
+  ) => {
+    setVariantImages((prev) => ({
+      ...prev,
+      [variantId]: images,
+    }));
   };
 
   const handleSameUnitPrice = (value: boolean) => {
@@ -285,7 +299,7 @@ const AddProduct: React.FC<Props> = ({ createProduct, categories }) => {
       <div className='space-y-4'>
         {/* Variation Cards Grid */}
         {!!formData.variation && formData.variation.length > 0 ? (
-          <div className='grid gap-4 sm:grid-cols-2 lg:grid-cols-3'>
+          <div className='grid gap-4 sm:grid-cols-2 lg:grid-cols-2'>
             {formData.variation.map((variation: IVariation, index: number) => (
               <div
                 key={variation.id}
@@ -296,7 +310,9 @@ const AddProduct: React.FC<Props> = ({ createProduct, categories }) => {
                     updateFormData((prev) => {
                       return {
                         ...prev,
-                        variation: prev?.variation.filter((__, i) => i !== index),
+                        variation: prev?.variation.filter(
+                          (__, i) => i !== index,
+                        ),
                         quantity: prev?.quantity - variation?.quantity,
                       };
                     });
@@ -345,8 +361,8 @@ const AddProduct: React.FC<Props> = ({ createProduct, categories }) => {
                           disabled={isSameUnitPrice}
                           className={`h-8 text-xs border-slate-300 dark:border-slate-600 ${
                             isSameUnitPrice
-                              ? 'bg-slate-100 dark:bg-slate-900 text-slate-500 cursor-not-allowed'
-                              : 'focus:border-green-400 dark:focus:border-green-500'
+                              ? "bg-slate-100 dark:bg-slate-900 text-slate-500 cursor-not-allowed"
+                              : "focus:border-green-400 dark:focus:border-green-500"
                           }`}
                           name='unitPrice'
                           onChange={(e) => updateVariationData(index, e)}
@@ -391,6 +407,17 @@ const AddProduct: React.FC<Props> = ({ createProduct, categories }) => {
                         />
                       </div>
                     </div>
+
+                    {/* Variant Images */}
+                    <VariantImageUploader
+                      variantId={variation.id}
+                      variantName={
+                        `${variation.color || ""} ${variation.size || ""}`.trim() ||
+                        `Variant ${index + 1}`
+                      }
+                      images={variantImages[variation.id] || []}
+                      onImagesChange={handleVariantImagesChange}
+                    />
                   </div>
                 </div>
               </div>
@@ -625,7 +652,7 @@ const AddProduct: React.FC<Props> = ({ createProduct, categories }) => {
                       </div>
                     </div>
                   </div>
-                )
+                ),
               )}
             </div>
           </div>
@@ -650,14 +677,74 @@ const AddProduct: React.FC<Props> = ({ createProduct, categories }) => {
   };
 
   const createProductAndExit = async () => {
-    const response = await createProduct({ ...formData });
+    // Prepare variant images for upload
+    const allVariantImages = Object.values(variantImages).flat();
+    const variantImageFileList = allVariantImages.filter(
+      (img) => img instanceof File,
+    ) as File[];
+
+    // Build variant image mappings
+    let currentIndex = 0;
+    const variantImageMappings = formData.variation
+      .map((variant) => {
+        const images = variantImages[variant.id] || [];
+        const imageIndexes = Array.from(
+          { length: images.length },
+          (_, i) => currentIndex + i,
+        );
+        currentIndex += images.length;
+
+        return {
+          variantId: variant.id,
+          imageIndexes,
+        };
+      })
+      .filter((mapping) => mapping.imageIndexes.length > 0);
+
+    const productData = {
+      ...formData,
+      variantImages: variantImageFileList,
+      variantImageMappings,
+    };
+
+    const response = await createProduct(productData);
     if (!!response) {
       navigate("/products");
     }
   };
 
   const createProductAndContinue = async () => {
-    const response = await createProduct({ ...formData });
+    // Prepare variant images for upload
+    const allVariantImages = Object.values(variantImages).flat();
+    const variantImageFileList = allVariantImages.filter(
+      (img) => img instanceof File,
+    ) as File[];
+
+    // Build variant image mappings
+    let currentIndex = 0;
+    const variantImageMappings = formData.variation
+      .map((variant) => {
+        const images = variantImages[variant.id] || [];
+        const imageIndexes = Array.from(
+          { length: images.length },
+          (_, i) => currentIndex + i,
+        );
+        currentIndex += images.length;
+
+        return {
+          variantId: variant.id,
+          imageIndexes,
+        };
+      })
+      .filter((mapping) => mapping.imageIndexes.length > 0);
+
+    const productData = {
+      ...formData,
+      variantImages: variantImageFileList,
+      variantImageMappings,
+    };
+
+    const response = await createProduct(productData);
     if (!!response) {
       // updateFormData({ ...defaultValue });
     }
@@ -1361,7 +1448,7 @@ const AddProduct: React.FC<Props> = ({ createProduct, categories }) => {
                           <button
                             onClick={() => {
                               const newImages = formData.images.filter(
-                                (_, i) => i !== index
+                                (_, i) => i !== index,
                               );
                               updateFormData({
                                 ...formData,

@@ -4,6 +4,15 @@
  */
 
 /**
+ * Variant details including size, color, and image
+ */
+export interface VariantDetails {
+  size?: string;
+  color?: string;
+  image?: string;
+}
+
+/**
  * Individual store reserve history item
  */
 export interface StoreReserveHistoryItem {
@@ -19,6 +28,7 @@ export interface StoreReserveHistoryItem {
   recordId: string;
   createdAt: string;
   createdBy: string;
+  variantDetails?: VariantDetails;
 }
 
 /**

@@ -11,6 +11,8 @@ import {
   DownloadCloud,
   ChevronLeft,
   ChevronRight,
+  Ruler,
+  Palette,
 } from "lucide-react";
 import { IRecord } from "./interface";
 import { Button } from "../../components/ui/button";
@@ -179,23 +181,60 @@ const SingleReserveStore: React.FC = () => {
               {record?.products?.length - 2} more items in this record
             </p>
           </div>
-          <div className='grid grid-cols-2 gap-2 w-full max-h-[30vh] overflow-y-auto pr-2'>
+          <div className='grid grid-cols-1 gap-2 w-full max-h-[30vh] overflow-y-auto pr-2'>
             {record?.products
               ?.slice(2, record?.products?.length)
-              .map((val, index) => (
-                <div
-                  key={index}
-                  className='p-2 rounded-lg border border-purple-100 bg-purple-50/50 hover:bg-purple-100/50 transition-colors duration-200'>
+              .map((val, index) => {
+                return (
                   <div
-                    className='text-xs font-medium text-foreground truncate'
-                    title={val?.name}>
-                    {val?.name}
+                    key={index}
+                    className='p-2 rounded-lg border border-purple-100 bg-purple-50/50 hover:bg-purple-100/50 transition-colors duration-200'>
+                    <div className='flex items-center gap-2'>
+                      {/* Variant Image Thumbnail */}
+                      {(val.variantDetails?.image || val.image) && (
+                        <img
+                          src={val.variantDetails?.image || val.image}
+                          alt=''
+                          className='w-10 h-10 object-cover rounded border border-purple-300 flex-shrink-0'
+                        />
+                      )}
+                      <div className='flex-1 min-w-0'>
+                        <div
+                          className='text-xs font-medium text-foreground truncate'
+                          title={val?.name}>
+                          {val?.name}
+                        </div>
+                        {/* Size & Color Badges */}
+                        {val.variantDetails && (
+                          <div className='flex gap-1 flex-wrap mt-1'>
+                            {val.variantDetails.size && (
+                              <Badge
+                                variant='outline'
+                                className='text-[10px] border-blue-300 text-blue-700 px-1 py-0 h-4'>
+                                <Ruler className='h-2 w-2 mr-0.5' />
+                                {val.variantDetails.size}
+                              </Badge>
+                            )}
+                            {val.variantDetails.color && (
+                              <Badge
+                                variant='outline'
+                                className='text-[10px] border-purple-300 text-purple-700 px-1 py-0 h-4'>
+                                <Palette className='h-2 w-2 mr-0.5' />
+                                {val.variantDetails.color}
+                              </Badge>
+                            )}
+                          </div>
+                        )}
+                      </div>
+                      <Badge
+                        variant='secondary'
+                        className='text-xs flex-shrink-0'>
+                        Qty: {val?.quantity}
+                      </Badge>
+                    </div>
                   </div>
-                  <Badge variant='secondary' className='mt-1 text-xs'>
-                    Qty: {val?.quantity}
-                  </Badge>
-                </div>
-              ))}
+                );
+              })}
           </div>
         </PopoverContent>
       </Popover>
@@ -309,41 +348,124 @@ const SingleReserveStore: React.FC = () => {
                             <>
                               {record?.products
                                 ?.slice(0, 2)
-                                .map((val, index) => (
-                                  <div
-                                    key={index}
-                                    className='inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-gradient-to-r from-purple-100 to-indigo-100 dark:from-purple-900/30 dark:to-indigo-900/30 border border-purple-200 dark:border-purple-800'>
+                                .map((val, index) => {
+                                  return (
+                                    <div
+                                      key={index}
+                                      className='inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-gradient-to-r from-purple-100 to-indigo-100 dark:from-purple-900/30 dark:to-indigo-900/30 border border-purple-200 dark:border-purple-800'>
+                                      {/* Variant Image Thumbnail */}
+                                      {(val.variantDetails?.image ||
+                                        val.image) && (
+                                        <img
+                                          src={
+                                            val.variantDetails?.image ||
+                                            val.image
+                                          }
+                                          alt=''
+                                          className='w-8 h-8 object-cover rounded border border-purple-300 flex-shrink-0'
+                                        />
+                                      )}
+                                      <div className='flex items-center gap-1.5'>
+                                        <span
+                                          className='text-xs font-medium truncate max-w-[100px]'
+                                          title={val?.name}>
+                                          {val?.name}
+                                        </span>
+                                        {/* Size & Color Badges */}
+                                        {val.variantDetails && (
+                                          <div className='flex gap-1 flex-wrap'>
+                                            {val.variantDetails.size && (
+                                              <Badge
+                                                variant='outline'
+                                                className='text-[10px] border-blue-300 text-blue-700 px-1 py-0 h-4'>
+                                                <Ruler className='h-2 w-2 mr-0.5' />
+                                                {val.variantDetails.size}
+                                              </Badge>
+                                            )}
+                                            {val.variantDetails.color && (
+                                              <Badge
+                                                variant='outline'
+                                                className='text-[10px] border-purple-300 text-purple-700 px-1 py-0 h-4'>
+                                                <Palette className='h-2 w-2 mr-0.5' />
+                                                {val.variantDetails.color}
+                                              </Badge>
+                                            )}
+                                          </div>
+                                        )}
+                                        <Badge
+                                          variant='secondary'
+                                          className='text-xs font-bold'>
+                                          ×{val?.quantity}
+                                        </Badge>
+                                      </div>
+                                    </div>
+                                  );
+                                })}
+                              {renderVariationPopover(record)}
+                            </>
+                          ) : (
+                            record?.products?.map((val, index) => {
+                              const variantName = val.variantDetails
+                                ? [
+                                    val.variantDetails.color,
+                                    val.variantDetails.size,
+                                  ]
+                                    .filter(Boolean)
+                                    .join(" - ") || "Standard"
+                                : val?.name.includes(" ")
+                                  ? val?.name.split(" ").slice(1).join(" ")
+                                  : "Standard";
+
+                              return (
+                                <div
+                                  key={index}
+                                  className='inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-gradient-to-r from-purple-100 to-indigo-100 dark:from-purple-900/30 dark:to-indigo-900/30 border border-purple-200 dark:border-purple-800'>
+                                  {/* Variant Image Thumbnail */}
+                                  {(val.variantDetails?.image || val.image) && (
+                                    <img
+                                      src={
+                                        val.variantDetails?.image || val.image
+                                      }
+                                      alt=''
+                                      className='w-8 h-8 object-cover rounded border border-purple-300 flex-shrink-0'
+                                    />
+                                  )}
+                                  <div className='flex items-center gap-1.5'>
                                     <span
-                                      className='text-xs font-medium truncate max-w-[120px]'
+                                      className='text-xs font-medium truncate max-w-[100px]'
                                       title={val?.name}>
-                                      {val?.name}
+                                      {variantName}
                                     </span>
+                                    {/* Size & Color Badges */}
+                                    {val.variantDetails && (
+                                      <div className='flex gap-1 flex-wrap'>
+                                        {val.variantDetails.size && (
+                                          <Badge
+                                            variant='outline'
+                                            className='text-[10px] border-blue-300 text-blue-700 px-1 py-0 h-4'>
+                                            <Ruler className='h-2 w-2 mr-0.5' />
+                                            {val.variantDetails.size}
+                                          </Badge>
+                                        )}
+                                        {val.variantDetails.color && (
+                                          <Badge
+                                            variant='outline'
+                                            className='text-[10px] border-purple-300 text-purple-700 px-1 py-0 h-4'>
+                                            <Palette className='h-2 w-2 mr-0.5' />
+                                            {val.variantDetails.color}
+                                          </Badge>
+                                        )}
+                                      </div>
+                                    )}
                                     <Badge
                                       variant='secondary'
                                       className='text-xs font-bold'>
                                       ×{val?.quantity}
                                     </Badge>
                                   </div>
-                                ))}
-                              {renderVariationPopover(record)}
-                            </>
-                          ) : (
-                            record?.products?.map((val, index) => (
-                              <div
-                                key={index}
-                                className='inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-gradient-to-r from-purple-100 to-indigo-100 dark:from-purple-900/30 dark:to-indigo-900/30 border border-purple-200 dark:border-purple-800'>
-                                <span
-                                  className='text-xs font-medium truncate max-w-[120px]'
-                                  title={val?.name}>
-                                  {val?.name}
-                                </span>
-                                <Badge
-                                  variant='secondary'
-                                  className='text-xs font-bold'>
-                                  ×{val?.quantity}
-                                </Badge>
-                              </div>
-                            ))
+                                </div>
+                              );
+                            })
                           )}
                         </div>
                       </td>

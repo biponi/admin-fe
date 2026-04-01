@@ -49,6 +49,11 @@ import { Skeleton } from "../../components/ui/skeleton";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import useRoleCheck from "../auth/hooks/useRoleCheck";
+import { useIsMobile } from "../../hooks/use-mobile";
+import MobilePurchaseOrderCard from "./components/MobilePurchaseOrderCard";
+import MobilePurchaseOrderHeader from "./components/MobilePurchaseOrderHeader";
+import MobilePurchaseOrderEmpty from "./components/MobilePurchaseOrderEmpty";
+import MobilePurchaseOrderSkeleton from "./components/MobilePurchaseOrderSkeleton";
 
 // Pagination Component
 const Pagination: React.FC<{
@@ -191,6 +196,7 @@ const PurchaseOrderSkeleton: React.FC = () => (
 
 const ListPurchaseOrders: React.FC = () => {
   const navigate = useNavigate();
+  const isMobile = useIsMobile();
   const { hasRequiredPermission, hasSomePermissionsForPage } = useRoleCheck();
 
   const [allPurchaseOrders, setAllPurchaseOrders] = useState<PurchaseOrder[]>(
@@ -314,6 +320,14 @@ const ListPurchaseOrders: React.FC = () => {
     }
   };
 
+  const handleEdit = (id: string) => {
+    navigate(`/purchase-order/update/${id}`);
+  };
+
+  const handleCreateOrder = () => {
+    navigate("/purchase-order/create");
+  };
+
   const renderProductsPopover = (order: PurchaseOrder) => {
     const remainingProducts = order.products?.slice(2);
     if (!remainingProducts || remainingProducts.length === 0) return null;
@@ -379,283 +393,303 @@ const ListPurchaseOrders: React.FC = () => {
   );
 
   return (
-    <div className='w-full mx-auto p-6 space-y-6 '>
-      {/* Header */}
-      <div className='flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4'>
-        <div>
-          <h1 className='text-3xl font-bold tracking-tight'>
-            Purchase Orders{" "}
-            <Badge
-              variant={"secondary"}
-              className='text-base font-medium text-orange-500 bg-orange-100'>
-              <Logs className='w-5 h-5 mr-2' /> {totalDocs}
-            </Badge>
-          </h1>
-          <p className='text-muted-foreground'>
-            Manage your purchase orders and track inventory
-          </p>
-        </div>
-        {hasRequiredPermission("purchaseorder", "create") && (
-          <Button onClick={() => navigate("/purchase-order/create")}>
-            <Plus className='w-4 h-4 mr-2' />
-            Create Purchase Order
-          </Button>
-        )}
-      </div>
-
-      {/* Stats Cards */}
-      {/* {!isLoading && allPurchaseOrders.length > 0 && (
-        <div className='grid grid-cols-1 md:grid-cols-4 gap-4'>
-          <Card>
-            <CardHeader className='flex flex-row items-center justify-between space-y-0 pb-2'>
-              <CardTitle className='text-sm font-medium'>
-                Total Orders
-              </CardTitle>
-              <Package className='h-4 w-4 text-muted-foreground' />
-            </CardHeader>
-            <CardContent>
-              <div className='text-2xl font-bold'>{totalDocs}</div>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardHeader className='flex flex-row items-center justify-between space-y-0 pb-2'>
-              <CardTitle className='text-sm font-medium'>
-                Current Page
-              </CardTitle>
-              <Hash className='h-4 w-4 text-muted-foreground' />
-            </CardHeader>
-            <CardContent>
-              <div className='text-2xl font-bold'>
-                {currentPage} of {totalPages}
-              </div>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardHeader className='flex flex-row items-center justify-between space-y-0 pb-2'>
-              <CardTitle className='text-sm font-medium'>This Page</CardTitle>
-              <Package className='h-4 w-4 text-muted-foreground' />
-            </CardHeader>
-            <CardContent>
-              <div className='text-2xl font-bold'>
-                {allPurchaseOrders.length}
-              </div>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardHeader className='flex flex-row items-center justify-between space-y-0 pb-2'>
-              <CardTitle className='text-sm font-medium'>Per Page</CardTitle>
-              <Hash className='h-4 w-4 text-muted-foreground' />
-            </CardHeader>
-            <CardContent>
-              <div className='text-2xl font-bold'>{pageSize}</div>
-            </CardContent>
-          </Card>
-        </div>
-      )} */}
-
-      {/* Content */}
-      {isLoading ? (
-        <PurchaseOrderSkeleton />
-      ) : allPurchaseOrders.length === 0 ? (
-        <EmptyState />
+    <div className="w-full mx-auto p-6 space-y-6">
+      {/* Header - Mobile */}
+      {isMobile ? (
+        <MobilePurchaseOrderHeader totalOrders={totalDocs} />
       ) : (
-        <Card>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead className='w-32'>
-                  <div className='flex items-center gap-2'>
-                    <Hash className='w-4 h-4' />
-                    Order #
-                  </div>
-                </TableHead>
-                <TableHead>
-                  <div className='flex items-center gap-2'>
-                    <Package className='w-4 h-4' />
-                    Products
-                  </div>
-                </TableHead>
-                <TableHead className='w-32'>
-                  <div className='flex items-center gap-2'>
-                    <DollarSign className='w-4 h-4' />
-                    Total
-                  </div>
-                </TableHead>
-                <TableHead className='w-48'>
-                  <div className='flex items-center gap-2'>
-                    <Calendar className='w-4 h-4' />
-                    Created At
-                  </div>
-                </TableHead>
-                {hasSomePermissionsForPage("purchaseorder", [
-                  "edit",
-                  "delete",
-                ]) && (
-                  <TableHead className='w-24 text-center'>Actions</TableHead>
-                )}
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {allPurchaseOrders.map((order) => (
-                <TableRow key={order.id} className='group'>
-                  <TableCell className='font-mono'>
-                    #{order.purchaseNumber}
-                  </TableCell>
-                  <TableCell>
-                    <div className='flex flex-wrap gap-1'>
-                      {order.products?.length > 2 ? (
-                        <>
-                          {order.products.slice(0, 2).map((product, index) => (
-                            <div
-                              key={index}
-                              className='flex items-center gap-2 bg-primary/10 text-primary px-2 py-1 rounded-md text-sm'>
-                              <span className='font-medium truncate max-w-48'>
-                                {!!product.title
-                                  ? product.title.toUpperCase().split(" ")[0]
-                                  : product.title}
-                                <Badge
-                                  variant='secondary'
-                                  className='text-xs bg-sky-100 text-sky-600 mx-1 shadow'>
-                                  {!!product.title
-                                    ? product.title
-                                        .split(" ")
-                                        .slice(1)
-                                        .join(" ") || "N/A"
-                                    : product.title}
-                                </Badge>
-                              </span>
-                              <Badge variant='secondary' className='text-xs'>
-                                {product.quantity}
-                              </Badge>
-                            </div>
-                          ))}
-                          {renderProductsPopover(order)}
-                        </>
-                      ) : (
-                        order.products?.map((product, index) => (
-                          <div
-                            key={index}
-                            className='flex items-center gap-2 bg-primary/10 text-primary px-2 py-1 rounded-md text-sm'>
-                            <span className='font-medium truncate max-w-48'>
-                              {!!product.title
-                                ? product.title.toUpperCase().split(" ")[0]
-                                : product.title}
-                              <Badge
-                                variant='secondary'
-                                className='text-xs bg-sky-100 text-sky-600 mx-1 shadow'>
-                                {!!product.title
-                                  ? product.title
-                                      .split(" ")
-                                      .slice(1)
-                                      .join(" ") || "N/A"
-                                  : product.title}
-                              </Badge>
-                            </span>
-                            <Badge variant='secondary' className='text-xs'>
-                              {product.quantity}
-                            </Badge>
-                          </div>
-                        ))
-                      )}
-                    </div>
-                  </TableCell>
-                  <TableCell className='font-semibold'>
-                    ৳{order.totalAmount?.toLocaleString()}
-                  </TableCell>
-                  <TableCell className='text-muted-foreground'>
-                    {new Date(order.createdAt).toLocaleDateString("en-US", {
-                      year: "numeric",
-                      month: "short",
-                      day: "numeric",
-                      hour: "2-digit",
-                      minute: "2-digit",
-                    })}
-                  </TableCell>
-                  {hasSomePermissionsForPage("purchaseorder", [
-                    "edit",
-                    "delete",
-                  ]) && (
-                    <TableCell>
-                      <div className='flex items-center justify-center gap-1'>
-                        {hasRequiredPermission("purchaseorder", "edit") && (
-                          <Button
-                            variant='ghost'
-                            size='sm'
-                            onClick={() =>
-                              navigate(`/purchase-order/update/${order.id}`)
-                            }
-                            className='text-green-600 bg-green-50 hover:text-green-700 hover:bg-green-50'
-                            title='Edit Purchase Order'>
-                            <Edit className='w-4 h-4' />
-                          </Button>
-                        )}
-
-                        {hasRequiredPermission("purchaseorder", "edit") && (
-                          <AlertDialog>
-                            <AlertDialogTrigger asChild>
-                              <Button
-                                variant='ghost'
-                                size='sm'
-                                disabled={isRestoring === order.id}
-                                className='text-blue-600 bg-blue-50 hover:text-blue-700 hover:bg-blue-50'
-                                title='Restore Purchase Order'>
-                                <ArchiveRestore className='w-4 h-4' />
-                              </Button>
-                            </AlertDialogTrigger>
-                            <AlertDialogContent>
-                              <AlertDialogHeader>
-                                <AlertDialogTitle>
-                                  Restore Purchase Order
-                                </AlertDialogTitle>
-                                <AlertDialogDescription>
-                                  Are you sure you want to restore this purchase
-                                  order? This will make it active again.
-                                </AlertDialogDescription>
-                              </AlertDialogHeader>
-                              <AlertDialogFooter>
-                                <AlertDialogCancel>Cancel</AlertDialogCancel>
-                                <AlertDialogAction
-                                  onClick={() =>
-                                    handleRestorePurchaseOrder(order.id)
-                                  }>
-                                  Restore
-                                </AlertDialogAction>
-                              </AlertDialogFooter>
-                            </AlertDialogContent>
-                          </AlertDialog>
-                        )}
-
-                        {hasRequiredPermission("purchaseorder", "delete") && (
-                          <Button
-                            variant='ghost'
-                            size='sm'
-                            disabled={isDeleting === order.id}
-                            onClick={() => handleDelete(order.id)}
-                            className='text-red-600 bg-red-50 hover:text-red-700 hover:bg-red-50'
-                            title='Delete Purchase Order'>
-                            <Trash2 className='w-4 h-4' />
-                          </Button>
-                        )}
-                      </div>
-                    </TableCell>
-                  )}
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </Card>
+        /* Header - Desktop */
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+          <div>
+            <h1 className="text-3xl font-bold tracking-tight">
+              Purchase Orders{" "}
+              <Badge
+                variant={"secondary"}
+                className="text-base font-medium text-orange-500 bg-orange-100">
+                <Logs className="w-5 h-5 mr-2" /> {totalDocs}
+              </Badge>
+            </h1>
+            <p className="text-muted-foreground">
+              Manage your purchase orders and track inventory
+            </p>
+          </div>
+          {hasRequiredPermission("purchaseorder", "create") && (
+            <Button onClick={handleCreateOrder}>
+              <Plus className="w-4 h-4 mr-2" />
+              Create Purchase Order
+            </Button>
+          )}
+        </div>
       )}
 
-      {/* Pagination */}
-      {!isLoading && allPurchaseOrders.length > 0 && totalPages > 1 && (
-        <Pagination
-          currentPage={currentPage}
-          totalPages={totalPages}
-          pageSize={pageSize}
-          onPageChange={handlePageChange}
-          onPageSizeChange={handlePageSizeChange}
-          isLoading={false}
-        />
+      {/* Content - Mobile View */}
+      {isMobile ? (
+        <div className="space-y-3 pb-safe">
+          {isLoading ? (
+            <MobilePurchaseOrderSkeleton />
+          ) : allPurchaseOrders.length === 0 ? (
+            <MobilePurchaseOrderEmpty onCreateOrder={handleCreateOrder} />
+          ) : (
+            <>
+              <div className="space-y-3">
+                {allPurchaseOrders.map((order) => (
+                  <MobilePurchaseOrderCard
+                    key={order.id}
+                    id={order.id}
+                    purchaseNumber={order.purchaseNumber}
+                    products={order.products || []}
+                    totalAmount={order.totalAmount}
+                    createdAt={order.createdAt}
+                    handleEdit={handleEdit}
+                    handleDelete={handleDelete}
+                    handleRestore={handleRestorePurchaseOrder}
+                    isDeleted={false}
+                  />
+                ))}
+              </div>
+
+              {/* Simplified Mobile Pagination */}
+              {totalPages > 1 && (
+                <div className="flex items-center justify-between gap-2 pt-4 px-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    disabled={currentPage <= 1 || isLoading}
+                    onClick={() => handlePageChange(currentPage - 1)}
+                    className="flex-1">
+                    ← Previous
+                  </Button>
+                  <div className="px-4 py-2 bg-gray-100 rounded-lg text-sm font-medium text-gray-700">
+                    {currentPage} / {totalPages}
+                  </div>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    disabled={currentPage >= totalPages || isLoading}
+                    onClick={() => handlePageChange(currentPage + 1)}
+                    className="flex-1">
+                    Next →
+                  </Button>
+                </div>
+              )}
+            </>
+          )}
+
+          {/* Floating Action Button */}
+          {hasRequiredPermission("purchaseorder", "create") && (
+            <Button
+              onClick={handleCreateOrder}
+              className="fixed bottom-20 right-4 h-14 w-14 rounded-full shadow-lg bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700 text-white z-50 flex items-center justify-center">
+              <Plus className="h-6 w-6" />
+            </Button>
+          )}
+        </div>
+      ) : (
+        /* Content - Desktop View */
+        <>
+          {isLoading ? (
+            <PurchaseOrderSkeleton />
+          ) : allPurchaseOrders.length === 0 ? (
+            <EmptyState />
+          ) : (
+            <Card>
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead className="w-32">
+                      <div className="flex items-center gap-2">
+                        <Hash className="w-4 h-4" />
+                        Order #
+                      </div>
+                    </TableHead>
+                    <TableHead>
+                      <div className="flex items-center gap-2">
+                        <Package className="w-4 h-4" />
+                        Products
+                      </div>
+                    </TableHead>
+                    <TableHead className="w-32">
+                      <div className="flex items-center gap-2">
+                        <DollarSign className="w-4 h-4" />
+                        Total
+                      </div>
+                    </TableHead>
+                    <TableHead className="w-48">
+                      <div className="flex items-center gap-2">
+                        <Calendar className="w-4 h-4" />
+                        Created At
+                      </div>
+                    </TableHead>
+                    {hasSomePermissionsForPage("purchaseorder", [
+                      "edit",
+                      "delete",
+                    ]) && <TableHead className="w-24 text-center">Actions</TableHead>}
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {allPurchaseOrders.map((order) => (
+                    <TableRow key={order.id} className="group">
+                      <TableCell className="font-mono">
+                        #{order.purchaseNumber}
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex flex-wrap gap-1">
+                          {order.products?.length > 2 ? (
+                            <>
+                              {order.products.slice(0, 2).map((product, index) => (
+                                <div
+                                  key={index}
+                                  className="flex items-center gap-2 bg-primary/10 text-primary px-2 py-1 rounded-md text-sm">
+                                  <span className="font-medium truncate max-w-48">
+                                    {!!product.title
+                                      ? product.title.toUpperCase().split(" ")[0]
+                                      : product.title}
+                                    <Badge
+                                      variant="secondary"
+                                      className="text-xs bg-sky-100 text-sky-600 mx-1 shadow">
+                                      {!!product.title
+                                        ? product.title
+                                            .split(" ")
+                                            .slice(1)
+                                            .join(" ") || "N/A"
+                                        : product.title}
+                                    </Badge>
+                                  </span>
+                                  <Badge variant="secondary" className="text-xs">
+                                    {product.quantity}
+                                  </Badge>
+                                </div>
+                              ))}
+                              {renderProductsPopover(order)}
+                            </>
+                          ) : (
+                            order.products?.map((product, index) => (
+                              <div
+                                key={index}
+                                className="flex items-center gap-2 bg-primary/10 text-primary px-2 py-1 rounded-md text-sm">
+                                <span className="font-medium truncate max-w-48">
+                                  {!!product.title
+                                    ? product.title.toUpperCase().split(" ")[0]
+                                    : product.title}
+                                  <Badge
+                                    variant="secondary"
+                                    className="text-xs bg-sky-100 text-sky-600 mx-1 shadow">
+                                    {!!product.title
+                                      ? product.title
+                                          .split(" ")
+                                          .slice(1)
+                                          .join(" ") || "N/A"
+                                      : product.title}
+                                  </Badge>
+                                </span>
+                                <Badge variant="secondary" className="text-xs">
+                                  {product.quantity}
+                                </Badge>
+                              </div>
+                            ))
+                          )}
+                        </div>
+                      </TableCell>
+                      <TableCell className="font-semibold">
+                        ৳{order.totalAmount?.toLocaleString()}
+                      </TableCell>
+                      <TableCell className="text-muted-foreground">
+                        {new Date(order.createdAt).toLocaleDateString("en-US", {
+                          year: "numeric",
+                          month: "short",
+                          day: "numeric",
+                          hour: "2-digit",
+                          minute: "2-digit",
+                        })}
+                      </TableCell>
+                      {hasSomePermissionsForPage("purchaseorder", [
+                        "edit",
+                        "delete",
+                      ]) && (
+                        <TableCell>
+                          <div className="flex items-center justify-center gap-1">
+                            {hasRequiredPermission("purchaseorder", "edit") && (
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() =>
+                                  navigate(`/purchase-order/update/${order.id}`)
+                                }
+                                className="text-green-600 bg-green-50 hover:text-green-700 hover:bg-green-50"
+                                title="Edit Purchase Order">
+                                <Edit className="w-4 h-4" />
+                              </Button>
+                            )}
+
+                            {hasRequiredPermission("purchaseorder", "edit") && (
+                              <AlertDialog>
+                                <AlertDialogTrigger asChild>
+                                  <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    disabled={isRestoring === order.id}
+                                    className="text-blue-600 bg-blue-50 hover:text-blue-700 hover:bg-blue-50"
+                                    title="Restore Purchase Order">
+                                    <ArchiveRestore className="w-4 h-4" />
+                                  </Button>
+                                </AlertDialogTrigger>
+                                <AlertDialogContent>
+                                  <AlertDialogHeader>
+                                    <AlertDialogTitle>
+                                      Restore Purchase Order
+                                    </AlertDialogTitle>
+                                    <AlertDialogDescription>
+                                      Are you sure you want to restore this
+                                      purchase order? This will make it active
+                                      again.
+                                    </AlertDialogDescription>
+                                  </AlertDialogHeader>
+                                  <AlertDialogFooter>
+                                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                    <AlertDialogAction
+                                      onClick={() =>
+                                        handleRestorePurchaseOrder(order.id)
+                                      }>
+                                      Restore
+                                    </AlertDialogAction>
+                                  </AlertDialogFooter>
+                                </AlertDialogContent>
+                              </AlertDialog>
+                            )}
+
+                            {hasRequiredPermission("purchaseorder", "delete") && (
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                disabled={isDeleting === order.id}
+                                onClick={() => handleDelete(order.id)}
+                                className="text-red-600 bg-red-50 hover:text-red-700 hover:bg-red-50"
+                                title="Delete Purchase Order">
+                                <Trash2 className="w-4 h-4" />
+                              </Button>
+                            )}
+                          </div>
+                        </TableCell>
+                      )}
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </Card>
+          )}
+
+          {/* Desktop Pagination */}
+          {!isLoading && allPurchaseOrders.length > 0 && totalPages > 1 && (
+            <Pagination
+              currentPage={currentPage}
+              totalPages={totalPages}
+              pageSize={pageSize}
+              onPageChange={handlePageChange}
+              onPageSizeChange={handlePageSizeChange}
+              isLoading={false}
+            />
+          )}
+        </>
       )}
     </div>
   );

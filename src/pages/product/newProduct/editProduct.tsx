@@ -48,6 +48,7 @@ import CustomAlertDialog from "../../../coreComponents/OptionModal";
 
 import { ICategory, IProductUpdateData, IVariation } from "../interface";
 import NestedCategorySelect from "../../../components/customComponent/NestedCategoryComponent";
+import { VariantImageUploader } from "../../../components/product/VariantImageUploader";
 
 interface Props {
   productData: IProductUpdateData;
@@ -79,6 +80,8 @@ const EditProduct: React.FC<Props> = ({
   const [v2Sizes, setV2Sizes] = useState<string[]>([]);
   const [newColor, setNewColor] = useState("");
   const [newSize, setNewSize] = useState("");
+  const [variantImages, setVariantImages] = useState<Record<string, (File | string)[]>>({});
+  const [removedVariantImageIndexes, setRemovedVariantImageIndexes] = useState<Record<string, number[]>>({});
   const fileRef = useRef(null);
   const fileRef2 = useRef(null);
   const dialogBtn = useRef(null);
@@ -87,6 +90,15 @@ const EditProduct: React.FC<Props> = ({
   useEffect(() => {
     if (!!productData) {
       updateFormData(productData);
+
+      // Initialize variant images from product data
+      const initialVariantImages: Record<string, (File | string)[]> = {};
+      productData.variation?.forEach(variant => {
+        if (variant.images && variant.images.length > 0) {
+          initialVariantImages[variant.id] = variant.images;
+        }
+      });
+      setVariantImages(initialVariantImages);
     }
   }, [productData]);
 
@@ -216,6 +228,33 @@ const EditProduct: React.FC<Props> = ({
     if (value && formData?.unitPrice) {
       onUnitPriceChange(formData.unitPrice);
     }
+  };
+
+  const handleVariantImagesChange = (variantId: string, images: (File | string)[]) => {
+    setVariantImages(prev => {
+      const previousImages = prev[variantId] || [];
+      const newImages = images;
+
+      // Track removed indices (only for existing string URLs)
+      const removedIndices: number[] = [];
+      previousImages.forEach((img, index) => {
+        if (typeof img === 'string' && !newImages.includes(img)) {
+          removedIndices.push(index);
+        }
+      });
+
+      if (removedIndices.length > 0) {
+        setRemovedVariantImageIndexes(prev => ({
+          ...prev,
+          [variantId]: removedIndices,
+        }));
+      }
+
+      return {
+        ...prev,
+        [variantId]: newImages,
+      };
+    });
   };
 
   // V2 Variation Functions
@@ -366,6 +405,14 @@ const EditProduct: React.FC<Props> = ({
                         />
                       </div>
                     </div>
+
+                    {/* Variant Images */}
+                    <VariantImageUploader
+                      variantId={variation.id}
+                      variantName={`${variation.color || ''} ${variation.size || ''}`.trim() || variation.name || `Variant ${index + 1}`}
+                      images={variantImages[variation.id] || []}
+                      onImagesChange={handleVariantImagesChange}
+                    />
                   </div>
                 </div>
               </div>
@@ -628,7 +675,43 @@ const EditProduct: React.FC<Props> = ({
   };
 
   const updateProductAndExit = async () => {
-    const response = await updateProduct({ ...formData });
+    // Prepare variant images for upload
+    const allVariantImages = Object.values(variantImages).flat();
+    const variantImageFileList = allVariantImages.filter(img => img instanceof File) as File[];
+
+    // Build variant image mappings for new uploads
+    let currentIndex = 0;
+    const variantImageMappings = formData.variation.map(variant => {
+      const images = variantImages[variant.id] || [];
+      const newImages = images.filter(img => img instanceof File);
+      const imageIndexes = Array.from(
+        { length: newImages.length },
+        (_, i) => currentIndex + i
+      );
+      currentIndex += newImages.length;
+
+      return {
+        variantId: variant.id,
+        imageIndexes,
+      };
+    }).filter(mapping => mapping.imageIndexes.length > 0);
+
+    // Build remove variant image indexes mapping
+    const removeVariantImageIndexes = Object.entries(removedVariantImageIndexes)
+      .filter(([_, indices]) => indices.length > 0)
+      .map(([variantId, imageIndexes]) => ({
+        variantId,
+        imageIndexes,
+      }));
+
+    const productData = {
+      ...formData,
+      variantImages: variantImageFileList,
+      variantImageMappings,
+      removeVariantImageIndexes,
+    };
+
+    const response = await updateProduct(productData);
     if (!!response) {
       // updateFormData({ ...defaultValue });
     }
