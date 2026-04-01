@@ -63,6 +63,11 @@ const isBrowserNotificationSupported = (): boolean => {
   return typeof window !== "undefined" && "Notification" in window;
 };
 
+// Helper function to check if browser notifications are enabled via feature flag
+const isBrowserNotificationEnabled = (): boolean => {
+  return process.env.REACT_APP_ADD_NOTIFICATION === "true";
+};
+
 // Helper function to get notification permission safely
 const getNotificationPermission = ():
   | NotificationPermission
@@ -220,6 +225,11 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({
 
   // Show browser notification safely
   const showBrowserNotification = useCallback((notification: Notification) => {
+    if (!isBrowserNotificationEnabled()) {
+      console.log("🔔 Browser notifications disabled via feature flag");
+      return;
+    }
+
     if (!isBrowserNotificationSupported()) {
       console.log("🔔 Browser notifications not supported on this device");
       return;
@@ -291,6 +301,12 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({
   // Request notification permission with proper handling
   const handleRequestNotificationPermission = useCallback(async () => {
     try {
+      // Check if browser notifications are enabled via feature flag
+      if (!isBrowserNotificationEnabled()) {
+        console.log("🔔 Browser notifications disabled via feature flag, skipping permission request");
+        return "unsupported";
+      }
+
       // First, request browser notification permission
       const permission = await requestNotificationPermission();
       setNotificationPermission(permission);
@@ -381,8 +397,9 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({
 
     initializeFirebase();
 
-    // Request browser notification permission only if supported
+    // Request browser notification permission only if supported and enabled via feature flag
     if (
+      isBrowserNotificationEnabled() &&
       isBrowserNotificationSupported() &&
       getNotificationPermission() === "default"
     ) {

@@ -13,6 +13,11 @@ import {
   markAllAsRead as apiMarkAllAsRead,
 } from "./notificationService";
 
+// Helper function to check if browser notifications are enabled via feature flag
+const isBrowserNotificationEnabled = (): boolean => {
+  return process.env.REACT_APP_ADD_NOTIFICATION === "true";
+};
+
 interface Notification {
   _id: string;
   subject: string;
@@ -242,8 +247,8 @@ export const useNotifications = () => {
         if (payload) {
           console.log("Foreground message:", payload);
 
-          // Show browser notification
-          if (Notification.permission === "granted") {
+          // Show browser notification (only if enabled via feature flag)
+          if (isBrowserNotificationEnabled() && Notification.permission === "granted") {
             new Notification(
               payload.notification?.title || "New Notification",
               {
