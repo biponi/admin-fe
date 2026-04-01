@@ -167,12 +167,6 @@ const InventoryDocument: React.FC<InventoryDocumentProps> = ({
     return fullName.split(" ")[0];
   };
 
-  const getVariant = (fullName: string) => {
-    const parts = fullName.split(" ");
-    if (parts.length === 1) return "N/A";
-    return parts.slice(1).join(" ");
-  };
-
   return (
     <Document>
       <Page size='A4' style={styles.page}>
@@ -248,8 +242,14 @@ const InventoryDocument: React.FC<InventoryDocumentProps> = ({
 
           {products.map((product, index) => {
             const name = getProductName(product.name);
-            const variant = getVariant(product.name);
             const amount = product.quantity * product.unitPrice;
+            const variantName = product.variantDetails
+              ? [product.variantDetails.color, product.variantDetails.size]
+                  .filter(Boolean)
+                  .join(" - ") || "Standard"
+              : product?.name.includes(" ")
+                ? product?.name.split(" ").slice(1).join(" ")
+                : "Standard";
 
             return (
               <View
@@ -281,7 +281,7 @@ const InventoryDocument: React.FC<InventoryDocumentProps> = ({
                     styles.variantText,
                     { width: "28%" },
                   ]}>
-                  {variant}
+                  {variantName}
                 </Text>
                 <Text
                   style={[

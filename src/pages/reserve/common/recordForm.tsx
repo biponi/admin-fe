@@ -281,12 +281,12 @@ const RecordForm = ({
           />
 
           <div className='flex items-center gap-3 pl-2 pr-3 py-2'>
-            {/* Product Image - Large and prominent */}
-            {product.image && (
+            {/* Product/Variant Image - Large and prominent */}
+            {(product.variant?.image || product.image) && (
               <div className='relative flex-shrink-0 w-16 h-16 rounded overflow-hidden bg-gray-100 shadow-sm'>
                 <img
                   alt={product.name}
-                  src={product.image}
+                  src={product.variant?.image || product.image}
                   className={`
                 w-full h-full object-cover
                 transition-transform duration-500

@@ -34,11 +34,73 @@ export const buildFormDataFromObject = (data: any): FormData => {
     });
   };
 
+  // Special handling for variant images - extract them first
+  // This ensures variant images are sent as a flat array
+  const variantImages = data.variantImages;
+  const variantImageMappings = data.variantImageMappings;
+  const removeVariantImageIndexes = data.removeVariantImageIndexes;
+
+  // Remove these from data so they don't get processed in the loop below
+  delete data.variantImages;
+  delete data.variantImageMappings;
+  delete data.removeVariantImageIndexes;
+
+  // Handle variant images array separately
+  if (variantImages && Array.isArray(variantImages)) {
+    console.log('variantImages:', variantImages);
+    variantImages.forEach((file: File) => {
+      if (file instanceof File) {
+        formData.append('variantImages', file);
+      }
+    });
+  }
+
+  // Handle variant image mappings
+  if (variantImageMappings && Array.isArray(variantImageMappings)) {
+    console.log('variantImageMappings:', variantImageMappings);
+    formData.append('variantImageMappings', JSON.stringify(variantImageMappings));
+  }
+
+  // Handle remove variant image indexes
+  if (removeVariantImageIndexes && Array.isArray(removeVariantImageIndexes)) {
+    console.log('removeVariantImageIndexes:', removeVariantImageIndexes);
+    formData.append('removeVariantImageIndexes', JSON.stringify(removeVariantImageIndexes));
+  }
+
   // Iterate over the properties of the input object
   for (const key in data) {
     if (Object.prototype.hasOwnProperty.call(data, key)) {
       const value = data[key];
-      if (Array.isArray(value)) {
+
+      // Skip null/undefined values
+      if (value === null || value === undefined) {
+        continue;
+      }
+
+      // Skip empty arrays
+      if (Array.isArray(value) && value.length === 0) {
+        continue;
+      }
+
+      if (key === 'variation' && Array.isArray(value)) {
+        // Special handling for variation array
+        // We need to ensure images array in variation doesn't include File objects
+        // as they're already sent via variantImages
+        value.forEach((variation: any, index: number) => {
+          // Create a clean variation object without File objects in images
+          const { images, ...variationData } = variation;
+
+          // If images array exists and contains strings (existing URLs), include them
+          if (images && Array.isArray(images) && images.length > 0) {
+            const existingImages = images.filter((img: any) => typeof img === 'string');
+            if (existingImages.length > 0) {
+              variationData.images = existingImages;
+            }
+          }
+
+          formData.append(`variation[${index}]`, JSON.stringify(variationData));
+        });
+      } else if (Array.isArray(value)) {
         // Handle nested arrays
         appendArrayValues(key, value);
       } else if (value instanceof File) {

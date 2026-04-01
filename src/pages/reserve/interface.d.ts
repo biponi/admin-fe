@@ -1,11 +1,19 @@
 import { Document } from "mongoose";
 
+export interface VariantDetails {
+  size?: string;
+  color?: string;
+  image?: string;
+}
+
 export interface IRecordProduct {
   id: string;
   name: string;
   quantity: number;
   unitPrice: number;
   variantId: string;
+  image?: string;
+  variantDetails?: VariantDetails;
 }
 
 export interface IRecord {

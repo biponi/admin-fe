@@ -18,7 +18,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "../../components/ui/dropdown-menu";
-import { Ellipsis } from "lucide-react";
+import { Ellipsis, Plus } from "lucide-react";
 import {
   Drawer,
   DrawerClose,
@@ -36,10 +36,15 @@ import { Input } from "../../components/ui/input";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-hot-toast";
 import useRoleCheck from "../auth/hooks/useRoleCheck";
+import { useIsMobile } from "../../hooks/use-mobile";
+import MobileCampaignCard from "./components/MobileCampaignCard";
+import MobileCampaignHeader from "./components/MobileCampaignHeader";
+import MobileCampaignEmpty from "./components/MobileCampaignEmpty";
 const DATE_FORMAT = "DD/MM/YYYY HH:mm";
 
 const CampaignList = () => {
   const navigate = useNavigate();
+  const isMobile = useIsMobile();
   const { hasRequiredPermission, hasSomePermissionsForPage } = useRoleCheck();
   const { fetchCampaignList, deleteACampaign } = useCampaign();
   const [campaigns, setCampaigns] = useState([]);
@@ -64,9 +69,22 @@ const CampaignList = () => {
     const isDeleted = await deleteACampaign(id);
     if (isDeleted) {
       toast.success("Campaign Deleted Successfully");
-      fetchCampaignList();
+      const list = await fetchCampaignList();
+      setCampaigns(list);
     }
   };
+
+  const handleUpdateCampaign = (id: string) => {
+    navigate(`/campaign/update/${id}`);
+  };
+
+  const handleCreateCampaign = () => {
+    navigate("/campaign/create");
+  };
+
+  const filteredCampaigns = campaigns.filter(
+    (c: ICampaign) => c?.title.includes(query) || c?.id?.includes(query)
+  );
 
   const renderDeleteDrawerView = () => {
     return (
@@ -106,7 +124,7 @@ const CampaignList = () => {
     );
   };
   const renderSingleCampaign = () => {
-    if (!campaigns || campaigns.length < 1) {
+    if (!filteredCampaigns || filteredCampaigns.length < 1) {
       return (
         <TableRow>
           <TableCell colSpan={5} className='text-center'>
@@ -115,48 +133,44 @@ const CampaignList = () => {
         </TableRow>
       );
     } else {
-      return campaigns
-        .filter(
-          (c: ICampaign) => c?.title.includes(query) || c?.id?.includes(query)
-        )
-        .map((cam: ICampaign, index: number) => (
-          <TableRow>
-            <TableCell className='font-medium'>{index + 1}</TableCell>
-            <TableCell>{cam?.title}</TableCell>
-            <TableCell>{cam?.products?.length ?? 0}</TableCell>
-            <TableCell>{dayjs(cam?.startDate).format(DATE_FORMAT)}</TableCell>
-            <TableCell>{dayjs(cam?.endDate).format(DATE_FORMAT)}</TableCell>
-            {hasSomePermissionsForPage("campaign", ["edit", "delete"]) && (
-              <TableCell className='text-right'>
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Ellipsis />
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent>
-                    {hasRequiredPermission("campaign", "edit") && (
-                      <DropdownMenuItem
-                        onClick={() => navigate(`/campaign/update/${cam?.id}`)}>
-                        Edit
-                      </DropdownMenuItem>
-                    )}
-                    {hasRequiredPermission("campaign", "delete") && (
-                      <DropdownMenuItem
-                        className='text-red-600'
-                        onClick={() => {
-                          if (!!deleteBtnRef) {
-                            setSelectedCamIdToDelete(cam?.id);
-                            deleteBtnRef?.current?.click();
-                          }
-                        }}>
-                        Delete
-                      </DropdownMenuItem>
-                    )}
-                  </DropdownMenuContent>
-                </DropdownMenu>
-              </TableCell>
-            )}
-          </TableRow>
-        ));
+      return filteredCampaigns.map((cam: ICampaign, index: number) => (
+        <TableRow>
+          <TableCell className='font-medium'>{index + 1}</TableCell>
+          <TableCell>{cam?.title}</TableCell>
+          <TableCell>{cam?.products?.length ?? 0}</TableCell>
+          <TableCell>{dayjs(cam?.startDate).format(DATE_FORMAT)}</TableCell>
+          <TableCell>{dayjs(cam?.endDate).format(DATE_FORMAT)}</TableCell>
+          {hasSomePermissionsForPage("campaign", ["edit", "delete"]) && (
+            <TableCell className='text-right'>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Ellipsis />
+                </DropdownMenuTrigger>
+                <DropdownMenuContent>
+                  {hasRequiredPermission("campaign", "edit") && (
+                    <DropdownMenuItem
+                      onClick={() => handleUpdateCampaign(cam?.id)}>
+                      Edit
+                    </DropdownMenuItem>
+                  )}
+                  {hasRequiredPermission("campaign", "delete") && (
+                    <DropdownMenuItem
+                      className='text-red-600'
+                      onClick={() => {
+                        if (!!deleteBtnRef) {
+                          setSelectedCamIdToDelete(cam?.id);
+                          deleteBtnRef?.current?.click();
+                        }
+                      }}>
+                      Delete
+                    </DropdownMenuItem>
+                  )}
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </TableCell>
+          )}
+        </TableRow>
+      ));
     }
   };
   const renderCampaignList = () => {
@@ -184,32 +198,74 @@ const CampaignList = () => {
   return (
     <MainView title='Campaign'>
       <div className='w-full my-2'>
-        {!loading && (
-          <Card className='w-full'>
-            <CardHeader>
-              <div className='flex justify-between items-start'>
-                <Input
-                  className='w-1/2'
-                  type='text'
-                  placeholder='Search (id, title)...'
-                  onChange={(e) => setQuery(e.target.value ?? "")}
-                />
-                {hasRequiredPermission("campaign", "create") && (
-                  <Button onClick={() => navigate("/campaign/create")}>
-                    Create New Campaign
-                  </Button>
-                )}
-              </div>
-            </CardHeader>
-            <CardContent>{renderCampaignList()}</CardContent>
-          </Card>
+        {loading && (
+          <div className="flex justify-center py-10">
+            <Badge variant={"outline"} className='mx-auto'>
+              Loading...
+            </Badge>
+          </div>
         )}
 
-        {loading && (
-          <Badge variant={"outline"} className='mx-auto mt-10'>
-            Loading...
-          </Badge>
+        {!loading && isMobile ? (
+          /* Mobile View */
+          <div className="space-y-3 pb-safe">
+            <MobileCampaignHeader
+              searchValue={query}
+              onSearchChange={(value) => setQuery(value)}
+            />
+
+            {filteredCampaigns.length === 0 ? (
+              <MobileCampaignEmpty
+                searchValue={query}
+                onCreateCampaign={handleCreateCampaign}
+              />
+            ) : (
+              <div className="space-y-3">
+                {filteredCampaigns.map((campaign: ICampaign, index: number) => (
+                  <MobileCampaignCard
+                    key={campaign.id}
+                    campaign={campaign}
+                    index={index}
+                    handleUpdateCampaign={handleUpdateCampaign}
+                    deleteExistingCampaign={handleCampaignDelete}
+                  />
+                ))}
+              </div>
+            )}
+
+            {/* Floating Action Button */}
+            {hasRequiredPermission("campaign", "create") && (
+              <Button
+                onClick={handleCreateCampaign}
+                className="fixed bottom-20 right-4 h-14 w-14 rounded-full shadow-lg bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white z-50 flex items-center justify-center">
+                <Plus className="h-6 w-6" />
+              </Button>
+            )}
+          </div>
+        ) : (
+          /* Desktop View */
+          !loading && (
+            <Card className='w-full'>
+              <CardHeader>
+                <div className='flex justify-between items-start'>
+                  <Input
+                    className='w-1/2'
+                    type='text'
+                    placeholder='Search (id, title)...'
+                    onChange={(e) => setQuery(e.target.value ?? "")}
+                  />
+                  {hasRequiredPermission("campaign", "create") && (
+                    <Button onClick={handleCreateCampaign}>
+                      Create New Campaign
+                    </Button>
+                  )}
+                </div>
+              </CardHeader>
+              <CardContent>{renderCampaignList()}</CardContent>
+            </Card>
+          )
         )}
+
         {hasRequiredPermission("campaign", "delete") &&
           renderDeleteDrawerView()}
       </div>
