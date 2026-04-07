@@ -35,7 +35,7 @@ const MultiCategorySelect: React.FC<MultiCategorySelectProps> = ({
 
   // Get selected categories
   const selectedCategories = categories.filter((cat) =>
-    selectedCategoryIds.includes(cat.id)
+    selectedCategoryIds.includes(cat.id),
   );
 
   // Create category hierarchy structure
@@ -76,7 +76,7 @@ const MultiCategorySelect: React.FC<MultiCategorySelectProps> = ({
     const searchLower = searchTerm.toLowerCase();
 
     const filterCategory = (
-      category: ICategory & { children: ICategory[] }
+      category: ICategory & { children: ICategory[] },
     ): (ICategory & { children: ICategory[] }) | null => {
       const matchesSearch = category.name.toLowerCase().includes(searchLower);
       const filteredChildren = category.children
@@ -114,7 +114,7 @@ const MultiCategorySelect: React.FC<MultiCategorySelectProps> = ({
       }
 
       setSelectedCategoryIds(
-        selectedCategoryIds.filter((id) => id !== categoryId)
+        selectedCategoryIds.filter((id) => id !== categoryId),
       );
     } else {
       // Check max limit
@@ -141,14 +141,14 @@ const MultiCategorySelect: React.FC<MultiCategorySelectProps> = ({
     }
 
     setSelectedCategoryIds(
-      selectedCategoryIds.filter((id) => id !== categoryId)
+      selectedCategoryIds.filter((id) => id !== categoryId),
     );
   };
 
   // Render category items recursively
   const renderCategoryItems = (
     categories: (ICategory & { children: ICategory[] })[],
-    level: number = 0
+    level: number = 0,
   ) => {
     return categories.map((category) => {
       const hasChildren = category.children.length > 0;
@@ -156,10 +156,6 @@ const MultiCategorySelect: React.FC<MultiCategorySelectProps> = ({
       const isPrimary = selectedCategoryIds[0] === category.id;
       const productCount =
         (category.totalProducts ?? 0) > 0 ? ` (${category.totalProducts})` : "";
-      const canSelect =
-        !isSelected || selectedCategoryIds.length > 1
-          ? isSelected && isPrimary
-          : true;
 
       if (hasChildren) {
         return (
@@ -182,7 +178,8 @@ const MultiCategorySelect: React.FC<MultiCategorySelectProps> = ({
               <DropdownMenuItem
                 onClick={() => handleCategoryToggle(category.id)}
                 disabled={
-                  (!isSelected && selectedCategoryIds.length >= maxCategories) ||
+                  (!isSelected &&
+                    selectedCategoryIds.length >= maxCategories) ||
                   (isSelected && isPrimary && selectedCategoryIds.length === 1)
                 }
                 className='font-medium border-b mb-1'>
@@ -246,7 +243,7 @@ const MultiCategorySelect: React.FC<MultiCategorySelectProps> = ({
   const renderFlatList = () => {
     const flattenCategories = (
       cats: (ICategory & { children: ICategory[] })[],
-      level: number = 0
+      level: number = 0,
     ): (ICategory & { level?: number })[] => {
       const result: (ICategory & { level?: number })[] = [];
       cats.forEach((cat) => {
@@ -265,9 +262,7 @@ const MultiCategorySelect: React.FC<MultiCategorySelectProps> = ({
       const isSelected = selectedCategoryIds.includes(category.id);
       const isPrimary = selectedCategoryIds[0] === category.id;
       const productCount =
-        (category.totalProducts ?? 0) > 0
-          ? ` (${category.totalProducts})`
-          : "";
+        (category.totalProducts ?? 0) > 0 ? ` (${category.totalProducts})` : "";
 
       return (
         <DropdownMenuItem
@@ -307,7 +302,9 @@ const MultiCategorySelect: React.FC<MultiCategorySelectProps> = ({
     <div className='w-full space-y-2'>
       <div className='grid gap-2'>
         <Label htmlFor='category'>
-          Categories {selectedCategoryIds.length > 0 && `(${selectedCategoryIds.length}/${maxCategories})`}
+          Categories{" "}
+          {selectedCategoryIds.length > 0 &&
+            `(${selectedCategoryIds.length}/${maxCategories})`}
         </Label>
 
         {/* Selected Categories Badges */}
@@ -394,7 +391,8 @@ const MultiCategorySelect: React.FC<MultiCategorySelectProps> = ({
 
         {/* Helper text */}
         <p className='text-xs text-muted-foreground'>
-          Select up to {maxCategories} categories. First selected will be primary.
+          Select up to {maxCategories} categories. First selected will be
+          primary.
         </p>
       </div>
     </div>
