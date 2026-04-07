@@ -315,3 +315,55 @@ export const deleteCategory = async (
     return handleApiError(error);
   }
 };
+
+// Multi-category helper functions
+
+// Function to add category to product
+export const addCategoryToProduct = async (
+  productId: string,
+  categoryId: string
+): Promise<ApiResponse<any>> => {
+  try {
+    const response = await axios.post<any>(
+      config.product.addCategory(),
+      { productId, categoryId }
+    );
+
+    if (response.status === 200 || response.status === 201) {
+      return { success: true, data: response.data };
+    } else {
+      return {
+        success: false,
+        error: response.data.message || "Failed to add category to product",
+      };
+    }
+  } catch (error: any) {
+    console.error("Error adding category to product:", error.message);
+    return handleApiError(error);
+  }
+};
+
+// Function to remove category from product
+export const removeCategoryFromProduct = async (
+  productId: string,
+  categoryId: string
+): Promise<ApiResponse<any>> => {
+  try {
+    const response = await axios.post<any>(
+      config.product.removeCategory(),
+      { productId, categoryId }
+    );
+
+    if (response.status === 200) {
+      return { success: true, data: response.data };
+    } else {
+      return {
+        success: false,
+        error: response.data.message || "Failed to remove category from product",
+      };
+    }
+  } catch (error: any) {
+    console.error("Error removing category from product:", error.message);
+    return handleApiError(error);
+  }
+};

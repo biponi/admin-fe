@@ -14,6 +14,7 @@ import {
   Box,
   BarChart3,
   XIcon as XCircle,
+  DollarSign,
 } from "lucide-react";
 import { Button } from "../../../components/ui/button";
 import {
@@ -48,7 +49,7 @@ import { Badge } from "../../../components/ui/badge";
 
 import { ICategory, IProductCreateData, IVariation } from "../interface";
 import { useNavigate } from "react-router-dom";
-import NestedCategorySelect from "../../../components/customComponent/NestedCategoryComponent";
+import MultiCategorySelect from "../../../components/customComponent/MultiCategorySelect";
 import { VariantImageUploader } from "../../../components/product/VariantImageUploader";
 
 const defaultValue = {
@@ -64,7 +65,10 @@ const defaultValue = {
   variation: [],
   sku: "",
   categoryId: "",
+  categoryIds: [] as string[],
   images: [],
+  commissionType: "none" as "percentage" | "fixed" | "none",
+  commissionRate: 0,
 };
 
 const defaultVariation = {
@@ -677,6 +681,12 @@ const AddProduct: React.FC<Props> = ({ createProduct, categories }) => {
   };
 
   const createProductAndExit = async () => {
+    // Validate category selection
+    if (!formData.categoryIds || formData.categoryIds.length === 0) {
+      alert("Please select at least one category");
+      return;
+    }
+
     // Prepare variant images for upload
     const allVariantImages = Object.values(variantImages).flat();
     const variantImageFileList = allVariantImages.filter(
@@ -714,6 +724,12 @@ const AddProduct: React.FC<Props> = ({ createProduct, categories }) => {
   };
 
   const createProductAndContinue = async () => {
+    // Validate category selection
+    if (!formData.categoryIds || formData.categoryIds.length === 0) {
+      alert("Please select at least one category");
+      return;
+    }
+
     // Prepare variant images for upload
     const allVariantImages = Object.values(variantImages).flat();
     const variantImageFileList = allVariantImages.filter(
@@ -953,13 +969,14 @@ const AddProduct: React.FC<Props> = ({ createProduct, categories }) => {
               <CardContent className='space-y-6 pt-6'>
                 <div className='grid gap-6 sm:grid-cols-2'>
                   <div className='space-y-4'>
-                    <NestedCategorySelect
+                    <MultiCategorySelect
                       categories={categories}
-                      selectedCategoryId={formData?.categoryId}
-                      setSelectedCategoryId={(id: string) => {
+                      selectedCategoryIds={formData?.categoryIds || []}
+                      setSelectedCategoryIds={(ids: string[]) => {
                         updateFormData({
                           ...formData,
-                          categoryId: id,
+                          categoryIds: ids,
+                          categoryId: ids[0] || "", // First category is primary
                         });
                       }}
                     />
@@ -1111,6 +1128,92 @@ const AddProduct: React.FC<Props> = ({ createProduct, categories }) => {
                       </p>
                     )}
                   </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Commission Settings Card */}
+            <Card className='border-none shadow-xl bg-white/80 dark:bg-slate-900/80 backdrop-blur-sm'>
+              <CardHeader className='border-b border-slate-200 dark:border-slate-700'>
+                <CardTitle className='text-xl flex items-center gap-2'>
+                  <div className='p-2 bg-gradient-to-br from-purple-500 to-pink-600 rounded-lg shadow-lg'>
+                    <DollarSign className='w-5 h-5 text-white' />
+                  </div>
+                  Commission Settings
+                </CardTitle>
+                <CardDescription>
+                  Configure commission for this product (optional)
+                </CardDescription>
+              </CardHeader>
+              <CardContent className='space-y-6 pt-6'>
+                <div className='grid gap-6 sm:grid-cols-2'>
+                  {/* Commission Type */}
+                  <div className='space-y-2'>
+                    <Label
+                      htmlFor='commission-type'
+                      className='text-sm font-semibold'>
+                      Commission Type
+                    </Label>
+                    <Select
+                      value={formData?.commissionType || "none"}
+                      onValueChange={(value) => {
+                        updateFormData({
+                          ...formData,
+                          commissionType: value as "percentage" | "fixed" | "none",
+                          commissionRate: value === "none" ? 0 : formData.commissionRate,
+                        });
+                      }}>
+                      <SelectTrigger
+                        id='commission-type'
+                        className='h-11 border-2'>
+                        <SelectValue placeholder='Select commission type' />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value='none'>No Commission</SelectItem>
+                        <SelectItem value='percentage'>Percentage (%)</SelectItem>
+                        <SelectItem value='fixed'>Fixed Amount</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  {/* Commission Rate */}
+                  {(formData?.commissionType === "percentage" ||
+                    formData?.commissionType === "fixed") && (
+                    <div className='space-y-2'>
+                      <Label
+                        htmlFor='commission-rate'
+                        className='text-sm font-semibold'>
+                        {formData?.commissionType === "percentage"
+                          ? "Commission Rate (%)"
+                          : "Commission Amount"}
+                      </Label>
+                      <Input
+                        id='commission-rate'
+                        type='number'
+                        value={formData?.commissionRate || 0}
+                        onChange={(e) =>
+                          updateFormData({
+                            ...formData,
+                            commissionRate: parseFloat(e.target.value) || 0,
+                          })
+                        }
+                        min='0'
+                        max={formData?.commissionType === "percentage" ? 100 : undefined}
+                        step='0.01'
+                        placeholder={
+                          formData?.commissionType === "percentage"
+                            ? "Enter percentage (e.g., 5 for 5%)"
+                            : "Enter fixed amount"
+                        }
+                        className='h-11 border-2 focus:border-purple-500 transition-colors'
+                      />
+                      <p className='text-xs text-slate-600 dark:text-slate-400'>
+                        {formData?.commissionType === "percentage"
+                          ? "This percentage of the product price will be paid as commission"
+                          : "This fixed amount will be paid as commission per item"}
+                      </p>
+                    </div>
+                  )}
                 </div>
               </CardContent>
             </Card>

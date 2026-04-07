@@ -14,6 +14,7 @@ import {
   PlusCircle,
   Plus,
   X,
+  DollarSign,
 } from "lucide-react";
 import {
   Card,
@@ -47,7 +48,7 @@ import PlaceHolderImage from "../../../assets/placeholder.svg";
 import CustomAlertDialog from "../../../coreComponents/OptionModal";
 
 import { ICategory, IProductUpdateData, IVariation } from "../interface";
-import NestedCategorySelect from "../../../components/customComponent/NestedCategoryComponent";
+import MultiCategorySelect from "../../../components/customComponent/MultiCategorySelect";
 import { VariantImageUploader } from "../../../components/product/VariantImageUploader";
 
 interface Props {
@@ -89,7 +90,35 @@ const EditProduct: React.FC<Props> = ({
 
   useEffect(() => {
     if (!!productData) {
-      updateFormData(productData);
+      // Initialize categoryIds array from categoryId if not present
+      // Handle multiple scenarios for backward compatibility
+      let categoryIds: string[] = [];
+
+      if (productData.categoryIds && Array.isArray(productData.categoryIds) && productData.categoryIds.length > 0) {
+        // Scenario A: API returns categoryIds array (new format)
+        categoryIds = productData.categoryIds;
+      } else if (productData.categoryId) {
+        // Scenario B: API returns only categoryId (old format) - convert to array
+        categoryIds = [productData.categoryId];
+      }
+      // Scenario C: Neither field exists - categoryIds remains empty array
+
+      const initializedData = {
+        ...productData,
+        categoryIds: categoryIds,
+        categoryId: categoryIds[0] || productData.categoryId || "", // Ensure categoryId is set to first category
+        commissionType: productData.commissionType || "none",
+        commissionRate: productData.commissionRate || 0,
+      };
+
+      console.log("Edit Product - Initialized data:", {
+        originalCategoryIds: productData.categoryIds,
+        originalCategoryId: productData.categoryId,
+        finalCategoryIds: categoryIds,
+        finalCategoryId: categoryIds[0] || productData.categoryId,
+      });
+
+      updateFormData(initializedData);
 
       // Initialize variant images from product data
       const initialVariantImages: Record<string, (File | string)[]> = {};
@@ -675,6 +704,12 @@ const EditProduct: React.FC<Props> = ({
   };
 
   const updateProductAndExit = async () => {
+    // Validate category selection
+    if (!formData.categoryIds || formData.categoryIds.length === 0) {
+      alert("Please select at least one category");
+      return;
+    }
+
     // Prepare variant images for upload
     const allVariantImages = Object.values(variantImages).flat();
     const variantImageFileList = allVariantImages.filter(img => img instanceof File) as File[];
@@ -899,13 +934,14 @@ const EditProduct: React.FC<Props> = ({
               <CardContent className='space-y-6 pt-6'>
                 <div className='grid gap-6 sm:grid-cols-2'>
                   <div className='space-y-4'>
-                    <NestedCategorySelect
+                    <MultiCategorySelect
                       categories={categories}
-                      selectedCategoryId={formData?.categoryId}
-                      setSelectedCategoryId={(id: string) => {
+                      selectedCategoryIds={formData?.categoryIds || []}
+                      setSelectedCategoryIds={(ids: string[]) => {
                         updateFormData({
                           ...formData,
-                          categoryId: id,
+                          categoryIds: ids,
+                          categoryId: ids[0] || "", // First category is primary
                         });
                       }}
                     />
@@ -1049,6 +1085,92 @@ const EditProduct: React.FC<Props> = ({
                       </p>
                     )}
                   </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Commission Settings Card */}
+            <Card className='border-none shadow-xl bg-white/80 dark:bg-slate-900/80 backdrop-blur-sm'>
+              <CardHeader className='border-b border-slate-200 dark:border-slate-700'>
+                <CardTitle className='text-xl flex items-center gap-2'>
+                  <div className='p-2 bg-gradient-to-br from-purple-500 to-pink-600 rounded-lg shadow-lg'>
+                    <DollarSign className='w-5 h-5 text-white' />
+                  </div>
+                  Commission Settings
+                </CardTitle>
+                <CardDescription>
+                  Configure commission for this product (optional)
+                </CardDescription>
+              </CardHeader>
+              <CardContent className='space-y-6 pt-6'>
+                <div className='grid gap-6 sm:grid-cols-2'>
+                  {/* Commission Type */}
+                  <div className='space-y-2'>
+                    <Label
+                      htmlFor='edit-commission-type'
+                      className='text-sm font-semibold'>
+                      Commission Type
+                    </Label>
+                    <Select
+                      value={formData?.commissionType || "none"}
+                      onValueChange={(value) => {
+                        updateFormData({
+                          ...formData,
+                          commissionType: value as "percentage" | "fixed" | "none",
+                          commissionRate: value === "none" ? 0 : formData.commissionRate,
+                        });
+                      }}>
+                      <SelectTrigger
+                        id='edit-commission-type'
+                        className='h-11 border-2'>
+                        <SelectValue placeholder='Select commission type' />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value='none'>No Commission</SelectItem>
+                        <SelectItem value='percentage'>Percentage (%)</SelectItem>
+                        <SelectItem value='fixed'>Fixed Amount</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  {/* Commission Rate */}
+                  {(formData?.commissionType === "percentage" ||
+                    formData?.commissionType === "fixed") && (
+                    <div className='space-y-2'>
+                      <Label
+                        htmlFor='edit-commission-rate'
+                        className='text-sm font-semibold'>
+                        {formData?.commissionType === "percentage"
+                          ? "Commission Rate (%)"
+                          : "Commission Amount"}
+                      </Label>
+                      <Input
+                        id='edit-commission-rate'
+                        type='number'
+                        value={formData?.commissionRate || 0}
+                        onChange={(e) =>
+                          updateFormData({
+                            ...formData,
+                            commissionRate: parseFloat(e.target.value) || 0,
+                          })
+                        }
+                        min='0'
+                        max={formData?.commissionType === "percentage" ? 100 : undefined}
+                        step='0.01'
+                        placeholder={
+                          formData?.commissionType === "percentage"
+                            ? "Enter percentage (e.g., 5 for 5%)"
+                            : "Enter fixed amount"
+                        }
+                        className='h-11 border-2 focus:border-purple-500 transition-colors'
+                      />
+                      <p className='text-xs text-slate-600 dark:text-slate-400'>
+                        {formData?.commissionType === "percentage"
+                          ? "This percentage of the product price will be paid as commission"
+                          : "This fixed amount will be paid as commission per item"}
+                      </p>
+                    </div>
+                  )}
                 </div>
               </CardContent>
             </Card>

@@ -1,25 +1,30 @@
 import React, { useState, useEffect } from "react";
 import { toast } from "sonner";
 import { Card } from "../../components/ui/card";
+import { Button } from "../../components/ui/button";
 import {
   Tabs,
   TabsContent,
   TabsList,
   TabsTrigger,
 } from "../../components/ui/tabs";
-import { User, Activity, History, Calendar } from "lucide-react";
+import { User, Activity, History, Calendar, DollarSign } from "lucide-react";
 import { getUserProfile } from "../../api/user";
 import useLoginAuth from "../auth/hooks/useLoginAuth";
+import useRoleCheck from "../auth/hooks/useRoleCheck";
 import { UserProfileHeader } from "./components/UserProfileHeader";
 import { UserInformationPanel } from "./components/UserInformationPanel";
 import { UserPerformancePanel } from "./components/UserPerformancePanel";
 import { UserActivityTimeline } from "./components/UserActivityTimeline";
 import dayjs from "dayjs";
+import { useNavigate } from "react-router-dom";
 import { useAdminAudit } from "../../hooks/useAdminAudit";
 import { UserPerformanceDetailResponse } from "../../api/adminAudit";
 
 const ProfilePage = () => {
+  const navigate = useNavigate();
   const { fetchUserById } = useLoginAuth();
+  const { hasRequiredPermission } = useRoleCheck();
   const [profile, setProfile] = useState({
     id: "",
     name: "",
@@ -223,6 +228,21 @@ const ProfilePage = () => {
                     )}
                   </div>
                 </Card>
+
+                {/* Commission Button */}
+                {hasRequiredPermission("commission", "personal_access") && (
+                  <Card className='p-4 shadow-md bg-gradient-to-br from-white to-green-50'>
+                    <h3 className='font-semibold text-gray-900 mb-3 flex items-center gap-2'>
+                      <DollarSign className='w-4 h-4 text-green-600' />
+                      Commissions
+                    </h3>
+                    <Button
+                      onClick={() => navigate(`/my-commissions`)}
+                      className='w-full bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white'>
+                      View My Commissions
+                    </Button>
+                  </Card>
+                )}
               </div>
             </div>
           </TabsContent>

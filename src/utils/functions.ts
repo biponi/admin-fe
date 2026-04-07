@@ -82,6 +82,18 @@ export const buildFormDataFromObject = (data: any): FormData => {
         continue;
       }
 
+      // Skip commission fields if commissionType is "none"
+      if (key === 'commissionType' && value === 'none') {
+        continue;
+      }
+      if (key === 'commissionRate') {
+        // Get commissionType from the original data object
+        const commissionType = data.commissionType;
+        if (commissionType === 'none' || commissionType === undefined || commissionType === null) {
+          continue;
+        }
+      }
+
       if (key === 'variation' && Array.isArray(value)) {
         // Special handling for variation array
         // We need to ensure images array in variation doesn't include File objects

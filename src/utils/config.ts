@@ -42,6 +42,10 @@ const config = {
       productId
         ? `${baseURL}/product/adjustments/${productId}`
         : `${baseURL}/product/adjustments`,
+
+    // Multi-category endpoints
+    addCategory: () => `${baseURL}/product/add-category`,
+    removeCategory: () => `${baseURL}/product/remove-category`,
     getAdjustmentStats: () => `${baseURL}/product/adjustment-stats`,
 
     // Product Analytics Endpoints
@@ -51,7 +55,8 @@ const config = {
       `${baseURL}/product/analytics/purchase-history/${id}`,
     getProductAdjustmentHistory: (id: string) =>
       `${baseURL}/product/analytics/adjustment-history/${id}`,
-    bulkCustomerAction: () => `${baseURL}/product/analytics/bulk-customer-action`,
+    bulkCustomerAction: () =>
+      `${baseURL}/product/analytics/bulk-customer-action`,
 
     // Product Report Endpoints
     getProductReport: () => `${baseURL}/product/report`,
@@ -239,23 +244,37 @@ const config = {
     getAllGlobal: () => `${baseURL}/coupons/global`,
     getGlobalByCode: (code: string) => `${baseURL}/coupons/global/${code}`,
     updateGlobal: (code: string) => `${baseURL}/coupons/global/${code}`,
-    disableGlobal: (code: string) => `${baseURL}/coupons/global/${code}/disable`,
+    disableGlobal: (code: string) =>
+      `${baseURL}/coupons/global/${code}/disable`,
     deleteGlobal: (code: string) => `${baseURL}/coupons/global/${code}`,
     getGlobalStats: () => `${baseURL}/coupons/global/stats`,
 
     // Customer-Specific Coupon Endpoints
     assignToCustomer: () => `${baseURL}/coupons/customer/assign`,
     bulkAssign: () => `${baseURL}/coupons/customer/bulk-assign`,
-    getCustomerCoupons: (phone: string) => `${baseURL}/coupons/customer/${phone}`,
-    getCustomerHistory: (phone: string) => `${baseURL}/coupons/customer/${phone}/history`,
-    getCustomerCouponById: (id: string) => `${baseURL}/coupons/customer/details/${id}`,
+    getCustomerCoupons: (phone: string) =>
+      `${baseURL}/coupons/customer/${phone}`,
+    getCustomerHistory: (phone: string) =>
+      `${baseURL}/coupons/customer/${phone}/history`,
+    getCustomerCouponById: (id: string) =>
+      `${baseURL}/coupons/customer/details/${id}`,
     updateCustomerCoupon: (id: string) => `${baseURL}/coupons/customer/${id}`,
-    disableCustomerCoupon: (id: string) => `${baseURL}/coupons/customer/${id}/disable`,
+    disableCustomerCoupon: (id: string) =>
+      `${baseURL}/coupons/customer/${id}/disable`,
     deleteCustomerCoupon: (id: string) => `${baseURL}/coupons/customer/${id}`,
 
     // Analytics Endpoints
     getSegmentSummary: () => `${baseURL}/coupons/analytics/segments`,
     getUsageHistory: () => `${baseURL}/coupons/analytics/usage`,
+  },
+  commission: {
+    getAll: () => `${baseURL}/commission`,
+    getSummary: () => `${baseURL}/commission/summary`,
+    getUserCommissions: (userId: string) =>
+      `${baseURL}/commission/user/${userId}`,
+    getPersonalCommissions: () => `${baseURL}/commission/personal`,
+    getById: (id: string) => `${baseURL}/commission/${id}`,
+    updateStatus: (id: string) => `${baseURL}/commission/${id}/status`,
   },
 };
 

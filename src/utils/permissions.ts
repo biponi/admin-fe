@@ -30,4 +30,5 @@ export const pagePermissions: Record<string, string[]> = {
   BulkCommunication: ["view", "create", "delete", "cancel"],
   Customer: ["view", "edit"],
   Coupon: ["view", "create", "edit", "delete", "assign", "analytics"],
+  Commission: ["view", "edit", "update_status", "delete", "personal_access"],
 };

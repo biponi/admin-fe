@@ -34,7 +34,8 @@ interface Props {
   quantity: number;
   unitPrice: number;
   updatedAt: string;
-  categoryName: string;
+  categoryName?: string; // @deprecated - Use categoryNames
+  categoryNames?: string[]; // Multiple category names
   variations: string[];
   totalReturned: number;
   totalSold: number;
@@ -55,6 +56,7 @@ const SingleProductCardItem: React.FC<Props> = ({
   totalSold,
   variations,
   categoryName,
+  categoryNames,
   totalReturned,
   handleUpdateProduct,
   deleteExistingProduct,
@@ -143,7 +145,23 @@ const SingleProductCardItem: React.FC<Props> = ({
               width='64'
             />
             <div className='col-span-2 grid-cols-1 gap-2'>
-              <Badge className='w-full text-center mb-1'>{categoryName}</Badge>
+              {/* Display categories - support both single and multiple */}
+              {categoryNames && categoryNames.length > 0 ? (
+                <div className='flex flex-wrap gap-1 mb-1'>
+                  {categoryNames.slice(0, 2).map((catName, idx) => (
+                    <Badge key={idx} className='text-xs' variant={idx === 0 ? "default" : "secondary"}>
+                      {catName}
+                    </Badge>
+                  ))}
+                  {categoryNames.length > 2 && (
+                    <Badge variant='outline' className='text-xs'>
+                      +{categoryNames.length - 2}
+                    </Badge>
+                  )}
+                </div>
+              ) : (
+                <Badge className='w-full text-center mb-1'>{categoryName || "Uncategorized"}</Badge>
+              )}
               <Badge
                 className='w-full text-center'
                 variant={quantity > 0 ? "outline" : "destructive"}>

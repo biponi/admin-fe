@@ -15,7 +15,10 @@ export interface IProduct {
   thumbnail: string;
   productCode: string;
   totalPrice: number;
-  categoryName?: string;
+  categoryName?: string; // @deprecated - Use categoryNames for multi-category support
+  categoryNames?: string[]; // Multiple category names
+  categoryId?: string; // Primary category ID
+  categoryIds?: string[]; // All category IDs including primary
   hasVariation?: boolean;
   variation: IVariation[];
   variantList?: string[];
@@ -69,10 +72,13 @@ export interface IProductCreateData {
   thumbnail: File | null;
   variation: IVariation[]; // Assuming variation can be an array of any type
   sku: string;
-  categoryId: string;
+  categoryId: string; // Primary category ID (must match categoryIds[0])
+  categoryIds?: string[]; // All category IDs including primary (optional for single category)
   images: File[] | [];
   variantImages?: File[]; // New variant image files to upload
   variantImageMappings?: IVariantImageMapping[]; // Maps variantIds to image indices
+  commissionType?: "percentage" | "fixed" | "none";
+  commissionRate?: number;
 }
 
 export interface IProductUpdateData {
@@ -88,7 +94,8 @@ export interface IProductUpdateData {
   thumbnail: string | File | null;
   variation: IVariation[]; // Assuming variation can be an array of any type
   sku: string;
-  categoryId: string;
+  categoryId: string; // Primary category ID (must match categoryIds[0] if provided)
+  categoryIds?: string[]; // All category IDs including primary (optional for single category)
   images: File[] | [];
 
   removeImageIndexes?: string[];
@@ -96,6 +103,8 @@ export interface IProductUpdateData {
   variantImages?: File[]; // New variant image files to upload
   variantImageMappings?: IVariantImageMapping[]; // Maps variantIds to image indices
   removeVariantImageIndexes?: IRemoveVariantImageMapping[]; // Variant images to remove
+  commissionType?: "percentage" | "fixed" | "none";
+  commissionRate?: number;
 }
 // Updated interfaces for hierarchical categories
 
@@ -213,4 +222,26 @@ export interface StockSummaryResponse {
   totalActiveProducts: number;
   totalActiveProductVariations: number;
   totalActiveProductType: number;
+}
+
+// Multi-category support types
+export interface CategorySelection {
+  categoryId: string;
+  isPrimary: boolean;
+}
+
+export interface ICategoryOperationResponse {
+  success: boolean;
+  message: string;
+  categoryIds?: string[];
+}
+
+export interface IAddCategoryRequest {
+  productId: string;
+  categoryId: string;
+}
+
+export interface IRemoveCategoryRequest {
+  productId: string;
+  categoryId: string;
 }

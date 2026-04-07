@@ -37,7 +37,8 @@ interface MobileProductCardProps {
   slug: string;
   image?: string;
   title: string;
-  categoryName: string;
+  categoryName?: string; // @deprecated - Use categoryNames
+  categoryNames?: string[]; // Multiple category names
   active: boolean;
   quantity: number;
   unitPrice: number;
@@ -57,6 +58,7 @@ const MobileProductCard: React.FC<MobileProductCardProps> = ({
   image,
   title,
   categoryName,
+  categoryNames,
   active,
   quantity,
   unitPrice,
@@ -227,10 +229,27 @@ const MobileProductCard: React.FC<MobileProductCardProps> = ({
 
         {/* Price & SKU */}
         <div className='mb-2'>
-          <div className='flex items-center gap-1 text-[10px] text-gray-600'>
-            <Tag className='h-2 w-2' />
-            <span className='truncate'>{categoryName}</span>
-          </div>
+          {/* Display categories - support both single and multiple */}
+          {categoryNames && categoryNames.length > 0 ? (
+            <div className='flex items-center gap-1 text-[10px] text-gray-600 mb-1'>
+              <Tag className='h-2 w-2' />
+              <div className='flex gap-1 truncate'>
+                {categoryNames.slice(0, 2).map((catName, idx) => (
+                  <Badge key={idx} variant={idx === 0 ? "default" : "secondary"} className='text-[9px] px-1'>
+                    {catName}
+                  </Badge>
+                ))}
+                {categoryNames.length > 2 && (
+                  <span className='text-[9px] text-gray-500'>+{categoryNames.length - 2}</span>
+                )}
+              </div>
+            </div>
+          ) : (
+            <div className='flex items-center gap-1 text-[10px] text-gray-600 mb-1'>
+              <Tag className='h-2 w-2' />
+              <span className='truncate'>{categoryName || "Uncategorized"}</span>
+            </div>
+          )}
           <div className=' items-center gap-1 text-[10px] text-gray-500 hidden'>
             <Hash className='h-2 w-2' />
             <span className='font-mono'>{sku}</span>
@@ -276,7 +295,7 @@ const MobileProductCard: React.FC<MobileProductCardProps> = ({
             sm={true}
             linkToShare={`https://priorbd.com/collections/${slug}`}
             title={`Check out this awesome product: ${title}`}
-            text={`This ${categoryName} has only ${quantity} item left. Don't miss out!`}
+            text={`This ${categoryNames?.[0] || categoryName || "product"} has only ${quantity} item left. Don't miss out!`}
           />
         </div>
       </div>

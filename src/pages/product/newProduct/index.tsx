@@ -88,9 +88,7 @@ const CreateNewProduct = () => {
       );
     } else {
       setLoading(true);
-      const response = await createProduct(
-        buildFormDataFromObject(productData)
-      );
+      const response = await createProduct(buildFormDataFromObject(productData));
       setLoading(false);
       if (response?.success) {
         toast({

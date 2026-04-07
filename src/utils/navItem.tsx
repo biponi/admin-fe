@@ -17,6 +17,7 @@ import {
   CheckCircle2,
   Megaphone,
   Ticket,
+  DollarSign,
 } from "lucide-react";
 
 export const navItems = [
@@ -209,6 +210,14 @@ export const navItems = [
         url: "/coupons/analytics",
       },
     ],
+    roles: ["admin", "manager"],
+  },
+  {
+    icon: <DollarSign className='w-5 h-5' />,
+    title: "Commission",
+    link: "/commission",
+    active: true,
+    id: "commission",
     roles: ["admin", "manager"],
   },
   // {

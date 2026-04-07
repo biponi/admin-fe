@@ -82,7 +82,12 @@ const UpdateProduct = () => {
   const getProductData = async (id: string) => {
     const response = await getProductById(id);
     if (response?.success) {
+      console.log("API Response - Product data:", response?.data);
+      console.log("API Response - categoryId:", response?.data?.categoryId);
+      console.log("API Response - categoryIds:", response?.data?.categoryIds);
       setProductData(response?.data);
+    } else {
+      console.error("Failed to fetch product:", response?.error);
     }
   };
 

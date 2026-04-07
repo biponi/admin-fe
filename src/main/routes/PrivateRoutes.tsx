@@ -33,6 +33,8 @@ import OrderDetails from "../../pages/order/OrderDetails";
 import ProductDetails from "../../pages/product/ProductDetails";
 import ProductAnalytics from "../../pages/product/ProductAnalytics";
 import SMSPage from "../../pages/bulk-communication/SMSPage";
+import { CommissionManagementPage } from "../../pages/commission";
+import { UserCommissionPage } from "../../pages/user/userCommissions";
 import EmailPage from "../../pages/bulk-communication/EmailPage";
 import CreateSMSCampaign from "../../pages/bulk-communication/components/CreateSMSCampaign";
 import CreateEmailCampaign from "../../pages/bulk-communication/components/CreateEmailCampaign";
@@ -156,6 +158,34 @@ export const ProtectedRoutes = () => {
           <ProtectedRoute page='role'>
             <MainViewComponent title='Role Management'>
               <RolesListPage />
+            </MainViewComponent>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path='/commission'
+        element={
+          <ProtectedRoute page='commission' requiredAction='view'>
+            <MainViewComponent title='Commission Management'>
+              <CommissionManagementPage />
+            </MainViewComponent>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path='/my-commissions'
+        element={
+          <ProtectedRoute page='commission' requiredAction='personal_access'>
+            <UserCommissionPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path='/user/:userId/commissions'
+        element={
+          <ProtectedRoute page='user-commissions' requiredAction='view'>
+            <MainViewComponent title='User Commissions'>
+              <UserCommissionPage />
             </MainViewComponent>
           </ProtectedRoute>
         }
