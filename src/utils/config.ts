@@ -103,6 +103,8 @@ const config = {
     cancelOrder: (orderId: string) =>
       `${baseURL}/order/prior/${orderId}/cancel`,
     getProcessingOrderCount: () => `${baseURL}/order/prior/processing/count`,
+    getCustomerAddress: () => `${baseURL}/order/customer-addresses`,
+    getCustomerSummary: () => `${baseURL}/order/customer-summary`,
   },
   transaction: {
     create: () => `${baseURL}/transection/create`,

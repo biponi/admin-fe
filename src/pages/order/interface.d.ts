@@ -249,14 +249,17 @@ export interface ICreateOrderDTO {
   notes?: string;
   orderCreatedBy?: string;
   creatorAvatar: string;
-  customer: ICustomer;
+  customerInformation: {
+    customer: ICustomer;
+    shipping: IShipping;
+  };
   status?: OrderStatus | string;
   totalPrice?: number;
   paid?: number;
   discount?: number;
   deliveryCharge?: number;
   payment?: IPayment[];
-  shipping: IShipping;
+
   products: IOrderProduct[];
   customerRiskLevel?: CustomerRiskLevel | string;
   courier?: Partial<ICourier>;

@@ -2,6 +2,7 @@ import { createContext, useContext, useState, useEffect, ReactNode } from 'react
 
 type LayoutType = 'modern' | 'legacy';
 type ThemeType = 'light' | 'dark' | 'blue' | 'green' | 'purple' | 'orange';
+type CreateOrderLayoutType = 'wizard' | 'product-first';
 
 interface SettingsContextType {
   layoutType: LayoutType;
@@ -9,6 +10,8 @@ interface SettingsContextType {
   toggleLayout: () => void;
   theme: ThemeType;
   setTheme: (theme: ThemeType) => void;
+  createOrderLayoutType: CreateOrderLayoutType;
+  setCreateOrderLayoutType: (type: CreateOrderLayoutType) => void;
 }
 
 const SettingsContext = createContext<SettingsContextType | undefined>(undefined);
@@ -18,16 +21,19 @@ const SETTINGS_STORAGE_KEY = 'prior-admin-settings';
 interface Settings {
   layoutType: LayoutType;
   theme: ThemeType;
+  createOrderLayoutType: CreateOrderLayoutType;
 }
 
 const defaultSettings: Settings = {
   layoutType: 'modern', // Default to new sidebar layout
-  theme: 'light' // Default to light theme
+  theme: 'light', // Default to light theme
+  createOrderLayoutType: 'wizard' // Default to wizard layout for create order
 };
 
 export function SettingsProvider({ children }: { children: ReactNode }) {
   const [layoutType, setLayoutTypeState] = useState<LayoutType>(defaultSettings.layoutType);
   const [theme, setThemeState] = useState<ThemeType>(defaultSettings.theme);
+  const [createOrderLayoutType, setCreateOrderLayoutTypeState] = useState<CreateOrderLayoutType>(defaultSettings.createOrderLayoutType);
 
   // Apply theme to document root on theme change
   useEffect(() => {
@@ -57,8 +63,17 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
       const stored = localStorage.getItem(SETTINGS_STORAGE_KEY);
       if (stored) {
         const settings: Settings = JSON.parse(stored);
+
+        // Migration: Force reset to wizard layout (previous version) for all users
+        // Remove this block after the migration is complete
+        if (settings.createOrderLayoutType === 'product-first') {
+          settings.createOrderLayoutType = 'wizard';
+          localStorage.setItem(SETTINGS_STORAGE_KEY, JSON.stringify(settings));
+        }
+
         setLayoutTypeState(settings.layoutType || defaultSettings.layoutType);
         setThemeState(settings.theme || defaultSettings.theme);
+        setCreateOrderLayoutTypeState(settings.createOrderLayoutType || defaultSettings.createOrderLayoutType);
       }
     } catch (error) {
       console.error('Failed to load settings from localStorage:', error);
@@ -66,9 +81,13 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
   }, []);
 
   // Save settings to localStorage whenever they change
-  const saveSettings = (newLayoutType: LayoutType, newTheme: ThemeType) => {
+  const saveSettings = (newLayoutType: LayoutType, newTheme: ThemeType, newCreateOrderLayoutType: CreateOrderLayoutType) => {
     try {
-      const settings: Settings = { layoutType: newLayoutType, theme: newTheme };
+      const settings: Settings = {
+        layoutType: newLayoutType,
+        theme: newTheme,
+        createOrderLayoutType: newCreateOrderLayoutType
+      };
       localStorage.setItem(SETTINGS_STORAGE_KEY, JSON.stringify(settings));
     } catch (error) {
       console.error('Failed to save settings to localStorage:', error);
@@ -77,12 +96,17 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
 
   const setLayoutType = (type: LayoutType) => {
     setLayoutTypeState(type);
-    saveSettings(type, theme);
+    saveSettings(type, theme, createOrderLayoutType);
   };
 
   const setTheme = (newTheme: ThemeType) => {
     setThemeState(newTheme);
-    saveSettings(layoutType, newTheme);
+    saveSettings(layoutType, newTheme, createOrderLayoutType);
+  };
+
+  const setCreateOrderLayoutType = (type: CreateOrderLayoutType) => {
+    setCreateOrderLayoutTypeState(type);
+    saveSettings(layoutType, theme, type);
   };
 
   const toggleLayout = () => {
@@ -90,7 +114,7 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
   };
 
   return (
-    <SettingsContext.Provider value={{ layoutType, setLayoutType, toggleLayout, theme, setTheme }}>
+    <SettingsContext.Provider value={{ layoutType, setLayoutType, toggleLayout, theme, setTheme, createOrderLayoutType, setCreateOrderLayoutType }}>
       {children}
     </SettingsContext.Provider>
   );

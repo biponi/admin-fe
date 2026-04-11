@@ -30,6 +30,8 @@ import { PackageDetailsPage } from "../../pages/package/PackageDetails";
 import { BarcodeScannerPage } from "../../pages/package/BarcodeScanner";
 import OrderConfirmation from "../../pages/order/OrderConfirmation";
 import OrderDetails from "../../pages/order/OrderDetails";
+import CreateOrder from "../../pages/order/CreateOrder";
+import CreateOrderV2 from "../../pages/order/CreateOrderV2";
 import ProductDetails from "../../pages/product/ProductDetails";
 import ProductAnalytics from "../../pages/product/ProductAnalytics";
 import SMSPage from "../../pages/bulk-communication/SMSPage";
@@ -46,8 +48,14 @@ import CreateGlobalCoupon from "../../pages/coupon/GlobalCoupons/CreateGlobalCou
 import CustomerCouponsPage from "../../pages/coupon/CustomerCoupons";
 import CouponAnalyticsPage from "../../pages/coupon/Analytics";
 
+// Layout switcher component for create order
+const CreateOrderLayoutSwitch = () => {
+  const { createOrderLayoutType } = useSettings();
+  return createOrderLayoutType === 'product-first' ? <CreateOrderV2 /> : <CreateOrder />;
+};
+
 export const ProtectedRoutes = () => {
-  const { layoutType } = useSettings();
+  const { layoutType, createOrderLayoutType } = useSettings();
   const MainViewComponent = layoutType === "legacy" ? LegacyMainView : MainView;
 
   return (
@@ -305,6 +313,22 @@ export const ProtectedRoutes = () => {
             <MainViewComponent title='Barcode Scanner'>
               <BarcodeScannerPage />
             </MainViewComponent>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path='/order/create'
+        element={
+          <ProtectedRoute page='order' requiredAction='create'>
+            <CreateOrderLayoutSwitch />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path='/order/create/v2'
+        element={
+          <ProtectedRoute page='order' requiredAction='create'>
+            <CreateOrderV2 />
           </ProtectedRoute>
         }
       />

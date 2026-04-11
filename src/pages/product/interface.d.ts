@@ -9,7 +9,7 @@ export interface IProduct {
   manufactureId: string;
   discount: number;
   updatedPrice: number;
-  dicountType: string;
+  discountType: string;
   hasDiscount: boolean;
   description: string;
   thumbnail: string;

@@ -1,7 +1,5 @@
 import {
   Settings,
-  Monitor,
-  Smartphone,
   Sun,
   Moon,
   Palette,
@@ -9,8 +7,9 @@ import {
   ArrowLeft,
   Package,
   Check,
-  Layout,
   Paintbrush,
+  ShoppingCart,
+  Layers,
 } from "lucide-react";
 import { Button } from "./ui/button";
 import {
@@ -91,7 +90,13 @@ const themeOptions = [
 const ORDER_VIEW_PREFERENCE_KEY = "order_view_preference";
 
 export function SettingsPanel() {
-  const { layoutType, setLayoutType, theme, setTheme } = useSettings();
+  const {
+    layoutType,
+    theme,
+    setTheme,
+    createOrderLayoutType,
+    setCreateOrderLayoutType,
+  } = useSettings();
   const location = useLocation();
   const isOrderPage = location.pathname.includes("/order");
 
@@ -104,7 +109,7 @@ export function SettingsPanel() {
     localStorage.setItem(ORDER_VIEW_PREFERENCE_KEY, orderView);
     if (isOrderPage) {
       window.dispatchEvent(
-        new CustomEvent("orderViewChanged", { detail: orderView })
+        new CustomEvent("orderViewChanged", { detail: orderView }),
       );
     }
   }, [orderView, isOrderPage]);
@@ -140,88 +145,6 @@ export function SettingsPanel() {
         {/* Scrollable Content */}
         <ScrollArea className='flex-1 px-6'>
           <div className='py-6 space-y-6'>
-            {/* Layout Section */}
-            <section>
-              <div className='flex items-center gap-2 mb-4'>
-                <div className='p-1.5 rounded-md bg-blue-100'>
-                  <Layout className='h-4 w-4 text-blue-600' />
-                </div>
-                <h3 className='font-semibold text-sm'>Layout Preference</h3>
-              </div>
-
-              <div className='grid grid-cols-2 gap-3'>
-                {/* Modern Layout */}
-                <button
-                  onClick={() => setLayoutType("modern")}
-                  className={cn(
-                    "relative flex flex-col items-center p-4 rounded-xl border-2 transition-all duration-200 hover:shadow-md",
-                    layoutType === "modern"
-                      ? "border-blue-500 bg-blue-50/50 shadow-sm"
-                      : "border-gray-200 hover:border-gray-300 bg-white"
-                  )}>
-                  {layoutType === "modern" && (
-                    <div className='absolute top-2 right-2 p-1 rounded-full bg-blue-500'>
-                      <Check className='h-3 w-3 text-white' />
-                    </div>
-                  )}
-                  <div
-                    className={cn(
-                      "p-3 rounded-lg mb-3 transition-colors",
-                      layoutType === "modern" ? "bg-blue-100" : "bg-gray-100"
-                    )}>
-                    <Monitor
-                      className={cn(
-                        "h-6 w-6",
-                        layoutType === "modern"
-                          ? "text-blue-600"
-                          : "text-gray-500"
-                      )}
-                    />
-                  </div>
-                  <span className='font-medium text-sm'>Modern</span>
-                  <span className='text-[11px] text-muted-foreground mt-1 text-center'>
-                    Collapsible sidebar
-                  </span>
-                </button>
-
-                {/* Classic Layout */}
-                <button
-                  onClick={() => setLayoutType("legacy")}
-                  className={cn(
-                    "relative flex flex-col items-center p-4 rounded-xl border-2 transition-all duration-200 hover:shadow-md",
-                    layoutType === "legacy"
-                      ? "border-blue-500 bg-blue-50/50 shadow-sm"
-                      : "border-gray-200 hover:border-gray-300 bg-white"
-                  )}>
-                  {layoutType === "legacy" && (
-                    <div className='absolute top-2 right-2 p-1 rounded-full bg-blue-500'>
-                      <Check className='h-3 w-3 text-white' />
-                    </div>
-                  )}
-                  <div
-                    className={cn(
-                      "p-3 rounded-lg mb-3 transition-colors",
-                      layoutType === "legacy" ? "bg-blue-100" : "bg-gray-100"
-                    )}>
-                    <Smartphone
-                      className={cn(
-                        "h-6 w-6",
-                        layoutType === "legacy"
-                          ? "text-blue-600"
-                          : "text-gray-500"
-                      )}
-                    />
-                  </div>
-                  <span className='font-medium text-sm'>Classic</span>
-                  <span className='text-[11px] text-muted-foreground mt-1 text-center'>
-                    Fixed sidebar
-                  </span>
-                </button>
-              </div>
-            </section>
-
-            <Separator />
-
             {/* Theme Section - Only show for modern layout */}
             {layoutType === "modern" && (
               <>
@@ -245,7 +168,7 @@ export function SettingsPanel() {
                             "relative flex flex-col items-center p-3 rounded-xl border-2 transition-all duration-200 hover:shadow-md hover:scale-105",
                             isSelected
                               ? "border-blue-500 shadow-sm"
-                              : "border-gray-200 hover:border-gray-300"
+                              : "border-gray-200 hover:border-gray-300",
                           )}>
                           {isSelected && (
                             <div className='absolute -top-1.5 -right-1.5 p-1 rounded-full bg-blue-500 shadow-sm'>
@@ -255,7 +178,7 @@ export function SettingsPanel() {
                           <div
                             className={cn(
                               "w-10 h-10 rounded-lg bg-gradient-to-br flex items-center justify-center mb-2 border",
-                              option.color
+                              option.color,
                             )}>
                             <IconComponent
                               className={cn("h-5 w-5", option.accent)}
@@ -301,7 +224,7 @@ export function SettingsPanel() {
                         "flex items-center space-x-3 rounded-xl border-2 p-4 transition-all duration-200",
                         orderView === "v2"
                           ? "border-blue-400 bg-gradient-to-r from-blue-50 to-purple-50 shadow-sm"
-                          : "border-blue-200 hover:bg-blue-50/50"
+                          : "border-blue-200 hover:bg-blue-50/50",
                       )}>
                       <RadioGroupItem value='v2' id='order-v2' />
                       <div className='flex-1'>
@@ -356,7 +279,7 @@ export function SettingsPanel() {
                         "flex items-center space-x-3 rounded-xl border-2 p-4 transition-all duration-200",
                         orderView === "v1"
                           ? "border-gray-400 bg-gray-50 shadow-sm"
-                          : "border-gray-200 hover:bg-accent"
+                          : "border-gray-200 hover:bg-accent",
                       )}>
                       <RadioGroupItem value='v1' id='order-v1' />
                       <div className='flex-1'>
@@ -392,6 +315,145 @@ export function SettingsPanel() {
                       <span>
                         Your preference is saved and will apply when you visit
                         the Orders page. You can switch anytime!
+                      </span>
+                    </p>
+                  </div>
+                </CardContent>
+              </Card>
+            </section>
+
+            <Separator />
+
+            {/* Create Order Layout Section */}
+            <section>
+              <Card className='border-2 border-green-100 bg-gradient-to-br from-green-50/50 to-emerald-50/50 shadow-sm'>
+                <CardHeader className='pb-4'>
+                  <CardTitle className='text-base flex items-center gap-2'>
+                    <div className='p-1.5 rounded-md bg-gradient-to-br from-green-500 to-emerald-500'>
+                      <ShoppingCart className='h-4 w-4 text-white' />
+                    </div>
+                    Create Order Layout
+                  </CardTitle>
+                  <CardDescription>
+                    Choose your preferred create order interface
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className='space-y-4'>
+                  <RadioGroup
+                    value={createOrderLayoutType}
+                    onValueChange={(value) =>
+                      setCreateOrderLayoutType(
+                        value as "wizard" | "product-first",
+                      )
+                    }
+                    className='space-y-3'>
+                    {/* Product-First View - New Layout */}
+                    <div
+                      className={cn(
+                        "flex items-center space-x-3 rounded-xl border-2 p-4 transition-all duration-200",
+                        createOrderLayoutType === "product-first"
+                          ? "border-green-400 bg-gradient-to-r from-green-50 to-emerald-50 shadow-sm"
+                          : "border-green-200 hover:bg-green-50/50",
+                      )}>
+                      <RadioGroupItem
+                        value='product-first'
+                        id='create-order-product-first'
+                      />
+                      <div className='flex-1'>
+                        <Label
+                          htmlFor='create-order-product-first'
+                          className='cursor-pointer'>
+                          <div className='flex items-center gap-2'>
+                            <Sparkles className='h-4 w-4 text-green-600' />
+                            <span className='font-semibold'>
+                              Product-First View
+                            </span>
+                            <span className='px-2 py-0.5 text-[10px] font-medium bg-gradient-to-r from-green-600 to-emerald-600 text-white rounded-full'>
+                              New
+                            </span>
+                          </div>
+                          <p className='text-xs text-muted-foreground mt-2 leading-relaxed'>
+                            ✨ Modern single-screen layout for faster order
+                            creation
+                          </p>
+                          <ul className='text-[11px] text-muted-foreground mt-2 space-y-1 ml-1'>
+                            <li className='flex items-center gap-1.5'>
+                              <span className='text-green-600 font-bold'>
+                                ✓
+                              </span>
+                              <span>Side-by-side product & cart view</span>
+                            </li>
+                            <li className='flex items-center gap-1.5'>
+                              <span className='text-green-600 font-bold'>
+                                ✓
+                              </span>
+                              <span>Grid-based product display</span>
+                            </li>
+                            <li className='flex items-center gap-1.5'>
+                              <span className='text-green-600 font-bold'>
+                                ✓
+                              </span>
+                              <span>No step navigation needed</span>
+                            </li>
+                            <li className='flex items-center gap-1.5'>
+                              <span className='text-green-600 font-bold'>
+                                ✓
+                              </span>
+                              <span>Mobile-friendly cart drawer</span>
+                            </li>
+                          </ul>
+                        </Label>
+                      </div>
+                    </div>
+
+                    {/* Step Wizard View - Classic Layout */}
+                    <div
+                      className={cn(
+                        "flex items-center space-x-3 rounded-xl border-2 p-4 transition-all duration-200",
+                        createOrderLayoutType === "wizard"
+                          ? "border-gray-400 bg-gray-50 shadow-sm"
+                          : "border-gray-200 hover:bg-accent",
+                      )}>
+                      <RadioGroupItem value='wizard' id='create-order-wizard' />
+                      <div className='flex-1'>
+                        <Label
+                          htmlFor='create-order-wizard'
+                          className='cursor-pointer'>
+                          <div className='flex items-center gap-2'>
+                            <Layers className='h-4 w-4 text-gray-600' />
+                            <span className='font-medium'>
+                              Step-by-Step Wizard
+                            </span>
+                          </div>
+                          <p className='text-xs text-muted-foreground mt-2'>
+                            Classic multi-step wizard for guided order creation
+                          </p>
+                          <ul className='text-[11px] text-muted-foreground mt-2 space-y-1 ml-1'>
+                            <li className='flex items-center gap-1.5'>
+                              <span className='text-blue-600'>•</span>
+                              <span>Products → Customer → Review</span>
+                            </li>
+                            <li className='flex items-center gap-1.5'>
+                              <span className='text-blue-600'>•</span>
+                              <span>Familiar guided workflow</span>
+                            </li>
+                            <li className='flex items-center gap-1.5'>
+                              <span className='text-blue-600'>•</span>
+                              <span>Best for complex orders</span>
+                            </li>
+                          </ul>
+                        </Label>
+                      </div>
+                    </div>
+                  </RadioGroup>
+
+                  {/* Info message */}
+                  <div className='bg-green-50 border border-green-200 rounded-lg p-3 mt-3'>
+                    <p className='text-xs text-green-800 flex items-start gap-2'>
+                      <span className='text-base'>💡</span>
+                      <span>
+                        Your preference is saved and will apply when you create
+                        new orders. Switch anytime!
                       </span>
                     </p>
                   </div>

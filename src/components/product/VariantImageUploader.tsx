@@ -149,22 +149,24 @@ export const VariantImageUploader: React.FC<VariantImageUploaderProps> = ({
           </CardContent>
         </Card>
       ) : (
-        <div className='grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3'>
+        <div className='grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4'>
           {previewUrls.map((previewUrl, index) => (
             <div
               key={index}
-              className='group relative aspect-square rounded-md border border-border h-16'>
+              className='group relative aspect-square rounded-md border border-border h-24 sm:h-32'>
               <img
                 src={previewUrl}
                 alt={`${variantName} ${index + 1}`}
-                className='w-full h-16 object-cover'
+                className='w-full h-24 sm:h-32 object-cover cursor-pointer hover:scale-105 transition-transform'
+                onClick={() => window.open(previewUrl, '_blank')}
+                title='Click to view full size'
               />
 
               {/* Image type badge */}
               {getImageType(images[index]) === "new" && (
                 <Badge
                   variant='default'
-                  className='absolute -top-2 -left-2 text-xs'>
+                  className='absolute -top-2 -left-2 text-xs shadow-sm'>
                   New
                 </Badge>
               )}
@@ -172,7 +174,7 @@ export const VariantImageUploader: React.FC<VariantImageUploaderProps> = ({
               {/* Image number badge */}
               <Badge
                 variant='secondary'
-                className='absolute -top-2 -right-2 text-xs'>
+                className='absolute -top-2 -right-2 text-xs shadow-sm'>
                 {index + 1}
               </Badge>
 
@@ -182,14 +184,15 @@ export const VariantImageUploader: React.FC<VariantImageUploaderProps> = ({
                   type='button'
                   variant='destructive'
                   size='icon'
-                  className='absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity z-50'
-                  onClick={() => handleRemoveImage(index)}>
+                  className='absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity z-50 hover:scale-110'
+                  onClick={() => handleRemoveImage(index)}
+                  title='Remove image'>
                   <X className='h-4 w-4' />
                 </Button>
               )}
 
               {/* Hover overlay */}
-              <div className='absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity' />
+              <div className='absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity rounded-md' />
             </div>
           ))}
         </div>

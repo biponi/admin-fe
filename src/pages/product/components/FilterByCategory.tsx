@@ -64,13 +64,13 @@ const CategoryFilterDropdown: React.FC<CategoryFilterDropdownProps> = ({
 
     // Sort categories
     const sortedRoots = rootCategories.sort((a, b) =>
-      a.name.localeCompare(b.name)
+      a.name.localeCompare(b.name),
     );
 
     // Flatten for display with proper hierarchy
     const flattenForDisplay = (
       cats: (ICategory & { children: ICategory[] })[],
-      level: number = 0
+      level: number = 0,
     ): (ICategory & { level: number })[] => {
       const result: (ICategory & { level: number })[] = [];
       cats.forEach((cat) => {
@@ -92,7 +92,7 @@ const CategoryFilterDropdown: React.FC<CategoryFilterDropdownProps> = ({
 
     const searchLower = searchTerm.toLowerCase();
     return organizedCategories.filter((category) =>
-      category.name.toLowerCase().includes(searchLower)
+      category.name.toLowerCase().includes(searchLower),
     );
   }, [organizedCategories, searchTerm]);
 
@@ -114,10 +114,13 @@ const CategoryFilterDropdown: React.FC<CategoryFilterDropdownProps> = ({
   return (
     <DropdownMenu open={isOpen} onOpenChange={setIsOpen}>
       <DropdownMenuTrigger asChild>
-        <Button variant='outline' size='sm' className='h-7 md:h-9 gap-1'>
-          <ListFilter className='h-3.5 w-3.5' />
-          <span className='sr-only sm:not-sr-only sm:whitespace-nowrap'>
-            Filter
+        <Button
+          variant='outline'
+          size='sm'
+          className='h-[40px] md:h-9 gap-1 w-full md:w-auto'>
+          <ListFilter className='h-4 w-4 sm:h-3.5 sm:w-3.5' />
+          <span className=' sm:whitespace-nowrap'>
+            Categories
             {activeFilterCount > 0 && (
               <span className='ml-1 rounded-full bg-primary px-1.5 py-0.5 text-xs text-primary-foreground'>
                 {activeFilterCount}

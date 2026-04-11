@@ -20,7 +20,6 @@ export const publicRoutes = (
     <Route path='/products/create' element={<CreateNewProduct />} />
     <Route path='/category' element={<Category />} />
     <Route path='/order' element={<OrderManagement />} />
-    <Route path='/order/create' element={<CreateOrder />} />
     <Route path='/order/modify/:orderId' element={<ModifyOrder />} />
     <Route path='/order/:orderId/history' element={<ModificationHistory />} />
     <Route path='/campaign/create' element={<CreateCampaignForm />} />
