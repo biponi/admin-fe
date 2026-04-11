@@ -51,11 +51,15 @@ import CouponAnalyticsPage from "../../pages/coupon/Analytics";
 // Layout switcher component for create order
 const CreateOrderLayoutSwitch = () => {
   const { createOrderLayoutType } = useSettings();
-  return createOrderLayoutType === 'product-first' ? <CreateOrderV2 /> : <CreateOrder />;
+  return createOrderLayoutType === "product-first" ? (
+    <CreateOrderV2 />
+  ) : (
+    <CreateOrder />
+  );
 };
 
 export const ProtectedRoutes = () => {
-  const { layoutType, createOrderLayoutType } = useSettings();
+  const { layoutType } = useSettings();
   const MainViewComponent = layoutType === "legacy" ? LegacyMainView : MainView;
 
   return (
