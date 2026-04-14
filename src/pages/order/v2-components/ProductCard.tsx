@@ -18,12 +18,17 @@ export function ProductCard({
   onProductClick,
   isLoading = false,
 }: ProductCardProps) {
-  const hasVariations =
-    product.hasVariation && product.variation && product.variation.length > 0;
+  const hasVariations = product.hasVariation === true || (product.variation && product.variation.length > 0);
   const inStock = product.quantity > 0;
   const hasDiscount = product.discount > 0;
 
   const handleCardClick = () => {
+    console.log('ProductCard clicked:', {
+      productName: product.name,
+      hasVariations,
+      hasVariation: product.hasVariation,
+      variationLength: product.variation?.length || 0,
+    });
     if (hasVariations) {
       onProductClick(product);
     } else {

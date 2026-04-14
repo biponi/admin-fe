@@ -58,7 +58,7 @@ export const buildFormDataFromObject = (data: any): FormData => {
   // Handle variant image mappings
   if (variantImageMappings && Array.isArray(variantImageMappings)) {
     console.log('variantImageMappings:', variantImageMappings);
-    formData.append('variantImageMappings', JSON.stringify(variantImageMappings));
+    formData.append('variantImageMapping', JSON.stringify(variantImageMappings));
   }
 
   // Handle remove variant image indexes

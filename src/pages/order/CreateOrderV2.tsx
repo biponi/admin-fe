@@ -120,7 +120,7 @@ const CreateOrderV2 = () => {
 
   // Handle add to cart
   const handleAddToCart = (product: IProduct) => {
-    if (!product.hasVariation) {
+    if (!product?.variation || product.variation.length < 1) {
       addToCart(product);
       toast.success(`${product.name} added to cart`);
     } else {
@@ -139,7 +139,11 @@ const CreateOrderV2 = () => {
 
   // Handle product click (for variations)
   const handleProductClick = (product: IProduct) => {
-    if (product.hasVariation) {
+    console.log("CreateOrderV2 handleProductClick:", {
+      product,
+    });
+    if (product?.variation && product.variation.length > 0) {
+      console.log("Opening variation modal for:", product.name);
       openVariationModal(product);
     }
   };

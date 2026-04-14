@@ -55,7 +55,7 @@ export function CartTable({ cart, onUpdateQuantity, onRemove }: CartTableProps) 
             <div className="flex-1 min-w-0">
               <h4 className="font-semibold text-xs sm:text-sm line-clamp-1 text-gray-900">{item.name}</h4>
               {item.variation && (
-                <p className="text-xs text-muted-foreground mt-0.5 hidden sm:block">
+                <p className="text-xs text-muted-foreground mt-0.5">
                   {item.variation.color && <span>Color: {item.variation.color}</span>}
                   {item.variation.color && item.variation.size && <span> • </span>}
                   {item.variation.size && <span>Size: {item.variation.size}</span>}

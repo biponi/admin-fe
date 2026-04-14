@@ -47,7 +47,7 @@ import PlaceHolderImage from "../../../assets/placeholder.svg";
 import CustomAlertDialog from "../../../coreComponents/OptionModal";
 import { Badge } from "../../../components/ui/badge";
 
-import { ICategory, IProductCreateData, IVariation } from "../interface";
+import { ICategory, IProductCreateData, IVariation, IVariantImageMapping } from "../interface";
 import { useNavigate } from "react-router-dom";
 import MultiCategorySelect from "../../../components/customComponent/MultiCategorySelect";
 import { VariantImageUploader } from "../../../components/product/VariantImageUploader";
@@ -693,23 +693,22 @@ const AddProduct: React.FC<Props> = ({ createProduct, categories }) => {
       (img) => img instanceof File,
     ) as File[];
 
-    // Build variant image mappings
-    let currentIndex = 0;
-    const variantImageMappings = formData.variation
-      .map((variant) => {
-        const images = variantImages[variant.id] || [];
-        const imageIndexes = Array.from(
-          { length: images.length },
-          (_, i) => currentIndex + i,
-        );
-        currentIndex += images.length;
+    // Build variant image mappings (one mapping per image)
+    const variantImageMappings: IVariantImageMapping[] = [];
+    let imageIndex = 0;
 
-        return {
+    for (const variant of formData.variation) {
+      const images = variantImages[variant.id] || [];
+      const fileImages = images.filter((img) => img instanceof File);
+
+      // Create a mapping for each image
+      for (let i = 0; i < fileImages.length; i++) {
+        variantImageMappings.push({
           variantId: variant.id,
-          imageIndexes,
-        };
-      })
-      .filter((mapping) => mapping.imageIndexes.length > 0);
+          imageIndex: imageIndex++,
+        });
+      }
+    }
 
     const productData = {
       ...formData,
@@ -736,23 +735,22 @@ const AddProduct: React.FC<Props> = ({ createProduct, categories }) => {
       (img) => img instanceof File,
     ) as File[];
 
-    // Build variant image mappings
-    let currentIndex = 0;
-    const variantImageMappings = formData.variation
-      .map((variant) => {
-        const images = variantImages[variant.id] || [];
-        const imageIndexes = Array.from(
-          { length: images.length },
-          (_, i) => currentIndex + i,
-        );
-        currentIndex += images.length;
+    // Build variant image mappings (one mapping per image)
+    const variantImageMappings: IVariantImageMapping[] = [];
+    let imageIndex = 0;
 
-        return {
+    for (const variant of formData.variation) {
+      const images = variantImages[variant.id] || [];
+      const fileImages = images.filter((img) => img instanceof File);
+
+      // Create a mapping for each image
+      for (let i = 0; i < fileImages.length; i++) {
+        variantImageMappings.push({
           variantId: variant.id,
-          imageIndexes,
-        };
-      })
-      .filter((mapping) => mapping.imageIndexes.length > 0);
+          imageIndex: imageIndex++,
+        });
+      }
+    }
 
     const productData = {
       ...formData,

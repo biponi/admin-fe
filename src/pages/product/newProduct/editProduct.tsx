@@ -47,7 +47,7 @@ import { Switch } from "../../../components/ui/switch";
 import PlaceHolderImage from "../../../assets/placeholder.svg";
 import CustomAlertDialog from "../../../coreComponents/OptionModal";
 
-import { ICategory, IProductUpdateData, IVariation } from "../interface";
+import { ICategory, IProductUpdateData, IVariation, IVariantImageMapping } from "../interface";
 import MultiCategorySelect from "../../../components/customComponent/MultiCategorySelect";
 import { VariantImageUploader } from "../../../components/product/VariantImageUploader";
 
@@ -714,22 +714,22 @@ const EditProduct: React.FC<Props> = ({
     const allVariantImages = Object.values(variantImages).flat();
     const variantImageFileList = allVariantImages.filter(img => img instanceof File) as File[];
 
-    // Build variant image mappings for new uploads
-    let currentIndex = 0;
-    const variantImageMappings = formData.variation.map(variant => {
+    // Build variant image mappings for new uploads (one mapping per image)
+    const variantImageMappings: IVariantImageMapping[] = [];
+    let imageIndex = 0;
+
+    for (const variant of formData.variation) {
       const images = variantImages[variant.id] || [];
       const newImages = images.filter(img => img instanceof File);
-      const imageIndexes = Array.from(
-        { length: newImages.length },
-        (_, i) => currentIndex + i
-      );
-      currentIndex += newImages.length;
 
-      return {
-        variantId: variant.id,
-        imageIndexes,
-      };
-    }).filter(mapping => mapping.imageIndexes.length > 0);
+      // Create a mapping for each new image
+      for (let i = 0; i < newImages.length; i++) {
+        variantImageMappings.push({
+          variantId: variant.id,
+          imageIndex: imageIndex++,
+        });
+      }
+    }
 
     // Build remove variant image indexes mapping
     const removeVariantImageIndexes = Object.entries(removedVariantImageIndexes)

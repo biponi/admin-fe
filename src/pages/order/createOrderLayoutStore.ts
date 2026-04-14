@@ -3,21 +3,21 @@
  * Manages the new product-first create order layout state
  */
 
-import { create } from 'zustand';
-import { devtools, persist } from 'zustand/middleware';
-import { toast } from 'react-hot-toast';
+import { create } from "zustand";
+import { devtools, persist } from "zustand/middleware";
+import { toast } from "react-hot-toast";
 import type {
   IOrderProduct,
   ICustomer,
   IShipping,
   ITransection,
-} from '../order/interface.d';
-import type { IProduct, IVariation } from '../product/interface.d';
+} from "../order/interface.d";
+import type { IProduct, IVariation } from "../product/interface.d";
 
 export interface CartItem extends IOrderProduct {
   selectedVariant?: IVariation;
-  availableStock?: number;  // Available stock for the product
-  variantStock?: number;    // Available stock for the variant (if applicable)
+  availableStock?: number; // Available stock for the product
+  variantStock?: number; // Available stock for the variant (if applicable)
 }
 
 interface CreateOrderLayoutState {
@@ -111,9 +111,9 @@ interface CreateOrderLayoutState {
 const initialState = {
   products: [],
   filteredProducts: [],
-  searchQuery: '',
-  selectedCategory: '',
-  selectedBrand: '',
+  searchQuery: "",
+  selectedCategory: "",
+  selectedBrand: "",
   isLoadingProducts: false,
 
   cart: [],
@@ -130,7 +130,7 @@ const initialState = {
     discount: 0,
     deliveryCharge: 0,
   },
-  notes: '',
+  notes: "",
 
   isSubmitting: false,
   variationModalOpen: false,
@@ -170,7 +170,8 @@ export const useCreateOrderLayoutStore = create<CreateOrderLayoutState>()(
         },
 
         filterProducts: () => {
-          const { products, searchQuery, selectedCategory, selectedBrand } = get();
+          const { products, searchQuery, selectedCategory, selectedBrand } =
+            get();
 
           let filtered = products;
 
@@ -180,21 +181,21 @@ export const useCreateOrderLayoutStore = create<CreateOrderLayoutState>()(
             filtered = filtered.filter(
               (product) =>
                 product.name.toLowerCase().includes(query) ||
-                product.sku.toLowerCase().includes(query)
+                product.sku.toLowerCase().includes(query),
             );
           }
 
           // Filter by category
           if (selectedCategory) {
             filtered = filtered.filter((product) =>
-              product.categoryIds?.includes(selectedCategory)
+              product.categoryIds?.includes(selectedCategory),
             );
           }
 
           // Filter by brand (manufacturer)
           if (selectedBrand) {
             filtered = filtered.filter(
-              (product) => product.manufactureId === selectedBrand
+              (product) => product.manufactureId === selectedBrand,
             );
           }
 
@@ -214,7 +215,9 @@ export const useCreateOrderLayoutStore = create<CreateOrderLayoutState>()(
 
           set((state) => {
             const existingItemIndex = state.cart.findIndex(
-              (item) => item.id === (variant ? `${product.id}-${variant.id}` : product.id)
+              (item) =>
+                item.id ===
+                (variant ? `${product.id}-${variant.id}` : product.id),
             );
 
             if (existingItemIndex > -1) {
@@ -284,8 +287,8 @@ export const useCreateOrderLayoutStore = create<CreateOrderLayoutState>()(
 
             // Determine max stock
             const maxStock = cartItem.selectedVariant
-              ? (cartItem.variantStock || cartItem.selectedVariant.quantity || 0)
-              : (cartItem.availableStock || cartItem.quantity || 0);
+              ? cartItem.variantStock || cartItem.selectedVariant.quantity || 0
+              : cartItem.availableStock || cartItem.quantity || 0;
 
             // Validate against stock
             if (quantity > maxStock) {
@@ -301,7 +304,7 @@ export const useCreateOrderLayoutStore = create<CreateOrderLayoutState>()(
                       quantity,
                       totalPrice: quantity * item.unitPrice,
                     }
-                  : item
+                  : item,
               ),
               isDirty: true,
             };
@@ -360,14 +363,11 @@ export const useCreateOrderLayoutStore = create<CreateOrderLayoutState>()(
         calculateTotals: () => {
           const { cart, transaction } = get();
 
-          const subtotal = cart.reduce(
-            (sum, item) => sum + item.totalPrice,
-            0
-          );
+          const subtotal = cart.reduce((sum, item) => sum + item.totalPrice, 0);
 
           const discount = transaction.discount || 0;
           const deliveryCharge = transaction.deliveryCharge || 0;
-          const totalPrice = subtotal - discount + deliveryCharge;
+          const totalPrice = subtotal + deliveryCharge - discount;
           const paid = transaction.paid || 0;
           const remaining = totalPrice - paid;
 
@@ -407,39 +407,39 @@ export const useCreateOrderLayoutStore = create<CreateOrderLayoutState>()(
 
           // Validate cart
           if (state.cart.length === 0) {
-            errors.cart = ['Please add at least one product'];
+            errors.cart = ["Please add at least one product"];
           }
 
           // Validate stock levels for all cart items
           state.cart.forEach((item) => {
             const maxStock = item.selectedVariant
-              ? (item.variantStock || item.selectedVariant.quantity || 0)
-              : (item.availableStock || item.quantity || 0);
+              ? item.variantStock || item.selectedVariant.quantity || 0
+              : item.availableStock || item.quantity || 0;
 
             if (item.quantity > maxStock) {
               errors[item.id] = [
-                `Only ${maxStock} ${item.selectedVariant ? 'of this variant' : 'of this product'} available, you have ${item.quantity} in cart`
+                `Only ${maxStock} ${item.selectedVariant ? "of this variant" : "of this product"} available, you have ${item.quantity} in cart`,
               ];
             }
           });
 
           // Validate customer
           if (!state.customerInfo.name) {
-            errors.customerName = ['Customer name is required'];
+            errors.customerName = ["Customer name is required"];
           }
           if (!state.customerInfo.phoneNumber) {
-            errors.customerPhone = ['Phone number is required'];
+            errors.customerPhone = ["Phone number is required"];
           }
 
           // Validate shipping
           if (!state.shippingInfo.division) {
-            errors.division = ['Division is required'];
+            errors.division = ["Division is required"];
           }
           if (!state.shippingInfo.district) {
-            errors.district = ['District is required'];
+            errors.district = ["District is required"];
           }
           if (!state.shippingInfo.address) {
-            errors.address = ['Address is required'];
+            errors.address = ["Address is required"];
           }
 
           set({ validationErrors: errors });
@@ -473,7 +473,7 @@ export const useCreateOrderLayoutStore = create<CreateOrderLayoutState>()(
           };
 
           // Save to localStorage
-          localStorage.setItem('order_draft_layout', JSON.stringify(draft));
+          localStorage.setItem("order_draft_layout", JSON.stringify(draft));
 
           set({
             draftId: draft.id,
@@ -484,7 +484,7 @@ export const useCreateOrderLayoutStore = create<CreateOrderLayoutState>()(
 
         loadDraft: async (draftId) => {
           try {
-            const draftJson = localStorage.getItem('order_draft_layout');
+            const draftJson = localStorage.getItem("order_draft_layout");
             if (draftJson) {
               const draft = JSON.parse(draftJson);
               if (draft.id === draftId) {
@@ -492,8 +492,9 @@ export const useCreateOrderLayoutStore = create<CreateOrderLayoutState>()(
                   cart: draft.data.cart || [],
                   customerInfo: draft.data.customerInfo || {},
                   shippingInfo: draft.data.shippingInfo || {},
-                  transaction: draft.data.transaction || initialState.transaction,
-                  notes: draft.data.notes || '',
+                  transaction:
+                    draft.data.transaction || initialState.transaction,
+                  notes: draft.data.notes || "",
                   draftId: draft.id,
                   lastSaved: new Date(draft.updatedAt),
                   isDirty: false,
@@ -502,12 +503,12 @@ export const useCreateOrderLayoutStore = create<CreateOrderLayoutState>()(
               }
             }
           } catch (error) {
-            console.error('Failed to load draft:', error);
+            console.error("Failed to load draft:", error);
           }
         },
 
         clearDraft: () => {
-          localStorage.removeItem('order_draft_layout');
+          localStorage.removeItem("order_draft_layout");
           set({
             draftId: null,
             lastSaved: null,
@@ -552,13 +553,13 @@ export const useCreateOrderLayoutStore = create<CreateOrderLayoutState>()(
         },
       }),
       {
-        name: 'create-order-layout-store',
+        name: "create-order-layout-store",
         partialize: (state) => ({
           // Persist draft data
           draftId: state.draftId,
           lastSaved: state.lastSaved,
         }),
-      }
-    )
-  )
+      },
+    ),
+  ),
 );

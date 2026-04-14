@@ -20,7 +20,7 @@ export const VariantImageUploader: React.FC<VariantImageUploaderProps> = ({
   variantId,
   variantName,
   images,
-  maxImages = 5,
+  maxImages = 2,
   onImagesChange,
   disabled = false,
 }) => {

@@ -51,7 +51,7 @@ export interface IVariation {
 // Variant image mapping for upload
 export interface IVariantImageMapping {
   variantId: string;
-  imageIndexes: number[]; // Indices pointing to the variantImages array
+  imageIndex: number; // Index pointing to a specific image in the variantImages array
 }
 
 // Variant image removal mapping for edit
