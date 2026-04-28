@@ -23,11 +23,12 @@ import { ITransection } from "../interface";
 import MobileOrderProductCard from "./MobileOrderProductCard";
 import useOrder from "../hooks/useOrder";
 import useDebounce from "../../../customHook/useDebounce";
+import { toast } from "react-hot-toast";
 
 interface MobileOrderProductSearchProps {
   onProductsSubmit: (
     products: IOrderProduct[],
-    transaction: ITransection
+    transaction: ITransection,
   ) => void;
   initialProducts?: IOrderProduct[];
   initialTransaction?: ITransection | null;
@@ -53,7 +54,7 @@ const MobileOrderProductSearch: React.FC<MobileOrderProductSearchProps> = ({
     useState<IOrderProduct[]>(initialProducts);
   const [isSearching, setIsSearching] = useState(false);
   const [transaction, setTransaction] = useState(
-    initialTransaction || defaultTransaction
+    initialTransaction || defaultTransaction,
   );
 
   const debouncedQuery = useDebounce(query, 500);
@@ -152,23 +153,71 @@ const MobileOrderProductSearch: React.FC<MobileOrderProductSearchProps> = ({
     }));
   };
 
-  const handleAddProduct = (orderProduct: IOrderProduct) => {
-    const existingIndex = selectedProducts.findIndex(
-      (p) =>
-        p.id === orderProduct.id &&
-        p.selectedVariant === orderProduct.selectedVariant
-    );
+  const handleAddProduct = (product: IOrderProduct) => {
+    // For products without variation, prevent duplicate selection
+    if (!product.hasVariation) {
+      const isAlreadySelected = selectedProducts.some(
+        (p) => p.id === product.id,
+      );
+      if (isAlreadySelected) {
+        toast.error("Product already selected!");
+        return;
+      }
+    }
+    // For products with variation, allow multiple selections with different variants
+    if (!!product.hasVariation && !!product.variation) {
+      const availableVariants = product.variation.filter(
+        (variant) => variant?.quantity > 0,
+      );
 
-    if (existingIndex >= 0) {
-      const updatedProducts = [...selectedProducts];
-      updatedProducts[existingIndex] = {
-        ...updatedProducts[existingIndex],
-        selectedQuantity: orderProduct.selectedQuantity,
-        totalPrice: orderProduct.totalPrice,
-      };
-      setSelectedProducts(updatedProducts);
+      if (availableVariants.length > 0) {
+        // Find the first variant that hasn't been selected yet
+        const selectedVariants = selectedProducts
+          .filter((p) => p.id === product.id)
+          .map((p) => p.selectedVariant);
+
+        const availableVariant = availableVariants.find(
+          (variant) =>
+            !selectedVariants.some(
+              (selected) =>
+                selected?.color === variant?.color &&
+                selected?.size === variant?.size,
+            ),
+        );
+
+        if (availableVariant) {
+          const existingCount = selectedProducts.filter(
+            (p) => p.id === product.id,
+          ).length;
+          const priceToUse = availableVariant.unitPrice;
+          setSelectedProducts([
+            ...selectedProducts,
+            {
+              ...product,
+              selectedQuantity: 1,
+              selectedVariant: availableVariant,
+              totalPrice: priceToUse * 1,
+            },
+          ]);
+          toast.success(
+            existingCount > 0
+              ? `${product.name} variation added to order! 🎨`
+              : `${product.name} added to order! 🛍️`,
+          );
+        } else {
+          toast.error(
+            "All available variations of this product are already selected!",
+          );
+        }
+      } else {
+        toast.error("No Available variant found");
+      }
     } else {
-      setSelectedProducts((prev) => [...prev, orderProduct]);
+      setSelectedProducts([
+        ...selectedProducts,
+        { ...product, selectedQuantity: 1, totalPrice: product.unitPrice * 1 },
+      ]);
+      toast.success(`${product.name} added to order! 🛍️`);
     }
   };
 

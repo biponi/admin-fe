@@ -42,7 +42,7 @@ const defaultTransaction = {
 interface Props {
   handleProductDataSubmit: (
     productData: IOrderProduct[],
-    transectionData: ITransection
+    transectionData: ITransection,
   ) => void;
   initialProducts?: IOrderProduct[];
   initialTransection?: ITransection | null;
@@ -61,7 +61,7 @@ const OrderProductList: React.FC<Props> = ({
   >(initialProducts || []);
   const [isSearching, setIsSearching] = useState(false);
   const [transection, setTransection] = useState(
-    initialTransection || defaultTransaction
+    initialTransection || defaultTransaction,
   );
 
   useEffect(() => {
@@ -117,7 +117,7 @@ const OrderProductList: React.FC<Props> = ({
     // For products without variation, prevent duplicate selection
     if (!product.hasVariation) {
       const isAlreadySelected = selectedProducts.some(
-        (p) => p.id === product.id
+        (p) => p.id === product.id,
       );
       if (isAlreadySelected) {
         toast.error("Product already selected!");
@@ -125,10 +125,9 @@ const OrderProductList: React.FC<Props> = ({
       }
     }
     // For products with variation, allow multiple selections with different variants
-    console.log("ppp:", product);
     if (!!product.hasVariation && !!product.variation) {
       const availableVariants = product.variation.filter(
-        (variant) => variant?.quantity > 0
+        (variant) => variant?.quantity > 0,
       );
 
       if (availableVariants.length > 0) {
@@ -142,13 +141,13 @@ const OrderProductList: React.FC<Props> = ({
             !selectedVariants.some(
               (selected) =>
                 selected?.color === variant?.color &&
-                selected?.size === variant?.size
-            )
+                selected?.size === variant?.size,
+            ),
         );
 
         if (availableVariant) {
           const existingCount = selectedProducts.filter(
-            (p) => p.id === product.id
+            (p) => p.id === product.id,
           ).length;
           const priceToUse = availableVariant.unitPrice;
           setSelectedProducts([
@@ -163,11 +162,11 @@ const OrderProductList: React.FC<Props> = ({
           toast.success(
             existingCount > 0
               ? `${product.name} variation added to order! 🎨`
-              : `${product.name} added to order! 🛍️`
+              : `${product.name} added to order! 🛍️`,
           );
         } else {
           toast.error(
-            "All available variations of this product are already selected!"
+            "All available variations of this product are already selected!",
           );
         }
       } else {
@@ -238,7 +237,7 @@ const OrderProductList: React.FC<Props> = ({
 
           if (product.hasVariation) {
             const availableVariants = product.variation.filter(
-              (v) => v?.quantity > 0
+              (v) => v?.quantity > 0,
             );
             const selectedVariants = selectedProducts
               .filter((p) => p.id === product.id)
@@ -248,8 +247,8 @@ const OrderProductList: React.FC<Props> = ({
               selectedVariants.some(
                 (selected) =>
                   selected?.color === variant?.color &&
-                  selected?.size === variant?.size
-              )
+                  selected?.size === variant?.size,
+              ),
             );
             isSelected = allVariantsSelected;
           } else {
@@ -318,8 +317,8 @@ const OrderProductList: React.FC<Props> = ({
                       isSelected
                         ? "bg-violet-600 hover:bg-violet-700 text-white"
                         : isAvailable
-                        ? "bg-gray-900 hover:bg-gray-800 text-white"
-                        : "bg-gray-100 text-gray-400 cursor-not-allowed"
+                          ? "bg-gray-900 hover:bg-gray-800 text-white"
+                          : "bg-gray-100 text-gray-400 cursor-not-allowed"
                     }`}>
                     {isSelected ? (
                       <>
@@ -347,7 +346,7 @@ const OrderProductList: React.FC<Props> = ({
   const renderVariantMenu = (
     type: "color" | "size",
     index: number,
-    list: string[]
+    list: string[],
   ) => {
     const handleVariantChange = (variant: Variation) => {
       if (!!variant) {
@@ -355,7 +354,7 @@ const OrderProductList: React.FC<Props> = ({
         selectedProduct.selectedVariant = selectedVariant;
         selectedProduct.selectedQuantity = Math.min(
           selectedProduct.selectedQuantity,
-          selectedVariant.quantity
+          selectedVariant.quantity,
         );
         const priceToUse = selectedVariant.unitPrice;
         selectedProduct.totalPrice =
@@ -373,7 +372,7 @@ const OrderProductList: React.FC<Props> = ({
         list={list}
         selectedProduct={selectedProduct}
         selectedVariant={selectedVariant}
-        selected={!!selectedVariant ? selectedVariant[`${type}`] ?? "" : ""}
+        selected={!!selectedVariant ? (selectedVariant[`${type}`] ?? "") : ""}
         onVariantChange={(variant: Variation) => {
           handleVariantChange(variant);
         }}
@@ -384,7 +383,7 @@ const OrderProductList: React.FC<Props> = ({
   const renderSelectedProductCard = (product: IOrderProduct, index: number) => {
     // Count how many times this product appears in selected products
     const productCount = selectedProducts.filter(
-      (p) => p.id === product.id
+      (p) => p.id === product.id,
     ).length;
     const productInstanceNumber = selectedProducts
       .slice(0, index + 1)
@@ -396,7 +395,7 @@ const OrderProductList: React.FC<Props> = ({
       const variations = product.variation.filter((v) => v?.quantity > 0);
       if (variations.length === 0) {
         toast.error(
-          `No available variants for ${product.name}. Please remove this product.`
+          `No available variants for ${product.name}. Please remove this product.`,
         );
         return null;
       }
@@ -410,7 +409,7 @@ const OrderProductList: React.FC<Props> = ({
     const uniqueSizes: string[] = Array.from(distinctSizes) ?? [];
 
     const maxQuantity = product?.hasVariation
-      ? product?.selectedVariant?.quantity ?? 0
+      ? (product?.selectedVariant?.quantity ?? 0)
       : product?.quantity;
 
     const handleQuantityChange = (newQuantity: number) => {
@@ -569,7 +568,7 @@ const OrderProductList: React.FC<Props> = ({
       <div className='max-h-[calc(100vh-450px)] overflow-y-auto -mx-4'>
         <div className='px-4'>
           {selectedProducts.map((product: IOrderProduct, index) =>
-            renderSelectedProductCard(product, index)
+            renderSelectedProductCard(product, index),
           )}
         </div>
       </div>
@@ -664,7 +663,7 @@ const OrderProductList: React.FC<Props> = ({
           onClick={() => {
             handleProductDataSubmit(selectedProducts, transection);
             toast.success(
-              `Proceeding with ${selectedProducts.length} products! 🚀`
+              `Proceeding with ${selectedProducts.length} products! 🚀`,
             );
           }}
           className='h-10 px-6 text-sm font-medium bg-violet-600 hover:bg-violet-700 text-white'>

@@ -59,7 +59,6 @@ const MobileOrderProductCard: React.FC<MobileOrderProductCardProps> = ({
       selectedQuantity: quantity,
       selectedVariant: hasVariants ? variant : null,
       totalPrice: unitPrice * quantity,
-      discount: 0,
     };
     onAddProduct(orderProduct);
   };
