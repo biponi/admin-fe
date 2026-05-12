@@ -1,8 +1,14 @@
-import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import {
+  createContext,
+  useContext,
+  useState,
+  useEffect,
+  ReactNode,
+} from "react";
 
-type LayoutType = 'modern' | 'legacy';
-type ThemeType = 'light' | 'dark' | 'blue' | 'green' | 'purple' | 'orange';
-type CreateOrderLayoutType = 'wizard' | 'product-first';
+type LayoutType = "modern" | "legacy";
+type ThemeType = "light" | "dark" | "blue" | "green" | "purple" | "orange";
+type CreateOrderLayoutType = "wizard" | "product-first";
 
 interface SettingsContextType {
   layoutType: LayoutType;
@@ -14,9 +20,11 @@ interface SettingsContextType {
   setCreateOrderLayoutType: (type: CreateOrderLayoutType) => void;
 }
 
-const SettingsContext = createContext<SettingsContextType | undefined>(undefined);
+const SettingsContext = createContext<SettingsContextType | undefined>(
+  undefined,
+);
 
-const SETTINGS_STORAGE_KEY = 'prior-admin-settings';
+const SETTINGS_STORAGE_KEY = "prior-admin-settings";
 
 interface Settings {
   layoutType: LayoutType;
@@ -25,35 +33,46 @@ interface Settings {
 }
 
 const defaultSettings: Settings = {
-  layoutType: 'modern', // Default to new sidebar layout
-  theme: 'light', // Default to light theme
-  createOrderLayoutType: 'wizard' // Default to wizard layout for create order
+  layoutType: "modern", // Default to new sidebar layout
+  theme: "light", // Default to light theme
+  createOrderLayoutType: "product-first", // Default to product-first layout for create order
 };
 
 export function SettingsProvider({ children }: { children: ReactNode }) {
-  const [layoutType, setLayoutTypeState] = useState<LayoutType>(defaultSettings.layoutType);
+  const [layoutType, setLayoutTypeState] = useState<LayoutType>(
+    defaultSettings.layoutType,
+  );
   const [theme, setThemeState] = useState<ThemeType>(defaultSettings.theme);
-  const [createOrderLayoutType, setCreateOrderLayoutTypeState] = useState<CreateOrderLayoutType>(defaultSettings.createOrderLayoutType);
+  const [createOrderLayoutType, setCreateOrderLayoutTypeState] =
+    useState<CreateOrderLayoutType>(defaultSettings.createOrderLayoutType);
 
   // Apply theme to document root on theme change
   useEffect(() => {
     const root = document.documentElement;
-    
+
     // Remove existing theme classes
-    root.classList.remove('light', 'dark', 'theme-dark', 'theme-blue', 'theme-green', 'theme-purple', 'theme-orange');
-    
+    root.classList.remove(
+      "light",
+      "dark",
+      "theme-dark",
+      "theme-blue",
+      "theme-green",
+      "theme-purple",
+      "theme-orange",
+    );
+
     // Only apply theme classes for modern layout, always use light for legacy
-    if (layoutType === 'modern') {
-      if (theme === 'light') {
-        root.classList.add('light');
-      } else if (theme === 'dark') {
-        root.classList.add('light', 'theme-dark'); // Use custom theme-dark instead of global dark
+    if (layoutType === "modern") {
+      if (theme === "light") {
+        root.classList.add("light");
+      } else if (theme === "dark") {
+        root.classList.add("light", "theme-dark"); // Use custom theme-dark instead of global dark
       } else {
-        root.classList.add('light', `theme-${theme}`);
+        root.classList.add("light", `theme-${theme}`);
       }
     } else {
       // Always use light theme for legacy layout
-      root.classList.add('light');
+      root.classList.add("light");
     }
   }, [theme, layoutType]);
 
@@ -64,33 +83,33 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
       if (stored) {
         const settings: Settings = JSON.parse(stored);
 
-        // Migration: Force reset to wizard layout (previous version) for all users
-        // Remove this block after the migration is complete
-        if (settings.createOrderLayoutType === 'product-first') {
-          settings.createOrderLayoutType = 'wizard';
-          localStorage.setItem(SETTINGS_STORAGE_KEY, JSON.stringify(settings));
-        }
-
         setLayoutTypeState(settings.layoutType || defaultSettings.layoutType);
         setThemeState(settings.theme || defaultSettings.theme);
-        setCreateOrderLayoutTypeState(settings.createOrderLayoutType || defaultSettings.createOrderLayoutType);
+        setCreateOrderLayoutTypeState(
+          settings.createOrderLayoutType ||
+            defaultSettings.createOrderLayoutType,
+        );
       }
     } catch (error) {
-      console.error('Failed to load settings from localStorage:', error);
+      console.error("Failed to load settings from localStorage:", error);
     }
   }, []);
 
   // Save settings to localStorage whenever they change
-  const saveSettings = (newLayoutType: LayoutType, newTheme: ThemeType, newCreateOrderLayoutType: CreateOrderLayoutType) => {
+  const saveSettings = (
+    newLayoutType: LayoutType,
+    newTheme: ThemeType,
+    newCreateOrderLayoutType: CreateOrderLayoutType,
+  ) => {
     try {
       const settings: Settings = {
         layoutType: newLayoutType,
         theme: newTheme,
-        createOrderLayoutType: newCreateOrderLayoutType
+        createOrderLayoutType: newCreateOrderLayoutType,
       };
       localStorage.setItem(SETTINGS_STORAGE_KEY, JSON.stringify(settings));
     } catch (error) {
-      console.error('Failed to save settings to localStorage:', error);
+      console.error("Failed to save settings to localStorage:", error);
     }
   };
 
@@ -110,11 +129,20 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
   };
 
   const toggleLayout = () => {
-    setLayoutType(layoutType === 'modern' ? 'legacy' : 'modern');
+    setLayoutType(layoutType === "modern" ? "legacy" : "modern");
   };
 
   return (
-    <SettingsContext.Provider value={{ layoutType, setLayoutType, toggleLayout, theme, setTheme, createOrderLayoutType, setCreateOrderLayoutType }}>
+    <SettingsContext.Provider
+      value={{
+        layoutType,
+        setLayoutType,
+        toggleLayout,
+        theme,
+        setTheme,
+        createOrderLayoutType,
+        setCreateOrderLayoutType,
+      }}>
       {children}
     </SettingsContext.Provider>
   );
@@ -123,7 +151,7 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
 export function useSettings() {
   const context = useContext(SettingsContext);
   if (!context) {
-    throw new Error('useSettings must be used within a SettingsProvider');
+    throw new Error("useSettings must be used within a SettingsProvider");
   }
   return context;
 }

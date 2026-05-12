@@ -50,6 +50,8 @@ const CreateCampaignForm: React.FC = () => {
   const [maxPrepaymentAmount, setMaxPrepaymentAmount] = useState<string | null>(
     null
   );
+  const [deliveryDiscountType, setDeliveryDiscountType] = useState<"none" | "free" | "fixed" | "percentage">("none");
+  const [deliveryDiscountAmount, setDeliveryDiscountAmount] = useState<string>("0");
 
   const [step, setStep] = useState(1);
 
@@ -73,6 +75,21 @@ const CreateCampaignForm: React.FC = () => {
       return;
     }
 
+    // Delivery discount validation
+    if (deliveryDiscountType === "fixed" && Number(deliveryDiscountAmount) <= 0) {
+      toast.error("Fixed delivery discount amount must be positive.");
+      return;
+    }
+    if (deliveryDiscountType === "percentage" &&
+        (Number(deliveryDiscountAmount) < 0 || Number(deliveryDiscountAmount) > 100)) {
+      toast.error("Delivery discount percentage must be between 0 and 100.");
+      return;
+    }
+    if (deliveryDiscountType === "free" && Number(deliveryDiscountAmount) !== 0) {
+      toast.error("Free delivery does not require a discount amount.");
+      return;
+    }
+
     // Prepare form data
     const formData = new FormData();
     formData.append("title", title);
@@ -93,6 +110,10 @@ const CreateCampaignForm: React.FC = () => {
         ? "true"
         : "false"
     );
+
+    // Delivery discount fields
+    formData.append("deliveryDiscountType", deliveryDiscountType);
+    formData.append("deliveryDiscountAmount", deliveryDiscountAmount);
 
     formData.append("active", active.toString());
     if (image) {
@@ -372,6 +393,110 @@ const CreateCampaignForm: React.FC = () => {
                     </div>
                   </CardContent>
                 </Card>
+
+                <Card x-chunk='dashboard-07-chunk-2' className='my-2'>
+                  <CardHeader>
+                    <CardTitle>Delivery Charge Discount</CardTitle>
+                    <CardDescription>
+                      Offer delivery charge discounts to customers
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <div className='grid gap-6 sm:grid-cols-2'>
+                      <div className='grid gap-3'>
+                        <Label htmlFor='delivery-discount-type'>Discount Type</Label>
+                        <Select
+                          value={deliveryDiscountType}
+                          onValueChange={(value: "none" | "free" | "fixed" | "percentage") => {
+                            setDeliveryDiscountType(value);
+                            if (value === "none" || value === "free") {
+                              setDeliveryDiscountAmount("0");
+                            }
+                          }}>
+                          <SelectTrigger
+                            id='delivery-discount-type'
+                            aria-label='Select Delivery Discount Type'>
+                            <SelectValue placeholder='Select Discount Type' />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value='none'>No Discount</SelectItem>
+                            <SelectItem value='free'>Free Delivery (100% off)</SelectItem>
+                            <SelectItem value='fixed'>Fixed Amount</SelectItem>
+                            <SelectItem value='percentage'>Percentage (%)</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+
+                      {deliveryDiscountType !== "none" && deliveryDiscountType !== "free" && (
+                        <div className='grid gap-3'>
+                          <Label htmlFor='delivery-discount-amount'>
+                            {deliveryDiscountType === "percentage" ? "Discount Percentage" : "Discount Amount"}
+                          </Label>
+                          <Input
+                            id='delivery-discount-amount'
+                            name='delivery-discount-amount'
+                            type='text'
+                            value={deliveryDiscountAmount}
+                            className='w-full'
+                            defaultValue='0'
+                            min={0}
+                            max={deliveryDiscountType === "percentage" ? 100 : undefined}
+                            step={deliveryDiscountType === "percentage" ? 1 : 0.01}
+                            placeholder={
+                              deliveryDiscountType === "percentage"
+                                ? "Enter percentage (0-100)"
+                                : "Enter amount"
+                            }
+                            onChange={(e) =>
+                              setDeliveryDiscountAmount(
+                                isNaN(Number(e.target.value))
+                                  ? "0"
+                                  : e.target.value
+                              )
+                            }
+                            required
+                          />
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Preview section */}
+                    {deliveryDiscountType !== "none" && (
+                      <div className='mt-4 p-4 bg-blue-50 border border-blue-200 rounded-lg'>
+                        <p className='text-sm font-medium text-blue-900 mb-2'>
+                          Delivery Discount Preview
+                        </p>
+                        <div className='text-xs text-blue-800 space-y-1'>
+                          <div className='flex justify-between'>
+                            <span>Original Delivery:</span>
+                            <span className='font-semibold'>60</span>
+                          </div>
+                          <div className='flex justify-between'>
+                            <span>Discount Type:</span>
+                            <span className='font-semibold'>
+                              {deliveryDiscountType === "free"
+                                ? "Free Delivery"
+                                : deliveryDiscountType === "percentage"
+                                ? `${deliveryDiscountAmount}% off`
+                                : `${deliveryDiscountAmount} off`}
+                            </span>
+                          </div>
+                          <div className='flex justify-between border-t border-blue-300 pt-1 mt-1'>
+                            <span>Final Delivery:</span>
+                            <span className='font-bold'>
+                              {deliveryDiscountType === "free"
+                                ? "0"
+                                : deliveryDiscountType === "percentage"
+                                ? Math.max(0, 60 - (60 * Number(deliveryDiscountAmount)) / 100)
+                                : Math.max(0, 60 - Number(deliveryDiscountAmount))}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+
                 <div className=' grid grid-cols-1 gap-2  md:my-4'>
                   <Card
                     x-chunk='dashboard-07-chunk-4'

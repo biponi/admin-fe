@@ -41,13 +41,18 @@ import { useEffect, useState, useRef } from "react";
 import { Badge } from "../../../components/ui/badge";
 import { Input } from "../../../components/ui/input";
 import { Label } from "../../../components/ui/label";
-import { Textarea } from "../../../components/ui/textarea";
 import { Button } from "../../../components/ui/button";
+import TiptapEditor from "../../../components/ui/tiptap";
 import { Switch } from "../../../components/ui/switch";
 import PlaceHolderImage from "../../../assets/placeholder.svg";
 import CustomAlertDialog from "../../../coreComponents/OptionModal";
 
-import { ICategory, IProductUpdateData, IVariation, IVariantImageMapping } from "../interface";
+import {
+  ICategory,
+  IProductUpdateData,
+  IVariation,
+  IVariantImageMapping,
+} from "../interface";
 import MultiCategorySelect from "../../../components/customComponent/MultiCategorySelect";
 import { VariantImageUploader } from "../../../components/product/VariantImageUploader";
 
@@ -74,15 +79,21 @@ const EditProduct: React.FC<Props> = ({
   categories,
 }) => {
   const [formData, updateFormData] = useState<IProductUpdateData>(productData);
-  const [hasVariation, setHasVariation] = useState(!!productData?.variation && productData.variation.length > 0);
+  const [hasVariation, setHasVariation] = useState(
+    !!productData?.variation && productData.variation.length > 0,
+  );
   const [isSameUnitPrice, setSameunitPrice] = useState(true);
   const [variationTab, setVariationTab] = useState("v1");
   const [v2Colors, setV2Colors] = useState<string[]>([]);
   const [v2Sizes, setV2Sizes] = useState<string[]>([]);
   const [newColor, setNewColor] = useState("");
   const [newSize, setNewSize] = useState("");
-  const [variantImages, setVariantImages] = useState<Record<string, (File | string)[]>>({});
-  const [removedVariantImageIndexes, setRemovedVariantImageIndexes] = useState<Record<string, number[]>>({});
+  const [variantImages, setVariantImages] = useState<
+    Record<string, (File | string)[]>
+  >({});
+  const [removedVariantImageIndexes, setRemovedVariantImageIndexes] = useState<
+    Record<string, number[]>
+  >({});
   const fileRef = useRef(null);
   const fileRef2 = useRef(null);
   const dialogBtn = useRef(null);
@@ -94,7 +105,11 @@ const EditProduct: React.FC<Props> = ({
       // Handle multiple scenarios for backward compatibility
       let categoryIds: string[] = [];
 
-      if (productData.categoryIds && Array.isArray(productData.categoryIds) && productData.categoryIds.length > 0) {
+      if (
+        productData.categoryIds &&
+        Array.isArray(productData.categoryIds) &&
+        productData.categoryIds.length > 0
+      ) {
         // Scenario A: API returns categoryIds array (new format)
         categoryIds = productData.categoryIds;
       } else if (productData.categoryId) {
@@ -122,7 +137,7 @@ const EditProduct: React.FC<Props> = ({
 
       // Initialize variant images from product data
       const initialVariantImages: Record<string, (File | string)[]> = {};
-      productData.variation?.forEach(variant => {
+      productData.variation?.forEach((variant) => {
         if (variant.images && variant.images.length > 0) {
           initialVariantImages[variant.id] = variant.images;
         }
@@ -133,13 +148,18 @@ const EditProduct: React.FC<Props> = ({
 
   // Calculate total quantity from all variations
   const totalQuantity =
-    formData?.variation?.reduce((sum, variant) => sum + (variant.quantity || 0), 0) ||
+    formData?.variation?.reduce(
+      (sum, variant) => sum + (variant.quantity || 0),
+      0,
+    ) ||
     formData?.quantity ||
     0;
 
   // Get unique colors and sizes
   const uniqueColors = formData?.variation
-    ? Array.from(new Set(formData.variation.map((v) => v.color).filter(Boolean)))
+    ? Array.from(
+        new Set(formData.variation.map((v) => v.color).filter(Boolean)),
+      )
     : [];
   const uniqueSizes = formData?.variation
     ? Array.from(new Set(formData.variation.map((v) => v.size).filter(Boolean)))
@@ -168,10 +188,18 @@ const EditProduct: React.FC<Props> = ({
     }
   };
 
+  // Handle Tiptap editor description changes
+  const handleDescriptionChange = (content: string) => {
+    updateFormData({
+      ...formData,
+      description: content,
+    });
+  };
+
   // Handle variation field updates (name, color, size - NOT quantity)
   const updateVariationData = (
     index: number,
-    e: React.ChangeEvent<HTMLInputElement>
+    e: React.ChangeEvent<HTMLInputElement>,
   ) => {
     if (!!formData && index < formData?.variation.length) {
       const { name, value } = e.target;
@@ -186,7 +214,9 @@ const EditProduct: React.FC<Props> = ({
   // Handle variation deletion
   const deleteVariation = (index: number) => {
     if (!!formData && formData.variation) {
-      const updatedVariations = formData.variation.filter((_, i) => i !== index);
+      const updatedVariations = formData.variation.filter(
+        (_, i) => i !== index,
+      );
       updateFormData({
         ...formData,
         variation: updatedVariations,
@@ -200,9 +230,11 @@ const EditProduct: React.FC<Props> = ({
       updateFormData({
         ...formData,
         sku: value,
-        variation: formData.variation.map((variation: IVariation, index: number) => {
-          return { ...variation, sku: `${value}-${variation.id || index}` };
-        }),
+        variation: formData.variation.map(
+          (variation: IVariation, index: number) => {
+            return { ...variation, sku: `${value}-${variation.id || index}` };
+          },
+        ),
       });
     }
   };
@@ -230,7 +262,7 @@ const EditProduct: React.FC<Props> = ({
     let arr = [];
     if (formData.variation && formData.variation.length > 0) {
       arr = [...formData.variation];
-      const newId = (formData.variation.length).toString();
+      const newId = formData.variation.length.toString();
       arr.push({
         ...defaultVariation,
         id: newId,
@@ -259,21 +291,24 @@ const EditProduct: React.FC<Props> = ({
     }
   };
 
-  const handleVariantImagesChange = (variantId: string, images: (File | string)[]) => {
-    setVariantImages(prev => {
+  const handleVariantImagesChange = (
+    variantId: string,
+    images: (File | string)[],
+  ) => {
+    setVariantImages((prev) => {
       const previousImages = prev[variantId] || [];
       const newImages = images;
 
       // Track removed indices (only for existing string URLs)
       const removedIndices: number[] = [];
       previousImages.forEach((img, index) => {
-        if (typeof img === 'string' && !newImages.includes(img)) {
+        if (typeof img === "string" && !newImages.includes(img)) {
           removedIndices.push(index);
         }
       });
 
       if (removedIndices.length > 0) {
-        setRemovedVariantImageIndexes(prev => ({
+        setRemovedVariantImageIndexes((prev) => ({
           ...prev,
           [variantId]: removedIndices,
         }));
@@ -376,7 +411,7 @@ const EditProduct: React.FC<Props> = ({
                   {/* Inputs Grid */}
                   <div className='space-y-3'>
                     {/* Variant Name (Editable) */}
-                    <div className='space-y-1.5'>
+                    <div className='space-y-1.5 hidden'>
                       <Label className='text-[10px] font-semibold text-slate-600 dark:text-slate-400 flex items-center gap-1'>
                         <Tag className='h-3 w-3 text-blue-500' />
                         Variant Name
@@ -385,7 +420,7 @@ const EditProduct: React.FC<Props> = ({
                         name='name'
                         onChange={(e) => updateVariationData(index, e)}
                         type='text'
-                        value={variation.name || ''}
+                        value={variation.name || ""}
                         className='h-8 text-xs border-slate-300 dark:border-slate-600 focus:border-blue-400 dark:focus:border-blue-500'
                         placeholder='e.g., Red - Large'
                       />
@@ -438,7 +473,11 @@ const EditProduct: React.FC<Props> = ({
                     {/* Variant Images */}
                     <VariantImageUploader
                       variantId={variation.id}
-                      variantName={`${variation.color || ''} ${variation.size || ''}`.trim() || variation.name || `Variant ${index + 1}`}
+                      variantName={
+                        `${variation.color || ""} ${variation.size || ""}`.trim() ||
+                        variation.name ||
+                        `Variant ${index + 1}`
+                      }
                       images={variantImages[variation.id] || []}
                       onImagesChange={handleVariantImagesChange}
                     />
@@ -644,7 +683,7 @@ const EditProduct: React.FC<Props> = ({
                             name='name'
                             onChange={(e) => updateVariationData(index, e)}
                             type='text'
-                            value={variation.name || ''}
+                            value={variation.name || ""}
                             className='h-8 text-sm border-slate-200 dark:border-slate-600 focus:border-blue-400 bg-white dark:bg-slate-900'
                             placeholder='e.g., Red - Large'
                           />
@@ -652,8 +691,7 @@ const EditProduct: React.FC<Props> = ({
 
                         {/* Stock (Read-only) */}
                         <div>
-                          <Label
-                            className='text-[10px] font-semibold text-slate-600 dark:text-slate-400 flex items-center gap-1 mb-1'>
+                          <Label className='text-[10px] font-semibold text-slate-600 dark:text-slate-400 flex items-center gap-1 mb-1'>
                             <BarChart3 className='w-3 h-3' />
                             Stock (Read-only)
                           </Label>
@@ -664,7 +702,7 @@ const EditProduct: React.FC<Props> = ({
                       </div>
                     </div>
                   </div>
-                )
+                ),
               )}
             </div>
           </div>
@@ -712,7 +750,9 @@ const EditProduct: React.FC<Props> = ({
 
     // Prepare variant images for upload
     const allVariantImages = Object.values(variantImages).flat();
-    const variantImageFileList = allVariantImages.filter(img => img instanceof File) as File[];
+    const variantImageFileList = allVariantImages.filter(
+      (img) => img instanceof File,
+    ) as File[];
 
     // Build variant image mappings for new uploads (one mapping per image)
     const variantImageMappings: IVariantImageMapping[] = [];
@@ -720,7 +760,7 @@ const EditProduct: React.FC<Props> = ({
 
     for (const variant of formData.variation) {
       const images = variantImages[variant.id] || [];
-      const newImages = images.filter(img => img instanceof File);
+      const newImages = images.filter((img) => img instanceof File);
 
       // Create a mapping for each new image
       for (let i = 0; i < newImages.length; i++) {
@@ -814,8 +854,12 @@ const EditProduct: React.FC<Props> = ({
                 </div>
                 <BarChart3 className='w-5 h-5 sm:w-6 sm:h-6 opacity-50' />
               </div>
-              <p className='text-xs sm:text-sm font-medium opacity-90 mb-1'>Total Stock</p>
-              <p className='text-2xl sm:text-3xl lg:text-4xl font-bold'>{totalQuantity}</p>
+              <p className='text-xs sm:text-sm font-medium opacity-90 mb-1'>
+                Total Stock
+              </p>
+              <p className='text-2xl sm:text-3xl lg:text-4xl font-bold'>
+                {totalQuantity}
+              </p>
             </CardContent>
           </Card>
 
@@ -829,7 +873,9 @@ const EditProduct: React.FC<Props> = ({
                 </div>
                 <Tag className='w-5 h-5 sm:w-6 sm:h-6 opacity-50' />
               </div>
-              <p className='text-xs sm:text-sm font-medium opacity-90 mb-1'>Total Variants</p>
+              <p className='text-xs sm:text-sm font-medium opacity-90 mb-1'>
+                Total Variants
+              </p>
               <p className='text-2xl sm:text-3xl lg:text-4xl font-bold'>
                 {formData?.variation?.length || 0}
               </p>
@@ -846,8 +892,12 @@ const EditProduct: React.FC<Props> = ({
                 </div>
                 <Palette className='w-5 h-5 sm:w-6 sm:h-6 opacity-50' />
               </div>
-              <p className='text-xs sm:text-sm font-medium opacity-90 mb-1'>Unique Colors</p>
-              <p className='text-2xl sm:text-3xl lg:text-4xl font-bold'>{uniqueColors.length}</p>
+              <p className='text-xs sm:text-sm font-medium opacity-90 mb-1'>
+                Unique Colors
+              </p>
+              <p className='text-2xl sm:text-3xl lg:text-4xl font-bold'>
+                {uniqueColors.length}
+              </p>
             </CardContent>
           </Card>
 
@@ -861,8 +911,12 @@ const EditProduct: React.FC<Props> = ({
                 </div>
                 <Ruler className='w-5 h-5 sm:w-6 sm:h-6 opacity-50' />
               </div>
-              <p className='text-xs sm:text-sm font-medium opacity-90 mb-1'>Unique Sizes</p>
-              <p className='text-2xl sm:text-3xl lg:text-4xl font-bold'>{uniqueSizes.length}</p>
+              <p className='text-xs sm:text-sm font-medium opacity-90 mb-1'>
+                Unique Sizes
+              </p>
+              <p className='text-2xl sm:text-3xl lg:text-4xl font-bold'>
+                {uniqueSizes.length}
+              </p>
             </CardContent>
           </Card>
         </div>
@@ -886,7 +940,9 @@ const EditProduct: React.FC<Props> = ({
               </CardHeader>
               <CardContent className='space-y-6 pt-6'>
                 <div className='space-y-2'>
-                  <Label htmlFor='name' className='text-sm font-semibold flex items-center gap-2'>
+                  <Label
+                    htmlFor='name'
+                    className='text-sm font-semibold flex items-center gap-2'>
                     <Tag className='w-4 h-4 text-blue-500' />
                     Product Name *
                   </Label>
@@ -903,16 +959,15 @@ const EditProduct: React.FC<Props> = ({
                 </div>
 
                 <div className='space-y-2'>
-                  <Label htmlFor='description' className='text-sm font-semibold'>
+                  <Label
+                    htmlFor='description'
+                    className='text-sm font-semibold'>
                     Description
                   </Label>
-                  <Textarea
-                    id='description'
-                    name='description'
-                    value={formData?.description || ""}
-                    onChange={handleChange}
-                    placeholder='Describe your product features, benefits, and specifications'
-                    className='min-h-[120px] resize-none border-2 focus:border-blue-500 transition-colors'
+                  <TiptapEditor
+                    content={formData?.description || ''}
+                    onChange={handleDescriptionChange}
+                    placeholder='Describe your product features, benefits, and specifications...'
                   />
                 </div>
               </CardContent>
@@ -990,7 +1045,9 @@ const EditProduct: React.FC<Props> = ({
                     </div>
 
                     <div className='space-y-2'>
-                      <Label htmlFor='quantity' className='text-sm font-semibold flex items-center gap-2'>
+                      <Label
+                        htmlFor='quantity'
+                        className='text-sm font-semibold flex items-center gap-2'>
                         <Package className='w-4 h-4 text-emerald-500' />
                         Total Quantity
                       </Label>
@@ -1007,7 +1064,9 @@ const EditProduct: React.FC<Props> = ({
                             : "focus:border-emerald-500"
                         }`}
                         min='0'
-                        disabled={formData?.variation && formData.variation.length > 0}
+                        disabled={
+                          formData?.variation && formData.variation.length > 0
+                        }
                       />
                       {formData?.variation && formData.variation.length > 0 && (
                         <p className='text-xs text-amber-600 dark:text-amber-400 font-medium'>
@@ -1036,7 +1095,9 @@ const EditProduct: React.FC<Props> = ({
               <CardContent className='space-y-6 pt-6'>
                 <div className='grid gap-6 sm:grid-cols-2'>
                   <div className='space-y-2'>
-                    <Label htmlFor='discount-type' className='text-sm font-semibold'>
+                    <Label
+                      htmlFor='discount-type'
+                      className='text-sm font-semibold'>
                       Discount Type
                     </Label>
                     <Select
@@ -1047,7 +1108,9 @@ const EditProduct: React.FC<Props> = ({
                           discountType: value,
                         });
                       }}>
-                      <SelectTrigger id='discount-type' className='h-11 border-2'>
+                      <SelectTrigger
+                        id='discount-type'
+                        className='h-11 border-2'>
                         <SelectValue placeholder='Select discount type' />
                       </SelectTrigger>
                       <SelectContent>
@@ -1116,8 +1179,12 @@ const EditProduct: React.FC<Props> = ({
                       onValueChange={(value) => {
                         updateFormData({
                           ...formData,
-                          commissionType: value as "percentage" | "fixed" | "none",
-                          commissionRate: value === "none" ? 0 : formData.commissionRate,
+                          commissionType: value as
+                            | "percentage"
+                            | "fixed"
+                            | "none",
+                          commissionRate:
+                            value === "none" ? 0 : formData.commissionRate,
                         });
                       }}>
                       <SelectTrigger
@@ -1127,7 +1194,9 @@ const EditProduct: React.FC<Props> = ({
                       </SelectTrigger>
                       <SelectContent>
                         <SelectItem value='none'>No Commission</SelectItem>
-                        <SelectItem value='percentage'>Percentage (%)</SelectItem>
+                        <SelectItem value='percentage'>
+                          Percentage (%)
+                        </SelectItem>
                         <SelectItem value='fixed'>Fixed Amount</SelectItem>
                       </SelectContent>
                     </Select>
@@ -1155,7 +1224,11 @@ const EditProduct: React.FC<Props> = ({
                           })
                         }
                         min='0'
-                        max={formData?.commissionType === "percentage" ? 100 : undefined}
+                        max={
+                          formData?.commissionType === "percentage"
+                            ? 100
+                            : undefined
+                        }
                         step='0.01'
                         placeholder={
                           formData?.commissionType === "percentage"
@@ -1305,7 +1378,9 @@ const EditProduct: React.FC<Props> = ({
                           {/* Remove button - appears on hover */}
                           <button
                             onClick={() => {
-                              const images = formData.images.filter((_, i) => i !== index);
+                              const images = formData.images.filter(
+                                (_, i) => i !== index,
+                              );
                               if (typeof imgData === "string") {
                                 updateFormData({
                                   ...formData,
@@ -1356,7 +1431,7 @@ const EditProduct: React.FC<Props> = ({
                           });
 
                           // Reset file input
-                          e.target.value = '';
+                          e.target.value = "";
                         }}
                       />
 
@@ -1520,17 +1595,13 @@ const EditProduct: React.FC<Props> = ({
                   onValueChange={setVariationTab}
                   className='w-full'>
                   <TabsList className='grid w-full grid-cols-2'>
-                    <TabsTrigger
-                      value='v1'
-                      className='flex items-center gap-2'>
+                    <TabsTrigger value='v1' className='flex items-center gap-2'>
                       <span>Advanced</span>
                       <Badge variant='outline' className='text-xs'>
                         V1
                       </Badge>
                     </TabsTrigger>
-                    <TabsTrigger
-                      value='v2'
-                      className='flex items-center gap-2'>
+                    <TabsTrigger value='v2' className='flex items-center gap-2'>
                       <span>Simple</span>
                       <Badge variant='outline' className='text-xs'>
                         V2
@@ -1541,8 +1612,8 @@ const EditProduct: React.FC<Props> = ({
                   <TabsContent value='v1' className='mt-6'>
                     <div className='space-y-4'>
                       <div className='text-sm text-slate-700 dark:text-slate-300 bg-blue-50 dark:bg-blue-950/20 p-3 rounded-lg border'>
-                        <strong>Advanced Mode:</strong> Manually configure
-                        each variation with full control over all properties.
+                        <strong>Advanced Mode:</strong> Manually configure each
+                        variation with full control over all properties.
                       </div>
                       {renderV1VariationView()}
                     </div>

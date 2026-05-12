@@ -142,7 +142,7 @@ const SearchableSelect = ({
   const filtered = options.filter(
     (opt) =>
       opt.name.toLowerCase().includes(query.toLowerCase()) ||
-      opt.bn_name.includes(query)
+      opt.bn_name.includes(query),
   );
 
   return (
@@ -167,7 +167,7 @@ const SearchableSelect = ({
             key={opt.id}
             value={opt.id}
             className={`text-xs cursor-pointer hover:bg-${colorClass}-50`}>
-            {`${opt.name} (${opt.bn_name})`}
+            {`${opt.name}`}
           </SelectItem>
         ))}
       </SelectContent>
@@ -188,12 +188,12 @@ const usePaymentCalculations = (initial: PaymentInfo) => {
       payment.deliveryCharge -
       payment.discount -
       payment.paid,
-    [payment]
+    [payment],
   );
 
   const finalAmount = useMemo(
     () => payment.totalPrice + payment.deliveryCharge - payment.discount,
-    [payment]
+    [payment],
   );
 
   const updateField = useCallback((field: keyof PaymentInfo, value: number) => {
@@ -260,7 +260,7 @@ const EditCustomerInformation: React.FC<Props> = ({
       district:
         getLocationByFormattedString(
           BDDistrictList,
-          shipping?.district ?? ""
+          shipping?.district ?? "",
         ) ?? null,
       division:
         getLocationByFormattedString(BDDivisions, shipping?.division ?? "") ??
@@ -283,8 +283,7 @@ const EditCustomerInformation: React.FC<Props> = ({
     setShippingAddress((prev) => ({ ...prev, district }));
   };
 
-  const formatLocation = (loc: Location | null) =>
-    loc ? `${loc.name}(${loc.bn_name})` : "";
+  const formatLocation = (loc: Location | null) => (loc ? `${loc.name}` : "");
 
   const handleSubmit = () => {
     setIsSubmitting(true);
@@ -310,9 +309,9 @@ const EditCustomerInformation: React.FC<Props> = ({
   const filteredDistricts = useMemo(
     () =>
       BDDistrictList.filter(
-        (d) => d.division_id === shippingAddress.division?.id
+        (d) => d.division_id === shippingAddress.division?.id,
       ),
-    [shippingAddress.division?.id]
+    [shippingAddress.division?.id],
   );
 
   return (

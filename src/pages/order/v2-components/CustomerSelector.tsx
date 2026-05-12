@@ -1,7 +1,9 @@
 import { useState } from 'react';
-import { User, Phone } from 'lucide-react';
+import { User, Phone, Mail, UserCheck, CheckCircle2 } from 'lucide-react';
 import { Input } from '../../../components/ui/input';
 import { Label } from '../../../components/ui/label';
+import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '../../../components/ui/card';
+import { Badge } from '../../../components/ui/badge';
 import { CustomerSearchDropdown } from './CustomerSearchDropdown';
 import { AddressSelectionModal } from './AddressSelectionModal';
 import { customerSearchAPI } from '../../../api/customerSearch';
@@ -100,84 +102,112 @@ export function CustomerSelector({
   };
 
   return (
-    <div className="space-y-4">
-      <div className="flex items-center justify-between">
-        <h3 className="font-semibold text-base flex items-center gap-2">
-          <User className="h-4 w-4 text-blue-600" />
+    <Card className="border shadow-sm">
+      <CardHeader className="bg-gradient-to-r from-blue-50 to-purple-50 border-b p-3 rounded-xl mx-2 mt-2 shadow">
+        <CardTitle className="flex items-center gap-2 text-base text-gray-800">
+          <User className="w-5 h-5 text-blue-600" />
           Customer Information
-        </h3>
-      </div>
+        </CardTitle>
+        <CardDescription className="text-xs text-gray-600">
+          Enter customer details for order processing
+        </CardDescription>
+      </CardHeader>
 
-      <div className="space-y-3.5">
-        {/* Customer Search Dropdown */}
-        <div className="space-y-2">
-          <Label className="text-xs font-semibold text-gray-700">
-            Search Existing Customer
-          </Label>
-          <CustomerSearchDropdown onSelect={handleCustomerSelect} />
-        </div>
-
-        {/* Manual Entry Separator */}
-        <div className="relative py-2">
-          <div className="absolute inset-0 flex items-center">
-            <div className="w-full border-t border-gray-200"></div>
+      <CardContent className="p-3 space-y-4">
+        <div className="space-y-3.5">
+          {/* Customer Search Dropdown */}
+          <div className="space-y-1.5">
+            <Label className="flex items-center gap-1.5 font-medium text-sm">
+              Search Existing Customer
+            </Label>
+            <CustomerSearchDropdown onSelect={handleCustomerSelect} />
           </div>
-          <div className="relative flex justify-center">
-            <span className="bg-white px-2 text-xs text-gray-500">Or enter manually</span>
+
+          {/* Manual Entry Separator */}
+          <div className="relative py-2">
+            <div className="absolute inset-0 flex items-center">
+              <div className="w-full border-t border-gray-200"></div>
+            </div>
+            <div className="relative flex justify-center">
+              <span className="bg-white px-2 text-xs text-gray-500">Or enter manually</span>
+            </div>
+          </div>
+
+          {/* Customer Name */}
+          <div className="space-y-1.5">
+            <Label htmlFor="customer-name" className="flex items-center gap-1.5 font-medium text-sm">
+              <UserCheck className="w-3.5 h-3.5 text-blue-600" />
+              Customer Name *
+            </Label>
+            <div className="relative w-full">
+              <User className="absolute left-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 pointer-events-none" />
+              <Input
+                id="customer-name"
+                type="text"
+                placeholder="Enter customer name"
+                value={customer.name || ''}
+                onChange={(e) => onChange({ ...customer, name: e.target.value })}
+                className="pl-9 h-9 text-sm border-gray-200 focus:border-blue-500 transition-all"
+              />
+              {customer.name && (
+                <CheckCircle2 className="absolute right-2.5 top-1/2 -translate-y-1/2 w-4 h-4 text-green-500 pointer-events-none" />
+              )}
+            </div>
+          </div>
+
+          {/* Phone Number */}
+          <div className="space-y-1.5">
+            <Label htmlFor="customer-phone" className="flex items-center gap-1.5 font-medium text-sm">
+              <Phone className="w-3.5 h-3.5 text-blue-600" />
+              Phone Number *
+            </Label>
+            <div className="relative w-full">
+              <Phone className="absolute left-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 pointer-events-none" />
+              <Input
+                id="customer-phone"
+                type="tel"
+                placeholder="Enter phone number"
+                value={customer.phoneNumber || ''}
+                onChange={(e) => onChange({ ...customer, phoneNumber: e.target.value })}
+                className="pl-9 h-9 text-sm border-gray-200 focus:border-blue-500 transition-all"
+              />
+              {customer.phoneNumber && (
+                <CheckCircle2 className="absolute right-2.5 top-1/2 -translate-y-1/2 w-4 h-4 text-green-500 pointer-events-none" />
+              )}
+            </div>
+            <p className="text-xs text-gray-500 flex items-center gap-1">
+              BD mobile format (11 digits, starts with 01)
+            </p>
+          </div>
+
+          {/* Email (Optional) */}
+          <div className="space-y-1.5">
+            <div className="flex items-center gap-2">
+              <Label htmlFor="customer-email" className="flex items-center gap-1.5 font-medium text-sm">
+                <Mail className="w-3.5 h-3.5 text-blue-600" />
+                Email
+              </Label>
+              <Badge variant="outline" className="text-xs px-1.5 py-0">
+                Optional
+              </Badge>
+            </div>
+            <div className="relative w-full">
+              <Mail className="absolute left-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 pointer-events-none" />
+              <Input
+                id="customer-email"
+                type="email"
+                placeholder="Enter email address"
+                value={customer.email || ''}
+                onChange={(e) => onChange({ ...customer, email: e.target.value })}
+                className="pl-9 h-9 text-sm border-gray-200 focus:border-blue-500 transition-all"
+              />
+              {customer.email && (
+                <CheckCircle2 className="absolute right-2.5 top-1/2 -translate-y-1/2 w-4 h-4 text-green-500 pointer-events-none" />
+              )}
+            </div>
           </div>
         </div>
-
-        {/* Customer Name */}
-        <div className="space-y-2">
-          <Label htmlFor="customer-name" className="text-xs font-semibold text-gray-700">
-            Customer Name *
-          </Label>
-          <div className="relative group w-full">
-            <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4.5 w-4.5 text-muted-foreground group-focus-within:text-blue-600 transition-colors" />
-            <Input
-              id="customer-name"
-              type="text"
-              placeholder="Enter customer name"
-              value={customer.name || ''}
-              onChange={(e) => onChange({ ...customer, name: e.target.value })}
-              className="w-full pl-11 h-10 border-gray-200 focus:border-blue-400 focus-visible:ring-2 focus-visible:ring-blue-400/20 transition-all"
-            />
-          </div>
-        </div>
-
-        {/* Phone Number */}
-        <div className="space-y-2">
-          <Label htmlFor="customer-phone" className="text-xs font-semibold text-gray-700">
-            Phone Number *
-          </Label>
-          <div className="relative group w-full">
-            <Phone className="absolute left-3 top-1/2 -translate-y-1/2 h-4.5 w-4.5 text-muted-foreground group-focus-within:text-green-600 transition-colors" />
-            <Input
-              id="customer-phone"
-              type="tel"
-              placeholder="Enter phone number"
-              value={customer.phoneNumber || ''}
-              onChange={(e) => onChange({ ...customer, phoneNumber: e.target.value })}
-              className="w-full pl-11 h-10 border-gray-200 focus:border-green-400 focus-visible:ring-2 focus-visible:ring-green-400/20 transition-all"
-            />
-          </div>
-        </div>
-
-        {/* Email (Optional) */}
-        <div className="space-y-2">
-          <Label htmlFor="customer-email" className="text-xs font-semibold text-gray-700">
-            Email (Optional)
-          </Label>
-          <Input
-            id="customer-email"
-            type="email"
-            placeholder="Enter email address"
-            value={customer.email || ''}
-            onChange={(e) => onChange({ ...customer, email: e.target.value })}
-            className="w-full h-10 border-gray-200 focus:border-blue-400 focus-visible:ring-2 focus-visible:ring-blue-400/20 transition-all"
-          />
-        </div>
-      </div>
+      </CardContent>
 
       {/* Address Selection Modal */}
       {selectedCustomer && (
@@ -189,6 +219,6 @@ export function CustomerSelector({
           onSelect={handleAddressSelect}
         />
       )}
-    </div>
+    </Card>
   );
 }

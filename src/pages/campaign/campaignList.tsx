@@ -127,7 +127,7 @@ const CampaignList = () => {
     if (!filteredCampaigns || filteredCampaigns.length < 1) {
       return (
         <TableRow>
-          <TableCell colSpan={5} className='text-center'>
+          <TableCell colSpan={6} className='text-center'>
             <Badge variant={"secondary"}>No Campaign Found</Badge>
           </TableCell>
         </TableRow>
@@ -138,6 +138,25 @@ const CampaignList = () => {
           <TableCell className='font-medium'>{index + 1}</TableCell>
           <TableCell>{cam?.title}</TableCell>
           <TableCell>{cam?.products?.length ?? 0}</TableCell>
+          <TableCell>
+            {!cam?.deliveryDiscountType || cam?.deliveryDiscountType === "none" ? (
+              <Badge variant='secondary'>None</Badge>
+            ) : cam?.deliveryDiscountType === "free" ? (
+              <Badge className='bg-green-100 text-green-800 border-green-300'>
+                Free Delivery
+              </Badge>
+            ) : cam?.deliveryDiscountType === "percentage" ? (
+              <Badge className='bg-blue-100 text-blue-800 border-blue-300'>
+                {cam?.deliveryDiscountAmount}% off
+              </Badge>
+            ) : cam?.deliveryDiscountType === "fixed" ? (
+              <Badge className='bg-orange-100 text-orange-800 border-orange-300'>
+                {cam?.deliveryDiscountAmount} off
+              </Badge>
+            ) : (
+              <Badge variant='secondary'>None</Badge>
+            )}
+          </TableCell>
           <TableCell>{dayjs(cam?.startDate).format(DATE_FORMAT)}</TableCell>
           <TableCell>{dayjs(cam?.endDate).format(DATE_FORMAT)}</TableCell>
           {hasSomePermissionsForPage("campaign", ["edit", "delete"]) && (
@@ -184,6 +203,7 @@ const CampaignList = () => {
               Title
             </TableHead>
             <TableHead>Total Products</TableHead>
+            <TableHead>Delivery Discount</TableHead>
             <TableHead>Start Date</TableHead>
             <TableHead>End Date</TableHead>
             {hasSomePermissionsForPage("campaign", ["edit", "delete"]) && (

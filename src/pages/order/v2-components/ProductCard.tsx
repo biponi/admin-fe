@@ -1,7 +1,4 @@
-import { Package, ShoppingCart } from "lucide-react";
-import { Card } from "../../../components/ui/card";
-import { Button } from "../../../components/ui/button";
-import { Badge } from "../../../components/ui/badge";
+import { ShoppingCart, Palette } from "lucide-react";
 import PlaceHolderImage from "../../../assets/placeholder.svg";
 import type { IProduct } from "../../product/interface";
 
@@ -18,173 +15,166 @@ export function ProductCard({
   onProductClick,
   isLoading = false,
 }: ProductCardProps) {
-  const hasVariations = product.hasVariation === true || (product.variation && product.variation.length > 0);
+  const hasVariations =
+    product.hasVariation === true ||
+    (product.variation && product.variation.length > 0);
   const inStock = product.quantity > 0;
   const hasDiscount = product.discount > 0;
 
-  const handleCardClick = () => {
-    console.log('ProductCard clicked:', {
-      productName: product.name,
-      hasVariations,
-      hasVariation: product.hasVariation,
-      variationLength: product.variation?.length || 0,
-    });
-    if (hasVariations) {
-      onProductClick(product);
-    } else {
-      onAddToCart(product);
-    }
+  const discountPercent =
+    product.discountType === "%"
+      ? Math.ceil(
+          ((product.unitPrice - product.updatedPrice) / product.unitPrice) *
+            100,
+        )
+      : Math.floor(product.discount);
+
+  const displayPrice = hasDiscount
+    ? (product.updatedPrice?.toFixed(2) ?? product.unitPrice.toFixed(2))
+    : product.unitPrice.toFixed(2);
+
+  const handleCardClick = (e: React.MouseEvent | React.TouchEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (!inStock) return;
+    hasVariations ? onProductClick(product) : onAddToCart(product);
   };
 
   const getImageUrl = () => {
     if (!product.thumbnail) return PlaceHolderImage;
-
-    // Handle relative URLs
-    if (product.thumbnail.startsWith("/")) {
-      return product.thumbnail;
-    }
-
-    // Handle absolute URLs
     return product.thumbnail;
   };
 
   return (
-    <Card
+    <div
       className={`
-        group relative overflow-hidden transition-all duration-300
-        ${!inStock ? "opacity-60" : "hover:shadow-xl hover:border-blue-400 hover:-translate-y-1"}
-        cursor-pointer rounded-md
+        group relative overflow-hidden rounded-xl border border-zinc-200
+        bg-white transition-all duration-300
+        ${
+          inStock
+            ? "cursor-pointer hover:-translate-y-0.5 hover:border-zinc-400 hover:shadow-[0_8px_32px_-8px_rgba(0,0,0,0.12)]"
+            : "opacity-55 cursor-default"
+        }
       `}
       onClick={handleCardClick}>
-      {/* Product Image - Square Aspect Ratio */}
-      <div className='aspect-square w-full overflow-hidden bg-gradient-to-br from-gray-100 to-gray-50 relative'>
+      {/* Image */}
+      <div className='relative aspect-square w-full overflow-hidden bg-zinc-50'>
         <img
           src={getImageUrl()}
           alt={product.name}
           loading='lazy'
-          className='w-full h-full object-cover transition-transform duration-300 group-hover:scale-110'
+          className='h-full w-full object-cover transition-transform duration-500 group-hover:scale-105'
           onError={(e) => {
             (e.target as HTMLImageElement).src = PlaceHolderImage;
           }}
         />
 
         {/* Badges */}
-        <div className='absolute top-2 left-2 flex flex-col gap-1.5 z-10'>
+        <div className='absolute left-2.5 top-2.5 z-10 flex flex-col gap-1.5'>
           {hasVariations && (
-            <Badge
-              variant='secondary'
-              className='text-xs font-semibold shadow-md backdrop-blur-sm bg-white/90'>
+            <span className='rounded-sm bg-white/95 px-2 py-0.5 text-[10px] font-medium uppercase tracking-widest text-zinc-700 shadow-sm'>
               Variations
-            </Badge>
+            </span>
           )}
           {!inStock && (
-            <Badge
-              variant='destructive'
-              className='text-xs font-semibold shadow-md'>
+            <span className='rounded-sm bg-zinc-800 px-2 py-0.5 text-[10px] font-medium uppercase tracking-widest text-zinc-300'>
               Out of Stock
-            </Badge>
+            </span>
           )}
           {hasDiscount && (
-            <Badge
-              variant='default'
-              className='text-xs font-semibold shadow-md bg-gradient-to-r from-green-500 to-green-600'>
-              {product?.discountType === "%"
-                ? Math.ceil(
-                    ((product.unitPrice - product.updatedPrice) /
-                      product.unitPrice) *
-                      100,
-                  )
-                : Math.floor(product.discount)}
-              {product?.discountType === "%" ? "%" : "TK"} OFF
-            </Badge>
+            <span className='rounded-sm bg-emerald-600 px-2 py-0.5 text-[10px] font-medium uppercase tracking-widest text-emerald-50'>
+              {discountPercent}
+              {product.discountType === "%" ? "%" : "tk"} off
+            </span>
           )}
         </div>
 
-        {/* Stock Info Overlay */}
+        {/* Stock pill */}
         {inStock && (
-          <div className='absolute bottom-2 right-2 bg-gradient-to-r from-black/80 to-black/70 text-white text-xs px-2.5 py-1.5 rounded-lg font-medium backdrop-blur-sm shadow-lg'>
+          <div className='absolute bottom-2.5 right-2.5 rounded-sm bg-black/60 px-2 py-1 text-[10px] tracking-wide text-white backdrop-blur-sm'>
             {product.quantity} left
           </div>
         )}
 
-        {/* Quick Add Overlay on Hover */}
-        {inStock && !hasVariations && (
-          <div className='absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-all duration-300 flex items-center justify-center opacity-0 group-hover:opacity-100'>
-            <ShoppingCart className='h-12 w-12 text-white drop-shadow-lg transform scale-0 group-hover:scale-100 transition-transform duration-300' />
+        {/* Hover CTA */}
+        {inStock && (
+          <div className='absolute inset-0 flex items-center justify-center bg-black/0 transition-all duration-300 group-hover:bg-black/8'>
+            <div className='flex h-10 w-10 scale-75 items-center justify-center rounded-full bg-white opacity-0 shadow-md transition-all duration-300 group-hover:scale-100 group-hover:opacity-100'>
+              {hasVariations ? (
+                <Palette className='h-4 w-4 text-zinc-700' />
+              ) : (
+                <ShoppingCart className='h-4 w-4 text-zinc-700' />
+              )}
+            </div>
           </div>
         )}
       </div>
 
-      {/* Product Info */}
-      <div className='p-3.5 space-y-2.5 bg-white'>
-        {/* Product Name */}
-        <h3 className='font-semibold text-sm line-clamp-2 leading-tight uppercase'>
+      {/* Info */}
+      <div className='p-3.5'>
+        {/* Categories */}
+        {product.categoryNames && product.categoryNames.length > 0 && (
+          <div className='mb-1.5 flex gap-1.5'>
+            {product.categoryNames.slice(0, 2).map((name, i) => (
+              <span
+                key={name}
+                className='text-[9px] uppercase tracking-[0.08em] text-zinc-400 font-light'>
+                {i > 0 && <span className='mr-1.5 opacity-40'>·</span>}
+                {name}
+              </span>
+            ))}
+          </div>
+        )}
+
+        {/* Name */}
+        <h3 className='font-serif text-[15px] font-normal leading-snug tracking-[0.01em] text-zinc-900'>
           {product.name}
         </h3>
 
         {/* SKU */}
-        <p className='text-xs text-muted-foreground font-mono'>
+        <p className='mt-1 text-[10px] font-light tracking-wide text-zinc-400'>
           SKU: {product.sku}
         </p>
 
-        {/* Price Section */}
-        <div className='flex items-center justify-between pt-1'>
-          <div className='flex flex-col'>
-            {hasDiscount ? (
-              <>
-                <span className='text-lg font-bold text-green-600'>
-                  ৳
-                  {product.updatedPrice?.toFixed(2) ||
-                    product.unitPrice.toFixed(2)}
-                </span>
-                <span className='text-xs text-muted-foreground line-through'>
-                  ৳{product.unitPrice.toFixed(2)}
-                </span>
-              </>
-            ) : (
-              <span className='text-lg font-bold text-gray-900'>
+        {/* Divider */}
+        <div className='my-2.5 h-px bg-zinc-100' />
+
+        {/* Price + action */}
+        <div className='flex items-end justify-between'>
+          <div className='flex items-baseline gap-1.5'>
+            <span
+              className={`font-serif text-[19px] font-medium leading-none ${
+                hasDiscount ? "text-emerald-700" : "text-zinc-900"
+              }`}>
+              ৳{displayPrice}
+            </span>
+            {hasDiscount && (
+              <span className='text-[11px] font-light text-zinc-400 line-through'>
                 ৳{product.unitPrice.toFixed(2)}
               </span>
             )}
           </div>
-
-          {/* Add to Cart Button */}
-          <Button
-            size='sm'
-            disabled={!inStock || isLoading}
-            className='h-8 px-3 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white shadow-md hover:shadow-lg transition-all duration-200'
-            onClick={(e) => {
-              e.stopPropagation();
-              handleCardClick();
-            }}>
-            {hasVariations ? (
-              <>
-                <Package className='h-3 w-3 mr-1' />
-                Select
-              </>
-            ) : (
-              <>
-                <ShoppingCart className='h-3 w-3 mr-1' />
-                Add
-              </>
-            )}
-          </Button>
         </div>
 
-        {/* Category Badge (if available) */}
-        {product.categoryNames && product.categoryNames.length > 0 && (
-          <div className='flex flex-wrap gap-1'>
-            {product.categoryNames.slice(0, 2).map((categoryName) => (
-              <Badge
-                key={categoryName}
-                variant='outline'
-                className='text-xs border-blue-200 text-blue-700'>
-                {categoryName}
-              </Badge>
-            ))}
-          </div>
-        )}
+        {/* Action label */}
+        <button
+          disabled={!inStock || isLoading}
+          className='mt-2 hidden w-full items-center gap-1.5 text-[10px] uppercase tracking-[0.07em] font-medium text-zinc-400 transition-colors duration-200 group-hover:text-zinc-800 disabled:cursor-not-allowed disabled:opacity-50'
+          onClick={(e) => {
+            e.stopPropagation();
+            handleCardClick(e);
+          }}>
+          {hasVariations ? (
+            <>
+              <Palette className='h-3 w-3' /> Select variation
+            </>
+          ) : (
+            <>
+              <ShoppingCart className='h-3 w-3' /> Add to cart
+            </>
+          )}
+        </button>
       </div>
-    </Card>
+    </div>
   );
 }

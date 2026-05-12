@@ -230,11 +230,16 @@ export const useCreateOrderLayoutStore = create<CreateOrderLayoutState>()(
                 return state;
               }
 
-              // Update quantity
+              // Update quantity - use the correct price source
               const updatedCart = [...state.cart];
               updatedCart[existingItemIndex].quantity = newQuantity;
+              // Use variant price if available, otherwise use the item's unit price
+              const priceSource =
+                existingItem.selectedVariant?.unitPrice ||
+                existingItem.unitPrice;
               updatedCart[existingItemIndex].totalPrice =
-                newQuantity * existingItem.unitPrice;
+                newQuantity * priceSource -
+                newQuantity * (existingItem?.discount ?? 0);
               return { cart: updatedCart, isDirty: true };
             } else {
               // Add new item
@@ -244,8 +249,15 @@ export const useCreateOrderLayoutStore = create<CreateOrderLayoutState>()(
                 name: product.name,
                 thumbnail: product.thumbnail,
                 quantity: 1,
-                unitPrice: variant ? variant.unitPrice : product.unitPrice,
-                totalPrice: variant ? variant.unitPrice : product.unitPrice,
+                // Use variant price if it exists and is greater than 0, otherwise use product price
+                unitPrice:
+                  (variant && variant.unitPrice > 0
+                    ? variant.unitPrice
+                    : product.unitPrice) - (product.discount ?? 0),
+                totalPrice:
+                  (variant && variant.unitPrice > 0
+                    ? variant.unitPrice
+                    : product.unitPrice) - (product.discount ?? 0),
                 discount: product.discount,
                 hasVariation: product.hasVariation,
                 variantId: variant?.id,
@@ -302,7 +314,9 @@ export const useCreateOrderLayoutStore = create<CreateOrderLayoutState>()(
                   ? {
                       ...item,
                       quantity,
-                      totalPrice: quantity * item.unitPrice,
+                      totalPrice:
+                        quantity *
+                        (item.selectedVariant?.unitPrice || item.unitPrice),
                     }
                   : item,
               ),

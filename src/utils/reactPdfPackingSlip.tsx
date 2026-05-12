@@ -11,6 +11,7 @@ import {
 } from "@react-pdf/renderer";
 import { IOrder } from "../pages/order/interface";
 import { getOrderDetails } from "../api/order";
+import { BRAND_CONFIG } from "../config/brand";
 
 // Register Bengali font
 Font.register({
@@ -441,7 +442,7 @@ const preloadPackingSlipImages = async (order: IOrder) => {
     district: order.shipping?.district,
     division: order.shipping?.division,
     due: order.remaining,
-    trackingUrl: `https://priorbd.com/order/${order.orderNumber}`,
+    trackingUrl: `${BRAND_CONFIG.website}/order/${order.orderNumber}`,
   });
 
   const QRCode = require("qrcode");

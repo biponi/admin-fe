@@ -123,6 +123,7 @@ import {
 import { useCourierActions } from "../delivery/hooks/useCourierActions";
 import { CourierSelector } from "./components/CourierSelector";
 import { useIsMobile } from "../../hooks/use-mobile";
+import { BRAND_CONFIG } from "../../config/brand";
 
 const OrderList = () => {
   const isMobile = useIsMobile();
@@ -188,7 +189,7 @@ const OrderList = () => {
 
   const handleCopy = () => {
     if (!selectedOrder) return;
-    const trackUrl = `https://priorbd.com/order/${selectedOrder?.id}`;
+    const trackUrl = `${BRAND_CONFIG.website}/order/${selectedOrder?.id}`;
     navigator.clipboard.writeText(trackUrl).then(() => {
       setIsCopied(true);
       setTimeout(() => setIsCopied(false), 2000); // Hide "Copied!" after 2 seconds

@@ -548,9 +548,7 @@ const CustomerInformation: React.FC<Props> = ({
                     className='hover:bg-blue-50'>
                     <div className='flex items-center justify-between w-full'>
                       <span>{`${division?.name}`}</span>
-                      <Badge variant='outline' className='text-xs ml-2'>
-                        {division?.bn_name}
-                      </Badge>
+                      
                     </div>
                   </SelectItem>
                 ))}
@@ -617,9 +615,7 @@ const CustomerInformation: React.FC<Props> = ({
                         className='hover:bg-green-50'>
                         <div className='flex items-center justify-between w-full'>
                           <span>{`${district?.name}`}</span>
-                          <Badge variant='outline' className='text-xs ml-2'>
-                            {district?.bn_name}
-                          </Badge>
+                         
                         </div>
                       </SelectItem>
                     ))}
@@ -693,12 +689,7 @@ const CustomerInformation: React.FC<Props> = ({
                       //@ts-ignore
                       shippingAddress.division.name
                     }{" "}
-                    (
-                    {
-                      //@ts-ignore
-                      shippingAddress.division.bn_name
-                    }
-                    )
+                   
                   </p>
                   <p>
                     <strong>District:</strong>{" "}
@@ -706,12 +697,7 @@ const CustomerInformation: React.FC<Props> = ({
                       //@ts-ignore
                       shippingAddress.district.name
                     }{" "}
-                    (
-                    {
-                      //@ts-ignore
-                      shippingAddress.district.bn_name
-                    }
-                    )
+                    
                   </p>
                 </div>
               </div>

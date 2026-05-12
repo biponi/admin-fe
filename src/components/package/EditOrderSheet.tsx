@@ -1,10 +1,5 @@
 import { useEffect, useState, useMemo, useCallback } from "react";
-import {
-  Sheet,
-  SheetContent,
-  SheetHeader,
-  SheetTitle,
-} from "../ui/sheet";
+import { Sheet, SheetContent, SheetHeader, SheetTitle } from "../ui/sheet";
 import {
   Select,
   SelectContent,
@@ -95,14 +90,14 @@ const SectionCard = ({
   title: string;
   children: React.ReactNode;
 }) => (
-  <div className="border-b border-gray-200 pb-4 last:border-0">
-    <div className="flex items-center gap-2 mb-3">
+  <div className='border-b border-gray-200 pb-4 last:border-0'>
+    <div className='flex items-center gap-2 mb-3'>
       <div className={`p-1.5 rounded ${iconBg}`}>
         <Icon className={`h-4 w-4 ${iconColor}`} />
       </div>
-      <h3 className="font-semibold text-sm text-gray-700">{title}</h3>
+      <h3 className='font-semibold text-sm text-gray-700'>{title}</h3>
     </div>
-    <div className="space-y-3 pl-9">{children}</div>
+    <div className='space-y-3 pl-9'>{children}</div>
   </div>
 );
 
@@ -115,9 +110,9 @@ const FormField = ({
   icon?: React.ElementType;
   children: React.ReactNode;
 }) => (
-  <div className="space-y-1.5">
-    <Label className="text-xs font-medium text-gray-700 flex items-center gap-1">
-      {Icon && <Icon className="h-3 w-3" />}
+  <div className='space-y-1.5'>
+    <Label className='text-xs font-medium text-gray-700 flex items-center gap-1'>
+      {Icon && <Icon className='h-3 w-3' />}
       {label}
     </Label>
     {children}
@@ -144,28 +139,31 @@ const SearchableSelect = ({
   const filtered = options.filter(
     (opt) =>
       opt.name.toLowerCase().includes(query.toLowerCase()) ||
-      opt.bn_name.includes(query)
+      opt.bn_name.includes(query),
   );
 
   return (
     <Select value={value} onValueChange={onValueChange}>
-      <SelectTrigger className="h-9 text-sm">
+      <SelectTrigger className='h-9 text-sm'>
         <SelectValue placeholder={placeholder} />
       </SelectTrigger>
       <SelectContent>
-        <div className="relative">
-          <Search className="absolute left-2 top-2 h-3 w-3 text-gray-400" />
+        <div className='relative'>
+          <Search className='absolute left-2 top-2 h-3 w-3 text-gray-400' />
           <Input
-            type="text"
-            className="h-7 pl-7 text-xs border-0 border-b rounded-none focus:border-green-500 focus:ring-0"
-            placeholder="Search..."
+            type='text'
+            className='h-7 pl-7 text-xs border-0 border-b rounded-none focus:border-green-500 focus:ring-0'
+            placeholder='Search...'
             value={query}
             onChange={(e) => onQueryChange(e.target.value)}
           />
         </div>
         {filtered.map((opt) => (
-          <SelectItem key={opt.id} value={opt.id} className="text-xs cursor-pointer">
-            {`${opt.name} (${opt.bn_name})`}
+          <SelectItem
+            key={opt.id}
+            value={opt.id}
+            className='text-xs cursor-pointer'>
+            {`${opt.name}`}
           </SelectItem>
         ))}
       </SelectContent>
@@ -186,12 +184,12 @@ const usePaymentCalculations = (initial: PaymentInfo) => {
       payment.deliveryCharge -
       payment.discount -
       payment.paid,
-    [payment]
+    [payment],
   );
 
   const finalAmount = useMemo(
     () => payment.totalPrice + payment.deliveryCharge - payment.discount,
-    [payment]
+    [payment],
   );
 
   const updateField = useCallback((field: keyof PaymentInfo, value: number) => {
@@ -240,9 +238,10 @@ export function EditOrderSheet({
     usePaymentCalculations({
       totalPrice: order?.totalPrice || 0,
       deliveryCharge: 0,
-      discount: order?.totalPrice && order?.paid && order?.remaining
-        ? order.totalPrice + 0 - order.paid - order.remaining
-        : 0,
+      discount:
+        order?.totalPrice && order?.paid && order?.remaining
+          ? order.totalPrice + 0 - order.paid - order.remaining
+          : 0,
       paid: order?.paid || 0,
     });
 
@@ -260,11 +259,13 @@ export function EditOrderSheet({
         district:
           getLocationByFormattedString(
             BDDistrictList,
-            order.shipping?.district ?? ""
+            order.shipping?.district ?? "",
           ) ?? null,
         division:
-          getLocationByFormattedString(BDDivisions, order.shipping?.division ?? "") ??
-          null,
+          getLocationByFormattedString(
+            BDDivisions,
+            order.shipping?.division ?? "",
+          ) ?? null,
       });
     }
   }, [order]);
@@ -284,8 +285,7 @@ export function EditOrderSheet({
     setShippingAddress((prev) => ({ ...prev, district }));
   };
 
-  const formatLocation = (loc: Location | null) =>
-    loc ? `${loc.name}(${loc.bn_name})` : "";
+  const formatLocation = (loc: Location | null) => (loc ? `${loc.name}` : "");
 
   const handleSubmit = async () => {
     if (!order) return;
@@ -325,70 +325,67 @@ export function EditOrderSheet({
   const filteredDistricts = useMemo(
     () =>
       BDDistrictList.filter(
-        (d) => d.division_id === shippingAddress.division?.id
+        (d) => d.division_id === shippingAddress.division?.id,
       ),
-    [shippingAddress.division?.id]
+    [shippingAddress.division?.id],
   );
 
   if (!order) return null;
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent className="w-full sm:max-w-lg overflow-y-auto">
+      <SheetContent className='w-full sm:max-w-lg overflow-y-auto'>
         <SheetHeader>
           <SheetTitle>Edit Order Information</SheetTitle>
-          <p className="text-sm text-gray-500">
-            Order #{order.orderNumber}
-          </p>
+          <p className='text-sm text-gray-500'>Order #{order.orderNumber}</p>
         </SheetHeader>
 
-        <div className="mt-6 space-y-4">
+        <div className='mt-6 space-y-4'>
           {/* Customer Information */}
           <SectionCard
             icon={User}
-            iconBg="bg-blue-100"
-            iconColor="text-blue-600"
-            title="Customer Information"
-          >
-            <FormField label="Customer Name" icon={User}>
+            iconBg='bg-blue-100'
+            iconColor='text-blue-600'
+            title='Customer Information'>
+            <FormField label='Customer Name' icon={User}>
               <Input
-                name="name"
+                name='name'
                 value={personalInfo.name}
                 onChange={handlePersonalChange}
-                placeholder="Enter customer name"
-                className="h-9 text-sm"
+                placeholder='Enter customer name'
+                className='h-9 text-sm'
               />
             </FormField>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              <FormField label="Email" icon={Mail}>
+            <div className='grid grid-cols-1 sm:grid-cols-2 gap-3'>
+              <FormField label='Email' icon={Mail}>
                 <Input
-                  name="email"
-                  type="email"
+                  name='email'
+                  type='email'
                   value={personalInfo.email}
                   onChange={handlePersonalChange}
-                  placeholder="email@example.com"
-                  className="h-9 text-sm"
+                  placeholder='email@example.com'
+                  className='h-9 text-sm'
                 />
               </FormField>
-              <FormField label="Phone" icon={Phone}>
+              <FormField label='Phone' icon={Phone}>
                 <Input
-                  name="phoneNumber"
+                  name='phoneNumber'
                   value={personalInfo.phoneNumber}
                   onChange={handlePersonalChange}
-                  placeholder="017XXXXXXXXX"
-                  className="h-9 text-sm"
+                  placeholder='017XXXXXXXXX'
+                  className='h-9 text-sm'
                 />
               </FormField>
             </div>
 
-            <FormField label="Notes" icon={FileText}>
+            <FormField label='Notes' icon={FileText}>
               <Textarea
                 rows={2}
                 value={updatedNotes}
                 onChange={(e) => setUpdatedNotes(e.target.value)}
-                placeholder="Special instructions..."
-                className="text-sm resize-none"
+                placeholder='Special instructions...'
+                className='text-sm resize-none'
               />
             </FormField>
           </SectionCard>
@@ -396,29 +393,28 @@ export function EditOrderSheet({
           {/* Shipping Address */}
           <SectionCard
             icon={MapPin}
-            iconBg="bg-green-100"
-            iconColor="text-green-600"
-            title="Shipping Address"
-          >
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              <FormField label="Division">
+            iconBg='bg-green-100'
+            iconColor='text-green-600'
+            title='Shipping Address'>
+            <div className='grid grid-cols-1 sm:grid-cols-2 gap-3'>
+              <FormField label='Division'>
                 <SearchableSelect
                   value={shippingAddress.division?.id ?? ""}
                   onValueChange={handleDivisionChange}
                   options={BDDivisions}
-                  placeholder="Select division"
+                  placeholder='Select division'
                   query={divisionQuery}
                   onQueryChange={setDivisionQuery}
                 />
               </FormField>
 
               {shippingAddress.division && (
-                <FormField label="District">
+                <FormField label='District'>
                   <SearchableSelect
                     value={shippingAddress.district?.id ?? ""}
                     onValueChange={handleDistrictChange}
                     options={filteredDistricts}
-                    placeholder="Select district"
+                    placeholder='Select district'
                     query={districtQuery}
                     onQueryChange={setDistrictQuery}
                   />
@@ -426,7 +422,7 @@ export function EditOrderSheet({
               )}
             </div>
 
-            <FormField label="Complete Address">
+            <FormField label='Complete Address'>
               <Textarea
                 rows={2}
                 value={shippingAddress.address}
@@ -436,8 +432,8 @@ export function EditOrderSheet({
                     address: e.target.value,
                   }))
                 }
-                placeholder="House/Flat no., Street, Area..."
-                className="text-sm resize-none"
+                placeholder='House/Flat no., Street, Area...'
+                className='text-sm resize-none'
               />
             </FormField>
           </SectionCard>
@@ -445,71 +441,69 @@ export function EditOrderSheet({
           {/* Payment Details */}
           <SectionCard
             icon={CreditCard}
-            iconBg="bg-amber-100"
-            iconColor="text-amber-600"
-            title="Payment Details"
-          >
-            <div className="grid grid-cols-2 gap-3">
-              <FormField label="Total Price" icon={Calculator}>
+            iconBg='bg-amber-100'
+            iconColor='text-amber-600'
+            title='Payment Details'>
+            <div className='grid grid-cols-2 gap-3'>
+              <FormField label='Total Price' icon={Calculator}>
                 <Input
-                  type="number"
+                  type='number'
                   value={payment.totalPrice}
                   disabled
-                  className="h-9 text-sm bg-gray-50"
+                  className='h-9 text-sm bg-gray-50'
                 />
               </FormField>
-              <FormField label="Delivery" icon={Truck}>
+              <FormField label='Delivery' icon={Truck}>
                 <Input
-                  type="number"
+                  type='number'
                   min={0}
                   value={payment.deliveryCharge}
                   onChange={(e) =>
                     updateField("deliveryCharge", Number(e.target.value))
                   }
-                  className="h-9 text-sm"
+                  className='h-9 text-sm'
                 />
               </FormField>
-              <FormField label="Discount" icon={Tag}>
+              <FormField label='Discount' icon={Tag}>
                 <Input
-                  type="number"
+                  type='number'
                   min={0}
                   value={payment.discount}
                   onChange={(e) =>
                     updateField("discount", Number(e.target.value))
                   }
-                  className="h-9 text-sm"
+                  className='h-9 text-sm'
                 />
               </FormField>
-              <FormField label="Paid" icon={Wallet}>
+              <FormField label='Paid' icon={Wallet}>
                 <Input
-                  type="number"
+                  type='number'
                   min={0}
                   value={payment.paid}
                   onChange={(e) => updateField("paid", Number(e.target.value))}
-                  className="h-9 text-sm"
+                  className='h-9 text-sm'
                 />
               </FormField>
             </div>
 
-            <Separator className="my-3" />
+            <Separator className='my-3' />
 
-            <div className="bg-gray-50 p-3 rounded-md">
-              <h4 className="text-xs font-medium text-gray-700 flex items-center gap-1 mb-2">
-                <Calculator className="h-3 w-3" /> Summary
+            <div className='bg-gray-50 p-3 rounded-md'>
+              <h4 className='text-xs font-medium text-gray-700 flex items-center gap-1 mb-2'>
+                <Calculator className='h-3 w-3' /> Summary
               </h4>
-              <div className="grid grid-cols-2 gap-2 text-xs">
-                <div className="flex justify-between">
-                  <span className="text-gray-600">Final:</span>
-                  <span className="font-medium">
+              <div className='grid grid-cols-2 gap-2 text-xs'>
+                <div className='flex justify-between'>
+                  <span className='text-gray-600'>Final:</span>
+                  <span className='font-medium'>
                     ৳{finalAmount.toLocaleString()}
                   </span>
                 </div>
-                <div className="flex justify-between items-center">
-                  <span className="text-gray-600">Due:</span>
+                <div className='flex justify-between items-center'>
+                  <span className='text-gray-600'>Due:</span>
                   <Badge
                     variant={remaining > 0 ? "destructive" : "secondary"}
-                    className="text-xs h-5 px-2"
-                  >
+                    className='text-xs h-5 px-2'>
                     ৳{remaining.toLocaleString()}
                   </Badge>
                 </div>
@@ -519,27 +513,25 @@ export function EditOrderSheet({
         </div>
 
         {/* Footer */}
-        <div className="mt-6 flex gap-3">
+        <div className='mt-6 flex gap-3'>
           <Button
-            variant="outline"
+            variant='outline'
             onClick={() => onOpenChange(false)}
             disabled={isSubmitting}
-            className="flex-1"
-          >
-            <X className="h-4 w-4 mr-2" /> Cancel
+            className='flex-1'>
+            <X className='h-4 w-4 mr-2' /> Cancel
           </Button>
           <Button
             onClick={handleSubmit}
             disabled={isSubmitting}
-            className="flex-1"
-          >
+            className='flex-1'>
             {isSubmitting ? (
               <>
-                <Loader2 className="h-4 w-4 mr-2 animate-spin" /> Saving...
+                <Loader2 className='h-4 w-4 mr-2 animate-spin' /> Saving...
               </>
             ) : (
               <>
-                <Save className="h-4 w-4 mr-2" /> Save Changes
+                <Save className='h-4 w-4 mr-2' /> Save Changes
               </>
             )}
           </Button>

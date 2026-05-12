@@ -65,7 +65,7 @@ const CreateOrder = () => {
   const [currentStep, setCurrentStep] = useState(0);
   const [orderProducts, setOrderProduct] = useState<IOrderProduct[]>([]);
   const [transectionData, setTransectionData] = useState<ITransection | null>(
-    null
+    null,
   );
   const [customerInformation, setCustomerInformation] = useState(null);
   const [isCreating, setIsCreating] = useState(false);
@@ -84,14 +84,17 @@ const CreateOrder = () => {
   }, [currentStep]);
   const handleProductDataSubmit = (
     productData: IOrderProduct[],
-    transectionData: ITransection
+    transectionData: ITransection,
   ) => {
     setOrderProduct(productData);
     setTransectionData(transectionData);
     setCurrentStep(1);
   };
 
-  const handleCustomerDataChange = (customerData: any, transaction: ITransection) => {
+  const handleCustomerDataChange = (
+    customerData: any,
+    transaction: ITransection,
+  ) => {
     setCustomerInformation(customerData);
     setTransectionData(transaction);
     setCurrentStep(2);
@@ -125,8 +128,8 @@ const CreateOrder = () => {
           customer: customerInformation.customer,
           shipping: {
             ...newCustomerInformation,
-            division: `${division.name}(${division.bn_name})`,
-            district: `${district.name}(${district.bn_name})`,
+            division: `${division.name}`,
+            district: `${district.name}`,
           },
         },
         transectionData,
@@ -220,16 +223,16 @@ const CreateOrder = () => {
                     step.status === "complete"
                       ? "bg-violet-50 border-violet-200"
                       : step.status === "in-progress"
-                      ? "bg-violet-50 border-violet-300 shadow-sm"
-                      : "bg-gray-50 border-gray-200"
+                        ? "bg-violet-50 border-violet-300 shadow-sm"
+                        : "bg-gray-50 border-gray-200"
                   }`}>
                   <div
                     className={`w-10 h-10 rounded-full flex items-center justify-center mr-3 flex-shrink-0 ${
                       step.status === "complete"
                         ? "bg-violet-600 text-white"
                         : step.status === "in-progress"
-                        ? "bg-violet-600 text-white"
-                        : "bg-gray-300 text-white"
+                          ? "bg-violet-600 text-white"
+                          : "bg-gray-300 text-white"
                     }`}>
                     {step.status === "complete" ? (
                       <CheckCircle2 className='w-5 h-5' />
@@ -243,8 +246,8 @@ const CreateOrder = () => {
                         step.status === "complete"
                           ? "text-violet-900"
                           : step.status === "in-progress"
-                          ? "text-violet-900"
-                          : "text-gray-500"
+                            ? "text-violet-900"
+                            : "text-gray-500"
                       }`}>
                       {step.name}
                     </h3>
@@ -253,8 +256,8 @@ const CreateOrder = () => {
                         step.status === "complete"
                           ? "text-violet-600"
                           : step.status === "in-progress"
-                          ? "text-violet-600"
-                          : "text-gray-400"
+                            ? "text-violet-600"
+                            : "text-gray-400"
                       }`}>
                       {step.description}
                     </p>

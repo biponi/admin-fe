@@ -2,6 +2,7 @@ import { useLocation, useNavigate } from "react-router-dom";
 import { navItems } from "../utils/navItem";
 import useRoleCheck from "../pages/auth/hooks/useRoleCheck";
 import { cn } from "../utils/functions";
+import { BRAND_CONFIG } from "../config/brand";
 import BrandLogo from "../assets/Biponi-lg.png";
 import { ChevronDown, ChevronRight } from "lucide-react";
 import { useState, useEffect } from "react";
@@ -91,7 +92,7 @@ export function MobileSheetNav({
                 alt='logo'
               />
               <div>
-                <SheetTitle className='text-lg font-bold'>Biponi</SheetTitle>
+                <SheetTitle className='text-lg font-bold'>{BRAND_CONFIG.shortName}</SheetTitle>
                 <p className='text-xs text-muted-foreground'>
                   {user?.name || "Welcome"}
                 </p>
@@ -235,9 +236,9 @@ export function MobileSheetNav({
         {/* Footer */}
         <div className='p-4 border-t border-border/40 bg-background/50'>
           <div className='text-xs text-center text-muted-foreground'>
-            <p>Biponi Admin Panel</p>
+            <p>{BRAND_CONFIG.name} Panel</p>
             <p className='mt-1'>
-              © {new Date().getFullYear()} All rights reserved
+              © {new Date().getFullYear()} {BRAND_CONFIG.companyName}. All rights reserved
             </p>
           </div>
         </div>

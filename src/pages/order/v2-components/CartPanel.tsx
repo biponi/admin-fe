@@ -44,6 +44,7 @@ export function CartPanel({
   isSubmitting = false,
 }: CartPanelProps) {
   const cartItemCount = cart.reduce((sum, item) => sum + item.quantity, 0);
+  const cartSubtotal = cart.reduce((sum, item) => sum + item.totalPrice, 0);
 
   return (
     <div className='flex flex-col h-full bg-white border-l shadow-[-4px_0_24px_rgba(0,0,0,0.05)] pt-2 md:mr-4 rounded-md'>
@@ -64,7 +65,7 @@ export function CartPanel({
 
       {/* Scrollable Content */}
       <ScrollArea className='flex-1 py-5 px-2'>
-        <div className='space-y-6'>
+        <div className='space-y-6 px-1'>
           {/* Cart Items */}
           <div className='space-y-3'>
             <h3 className='font-semibold text-base flex items-center gap-2'>
@@ -80,17 +81,24 @@ export function CartPanel({
 
           <Separator className='bg-gradient-to-r from-transparent via-gray-200 to-transparent' />
 
-          {/* Customer Information */}
-          <CustomerSelector
-            customer={customerInfo}
-            onChange={onCustomerChange}
-            onShippingChange={onShippingChange}
-          />
+          {/* Customer & Shipping Information - Grid Layout */}
+          <div className='grid grid-cols-1 lg:grid-cols-2 gap-3'>
+            {/* Customer Information */}
+            <CustomerSelector
+              customer={customerInfo}
+              onChange={onCustomerChange}
+              onShippingChange={onShippingChange}
+            />
 
-          <Separator className='bg-gradient-to-r from-transparent via-gray-200 to-transparent' />
-
-          {/* Shipping Information */}
-          <ShippingForm shipping={shippingInfo} onChange={onShippingChange} />
+            {/* Shipping Information */}
+            <ShippingForm
+              shipping={shippingInfo}
+              onChange={onShippingChange}
+              onDeliveryChargeChange={(charge) => {
+                onTransactionChange({ ...transaction, deliveryCharge: charge });
+              }}
+            />
+          </div>
 
           <Separator className='bg-gradient-to-r from-transparent via-gray-200 to-transparent' />
 
@@ -103,6 +111,7 @@ export function CartPanel({
             onSubmit={onSubmit}
             isSubmitting={isSubmitting}
             cartItemCount={cartItemCount}
+            cartSubtotal={cartSubtotal}
           />
         </div>
       </ScrollArea>

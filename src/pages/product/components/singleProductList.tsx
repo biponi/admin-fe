@@ -1,46 +1,278 @@
 import {
-  BoxIcon,
-  MoreHorizontalIcon,
-  PackageSearch,
+  EditIcon,
+  BarChart2,
+  SlidersHorizontal,
   History,
+  Trash2,
+  Package,
+  PackageX,
 } from "lucide-react";
-import { Badge } from "../../../components/ui/badge";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "../../../components/ui/dropdown-menu";
 import dayjs from "dayjs";
-import advancedFormat from "dayjs/plugin/advancedFormat.js"; // note the /plugin path
+import advancedFormat from "dayjs/plugin/advancedFormat.js";
 import { TableCell, TableRow } from "../../../components/ui/table";
-import { Button } from "../../../components/ui/button";
-import { useRef, useState, memo } from "react";
-import CustomAlertDialog from "../../../coreComponents/OptionModal";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "../../../components/ui/tooltip";
 import {
   Popover,
   PopoverContent,
   PopoverTrigger,
 } from "../../../components/ui/popover";
+import { useRef, useState, memo } from "react";
+import CustomAlertDialog from "../../../coreComponents/OptionModal";
 import useRoleCheck from "../../auth/hooks/useRoleCheck";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-  DialogFooter,
-  DialogClose,
-} from "../../../components/ui/dialog";
-import { Label } from "../../../components/ui/label";
-import { Input } from "../../../components/ui/input";
-import ShareButton from "../../../common/ShareButton";
 import { ProductAdjustmentDialog } from "./ProductAdjustmentDialog";
 import { ProductAdjustmentHistory } from "./ProductAdjustmentHistory";
-import { IVariation } from "../interface";
+import type { IVariation } from "../interface";
+import PlaceHolderImage from "../../../assets/placeholder.svg";
+
+dayjs.extend(advancedFormat);
+
+// ─── Variation chip ───────────────────────────────────────────────────────────
+
+function VariationChip({ variation }: { variation: IVariation }) {
+  const src = (() => {
+    if (variation.images && variation.images.length > 0) {
+      const img = variation.images[0];
+      if (typeof img === "string") return img;
+      if (img instanceof File) return URL.createObjectURL(img);
+    }
+    return null;
+  })();
+
+  const label =
+    variation.name ||
+    variation.title ||
+    [variation.color, variation.size].filter(Boolean).join(" · ");
+
+  const qty = variation.quantity ?? 0;
+  const qtyColor =
+    qty <= 0 ? "text-red-600" : qty <= 5 ? "text-amber-700" : "text-zinc-500";
+  const qtyLabel =
+    qty <= 0 ? "out of stock" : qty <= 5 ? `${qty} left` : `${qty} in stock`;
+
+  return (
+    <div className='flex items-center gap-1.5 rounded-lg border border-zinc-200 bg-white px-2 py-1 transition-colors hover:border-zinc-400'>
+      {src ? (
+        <img
+          src={src}
+          alt={label}
+          className='h-8 w-8 flex-shrink-0 rounded-md object-cover border border-zinc-100'
+          onError={(e) => {
+            (e.target as HTMLImageElement).src = PlaceHolderImage;
+          }}
+        />
+      ) : (
+        <div className='flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-md border border-zinc-100 bg-zinc-50 text-[11px] font-semibold text-zinc-600'>
+          {variation.size || variation.color?.slice(0, 1) || "?"}
+        </div>
+      )}
+      <div className='flex flex-col'>
+        <span className='text-[12px] font-semibold leading-tight text-zinc-900 whitespace-nowrap'>
+          {label}
+        </span>
+        <span
+          className={`text-[11px] font-medium leading-tight whitespace-nowrap ${qtyColor}`}>
+          {qtyLabel}
+        </span>
+      </div>
+    </div>
+  );
+}
+
+// ─── Variation list display — shows max 3, popover for rest ──────────────────────
+
+function VariationDisplayList({
+  variationList,
+  onExpand,
+}: {
+  variationList?: IVariation[];
+  onExpand: () => void;
+}) {
+  if (!variationList || variationList.length === 0) {
+    return (
+      <span className='text-[12px] font-medium italic text-zinc-400'>
+        No variations
+      </span>
+    );
+  }
+
+  const visible = variationList.slice(0, 3);
+  const remaining = Math.max(0, variationList.length - 3);
+
+  return (
+    <div className='flex items-center gap-1.5 flex-wrap'>
+      {visible.map((v) => (
+        <VariationChip key={v.id} variation={v} />
+      ))}
+      {remaining > 0 && (
+        <button
+          onClick={onExpand}
+          className='text-xs font-semibold text-zinc-600 hover:text-zinc-900 underline px-1 py-0.5 rounded transition-colors hover:bg-zinc-100'>
+          +{remaining} more
+        </button>
+      )}
+    </div>
+  );
+}
+
+// ─── Variation popover content — shows all in 2-per-row grid ─────────────────────
+
+function VariationPopoverContent({
+  variationList,
+}: {
+  variationList?: IVariation[];
+}) {
+  if (!variationList || variationList.length === 0) {
+    return (
+      <div className='text-sm text-zinc-500 py-2'>No variations available</div>
+    );
+  }
+
+  // Chunk into rows of 2
+  const rows: IVariation[][] = [];
+  for (let i = 0; i < variationList.length; i += 2) {
+    rows.push(variationList.slice(i, i + 2));
+  }
+
+  return (
+    <div className='space-y-2 max-h-[300px] overflow-y-auto'>
+      {rows.map((row, idx) => (
+        <div key={idx} className='flex gap-2'>
+          {row.map((v) => (
+            <VariationChip key={v.id} variation={v} />
+          ))}
+        </div>
+      ))}
+    </div>
+  );
+}
+
+// ─── Variation grid display — shows ALL, wraps every 3 ─────────────────────────
+
+function VariationDisplayGrid({
+  variationList,
+}: {
+  variationList?: IVariation[];
+}) {
+  if (!variationList || variationList.length === 0) {
+    return (
+      <span className='text-[12px] font-medium italic text-zinc-400'>
+        No variations
+      </span>
+    );
+  }
+
+  // Chunk into rows of 3
+  const rows: IVariation[][] = [];
+  for (let i = 0; i < variationList.length; i += 3) {
+    rows.push(variationList.slice(i, i + 3));
+  }
+
+  return (
+    <div className='flex flex-col gap-1.5'>
+      {rows.map((row, rowIdx) => (
+        <div key={rowIdx} className='flex gap-1.5'>
+          {row.map((v, i) => (
+            <VariationChip key={v.id || `${rowIdx}-${i}`} variation={v} />
+          ))}
+        </div>
+      ))}
+    </div>
+  );
+}
+
+// ─── Stock badge ──────────────────────────────────────────────────────────────
+
+function StockBadge({ quantity }: { quantity: number }) {
+  if (quantity <= 0)
+    return (
+      <span className='inline-flex items-center gap-1.5 rounded px-2 py-1 text-[12px] font-semibold bg-red-50 text-red-700'>
+        <PackageX className='h-3.5 w-3.5' /> Out of stock
+      </span>
+    );
+  if (quantity <= 10)
+    return (
+      <span className='inline-flex items-center gap-1.5 rounded px-2 py-1 text-[12px] font-semibold bg-amber-50 text-amber-800'>
+        <Package className='h-3.5 w-3.5' /> {quantity}
+      </span>
+    );
+  return (
+    <span className='inline-flex items-center gap-1.5 rounded px-2 py-1 text-[12px] font-semibold bg-emerald-50 text-emerald-800'>
+      <Package className='h-3.5 w-3.5' /> {quantity}
+    </span>
+  );
+}
+
+// ─── Sold / Returned ──────────────────────────────────────────────────────────
+
+function SoldReturnedStat({
+  totalSold,
+  totalReturned,
+}: {
+  totalSold: number;
+  totalReturned: number;
+}) {
+  return (
+    <div className='flex items-center gap-2.5'>
+      <div className='text-center'>
+        <p className='text-[14px] font-bold leading-tight text-zinc-900'>
+          {totalSold}
+        </p>
+        <p className='text-[11px] font-medium text-zinc-500'>sold</p>
+      </div>
+      <div className='h-4 w-px bg-zinc-200' />
+      <div className='text-center'>
+        <p
+          className={`text-[14px] font-bold leading-tight ${
+            totalReturned > 0 ? "text-red-600" : "text-zinc-400"
+          }`}>
+          {totalReturned}
+        </p>
+        <p className='text-[11px] font-medium text-zinc-500'>returned</p>
+      </div>
+    </div>
+  );
+}
+
+// ─── Action button ────────────────────────────────────────────────────────────
+
+function ActionButton({
+  label,
+  icon: Icon,
+  onClick,
+  danger = false,
+}: {
+  label: string;
+  icon: React.ElementType;
+  onClick?: () => void;
+  danger?: boolean;
+}) {
+  return (
+    <Tooltip>
+      <TooltipTrigger asChild>
+        <button
+          onClick={onClick}
+          aria-label={label}
+          className={`flex h-7 w-7 items-center justify-center rounded-md border border-zinc-200 bg-transparent transition-colors
+            ${
+              danger
+                ? "text-zinc-400 hover:border-red-300 hover:bg-red-50 hover:text-red-600"
+                : "text-zinc-400 hover:border-zinc-400 hover:bg-zinc-50 hover:text-zinc-800"
+            }`}>
+          <Icon className='h-3.5 w-3.5' />
+        </button>
+      </TooltipTrigger>
+      <TooltipContent side='top' className='text-xs'>
+        {label}
+      </TooltipContent>
+    </Tooltip>
+  );
+}
+
+// ─── Props ────────────────────────────────────────────────────────────────────
 
 interface Props {
   id: string;
@@ -62,14 +294,14 @@ interface Props {
   deleteExistingProduct: (id: string) => void;
   refreshProductList?: () => void;
   handleViewProductDetails: (id: string) => void;
+  variationDisplayMode?: string;
 }
 
-dayjs.extend(advancedFormat);
+// ─── Main component ───────────────────────────────────────────────────────────
 
 const SingleItem: React.FC<Props> = ({
   id,
   sku,
-  slug,
   image,
   title,
   active,
@@ -77,7 +309,6 @@ const SingleItem: React.FC<Props> = ({
   unitPrice,
   updatedAt,
   totalSold,
-  variations,
   variationList,
   hasVariation,
   categoryName,
@@ -86,190 +317,154 @@ const SingleItem: React.FC<Props> = ({
   handleUpdateProduct,
   deleteExistingProduct,
   handleViewProductDetails,
+  variationDisplayMode = "list",
 }) => {
   const { hasRequiredPermission, hasSomePermissionsForPage } = useRoleCheck();
-  const dialogBtn = useRef(null);
+  const dialogBtn = useRef<HTMLButtonElement>(null);
   const [adjustDialogOpen, setAdjustDialogOpen] = useState(false);
   const [historyDialogOpen, setHistoryDialogOpen] = useState(false);
+  const [isVariationPopoverOpen, setIsVariationPopoverOpen] = useState(false);
 
-  const discardDialog = () => {
-    return (
-      <CustomAlertDialog
-        title='Are You Sure?'
-        description={`Deleting ${title}?`}
-        onSubmit={() => {
-          deleteExistingProduct(id);
-        }}>
-        <Button className='hidden' ref={dialogBtn}>
-          show dialog
-        </Button>
-      </CustomAlertDialog>
-    );
-  };
-  const renderVariationPopover = () => {
-    if (!variations || variations.length === 0) {
-      return (
-        <Button variant='secondary' disabled size={"sm"}>
-          No Variations
-        </Button>
-      );
-    }
-    return (
-      <Popover>
-        <PopoverTrigger asChild>
-          <Button variant='default' size={"sm"}>
-            View
-          </Button>
-        </PopoverTrigger>
-        <PopoverContent className='w-96'>
-          <div className='grid grid-cols-3 gap-2 w-full'>
-            {variations?.map((val, index) => (
-              <Button key={index} variant={"secondary"} size={"sm"}>
-                {val}
-              </Button>
-            ))}
-          </div>
-        </PopoverContent>
-      </Popover>
-    );
-  };
   return (
-    <TableRow>
-      <TableCell className='hidden sm:table-cell'>
-        <Dialog>
-          <DialogTrigger asChild>
-            <img
-              alt='img'
-              className='aspect-square rounded-md object-cover'
-              height='32'
-              src={image}
-              width='32'
-            />
-          </DialogTrigger>
-          <DialogContent className='sm:max-w-md'>
-            <DialogHeader>
-              <DialogTitle>Share link</DialogTitle>
-              <DialogDescription>
-                Anyone who has this link will be able to view this.
-              </DialogDescription>
-            </DialogHeader>
-            <div className='flex justify-between items-center gap-2'>
-              <div className='grid flex-1 gap-2'>
-                <Label htmlFor='link' className='sr-only'>
-                  Link
-                </Label>
-                <Input
-                  id='link'
-                  defaultValue={`https://priorbd.com/collections/${slug}`}
-                  readOnly
+    <TableRow className='group border-b border-zinc-100 transition-colors hover:bg-zinc-50/60 align-top rounded-md'>
+      {/* Image + active dot */}
+      <TableCell className='pt-3 pl-3 pr-2 w-20'>
+        <div className='relative inline-block'>
+          <img
+            src={image || PlaceHolderImage}
+            alt={title}
+            className={`h-16 w-20 rounded-lg object-cover border border-zinc-200 ${
+              !active ? "opacity-50" : ""
+            }`}
+            onError={(e) => {
+              (e.target as HTMLImageElement).src = PlaceHolderImage;
+            }}
+          />
+          <span
+            className={`absolute bottom-0.5 right-0.5 h-1.5 w-1.5 rounded-full ring-2 ring-white ${
+              active ? "bg-emerald-500" : "bg-zinc-300"
+            }`}
+          />
+        </div>
+      </TableCell>
+
+      {/* Name + SKU */}
+      <TableCell className='pt-3 min-w-[140px] max-w-[180px]'>
+        <p className='truncate text-[13px] font-bold text-zinc-900 leading-tight'>
+          {title}
+        </p>
+        <p className='mt-0.5 font-mono text-[11px] font-semibold text-zinc-500'>
+          {sku}
+        </p>
+      </TableCell>
+
+      {/* Category */}
+      <TableCell className='pt-3 whitespace-nowrap text-[12px] font-semibold text-zinc-600'>
+        {categoryName}
+      </TableCell>
+
+      {/* Price */}
+      <TableCell className='pt-3'>
+        <span
+          className='text-[15px] font-bold text-zinc-900 leading-none'
+          style={{ fontFamily: "'Cormorant Garamond', 'Georgia', serif" }}>
+          ৳{unitPrice.toLocaleString()}
+        </span>
+      </TableCell>
+
+      {/* Variations — different displays based on mode */}
+      <TableCell className='pt-3 pb-3'>
+        {variationDisplayMode === "list" ? (
+          <Popover
+            open={isVariationPopoverOpen}
+            onOpenChange={setIsVariationPopoverOpen}>
+            <PopoverTrigger asChild>
+              <div className='cursor-pointer'>
+                <VariationDisplayList
+                  variationList={variationList}
+                  onExpand={() => setIsVariationPopoverOpen(true)}
                 />
               </div>
-              <ShareButton
-                linkToShare={`https://priorbd.com/collections/${slug}`}
-                title={`Check out this awesome product: ${title}`}
-                text={`This ${categoryName} has only ${quantity} item left. Don't miss out!`}
-              />
-            </div>
-            <DialogFooter className='sm:justify-start'>
-              <DialogClose asChild>
-                <Button type='button' variant='destructive'>
-                  Close
-                </Button>
-              </DialogClose>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
-      </TableCell>
-      <TableCell className='font-medium'>{title}</TableCell>
-      <TableCell>{sku}</TableCell>
-      <TableCell>{categoryName}</TableCell>
-      <TableCell>{unitPrice}</TableCell>
-      <TableCell>{renderVariationPopover()}</TableCell>
-      <TableCell className='hidden text-center md:table-cell'>
-        {quantity > 0 ? (
-          <Badge variant={"outline"}>
-            <BoxIcon className=' size-4 mr-2' />
-            {quantity}
-          </Badge>
+            </PopoverTrigger>
+            <PopoverContent className='w-96' side='bottom' align='start'>
+              <VariationPopoverContent variationList={variationList} />
+            </PopoverContent>
+          </Popover>
         ) : (
-          <Badge variant={"destructive"}>Out Of Stock</Badge>
+          <VariationDisplayGrid variationList={variationList} />
         )}
       </TableCell>
-      <TableCell>
-        <Popover>
-          <PopoverTrigger asChild>
-            <Button size={"sm"} variant={"outline"}>
-              {totalSold}
-            </Button>
-          </PopoverTrigger>
-          <PopoverContent>
-            <div className='grid grid-cols-3 gap-2 grid-flow-row auto-rows-min'>
-              {!!totalSold && totalSold > 0 ? (
-                <Badge
-                  variant={"outline"}
-                  className='flex flex-col col-auto justify-center items-center gap-1 py-2 uppercase text-[10px]'>
-                  {totalSold}
-                </Badge>
-              ) : (
-                <Badge
-                  variant={"secondary"}
-                  className=' col-span-3 text-center mx-auto'>
-                  No Activity Found
-                </Badge>
-              )}
-            </div>
-          </PopoverContent>
-        </Popover>
+
+      {/* Total stock */}
+      <TableCell className='pt-3'>
+        <StockBadge quantity={quantity} />
       </TableCell>
-      <TableCell>{totalReturned}</TableCell>
-      <TableCell className='hidden md:table-cell'>
-        {dayjs(updatedAt).format("DD/MM/YYYY HH:mm A")}
+
+      {/* Sold / Returned */}
+      <TableCell className='pt-3'>
+        <SoldReturnedStat totalSold={totalSold} totalReturned={totalReturned} />
       </TableCell>
+
+      {/* Updated at */}
+      <TableCell className='pt-3 hidden md:table-cell'>
+        <p className='text-[12px] font-semibold text-zinc-600 whitespace-nowrap leading-relaxed'>
+          {dayjs(updatedAt).format("DD MMM YYYY")}
+          <br />
+          <span className='text-[11px] font-medium text-zinc-400'>
+            {dayjs(updatedAt).format("hh:mm A")}
+          </span>
+        </p>
+      </TableCell>
+
+      {/* Actions */}
       {hasSomePermissionsForPage("product", ["edit", "delete"]) && (
-        <TableCell>
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button aria-haspopup='true' size='icon' variant='ghost'>
-                <MoreHorizontalIcon className='h-4 w-4' />
-                <span className='sr-only'>Toggle menu</span>
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align='end'>
-              <DropdownMenuLabel>Actions</DropdownMenuLabel>
-              {hasRequiredPermission("product", "edit") && (
-                <DropdownMenuItem onClick={() => handleUpdateProduct(id)}>
-                  Edit
-                </DropdownMenuItem>
-              )}
-              {hasRequiredPermission("product", "analytics") && (
-                <DropdownMenuItem onClick={() => handleViewProductDetails(id)}>
-                  View Details
-                </DropdownMenuItem>
-              )}
-              <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={() => setAdjustDialogOpen(true)}>
-                <PackageSearch className='h-4 w-4 mr-2' />
-                Adjust Stock
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => setHistoryDialogOpen(true)}>
-                <History className='h-4 w-4 mr-2' />
-                View History
-              </DropdownMenuItem>
-              <DropdownMenuSeparator />
-              {hasRequiredPermission("product", "delete") && (
-                <DropdownMenuItem
-                  onClick={() => {
-                    //@ts-ignore
-                    if (!!dialogBtn) dialogBtn.current?.click();
-                  }}>
-                  Delete
-                </DropdownMenuItem>
-              )}
-            </DropdownMenuContent>
-          </DropdownMenu>
+        <TableCell className='pt-3 pr-3'>
+          <div className='flex items-center justify-end gap-1'>
+            {hasRequiredPermission("product", "edit") && (
+              <ActionButton
+                label='Edit'
+                icon={EditIcon}
+                onClick={() => handleUpdateProduct(id)}
+              />
+            )}
+            {hasRequiredPermission("product", "analytics") && (
+              <ActionButton
+                label='View details'
+                icon={BarChart2}
+                onClick={() => handleViewProductDetails(id)}
+              />
+            )}
+            <ActionButton
+              label='Adjust stock'
+              icon={SlidersHorizontal}
+              onClick={() => setAdjustDialogOpen(true)}
+            />
+            <ActionButton
+              label='View history'
+              icon={History}
+              onClick={() => setHistoryDialogOpen(true)}
+            />
+            <div className='mx-0.5 h-4 w-px bg-zinc-200' />
+            {hasRequiredPermission("product", "delete") && (
+              <ActionButton
+                label='Delete'
+                icon={Trash2}
+                danger
+                onClick={() => dialogBtn.current?.click()}
+              />
+            )}
+          </div>
         </TableCell>
       )}
-      {discardDialog()}
+
+      {/* Hidden delete confirm trigger */}
+      <CustomAlertDialog
+        title='Are you sure?'
+        description={`Deleting "${title}". This action cannot be undone.`}
+        onSubmit={() => deleteExistingProduct(id)}>
+        <button className='hidden' ref={dialogBtn} />
+      </CustomAlertDialog>
+
       {adjustDialogOpen && (
         <ProductAdjustmentDialog
           open={adjustDialogOpen}
@@ -280,11 +475,10 @@ const SingleItem: React.FC<Props> = ({
           currentStock={quantity}
           hasVariation={hasVariation}
           variations={variationList}
-          onSuccess={() => {
-            refreshProductList?.();
-          }}
+          onSuccess={() => refreshProductList?.()}
         />
       )}
+
       {historyDialogOpen && (
         <ProductAdjustmentHistory
           open={historyDialogOpen}

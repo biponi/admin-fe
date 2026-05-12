@@ -148,7 +148,7 @@ export function SettingsPanel() {
             {/* Theme Section - Only show for modern layout */}
             {layoutType === "modern" && (
               <>
-                <section>
+                <section className='hidden md:block'>
                   <div className='flex items-center gap-2 mb-4'>
                     <div className='p-1.5 rounded-md bg-purple-100'>
                       <Paintbrush className='h-4 w-4 text-purple-600' />
@@ -193,12 +193,12 @@ export function SettingsPanel() {
                   </div>
                 </section>
 
-                <Separator />
+                <Separator className='hidden md:block' />
               </>
             )}
 
             {/* Order View Section - Keep original beautiful design */}
-            <section>
+            <section className='hidden md:block'>
               <Card className='border-2 border-blue-100 bg-gradient-to-br from-blue-50/50 to-purple-50/50 shadow-sm'>
                 <CardHeader className='pb-4'>
                   <CardTitle className='text-base flex items-center gap-2'>
@@ -322,10 +322,10 @@ export function SettingsPanel() {
               </Card>
             </section>
 
-            <Separator />
+            <Separator className='hidden md:block' />
 
             {/* Create Order Layout Section */}
-            <section>
+            <section className='hidden md:block'>
               <Card className='border-2 border-green-100 bg-gradient-to-br from-green-50/50 to-emerald-50/50 shadow-sm'>
                 <CardHeader className='pb-4'>
                   <CardTitle className='text-base flex items-center gap-2'>

@@ -16,7 +16,7 @@ export function ProductGrid({
   isLoading = false,
 }: ProductGridProps) {
   // Responsive grid:
-  // Mobile: 2 columns (forced)
+  // Mobile: 2 columns (forced) with increased gap for better touch targets
   // sm: 2 columns
   // md: 3 columns
   // lg: 2 columns (for product section)
@@ -24,7 +24,7 @@ export function ProductGrid({
   // 2xl: 4 columns
   // 3xl: 5 columns
   const gridClasses = `
-    grid grid-cols-2 gap-3 sm:gap-4
+    grid grid-cols-2 gap-4 sm:gap-4
     sm:grid-cols-2
     xl:grid-cols-3
   `;

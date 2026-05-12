@@ -45,15 +45,15 @@ const SelectDemo: React.FC<Props> = ({
     const rType = vType === "color" ? "size" : "color";
     const selectedRev = !!selectedVariant ? selectedVariant[rType] ?? "" : "";
 
-    const filteredVariants = variations.filter((variant: Variation) => {
+    // Use exact matching instead of .includes() to find the precise variant combination
+    const matchedVariant = variations.find((variant: Variation) => {
       return (
-        variant[vType].includes(value) && variant[rType].includes(selectedRev)
+        variant[vType] === value && variant[rType] === selectedRev
       );
     });
 
-    if (filteredVariants.length > 0) {
-      const selectedVariantData = filteredVariants[0];
-      onVariantChange(selectedVariantData);
+    if (matchedVariant) {
+      onVariantChange(matchedVariant);
       toast.success(`${type === 'color' ? 'Color' : 'Size'} updated! ✨`);
     } else {
       toast.error(`This ${type} combination is out of stock`);

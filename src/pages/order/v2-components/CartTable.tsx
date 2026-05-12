@@ -1,7 +1,6 @@
-import { Minus, Plus, Trash2, Package } from 'lucide-react';
-import { Button } from '../../../components/ui/button';
-import PlaceHolderImage from '../../../assets/placeholder.svg';
-import type { CartItem } from '../createOrderLayoutStore';
+import { Minus, Plus, Trash2, Package } from "lucide-react";
+import PlaceHolderImage from "../../../assets/placeholder.svg";
+import type { CartItem } from "../createOrderLayoutStore";
 
 interface CartTableProps {
   cart: CartItem[];
@@ -9,15 +8,32 @@ interface CartTableProps {
   onRemove: (productId: string) => void;
 }
 
-export function CartTable({ cart, onUpdateQuantity, onRemove }: CartTableProps) {
+export function CartTable({
+  cart,
+  onUpdateQuantity,
+  onRemove,
+}: CartTableProps) {
+  const getImageUrl = (item: CartItem): string => {
+    if (
+      item.selectedVariant?.images &&
+      item.selectedVariant.images.length > 0
+    ) {
+      const image = item.selectedVariant.images[0];
+      if (typeof image === "string") return image;
+    }
+    return item.thumbnail || PlaceHolderImage;
+  };
+
   if (cart.length === 0) {
     return (
-      <div className="flex flex-col items-center justify-center py-12 text-center">
-        <div className="w-16 h-16 rounded-full bg-gradient-to-br from-gray-100 to-gray-50 flex items-center justify-center mb-4 shadow-inner">
-          <Package className="h-8 w-8 text-muted-foreground" />
+      <div className='flex flex-col items-center justify-center py-12 text-center'>
+        <div className='mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-zinc-100'>
+          <Package className='h-7 w-7 text-zinc-400' />
         </div>
-        <h3 className="text-lg font-semibold mb-2">Your cart is empty</h3>
-        <p className="text-sm text-muted-foreground">
+        <h3 className='text-sm font-medium text-zinc-800'>
+          Your cart is empty
+        </h3>
+        <p className='mt-1 text-xs text-zinc-400'>
           Add products to get started
         </p>
       </div>
@@ -25,101 +41,101 @@ export function CartTable({ cart, onUpdateQuantity, onRemove }: CartTableProps) 
   }
 
   return (
-    <div className="space-y-3">
+    <div className='space-y-2.5'>
       {cart.map((item) => {
-        // Calculate max stock for this item
         const maxStock = item.selectedVariant
-          ? (item.variantStock || item.selectedVariant.quantity || 99)
-          : (item.availableStock || item.quantity || 99);
-
+          ? item.variantStock || item.selectedVariant.quantity || 99
+          : item.availableStock || item.quantity || 99;
         const stockRemaining = maxStock - item.quantity;
 
         return (
           <div
             key={item.id}
-            className="flex items-center gap-2 sm:gap-3 p-2.5 sm:p-3.5 border border-gray-200 rounded-xl hover:border-blue-300 hover:shadow-md transition-all bg-white group"
-          >
-            {/* Product Thumbnail */}
-            <div className="w-12 h-12 sm:w-16 sm:h-16 shrink-0 rounded-lg bg-gradient-to-br from-gray-100 to-gray-50 overflow-hidden shadow-sm">
-              <img
-                src={item.thumbnail || PlaceHolderImage}
-                alt={item.name}
-                className="w-full h-full object-cover"
-                onError={(e) => {
-                  (e.target as HTMLImageElement).src = PlaceHolderImage;
-                }}
-              />
-            </div>
-
-            {/* Product Info */}
-            <div className="flex-1 min-w-0">
-              <h4 className="font-semibold text-xs sm:text-sm line-clamp-1 text-gray-900">{item.name}</h4>
-              {item.variation && (
-                <p className="text-xs text-muted-foreground mt-0.5">
-                  {item.variation.color && <span>Color: {item.variation.color}</span>}
-                  {item.variation.color && item.variation.size && <span> • </span>}
-                  {item.variation.size && <span>Size: {item.variation.size}</span>}
-                </p>
-              )}
-              <p className="text-xs sm:text-sm font-bold text-green-600 mt-0.5 sm:mt-1">
-                ৳{item.unitPrice.toFixed(2)}
-              </p>
-              {stockRemaining <= 5 && stockRemaining > 0 && (
-                <p className="text-xs text-orange-600 mt-1">
-                  Only {stockRemaining} left in stock!
-                </p>
-              )}
-            </div>
-
-            {/* Quantity Controls */}
-            <div className="flex flex-col items-center gap-1 sm:gap-2 shrink-0">
-              <div className="flex items-center gap-1 sm:gap-2">
-                <Button
-                  variant="outline"
-                  size="icon"
-                  className="h-7 w-7 sm:h-8 sm:w-8 border-gray-200 hover:border-blue-400 hover:text-blue-600 transition-colors"
-                  onClick={() => onUpdateQuantity(item.id, item.quantity - 1)}
-                  disabled={item.quantity <= 1}
-                >
-                  <Minus className="h-3 w-3" />
-                </Button>
-
-                <span className="w-6 sm:w-8 text-center text-xs sm:text-sm font-semibold text-gray-900">{item.quantity}</span>
-
-                <Button
-                  variant="outline"
-                  size="icon"
-                  className="h-7 w-7 sm:h-8 sm:w-8 border-gray-200 hover:border-blue-400 hover:text-blue-600 transition-colors"
-                  onClick={() => onUpdateQuantity(item.id, item.quantity + 1)}
-                  disabled={item.quantity >= maxStock}
-                >
-                  <Plus className="h-3 w-3" />
-                </Button>
+            className='rounded-xl border border-zinc-200 bg-white p-3 transition-colors hover:border-zinc-300'>
+            {/* TOP ROW: image + name/variation/unit price + delete */}
+            <div className='flex items-start gap-3'>
+              {/* Thumbnail */}
+              <div className='h-[60px] w-[60px] shrink-0 overflow-hidden rounded-lg bg-zinc-100'>
+                <img
+                  src={getImageUrl(item)}
+                  alt={item.name}
+                  className='h-full w-full object-cover'
+                  onError={(e) => {
+                    (e.target as HTMLImageElement).src = PlaceHolderImage;
+                  }}
+                />
               </div>
 
-              {stockRemaining > 0 && stockRemaining <= 10 && (
-                <span className="text-xs text-gray-500 hidden sm:block">
-                  {stockRemaining} left
-                </span>
-              )}
+              {/* Name + variation + unit price */}
+              <div className='min-w-0 flex-1'>
+                <p className='truncate text-sm font-medium text-zinc-900'>
+                  {item.name}
+                </p>
+
+                {item.variation && (
+                  <p className='mt-0.5 text-xs text-zinc-500'>
+                    {[
+                      item.variation.color && `Color: ${item.variation.color}`,
+                      item.variation.size && `Size: ${item.variation.size}`,
+                    ]
+                      .filter(Boolean)
+                      .join(" · ")}
+                  </p>
+                )}
+
+                <p className='mt-1 text-xs text-zinc-400'>
+                  ৳{item.unitPrice.toFixed(2)} / piece
+                </p>
+              </div>
+
+              {/* Delete */}
+              <button
+                onClick={() => onRemove(item.id)}
+                className='flex-shrink-0 rounded-md p-1 text-zinc-400 transition-colors hover:bg-red-50 hover:text-red-500'
+                aria-label='Remove item'>
+                <Trash2 className='h-4 w-4 text-red-600' />
+              </button>
             </div>
 
-            {/* Total Price */}
-            <div className="w-16 sm:w-24 text-right shrink-0">
-              <p className="text-xs sm:text-sm font-bold text-gray-900">
-                ৳{item.totalPrice.toFixed(2)}
-              </p>
-            </div>
+            {/* BOTTOM ROW: quantity stepper + low stock + total */}
+            <div className='mt-2.5 flex items-center justify-between border-t border-zinc-100 pt-2.5'>
+              {/* Left: qty stepper + stock warning */}
+              <div className='flex items-center gap-2.5'>
+                <div className='flex items-center overflow-hidden rounded-md border border-zinc-200'>
+                  <button
+                    onClick={() => onUpdateQuantity(item.id, item.quantity - 1)}
+                    disabled={item.quantity <= 1}
+                    className='flex h-7 w-7 items-center justify-center text-zinc-500 transition-colors hover:bg-zinc-50 hover:text-zinc-800 disabled:cursor-not-allowed disabled:opacity-30'
+                    aria-label='Decrease quantity'>
+                    <Minus className='h-3 w-3' />
+                  </button>
+                  <span className='w-8 border-x border-zinc-200 text-center text-xs font-medium leading-7 text-zinc-900'>
+                    {item.quantity}
+                  </span>
+                  <button
+                    onClick={() => onUpdateQuantity(item.id, item.quantity + 1)}
+                    disabled={item.quantity >= maxStock}
+                    className='flex h-7 w-7 items-center justify-center text-zinc-500 transition-colors hover:bg-zinc-50 hover:text-zinc-800 disabled:cursor-not-allowed disabled:opacity-30'
+                    aria-label='Increase quantity'>
+                    <Plus className='h-3 w-3' />
+                  </button>
+                </div>
 
-            {/* Remove Button */}
-            <Button
-              variant="ghost"
-              size="icon"
-              className="h-7 w-7 sm:h-8 sm:w-8 text-gray-400 hover:text-red-600 hover:bg-red-50 transition-all shrink-0"
-              onClick={() => onRemove(item.id)}
-            >
-              <Trash2 className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
-            </Button>
+                {stockRemaining > 0 && stockRemaining <= 5 && (
+                  <span className='text-xs text-amber-600'>
+                    {stockRemaining} left
+                  </span>
+                )}
+              </div>
+
+              {/* Right: total */}
+              <div className='text-right'>
+                <p className='text-[10px] text-zinc-400'>Total</p>
+                <p className='text-sm font-medium text-zinc-900'>
+                  ৳{item.totalPrice.toFixed(2)}
+                </p>
+              </div>
+            </div>
           </div>
         );
       })}

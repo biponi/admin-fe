@@ -417,7 +417,10 @@ const OrderProductList: React.FC<Props> = ({
       if (newQuantity > 0 && newQuantity <= maxQuantity) {
         const updatedProducts = [...selectedProducts];
         updatedProducts[index].selectedQuantity = newQuantity;
-        const priceToUse = product?.unitPrice;
+        // Use variant price if product has variation, otherwise use product price
+        const priceToUse = product?.hasVariation && product?.selectedVariant
+          ? product.selectedVariant.unitPrice
+          : product?.unitPrice;
         updatedProducts[index].totalPrice = newQuantity * priceToUse;
         setSelectedProducts(updatedProducts);
       }

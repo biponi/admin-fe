@@ -55,6 +55,7 @@ import InvoiceDocument, {
 import { generateReactPdfPackingSlip } from "../../../utils/reactPdfPackingSlip";
 import { pdf } from "@react-pdf/renderer";
 import { toast } from "sonner";
+import { BRAND_CONFIG } from "../../../config/brand";
 
 interface OrderDetailsSheetProps {
   order: IOrder | null;
@@ -79,7 +80,7 @@ export const OrderDetailsSheet: React.FC<OrderDetailsSheetProps> = ({
 
   const handleCopyOrderNumber = async () => {
     await navigator.clipboard.writeText(
-      `https://priorbd.com/order/${order?.orderNumber}`,
+      `${BRAND_CONFIG.website}/order/${order?.orderNumber}`,
     );
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
@@ -127,7 +128,7 @@ export const OrderDetailsSheet: React.FC<OrderDetailsSheetProps> = ({
     const shareData = {
       title: `Order ${formatOrderNumber(order.orderNumber)}`,
       text: `Order details for ${order.customer.name}`,
-      url: `https://priorbd.com/order/${order?.orderNumber}`,
+      url: `${BRAND_CONFIG.website}/order/${order?.orderNumber}`,
     };
 
     if (navigator.share) {
@@ -135,7 +136,7 @@ export const OrderDetailsSheet: React.FC<OrderDetailsSheetProps> = ({
     } else {
       // Fallback: copy link to clipboard
       await navigator.clipboard.writeText(
-        `https://priorbd.com/order/${order?.orderNumber}`,
+        `${BRAND_CONFIG.website}/order/${order?.orderNumber}`,
       );
       toast.success("Link copied to clipboard!");
     }

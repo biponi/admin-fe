@@ -10,6 +10,7 @@ import {
   Clock,
   Tag,
   Package,
+  Truck,
 } from "lucide-react";
 import { Badge } from "../../../components/ui/badge";
 import { Button } from "../../../components/ui/button";
@@ -240,6 +241,23 @@ const MobileCampaignCard: React.FC<Props> = ({
                     (min: ৳{campaign.minOrderAmount})
                   </span>
                 )}
+              </p>
+            </div>
+          </div>
+        )}
+
+        {/* Delivery Discount Info (if applicable) */}
+        {campaign.deliveryDiscountType && campaign.deliveryDiscountType !== "none" && (
+          <div className="mt-3 p-3 bg-blue-50 rounded-xl border border-blue-100">
+            <div className="flex items-center gap-2">
+              <Truck className="h-4 w-4 text-blue-600" />
+              <p className="text-xs font-medium text-blue-700">
+                Delivery:{" "}
+                {campaign.deliveryDiscountType === "free"
+                  ? "FREE"
+                  : campaign.deliveryDiscountType === "percentage"
+                  ? `${campaign.deliveryDiscountAmount}% off`
+                  : `${campaign.deliveryDiscountAmount} off`}
               </p>
             </div>
           </div>

@@ -16,6 +16,7 @@ import {
 import { navItems } from "../utils/navItem";
 import { Link, useLocation } from "react-router-dom";
 import { BiponiMainLogo } from "../utils/contents";
+import { BRAND_CONFIG } from "../config/brand";
 import useLoginAuth from "../pages/auth/hooks/useLoginAuth";
 import useRoleCheck from "../pages/auth/hooks/useRoleCheck";
 import { SettingsPanel } from "./settings-panel";
@@ -60,7 +61,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                   />
                 </div>
                 <div className='grid flex-1 text-left text-sm leading-tight'>
-                  <span className='truncate font-semibold'>Prior Admin</span>
+                  <span className='truncate font-semibold'>{BRAND_CONFIG.name}</span>
                   <span className='truncate text-xs'>Management</span>
                 </div>
               </Link>

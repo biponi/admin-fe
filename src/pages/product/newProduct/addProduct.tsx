@@ -38,8 +38,8 @@ import {
   TabsList,
   TabsTrigger,
 } from "../../../components/ui/tabs";
-import { Textarea } from "../../../components/ui/textarea";
 import { useRef, useState } from "react";
+import TiptapEditor from "../../../components/ui/tiptap";
 import { Input } from "../../../components/ui/input";
 import { Label } from "../../../components/ui/label";
 import { Switch } from "../../../components/ui/switch";
@@ -140,6 +140,14 @@ const AddProduct: React.FC<Props> = ({ createProduct, categories }) => {
         onSkuChange(value);
       }
     }
+  };
+
+  // Handle Tiptap editor description changes
+  const handleDescriptionChange = (content: string) => {
+    updateFormData({
+      ...formData,
+      description: content,
+    });
   };
 
   const onSkuChange = (value: string) => {
@@ -939,13 +947,10 @@ const AddProduct: React.FC<Props> = ({ createProduct, categories }) => {
                     className='text-sm font-semibold'>
                     Description
                   </Label>
-                  <Textarea
-                    id='description'
-                    name='description'
-                    value={formData?.description}
-                    onChange={handleChange}
-                    placeholder='Describe your product features, benefits, and specifications'
-                    className='min-h-[120px] resize-none border-2 focus:border-blue-500 transition-colors'
+                  <TiptapEditor
+                    content={formData?.description || ''}
+                    onChange={handleDescriptionChange}
+                    placeholder='Describe your product features, benefits, and specifications...'
                   />
                 </div>
               </CardContent>

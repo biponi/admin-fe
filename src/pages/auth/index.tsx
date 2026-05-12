@@ -13,6 +13,7 @@ import { Label } from "../../components/ui/label";
 import useLoginAuth from "./hooks/useLoginAuth";
 import { ReloadIcon } from "@radix-ui/react-icons";
 import { BiponiMainLogo } from "../../utils/contents";
+import { BRAND_CONFIG } from "../../config/brand";
 import { Eye, EyeOff } from "lucide-react";
 
 const SignIn = () => {
@@ -47,7 +48,7 @@ const SignIn = () => {
             <img
               className='h-12 w-12 object-contain transition-transform duration-300 hover:scale-105'
               src={BiponiMainLogo}
-              alt='Biponi Logo'
+              alt={`${BRAND_CONFIG.shortName} Logo`}
             />
           </div>
         </div>

@@ -23,4 +23,17 @@ export interface ICampaign {
   prepaymentType?: string; // Optional with default 'percentage'
   minOrderAmount?: number; // Optional with default 0
   maxPrepaymentAmount?: number; // Optional with default 0
+  deliveryDiscountType?: 'none' | 'free' | 'fixed' | 'percentage'; // Delivery discount type
+  deliveryDiscountAmount?: number; // Delivery discount amount (required for fixed/percentage)
+}
+
+// Delivery discount info from calculate-prepayment API
+export interface DeliveryDiscountInfo {
+  hasDeliveryDiscount: boolean;
+  deliveryDiscount: number;
+  originalDeliveryCharge: number;
+  discountedDeliveryCharge: number;
+  deliveryDiscountType: 'none' | 'free' | 'fixed' | 'percentage';
+  deliveryDiscountSource: string; // campaign ID
+  campaignTitle?: string;
 }

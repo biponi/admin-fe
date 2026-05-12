@@ -1,14 +1,5 @@
 import React, { useEffect, useState } from "react";
-import {
-  Table,
-  TableBody,
-  TableCaption,
-  TableCell,
-  TableFooter,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "../../components/ui/table";
+
 import { Card } from "../../components/ui/card";
 import {
   Select,
@@ -20,7 +11,12 @@ import {
 import { Input } from "../../components/ui/input";
 import { Button } from "../../components/ui/button";
 import { Label } from "../../components/ui/label";
-import { Badge } from "../../components/ui/badge";
+import {
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
+} from "../../components/ui/tabs";
 import {
   Edit,
   Plus,
@@ -32,6 +28,10 @@ import {
   Lock,
   Users,
   Loader2,
+  Shield,
+  UserCheck,
+  Crown,
+  Sparkles,
 } from "lucide-react";
 import { IUser } from "./interface";
 import {
@@ -47,8 +47,8 @@ import {
 import {
   Dialog,
   DialogContent,
-  DialogHeader,
   DialogTitle,
+  DialogDescription,
   DialogFooter,
 } from "../../components/ui/dialog";
 import {
@@ -74,6 +74,7 @@ import {
   AvatarFallback,
   AvatarImage,
 } from "../../components/ui/avatar";
+import { cn } from "../../lib/utils";
 
 export function UserComponent() {
   const { hasRequiredPermission, hasSomePermissionsForPage } = useRoleCheck();
@@ -97,6 +98,10 @@ export function UserComponent() {
     password: "",
     role: -1, // Default role
   });
+
+  // Optimistic loading states
+  const [loadingUserId, setLoadingUserId] = useState<string | null>(null);
+  const [activeTab, setActiveTab] = useState("all");
 
   // Detect mobile screen size
   const [isMobile, setIsMobile] = useState(false);
@@ -150,7 +155,8 @@ export function UserComponent() {
 
       if (response.success) {
         toast.success("User created successfully.");
-        fetchUsers(); // Refresh the user list
+        // Silent refresh without full page loader
+        await fetchUsers(false);
         setIsCreateModalOpen(false);
         setNewUser({
           name: "",
@@ -167,22 +173,40 @@ export function UserComponent() {
     }
   };
 
-  // Search and filter users
+  // Search and filter users with tabs
   useEffect(() => {
-    if (searchQuery.trim() === "") {
-      setFilteredUsers(users);
-    } else {
+    let filtered = users;
+
+    // Apply tab filter
+    if (activeTab !== "all") {
+      filtered = filtered.filter((user) => {
+        if (activeTab === "admins")
+          return user.role.toLowerCase().includes("admin");
+        if (activeTab === "managers")
+          return user.role.toLowerCase().includes("manager");
+        if (activeTab === "regular")
+          return (
+            !user.role.toLowerCase().includes("admin") &&
+            !user.role.toLowerCase().includes("manager")
+          );
+        return true;
+      });
+    }
+
+    // Apply search filter
+    if (searchQuery.trim() !== "") {
       const query = searchQuery.toLowerCase();
-      const filtered = users.filter(
+      filtered = filtered.filter(
         (user) =>
           user.name.toLowerCase().includes(query) ||
           user.email.toLowerCase().includes(query) ||
           user.mobile_number.includes(query) ||
-          user.role.toLowerCase().includes(query)
+          user.role.toLowerCase().includes(query),
       );
-      setFilteredUsers(filtered);
     }
-  }, [searchQuery, users]);
+
+    setFilteredUsers(filtered);
+  }, [searchQuery, users, activeTab]);
 
   useEffect(() => {
     fetchUsers();
@@ -190,8 +214,8 @@ export function UserComponent() {
     //eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const fetchUsers = async () => {
-    setIsLoading(true);
+  const fetchUsers = async (showLoading = true) => {
+    if (showLoading) setIsLoading(true);
     try {
       const response = await getAllUsers();
       if (!response?.success) {
@@ -204,24 +228,37 @@ export function UserComponent() {
     } catch (error) {
       console.error("Error fetching the user data:", error);
     } finally {
-      setIsLoading(false);
+      if (showLoading) setIsLoading(false);
+    }
+  };
+
+  // Optimistic update wrapper functions
+  const handleOptimisticUpdate = async (
+    userId: string,
+    updateFn: () => Promise<void>,
+  ) => {
+    setLoadingUserId(userId);
+    try {
+      await updateFn();
+      // Silent refresh without showing full page loader
+      await fetchUsers(false);
+      toast.success("User updated successfully");
+    } catch (error) {
+      toast.error("Failed to update user");
+      // Refresh to ensure data consistency
+      await fetchUsers(false);
+    } finally {
+      setLoadingUserId(null);
     }
   };
 
   const handleRoleChange = async (userId: string, newRole: string) => {
-    try {
+    await handleOptimisticUpdate(userId, async () => {
       const response = await adminChangeUserData(userId, { role: newRole });
       if (!response?.success) {
-        console.error("Failed to fetch users:", response?.error);
-        toast.error(response?.error || "Failed to fetch users");
-        return;
-      } else {
-        toast.success("User role updated successfully");
+        throw new Error(response?.error || "Failed to update role");
       }
-      fetchUsers(); // Refresh the user list
-    } catch (error) {
-      console.error("Error updating user role:", error);
-    }
+    });
   };
 
   const handleEdit = (user: IUser) => {
@@ -247,51 +284,43 @@ export function UserComponent() {
           mobile_number: editData?.mobile_number,
         };
 
-    try {
+    await handleOptimisticUpdate(`${selectedUser?.id}`, async () => {
       const response = await adminChangeUserData(
         `${selectedUser?.id}`,
-        updateAbleData
+        updateAbleData,
       );
       if (!response?.success) {
-        console.error("Failed to fetch users:", response?.error);
-        toast.error(response?.error || "Failed to fetch users");
-        return;
-      } else {
-        toast.success("User information updated successfully");
-        setIsEditModalOpen(false);
-        fetchUsers(); // Refresh the user list
+        throw new Error(response?.error || "Failed to update user");
       }
-    } catch (error) {
-      console.error("Error updating user information:", error);
-    }
+    });
+
+    setIsEditModalOpen(false);
   };
 
   const handleDelete = async () => {
     if (!deleteUserId) return;
 
-    try {
-      const response = await deleteUser(deleteUserId);
-      if (response?.success) {
-        fetchUsers(); // Refresh the user list
-        setIsDeleteModalOpen(false);
-        toast.success("User deleted successfully");
-      } else {
-        console.error("Failed to delete user:", response?.error);
-        toast.error(response?.error || "Failed to delete user");
-        return;
+    const userIdToDelete = deleteUserId;
+
+    await handleOptimisticUpdate(userIdToDelete, async () => {
+      const response = await deleteUser(userIdToDelete);
+      if (!response?.success) {
+        throw new Error(response?.error || "Failed to delete user");
       }
-    } catch (error) {
-      console.error("Error deleting user:", error);
-    }
+    });
+
+    setIsDeleteModalOpen(false);
   };
 
   const renderCreateUserForm = () => (
-    <div className='space-y-5 py-4'>
-      <div className='space-y-2'>
+    <div className='space-y-5 py-2'>
+      <div className='space-y-2.5'>
         <Label
           htmlFor='name'
-          className='text-sm font-medium flex items-center gap-2'>
-          <User className='h-4 w-4' />
+          className='text-sm font-bold flex items-center gap-2 text-gray-700'>
+          <div className='h-7 w-7 rounded-lg bg-blue-100 flex items-center justify-center'>
+            <User className='h-4 w-4 text-blue-600' />
+          </div>
           Full Name
         </Label>
         <Input
@@ -300,15 +329,17 @@ export function UserComponent() {
           name='name'
           value={newUser.name}
           onChange={handleInputChange}
-          className='h-11'
+          className='h-11 border-2 focus:border-blue-400 font-medium'
         />
       </div>
 
-      <div className='space-y-2'>
+      <div className='space-y-2.5'>
         <Label
           htmlFor='email'
-          className='text-sm font-medium flex items-center gap-2'>
-          <Mail className='h-4 w-4' />
+          className='text-sm font-bold flex items-center gap-2 text-gray-700'>
+          <div className='h-7 w-7 rounded-lg bg-purple-100 flex items-center justify-center'>
+            <Mail className='h-4 w-4 text-purple-600' />
+          </div>
           Email Address
         </Label>
         <Input
@@ -318,15 +349,17 @@ export function UserComponent() {
           name='email'
           value={newUser.email}
           onChange={handleInputChange}
-          className='h-11'
+          className='h-11 border-2 focus:border-purple-400 font-medium'
         />
       </div>
 
-      <div className='space-y-2'>
+      <div className='space-y-2.5'>
         <Label
           htmlFor='mobile'
-          className='text-sm font-medium flex items-center gap-2'>
-          <Phone className='h-4 w-4' />
+          className='text-sm font-bold flex items-center gap-2 text-gray-700'>
+          <div className='h-7 w-7 rounded-lg bg-green-100 flex items-center justify-center'>
+            <Phone className='h-4 w-4 text-green-600' />
+          </div>
           Mobile Number
         </Label>
         <Input
@@ -335,15 +368,17 @@ export function UserComponent() {
           name='mobile_number'
           value={newUser.mobile_number}
           onChange={handleInputChange}
-          className='h-11'
+          className='h-11 border-2 focus:border-green-400 font-medium'
         />
       </div>
 
-      <div className='space-y-2'>
+      <div className='space-y-2.5'>
         <Label
           htmlFor='password'
-          className='text-sm font-medium flex items-center gap-2'>
-          <Lock className='h-4 w-4' />
+          className='text-sm font-bold flex items-center gap-2 text-gray-700'>
+          <div className='h-7 w-7 rounded-lg bg-orange-100 flex items-center justify-center'>
+            <Lock className='h-4 w-4 text-orange-600' />
+          </div>
           Password
         </Label>
         <Input
@@ -353,24 +388,29 @@ export function UserComponent() {
           type='password'
           value={newUser.password}
           onChange={handleInputChange}
-          className='h-11'
+          className='h-11 border-2 focus:border-orange-400 font-medium'
         />
       </div>
 
-      <div className='space-y-2'>
-        <Label className='text-sm font-medium flex items-center gap-2'>
-          <Users className='h-4 w-4' />
+      <div className='space-y-2.5'>
+        <Label className='text-sm font-bold flex items-center gap-2 text-gray-700'>
+          <div className='h-7 w-7 rounded-lg bg-indigo-100 flex items-center justify-center'>
+            <Users className='h-4 w-4 text-indigo-600' />
+          </div>
           User Role
         </Label>
         <Select
           value={`${newUser.role}`}
           onValueChange={handleNewUserRoleChange}>
-          <SelectTrigger className='h-11'>
+          <SelectTrigger className='h-11 border-2 focus:border-indigo-400 font-medium'>
             <SelectValue placeholder='Select a role' />
           </SelectTrigger>
           <SelectContent>
             {roles.map((role) => (
-              <SelectItem key={role?.id} value={`${role?.roleNumber}`}>
+              <SelectItem
+                key={role?.id}
+                value={`${role?.roleNumber}`}
+                className='font-medium'>
                 {role?.name}
               </SelectItem>
             ))}
@@ -385,29 +425,35 @@ export function UserComponent() {
       return (
         <Drawer open={isCreateModalOpen} onOpenChange={setIsCreateModalOpen}>
           <DrawerContent className='max-h-[90vh]'>
-            <DrawerHeader className='text-left'>
-              <DrawerTitle className='flex items-center gap-2 text-2xl'>
-                <Users className='h-6 w-6' />
-                Create New User
-              </DrawerTitle>
-              <DrawerDescription>
-                Fill in the details to create a new user account
-              </DrawerDescription>
+            <DrawerHeader className='text-left pb-4'>
+              <div className='flex items-center gap-3 mb-2'>
+                <div className='h-12 w-12 rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center shadow-lg'>
+                  <Users className='h-6 w-6 text-white' />
+                </div>
+                <div className='flex-1'>
+                  <DrawerTitle className='text-2xl font-bold text-gray-900'>
+                    Create New User
+                  </DrawerTitle>
+                  <DrawerDescription className='text-sm mt-1'>
+                    Fill in the details to create a new user account
+                  </DrawerDescription>
+                </div>
+              </div>
             </DrawerHeader>
             <div className='overflow-y-auto px-4'>{renderCreateUserForm()}</div>
-            <DrawerFooter className='pt-4'>
+            <DrawerFooter className='pt-4 gap-2'>
               <Button
                 onClick={handleCreateUser}
                 disabled={isCreating}
-                className='h-11 w-full'>
+                className='h-12 w-full shadow-lg bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white border-0 text-base font-semibold'>
                 {isCreating ? (
                   <>
-                    <Loader2 className='mr-2 h-4 w-4 animate-spin' />
+                    <Loader2 className='mr-2 h-5 w-5 animate-spin' />
                     Creating...
                   </>
                 ) : (
                   <>
-                    <Plus className='mr-2 h-4 w-4' />
+                    <Sparkles className='mr-2 h-5 w-5' />
                     Create User
                   </>
                 )}
@@ -416,7 +462,7 @@ export function UserComponent() {
                 <Button
                   variant='outline'
                   disabled={isCreating}
-                  className='h-11 w-full'>
+                  className='h-12 w-full border-2 text-base font-semibold'>
                   Cancel
                 </Button>
               </DrawerClose>
@@ -428,26 +474,35 @@ export function UserComponent() {
 
     return (
       <Dialog open={isCreateModalOpen} onOpenChange={setIsCreateModalOpen}>
-        <DialogContent className='sm:max-w-[500px]'>
-          <DialogHeader>
-            <DialogTitle className='flex items-center gap-2 text-2xl'>
-              <Users className='h-6 w-6' />
-              Create New User
-            </DialogTitle>
-          </DialogHeader>
-          {renderCreateUserForm()}
-          <DialogFooter className='gap-2 sm:gap-0'>
+        <DialogContent className='sm:max-w-[520px] p-0'>
+          <div className='p-6 pb-2'>
+            <div className='flex items-center gap-3 mb-2'>
+              <div className='h-12 w-12 rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center shadow-lg'>
+                <Users className='h-6 w-6 text-white' />
+              </div>
+              <div className='flex-1'>
+                <DialogTitle className='text-2xl font-bold text-gray-900'>
+                  Create New User
+                </DialogTitle>
+                <DialogDescription className='text-sm mt-1'>
+                  Fill in the details to create a new user account
+                </DialogDescription>
+              </div>
+            </div>
+          </div>
+          <div className='px-6'>{renderCreateUserForm()}</div>
+          <DialogFooter className='p-6 pt-2 gap-2 sm:gap-0'>
             <Button
               variant='outline'
               onClick={() => setIsCreateModalOpen(false)}
               disabled={isCreating}
-              className='h-11'>
+              className='h-11 border-2 font-semibold'>
               Cancel
             </Button>
             <Button
               onClick={handleCreateUser}
               disabled={isCreating}
-              className='h-11'>
+              className='h-11 shadow-md bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white border-0 font-semibold'>
               {isCreating ? (
                 <>
                   <Loader2 className='mr-2 h-4 w-4 animate-spin' />
@@ -455,7 +510,7 @@ export function UserComponent() {
                 </>
               ) : (
                 <>
-                  <Plus className='mr-2 h-4 w-4' />
+                  <Sparkles className='mr-2 h-4 w-4' />
                   Create User
                 </>
               )}
@@ -466,11 +521,33 @@ export function UserComponent() {
     );
   };
 
-  // Helper function to get role color
-  const getRoleBadgeColor = (roleName: string) => {
-    if (roleName.toLowerCase().includes("admin")) return "destructive";
-    if (roleName.toLowerCase().includes("manager")) return "default";
-    return "secondary";
+  // Helper function to get role configuration
+  const getRoleConfig = (roleName: string) => {
+    if (roleName.toLowerCase().includes("admin")) {
+      return {
+        gradient: "from-red-500 to-pink-600",
+        bgColor: "bg-red-50",
+        textColor: "text-red-700",
+        borderColor: "border-red-200",
+        icon: Crown,
+      };
+    }
+    if (roleName.toLowerCase().includes("manager")) {
+      return {
+        gradient: "from-purple-500 to-indigo-600",
+        bgColor: "bg-purple-50",
+        textColor: "text-purple-700",
+        borderColor: "border-purple-200",
+        icon: Shield,
+      };
+    }
+    return {
+      gradient: "from-blue-500 to-cyan-600",
+      bgColor: "bg-blue-50",
+      textColor: "text-blue-700",
+      borderColor: "border-blue-200",
+      icon: UserCheck,
+    };
   };
 
   // Helper function to get user initials
@@ -482,301 +559,412 @@ export function UserComponent() {
     return name.substring(0, 2).toUpperCase();
   };
 
+  // Calculate user statistics
+  const getUserStats = () => {
+    const adminCount = users.filter((u) =>
+      u.role.toLowerCase().includes("admin"),
+    ).length;
+    const managerCount = users.filter((u) =>
+      u.role.toLowerCase().includes("manager"),
+    ).length;
+    const regularCount = users.length - adminCount - managerCount;
+
+    return { adminCount, managerCount, regularCount, total: users.length };
+  };
+
+  const stats = getUserStats();
+
   return (
     <div className='space-y-6'>
-      {/* Header Section */}
-      <Card className='p-6'>
-        <div className='flex flex-col md:flex-row md:items-center md:justify-between gap-4'>
-          <div>
-            <h2 className='text-3xl font-bold tracking-tight'>
-              User Management
-            </h2>
-            <p className='text-muted-foreground mt-1'>
-              Manage and organize your team members
-            </p>
+      {/* Header Section with Gradient */}
+      <div className='rounded-2xl bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 border-2 border-blue-100 p-6 md:p-8 shadow-sm'>
+        <div className='flex flex-col md:flex-row md:items-center md:justify-between gap-6'>
+          <div className='flex-1'>
+            <div className='flex items-center gap-3 mb-2'>
+              <div className='p-2.5 rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 shadow-sm'>
+                <Users className='h-6 w-6 text-white' />
+              </div>
+              <div>
+                <h2 className='text-3xl font-bold tracking-tight text-gray-900'>
+                  User Management
+                </h2>
+                <p className='text-muted-foreground mt-1'>
+                  Manage and organize your team members efficiently
+                </p>
+              </div>
+            </div>
           </div>
+
+          {/* Stats Cards - Desktop */}
+          <div className='hidden md:grid grid-cols-3 gap-3'>
+            <div className='flex items-center gap-2 px-4 py-3 bg-white rounded-xl border-2 border-purple-200 shadow-sm'>
+              <div className='h-10 w-10 rounded-lg bg-gradient-to-br from-purple-500 to-pink-600 flex items-center justify-center'>
+                <Crown className='h-5 w-5 text-white' />
+              </div>
+              <div>
+                <p className='text-[10px] font-medium text-purple-600 uppercase tracking-wide'>
+                  Admins
+                </p>
+                <p className='text-xl font-bold text-gray-900'>
+                  {stats.adminCount}
+                </p>
+              </div>
+            </div>
+
+            <div className='flex items-center gap-2 px-4 py-3 bg-white rounded-xl border-2 border-indigo-200 shadow-sm'>
+              <div className='h-10 w-10 rounded-lg bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center'>
+                <Shield className='h-5 w-5 text-white' />
+              </div>
+              <div>
+                <p className='text-[10px] font-medium text-indigo-600 uppercase tracking-wide'>
+                  Managers
+                </p>
+                <p className='text-xl font-bold text-gray-900'>
+                  {stats.managerCount}
+                </p>
+              </div>
+            </div>
+
+            <div className='flex items-center gap-2 px-4 py-3 bg-white rounded-xl border-2 border-blue-200 shadow-sm'>
+              <div className='h-10 w-10 rounded-lg bg-gradient-to-br from-blue-500 to-cyan-600 flex items-center justify-center'>
+                <UserCheck className='h-5 w-5 text-white' />
+              </div>
+              <div>
+                <p className='text-[10px] font-medium text-blue-600 uppercase tracking-wide'>
+                  Regular
+                </p>
+                <p className='text-xl font-bold text-gray-900'>
+                  {stats.regularCount}
+                </p>
+              </div>
+            </div>
+          </div>
+
           {hasRequiredPermission("user", "create") && (
             <Button
               onClick={() => setIsCreateModalOpen(true)}
               size='lg'
-              className='shadow-sm'>
-              <Plus className='mr-2 h-5 w-5' /> Create User
+              className='shadow-lg bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white border-0 h-12 px-6'>
+              <Sparkles className='mr-2 h-5 w-5' /> Create User
             </Button>
           )}
         </div>
 
         {/* Search Bar */}
-        <div className='relative mt-6'>
-          <Search className='absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground' />
+        <div className='relative mt-6 max-w-2xl'>
+          <Search className='absolute left-4 top-1/2 transform -translate-y-1/2 h-5 w-5 text-muted-foreground' />
           <Input
             placeholder='Search by name, email, mobile, or role...'
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className='pl-10 h-11'
+            className='pl-12 h-12 bg-white border-2 border-gray-200 focus:border-blue-400 rounded-xl text-base shadow-sm'
           />
         </div>
-      </Card>
 
-      {/* Users Table / Cards */}
-      <Card className='shadow-sm'>
-        {isLoading ? (
-          <div className='flex items-center justify-center py-16'>
-            <Loader2 className='h-8 w-8 animate-spin text-muted-foreground' />
-          </div>
-        ) : filteredUsers.length === 0 ? (
-          <div className='py-16 text-center'>
-            <Users className='mx-auto h-12 w-12 text-muted-foreground/50' />
-            <p className='mt-4 text-lg font-medium'>No users found</p>
-            <p className='text-sm text-muted-foreground mt-1'>
-              {searchQuery
-                ? "Try adjusting your search"
-                : "Get started by creating a new user"}
+        {/* Mobile Stats */}
+        <div className='grid grid-cols-3 gap-2 mt-4 md:hidden'>
+          <div className='flex flex-col items-center p-3 bg-white rounded-xl border-2 border-purple-200'>
+            <Crown className='h-5 w-5 text-purple-600 mb-1' />
+            <p className='text-[10px] font-medium text-purple-600'>Admins</p>
+            <p className='text-lg font-bold text-gray-900'>
+              {stats.adminCount}
             </p>
           </div>
-        ) : (
-          <>
-            {/* Mobile Card View */}
-            <div className='md:hidden space-y-4 p-4'>
-              {filteredUsers.map((user: IUser) => (
-                <Card key={user.id} className='p-4 shadow-sm border-2'>
-                  <div className='flex items-start gap-4'>
-                    <div className='h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center text-primary font-semibold flex-shrink-0'>
-                      {getUserInitials(user.name)}
-                    </div>
-                    <div className='flex-1 min-w-0'>
-                      <div className='flex items-start justify-between gap-2 mb-2'>
-                        <div className='flex-1 min-w-0'>
-                          <h3 className='font-semibold text-base truncate'>
-                            {!!user.name && user?.name.length > 7
-                              ? user.name.slice(0, 7) + "..."
-                              : user.name}
-                          </h3>
-                          <Badge
-                            variant={getRoleBadgeColor(user.role)}
-                            className='mt-1 font-medium text-xs'>
-                            {user.role}
-                          </Badge>
-                        </div>
-                        {hasSomePermissionsForPage("user", [
-                          "edit",
-                          "delete",
-                        ]) && (
-                          <div className='flex gap-1 flex-shrink-0'>
-                            {hasRequiredPermission("user", "edit") && (
-                              <Button
-                                variant='ghost'
-                                size='icon'
-                                onClick={() => handleEdit(user)}
-                                disabled={user.role === "admin"}
-                                className='h-8 w-8 hover:bg-primary/10 hover:text-primary'>
-                                <Edit className='h-4 w-4' />
-                              </Button>
-                            )}
-                            {hasRequiredPermission("user", "delete") && (
-                              <Button
-                                variant='ghost'
-                                size='icon'
-                                onClick={() => {
-                                  setDeleteUserId(`${user.id}`);
-                                  setIsDeleteModalOpen(true);
-                                }}
-                                disabled={user.role === "admin"}
-                                className='h-8 w-8 hover:bg-destructive/10 hover:text-destructive'>
-                                <Trash className='h-4 w-4' />
-                              </Button>
-                            )}
-                          </div>
-                        )}
-                      </div>
-                      <div className='space-y-2 text-sm'>
-                        <div className='flex items-center gap-2 text-muted-foreground'>
-                          <Mail className='h-3.5 w-3.5 flex-shrink-0' />
-                          <span className='truncate'>{user.email}</span>
-                        </div>
-                        <div className='flex items-center gap-2 text-muted-foreground'>
-                          <Phone className='h-3.5 w-3.5 flex-shrink-0' />
-                          <span>{user.mobile_number}</span>
-                        </div>
-                      </div>
-                      <div className='mt-3'>
-                        <Select
-                          value={`${user.role_id}`}
-                          onValueChange={(newRole) =>
-                            handleRoleChange(`${user.id}`, newRole)
-                          }
-                          disabled={user.role.includes("admin")}>
-                          <SelectTrigger className='h-9 w-full'>
-                            <SelectValue placeholder='Change Role' />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {roles.map((rol) => (
-                              <SelectItem
-                                key={rol?.id}
-                                value={`${rol?.roleNumber}`}>
-                                {rol?.name}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      </div>
-                    </div>
-                  </div>
-                </Card>
-              ))}
-              <div className='pt-4 pb-2'>
-                <div className='flex items-center justify-center gap-2 text-sm text-muted-foreground'>
-                  <Users className='h-4 w-4' />
-                  <span className='font-medium'>Total Users:</span>{" "}
-                  {users.length}
-                </div>
-              </div>
-            </div>
+          <div className='flex flex-col items-center p-3 bg-white rounded-xl border-2 border-indigo-200'>
+            <Shield className='h-5 w-5 text-indigo-600 mb-1' />
+            <p className='text-[10px] font-medium text-indigo-600'>Managers</p>
+            <p className='text-lg font-bold text-gray-900'>
+              {stats.managerCount}
+            </p>
+          </div>
+          <div className='flex flex-col items-center p-3 bg-white rounded-xl border-2 border-blue-200'>
+            <UserCheck className='h-5 w-5 text-blue-600 mb-1' />
+            <p className='text-[10px] font-medium text-blue-600'>Regular</p>
+            <p className='text-lg font-bold text-gray-900'>
+              {stats.regularCount}
+            </p>
+          </div>
+        </div>
+      </div>
 
-            {/* Desktop Table View */}
-            <div className='hidden md:block overflow-x-auto'>
-              <Table>
-                <TableCaption>
-                  Showing {filteredUsers.length} of {users.length} users
-                </TableCaption>
-                <TableHeader>
-                  <TableRow className='hover:bg-transparent'>
-                    <TableHead className='w-16'>SL</TableHead>
-                    <TableHead>User</TableHead>
-                    <TableHead>Contact</TableHead>
-                    <TableHead>Role</TableHead>
-                    {hasSomePermissionsForPage("user", ["edit", "delete"]) && (
-                      <TableHead className='text-right'>Actions</TableHead>
-                    )}
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {filteredUsers.map((user: IUser, index: number) => (
-                    <TableRow key={user.id} className='group'>
-                      <TableCell className='font-medium text-muted-foreground'>
-                        {index + 1}
-                      </TableCell>
-                      <TableCell>
-                        <div className='flex items-center gap-3'>
-                          <div className='h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center text-primary font-semibold text-sm'>
-                            <Avatar>
-                              <AvatarImage
-                                src={user?.avatar || ""}
-                                alt='avatar'
-                              />
-                              <AvatarFallback>
-                                {getUserInitials(user.name)}
-                              </AvatarFallback>
-                            </Avatar>
-                          </div>
-                          <div>
-                            <div className='font-medium'>{user.name}</div>
-                            <div className='text-sm text-muted-foreground'>
-                              {user.email}
+      {/* Main Content with Tabs */}
+      <Tabs value={activeTab} onValueChange={setActiveTab} className='w-full'>
+        {/* Tab Navigation */}
+        <TabsList className='h-12 w-full grid grid-cols-2 md:grid-cols-4 bg-white border-2 border-gray-200 rounded-xl p-1.5 shadow-sm gap-1.5'>
+          <TabsTrigger
+            value='all'
+            className='data-[state=active]:bg-gradient-to-r data-[state=active]:from-blue-500 data-[state=active]:to-indigo-600 data-[state=active]:text-white rounded-lg font-semibold text-sm'>
+            <Users className='w-4 h-4 mr-2' />
+            All Users ({users.length})
+          </TabsTrigger>
+          <TabsTrigger
+            value='admins'
+            className='data-[state=active]:bg-gradient-to-r data-[state=active]:from-red-500 data-[state=active]:to-pink-600 data-[state=active]:text-white rounded-lg font-semibold text-sm'>
+            <Crown className='w-4 h-4 mr-2' />
+            Admins ({stats.adminCount})
+          </TabsTrigger>
+          <TabsTrigger
+            value='managers'
+            className='data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-500 data-[state=active]:to-indigo-600 data-[state=active]:text-white rounded-lg font-semibold text-sm'>
+            <Shield className='w-4 h-4 mr-2' />
+            Managers ({stats.managerCount})
+          </TabsTrigger>
+          <TabsTrigger
+            value='regular'
+            className='data-[state=active]:bg-gradient-to-r data-[state=active]:from-blue-500 data-[state=active]:to-cyan-600 data-[state=active]:text-white rounded-lg font-semibold text-sm'>
+            <UserCheck className='w-4 h-4 mr-2' />
+            Regular ({stats.regularCount})
+          </TabsTrigger>
+        </TabsList>
+
+        {/* All Tabs Content - Shared */}
+        <TabsContent value={activeTab} className='mt-6 space-y-4'>
+          <Card className='shadow-sm border-2 border-gray-100 bg-transparent'>
+            {isLoading ? (
+              <div className='flex flex-col items-center justify-center py-20 px-4'>
+                <div className='relative'>
+                  <div className='absolute inset-0 bg-blue-500/20 rounded-full animate-ping' />
+                  <div className='relative h-16 w-16 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center shadow-lg'>
+                    <Loader2 className='h-8 w-8 text-white animate-spin' />
+                  </div>
+                </div>
+                <p className='mt-6 text-lg font-semibold text-gray-900'>
+                  Loading users...
+                </p>
+                <p className='text-sm text-muted-foreground mt-1'>
+                  Please wait while we fetch the data
+                </p>
+              </div>
+            ) : filteredUsers.length === 0 ? (
+              <div className='py-20 px-4 text-center bg-white rounded-2xl'>
+                <div className='mx-auto h-20 w-20 rounded-2xl bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center mb-6'>
+                  <Users className='h-10 w-10 text-gray-400' />
+                </div>
+                <p className='text-xl font-bold text-gray-900 mb-2'>
+                  No users found
+                </p>
+                <p className='text-sm text-muted-foreground mb-6 max-w-sm mx-auto'>
+                  {searchQuery
+                    ? "Try adjusting your search criteria to find what you're looking for"
+                    : "Get started by creating your first user account"}
+                </p>
+                {!searchQuery && hasRequiredPermission("user", "create") && (
+                  <Button
+                    onClick={() => setIsCreateModalOpen(true)}
+                    size='lg'
+                    className='shadow-lg bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white border-0'>
+                    <Plus className='mr-2 h-5 w-5' /> Create First User
+                  </Button>
+                )}
+              </div>
+            ) : (
+              <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 p-6'>
+                {filteredUsers.map((user: IUser) => {
+                  const roleConfig = getRoleConfig(user.role);
+                  const RoleIcon = roleConfig.icon;
+                  const isCardLoading = loadingUserId === user.id;
+
+                  return (
+                    <Card
+                      key={user.id}
+                      className={cn(
+                        "group relative overflow-hidden transition-all duration-300 hover:shadow-xl border-2",
+                        isCardLoading
+                          ? "opacity-50 pointer-events-none"
+                          : "hover:border-blue-200",
+                      )}>
+                      {/* Loading Overlay */}
+                      {isCardLoading && (
+                        <div className='absolute inset-0 bg-white/80 backdrop-blur-sm z-10 flex items-center justify-center'>
+                          <Loader2 className='h-8 w-8 animate-spin text-blue-600' />
+                        </div>
+                      )}
+
+                      {/* Gradient Top Bar */}
+                      <div className='h-2 w-full bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500' />
+
+                      <div className='p-6'>
+                        {/* User Avatar & Header */}
+                        <div className='flex flex-col items-center text-center mb-6'>
+                          <div className='relative mb-4'>
+                            <div className='h-24 w-24 rounded-full bg-gradient-to-br shadow-lg flex items-center justify-center text-white font-bold text-2xl border-4 border-white'>
+                              {user.avatar ? (
+                                <Avatar className='h-24 w-24 rounded-full border-4 border-white shadow-lg'>
+                                  <AvatarImage
+                                    src={user.avatar}
+                                    alt={user.name}
+                                  />
+                                  <AvatarFallback
+                                    className={cn(
+                                      "rounded-xl text-white font-bold text-2xl border-2",
+                                      roleConfig.gradient,
+                                    )}>
+                                    {getUserInitials(user.name)}
+                                  </AvatarFallback>
+                                </Avatar>
+                              ) : (
+                                <div
+                                  className={cn(
+                                    "h-24 w-24 rounded-full flex items-center justify-center text-white font-bold text-2xl border-4 border-white/20",
+                                    roleConfig.gradient,
+                                  )}>
+                                  {getUserInitials(user.name)}
+                                </div>
+                              )}
                             </div>
                           </div>
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        <div className='flex items-center gap-2 text-sm'>
-                          <Phone className='h-3.5 w-3.5 text-muted-foreground' />
-                          {user.mobile_number}
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        <div className='flex items-center gap-2'>
-                          <Badge
-                            variant={getRoleBadgeColor(user.role)}
-                            className='font-medium'>
-                            {user.role}
-                          </Badge>
-                          <Select
-                            value={`${user.role_id}`}
-                            onValueChange={(newRole) =>
-                              handleRoleChange(`${user.id}`, newRole)
-                            }
-                            disabled={user.role.includes("admin")}>
-                            <SelectTrigger className='h-9 w-[140px]'>
-                              <SelectValue placeholder='Change Role' />
-                            </SelectTrigger>
-                            <SelectContent>
-                              {roles.map((rol) => (
-                                <SelectItem
-                                  key={rol?.id}
-                                  value={`${rol?.roleNumber}`}>
-                                  {rol?.name}
-                                </SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
-                        </div>
-                      </TableCell>
-                      {hasSomePermissionsForPage("user", [
-                        "edit",
-                        "delete",
-                      ]) && (
-                        <TableCell className='text-right'>
-                          <div className='flex items-center justify-end gap-1'>
-                            {hasRequiredPermission("user", "edit") && (
-                              <Button
-                                variant='ghost'
-                                size='icon'
-                                onClick={() => handleEdit(user)}
-                                disabled={user.role === "admin"}
-                                className='h-8 w-8 hover:bg-primary/10 hover:text-primary'>
-                                <Edit className='h-4 w-4' />
-                              </Button>
-                            )}
-                            {hasRequiredPermission("user", "delete") && (
-                              <Button
-                                variant='ghost'
-                                size='icon'
-                                onClick={() => {
-                                  setDeleteUserId(`${user.id}`);
-                                  setIsDeleteModalOpen(true);
-                                }}
-                                disabled={user.role === "admin"}
-                                className='h-8 w-8 hover:bg-destructive/10 hover:text-destructive'>
-                                <Trash className='h-4 w-4' />
-                              </Button>
-                            )}
-                          </div>
-                        </TableCell>
-                      )}
-                    </TableRow>
-                  ))}
-                </TableBody>
-                <TableFooter>
-                  <TableRow>
-                    <TableCell colSpan={6} className='bg-muted/50'>
-                      <div className='flex items-center gap-2'>
-                        <Users className='h-4 w-4' />
-                        <span className='font-medium'>Total Users:</span>{" "}
-                        {users.length}
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                </TableFooter>
-              </Table>
-            </div>
-          </>
-        )}
-      </Card>
 
-      {/* Edit Modal */}
+                          <h3 className='text-xl font-bold text-gray-900 mb-2'>
+                            {user.name}
+                          </h3>
+
+                          {/* Role Badge */}
+                          <div
+                            className={cn(
+                              "inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full border-2 text-sm font-semibold mb-3",
+                              roleConfig.bgColor,
+                              roleConfig.textColor,
+                              roleConfig.borderColor,
+                            )}>
+                            <RoleIcon className='h-3.5 w-3.5' />
+                            {user.role}
+                          </div>
+
+                          {/* Quick Stats */}
+                          <div className='flex items-center gap-4 text-sm text-gray-600 mb-4'>
+                            <div className='flex items-center gap-1'>
+                              <Mail className='h-3.5 w-3.5' />
+                              <span className='truncate max-w-[150px]'>
+                                {user.email}
+                              </span>
+                            </div>
+                          </div>
+
+                          <div className='flex items-center gap-1 text-sm text-gray-600 mb-6'>
+                            <Phone className='h-3.5 w-3.5' />
+                            <span>{user.mobile_number}</span>
+                          </div>
+
+                          {/* Role Change Selector */}
+                          <div className='w-full mb-4'>
+                            <Select
+                              value={`${user.role_id}`}
+                              onValueChange={(newRole) =>
+                                handleRoleChange(`${user.id}`, newRole)
+                              }
+                              disabled={
+                                user.role.includes("admin") || isCardLoading
+                              }>
+                              <SelectTrigger className='h-10 border-2 shadow-sm'>
+                                <SelectValue placeholder='Change Role' />
+                              </SelectTrigger>
+                              <SelectContent>
+                                {roles.map((rol) => (
+                                  <SelectItem
+                                    key={rol?.id}
+                                    value={`${rol?.roleNumber}`}
+                                    className='font-medium'>
+                                    {rol?.name}
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                          </div>
+
+                          {/* Action Buttons */}
+                          {hasSomePermissionsForPage("user", [
+                            "edit",
+                            "delete",
+                          ]) && (
+                            <div className='flex gap-2 w-full'>
+                              {hasRequiredPermission("user", "edit") && (
+                                <Button
+                                  variant='outline'
+                                  size='sm'
+                                  onClick={() => handleEdit(user)}
+                                  disabled={
+                                    user.role.includes("admin") || isCardLoading
+                                  }
+                                  className='flex-1 border-2 hover:bg-blue-50 hover:text-blue-600 hover:border-blue-300 font-semibold'>
+                                  <Edit className='h-4 w-4 mr-1' />
+                                  Edit
+                                </Button>
+                              )}
+                              {hasRequiredPermission("user", "delete") && (
+                                <Button
+                                  variant='outline'
+                                  size='sm'
+                                  onClick={() => {
+                                    setDeleteUserId(`${user.id}`);
+                                    setIsDeleteModalOpen(true);
+                                  }}
+                                  disabled={
+                                    user.role.includes("admin") || isCardLoading
+                                  }
+                                  className='flex-1 border-2 hover:bg-red-50 hover:text-red-600 hover:border-red-300 font-semibold'>
+                                  <Trash className='h-4 w-4 mr-1' />
+                                  Delete
+                                </Button>
+                              )}
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    </Card>
+                  );
+                })}
+              </div>
+            )}
+          </Card>
+
+          {/* Total Users Footer */}
+          {filteredUsers.length > 0 && (
+            <Card className='bg-gradient-to-r from-blue-50 to-indigo-50 border-2 border-blue-200 p-6'>
+              <div className='flex items-center justify-center gap-4'>
+                <div className='h-12 w-12 rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center shadow-lg'>
+                  <Users className='h-6 w-6 text-white' />
+                </div>
+                <div className='text-center'>
+                  <p className='text-sm font-semibold text-blue-600 uppercase tracking-wide mb-1'>
+                    Showing {filteredUsers.length} of {users.length} Users
+                  </p>
+                  <p className='text-xs text-gray-600'>
+                    {activeTab !== "all"
+                      ? `Filtered by: ${activeTab}`
+                      : "All users"}
+                  </p>
+                </div>
+              </div>
+            </Card>
+          )}
+        </TabsContent>
+      </Tabs>
+
       <Dialog open={isEditModalOpen} onOpenChange={setIsEditModalOpen}>
-        <DialogContent className='sm:max-w-[500px]'>
-          <DialogHeader>
-            <DialogTitle className='flex items-center gap-2 text-2xl'>
-              <Edit className='h-6 w-6' />
-              Edit User Information
-            </DialogTitle>
-          </DialogHeader>
-          <div className='space-y-5 py-4'>
-            <div className='space-y-2'>
+        <DialogContent className='sm:max-w-[520px] p-0'>
+          <div className='p-6 pb-2'>
+            <div className='flex items-center gap-3 mb-2'>
+              <div className='h-12 w-12 rounded-xl bg-gradient-to-br from-purple-500 to-pink-600 flex items-center justify-center shadow-lg'>
+                <Edit className='h-6 w-6 text-white' />
+              </div>
+              <div className='flex-1'>
+                <DialogTitle className='text-2xl font-bold text-gray-900'>
+                  Edit User Information
+                </DialogTitle>
+                <DialogDescription className='text-sm mt-1'>
+                  Update user details and credentials
+                </DialogDescription>
+              </div>
+            </div>
+          </div>
+          <div className='px-6 space-y-5 py-2'>
+            <div className='space-y-2.5'>
               <Label
                 htmlFor='edit-email'
-                className='text-sm font-medium flex items-center gap-2'>
-                <Mail className='h-4 w-4' />
+                className='text-sm font-bold flex items-center gap-2 text-gray-700'>
+                <div className='h-7 w-7 rounded-lg bg-purple-100 flex items-center justify-center'>
+                  <Mail className='h-4 w-4 text-purple-600' />
+                </div>
                 Email Address
               </Label>
               <Input
@@ -787,15 +975,17 @@ export function UserComponent() {
                 onChange={(e) =>
                   setEditData({ ...editData, email: e.target.value })
                 }
-                className='h-11'
+                className='h-11 border-2 focus:border-purple-400 font-medium'
               />
             </div>
 
-            <div className='space-y-2'>
+            <div className='space-y-2.5'>
               <Label
                 htmlFor='edit-mobile'
-                className='text-sm font-medium flex items-center gap-2'>
-                <Phone className='h-4 w-4' />
+                className='text-sm font-bold flex items-center gap-2 text-gray-700'>
+                <div className='h-7 w-7 rounded-lg bg-green-100 flex items-center justify-center'>
+                  <Phone className='h-4 w-4 text-green-600' />
+                </div>
                 Mobile Number
               </Label>
               <Input
@@ -805,15 +995,17 @@ export function UserComponent() {
                 onChange={(e) =>
                   setEditData({ ...editData, mobile_number: e.target.value })
                 }
-                className='h-11'
+                className='h-11 border-2 focus:border-green-400 font-medium'
               />
             </div>
 
-            <div className='space-y-2'>
+            <div className='space-y-2.5'>
               <Label
                 htmlFor='edit-password'
-                className='text-sm font-medium flex items-center gap-2'>
-                <Lock className='h-4 w-4' />
+                className='text-sm font-bold flex items-center gap-2 text-gray-700'>
+                <div className='h-7 w-7 rounded-lg bg-orange-100 flex items-center justify-center'>
+                  <Lock className='h-4 w-4 text-orange-600' />
+                </div>
                 New Password (Optional)
               </Label>
               <Input
@@ -824,21 +1016,25 @@ export function UserComponent() {
                 onChange={(e) =>
                   setEditData({ ...editData, password: e.target.value })
                 }
-                className='h-11'
+                className='h-11 border-2 focus:border-orange-400 font-medium'
               />
-              <p className='text-xs text-muted-foreground'>
+              <p className='text-xs text-muted-foreground flex items-center gap-1'>
+                <Lock className='h-3 w-3' />
                 Only enter a password if you want to change it
               </p>
             </div>
           </div>
-          <DialogFooter className='gap-2 sm:gap-0'>
+          <DialogFooter className='p-6 pt-2 gap-2 sm:gap-0'>
             <Button
               variant='outline'
               onClick={() => setIsEditModalOpen(false)}
-              className='h-11'>
+              className='h-11 border-2 font-semibold'>
               Cancel
             </Button>
-            <Button onClick={handleSave} className='h-11'>
+            <Button
+              onClick={handleSave}
+              className='h-11 shadow-md bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white border-0 font-semibold'>
+              <Sparkles className='mr-2 h-4 w-4' />
               Save Changes
             </Button>
           </DialogFooter>
@@ -847,22 +1043,31 @@ export function UserComponent() {
 
       {/* Delete Confirmation Modal */}
       <AlertDialog open={isDeleteModalOpen} onOpenChange={setIsDeleteModalOpen}>
-        <AlertDialogContent>
+        <AlertDialogContent className='sm:max-w-[480px]'>
           <AlertDialogHeader>
-            <AlertDialogTitle className='flex items-center gap-2 text-xl'>
-              <Trash className='h-5 w-5 text-destructive' />
-              Delete User
-            </AlertDialogTitle>
-            <AlertDialogDescription className='text-base'>
+            <div className='flex items-center gap-3 mb-3'>
+              <div className='h-14 w-14 rounded-xl bg-gradient-to-br from-red-500 to-pink-600 flex items-center justify-center shadow-lg'>
+                <Trash className='h-7 w-7 text-white' />
+              </div>
+              <div>
+                <AlertDialogTitle className='text-2xl font-bold text-gray-900'>
+                  Delete User
+                </AlertDialogTitle>
+              </div>
+            </div>
+            <AlertDialogDescription className='text-base text-gray-600 pl-1'>
               Are you sure you want to delete this user? This action cannot be
               undone and will permanently remove the user from the system.
             </AlertDialogDescription>
           </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel className='h-11'>Cancel</AlertDialogCancel>
+          <AlertDialogFooter className='gap-2 sm:gap-0'>
+            <AlertDialogCancel className='h-11 border-2 font-semibold'>
+              Cancel
+            </AlertDialogCancel>
             <AlertDialogAction
               onClick={handleDelete}
-              className='h-11 bg-destructive hover:bg-destructive/90'>
+              className='h-11 shadow-lg bg-gradient-to-r from-red-600 to-pink-600 hover:from-red-700 hover:to-pink-700 text-white border-0 font-semibold'>
+              <Trash className='mr-2 h-4 w-4' />
               Delete User
             </AlertDialogAction>
           </AlertDialogFooter>
