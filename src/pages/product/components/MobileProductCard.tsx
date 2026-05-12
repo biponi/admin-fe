@@ -5,9 +5,7 @@ import {
   Trash2,
   MoreVertical,
   Eye,
-  Activity,
   ShoppingCart,
-  RefreshCw,
   Tag,
   Calendar,
   Search,
@@ -490,7 +488,7 @@ const MobileProductCard: React.FC<MobileProductCardProps> = ({
             <div
               className={cn(
                 "absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent",
-                image ? "hidden" : "flex"
+                image ? "hidden" : "flex",
               )}>
               <Package className='h-12 w-12 text-gray-400' />
             </div>
