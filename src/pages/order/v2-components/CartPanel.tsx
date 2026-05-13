@@ -18,8 +18,8 @@ interface CartPanelProps {
   shippingInfo: Partial<IShipping>;
   transaction: Partial<ITransection>;
   notes: string;
-  onUpdateQuantity: (productId: string, quantity: number) => void;
-  onRemove: (productId: string) => void;
+  onUpdateQuantity: (cartItemId: string, quantity: number) => void;
+  onRemove: (cartItemId: string) => void;
   onCustomerChange: (customer: Partial<ICustomer>) => void;
   onShippingChange: (shipping: Partial<IShipping>) => void;
   onTransactionChange: (transaction: Partial<ITransection>) => void;

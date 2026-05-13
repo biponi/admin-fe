@@ -37,15 +37,16 @@ export const distinctProducts = (products: any) => {
 
   for (const product of products) {
     const normalizedProduct = normalizeProduct(product);
-    const key = `${normalizedProduct.id}-${normalizedProduct.variantId}`;
+    // Use a tuple [id, variantId] as the key instead of composite string
+    const key = [normalizedProduct.id, normalizedProduct.variantId] as const;
 
     // If the product already exists in the map, add the quantities
-    if (productMap.has(key)) {
-      const existingProduct = productMap.get(key);
+    if (productMap.has(key.toString())) {
+      const existingProduct = productMap.get(key.toString());
       existingProduct.quantity += normalizedProduct.quantity;
     } else {
       // Otherwise, add the product to the map
-      productMap.set(key, { ...normalizedProduct });
+      productMap.set(key.toString(), { ...normalizedProduct });
     }
   }
 

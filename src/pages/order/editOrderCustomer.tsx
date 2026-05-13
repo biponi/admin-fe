@@ -373,7 +373,7 @@ const EditCustomerInformation: React.FC<Props> = ({
           iconColor='text-green-600'
           title='Shipping Address'>
           <div className='grid grid-cols-1 sm:grid-cols-2 gap-3'>
-            <FormField label='Division'>
+            <FormField label='District'>
               <SearchableSelect
                 value={shippingAddress.division?.id ?? ""}
                 onValueChange={handleDivisionChange}
@@ -385,7 +385,7 @@ const EditCustomerInformation: React.FC<Props> = ({
             </FormField>
 
             {shippingAddress.division && (
-              <FormField label='District'>
+              <FormField label='Area'>
                 <SearchableSelect
                   value={shippingAddress.district?.id ?? ""}
                   onValueChange={handleDistrictChange}

@@ -313,11 +313,11 @@ const OrderDetails = () => {
                 </CardHeader>
                 <CardContent className='space-y-3'>
                   <div>
-                    <p className='text-sm text-gray-500'>Division</p>
+                    <p className='text-sm text-gray-500'>District</p>
                     <p className='font-medium'>{order.shipping.division}</p>
                   </div>
                   <div>
-                    <p className='text-sm text-gray-500'>District</p>
+                    <p className='text-sm text-gray-500'>Area</p>
                     <p className='font-medium'>{order.shipping.district}</p>
                   </div>
                   <div>
@@ -412,25 +412,29 @@ const OrderDetails = () => {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {order.products.map((product, idx) => (
-                      <TableRow key={idx}>
-                        <TableCell>
-                          <div className='flex items-center space-x-3'>
-                            {product.thumbnail && (
-                              <img
-                                src={product.thumbnail}
-                                alt={product.name}
-                                className='w-12 h-12 object-cover rounded border'
-                              />
-                            )}
-                            <div>
-                              <p className='font-medium'>{product.name}</p>
-                              <p className='text-sm text-gray-500'>
-                                ID: {product.productId}
-                              </p>
+                    {order.products.map((product, idx) => {
+                      // Determine which image to display: variant image or product thumbnail
+                      const displayImage = product.thumbnail || '';
+
+                      return (
+                        <TableRow key={idx}>
+                          <TableCell>
+                            <div className='flex items-center space-x-3'>
+                              {displayImage && (
+                                <img
+                                  src={displayImage}
+                                  alt={product.name}
+                                  className='w-12 h-12 object-cover rounded border'
+                                />
+                              )}
+                              <div>
+                                <p className='font-medium'>{product.name}</p>
+                                <p className='text-sm text-gray-500'>
+                                  ID: {product.productId}
+                                </p>
+                              </div>
                             </div>
-                          </div>
-                        </TableCell>
+                          </TableCell>
                         <TableCell>
                           {product.hasVariation && product.variation ? (
                             <div className='text-sm'>
@@ -455,7 +459,8 @@ const OrderDetails = () => {
                           ৳{product.totalPrice.toLocaleString()}
                         </TableCell>
                       </TableRow>
-                    ))}
+                    );
+                    })}
                   </TableBody>
                 </Table>
               </CardContent>

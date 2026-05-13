@@ -181,7 +181,7 @@ export function OrderSummary({
         onClick={onSubmit}
         disabled={isSubmitting || cartItemCount === 0}
         className={`w-full h-12 text-base font-semibold bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 shadow-lg hover:shadow-xl transition-all duration-200 hover:-translate-y-0.5 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:translate-y-0 disabled:hover:shadow-lg ${
-          isSubmitting ? 'animate-pulse' : ''
+          isSubmitting ? "animate-pulse" : ""
         }`}
         size='lg'>
         {isSubmitting ? (

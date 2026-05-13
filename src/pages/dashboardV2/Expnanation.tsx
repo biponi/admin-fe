@@ -122,7 +122,7 @@ const AnalyticsGuideComponent = () => {
         <div className='bg-muted p-4 rounded-lg'>
           <h4 className='font-medium mb-2'>What it shows:</h4>
           <p className='text-sm text-muted-foreground mb-3'>
-            Revenue breakdown by delivery locations (District, Division) showing
+            Revenue breakdown by delivery locations (Area, District) showing
             your market penetration across different areas.
           </p>
           <h4 className='font-medium mb-2'>Calculations:</h4>

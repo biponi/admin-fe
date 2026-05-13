@@ -105,7 +105,7 @@ const SingleItemMobileView: React.FC<Props> = ({
       </CardHeader>
 
       <CardContent className='px-2 pb-2'>
-        {/* Status and District */}
+        {/* Status and Area */}
         <div className='flex items-center space-x-2 mb-4'>
           <Badge
             variant={
@@ -115,10 +115,10 @@ const SingleItemMobileView: React.FC<Props> = ({
               status === "processing"
                 ? ""
                 : status === "shipped"
-                ? "bg-blue-400 text-gray-200"
-                : ["cancel", "delete"].includes(status)
-                ? ""
-                : "bg-green-500 text-gray-200"
+                  ? "bg-blue-400 text-gray-200"
+                  : ["cancel", "delete"].includes(status)
+                    ? ""
+                    : "bg-green-500 text-gray-200"
             }`}>
             {status.toUpperCase()}
           </Badge>

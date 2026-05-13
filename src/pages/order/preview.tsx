@@ -113,7 +113,9 @@ const OrderPreview: React.FC<Props> = ({
                     )}
 
                     {!product?.hasVariation && (
-                      <Badge variant='secondary' className='text-xs px-1.5 py-0'>
+                      <Badge
+                        variant='secondary'
+                        className='text-xs px-1.5 py-0'>
                         No Variant
                       </Badge>
                     )}
@@ -127,7 +129,7 @@ const OrderPreview: React.FC<Props> = ({
                   <div className='text-xs text-gray-500'>
                     ৳
                     {(product?.totalPrice / product?.selectedQuantity).toFixed(
-                      2
+                      2,
                     )}{" "}
                     ea
                   </div>
@@ -157,7 +159,7 @@ const OrderPreview: React.FC<Props> = ({
       <ScrollArea className='max-h-[60vh]'>
         <div className='space-y-3'>
           {orderProducts.map((product: IOrderProduct, index) =>
-            renderSelectedProduct(product, index)
+            renderSelectedProduct(product, index),
           )}
         </div>
       </ScrollArea>
@@ -168,7 +170,7 @@ const OrderPreview: React.FC<Props> = ({
     const totalItems =
       orderProducts?.reduce(
         (sum, product) => sum + product.selectedQuantity,
-        0
+        0,
       ) || 0;
 
     return (
@@ -337,7 +339,7 @@ const OrderPreview: React.FC<Props> = ({
           <div className='space-y-3'>
             <div>
               <div className='text-sm text-orange-700 font-medium'>
-                Division
+                District
               </div>
               <div className='text-gray-900 font-semibold'>
                 {customerInformation.shipping.division.name}
@@ -345,9 +347,7 @@ const OrderPreview: React.FC<Props> = ({
             </div>
 
             <div>
-              <div className='text-sm text-orange-700 font-medium'>
-                District
-              </div>
+              <div className='text-sm text-orange-700 font-medium'>Area</div>
               <div className='text-gray-900 font-semibold'>
                 {customerInformation.shipping.district.name}
               </div>
@@ -426,8 +426,12 @@ const OrderPreview: React.FC<Props> = ({
           <div className='md:col-span-2 space-y-3'>
             <Tabs defaultValue='products' className='w-full'>
               <TabsList className='h-9'>
-                <TabsTrigger value='products' className='text-sm'>Selected Products</TabsTrigger>
-                <TabsTrigger value='customer' className='text-sm'>Customer Information</TabsTrigger>
+                <TabsTrigger value='products' className='text-sm'>
+                  Selected Products
+                </TabsTrigger>
+                <TabsTrigger value='customer' className='text-sm'>
+                  Customer Information
+                </TabsTrigger>
               </TabsList>
               <TabsContent value='products' className='mt-2'>
                 {/* Products Card */}

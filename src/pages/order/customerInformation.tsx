@@ -63,7 +63,7 @@ interface Props {
   handleBack: () => void;
   handleCustomerDataChange: (
     information: any,
-    transaction: ITransection
+    transaction: ITransection,
   ) => void;
   initialTransaction?: ITransection | null;
   orderTotal: number;
@@ -75,10 +75,10 @@ const CustomerInformation: React.FC<Props> = ({
   orderTotal,
 }) => {
   const [personalInfomation, setPersonalInformation] = useState(
-    defaultPersonalInformation
+    defaultPersonalInformation,
   );
   const [shippingAddress, setShippingAddress] = useState(
-    defaultShippingAddress
+    defaultShippingAddress,
   );
 
   const [divisionQuery, setDivisionQuery] = useState("");
@@ -96,7 +96,7 @@ const CustomerInformation: React.FC<Props> = ({
   };
 
   const [transaction, setTransaction] = useState<ITransection>(
-    initialTransaction || defaultTransaction
+    initialTransaction || defaultTransaction,
   );
 
   // Mobile transaction editing states
@@ -104,19 +104,19 @@ const CustomerInformation: React.FC<Props> = ({
   const [isEditingDelivery, setIsEditingDelivery] = useState(false);
   const [isEditingPaid, setIsEditingPaid] = useState(false);
   const [tempDiscount, setTempDiscount] = useState(
-    initialTransaction?.discount?.toString() || "0"
+    initialTransaction?.discount?.toString() || "0",
   );
   const [tempDeliveryCharge, setTempDeliveryCharge] = useState(
-    initialTransaction?.deliveryCharge?.toString() || "100"
+    initialTransaction?.deliveryCharge?.toString() || "100",
   );
   const [tempPaidAmount, setTempPaidAmount] = useState(
-    initialTransaction?.paid?.toString() || "0"
+    initialTransaction?.paid?.toString() || "0",
   );
 
   // Calculate delivery charge based on location
   const calculateDeliveryCharge = (
     district: string,
-    division: string
+    division: string,
   ): number => {
     let deliveryChargeX = 150; // Default charge
 
@@ -128,7 +128,7 @@ const CustomerInformation: React.FC<Props> = ({
     } else if (
       division.toLowerCase().includes("dhaka") &&
       ["gazipur", "tongi", "narayanganj", "savar"].includes(
-        district.replace(/\s*\(.*?\)\s*/g, "").toLowerCase()
+        district.replace(/\s*\(.*?\)\s*/g, "").toLowerCase(),
       )
     ) {
       deliveryChargeX = 130;
@@ -144,7 +144,7 @@ const CustomerInformation: React.FC<Props> = ({
     if (shippingData?.district?.name && shippingData?.division?.name) {
       const calculatedCharge = calculateDeliveryCharge(
         shippingData.district.name,
-        shippingData.division.name
+        shippingData.division.name,
       );
 
       setTransaction((prev) => ({
@@ -266,7 +266,7 @@ const CustomerInformation: React.FC<Props> = ({
           customer: personalInfomation,
           shipping: shippingAddress,
         },
-        finalTransaction
+        finalTransaction,
       );
       toast.success("Customer information saved! Proceeding to review... 🚀");
     } catch (error) {
@@ -277,7 +277,7 @@ const CustomerInformation: React.FC<Props> = ({
   };
 
   const handlePersonalInfomationChange = (
-    e: React.ChangeEvent<HTMLInputElement>
+    e: React.ChangeEvent<HTMLInputElement>,
   ) => {
     const { name, value } = e.target;
     setPersonalInformation({
@@ -294,7 +294,7 @@ const CustomerInformation: React.FC<Props> = ({
   const handleShippingDivChange = (id: string, name: string) => {
     if (name === "division") {
       const filteredDivision = BDDivisions.filter(
-        (division) => division?.id === id
+        (division) => division?.id === id,
       );
       if (filteredDivision.length > 0) {
         setShippingAddress({
@@ -309,9 +309,7 @@ const CustomerInformation: React.FC<Props> = ({
         }
       }
     } else {
-      const filteredDistrict = BDDistrictList.filter(
-        (District) => District?.id === id
-      );
+      const filteredDistrict = BDDistrictList.filter((Area) => Area?.id === id);
       if (filteredDistrict.length > 0) {
         const newShippingData = {
           ...shippingAddress,
@@ -458,7 +456,7 @@ const CustomerInformation: React.FC<Props> = ({
               {personalInfomation.phoneNumber &&
                 !errors.phoneNumber &&
                 isValidBangladeshiMobileNumber(
-                  personalInfomation.phoneNumber
+                  personalInfomation.phoneNumber,
                 ) && (
                   <CheckCircle2 className='absolute right-2.5 top-1/2 transform -translate-y-1/2 w-4 h-4 text-green-500' />
                 )}
@@ -500,13 +498,13 @@ const CustomerInformation: React.FC<Props> = ({
           </CardDescription>
         </CardHeader>
         <CardContent className='p-3 space-y-4'>
-          {/* Division Selection */}
+          {/* District Selection */}
           <div className='space-y-2'>
             <Label
               htmlFor='division'
               className='flex items-center gap-2 font-medium'>
               <MapPin className='w-4 h-4 text-green-600' />
-              Division *
+              District *
             </Label>
             <Select
               value={selectedDivision ? `${selectedDivision}` : ""}
@@ -519,7 +517,7 @@ const CustomerInformation: React.FC<Props> = ({
                 }`}>
                 <SelectValue
                   className='text-sidebar'
-                  placeholder='Select Division'
+                  placeholder='Select District'
                 />
               </SelectTrigger>
               <SelectContent className='max-h-64'>
@@ -540,7 +538,7 @@ const CustomerInformation: React.FC<Props> = ({
                     division.name
                       .toLowerCase()
                       .includes(divisionQuery.toLowerCase()) ||
-                    division.bn_name.includes(divisionQuery)
+                    division.bn_name.includes(divisionQuery),
                 ).map((division, index: number) => (
                   <SelectItem
                     key={index}
@@ -548,7 +546,6 @@ const CustomerInformation: React.FC<Props> = ({
                     className='hover:bg-blue-50'>
                     <div className='flex items-center justify-between w-full'>
                       <span>{`${division?.name}`}</span>
-                      
                     </div>
                   </SelectItem>
                 ))}
@@ -564,7 +561,7 @@ const CustomerInformation: React.FC<Props> = ({
             )}
           </div>
 
-          {/* District Selection */}
+          {/* Area Selection */}
           {
             //@ts-ignore
             !!shippingAddress?.division?.id && (
@@ -573,7 +570,7 @@ const CustomerInformation: React.FC<Props> = ({
                   htmlFor='district'
                   className='flex items-center gap-2 font-medium'>
                   <Home className='w-4 h-4 text-green-600' />
-                  District *
+                  Area *
                 </Label>
                 <Select
                   value={selectedDistrict ? `${selectedDistrict}` : ""}
@@ -584,7 +581,7 @@ const CustomerInformation: React.FC<Props> = ({
                     className={`h-12 ${
                       errors.district ? "border-red-500" : "border-gray-200"
                     }`}>
-                    <SelectValue placeholder='Select District' />
+                    <SelectValue placeholder='Select Area' />
                   </SelectTrigger>
                   <SelectContent className='max-h-64'>
                     <div className='p-2'>
@@ -607,7 +604,7 @@ const CustomerInformation: React.FC<Props> = ({
                         (district.name
                           .toLowerCase()
                           .includes(districtQuery.toLowerCase()) ||
-                          district.bn_name.includes(districtQuery))
+                          district.bn_name.includes(districtQuery)),
                     ).map((district, index: number) => (
                       <SelectItem
                         key={index}
@@ -615,7 +612,6 @@ const CustomerInformation: React.FC<Props> = ({
                         className='hover:bg-green-50'>
                         <div className='flex items-center justify-between w-full'>
                           <span>{`${district?.name}`}</span>
-                         
                         </div>
                       </SelectItem>
                     ))}
@@ -684,20 +680,18 @@ const CustomerInformation: React.FC<Props> = ({
                 </h4>
                 <div className='text-sm text-green-700'>
                   <p>
-                    <strong>Division:</strong>{" "}
+                    <strong>District:</strong>{" "}
                     {
                       //@ts-ignore
                       shippingAddress.division.name
                     }{" "}
-                   
                   </p>
                   <p>
-                    <strong>District:</strong>{" "}
+                    <strong>Area:</strong>{" "}
                     {
                       //@ts-ignore
                       shippingAddress.district.name
                     }{" "}
-                    
                   </p>
                 </div>
               </div>
@@ -902,8 +896,8 @@ const CustomerInformation: React.FC<Props> = ({
                     grandTotal - transaction.paid === 0
                       ? "bg-emerald-50 border-l-emerald-500 border border-emerald-200"
                       : transaction.paid > 0
-                      ? "bg-amber-50 border-l-amber-500 border border-amber-200"
-                      : "bg-slate-50 border-l-slate-400 border border-slate-200"
+                        ? "bg-amber-50 border-l-amber-500 border border-amber-200"
+                        : "bg-slate-50 border-l-slate-400 border border-slate-200"
                   }`}>
                   <div className='flex items-center gap-2'>
                     {grandTotal - transaction.paid === 0 ? (

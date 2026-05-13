@@ -122,7 +122,7 @@ const GeographicDistributionCard: React.FC<GeographicDistributionCardProps> = ({
       paid: item.paid,
       due: item.due,
       subtotal: item.subtotal,
-    })
+    }),
   );
 
   if (data.length === 0) {
@@ -150,27 +150,27 @@ const GeographicDistributionCard: React.FC<GeographicDistributionCardProps> = ({
       </CardHeader>
       <CardContent>
         <div className='space-y-6'>
-          <Tabs defaultValue='Division'>
+          <Tabs defaultValue='District'>
             <TabsList>
-              <TabsTrigger value='Division'>Division</TabsTrigger>
               <TabsTrigger value='District'>District</TabsTrigger>
+              <TabsTrigger value='Area'>Area</TabsTrigger>
             </TabsList>
-            <TabsContent value='Division'>
+            <TabsContent value='District'>
               {/* Chart */}
               <div className='h-auto w-full grid grid-cols-1 gap-2 sm:grid-cols-2 mb-3'>
                 <BarChartActive
                   names={{
-                    xKey: "Division",
+                    xKey: "District",
                     yKey: "Orders: ",
                   }}
                   data={metricsForDivision}
-                  label='Order Count by Division'
+                  label='Order Count by District'
                   duration={duration}
                   footer='Order Count Data'
                   footerDescription={
                     "Total Orders: " +
                     formatCurrency(
-                      data.reduce((acc, item) => acc + item.orderCount, 0)
+                      data.reduce((acc, item) => acc + item.orderCount, 0),
                     )
                   }
                   isUpwardTrend={false}
@@ -180,18 +180,18 @@ const GeographicDistributionCard: React.FC<GeographicDistributionCardProps> = ({
                   xKey='division'
                   barKeys={["subtotal", "revenue"]}
                   chartConfig={chartConfigForRevenue}
-                  label='Revenue vs Subtotal by Division'
+                  label='Revenue vs Subtotal by District'
                   duration={duration}
                   footer='Revenue Vs Subtotal'
                   footerDescription={
                     "Total Revenue " +
                     formatCurrency(
-                      data.reduce((acc, item) => acc + item.revenue, 0)
+                      data.reduce((acc, item) => acc + item.revenue, 0),
                     ) +
                     " vs " +
                     "Total Subtotal " +
                     formatCurrency(
-                      data.reduce((acc, item) => acc + item.subtotal, 0)
+                      data.reduce((acc, item) => acc + item.subtotal, 0),
                     )
                   }
                   isUpwardTrend={false}
@@ -204,21 +204,21 @@ const GeographicDistributionCard: React.FC<GeographicDistributionCardProps> = ({
                   xKey='division'
                   barKeys={["discounts", "deliveryCharge"]}
                   chartConfig={chartConfigForRevenue}
-                  label='Discount vs Delivery Charge by Division'
+                  label='Discount vs Delivery Charge by District'
                   duration={duration}
                   footer='Discount Vs Delivery Charge'
                   footerDescription={
                     "Total Discounts " +
                     formatCurrency(
-                      data.reduce((acc, item) => acc + item.discounts, 0)
+                      data.reduce((acc, item) => acc + item.discounts, 0),
                     ) +
                     " vs " +
                     "Total Delivery Charge " +
                     formatCurrency(
                       data.reduce(
                         (acc, item) => acc + (item.deliveryCharge ?? 0),
-                        0
-                      )
+                        0,
+                      ),
                     )
                   }
                   isUpwardTrend={false}
@@ -228,32 +228,32 @@ const GeographicDistributionCard: React.FC<GeographicDistributionCardProps> = ({
                   xKey='division'
                   barKeys={["paid", "due"]}
                   chartConfig={chartConfigForRevenue}
-                  label='Paid vs Due by Division'
+                  label='Paid vs Due by District'
                   duration={duration}
                   footer='Paid Vs Due'
                   footerDescription={
                     "Total Paid " +
                     formatCurrency(
-                      data.reduce((acc, item) => acc + (item.paid || 0), 0)
+                      data.reduce((acc, item) => acc + (item.paid || 0), 0),
                     ) +
                     " vs " +
                     "Total Due " +
                     formatCurrency(
-                      data.reduce((acc, item) => acc + (item.due || 0), 0)
+                      data.reduce((acc, item) => acc + (item.due || 0), 0),
                     )
                   }
                   isUpwardTrend={false}
                 />
               </div>
             </TabsContent>
-            <TabsContent value='District'>
+            <TabsContent value='Area'>
               {/* Data Table */}
               <div className='rounded-md border'>
                 <div className='max-h-96 overflow-y-auto overflow-x-auto'>
                   <table className='w-full text-sm relative'>
                     <thead className=' sticky top-0 bg-background'>
                       <tr className='border-b bg-muted/50'>
-                        <th className='p-3 text-left font-medium'>District</th>
+                        <th className='p-3 text-left font-medium'>Area</th>
                         <th className='p-3 text-right font-medium'>Orders</th>
                         <th className='p-3 text-right font-medium'>Subtotal</th>
                         <th className='p-3 text-right font-medium'>

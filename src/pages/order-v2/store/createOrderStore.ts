@@ -3,8 +3,8 @@
  * Manages the multi-step order creation wizard state
  */
 
-import { create } from 'zustand';
-import { devtools, persist } from 'zustand/middleware';
+import { create } from "zustand";
+import { devtools, persist } from "zustand/middleware";
 import type {
   IOrderProduct,
   ICustomer,
@@ -12,7 +12,7 @@ import type {
   ITransection,
   IPayment,
   DraftOrder,
-} from '../types';
+} from "../types";
 
 interface CreateOrderState {
   // Current step (0-indexed)
@@ -99,7 +99,7 @@ const initialState = {
     deliveryCharge: 0,
   },
   payments: [],
-  notes: '',
+  notes: "",
   isSubmitting: false,
   validationErrors: {},
   isDirty: false,
@@ -156,7 +156,7 @@ export const useCreateOrderStore = create<CreateOrderState>()(
         updateProduct: (productId, updates) => {
           set((state) => ({
             products: state.products.map((p) =>
-              p.id === productId ? { ...p, ...updates } : p
+              p.id === productId ? { ...p, ...updates } : p,
             ),
             isDirty: true,
           }));
@@ -195,7 +195,9 @@ export const useCreateOrderStore = create<CreateOrderState>()(
           const { products, transaction } = get();
 
           const subtotal = products.reduce((sum, product) => {
-            return sum + (product.totalPrice || product.unitPrice * product.quantity);
+            return (
+              sum + (product.totalPrice || product.unitPrice * product.quantity)
+            );
           }, 0);
 
           const discount = transaction.discount || 0;
@@ -260,25 +262,25 @@ export const useCreateOrderStore = create<CreateOrderState>()(
           switch (step) {
             case 0: // Products
               if (state.products.length === 0) {
-                errors.products = ['Please add at least one product'];
+                errors.products = ["Please add at least one product"];
               }
               break;
 
             case 1: // Customer & Shipping
               if (!state.customer.name) {
-                errors.customerName = ['Customer name is required'];
+                errors.customerName = ["Customer name is required"];
               }
               if (!state.customer.phoneNumber) {
-                errors.customerPhone = ['Phone number is required'];
+                errors.customerPhone = ["Phone number is required"];
               }
               if (!state.shipping.division) {
-                errors.division = ['Division is required'];
+                errors.division = ["District is required"];
               }
               if (!state.shipping.district) {
-                errors.district = ['District is required'];
+                errors.district = ["Area is required"];
               }
               if (!state.shipping.address) {
-                errors.address = ['Address is required'];
+                errors.address = ["Address is required"];
               }
               break;
 
@@ -304,7 +306,9 @@ export const useCreateOrderStore = create<CreateOrderState>()(
           const state = get();
           const draft: DraftOrder = {
             id: state.draftId || `draft_${Date.now()}`,
-            createdAt: state.draftId ? (state.lastSaved || new Date()) : new Date(),
+            createdAt: state.draftId
+              ? state.lastSaved || new Date()
+              : new Date(),
             updatedAt: new Date(),
             step: state.currentStep,
             data: {
@@ -317,7 +321,7 @@ export const useCreateOrderStore = create<CreateOrderState>()(
           };
 
           // Save to localStorage or backend
-          localStorage.setItem('order_draft_v2', JSON.stringify(draft));
+          localStorage.setItem("order_draft_v2", JSON.stringify(draft));
 
           set({
             draftId: draft.id,
@@ -328,7 +332,7 @@ export const useCreateOrderStore = create<CreateOrderState>()(
 
         loadDraft: async (draftId) => {
           try {
-            const draftJson = localStorage.getItem('order_draft_v2');
+            const draftJson = localStorage.getItem("order_draft_v2");
             if (draftJson) {
               const draft: DraftOrder = JSON.parse(draftJson);
               if (draft.id === draftId) {
@@ -336,8 +340,9 @@ export const useCreateOrderStore = create<CreateOrderState>()(
                   products: draft.data.products || [],
                   customer: draft.data.customer || {},
                   shipping: draft.data.shipping || {},
-                  transaction: draft.data.transaction || initialState.transaction,
-                  notes: draft.data.notes || '',
+                  transaction:
+                    draft.data.transaction || initialState.transaction,
+                  notes: draft.data.notes || "",
                   currentStep: draft.step,
                   draftId: draft.id,
                   lastSaved: new Date(draft.updatedAt),
@@ -347,12 +352,12 @@ export const useCreateOrderStore = create<CreateOrderState>()(
               }
             }
           } catch (error) {
-            console.error('Failed to load draft:', error);
+            console.error("Failed to load draft:", error);
           }
         },
 
         clearDraft: () => {
-          localStorage.removeItem('order_draft_v2');
+          localStorage.removeItem("order_draft_v2");
           set({
             draftId: null,
             lastSaved: null,
@@ -398,12 +403,12 @@ export const useCreateOrderStore = create<CreateOrderState>()(
         },
       }),
       {
-        name: 'create-order-store-v2',
+        name: "create-order-store-v2",
         partialize: (state) => ({
           // Persist draft data
           autoSaveDrafts: state.autoSaveDrafts,
         }),
-      }
-    )
-  )
+      },
+    ),
+  ),
 );

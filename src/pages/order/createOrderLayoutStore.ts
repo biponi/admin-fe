@@ -14,7 +14,13 @@ import type {
 } from "../order/interface.d";
 import type { IProduct, IVariation } from "../product/interface.d";
 
+// UUID generator for cart items
+const generateCartItemId = (): string => {
+  return `cart_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
+};
+
 export interface CartItem extends IOrderProduct {
+  cartItemId: string; // Unique identifier for cart items (UUID)
   selectedVariant?: IVariation;
   availableStock?: number; // Available stock for the product
   variantStock?: number; // Available stock for the variant (if applicable)
@@ -65,8 +71,8 @@ interface CreateOrderLayoutState {
 
   // Actions - Cart Management
   addToCart: (product: IProduct, variant?: IVariation) => void;
-  removeFromCart: (productId: string) => void;
-  updateCartQuantity: (productId: string, quantity: number) => void;
+  removeFromCart: (cartItemId: string) => void;
+  updateCartQuantity: (cartItemId: string, quantity: number) => void;
   clearCart: () => void;
   toggleCart: () => void;
   openCart: () => void;
@@ -214,10 +220,11 @@ export const useCreateOrderLayoutStore = create<CreateOrderLayoutState>()(
           const maxStock = variant ? variantStock : availableStock;
 
           set((state) => {
+            // Check if item already exists by comparing both productId and variantId
             const existingItemIndex = state.cart.findIndex(
               (item) =>
-                item.id ===
-                (variant ? `${product.id}-${variant.id}` : product.id),
+                item.productId === product.id &&
+                (variant ? item.variantId === variant.id : !item.variantId),
             );
 
             if (existingItemIndex > -1) {
@@ -242,9 +249,10 @@ export const useCreateOrderLayoutStore = create<CreateOrderLayoutState>()(
                 newQuantity * (existingItem?.discount ?? 0);
               return { cart: updatedCart, isDirty: true };
             } else {
-              // Add new item
+              // Add new item with plain productId and unique cartItemId
               const cartItem: CartItem = {
-                id: variant ? `${product.id}-${variant.id}` : product.id,
+                cartItemId: generateCartItemId(),
+                id: product.id, // Use plain product ID
                 productId: product.id,
                 name: product.name,
                 thumbnail: product.thumbnail,
@@ -279,22 +287,24 @@ export const useCreateOrderLayoutStore = create<CreateOrderLayoutState>()(
           get().calculateTotals();
         },
 
-        removeFromCart: (productId) => {
+        removeFromCart: (cartItemId) => {
           set((state) => ({
-            cart: state.cart.filter((item) => item.id !== productId),
+            cart: state.cart.filter((item) => item.cartItemId !== cartItemId),
             isDirty: true,
           }));
           get().calculateTotals();
         },
 
-        updateCartQuantity: (productId, quantity) => {
+        updateCartQuantity: (cartItemId, quantity) => {
           if (quantity <= 0) {
-            get().removeFromCart(productId);
+            get().removeFromCart(cartItemId);
             return;
           }
 
           set((state) => {
-            const cartItem = state.cart.find((item) => item.id === productId);
+            const cartItem = state.cart.find(
+              (item) => item.cartItemId === cartItemId,
+            );
             if (!cartItem) return state;
 
             // Determine max stock
@@ -310,7 +320,7 @@ export const useCreateOrderLayoutStore = create<CreateOrderLayoutState>()(
 
             return {
               cart: state.cart.map((item) =>
-                item.id === productId
+                item.cartItemId === cartItemId
                   ? {
                       ...item,
                       quantity,
@@ -372,6 +382,15 @@ export const useCreateOrderLayoutStore = create<CreateOrderLayoutState>()(
             transaction: { ...state.transaction, ...transaction },
             isDirty: true,
           }));
+
+          // Automatically recalculate totals when delivery charge, discount, or paid amount changes
+          if (
+            transaction.deliveryCharge !== undefined ||
+            transaction.discount !== undefined ||
+            transaction.paid !== undefined
+          ) {
+            get().calculateTotals();
+          }
         },
 
         calculateTotals: () => {
@@ -431,7 +450,7 @@ export const useCreateOrderLayoutStore = create<CreateOrderLayoutState>()(
               : item.availableStock || item.quantity || 0;
 
             if (item.quantity > maxStock) {
-              errors[item.id] = [
+              errors[item.cartItemId] = [
                 `Only ${maxStock} ${item.selectedVariant ? "of this variant" : "of this product"} available, you have ${item.quantity} in cart`,
               ];
             }
@@ -447,10 +466,10 @@ export const useCreateOrderLayoutStore = create<CreateOrderLayoutState>()(
 
           // Validate shipping
           if (!state.shippingInfo.division) {
-            errors.division = ["Division is required"];
+            errors.division = ["District is required"];
           }
           if (!state.shippingInfo.district) {
-            errors.district = ["District is required"];
+            errors.district = ["Area is required"];
           }
           if (!state.shippingInfo.address) {
             errors.address = ["Address is required"];

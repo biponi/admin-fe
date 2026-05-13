@@ -170,6 +170,15 @@ const CreateOrderV2 = () => {
         // Add variation if exists (from selectedVariant)
         if (item.selectedVariant) {
           transformedItem.variation = item.selectedVariant;
+
+          // Use variant image as thumbnail if available
+          if (
+            item.selectedVariant.images &&
+            item.selectedVariant.images.length > 0 &&
+            typeof item.selectedVariant.images[0] === 'string'
+          ) {
+            transformedItem.thumbnail = item.selectedVariant.images[0];
+          }
         } else if (item.variation) {
           transformedItem.variation = item.variation;
         }

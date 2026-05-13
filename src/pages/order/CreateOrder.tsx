@@ -114,6 +114,15 @@ const CreateOrder = () => {
         if (!!op.selectedVariant) {
           //@ts-ignore
           newOp = { ...newOp, variation: op.selectedVariant };
+
+          // Use variant image as thumbnail if available
+          if (
+            op.selectedVariant.images &&
+            op.selectedVariant.images.length > 0 &&
+            typeof op.selectedVariant.images[0] === 'string'
+          ) {
+            newOp.thumbnail = op.selectedVariant.images[0];
+          }
         }
         newOp = { ...newOp, quantity: op.selectedQuantity };
         return newOp;

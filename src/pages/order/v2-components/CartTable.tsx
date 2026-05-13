@@ -4,8 +4,8 @@ import type { CartItem } from "../createOrderLayoutStore";
 
 interface CartTableProps {
   cart: CartItem[];
-  onUpdateQuantity: (productId: string, quantity: number) => void;
-  onRemove: (productId: string) => void;
+  onUpdateQuantity: (cartItemId: string, quantity: number) => void;
+  onRemove: (cartItemId: string) => void;
 }
 
 export function CartTable({
@@ -50,7 +50,7 @@ export function CartTable({
 
         return (
           <div
-            key={item.id}
+            key={item.cartItemId}
             className='rounded-xl border border-zinc-200 bg-white p-3 transition-colors hover:border-zinc-300'>
             {/* TOP ROW: image + name/variation/unit price + delete */}
             <div className='flex items-start gap-3'>
@@ -90,7 +90,7 @@ export function CartTable({
 
               {/* Delete */}
               <button
-                onClick={() => onRemove(item.id)}
+                onClick={() => onRemove(item.cartItemId)}
                 className='flex-shrink-0 rounded-md p-1 text-zinc-400 transition-colors hover:bg-red-50 hover:text-red-500'
                 aria-label='Remove item'>
                 <Trash2 className='h-4 w-4 text-red-600' />
@@ -103,7 +103,7 @@ export function CartTable({
               <div className='flex items-center gap-2.5'>
                 <div className='flex items-center overflow-hidden rounded-md border border-zinc-200'>
                   <button
-                    onClick={() => onUpdateQuantity(item.id, item.quantity - 1)}
+                    onClick={() => onUpdateQuantity(item.cartItemId, item.quantity - 1)}
                     disabled={item.quantity <= 1}
                     className='flex h-7 w-7 items-center justify-center text-zinc-500 transition-colors hover:bg-zinc-50 hover:text-zinc-800 disabled:cursor-not-allowed disabled:opacity-30'
                     aria-label='Decrease quantity'>
@@ -113,7 +113,7 @@ export function CartTable({
                     {item.quantity}
                   </span>
                   <button
-                    onClick={() => onUpdateQuantity(item.id, item.quantity + 1)}
+                    onClick={() => onUpdateQuantity(item.cartItemId, item.quantity + 1)}
                     disabled={item.quantity >= maxStock}
                     className='flex h-7 w-7 items-center justify-center text-zinc-500 transition-colors hover:bg-zinc-50 hover:text-zinc-800 disabled:cursor-not-allowed disabled:opacity-30'
                     aria-label='Increase quantity'>
