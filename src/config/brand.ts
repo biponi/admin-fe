@@ -11,6 +11,12 @@
  * - REACT_APP_BRAND_COMPANY_NAME: Legal company name (e.g., "PriorBD")
  * - REACT_APP_BRAND_WEBSITE: Company website URL
  * - REACT_APP_BRAND_EMAIL: Company contact email
+ * - REACT_APP_BRAND_ADDRESS: Physical address (e.g., "Shop 134, Genetic Plaza, Dhanmondi-27, Dhaka")
+ * - REACT_APP_BRAND_PHONE: Contact phone (e.g., "+880 1700-534317")
+ * - REACT_APP_BRAND_LOGO_URL: Main logo URL
+ * - REACT_APP_BRAND_INVOICE_LOGO_URL: Logo URL for PDF invoices
+ * - REACT_APP_BRAND_PACKING_LOGO_URL: Logo URL for packing slips
+ * - REACT_APP_BRAND_ICON_URL: Small icon URL
  */
 
 export const BRAND_CONFIG = {
@@ -28,6 +34,24 @@ export const BRAND_CONFIG = {
 
   /** Company contact email for support and inquiries */
   email: process.env.REACT_APP_BRAND_EMAIL || 'prior.retailshop.info.bd@gmail.com',
+
+  /** Physical company address for invoices and documents */
+  address: process.env.REACT_APP_BRAND_ADDRESS || 'Shop 134, Genetic Plaza, Dhanmondi-27, Dhaka',
+
+  /** Contact phone number for customer support */
+  phone: process.env.REACT_APP_BRAND_PHONE || '+880 1700-534317',
+
+  /** Main logo URL for general use */
+  logoUrl: process.env.REACT_APP_BRAND_LOGO_URL || 'https://res.cloudinary.com/emerging-it/image/upload/v1755976159/2193d5ff-ffb3-4fb7-ae67-c7a79e89c3f6__1_-removebg-preview_sobjwy.png',
+
+  /** High-resolution logo URL for PDF invoices */
+  invoiceLogoUrl: process.env.REACT_APP_BRAND_INVOICE_LOGO_URL || 'https://res.cloudinary.com/emerging-it/image/upload/v1755976159/2193d5ff-ffb3-4fb7-ae67-c7a79e89c3f6__1_-removebg-preview_sobjwy.png',
+
+  /** Compact logo URL for thermal printer packing slips */
+  packingLogoUrl: process.env.REACT_APP_BRAND_PACKING_LOGO_URL || 'https://res.cloudinary.com/emerging-it/image/upload/v1755976159/2193d5ff-ffb3-4fb7-ae67-c7a79e89c3f6__1_-removebg-preview_sobjwy.png',
+
+  /** Small icon URL for favicons and compact displays */
+  iconUrl: process.env.REACT_APP_BRAND_ICON_URL || 'https://res.cloudinary.com/emerging-it/image/upload/v1755976159/2193d5ff-ffb3-4fb7-ae67-c7a79e89c3f6__1_-removebg-preview_sobjwy.png',
 
   /** Order tracking URL template */
   trackingUrl: (orderNumber: string) =>

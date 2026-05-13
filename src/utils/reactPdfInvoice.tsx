@@ -10,6 +10,7 @@ import {
   pdf,
 } from "@react-pdf/renderer";
 import { IOrder } from "../pages/order/interface";
+import { BRAND_CONFIG } from "../config/brand";
 
 // IMPORTANT: Download NotoSansBengali-Regular.ttf from Google Fonts
 // and place it in public/fonts/NotoSansBengali-Regular.ttf
@@ -409,16 +410,14 @@ const InvoiceDocument: React.FC<InvoiceDocumentProps> = ({
           <View style={styles.logoSection}>
             <PDFImage
               style={styles.logo}
-              src={
-                logoImage ||
-                "https://res.cloudinary.com/emerging-it/image/upload/v1755976159/2193d5ff-ffb3-4fb7-ae67-c7a79e89c3f6__1_-removebg-preview_sobjwy.png"
-              }
+              src={logoImage || BRAND_CONFIG.invoiceLogoUrl}
             />
             <View style={styles.companyInfo}>
-              <Text style={styles.companyDetail}>Shop 134, Genetic Plaza</Text>
-              <Text style={styles.companyDetail}>Dhanmondi-27, Dhaka</Text>
-              <Text style={styles.companyDetail}>+880 1700-534317</Text>
-              <Text style={styles.companyDetail}>www.priorbd.com</Text>
+              <Text style={styles.companyDetail}>{BRAND_CONFIG.address}</Text>
+              <Text style={styles.companyDetail}>{BRAND_CONFIG.phone}</Text>
+              <Text style={styles.companyDetail}>
+                {BRAND_CONFIG.website.replace('https://', '').replace('http://', '')}
+              </Text>
             </View>
           </View>
           <View style={styles.invoiceSection}>
@@ -597,7 +596,7 @@ const InvoiceDocument: React.FC<InvoiceDocumentProps> = ({
                     styles.tableCellRight,
                     { width: "12%" },
                   ]}>
-                  {`Tk ${(product.unitPrice || 0).toFixed(0)}`}
+                  {`${BRAND_CONFIG.currency} ${(product.unitPrice || 0).toFixed(0)}`}
                 </Text>
                 <Text
                   style={[
@@ -605,7 +604,7 @@ const InvoiceDocument: React.FC<InvoiceDocumentProps> = ({
                     styles.tableCellRight,
                     { width: "10%" },
                   ]}>
-                  {`Tk ${(product.discount || 0).toFixed(0)}`}
+                  {`${BRAND_CONFIG.currency} ${(product.discount || 0).toFixed(0)}`}
                 </Text>
                 <Text
                   style={[
@@ -613,7 +612,7 @@ const InvoiceDocument: React.FC<InvoiceDocumentProps> = ({
                     styles.tableCellRight,
                     { width: "12%" },
                   ]}>
-                  {`Tk ${(
+                  {`${BRAND_CONFIG.currency} ${(
                     (product.quantity || 0) * (product.unitPrice || 0) -
                     (product.discount || 0)
                   ).toFixed(0)}`}
@@ -635,31 +634,31 @@ const InvoiceDocument: React.FC<InvoiceDocumentProps> = ({
               <View style={styles.summaryRow}>
                 <Text style={styles.summaryLabel}>Subtotal</Text>
                 <Text style={styles.summaryValue}>
-                  {`Tk ${subtotal.toFixed(0)}`}
+                  {`${BRAND_CONFIG.currency} ${subtotal.toFixed(0)}`}
                 </Text>
               </View>
               <View style={styles.summaryRow}>
                 <Text style={styles.summaryLabel}>Discount</Text>
                 <Text style={styles.summaryValue}>
-                  {`−Tk ${discount.toFixed(0)}`}
+                  {`−${BRAND_CONFIG.currency} ${discount.toFixed(0)}`}
                 </Text>
               </View>
               <View style={styles.summaryRow}>
                 <Text style={styles.summaryLabel}>Shipping</Text>
                 <Text style={styles.summaryValue}>
-                  {`Tk ${shipping.toFixed(0)}`}
+                  {`${BRAND_CONFIG.currency} ${shipping.toFixed(0)}`}
                 </Text>
               </View>
               <View style={[styles.summaryRow, styles.summaryRowTotal]}>
                 <Text style={styles.summaryLabelTotal}>TOTAL</Text>
                 <Text style={styles.summaryValueTotal}>
-                  {`Tk ${total.toFixed(0)}`}
+                  {`${BRAND_CONFIG.currency} ${total.toFixed(0)}`}
                 </Text>
               </View>
               <View style={styles.summaryRow}>
                 <Text style={styles.summaryLabel}>Amount Paid</Text>
                 <Text style={styles.summaryValue}>
-                  {`Tk ${paid.toFixed(0)}`}
+                  {`${BRAND_CONFIG.currency} ${paid.toFixed(0)}`}
                 </Text>
               </View>
               <View
@@ -676,7 +675,7 @@ const InvoiceDocument: React.FC<InvoiceDocumentProps> = ({
                     styles.summaryValue,
                     { fontSize: 9, color: "#1e272e" },
                   ]}>
-                  {`Tk ${due.toFixed(0)}`}
+                  {`${BRAND_CONFIG.currency} ${due.toFixed(0)}`}
                 </Text>
               </View>
             </View>
@@ -711,11 +710,9 @@ const InvoiceDocument: React.FC<InvoiceDocumentProps> = ({
         {/* Footer */}
         <View style={styles.footer} fixed>
           <View style={styles.footerLeft}>
+            <Text style={styles.footerText}>{BRAND_CONFIG.email}</Text>
             <Text style={styles.footerText}>
-              prior.retailshop.info.bd@gmail.com
-            </Text>
-            <Text style={styles.footerText}>
-              Questions? Contact us at +880 1700-534317
+              Questions? Contact us at {BRAND_CONFIG.phone}
             </Text>
           </View>
           <View style={styles.footerCenter}>
@@ -737,8 +734,7 @@ const InvoiceDocument: React.FC<InvoiceDocumentProps> = ({
 
 // Helper function to preload images from order
 const preloadOrderImages = async (order: IOrder) => {
-  const logoUrl =
-    "https://res.cloudinary.com/emerging-it/image/upload/v1755976159/2193d5ff-ffb3-4fb7-ae67-c7a79e89c3f6__1_-removebg-preview_sobjwy.png";
+  const logoUrl = BRAND_CONFIG.invoiceLogoUrl;
 
   const logoBase64 = await fetchImageAsBase64(logoUrl);
 

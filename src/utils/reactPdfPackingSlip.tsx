@@ -327,7 +327,7 @@ const PackingSlipDocument: React.FC<PackingSlipDocumentProps> = ({
             <Text style={styles.title}>Order #{order.orderNumber}</Text>
           </View>
           <View style={styles.headerRight}>
-            <Text style={styles.subtitle}>PriorBD</Text>
+            <Text style={styles.subtitle}>{BRAND_CONFIG.companyName}</Text>
           </View>
         </View>
 

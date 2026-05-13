@@ -9,6 +9,7 @@ import {
 } from "@react-pdf/renderer";
 import dayjs from "dayjs";
 import { IRecordProduct } from "../pages/reserve/interface";
+import { BRAND_CONFIG } from "../config/brand";
 
 const styles = StyleSheet.create({
   page: {
@@ -173,7 +174,7 @@ const InventoryDocument: React.FC<InventoryDocumentProps> = ({
         {/* Header - Fixed on every page */}
         <View style={styles.header} fixed>
           <View style={styles.headerLeft}>
-            <Text style={styles.title}>Prior Inventory Record</Text>
+            <Text style={styles.title}>{BRAND_CONFIG.shortName} Inventory Record</Text>
             <View style={styles.summaryItem}>
               <Text style={styles.summaryLabel}>Outlet:</Text>
               <Text style={styles.summaryValue}>{storeName}</Text>

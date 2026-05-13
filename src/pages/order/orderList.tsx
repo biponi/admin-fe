@@ -124,6 +124,7 @@ import { useCourierActions } from "../delivery/hooks/useCourierActions";
 import { CourierSelector } from "./components/CourierSelector";
 import { useIsMobile } from "../../hooks/use-mobile";
 import { BRAND_CONFIG } from "../../config/brand";
+import PlaceHolderImage from "../../assets/placeholder.svg";
 
 const OrderList = () => {
   const isMobile = useIsMobile();
@@ -990,9 +991,6 @@ const OrderList = () => {
                 </div>
               )}
           </div>
-
-          {/* Order Details Panel */}
-          {renderOrderDetailsPanel()}
         </div>
       </div>
     );
@@ -1169,7 +1167,19 @@ const OrderList = () => {
                   {selectedOrder?.products.map((product, index) => (
                     <div
                       key={index}
-                      className='flex items-center justify-between p-3 bg-gray-50 rounded-lg'>
+                      className='flex items-start gap-3 p-3 bg-gray-50 rounded-lg'>
+                      {/* Product Image */}
+                      {product?.thumbnail && (
+                        <img
+                          src={product.thumbnail}
+                          alt={product?.name || "Product"}
+                          className='w-16 h-16 rounded-lg object-cover flex-shrink-0 border border-gray-200 bg-white'
+                          onError={(e) => {
+                            (e.target as HTMLImageElement).src = PlaceHolderImage;
+                          }}
+                        />
+                      )}
+
                       <div className='flex-1 space-y-1'>
                         <div className='font-medium text-gray-900 uppercase'>
                           {product?.name}
@@ -1801,6 +1811,7 @@ const OrderList = () => {
       {renderBulkActionDrawer()}
       {returnModal()}
       {drawerDialog()}
+      {renderOrderDetailsPanel()}
 
       {/* Courier Selector Dialog for Desktop */}
       <CourierSelector
