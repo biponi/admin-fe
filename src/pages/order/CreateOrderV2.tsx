@@ -91,8 +91,9 @@ const CreateOrderV2 = () => {
         (selectedCategory && selectedCategory !== "all") ||
         (selectedBrand && selectedBrand !== "all")
       ) {
-        const query = debouncedSearchQuery || "*";
-        const response = await searchProducts(query);
+        const query = debouncedSearchQuery || "";
+        const categoryId = selectedCategory !== "all" ? selectedCategory : undefined;
+        const response = await searchProducts(query, categoryId);
 
         if (response?.success && response?.data) {
           setProducts(response.data);

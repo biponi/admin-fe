@@ -11,12 +11,23 @@ export interface Product {
   };
 }
 
+export interface PurchaseOrderProduct {
+  title: string;
+  productId: string;
+  quantity: number;
+  variantId?: string;
+  sku?: string;
+  unitPrice?: number;
+  image?: string;
+  thumbnail?: string;
+}
+
 export interface PurchaseOrder {
   id: string;
-  products: Array<{title:string; productId: string; quantity: number; variantId?: string }>;
+  products: PurchaseOrderProduct[];
   totalAmount: number;
   createdAt: string;
-  purchaseNumber:number;
+  purchaseNumber: number;
 }
 
 

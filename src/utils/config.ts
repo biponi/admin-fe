@@ -277,6 +277,30 @@ const config = {
     getPersonalCommissions: () => `${baseURL}/commission/personal`,
     getById: (id: string) => `${baseURL}/commission/${id}`,
     updateStatus: (id: string) => `${baseURL}/commission/${id}/status`,
+    // Order-wise commission endpoints
+    getOrderCommissions: () => `${baseURL}/commission/orders`,
+    getOrderCommissionDetails: (orderId: string) =>
+      `${baseURL}/commission/order/${orderId}`,
+    getOrderCommissionCount: (orderId: string) =>
+      `${baseURL}/commission/order/${orderId}/count`,
+    bulkStatusUpdate: () => `${baseURL}/commission/bulk-status`,
+    bulkStatusUpdateDirect: () => `${baseURL}/commission/bulk-status-direct`,
+    bulkStatusUpdateByOrders: () =>
+      `${baseURL}/commission/bulk-status-by-orders`,
+    bulkStatusUpdateByOrdersDirect: () =>
+      `${baseURL}/commission/bulk-status-by-orders-direct`,
+    getBulkOperationStatus: (jobId: string) =>
+      `${baseURL}/commission/bulk-operation/${jobId}`,
+    // User-wise commission endpoints
+    getUserCommissionsList: () => `${baseURL}/commission/users/summary`,
+    getUserCommissionHistory: (userId: string) =>
+      `${baseURL}/commission/user/${userId}/history`,
+    getUserCommissionCount: (userId: string) =>
+      `${baseURL}/commission/user/${userId}/count`,
+    getTopPerformers: () => `${baseURL}/commission/users/top-performers`,
+    getUserWiseSummaryStats: () => `${baseURL}/commission/users/summary-stats`,
+    // Commission export endpoints
+    getExportReport: () => `${baseURL}/commission/export`,
   },
 };
 

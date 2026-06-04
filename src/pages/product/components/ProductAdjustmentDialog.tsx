@@ -40,6 +40,7 @@ interface ProductAdjustmentSheetProps {
   productId: string;
   productName: string;
   productSku?: string;
+  productThumbnail?: string;
   currentStock: number;
   hasVariation?: boolean;
   variations?: IVariation[];
@@ -52,6 +53,7 @@ export const ProductAdjustmentDialog: React.FC<ProductAdjustmentSheetProps> = ({
   productId,
   productName,
   productSku,
+  productThumbnail,
   currentStock,
   hasVariation,
   variations,
@@ -227,21 +229,50 @@ export const ProductAdjustmentDialog: React.FC<ProductAdjustmentSheetProps> = ({
         <form onSubmit={handleSubmit} className='space-y-4 mt-6'>
           {/* Product Info */}
           <div className='rounded-lg border p-4 bg-muted/50'>
-            <div className='flex items-center justify-between'>
-              <div>
-                <p className='font-medium'>{productName}</p>
+            <div className='flex items-start gap-3'>
+              {/* Product Image */}
+              <div className='shrink-0'>
+                {selectedVariation && selectedVariation.images && selectedVariation.images.length > 0 ? (
+                  <img
+                    src={typeof selectedVariation.images[0] === 'string' ? selectedVariation.images[0] : productThumbnail}
+                    alt={selectedVariation.name || productName}
+                    className='w-14 h-14 rounded-lg object-cover border border-border'
+                  />
+                ) : productThumbnail ? (
+                  <img
+                    src={productThumbnail}
+                    alt={productName}
+                    className='w-14 h-14 rounded-lg object-cover border border-border'
+                  />
+                ) : (
+                  <div className='w-14 h-14 rounded-lg bg-muted border border-border flex items-center justify-center'>
+                    <Package className='w-6 h-6 text-muted-foreground' />
+                  </div>
+                )}
+              </div>
+
+              {/* Product Details */}
+              <div className='flex-1 min-w-0'>
+                <p className='font-medium truncate'>{productName}</p>
+                {selectedVariation && selectedVariation.name && (
+                  <p className='text-sm text-muted-foreground truncate'>
+                    {selectedVariation.name}
+                  </p>
+                )}
                 {productSku && !selectedVariation && (
                   <p className='text-sm text-muted-foreground'>
                     SKU: {productSku}
                   </p>
                 )}
-                {selectedVariation && (
+                {selectedVariation && selectedVariation.sku && (
                   <p className='text-sm text-muted-foreground'>
                     SKU: {selectedVariation.sku}
                   </p>
                 )}
               </div>
-              <Badge variant='outline' className='ml-2'>
+
+              {/* Stock Badge */}
+              <Badge variant='outline' className='shrink-0'>
                 Current: {displayStock}
               </Badge>
             </div>
@@ -262,21 +293,42 @@ export const ProductAdjustmentDialog: React.FC<ProductAdjustmentSheetProps> = ({
                   <SelectValue placeholder='Select a variation' />
                 </SelectTrigger>
                 <SelectContent>
-                  {variations.map((variation) => (
-                    <SelectItem key={variation.id} value={variation.id}>
-                      <div className='flex items-center gap-2'>
-                        <span>
-                          {variation.name ||
-                            `${variation.color || ""} ${
-                              variation.size || ""
-                            }`.trim()}
-                        </span>
-                        <Badge variant='secondary' className='text-xs'>
-                          Stock: {variation.quantity}
-                        </Badge>
-                      </div>
-                    </SelectItem>
-                  ))}
+                  {variations.map((variation) => {
+                    // Get variant image
+                    const variantImage = variation.images && variation.images.length > 0
+                      ? typeof variation.images[0] === 'string'
+                        ? variation.images[0]
+                        : productThumbnail
+                      : productThumbnail;
+
+                    return (
+                      <SelectItem key={variation.id} value={variation.id}>
+                        <div className='flex items-center gap-2'>
+                          {/* Variant Image */}
+                          {variantImage ? (
+                            <img
+                              src={variantImage}
+                              alt={variation.name || `${variation.color || ''} ${variation.size || ''}`.trim()}
+                              className='w-8 h-8 rounded-md object-cover border border-border shrink-0'
+                            />
+                          ) : (
+                            <div className='w-8 h-8 rounded-md bg-muted border border-border flex items-center justify-center shrink-0'>
+                              <Package className='w-4 h-4 text-muted-foreground' />
+                            </div>
+                          )}
+                          <span className='truncate'>
+                            {variation.name ||
+                              `${variation.color || ""} ${
+                                variation.size || ""
+                              }`.trim()}
+                          </span>
+                          <Badge variant='secondary' className='text-xs shrink-0'>
+                            Stock: {variation.quantity}
+                          </Badge>
+                        </div>
+                      </SelectItem>
+                    );
+                  })}
                 </SelectContent>
               </Select>
               {!selectedVariation && (

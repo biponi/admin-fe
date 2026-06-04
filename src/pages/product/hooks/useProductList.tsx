@@ -82,7 +82,8 @@ export const useProductList = () => {
   };
 
   const searchProductByQuery = async () => {
-    const response = await searchProducts(searchQuery);
+    const categoryId = selectedCategory !== "all" ? selectedCategory : undefined;
+    const response = await searchProducts(searchQuery, categoryId);
     if (response?.success) {
       //@ts-ignore
       setProducts(response.data);

@@ -44,8 +44,6 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   //   },
   // ];
 
-  console.log("Filtered Nav Items:", filteredNavItems);
-
   return (
     <Sidebar variant='inset' {...props}>
       <SidebarHeader>
@@ -61,7 +59,9 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                   />
                 </div>
                 <div className='grid flex-1 text-left text-sm leading-tight'>
-                  <span className='truncate font-semibold'>{BRAND_CONFIG.name}</span>
+                  <span className='truncate font-semibold'>
+                    {BRAND_CONFIG.name}
+                  </span>
                   <span className='truncate text-xs'>Management</span>
                 </div>
               </Link>

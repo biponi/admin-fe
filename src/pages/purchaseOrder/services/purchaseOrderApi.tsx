@@ -14,10 +14,15 @@ export const fetchPurchaseOrders = async (
 };
 
 export const searchProducts = async (
-  query: string
+  query: string,
+  categoryId?: string
 ): Promise<ProductSearchResponse[]> => {
+  const params: any = { query };
+  if (categoryId) params.categoryId = categoryId;
+
   const response = await axios.get(
-    `${config.purchaseOrder.purchaseSearch()}?query=${query}`
+    config.purchaseOrder.purchaseSearch(),
+    { params }
   );
   return response.data;
 };

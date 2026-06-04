@@ -1,0 +1,35 @@
+import { useState, useEffect } from "react";
+
+export function useMediaQuery(query: string): boolean {
+  const [matches, setMatches] = useState<boolean>(() => {
+    if (typeof window !== "undefined") {
+      return window.matchMedia(query).matches;
+    }
+    return false;
+  });
+
+  useEffect(() => {
+    const mediaQuery = window.matchMedia(query);
+    const handler = (event: MediaQueryListEvent) => setMatches(event.matches);
+
+    // Set initial value
+    setMatches(mediaQuery.matches);
+
+    // Add listener
+    mediaQuery.addEventListener("change", handler);
+
+    // Cleanup
+    return () => mediaQuery.removeEventListener("change", handler);
+  }, [query]);
+
+  return matches;
+}
+
+// Predefined hooks for common breakpoints
+export function useIsDesktop() {
+  return useMediaQuery("(min-width: 768px)");
+}
+
+export function useIsMobile() {
+  return useMediaQuery("(max-width: 767px)");
+}

@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { MapPin, Home, Truck, Search, CheckCircle2 } from "lucide-react";
 import { Input } from "../../../components/ui/input";
 import { Label } from "../../../components/ui/label";
@@ -38,6 +38,18 @@ export function ShippingForm({
   const selectedDivision = BDDivisions.find(
     (d) => d.name === shipping.division,
   );
+
+  // Auto-calculate delivery charge when division and district are set
+  useEffect(() => {
+    if (shipping.division && shipping.district && onDeliveryChargeChange) {
+      const chargeInfo = calculateDeliveryCharge(
+        shipping.district,
+        shipping.division
+      );
+      onDeliveryChargeChange(chargeInfo.charge);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [shipping.division, shipping.district]);
 
   // Filter divisions based on search
   const filteredDivisions = useMemo(() => {

@@ -179,12 +179,17 @@ export const editProduct = async (
 
 // Function to search for products
 export const searchProducts = async (
-  searchQuery: any
+  searchQuery: any,
+  categoryId?: string
 ): Promise<ApiResponse<any>> => {
   try {
-    const response = await axios.post<any>(config.product.searchProduct(), {
-      query: searchQuery,
-    });
+    const requestBody: any = { query: searchQuery };
+    if (categoryId) requestBody.categoryId = categoryId;
+
+    const response = await axios.post<any>(
+      config.product.searchProduct(),
+      requestBody
+    );
     if (response.status === 200) {
       return { success: true, data: response.data.data };
     } else {

@@ -37,6 +37,10 @@ interface Product {
   productId: string;
   quantity: number;
   variantId?: string;
+  image?: string;
+  thumbnail?: string;
+  sku?: string;
+  unitPrice?: number;
 }
 
 interface Props {
@@ -162,9 +166,17 @@ const MobilePurchaseOrderCard: React.FC<Props> = ({
                 key={`${product.productId}-${index}`}
                 className='flex items-center justify-between p-2.5 bg-gray-50 rounded-lg border border-gray-100'>
                 <div className='flex items-center gap-2 flex-1 min-w-0'>
-                  <div className='h-6 w-6 rounded-full bg-blue-100 flex items-center justify-center flex-shrink-0'>
-                    <Package className='h-3 w-3 text-blue-600' />
-                  </div>
+                  {product.image || product.thumbnail ? (
+                    <img
+                      src={product.image || product.thumbnail}
+                      alt={product.title}
+                      className='h-10 w-10 rounded-lg object-cover border border-gray-200 flex-shrink-0'
+                    />
+                  ) : (
+                    <div className='h-10 w-10 rounded-lg bg-blue-100 flex items-center justify-center flex-shrink-0'>
+                      <Package className='h-5 w-5 text-blue-600' />
+                    </div>
+                  )}
                   <span className='text-sm font-medium text-gray-900 truncate'>
                     {product.title}
                   </span>
@@ -219,9 +231,17 @@ const MobilePurchaseOrderCard: React.FC<Props> = ({
                             key={`${product.productId}-${index}`}
                             className='flex items-center justify-between p-3 bg-white rounded-xl border border-gray-200 hover:border-blue-300 hover:bg-blue-50/30 transition-all'>
                             <div className='flex items-center gap-3 flex-1 min-w-0'>
-                              <div className='h-10 w-10 rounded-lg bg-gradient-to-br from-blue-100 to-cyan-100 flex items-center justify-center flex-shrink-0'>
-                                <Package className='h-5 w-5 text-blue-600' />
-                              </div>
+                              {product.image || product.thumbnail ? (
+                                <img
+                                  src={product.image || product.thumbnail}
+                                  alt={product.title}
+                                  className='h-12 w-12 rounded-lg object-cover border border-gray-200 flex-shrink-0'
+                                />
+                              ) : (
+                                <div className='h-12 w-12 rounded-lg bg-gradient-to-br from-blue-100 to-cyan-100 flex items-center justify-center flex-shrink-0'>
+                                  <Package className='h-6 w-6 text-blue-600' />
+                                </div>
+                              )}
                               <div className='flex-1 min-w-0'>
                                 <p className='text-sm font-semibold text-gray-900 truncate'>
                                   {product.title}

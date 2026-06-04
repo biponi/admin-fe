@@ -1,6 +1,9 @@
 import { saveAs } from "file-saver";
 import dayjs from "dayjs";
-import { generateProductReport, ProductReportOptions } from "../api/productReport";
+import {
+  generateProductReport,
+  ProductReportOptions,
+} from "../api/productReport";
 
 /**
  * Product Report Export Utility
@@ -21,7 +24,7 @@ export interface ExportResult {
  */
 export const downloadProductReport = async (
   options: ProductReportOptions,
-  customFilename?: string
+  customFilename?: string,
 ): Promise<ExportResult> => {
   try {
     const response = await generateProductReport(options);
@@ -35,9 +38,7 @@ export const downloadProductReport = async (
 
     // Determine content type based on format
     const contentType =
-      options.format === "pdf"
-        ? "application/pdf"
-        : "text/csv;charset=utf-8;";
+      options.format === "pdf" ? "application/pdf" : "text/csv;charset=utf-8;";
 
     // Create blob
     const blob = new Blob([response.data], { type: contentType });
@@ -68,7 +69,7 @@ export const downloadProductReport = async (
 export const downloadPdfFlat = (
   categoryId?: string | null,
   includeInactive?: boolean,
-  onProgress?: (progress: number) => void
+  onProgress?: (progress: number) => void,
 ): Promise<ExportResult> => {
   return downloadProductReport(
     {
@@ -78,14 +79,14 @@ export const downloadPdfFlat = (
       includeInactive,
       onProgress,
     },
-    `product-report-flat-${dayjs().format("YYYY-MM-DD")}.pdf`
+    `product-report-flat-${dayjs().format("YYYY-MM-DD")}.pdf`,
   );
 };
 
 export const downloadPdfGrouped = (
   categoryId?: string | null,
   includeInactive?: boolean,
-  onProgress?: (progress: number) => void
+  onProgress?: (progress: number) => void,
 ): Promise<ExportResult> => {
   return downloadProductReport(
     {
@@ -95,14 +96,14 @@ export const downloadPdfGrouped = (
       includeInactive,
       onProgress,
     },
-    `product-report-grouped-${dayjs().format("YYYY-MM-DD")}.pdf`
+    `product-report-grouped-${dayjs().format("YYYY-MM-DD")}.pdf`,
   );
 };
 
 export const downloadPdfSplit = (
   categoryId?: string | null,
   includeInactive?: boolean,
-  onProgress?: (progress: number) => void
+  onProgress?: (progress: number) => void,
 ): Promise<ExportResult> => {
   return downloadProductReport(
     {
@@ -112,14 +113,14 @@ export const downloadPdfSplit = (
       includeInactive,
       onProgress,
     },
-    `product-report-split-${dayjs().format("YYYY-MM-DD")}.pdf`
+    `product-report-split-${dayjs().format("YYYY-MM-DD")}.pdf`,
   );
 };
 
 export const downloadCsvFlat = (
   categoryId?: string | null,
   includeInactive?: boolean,
-  onProgress?: (progress: number) => void
+  onProgress?: (progress: number) => void,
 ): Promise<ExportResult> => {
   return downloadProductReport(
     {
@@ -129,14 +130,14 @@ export const downloadCsvFlat = (
       includeInactive,
       onProgress,
     },
-    `product-report-flat-${dayjs().format("YYYY-MM-DD")}.csv`
+    `product-report-flat-${dayjs().format("YYYY-MM-DD")}.csv`,
   );
 };
 
 export const downloadCsvGrouped = (
   categoryId?: string | null,
   includeInactive?: boolean,
-  onProgress?: (progress: number) => void
+  onProgress?: (progress: number) => void,
 ): Promise<ExportResult> => {
   return downloadProductReport(
     {
@@ -146,14 +147,14 @@ export const downloadCsvGrouped = (
       includeInactive,
       onProgress,
     },
-    `product-report-grouped-${dayjs().format("YYYY-MM-DD")}.csv`
+    `product-report-grouped-${dayjs().format("YYYY-MM-DD")}.csv`,
   );
 };
 
 export const downloadCsvSplit = (
   categoryId?: string | null,
   includeInactive?: boolean,
-  onProgress?: (progress: number) => void
+  onProgress?: (progress: number) => void,
 ): Promise<ExportResult> => {
   return downloadProductReport(
     {
@@ -163,7 +164,7 @@ export const downloadCsvSplit = (
       includeInactive,
       onProgress,
     },
-    `product-report-split-${dayjs().format("YYYY-MM-DD")}.csv`
+    `product-report-split-${dayjs().format("YYYY-MM-DD")}.csv`,
   );
 };
 

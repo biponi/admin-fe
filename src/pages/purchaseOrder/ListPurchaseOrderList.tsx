@@ -6,6 +6,7 @@ import {
 } from "./services/purchaseOrderApi";
 import { PurchaseOrder } from "./types";
 import { Button } from "../../components/ui/button";
+import { cn } from "../../utils/functions";
 import {
   ArchiveRestore,
   Bird,
@@ -335,33 +336,64 @@ const ListPurchaseOrders: React.FC = () => {
     return (
       <Popover>
         <PopoverTrigger asChild>
-          <Button variant='outline' size='sm' className='h-8'>
+          <Button
+            variant='outline'
+            size='sm'
+            className='h-8 px-3 rounded-lg text-xs font-medium border-indigo-200 dark:border-indigo-800 text-indigo-700 dark:text-indigo-300 hover:bg-indigo-50 dark:hover:bg-indigo-900/30 transition-all duration-200'>
             +{remainingProducts.length} more
           </Button>
         </PopoverTrigger>
-        <PopoverContent className='w-80'>
-          <div className='space-y-2'>
-            <h4 className='font-medium text-sm'>Additional Products</h4>
-            <div className='grid gap-2 max-h-48 overflow-y-auto'>
+        <PopoverContent className='w-96 p-0'>
+          <div className='space-y-0'>
+            <div className='px-4 py-3 border-b border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50'>
+              <h4 className='font-semibold text-sm text-slate-900 dark:text-white flex items-center gap-2'>
+                <Package className='h-4 w-4 text-indigo-600 dark:text-indigo-400' />
+                Additional Products ({remainingProducts.length})
+              </h4>
+            </div>
+            <div className='max-h-80 overflow-y-auto p-3 space-y-2'>
               {remainingProducts.map((product, index) => (
                 <div
                   key={index}
-                  className='flex items-center justify-between p-2 rounded-md bg-primary/10'>
-                  <span className='text-sm font-medium truncate'>
-                    {!!product.title
-                      ? product.title.toUpperCase().split(" ")[0]
-                      : product.title}
-                    <Badge
-                      variant='secondary'
-                      className='text-xs bg-sky-100 text-sky-600 mx-1 shadow'>
+                  className='flex items-center gap-3 p-3 rounded-lg bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:border-indigo-300 dark:hover:border-indigo-600 hover:shadow-sm transition-all duration-200'>
+                  {product.image || product.thumbnail ? (
+                    <div className='relative shrink-0'>
+                      <img
+                        src={product.image || product.thumbnail}
+                        alt={product.title}
+                        className='h-10 w-10 rounded-lg object-cover border border-slate-200 dark:border-slate-600'
+                      />
+                      <div className='absolute -top-1 -right-1 h-4 w-4 rounded-full bg-indigo-500 flex items-center justify-center text-[10px] text-white font-bold'>
+                        {product.quantity}
+                      </div>
+                    </div>
+                  ) : (
+                    <div className='h-10 w-10 rounded-lg bg-slate-100 dark:bg-slate-700 flex items-center justify-center border border-slate-200 dark:border-slate-600 relative shrink-0'>
+                      <Package className='h-5 w-5 text-slate-400' />
+                      <div className='absolute -top-1 -right-1 h-4 w-4 rounded-full bg-indigo-500 flex items-center justify-center text-[10px] text-white font-bold'>
+                        {product.quantity}
+                      </div>
+                    </div>
+                  )}
+                  <div className='flex-1 min-w-0'>
+                    <p className='text-sm font-semibold text-slate-900 dark:text-white truncate leading-tight'>
                       {!!product.title
-                        ? product.title.split(" ").slice(1).join(" ") || "N/A"
+                        ? product.title.split(" ")[0]
                         : product.title}
-                    </Badge>
-                  </span>
-                  <Badge variant='secondary' className='ml-2'>
-                    {product.quantity}
-                  </Badge>
+                    </p>
+                    <div className='flex items-center gap-2 mt-1'>
+                      {!!product.title && product.title.split(" ").slice(1).join(" ") && (
+                        <Badge
+                          variant='secondary'
+                          className='text-[10px] px-2 py-0.5 bg-sky-100 dark:bg-sky-900/30 text-sky-700 dark:text-sky-300 font-medium'>
+                          {product.title.split(" ").slice(1).join(" ")}
+                        </Badge>
+                      )}
+                      <Badge variant='outline' className='text-[10px] px-2 py-0.5 text-slate-600 dark:text-slate-400 font-medium'>
+                        Qty: {product.quantity}
+                      </Badge>
+                    </div>
+                  </div>
                 </div>
               ))}
             </div>
@@ -492,122 +524,201 @@ const ListPurchaseOrders: React.FC = () => {
           ) : allPurchaseOrders.length === 0 ? (
             <EmptyState />
           ) : (
-            <Card>
+            <Card className="border shadow-sm">
               <Table>
                 <TableHeader>
-                  <TableRow>
-                    <TableHead className="w-32">
+                  <TableRow className="bg-slate-50/80 dark:bg-slate-800/50 border-b border-slate-200 dark:border-slate-700">
+                    <TableHead className="w-40 text-xs font-bold text-slate-600 dark:text-slate-300 uppercase tracking-wider">
                       <div className="flex items-center gap-2">
-                        <Hash className="w-4 h-4" />
-                        Order #
+                        <div className="h-6 w-6 rounded-lg bg-indigo-100 dark:bg-indigo-900/30 flex items-center justify-center">
+                          <Hash className="w-3.5 h-3.5 text-indigo-600 dark:text-indigo-400" />
+                        </div>
+                        Order Number
                       </div>
                     </TableHead>
-                    <TableHead>
+                    <TableHead className="text-xs font-bold text-slate-600 dark:text-slate-300 uppercase tracking-wider">
                       <div className="flex items-center gap-2">
-                        <Package className="w-4 h-4" />
+                        <div className="h-6 w-6 rounded-lg bg-emerald-100 dark:bg-emerald-900/30 flex items-center justify-center">
+                          <Package className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
+                        </div>
                         Products
                       </div>
                     </TableHead>
-                    <TableHead className="w-32">
+                    <TableHead className="w-36 text-xs font-bold text-slate-600 dark:text-slate-300 uppercase tracking-wider">
                       <div className="flex items-center gap-2">
-                        <DollarSign className="w-4 h-4" />
-                        Total
+                        <div className="h-6 w-6 rounded-lg bg-green-100 dark:bg-green-900/30 flex items-center justify-center">
+                          <DollarSign className="w-3.5 h-3.5 text-green-600 dark:text-green-400" />
+                        </div>
+                        Total Amount
                       </div>
                     </TableHead>
-                    <TableHead className="w-48">
+                    <TableHead className="w-44 text-xs font-bold text-slate-600 dark:text-slate-300 uppercase tracking-wider">
                       <div className="flex items-center gap-2">
-                        <Calendar className="w-4 h-4" />
-                        Created At
+                        <div className="h-6 w-6 rounded-lg bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center">
+                          <Calendar className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400" />
+                        </div>
+                        Created Date
                       </div>
                     </TableHead>
                     {hasSomePermissionsForPage("purchaseorder", [
                       "edit",
                       "delete",
-                    ]) && <TableHead className="w-24 text-center">Actions</TableHead>}
+                    ]) && <TableHead className="w-28 text-center text-xs font-bold text-slate-600 dark:text-slate-300 uppercase tracking-wider">Actions</TableHead>}
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {allPurchaseOrders.map((order) => (
-                    <TableRow key={order.id} className="group">
-                      <TableCell className="font-mono">
-                        #{order.purchaseNumber}
+                  {allPurchaseOrders.map((order, index) => (
+                    <TableRow
+                      key={order.id}
+                      className="group hover:bg-slate-50 dark:hover:bg-slate-800/30 transition-colors duration-200 border-b border-slate-200 dark:border-slate-700">
+                      <TableCell className="py-4 px-4">
+                        <div className="flex items-center gap-3">
+                          <div className="h-10 w-10 rounded-lg bg-indigo-500 flex items-center justify-center text-white font-bold text-sm shadow-sm">
+                            #{order.purchaseNumber}
+                          </div>
+                          <div className="hidden lg:block">
+                            <p className="text-xs text-slate-500 dark:text-slate-400 font-medium">Purchase Order</p>
+                            <p className="text-xs text-slate-400 dark:text-slate-500">ID: {order.id.slice(-8)}</p>
+                          </div>
+                        </div>
                       </TableCell>
-                      <TableCell>
-                        <div className="flex flex-wrap gap-1">
+                      <TableCell className="py-4 px-4">
+                        <div className="space-y-2">
                           {order.products?.length > 2 ? (
                             <>
-                              {order.products.slice(0, 2).map((product, index) => (
-                                <div
-                                  key={index}
-                                  className="flex items-center gap-2 bg-primary/10 text-primary px-2 py-1 rounded-md text-sm">
-                                  <span className="font-medium truncate max-w-48">
-                                    {!!product.title
-                                      ? product.title.toUpperCase().split(" ")[0]
-                                      : product.title}
-                                    <Badge
-                                      variant="secondary"
-                                      className="text-xs bg-sky-100 text-sky-600 mx-1 shadow">
-                                      {!!product.title
-                                        ? product.title
-                                            .split(" ")
-                                            .slice(1)
-                                            .join(" ") || "N/A"
-                                        : product.title}
-                                    </Badge>
-                                  </span>
-                                  <Badge variant="secondary" className="text-xs">
-                                    {product.quantity}
-                                  </Badge>
-                                </div>
-                              ))}
+                              <div className="flex flex-wrap gap-2">
+                                {order.products.slice(0, 2).map((product, index) => (
+                                  <div
+                                    key={index}
+                                    className="group/product flex items-center gap-2 px-3 py-2 bg-white dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700 hover:border-indigo-300 dark:hover:border-indigo-500 hover:shadow-sm transition-all duration-200">
+                                    {product.image || product.thumbnail ? (
+                                      <div className="relative">
+                                        <img
+                                          src={product.image || product.thumbnail}
+                                          alt={product.title}
+                                          className="h-10 w-10 rounded-lg object-cover border border-slate-200 dark:border-slate-600"
+                                        />
+                                        <div className="absolute -top-1 -right-1 h-4 w-4 rounded-full bg-indigo-500 flex items-center justify-center text-[10px] text-white font-bold">
+                                          {product.quantity}
+                                        </div>
+                                      </div>
+                                    ) : (
+                                      <div className="h-10 w-10 rounded-lg bg-slate-100 dark:bg-slate-700 flex items-center justify-center border border-slate-200 dark:border-slate-600 relative">
+                                        <Package className="h-5 w-5 text-slate-400" />
+                                        <div className="absolute -top-1 -right-1 h-4 w-4 rounded-full bg-indigo-500 flex items-center justify-center text-[10px] text-white font-bold">
+                                          {product.quantity}
+                                        </div>
+                                      </div>
+                                    )}
+                                    <div className="flex-1 min-w-0 max-w-[200px]">
+                                      <p className="text-sm font-semibold text-slate-900 dark:text-white truncate leading-tight">
+                                        {!!product.title
+                                          ? product.title.split(" ")[0]
+                                          : product.title}
+                                      </p>
+                                      <div className="flex items-center gap-1.5 mt-1">
+                                        {!!product.title && product.title.split(" ").slice(1).join(" ") && (
+                                          <Badge
+                                            variant="secondary"
+                                            className="text-[10px] px-2 py-0.5 bg-sky-100 dark:bg-sky-900/30 text-sky-700 dark:text-sky-300 font-medium">
+                                            {product.title.split(" ").slice(1).join(" ")}
+                                          </Badge>
+                                        )}
+                                      </div>
+                                    </div>
+                                  </div>
+                                ))}
+                              </div>
                               {renderProductsPopover(order)}
                             </>
                           ) : (
-                            order.products?.map((product, index) => (
-                              <div
-                                key={index}
-                                className="flex items-center gap-2 bg-primary/10 text-primary px-2 py-1 rounded-md text-sm">
-                                <span className="font-medium truncate max-w-48">
-                                  {!!product.title
-                                    ? product.title.toUpperCase().split(" ")[0]
-                                    : product.title}
-                                  <Badge
-                                    variant="secondary"
-                                    className="text-xs bg-sky-100 text-sky-600 mx-1 shadow">
-                                    {!!product.title
-                                      ? product.title
-                                          .split(" ")
-                                          .slice(1)
-                                          .join(" ") || "N/A"
-                                      : product.title}
-                                  </Badge>
-                                </span>
-                                <Badge variant="secondary" className="text-xs">
-                                  {product.quantity}
-                                </Badge>
-                              </div>
-                            ))
+                            <div className="flex flex-wrap gap-2">
+                              {order.products?.map((product, index) => (
+                                <div
+                                  key={index}
+                                  className="group/product flex items-center gap-2 px-3 py-2 bg-white dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700 hover:border-indigo-300 dark:hover:border-indigo-500 hover:shadow-sm transition-all duration-200">
+                                  {product.image || product.thumbnail ? (
+                                    <div className="relative">
+                                      <img
+                                        src={product.image || product.thumbnail}
+                                        alt={product.title}
+                                        className="h-10 w-10 rounded-lg object-cover border border-slate-200 dark:border-slate-600"
+                                      />
+                                      <div className="absolute -top-1 -right-1 h-4 w-4 rounded-full bg-indigo-500 flex items-center justify-center text-[10px] text-white font-bold">
+                                        {product.quantity}
+                                      </div>
+                                    </div>
+                                  ) : (
+                                    <div className="h-10 w-10 rounded-lg bg-slate-100 dark:bg-slate-700 flex items-center justify-center border border-slate-200 dark:border-slate-600 relative">
+                                      <Package className="h-5 w-5 text-slate-400" />
+                                      <div className="absolute -top-1 -right-1 h-4 w-4 rounded-full bg-indigo-500 flex items-center justify-center text-[10px] text-white font-bold">
+                                        {product.quantity}
+                                      </div>
+                                    </div>
+                                  )}
+                                  <div className="flex-1 min-w-0 max-w-[200px]">
+                                    <p className="text-sm font-semibold text-slate-900 dark:text-white truncate leading-tight">
+                                      {!!product.title
+                                        ? product.title.split(" ")[0]
+                                        : product.title}
+                                    </p>
+                                    <div className="flex items-center gap-1.5 mt-1">
+                                      {!!product.title && product.title.split(" ").slice(1).join(" ") && (
+                                        <Badge
+                                          variant="secondary"
+                                          className="text-[10px] px-2 py-0.5 bg-sky-100 dark:bg-sky-900/30 text-sky-700 dark:text-sky-300 font-medium">
+                                          {product.title.split(" ").slice(1).join(" ")}
+                                        </Badge>
+                                      )}
+                                    </div>
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
                           )}
                         </div>
                       </TableCell>
-                      <TableCell className="font-semibold">
-                        ৳{order.totalAmount?.toLocaleString()}
+                      <TableCell className="py-4 px-4">
+                        <div className="flex items-center gap-2">
+                          <div className="h-9 w-9 rounded-lg bg-emerald-50 dark:bg-emerald-900/20 flex items-center justify-center border border-emerald-200 dark:border-emerald-800">
+                            <DollarSign className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
+                          </div>
+                          <div>
+                            <p className="text-sm font-bold text-slate-900 dark:text-white tabular-nums">
+                              ৳{order.totalAmount?.toLocaleString()}
+                            </p>
+                            <p className="text-[10px] text-slate-500 dark:text-slate-400 font-medium">Total Value</p>
+                          </div>
+                        </div>
                       </TableCell>
-                      <TableCell className="text-muted-foreground">
-                        {new Date(order.createdAt).toLocaleDateString("en-US", {
-                          year: "numeric",
-                          month: "short",
-                          day: "numeric",
-                          hour: "2-digit",
-                          minute: "2-digit",
-                        })}
+                      <TableCell className="py-4 px-4">
+                        <div className="flex items-center gap-2">
+                          <div className="h-9 w-9 rounded-lg bg-blue-50 dark:bg-blue-900/20 flex items-center justify-center border border-blue-200 dark:border-blue-800">
+                            <Calendar className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+                          </div>
+                          <div>
+                            <p className="text-xs font-semibold text-slate-900 dark:text-white">
+                              {new Date(order.createdAt).toLocaleDateString("en-US", {
+                                month: "short",
+                                day: "numeric",
+                                year: "numeric",
+                              })}
+                            </p>
+                            <p className="text-[10px] text-slate-500 dark:text-slate-400 font-medium">
+                              {new Date(order.createdAt).toLocaleTimeString("en-US", {
+                                hour: "2-digit",
+                                minute: "2-digit",
+                              })}
+                            </p>
+                          </div>
+                        </div>
                       </TableCell>
                       {hasSomePermissionsForPage("purchaseorder", [
                         "edit",
                         "delete",
                       ]) && (
-                        <TableCell>
-                          <div className="flex items-center justify-center gap-1">
+                        <TableCell className="py-4 px-4">
+                          <div className="flex items-center justify-center gap-1.5">
                             {hasRequiredPermission("purchaseorder", "edit") && (
                               <Button
                                 variant="ghost"
@@ -615,7 +726,7 @@ const ListPurchaseOrders: React.FC = () => {
                                 onClick={() =>
                                   navigate(`/purchase-order/update/${order.id}`)
                                 }
-                                className="text-green-600 bg-green-50 hover:text-green-700 hover:bg-green-50"
+                                className="h-8 w-8 p-0 rounded-lg hover:bg-emerald-50 hover:text-emerald-700 text-slate-500 transition-all duration-200"
                                 title="Edit Purchase Order">
                                 <Edit className="w-4 h-4" />
                               </Button>
@@ -628,7 +739,7 @@ const ListPurchaseOrders: React.FC = () => {
                                     variant="ghost"
                                     size="sm"
                                     disabled={isRestoring === order.id}
-                                    className="text-blue-600 bg-blue-50 hover:text-blue-700 hover:bg-blue-50"
+                                    className="h-8 w-8 p-0 rounded-lg hover:bg-blue-50 hover:text-blue-700 text-slate-500 transition-all duration-200"
                                     title="Restore Purchase Order">
                                     <ArchiveRestore className="w-4 h-4" />
                                   </Button>
@@ -663,7 +774,7 @@ const ListPurchaseOrders: React.FC = () => {
                                 size="sm"
                                 disabled={isDeleting === order.id}
                                 onClick={() => handleDelete(order.id)}
-                                className="text-red-600 bg-red-50 hover:text-red-700 hover:bg-red-50"
+                                className="h-8 w-8 p-0 rounded-lg hover:bg-red-50 hover:text-red-700 text-slate-500 transition-all duration-200"
                                 title="Delete Purchase Order">
                                 <Trash2 className="w-4 h-4" />
                               </Button>

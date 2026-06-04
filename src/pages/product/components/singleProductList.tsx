@@ -472,6 +472,7 @@ const SingleItem: React.FC<Props> = ({
           productId={id}
           productName={title}
           productSku={sku}
+          productThumbnail={image}
           currentStock={quantity}
           hasVariation={hasVariation}
           variations={variationList}
