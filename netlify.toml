@@ -3,30 +3,8 @@
   publish = "build"
 
 [build.environment]
-  NODE_VERSION = "20"
-  # Map environment variables from Netlify UI to Vite format
-  # You can set these variables in Netlify dashboard under Site Settings > Environment Variables
-  VITE_API_BASE_URL = "${API_BASE_URL:-http://localhost:7001}"
-  VITE_API_URL = "${API_URL:-http://localhost:7001/api/v1}"
-  VITE_ADD_NOTIFICATION = "${ADD_NOTIFICATION:-true}"
-  VITE_BRAND_NAME = "${BRAND_NAME:-Prior Admin}"
-  VITE_BRAND_SHORT_NAME = "${BRAND_SHORT_NAME:-Prior}"
-  VITE_BRAND_COMPANY_NAME = "${BRAND_COMPANY_NAME:-PriorBD}"
-  VITE_BRAND_WEBSITE = "${BRAND_WEBSITE:-https://priorbd.com}"
-  VITE_BRAND_EMAIL = "${BRAND_EMAIL:-prior.retailshop.info.bd@gmail.com}"
-  VITE_BRAND_ADDRESS = "${BRAND_ADDRESS:-Shop 134, Genetic Plaza, Dhanmondi-27, Dhaka}"
-  VITE_BRAND_PHONE = "${BRAND_PHONE:+880 1700-534317}"
-  VITE_BRAND_LOGO_URL = "${BRAND_LOGO_URL}"
-  VITE_BRAND_INVOICE_LOGO_URL = "${BRAND_INVOICE_LOGO_URL}"
-  VITE_BRAND_PACKING_LOGO_URL = "${BRAND_PACKING_LOGO_URL}"
-  VITE_BRAND_ICON_URL = "${BRAND_ICON_URL}"
-  VITE_FIREBASE_API_KEY = "${FIREBASE_API_KEY}"
-  VITE_FIREBASE_AUTH_DOMAIN = "${FIREBASE_AUTH_DOMAIN}"
-  VITE_FIREBASE_PROJECT_ID = "${FIREBASE_PROJECT_ID}"
-  VITE_FIREBASE_STORAGE_BUCKET = "${FIREBASE_STORAGE_BUCKET}"
-  VITE_FIREBASE_MESSAGING_SENDER_ID = "${FIREBASE_MESSAGING_SENDER_ID}"
-  VITE_FIREBASE_APP_ID = "${FIREBASE_APP_ID}"
-  VITE_FIREBASE_VAPID_KEY = "${FIREBASE_VAPID_KEY}"
+  NODE_VERSION = "22"
+
 
 # Security Headers
 [[headers]]
