@@ -38,29 +38,63 @@
   [headers.values]
     Cache-Control = "public, max-age=0, must-revalidate"
 
-# CRITICAL: Redirect rules - ORDER MATTERS!
-# 1. First, explicitly exclude asset files from being redirected
+# SPA Routing - Serve static files first, then redirect to index.html
+# JavaScript files
 [[redirects]]
-  from = "/assets/*"
-  to = "/assets/:splat"
+  from = "/*.js"
+  to = "/:splat"
   status = 200
-  force = false
 
-# 2. Handle service worker and manifest
+# CSS files
+[[redirects]]
+  from = "/*.css"
+  to = "/:splat"
+  status = 200
+
+# JSON and manifest files
+[[redirects]]
+  from = "/*.{json,webmanifest}"
+  to = "/:splat"
+  status = 200
+
+# Image files
+[[redirects]]
+  from = "/*.{png,jpg,jpeg,gif,svg,ico,webp}"
+  to = "/:splat"
+  status = 200
+
+# Font files
+[[redirects]]
+  from = "/*.{woff,woff2,ttf,otf,eot}"
+  to = "/:splat"
+  status = 200
+
+# HTML files - explicit rule to prevent redirect loop
+[[redirects]]
+  from = "/*.html"
+  to = "/:splat"
+  status = 200
+
+# Service worker
+[[redirects]]
+  from = "/sw.js"
+  to = "/sw.js"
+  status = 200
+
 [[redirects]]
   from = "/registerSW.js"
   to = "/registerSW.js"
   status = 200
 
+# PWA manifest
 [[redirects]]
   from = "/manifest.webmanifest"
   to = "/manifest.webmanifest"
   status = 200
 
-# 3. SPA routing - ONLY for non-file routes (catch-all at the end)
+# SPA Catch-all - MUST come LAST to handle app routes
 [[redirects]]
   from = "/*"
   to = "/index.html"
   status = 200
   force = false
-  condition = { Role = "!exists" }  # Only redirect if file doesn't exist
