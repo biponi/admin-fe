@@ -5,7 +5,6 @@
 [build.environment]
   NODE_VERSION = "22"
 
-
 # Security Headers
 [[headers]]
   for = "/*"
@@ -17,35 +16,51 @@
 
 # Asset Caching - JavaScript
 [[headers]]
-  for = "*.js"
+  for = "/assets/*.js"
   [headers.values]
     Cache-Control = "public, max-age=31536000, immutable"
 
 # Asset Caching - CSS
 [[headers]]
-  for = "*.css"
+  for = "/assets/*.css"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"
+
+# Image assets
+[[headers]]
+  for = "/assets/*.{png,jpg,jpeg,gif,svg,ico}"
   [headers.values]
     Cache-Control = "public, max-age=31536000, immutable"
 
 # HTML - No caching for index.html
 [[headers]]
-  for = "*.html"
+  for = "/*.html"
   [headers.values]
     Cache-Control = "public, max-age=0, must-revalidate"
 
-# SPA Routing - Only redirect non-file routes to index.html
+# CRITICAL: Redirect rules - ORDER MATTERS!
+# 1. First, explicitly exclude asset files from being redirected
 [[redirects]]
   from = "/assets/*"
   to = "/assets/:splat"
   status = 200
+  force = false
 
+# 2. Handle service worker and manifest
 [[redirects]]
-  from = "/{registerSW,manifest.webmanifest}"
-  to = "/:splat"
+  from = "/registerSW.js"
+  to = "/registerSW.js"
   status = 200
 
+[[redirects]]
+  from = "/manifest.webmanifest"
+  to = "/manifest.webmanifest"
+  status = 200
+
+# 3. SPA routing - ONLY for non-file routes (catch-all at the end)
 [[redirects]]
   from = "/*"
   to = "/index.html"
   status = 200
   force = false
+  condition = { Role = "!exists" }  # Only redirect if file doesn't exist
