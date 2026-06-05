@@ -400,7 +400,7 @@ const ProductSearchDialog: React.FC<SearchDialogProps> = ({
                 <SelectValue placeholder='All Categories' />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value=''>All Categories</SelectItem>
+                <SelectItem value='all'>All Categories</SelectItem>
                 {categories.map((cat) => (
                   <SelectItem key={cat.id} value={cat.id}>
                     {cat.name}
@@ -408,10 +408,10 @@ const ProductSearchDialog: React.FC<SearchDialogProps> = ({
                 ))}
               </SelectContent>
             </Select>
-            {selectedCategory && (
+            {selectedCategory !== "all" && (
               <button
                 className='text-xs text-slate-400 hover:text-slate-600 dark:hover:text-slate-300'
-                onClick={() => setSelectedCategory("")}>
+                onClick={() => setSelectedCategory("all")}>
                 Clear
               </button>
             )}
@@ -557,7 +557,7 @@ const CreatePurchaseOrder: React.FC = () => {
   const isMobile = useIsMobile();
   const [products, setProducts] = useState<ProductSearchResponse[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
-  const [selectedCategory, setSelectedCategory] = useState<string>("");
+  const [selectedCategory, setSelectedCategory] = useState<string>("all");
   const [categories, setCategories] = useState<
     Array<{ id: string; name: string }>
   >([]);
@@ -590,7 +590,7 @@ const CreatePurchaseOrder: React.FC = () => {
   useEffect(() => {
     if (searchQuery.trim()) {
       setSearching(true);
-      searchProducts(searchQuery, selectedCategory || undefined)
+      searchProducts(searchQuery, selectedCategory === "all" ? undefined : selectedCategory)
         .then((res) => {
           setProducts([...res]);
           setSearching(false);
