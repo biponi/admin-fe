@@ -28,7 +28,22 @@
 
 # Image assets
 [[headers]]
-  for = "/assets/*.{png,jpg,jpeg,gif,svg,ico}"
+  for = "/assets/*.png"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"
+
+[[headers]]
+  for = "/assets/*.jpg"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"
+
+[[headers]]
+  for = "/assets/*.svg"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"
+
+[[headers]]
+  for = "/assets/*.ico"
   [headers.values]
     Cache-Control = "public, max-age=31536000, immutable"
 
@@ -38,63 +53,10 @@
   [headers.values]
     Cache-Control = "public, max-age=0, must-revalidate"
 
-# SPA Routing - Serve static files first, then redirect to index.html
-# JavaScript files
-[[redirects]]
-  from = "/*.js"
-  to = "/:splat"
-  status = 200
-
-# CSS files
-[[redirects]]
-  from = "/*.css"
-  to = "/:splat"
-  status = 200
-
-# JSON and manifest files
-[[redirects]]
-  from = "/*.{json,webmanifest}"
-  to = "/:splat"
-  status = 200
-
-# Image files
-[[redirects]]
-  from = "/*.{png,jpg,jpeg,gif,svg,ico,webp}"
-  to = "/:splat"
-  status = 200
-
-# Font files
-[[redirects]]
-  from = "/*.{woff,woff2,ttf,otf,eot}"
-  to = "/:splat"
-  status = 200
-
-# HTML files - explicit rule to prevent redirect loop
-[[redirects]]
-  from = "/*.html"
-  to = "/:splat"
-  status = 200
-
-# Service worker
-[[redirects]]
-  from = "/sw.js"
-  to = "/sw.js"
-  status = 200
-
-[[redirects]]
-  from = "/registerSW.js"
-  to = "/registerSW.js"
-  status = 200
-
-# PWA manifest
-[[redirects]]
-  from = "/manifest.webmanifest"
-  to = "/manifest.webmanifest"
-  status = 200
-
-# SPA Catch-all - MUST come LAST to handle app routes
+# SPA Catch-all - ONLY this redirect is needed.
+# Netlify serves real files first before applying redirects,
+# so static assets are never intercepted.
 [[redirects]]
   from = "/*"
   to = "/index.html"
   status = 200
-  force = false
