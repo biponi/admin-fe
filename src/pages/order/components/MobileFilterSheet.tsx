@@ -91,7 +91,7 @@ export function MobileFilterSheet({
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent className="w-full sm:max-w-md pb-safe-bottom">
+      <SheetContent className="w-full sm:max-w-md pb-safe-bottom flex flex-col h-full">
         <SheetHeader>
           <SheetTitle>Filters</SheetTitle>
           {activeFilterCount > 0 && (
@@ -101,7 +101,7 @@ export function MobileFilterSheet({
           )}
         </SheetHeader>
 
-        <div className="flex-1 overflow-y-auto py-6 space-y-6">
+        <div className="flex-1 overflow-y-auto overflow-x-hidden py-6 space-y-6 -mx-6 px-6">
           {/* Order Status */}
           <div className="space-y-3">
             <div className="flex items-center justify-between">
@@ -203,7 +203,7 @@ export function MobileFilterSheet({
           </div>
         </div>
 
-        <SheetFooter className="flex gap-3 border-t pt-4">
+        <SheetFooter className="flex gap-3 border-t pt-4 shrink-0">
           <Button
             variant="outline"
             onClick={handleClearAll}
