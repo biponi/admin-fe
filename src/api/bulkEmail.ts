@@ -11,7 +11,7 @@ import {
   JobStatus,
 } from "../pages/bulk-communication/interface";
 
-const BASE_URL = process.env.REACT_APP_API_URL || "";
+const BASE_URL = import.meta.env.VITE_API_URL || "";
 
 // Create Bulk Email Campaign
 export const createBulkEmailCampaign = async (

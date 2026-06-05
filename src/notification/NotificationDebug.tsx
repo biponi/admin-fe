@@ -22,7 +22,7 @@ export const NotificationDebug: React.FC = () => {
     const info = {
       fcmToken: fcmToken || 'Not generated',
       authToken: localStorage.getItem('token') ? 'Present' : 'Missing',
-      apiUrl: process.env.REACT_APP_API_BASE_URL,
+      apiUrl: import.meta.env.VITE_API_BASE_URL,
       notificationPermission: Notification.permission,
       notificationCount: notifications.length,
       unreadCount,

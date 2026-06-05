@@ -1,6 +1,6 @@
 {
   "name": "prior-admin-fe",
-  "version": "2.7.0",
+  "version": "3.0.0",
   "private": true,
   "engines": {
     "node": ">=20.0.0"
@@ -39,9 +39,6 @@
     "@reduxjs/toolkit": "^2.2.1",
     "@tailwindcss/forms": "^0.5.7",
     "@tanstack/react-virtual": "^3.13.12",
-    "@testing-library/jest-dom": "^5.17.0",
-    "@testing-library/react": "^13.4.0",
-    "@testing-library/user-event": "^13.5.0",
     "@tiptap/extension-image": "^3.23.1",
     "@tiptap/extension-link": "^3.23.1",
     "@tiptap/extension-placeholder": "^3.23.1",
@@ -51,12 +48,12 @@
     "@tiptap/react": "^3.23.1",
     "@tiptap/starter-kit": "^3.23.1",
     "@types/file-saver": "^2.0.7",
-    "@types/jest": "^27.5.2",
-    "@types/node": "^16.18.87",
+    "@types/node": "^25.9.1",
     "@types/qrcode": "^1.5.6",
     "@types/qrcode.react": "^3.0.0",
     "@types/react": "^18.2.64",
     "@types/react-dom": "^18.2.21",
+    "@vitejs/plugin-react": "^6.0.2",
     "@zxing/library": "^0.21.3",
     "axios": "^1.5.1",
     "chart.js": "^4.4.0",
@@ -93,7 +90,6 @@
     "react-redux": "^9.1.0",
     "react-resizable-panels": "^2.0.16",
     "react-router-dom": "^6.22.3",
-    "react-scripts": "5.0.1",
     "recharts": "2.15.4",
     "regenerator-runtime": "^0.14.1",
     "sass": "^1.71.1",
@@ -105,21 +101,21 @@
     "tailwindcss-animate": "^1.0.7",
     "typescript": "^4.9.5",
     "vaul": "^0.9.0",
-    "web-vitals": "^2.1.4",
+    "vite": "^8.0.16",
+    "vite-plugin-pwa": "^1.3.0",
     "zod": "^3.22.4",
     "zustand": "^5.0.8"
   },
-  "main": "public/electron.js",
+  "main": "dist-electron/main.js",
   "homepage": "./",
   "scripts": {
-    "start": "react-scripts start",
-    "build": "react-scripts build",
-    "test": "react-scripts test",
-    "eject": "react-scripts eject",
-    "electron": "electron .",
-    "electron-dev": "concurrently \"yarn start\" \"wait-on http://localhost:3000 && electron .\"",
-    "build-electron": "yarn build && electron-builder",
-    "dist": "yarn build && electron-builder --publish=never"
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "build:electron": "node scripts/build-electron.js",
+    "electron:dev": "npm run build && npm run build:electron && electron .",
+    "electron:build": "npm run build && npm run build:electron && electron-builder",
+    "electron:dist": "npm run build && npm run build:electron && electron-builder --publish=never"
   },
   "eslintConfig": {
     "extends": [
@@ -147,12 +143,12 @@
   },
   "devDependencies": {
     "@babel/plugin-proposal-private-property-in-object": "^7.21.11",
-    "concurrently": "^9.2.0",
-    "electron": "^37.3.1",
-    "electron-builder": "^26.0.12",
-    "electron-devtools-installer": "^4.0.0",
-    "electron-is-dev": "^3.0.1",
-    "wait-on": "^8.0.4"
+    "autoprefixer": "^10.5.0",
+    "electron": "^42.3.3",
+    "electron-builder": "^26.8.1",
+    "esbuild": "^0.28.0",
+    "postcss": "^8.5.15",
+    "vite-plugin-electron": "^1.0.2"
   },
   "build": {
     "appId": "com.prior.admin",
@@ -162,7 +158,7 @@
     },
     "files": [
       "build/**/*",
-      "public/electron.js",
+      "dist-electron/**/*",
       "node_modules/**/*"
     ],
     "mac": {

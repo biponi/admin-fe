@@ -14,7 +14,6 @@ import {
 import { Button } from "../../../../components/ui/button";
 import { Card, CardContent } from "../../../../components/ui/card";
 import { Checkbox } from "../../../../components/ui/checkbox";
-import { Separator } from "../../../../components/ui/separator";
 import { UserCommissionSummary } from "../../../../api/commission";
 import { StatusBreakdownBadge } from "../shared/StatusBreakdownBadge";
 import {
@@ -55,49 +54,69 @@ export const UserCommissionTable: React.FC<UserCommissionTableProps> = ({
   }: {
     commission: UserCommissionSummary;
   }) => (
-    <Card className='overflow-hidden hover:shadow-md transition-shadow'>
-      <CardContent className='p-4 space-y-3'>
+    <Card className='relative overflow-hidden rounded-2xl border-[var(--cm-border,#e4e6f0)] bg-[var(--cm-surface,#fff)] shadow-[0_8px_24px_rgba(26,29,46,0.06)]'>
+      <div className='absolute inset-x-0 top-0 h-1 bg-[var(--cm-accent,#5b52f0)]' />
+      <CardContent className='p-4 pt-5 space-y-4'>
         {/* Header: User Info + Checkbox + Total Commission */}
         <div className='flex items-start justify-between gap-3'>
-          <div className='flex items-center gap-3 flex-1 min-w-0'>
+          <div className='flex min-w-0 flex-1 items-center gap-3'>
             <Checkbox
               checked={selectedIds.includes(commission.userId)}
               onCheckedChange={(checked: boolean) =>
                 onSelect(commission.userId, checked)
               }
-              className='shrink-0'
+              className='shrink-0 border-[var(--cm-border,#e4e6f0)] data-[state=checked]:border-[var(--cm-accent,#5b52f0)] data-[state=checked]:bg-[var(--cm-accent,#5b52f0)]'
             />
-            <Avatar className='h-10 w-10 ring-2 ring-primary/10'>
+            <Avatar className='h-11 w-11 ring-2 ring-[rgba(91,82,240,0.14)]'>
               <AvatarImage
                 src={commission.userAvatar}
                 alt={commission.userName}
               />
-              <AvatarFallback className='bg-primary/10 text-primary font-semibold text-sm'>
+              <AvatarFallback className='bg-[var(--cm-accent-lt,rgba(91,82,240,.08))] text-sm font-semibold text-[var(--cm-accent,#5b52f0)]'>
                 {commission.userName.slice(0, 2).toUpperCase()}
               </AvatarFallback>
             </Avatar>
             <div className='flex-1 min-w-0'>
-              <h4 className='font-semibold text-sm truncate'>
+              <p className='text-[11px] font-semibold uppercase tracking-wide text-[var(--cm-muted,#8b90a7)]'>
+                User Commission
+              </p>
+              <h4 className='mt-0.5 truncate text-sm font-semibold text-[var(--cm-text,#1a1d2e)]'>
                 {commission.userName}
               </h4>
               <div className='flex items-center gap-2 mt-1'>
-                <ShoppingCart className='h-3 w-3 text-muted-foreground' />
-                <span className='text-xs text-muted-foreground'>
+                <ShoppingCart className='h-3 w-3 text-[var(--cm-muted,#8b90a7)]' />
+                <span className='text-xs font-medium text-[var(--cm-muted,#8b90a7)]'>
                   {commission.totalOrders} orders
                 </span>
               </div>
             </div>
           </div>
-          <div className='text-right shrink-0'>
-            <div className='text-lg font-bold text-primary'>
-              {formatCurrency(commission.totalCommissionAmount)}
+        </div>
+
+        <div className='rounded-2xl border border-[rgba(91,82,240,0.16)] bg-[linear-gradient(135deg,rgba(91,82,240,0.08),rgba(0,184,150,0.08))] p-3.5'>
+          <div className='flex items-end justify-between gap-3'>
+            <div>
+              <p className='text-[11px] font-semibold uppercase tracking-wide text-[var(--cm-muted,#8b90a7)]'>
+                Total Commission
+              </p>
+              <p className='mt-1 text-2xl font-bold tracking-tight text-[var(--cm-text,#1a1d2e)]'>
+                {formatCurrency(commission.totalCommissionAmount)}
+              </p>
             </div>
-            <div className='text-xs text-muted-foreground'>Total</div>
+            <button
+              className='flex h-10 w-10 items-center justify-center rounded-xl bg-white text-[var(--cm-accent,#5b52f0)] shadow-sm transition-colors hover:bg-[var(--cm-accent-lt,rgba(91,82,240,.08))]'
+              onClick={() => onViewDetails?.(commission)}
+            >
+              <ChevronRight className='h-5 w-5' />
+            </button>
           </div>
         </div>
 
         {/* Status Breakdown */}
-        <div className='pl-14'>
+        <div className='rounded-xl bg-[var(--cm-surface2,#f0f1f8)]/60 px-3 py-2'>
+          <p className='mb-2 text-[11px] font-semibold uppercase tracking-wide text-[var(--cm-muted,#8b90a7)]'>
+            Status
+          </p>
           <StatusBreakdownBadge
             breakdown={commission.statusBreakdown}
             className='text-xs'
@@ -105,31 +124,38 @@ export const UserCommissionTable: React.FC<UserCommissionTableProps> = ({
         </div>
 
         {/* Products Count & Date Range */}
-        <div className='flex items-center justify-between pl-14'>
-          <div className='flex items-center gap-2 text-xs text-muted-foreground'>
-            <Package className='h-3 w-3' />
-            <span>{commission.totalProducts} Product(s)</span>
+        <div className='grid grid-cols-2 gap-2'>
+          <div className='rounded-xl bg-[var(--cm-surface2,#f0f1f8)]/60 px-3 py-2'>
+            <div className='flex items-center gap-1.5 text-[11px] font-medium text-[var(--cm-muted,#8b90a7)]'>
+              <Package className='h-3 w-3' />
+              Products
+            </div>
+            <p className='mt-1 text-sm font-semibold text-[var(--cm-text,#1a1d2e)]'>
+              {commission.totalProducts}
+            </p>
           </div>
-          <div className='flex items-center gap-2 text-xs text-muted-foreground'>
-            <Calendar className='h-3 w-3' />
-            <span>
-              {formatDate(commission.firstCommissionDate)} –{" "}
+          <div className='rounded-xl bg-[var(--cm-surface2,#f0f1f8)]/60 px-3 py-2'>
+            <div className='flex items-center gap-1.5 text-[11px] font-medium text-[var(--cm-muted,#8b90a7)]'>
+              <Calendar className='h-3 w-3' />
+              Range
+            </div>
+            <p className='mt-1 text-xs font-semibold leading-snug text-[var(--cm-text,#1a1d2e)]'>
+              {formatDate(commission.firstCommissionDate)} -{" "}
               {formatDate(commission.lastCommissionDate)}
-            </span>
+            </p>
           </div>
         </div>
 
         {/* Actions */}
-        <Separator />
-        <div className='flex justify-end pl-14'>
+        <div className='border-t border-[var(--cm-border,#e4e6f0)] pt-3'>
           <Button
-            variant='ghost'
-            size='sm'
-            className='h-8 gap-1'
+            variant='outline'
+            size='default'
+            className='h-11 w-full rounded-xl border-[var(--cm-border,#e4e6f0)] bg-white text-[var(--cm-text,#1a1d2e)] hover:border-[rgba(91,82,240,0.35)] hover:bg-[var(--cm-accent-lt,rgba(91,82,240,.08))] hover:text-[var(--cm-accent,#5b52f0)]'
             onClick={() => onViewDetails?.(commission)}>
-            <Eye className='h-3.5 w-3.5' />
+            <Eye className='h-4 w-4 mr-2' />
             View Details
-            <ChevronRight className='h-3.5 w-3.5' />
+            <ChevronRight className='h-4 w-4 ml-1' />
           </Button>
         </div>
       </CardContent>
@@ -138,7 +164,7 @@ export const UserCommissionTable: React.FC<UserCommissionTableProps> = ({
 
   // Desktop Table Layout
   const DesktopTable = () => (
-    <div className='rounded-md border'>
+    <div className='rounded-b-md rounded-t-none border-t'>
       <Table>
         <TableHeader>
           <TableRow>

@@ -55,7 +55,7 @@ import {
 } from "../../components/ui/table";
 import { useOrderList } from "./hooks/useOrderList";
 import SingleItem from "./components/SingleOrderItem";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { Input } from "../../components/ui/input";
 import useDebounce from "../../customHook/useDebounce";
 import { CourierProvider, IOrder } from "./interface";
@@ -114,6 +114,13 @@ import MobileFilterSearch from "./components/MobileFilterSearch";
 import MobileOrderHeader from "./components/MobileOrderHeader";
 import MobileBulkActions from "./components/MobileBulkActions";
 import MobileEmptyState from "./components/MobileEmptyState";
+import { MobileBottomNav } from "./components/MobileBottomNav";
+import { MobileKeyboardSearch } from "./components/MobileKeyboardSearch";
+import {
+  MobileFilterSheet,
+  FilterOptions,
+} from "./components/MobileFilterSheet";
+import { MobileSortSheet, SortOption } from "./components/MobileSortSheet";
 import useRoleCheck from "../auth/hooks/useRoleCheck";
 import {
   Collapsible,
@@ -176,6 +183,11 @@ const OrderList = () => {
   const [bulkCourierSelectorMobile, setBulkCourierSelectorMobile] =
     useState<boolean>(false);
   const [pendingBulkAction, setPendingBulkAction] = useState<string>("");
+
+  // Mobile bottom sheet states
+  const [showFilterSheet, setShowFilterSheet] = useState<boolean>(false);
+  const [showSortSheet, setShowSortSheet] = useState<boolean>(false);
+  const [showKeyboardSearch, setShowKeyboardSearch] = useState<boolean>(false);
 
   const debounceHandler = useDebounce(inputValue, 500);
 
@@ -402,6 +414,30 @@ const OrderList = () => {
     );
   };
 
+  // Active filter count for bottom nav
+  const activeFilterCount = useMemo(() => {
+    let count = 0;
+    if (selectedStatus) count++;
+    if (inputValue) count++;
+    return count;
+  }, [selectedStatus, inputValue]);
+
+  // Filter handlers
+  const handleApplyFilters = (filters: FilterOptions) => {
+    // Apply status filter
+    if (filters.statuses && filters.statuses.length > 0) {
+      setSelectedStatus(filters.statuses[0]);
+    } else {
+      setSelectedStatus("");
+    }
+  };
+
+  const handleSort = (sortBy: SortOption) => {
+    // Implement sort logic here
+    console.log("Sorting by:", sortBy);
+    // TODO: Add actual sorting implementation
+  };
+
   const renderMobileView = () => {
     return (
       <div className='min-h-screen bg-gray-50 sm:hidden'>
@@ -438,11 +474,11 @@ const OrderList = () => {
         />
 
         {/* Mobile Orders List */}
-        <div className='px-4 py-4'>
+        <div className='px-4 py-4 pb-24'>
           {(!orders || orders.length < 1) && renderMobileEmptyView()}
           {!!orders && orders.length > 0 && (
             <>
-              <div className='space-y-4 pb-4'>
+              <div className='space-y-2'>
                 {orders.map((order: IOrder, index: number) => (
                   <MobileOrderCard
                     key={index}
@@ -459,6 +495,7 @@ const OrderList = () => {
                     updatedAt={order?.timestamps?.updatedAt}
                     isBulkAdded={bulkOrders.includes(order?.id)}
                     fraudDetection={order?.fraudDetection}
+                    products={order?.products || []}
                     handleBulkCheck={(val: boolean) => {
                       val
                         ? setBulkOrders([...bulkOrders, order?.id])
@@ -580,6 +617,41 @@ const OrderList = () => {
             !!bulkOrders &&
             bulkOrders.length > 0
           }
+        />
+
+        {/* Bottom Navigation - Mobile Only */}
+        {!showKeyboardSearch && (
+          <MobileBottomNav
+            onSearchClick={() => setShowKeyboardSearch(true)}
+            onFilterClick={() => setShowFilterSheet(true)}
+            onSortClick={() => setShowSortSheet(true)}
+            activeFilterCount={activeFilterCount}
+          />
+        )}
+
+        <MobileKeyboardSearch
+          open={showKeyboardSearch}
+          searchValue={inputValue}
+          onSearchChange={setInputValue}
+          onClose={() => setShowKeyboardSearch(false)}
+        />
+
+        {/* Filter Bottom Sheet */}
+        <MobileFilterSheet
+          open={showFilterSheet}
+          onOpenChange={setShowFilterSheet}
+          onApplyFilters={handleApplyFilters}
+          initialFilters={{
+            statuses: selectedStatus ? [selectedStatus] : [],
+          }}
+        />
+
+        {/* Sort Bottom Sheet */}
+        <MobileSortSheet
+          open={showSortSheet}
+          onOpenChange={setShowSortSheet}
+          onSort={handleSort}
+          initialSort='date-desc'
         />
       </div>
     );
@@ -1175,7 +1247,8 @@ const OrderList = () => {
                           alt={product?.name || "Product"}
                           className='w-16 h-16 rounded-lg object-cover flex-shrink-0 border border-gray-200 bg-white'
                           onError={(e) => {
-                            (e.target as HTMLImageElement).src = PlaceHolderImage;
+                            (e.target as HTMLImageElement).src =
+                              PlaceHolderImage;
                           }}
                         />
                       )}

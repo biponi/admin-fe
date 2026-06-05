@@ -11,7 +11,6 @@ import { Button } from "../../../../components/ui/button";
 import { Card, CardContent } from "../../../../components/ui/card";
 import { Badge } from "../../../../components/ui/badge";
 import { Checkbox } from "../../../../components/ui/checkbox";
-import { Separator } from "../../../../components/ui/separator";
 import { OrderCommission } from "../../../../api/commission";
 import { RecipientCell } from "../shared/RecipientCell";
 import { StatusBreakdownBadge } from "../shared/StatusBreakdownBadge";
@@ -28,7 +27,6 @@ import {
   Users,
   BookText,
 } from "lucide-react";
-import { cn } from "../../../../lib/utils";
 
 interface OrderCommissionTableProps {
   commissions: OrderCommission[];
@@ -53,21 +51,31 @@ export const OrderCommissionTable: React.FC<OrderCommissionTableProps> = ({
 
   // Mobile Card Layout
   const MobileCard = ({ commission }: { commission: OrderCommission }) => (
-    <Card className='overflow-hidden'>
-      <CardContent className='p-4 space-y-3'>
+    <Card className='relative overflow-hidden rounded-2xl border-[var(--cm-border,#e4e6f0)] bg-[var(--cm-surface,#fff)] shadow-[0_8px_24px_rgba(26,29,46,0.06)]'>
+      <div className='absolute inset-x-0 top-0 h-1 bg-[var(--cm-accent,#5b52f0)]' />
+      <CardContent className='p-4 pt-5 space-y-4'>
         {/* Header: Order Number + Checkbox + Status */}
-        <div className='flex items-center justify-between'>
-          <div className='flex items-center gap-2 flex-1'>
+        <div className='flex items-start justify-between gap-3'>
+          <div className='flex min-w-0 flex-1 items-center gap-3'>
             <Checkbox
               checked={selectedIds.includes(commission.orderId)}
               onCheckedChange={(checked: boolean) =>
                 onSelect(commission.orderId, checked)
               }
-              className='mr-2'
+              className='mt-0.5 shrink-0 border-[var(--cm-border,#e4e6f0)] data-[state=checked]:border-[var(--cm-accent,#5b52f0)] data-[state=checked]:bg-[var(--cm-accent,#5b52f0)]'
             />
-            <Badge variant='outline' className='font-semibold'>
-              #{commission.orderNumber}
-            </Badge>
+            <div className='min-w-0'>
+              <p className='text-[11px] font-semibold uppercase tracking-wide text-[var(--cm-muted,#8b90a7)]'>
+                Order Commission
+              </p>
+              <button
+                className='mt-1 inline-flex items-center gap-1 rounded-full border border-[rgba(91,82,240,0.22)] bg-[var(--cm-accent-lt,rgba(91,82,240,.08))] px-2.5 py-1 font-mono text-xs font-semibold text-[var(--cm-accent,#5b52f0)]'
+                onClick={() => showOrderModal(commission.orderNumber)}
+              >
+                #{commission.orderNumber}
+                <ExternalLink className='h-3 w-3' />
+              </button>
+            </div>
           </div>
           <StatusBreakdownBadge
             breakdown={commission.statusBreakdown}
@@ -76,12 +84,19 @@ export const OrderCommissionTable: React.FC<OrderCommissionTableProps> = ({
         </div>
 
         {/* Recipients */}
-        <div className='space-y-2'>
-          <div className='flex items-center gap-2 text-xs text-muted-foreground'>
-            <Users className='h-3 w-3' />
-            <span>{commission.recipients.length} Recipient(s)</span>
+        <div className='rounded-2xl border border-[var(--cm-border,#e4e6f0)] bg-[var(--cm-surface2,#f0f1f8)]/60 p-3'>
+          <div className='flex items-center justify-between gap-3'>
+            <div className='flex items-center gap-2 text-xs font-semibold text-[var(--cm-muted,#8b90a7)]'>
+              <div className='flex h-8 w-8 items-center justify-center rounded-lg bg-white text-[var(--cm-accent,#5b52f0)] shadow-sm'>
+                <Users className='h-4 w-4' />
+              </div>
+              <span>{commission.recipients.length} Recipient(s)</span>
+            </div>
+            <span className='rounded-full bg-white px-2.5 py-1 text-[11px] font-semibold text-[var(--cm-text,#1a1d2e)] shadow-sm'>
+              {commission.productCount} products
+            </span>
           </div>
-          <div className='space-y-2 pl-5'>
+          <div className='mt-3 space-y-2'>
             {commission.recipients
               .slice(0, 2)
               .map((recipient: any, idx: number) => (
@@ -89,11 +104,11 @@ export const OrderCommissionTable: React.FC<OrderCommissionTableProps> = ({
                   key={idx}
                   name={recipient.userName}
                   avatar={recipient.userAvatar}
-                  className='text-sm'
+                  className='rounded-xl bg-white/70 px-2 py-1.5 text-sm'
                 />
               ))}
             {commission.recipients.length > 2 && (
-              <div className='text-xs text-muted-foreground pl-11'>
+              <div className='pl-2 text-xs font-medium text-[var(--cm-muted,#8b90a7)]'>
                 +{commission.recipients.length - 2} more
               </div>
             )}
@@ -101,43 +116,43 @@ export const OrderCommissionTable: React.FC<OrderCommissionTableProps> = ({
         </div>
 
         {/* Product Count & Total Commission */}
-        <div className='flex items-center justify-between'>
-          <div className='flex items-center gap-2 text-sm'>
-            <Package className='h-4 w-4 text-muted-foreground' />
-            <span className='text-muted-foreground'>
-              {commission.productCount} Product(s)
-            </span>
-          </div>
-          <div
-            className={cn(
-              "text-lg font-bold bg-gradient-to-r from-purple-50 to-blue-50 dark:from-purple-950 dark:to-blue-950 px-3 py-1.5 rounded-lg",
-              "cursor-pointer hover:from-purple-100 hover:to-blue-100 dark:hover:from-purple-900 dark:hover:to-blue-900 transition-colors",
-            )}
-            onClick={() => onViewDetails?.(commission)}>
-            {formatCurrency(commission.totalCommissionAmount)}
+        <div className='rounded-2xl border border-[rgba(91,82,240,0.16)] bg-[linear-gradient(135deg,rgba(91,82,240,0.08),rgba(0,184,150,0.08))] p-3.5'>
+          <div className='flex items-end justify-between gap-3'>
+            <div>
+              <p className='text-[11px] font-semibold uppercase tracking-wide text-[var(--cm-muted,#8b90a7)]'>
+                Total Commission
+              </p>
+              <div
+                className='mt-1 cursor-pointer text-2xl font-bold tracking-tight text-[var(--cm-text,#1a1d2e)] transition-colors hover:text-[var(--cm-accent,#5b52f0)]'
+                onClick={() => onViewDetails?.(commission)}>
+                {formatCurrency(commission.totalCommissionAmount)}
+              </div>
+            </div>
+            <div className='flex h-10 w-10 items-center justify-center rounded-xl bg-white text-[var(--cm-accent,#5b52f0)] shadow-sm'>
+              <Package className='h-5 w-5' />
+            </div>
           </div>
         </div>
 
         {/* Date & Actions */}
-        <Separator />
-        <div className='flex items-center justify-between'>
-          <div className='flex items-center gap-2 text-xs text-muted-foreground'>
+        <div className='flex items-center justify-between border-t border-[var(--cm-border,#e4e6f0)] pt-3'>
+          <div className='flex items-center gap-2 text-xs font-medium text-[var(--cm-muted,#8b90a7)]'>
             <Calendar className='h-3 w-3' />
             <span>{formatDate(commission.createdAt)}</span>
           </div>
           <div className='flex gap-2'>
             <Button
-              variant='ghost'
+              variant='outline'
               size='sm'
-              className='h-8 w-8 p-0'
+              className='h-9 w-9 rounded-xl border-[var(--cm-border,#e4e6f0)] bg-white p-0 text-[var(--cm-muted,#8b90a7)] hover:border-[rgba(91,82,240,0.35)] hover:bg-[var(--cm-accent-lt,rgba(91,82,240,.08))] hover:text-[var(--cm-accent,#5b52f0)]'
               onClick={() => showOrderModal(commission.orderNumber)}
               title='View order'>
               <ExternalLink className='h-4 w-4' />
             </Button>
             <Button
-              variant='ghost'
+              variant='outline'
               size='sm'
-              className='h-8 w-8 p-0'
+              className='h-9 w-9 rounded-xl border-[var(--cm-border,#e4e6f0)] bg-white p-0 text-[var(--cm-muted,#8b90a7)] hover:border-[rgba(91,82,240,0.35)] hover:bg-[var(--cm-accent-lt,rgba(91,82,240,.08))] hover:text-[var(--cm-accent,#5b52f0)]'
               onClick={() => onViewDetails?.(commission)}
               title='View details'>
               <Eye className='h-4 w-4' />
@@ -150,7 +165,7 @@ export const OrderCommissionTable: React.FC<OrderCommissionTableProps> = ({
 
   // Desktop Table Layout
   const DesktopTable = () => (
-    <div className='rounded-md border'>
+    <div className='rounded-b-md rounded-t-none border-t'>
       <Table>
         <TableHeader>
           <TableRow>

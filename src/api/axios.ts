@@ -1,7 +1,7 @@
 import axios, { AxiosError, AxiosRequestConfig, AxiosResponse } from "axios";
 import { refreshApiToken } from "./index";
 
-const baseHostName = process.env.REACT_APP_API_BASE_URL;
+const baseHostName = import.meta.env.VITE_API_BASE_URL;
 const axiosInstance = axios.create({
   baseURL: baseHostName,
   headers: {

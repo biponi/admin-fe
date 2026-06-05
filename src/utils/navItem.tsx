@@ -113,7 +113,7 @@ export const navItems = [
     icon: <BadgeDollarSign className='w-5 h-5' />,
     title: "Transactions",
     link: "/transactions",
-    active: true,
+    active: false,
     id: "transaction",
     roles: ["admin"],
   },

@@ -15,7 +15,7 @@ import {
 
 // Helper function to check if browser notifications are enabled via feature flag
 const isBrowserNotificationEnabled = (): boolean => {
-  return process.env.REACT_APP_ADD_NOTIFICATION === "true";
+  return import.meta.env.VITE_ADD_NOTIFICATION === "true";
 };
 
 interface Notification {

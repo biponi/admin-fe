@@ -110,7 +110,7 @@ const CreateNotificationModal: React.FC<CreateNotificationModalProps> = ({
     try {
       const token = localStorage.getItem("token");
       const apiUrl =
-        process.env.REACT_APP_API_BASE_URL || "http://localhost:7001";
+        import.meta.env.VITE_API_BASE_URL || "http://localhost:7001";
 
       const payload = {
         subject: formData.subject,

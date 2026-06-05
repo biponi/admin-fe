@@ -1,5 +1,5 @@
 export const API_BASE_URL =
-  process.env.REACT_APP_API_BASE_URL || "http://localhost:3001";
+  import.meta.env.VITE_API_BASE_URL || "http://localhost:3001";
 export const CHAT_API_BASE_URL = "https://yuki.priorbd.com";
 export const SOCKET_URL = "https://yuki.priorbd.com";
 

@@ -15,7 +15,7 @@ config.headers.set("x-access-token", token);
 
 **Fixed:** Changed to match your existing API setup:
 ```typescript
-const API_URL = process.env.REACT_APP_API_BASE_URL || "http://localhost:7001";
+const API_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:7001";
 ```
 
 ### ✅ Issue 3: Limited Topic Subscription

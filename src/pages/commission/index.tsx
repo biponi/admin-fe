@@ -26,7 +26,6 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuSeparator,
-  DropdownMenuShortcut,
   DropdownMenuTrigger,
 } from "../../components/ui/dropdown-menu";
 import { useCommission } from "../../hooks/useCommission";
@@ -40,51 +39,492 @@ import {
   UserCommissionSummary,
   UserCommissionHistory,
 } from "../../api/commission";
-import { Download, Loader2, BarChart3, FileText, Users, Layers, ChevronDown, Calendar, Filter } from "lucide-react";
+import {
+  Download,
+  Loader2,
+  BarChart3,
+  FileText,
+  Users,
+  Layers,
+  ChevronDown,
+  Calendar,
+  Filter,
+  Package,
+  ShoppingBag,
+  TrendingUp,
+  ChevronRight,
+  ArrowUpRight,
+  Sparkles,
+} from "lucide-react";
 import { useToast } from "../../components/ui/use-toast";
 import {
   Popover,
   PopoverContent,
   PopoverTrigger,
 } from "../../components/ui/popover";
-import { Drawer, DrawerContent, DrawerTrigger } from "../../components/ui/drawer";
+import {
+  Drawer,
+  DrawerContent,
+  DrawerTrigger,
+} from "../../components/ui/drawer";
 import { formatDate } from "../../utils/inventoryReportUtils";
 
-// Product-wise components
 import { ProductCommissionTable } from "./components/product-wise/ProductCommissionTable";
 import { ProductCommissionDetailsModal } from "./components/product-wise/ProductCommissionDetailsModal";
-
-// Order-wise components
 import { OrderCommissionTable } from "./components/order-wise/OrderCommissionTable";
 import { OrderCommissionDetailsSheet } from "./components/order-wise/OrderCommissionDetailsSheet";
 import { BulkCommissionActionsBar } from "./components/order-wise/BulkCommissionActionsBar";
 import { MobileBulkCommissionActions } from "./components/order-wise/MobileBulkCommissionActions";
-
-// User-wise components
 import { UserCommissionTable } from "./components/user-wise/UserCommissionTable";
 import { UserCommissionDetailsSheet } from "./components/user-wise/UserCommissionDetailsSheet";
-
-// Shared components
 import { CommissionFilters } from "./components/shared/CommissionFilters";
 import { UpdateCommissionDialog } from "./components/shared/UpdateCommissionDialog";
 import { CommissionSummaryCards } from "./components/shared/CommissionSummaryCards";
 import { CommissionSummaryBadges } from "./components/shared/CommissionSummaryBadges";
 
+// ─── Inline styles ──────────────────────────────────────────────────────────
+const css = `
+  @import url('https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+
+  .cm-root {
+    --cm-bg:        #f5f6fa;
+    --cm-surface:   #ffffff;
+    --cm-surface2:  #f0f1f8;
+    --cm-border:    #e4e6f0;
+    --cm-accent:    #5b52f0;
+    --cm-accent-lt: rgba(91,82,240,.08);
+    --cm-accent2:   #00b896;
+    --cm-danger:    #f43f5e;
+    --cm-warn:      #f59e0b;
+    --cm-text:      #1a1d2e;
+    --cm-muted:     #8b90a7;
+    --cm-radius:    16px;
+    font-family: 'Sora', sans-serif;
+    background: var(--cm-bg);
+    color: var(--cm-text);
+    min-height: 100vh;
+  }
+
+  /* ── App Shell ── */
+  .cm-shell {
+    max-width: 520px;
+    margin: 0 auto;
+    position: relative;
+    background: var(--cm-bg);
+  }
+  @media(min-width:768px) {
+    .cm-shell { max-width: 100%; padding: 0 28px; }
+  }
+
+  /* ── Status Bar (mobile only) ── */
+  .cm-statusbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 14px 20px 4px;
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--cm-muted);
+    letter-spacing: .04em;
+  }
+  @media(min-width:768px) { .cm-statusbar { display:none; } }
+
+  /* ── Hero Section ── */
+  .cm-hero {
+    padding: 20px 20px 0;
+    position: relative;
+    overflow: hidden;
+  }
+  .cm-hero-bg {
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(ellipse 90% 70% at 60% -20%, rgba(91,82,240,.07) 0%, transparent 65%);
+    pointer-events: none;
+  }
+  .cm-hero-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: var(--cm-accent-lt);
+    border: 1px solid rgba(91,82,240,.18);
+    border-radius: 100px;
+    padding: 4px 12px;
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--cm-accent);
+    letter-spacing: .06em;
+    margin-bottom: 12px;
+  }
+  .cm-hero-title {
+    font-size: clamp(22px, 5vw, 28px);
+    font-weight: 700;
+    letter-spacing: -.025em;
+    line-height: 1.15;
+    margin: 0 0 5px;
+    color: var(--cm-text);
+  }
+  .cm-hero-title span { color: var(--cm-accent); }
+  .cm-hero-sub {
+    font-size: 12.5px;
+    color: var(--cm-muted);
+    margin: 0 0 20px;
+    font-weight: 400;
+  }
+
+  /* ── Quick Stats Strip ── */
+  .cm-stats-strip {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+    margin-bottom: 20px;
+  }
+  .cm-stat-card {
+    background: var(--cm-surface);
+    border: 1px solid var(--cm-border);
+    border-radius: 14px;
+    padding: 14px 12px;
+    position: relative;
+    overflow: hidden;
+    transition: box-shadow .2s, border-color .2s;
+    box-shadow: 0 1px 4px rgba(26,29,46,.04);
+  }
+  .cm-stat-card:hover {
+    border-color: rgba(91,82,240,.25);
+    box-shadow: 0 4px 16px rgba(91,82,240,.08);
+  }
+  .cm-stat-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 3px;
+    background: var(--cm-stat-color, var(--cm-accent));
+    opacity: .85;
+    border-radius: 14px 14px 0 0;
+  }
+  .cm-stat-icon {
+    width: 28px; height: 28px;
+    border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    margin-bottom: 8px;
+    background: var(--cm-accent-lt);
+  }
+  .cm-stat-val {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--cm-text);
+    line-height: 1;
+    margin-bottom: 3px;
+  }
+  .cm-stat-lbl {
+    font-size: 10px;
+    color: var(--cm-muted);
+    font-weight: 500;
+    letter-spacing: .04em;
+    text-transform: uppercase;
+  }
+
+  /* ── Action Bar ── */
+  .cm-action-bar {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 20px;
+  }
+  .cm-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    border-radius: 12px;
+    padding: 10px 16px;
+    font-family: 'Sora', sans-serif;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all .18s;
+    border: none;
+    white-space: nowrap;
+  }
+  .cm-btn-primary {
+    background: var(--cm-accent);
+    color: #fff;
+    box-shadow: 0 4px 14px rgba(91,82,240,.28);
+  }
+  .cm-btn-primary:hover { background: #6b63f5; transform: translateY(-1px); box-shadow: 0 6px 18px rgba(91,82,240,.32); }
+  .cm-btn-primary:disabled { opacity:.55; cursor:not-allowed; transform:none; }
+  .cm-btn-ghost {
+    background: var(--cm-surface);
+    color: var(--cm-text);
+    border: 1px solid var(--cm-border);
+    flex: 1;
+    justify-content: center;
+    box-shadow: 0 1px 3px rgba(26,29,46,.05);
+  }
+  .cm-btn-ghost:hover { border-color: rgba(91,82,240,.3); background: var(--cm-accent-lt); color: var(--cm-accent); }
+  .cm-btn-ghost:disabled { opacity: .5; cursor: not-allowed; }
+
+  /* ── View Toggle (pill tabs) ── */
+  .cm-view-toggle {
+    display: flex;
+    background: var(--cm-surface);
+    border: 1px solid var(--cm-border);
+    border-radius: 14px;
+    padding: 4px;
+    margin-bottom: 20px;
+    gap: 3px;
+    box-shadow: 0 1px 4px rgba(26,29,46,.06);
+  }
+  .cm-view-btn {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
+    padding: 9px 8px;
+    border-radius: 10px;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all .2s;
+    border: none;
+    background: transparent;
+    color: var(--cm-muted);
+    font-family: 'Sora', sans-serif;
+    letter-spacing: .01em;
+  }
+  .cm-view-btn.active {
+    background: var(--cm-accent);
+    color: #fff;
+    box-shadow: 0 2px 10px rgba(91,82,240,.28);
+  }
+  .cm-view-btn:not(.active):hover { color: var(--cm-accent); background: var(--cm-accent-lt); }
+
+  /* ── Content Area ── */
+  .cm-content {
+    padding: 0 16px 32px;
+  }
+
+  /* ── Status Chip Tabs (horizontal scroll) ── */
+  .cm-chip-row {
+    display: flex;
+    gap: 7px;
+    overflow-x: auto;
+    scrollbar-width: none;
+    margin-bottom: 16px;
+    padding-bottom: 2px;
+  }
+  .cm-chip-row::-webkit-scrollbar { display: none; }
+  .cm-chip {
+    flex-shrink: 0;
+    padding: 6px 14px;
+    border-radius: 100px;
+    font-size: 11.5px;
+    font-weight: 600;
+    cursor: pointer;
+    border: 1.5px solid var(--cm-border);
+    background: var(--cm-surface);
+    color: var(--cm-muted);
+    font-family: 'Sora', sans-serif;
+    transition: all .15s;
+    letter-spacing: .02em;
+    box-shadow: 0 1px 3px rgba(26,29,46,.04);
+  }
+  .cm-chip.active {
+    border-color: var(--cm-accent);
+    background: var(--cm-accent-lt);
+    color: var(--cm-accent);
+  }
+  .cm-chip:not(.active):hover { border-color: rgba(91,82,240,.25); color: var(--cm-text); }
+
+  /* ── Section Card ── */
+  .cm-section {
+    background: var(--cm-surface);
+    border: 1px solid var(--cm-border);
+    border-radius: var(--cm-radius);
+    overflow: hidden;
+    box-shadow: 0 2px 8px rgba(26,29,46,.05);
+  }
+  .cm-section-head {
+    padding: 16px 18px 14px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: var(--cm-surface);
+  }
+  .cm-section-title {
+    font-size: 14.5px;
+    font-weight: 700;
+    color: var(--cm-text);
+    margin: 0;
+    letter-spacing: -.01em;
+  }
+  .cm-section-desc {
+    font-size: 11px;
+    color: var(--cm-muted);
+    margin: 2px 0 0;
+    font-weight: 400;
+  }
+  .cm-section-body { padding: 4px 0; }
+
+  /* ── Loader ── */
+  .cm-loader {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 48px 0;
+    color: var(--cm-muted);
+  }
+
+  /* ── Top Performers ── */
+  .cm-performer-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 13px 18px;
+    border-bottom: 1px solid var(--cm-border);
+    transition: background .15s;
+    cursor: default;
+  }
+  .cm-performer-item:last-child { border-bottom: none; }
+  .cm-performer-item:hover { background: #fafbff; }
+  .cm-performer-rank {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--cm-muted);
+    width: 22px;
+    flex-shrink: 0;
+  }
+  .cm-performer-rank.gold { color: #d4960a; }
+  .cm-performer-rank.silver { color: #8b95a7; }
+  .cm-performer-rank.bronze { color: #b06020; }
+  .cm-performer-avatar {
+    width: 38px; height: 38px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--cm-accent), #a78bfa);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 13px; font-weight: 700; color: #fff;
+    flex-shrink: 0;
+    box-shadow: 0 2px 8px rgba(91,82,240,.2);
+  }
+  .cm-performer-info { flex: 1; min-width: 0; }
+  .cm-performer-name {
+    font-size: 13.5px;
+    font-weight: 600;
+    color: var(--cm-text);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .cm-performer-count {
+    font-size: 11px;
+    color: var(--cm-muted);
+    margin-top: 1px;
+  }
+  .cm-performer-amounts { text-align: right; flex-shrink: 0; }
+  .cm-performer-total {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--cm-text);
+  }
+  .cm-performer-paid {
+    font-size: 11px;
+    color: var(--cm-accent2);
+    margin-top: 2px;
+    font-weight: 500;
+  }
+
+  /* ── Badge ── */
+  .cm-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 3px 10px;
+    border-radius: 100px;
+    font-size: 10.5px;
+    font-weight: 600;
+    letter-spacing: .03em;
+  }
+  .cm-badge-accent { background: var(--cm-accent-lt); color: var(--cm-accent); border: 1px solid rgba(91,82,240,.18); }
+  .cm-badge-success { background: rgba(0,184,150,.1); color: #00966e; border: 1px solid rgba(0,184,150,.2); }
+
+  /* ── Summary Drawer ── */
+  .cm-drawer-inner { padding: 20px 16px 32px; }
+  .cm-drawer-title {
+    font-size: 17px;
+    font-weight: 700;
+    margin: 0 0 16px;
+    color: var(--cm-text);
+    letter-spacing: -.01em;
+  }
+
+  /* ── Desktop header ── */
+  .cm-desktop-header {
+    display: none;
+  }
+  @media(min-width:768px) {
+    .cm-desktop-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-end;
+      padding: 32px 0 24px;
+      border-bottom: 1px solid var(--cm-border);
+      margin-bottom: 28px;
+    }
+    .cm-hero { display: none; }
+    .cm-view-toggle { max-width: 420px; }
+    .cm-content { padding: 0 0 40px; }
+  }
+
+  /* ── Spin animation ── */
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .cm-spin { animation: spin .8s linear infinite; }
+
+  /* ── Fade-up animation ── */
+  @keyframes fadeUp {
+    from { opacity:0; transform:translateY(8px); }
+    to   { opacity:1; transform:translateY(0); }
+  }
+  .cm-fade-up { animation: fadeUp .25s ease both; }
+`;
+
+// Status chips config
+const STATUS_CHIPS = [
+  { value: "all-commissions", label: "All" },
+  { value: "pending", label: "Pending" },
+  { value: "unpaid", label: "Unpaid" },
+  { value: "paid", label: "Paid" },
+  { value: "hold", label: "On Hold" },
+  { value: "cancelled", label: "Cancelled" },
+  { value: "removed", label: "Removed" },
+  { value: "top-performers", label: "⭐ Top" },
+];
+
+const VIEW_MODES = [
+  { value: "product-wise", label: "Products", Icon: Package },
+  { value: "order-wise", label: "Orders", Icon: ShoppingBag },
+  { value: "user-wise", label: "Users", Icon: Users },
+];
+
+const formatCurrency = (amount) =>
+  new Intl.NumberFormat("en-BD", {
+    style: "currency",
+    currency: "BDT",
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 0,
+  }).format(amount);
+
+// ─── Component ───────────────────────────────────────────────────────────────
 export const CommissionManagementPage = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const viewMode = searchParams.get("view") || "product-wise";
 
-  // Product-wise state
   const [productActiveTab, setProductActiveTab] = useState("all-commissions");
-  const [productFilters, setProductFilters] = useState<CommissionQueryParams>(
-    {},
-  );
-  const [commissions, setCommissions] = useState<Commission[]>([]);
-  const [productSummary, setProductSummary] = useState<any>(null);
-  const [selectedCommission, setSelectedCommission] =
-    useState<Commission | null>(null);
-  const [viewDetailsCommission, setViewDetailsCommission] =
-    useState<Commission | null>(null);
+  const [productFilters, setProductFilters] = useState({});
+  const [commissions, setCommissions] = useState([]);
+  const [productSummary, setProductSummary] = useState(null);
+  const [selectedCommission, setSelectedCommission] = useState(null);
+  const [viewDetailsCommission, setViewDetailsCommission] = useState(null);
   const [isUpdateDialogOpen, setIsUpdateDialogOpen] = useState(false);
   const [, setProductPagination] = useState({
     currentPage: 1,
@@ -93,17 +533,11 @@ export const CommissionManagementPage = () => {
     itemsPerPage: 20,
   });
 
-  // Order-wise state
-  const [orderFilters, setOrderFilters] = useState<OrderCommissionQueryParams>(
-    {},
-  );
-  const [orderCommissions, setOrderCommissions] = useState<OrderCommission[]>(
-    [],
-  );
-  const [orderSummary, setOrderSummary] = useState<any>(null);
-  const [selectedOrderIds, setSelectedOrderIds] = useState<string[]>([]);
-  const [viewOrderDetails, setViewOrderDetails] =
-    useState<OrderCommissionDetails | null>(null);
+  const [orderFilters, setOrderFilters] = useState({});
+  const [orderCommissions, setOrderCommissions] = useState([]);
+  const [orderSummary, setOrderSummary] = useState(null);
+  const [selectedOrderIds, setSelectedOrderIds] = useState([]);
+  const [viewOrderDetails, setViewOrderDetails] = useState(null);
   const [, setOrderPagination] = useState({
     currentPage: 1,
     totalPages: 1,
@@ -113,30 +547,24 @@ export const CommissionManagementPage = () => {
   const [bulkProcessing, setBulkProcessing] = useState(false);
   const [bulkProgress, setBulkProgress] = useState(0);
   const [bulkErrors, setBulkErrors] = useState(0);
-  const [desktopSummaryOpen, setDesktopSummaryOpen] = useState(false);
-  const [mobileSummaryOpen, setMobileSummaryOpen] = useState(false);
 
-  // Export state
   const [isExporting, setIsExporting] = useState(false);
   const [exportProgress, setExportProgress] = useState(0);
-  const [exportMode, setExportMode] = useState<"order-wise" | "user-wise" | "combined" | null>(null);
+  const [exportMode, setExportMode] = useState(null);
 
-  // User-wise state
-  const [userFilters, setUserFilters] = useState<UserCommissionQueryParams>({});
-  const [userCommissions, setUserCommissions] = useState<
-    UserCommissionSummary[]
-  >([]);
-  const [userSummary, setUserSummary] = useState<any>(null);
-  const [selectedUserIds, setSelectedUserIds] = useState<string[]>([]);
-  const [viewUserDetails, setViewUserDetails] =
-    useState<UserCommissionHistory | null>(null);
-
+  const [userFilters, setUserFilters] = useState({});
+  const [userCommissions, setUserCommissions] = useState([]);
+  const [userSummary, setUserSummary] = useState(null);
+  const [selectedUserIds, setSelectedUserIds] = useState([]);
+  const [viewUserDetails, setViewUserDetails] = useState(null);
   const [, setUserPagination] = useState({
     currentPage: 1,
     totalPages: 1,
     totalItems: 0,
     itemsPerPage: 20,
   });
+
+  const [mobileSummaryOpen, setMobileSummaryOpen] = useState(false);
 
   const {
     fetchCommissions,
@@ -153,122 +581,61 @@ export const CommissionManagementPage = () => {
   } = useCommission();
   const { toast } = useToast();
 
-  // Update URL when view mode changes
-  const setViewMode = (view: string) => {
-    setSearchParams({ view });
-  };
+  const setViewMode = (view) => setSearchParams({ view });
 
-  // Wrap setFilters in useCallback to prevent infinite re-renders
   const handleProductFiltersChange = useCallback(
-    (
-      newFiltersOrUpdater:
-        | CommissionQueryParams
-        | ((prev: CommissionQueryParams) => CommissionQueryParams),
-    ) => {
-      setProductFilters((prev) => {
-        if (typeof newFiltersOrUpdater === "function") {
-          return newFiltersOrUpdater(prev);
-        }
-        return newFiltersOrUpdater;
-      });
-    },
+    (v) => setProductFilters((p) => (typeof v === "function" ? v(p) : v)),
     [],
   );
-
   const handleOrderFiltersChange = useCallback(
-    (
-      newFiltersOrUpdater:
-        | OrderCommissionQueryParams
-        | ((prev: OrderCommissionQueryParams) => OrderCommissionQueryParams),
-    ) => {
-      setOrderFilters((prev) => {
-        if (typeof newFiltersOrUpdater === "function") {
-          return newFiltersOrUpdater(prev);
-        }
-        return newFiltersOrUpdater;
-      });
-    },
+    (v) => setOrderFilters((p) => (typeof v === "function" ? v(p) : v)),
+    [],
+  );
+  const handleUserFiltersChange = useCallback(
+    (v) => setUserFilters((p) => (typeof v === "function" ? v(p) : v)),
     [],
   );
 
-  // Fetch product-wise data
   useEffect(() => {
     if (viewMode !== "product-wise") return;
-
-    const loadProductData = async () => {
-      const [commissionsData, summaryData] = await Promise.all([
+    (async () => {
+      const [cd, sd] = await Promise.all([
         fetchCommissions(productFilters),
         fetchCommissionSummary(productFilters),
       ]);
-
-      if (commissionsData) {
-        setCommissions(commissionsData.commissions);
-        setProductPagination(commissionsData.pagination);
+      if (cd) {
+        setCommissions(cd.commissions);
+        setProductPagination(cd.pagination);
       }
-
-      if (summaryData) {
-        setProductSummary(summaryData);
-      }
-    };
-
-    loadProductData();
+      if (sd) setProductSummary(sd);
+    })();
   }, [productFilters, viewMode, fetchCommissions, fetchCommissionSummary]);
 
-  // Fetch order-wise data
   useEffect(() => {
     if (viewMode !== "order-wise") return;
-
-    const loadOrderData = async () => {
-      const ordersData = await fetchOrderCommissions(orderFilters);
-
-      if (ordersData) {
-        setOrderCommissions(ordersData.commissions);
-        setOrderPagination(ordersData.pagination);
-        setOrderSummary(ordersData.summary);
+    (async () => {
+      const d = await fetchOrderCommissions(orderFilters);
+      if (d) {
+        setOrderCommissions(d.commissions);
+        setOrderPagination(d.pagination);
+        setOrderSummary(d.summary);
       }
-    };
-
-    loadOrderData();
+    })();
   }, [orderFilters, viewMode, fetchOrderCommissions]);
 
-  // User-wise filter handler
-  const handleUserFiltersChange = useCallback(
-    (
-      newFiltersOrUpdater:
-        | UserCommissionQueryParams
-        | ((prev: UserCommissionQueryParams) => UserCommissionQueryParams),
-    ) => {
-      setUserFilters((prev) => {
-        if (typeof newFiltersOrUpdater === "function") {
-          return newFiltersOrUpdater(prev);
-        }
-        return newFiltersOrUpdater;
-      });
-    },
-    [],
-  );
-
-  // Fetch user-wise data
   useEffect(() => {
     if (viewMode !== "user-wise") return;
-
-    const loadUserData = async () => {
-      const [usersData, summaryData] = await Promise.all([
+    (async () => {
+      const [ud, sd] = await Promise.all([
         fetchUserCommissionsList(userFilters),
         fetchUserWiseSummaryStats(userFilters),
       ]);
-
-      if (usersData) {
-        setUserCommissions(usersData.data);
-        setUserPagination(usersData.pagination);
+      if (ud) {
+        setUserCommissions(ud.data);
+        setUserPagination(ud.pagination);
       }
-
-      if (summaryData) {
-        setUserSummary(summaryData);
-      }
-    };
-
-    loadUserData();
+      if (sd) setUserSummary(sd);
+    })();
   }, [
     userFilters,
     viewMode,
@@ -276,24 +643,15 @@ export const CommissionManagementPage = () => {
     fetchUserWiseSummaryStats,
   ]);
 
-  const handleUpdateStatus = async (
-    id: string,
-    status: string,
-    notes?: string,
-  ) => {
+  const handleUpdateStatus = async (id, status, notes) => {
     const result = await updateStatus(id, status, notes);
     if (result) {
       toast({
-        title: "Success",
-        description: "Commission status updated successfully",
+        title: "Status Updated",
+        description: "Commission updated successfully",
       });
-      // Refresh data
-      if (viewMode === "product-wise") {
-        const commissionsData = await fetchCommissions(productFilters);
-        if (commissionsData) {
-          setCommissions(commissionsData.commissions);
-        }
-      }
+      const cd = await fetchCommissions(productFilters);
+      if (cd) setCommissions(cd.commissions);
     } else {
       toast({
         variant: "destructive",
@@ -303,75 +661,58 @@ export const CommissionManagementPage = () => {
     }
   };
 
-  const handleProductTabChange = (value: string) => {
+  const handleProductTabChange = (value) => {
     setProductActiveTab(value);
     if (value === "all-commissions" || value === "top-performers") {
-      setProductFilters((prev) => ({ ...prev, status: undefined }));
+      setProductFilters((p) => ({ ...p, status: undefined }));
     } else {
-      setProductFilters((prev) => ({ ...prev, status: value }));
+      setProductFilters((p) => ({ ...p, status: value }));
     }
   };
 
-  const handleExport = async (
-    mode: "order-wise" | "user-wise" | "combined"
-  ) => {
+  const handleExport = async (mode) => {
     if (isExporting) return;
-
     setExportMode(mode);
     setIsExporting(true);
     setExportProgress(0);
-
     try {
-      // Get current filters based on active view
-      let filters: any = {};
-
-      if (viewMode === "product-wise" && productFilters) {
-        filters = {
-          startDate: productFilters.startDate,
-          endDate: productFilters.endDate,
-          status: productFilters.status,
-        };
-      } else if (viewMode === "order-wise" && orderFilters) {
-        filters = {
-          startDate: orderFilters.startDate,
-          endDate: orderFilters.endDate,
-          status: orderFilters.status,
-        };
-      } else if (viewMode === "user-wise" && userFilters) {
-        filters = {
-          startDate: userFilters.startDate,
-          endDate: userFilters.endDate,
-          status: userFilters.status,
-        };
-      }
+      const filters =
+        viewMode === "product-wise"
+          ? {
+              startDate: productFilters.startDate,
+              endDate: productFilters.endDate,
+              status: productFilters.status,
+            }
+          : viewMode === "order-wise"
+            ? {
+                startDate: orderFilters.startDate,
+                endDate: orderFilters.endDate,
+                status: orderFilters.status,
+              }
+            : {
+                startDate: userFilters.startDate,
+                endDate: userFilters.endDate,
+                status: userFilters.status,
+              };
 
       const result = await downloadCommissionReport(
         mode,
         filters,
-        (progress) => {
-          setExportProgress(progress);
-        }
+        setExportProgress,
       );
-
-      if (result.success) {
-        toast({
-          title: "Success",
-          description: `${mode} commission report exported: ${result.filename}`,
-          variant: "default",
-        });
-      } else {
-        toast({
-          title: "Export Failed",
-          description: result.error || "Failed to export commission report",
-          variant: "destructive",
-        });
-      }
-    } catch (error: any) {
-      console.error("Export error:", error);
+      toast(
+        result.success
+          ? { title: "Exported", description: `${result.filename}` }
+          : {
+              title: "Export Failed",
+              description: result.error,
+              variant: "destructive",
+            },
+      );
+    } catch (e) {
       toast({
         title: "Export Failed",
-        description:
-          error.message || "An error occurred while exporting the report",
+        description: e.message,
         variant: "destructive",
       });
     } finally {
@@ -381,107 +722,71 @@ export const CommissionManagementPage = () => {
     }
   };
 
-  // Order selection handlers
-  const handleSelectOrder = (orderId: string, selected: boolean) => {
-    setSelectedOrderIds((prev) =>
-      selected ? [...prev, orderId] : prev.filter((id) => id !== orderId),
-    );
+  const handleSelectOrder = (id, sel) =>
+    setSelectedOrderIds((p) => (sel ? [...p, id] : p.filter((x) => x !== id)));
+  const handleSelectAllOrders = (sel) =>
+    setSelectedOrderIds(sel ? orderCommissions.map((c) => c.orderId) : []);
+
+  const handleViewOrderDetails = async (oc) => {
+    const d = await fetchOrderCommissionDetails(oc.orderId);
+    if (d) setViewOrderDetails(d);
   };
 
-  const handleSelectAllOrders = (selected: boolean) => {
-    setSelectedOrderIds(selected ? orderCommissions.map((c) => c.orderId) : []);
-  };
+  const handleSelectUser = (id, sel) =>
+    setSelectedUserIds((p) => (sel ? [...p, id] : p.filter((x) => x !== id)));
+  const handleSelectAllUsers = (sel) =>
+    setSelectedUserIds(sel ? userCommissions.map((c) => c.userId) : []);
 
-  // View order details
-  const handleViewOrderDetails = async (orderCommission: OrderCommission) => {
-    const details = await fetchOrderCommissionDetails(orderCommission.orderId);
-    if (details) {
-      setViewOrderDetails(details);
-    }
-  };
-
-  // User selection handlers
-  const handleSelectUser = (userId: string, selected: boolean) => {
-    setSelectedUserIds((prev) =>
-      selected ? [...prev, userId] : prev.filter((id) => id !== userId),
-    );
-  };
-
-  const handleSelectAllUsers = (selected: boolean) => {
-    setSelectedUserIds(selected ? userCommissions.map((c) => c.userId) : []);
-  };
-
-  // View user details
-  const handleViewUserDetails = async (
-    userCommission: UserCommissionSummary,
-  ) => {
-    const details = await fetchUserCommissionHistory(userCommission.userId, {
+  const handleViewUserDetails = async (uc) => {
+    const d = await fetchUserCommissionHistory(uc.userId, {
       interval: "daily",
       includePerformance: true,
     });
-    if (details) {
-      setViewUserDetails(details);
-    }
+    if (d) setViewUserDetails(d);
   };
 
-  // Bulk action handlers
-  const handleBulkAction = async (action: string) => {
-    if (selectedOrderIds.length === 0) return;
-
+  const handleBulkAction = async (action) => {
+    if (!selectedOrderIds.length) return;
     setBulkProcessing(true);
     setBulkProgress(0);
     setBulkErrors(0);
-
-    // Get order numbers from selected IDs
-    const selectedOrders = orderCommissions.filter((c) =>
-      selectedOrderIds.includes(c.orderId),
-    );
-    const orderNumbers = selectedOrders.map((c) => c.orderNumber);
-
+    const orderNumbers = orderCommissions
+      .filter((c) => selectedOrderIds.includes(c.orderId))
+      .map((c) => c.orderNumber);
     const result = await submitBulkOrderCommissionUpdate({
       orderNumbers,
       status: action,
     });
-
     if (result.success) {
-      // Simulate progress for queue-based operations
       if (result.jobId) {
-        const interval = setInterval(() => {
-          setBulkProgress((prev) => {
-            if (prev >= 100) {
-              clearInterval(interval);
+        const iv = setInterval(() => {
+          setBulkProgress((p) => {
+            if (p >= 100) {
+              clearInterval(iv);
               setBulkProcessing(false);
-              // Refresh data after interval is cleared
               setTimeout(async () => {
-                const ordersData = await fetchOrderCommissions(orderFilters);
-                if (ordersData) {
-                  setOrderCommissions(ordersData.commissions);
-                  setOrderSummary(ordersData.summary);
+                const d = await fetchOrderCommissions(orderFilters);
+                if (d) {
+                  setOrderCommissions(d.commissions);
+                  setOrderSummary(d.summary);
                 }
                 setSelectedOrderIds([]);
               }, 0);
-              toast({
-                title: "Success",
-                description: `Bulk ${action} completed successfully`,
-              });
+              toast({ title: "Done", description: `Bulk ${action} completed` });
               return 100;
             }
-            return prev + 10;
+            return p + 10;
           });
         }, 500);
       } else {
-        // Direct update completed
         setBulkProcessing(false);
-        const ordersData = await fetchOrderCommissions(orderFilters);
-        if (ordersData) {
-          setOrderCommissions(ordersData.commissions);
-          setOrderSummary(ordersData.summary);
+        const d = await fetchOrderCommissions(orderFilters);
+        if (d) {
+          setOrderCommissions(d.commissions);
+          setOrderSummary(d.summary);
         }
         setSelectedOrderIds([]);
-        toast({
-          title: "Success",
-          description: `Bulk ${action} completed successfully`,
-        });
+        toast({ title: "Done", description: `Bulk ${action} completed` });
       }
     } else {
       setBulkProcessing(false);
@@ -493,653 +798,499 @@ export const CommissionManagementPage = () => {
     }
   };
 
+  // Derive current summary
+  const currentSummary =
+    viewMode === "product-wise"
+      ? productSummary?.overview
+      : viewMode === "order-wise"
+        ? orderSummary
+        : userSummary;
+
+  const summaryType =
+    viewMode === "product-wise"
+      ? "product"
+      : viewMode === "order-wise"
+        ? "order"
+        : "user";
+
+  // Active view filters
+  const activeFilters =
+    viewMode === "product-wise"
+      ? productFilters
+      : viewMode === "order-wise"
+        ? orderFilters
+        : userFilters;
+
+  const dateRangeLabel =
+    activeFilters?.startDate || activeFilters?.endDate
+      ? `${activeFilters.startDate ? formatDate(activeFilters.startDate) : "Start"} – ${activeFilters.endDate ? formatDate(activeFilters.endDate) : "Now"}`
+      : "All time";
+
   return (
-    <div className='space-y-6 mx-2 md:container'>
-      {/* Mobile Report Header */}
-      <div className='md:hidden space-y-4'>
-        {/* Professional mobile header matching PDF style */}
-        <div className='border-b pb-4 space-y-3'>
-          <div>
-            <h2 className='text-2xl font-bold tracking-tight'>
-              Commission Report
-            </h2>
-            <p className='text-sm text-muted-foreground'>
-              {viewMode === 'product-wise' ? 'Product-wise Analysis' :
-               viewMode === 'order-wise' ? 'Order-wise Analysis' :
-               'Combined Commission Analysis'}
-            </p>
-          </div>
-
-          {/* Report Metadata */}
-          <div className='space-y-2 text-xs text-muted-foreground'>
-            <div className='flex items-center gap-2'>
-              <Calendar className='h-3.5 w-3.5' />
-              <span>Generated: {formatDate(new Date().toISOString())}</span>
-            </div>
-            <div className='flex items-center gap-2'>
-              <Filter className='h-3.5 w-3.5' />
-              <span>
-                {(() => {
-                  const filters = viewMode === 'product-wise' ? productFilters :
-                                  viewMode === 'order-wise' ? orderFilters : userFilters;
-                  if (filters?.startDate || filters?.endDate) {
-                    return `${filters.startDate ? formatDate(filters.startDate) : 'Start'} – ${filters.endDate ? formatDate(filters.endDate) : 'Present'}`;
-                  }
-                  return 'All time';
-                })()}
-              </span>
-            </div>
-          </div>
-        </div>
-
-        {/* Mobile Action Buttons */}
-        <div className='flex gap-2'>
-          {/* Summary Button - Opens Drawer with cards */}
-          <Drawer
-            open={mobileSummaryOpen}
-            onOpenChange={setMobileSummaryOpen}>
-            <DrawerTrigger asChild>
-              <Button variant='outline' className='flex-1'>
-                <BarChart3 className='w-4 h-4 mr-2' />
-                Summary
-              </Button>
-            </DrawerTrigger>
-            <DrawerContent className='h-auto max-h-[80vh]'>
-              <div className='p-4'>
-                <h3 className='text-lg font-semibold mb-4'>
-                  Commission Summary
-                </h3>
-                <CommissionSummaryCards
-                  type={
-                    viewMode === "product-wise"
-                      ? "product"
-                      : viewMode === "order-wise"
-                        ? "order"
-                        : "user"
-                  }
-                  summary={
-                    viewMode === "product-wise"
-                      ? productSummary?.overview
-                      : viewMode === "order-wise"
-                        ? orderSummary
-                        : userSummary
-                  }
-                />
+    <>
+      <style>{css}</style>
+      <div className='cm-root'>
+        <div className='cm-shell'>
+          {/* ── Desktop Header ── */}
+          <div className='cm-desktop-header'>
+            <div>
+              <div
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 8,
+                  marginBottom: 4,
+                }}>
+                <Sparkles size={16} style={{ color: "#5b52f0" }} />
+                <span
+                  style={{
+                    fontSize: 12,
+                    fontWeight: 600,
+                    color: "#5b52f0",
+                    letterSpacing: ".06em",
+                    textTransform: "uppercase",
+                  }}>
+                  Commission Management
+                </span>
               </div>
-            </DrawerContent>
-          </Drawer>
-
-          {/* Export Button */}
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant='outline' disabled={isExporting} className='flex-1'>
-                {isExporting ? (
-                  <>
-                    <Loader2 className='w-4 h-4 mr-2 animate-spin' />
-                    Exporting
-                  </>
-                ) : (
-                  <>
-                    <Download className='w-4 h-4 mr-2' />
-                    Export
-                  </>
-                )}
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align='end' className='w-48'>
-              <DropdownMenuItem onClick={() => handleExport('order-wise')}>
-                <FileText className='mr-2 h-4 w-4' />
-                <span>Order-wise</span>
-                <DropdownMenuShortcut>⌘O</DropdownMenuShortcut>
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => handleExport('user-wise')}>
-                <Users className='mr-2 h-4 w-4' />
-                <span>User-wise</span>
-                <DropdownMenuShortcut>⌘U</DropdownMenuShortcut>
-              </DropdownMenuItem>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={() => handleExport('combined')}>
-                <Layers className='mr-2 h-4 w-4' />
-                <span>Combined Report</span>
-                <DropdownMenuShortcut>⌘C</DropdownMenuShortcut>
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-        </div>
-      </div>
-
-      {/* Desktop Header */}
-      <div className='hidden md:flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4'>
-        <div>
-          <h2 className='text-3xl font-bold tracking-tight'>
-            Commission Management
-          </h2>
-          <p className='text-muted-foreground'>
-            Manage and review commissions by product or order
-          </p>
-        </div>
-        <div className='flex gap-2'>
-          {/* Summary Button - Desktop Popover */}
-          <Popover
-            open={desktopSummaryOpen}
-            onOpenChange={setDesktopSummaryOpen}>
-            <PopoverTrigger asChild>
-              <Button variant='outline'>
-                <BarChart3 className='w-4 h-4 mr-2' />
-                Summary
-              </Button>
-            </PopoverTrigger>
-            <PopoverContent className='w-auto p-4' align='end'>
-              <CommissionSummaryBadges
-                type={
-                  viewMode === "product-wise"
-                    ? "product"
-                    : viewMode === "order-wise"
-                      ? "order"
-                      : "user"
-                }
-                summary={
-                  viewMode === "product-wise"
-                    ? productSummary?.overview
-                    : viewMode === "order-wise"
-                      ? orderSummary
-                      : userSummary
-                }
-              />
-            </PopoverContent>
-          </Popover>
-
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant='outline' disabled={isExporting}>
-                {isExporting ? (
-                  <>
-                    <Loader2 className='w-4 h-4 mr-2 animate-spin' />
-                    Exporting {exportMode && `${exportMode} `}
-                    {exportProgress > 0 && `(${exportProgress}%)`}
-                  </>
-                ) : (
-                  <>
-                    <Download className='w-4 h-4 mr-2' />
-                    Export
-                    <ChevronDown className='w-4 h-4 ml-2' />
-                  </>
-                )}
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align='end'>
-              <DropdownMenuItem onClick={() => handleExport('order-wise')}>
-                <FileText className='w-4 h-4 mr-2' />
-                Order-wise only
-                <DropdownMenuShortcut>⌘O</DropdownMenuShortcut>
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => handleExport('user-wise')}>
-                <Users className='w-4 h-4 mr-2' />
-                User-wise only
-                <DropdownMenuShortcut>⌘U</DropdownMenuShortcut>
-              </DropdownMenuItem>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={() => handleExport('combined')}>
-                <Layers className='w-4 h-4 mr-2' />
-                Combined (Order + User)
-                <DropdownMenuShortcut>⌘C</DropdownMenuShortcut>
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-        </div>
-      </div>
-
-      {/* View Mode Tabs */}
-      <Tabs value={viewMode} onValueChange={setViewMode} className='space-y-4'>
-        <TabsList className='grid w-full max-w-md grid-cols-3'>
-          <TabsTrigger value='product-wise'>Product Wise</TabsTrigger>
-          <TabsTrigger value='order-wise'>Order Wise</TabsTrigger>
-          <TabsTrigger value='user-wise'>User Wise</TabsTrigger>
-        </TabsList>
-
-        {/* PRODUCT-WISE TAB CONTENT */}
-        <TabsContent value='product-wise' className='space-y-4'>
-          {/* Filters */}
-          <CommissionFilters
-            filters={productFilters}
-            onFiltersChange={handleProductFiltersChange}
-          />
-
-          {/* Status-based Tabs (existing functionality) */}
-          <Tabs
-            defaultValue='all-commissions'
-            className='space-y-4'
-            onValueChange={handleProductTabChange}>
-            {/* Mobile: Dropdown for tabs */}
-            <div className='md:hidden'>
-              <Select
-                value={productActiveTab}
-                onValueChange={handleProductTabChange}>
-                <SelectTrigger className='w-full h-12'>
-                  <SelectValue placeholder='Select tab' />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value='all-commissions'>
-                    All Commissions
-                  </SelectItem>
-                  <SelectItem value='pending'>Pending</SelectItem>
-                  <SelectItem value='unpaid'>Unpaid</SelectItem>
-                  <SelectItem value='paid'>Paid</SelectItem>
-                  <SelectItem value='hold'>Hold</SelectItem>
-                  <SelectItem value='cancelled'>Cancelled</SelectItem>
-                  <SelectItem value='removed'>Removed</SelectItem>
-                  <SelectItem value='top-performers'>Top Performers</SelectItem>
-                </SelectContent>
-              </Select>
+              <h1
+                style={{
+                  margin: 0,
+                  fontSize: 26,
+                  fontWeight: 700,
+                  letterSpacing: "-.02em",
+                  color: "#1a1d2e",
+                }}>
+                {viewMode === "product-wise"
+                  ? "Product Analysis"
+                  : viewMode === "order-wise"
+                    ? "Order Analysis"
+                    : "User Analysis"}
+              </h1>
+              <p style={{ margin: "4px 0 0", fontSize: 13, color: "#8b90a7" }}>
+                {dateRangeLabel}
+              </p>
             </div>
 
-            {/* Desktop: Horizontal tabs */}
-            <TabsList className='hidden md:flex overflow-x-auto'>
-              <TabsTrigger value='all-commissions'>All Commissions</TabsTrigger>
-              <TabsTrigger value='pending'>Pending</TabsTrigger>
-              <TabsTrigger value='unpaid'>Unpaid</TabsTrigger>
-              <TabsTrigger value='paid'>Paid</TabsTrigger>
-              <TabsTrigger value='hold'>Hold</TabsTrigger>
-              <TabsTrigger value='cancelled'>Cancelled</TabsTrigger>
-              <TabsTrigger value='removed'>Removed</TabsTrigger>
-              <TabsTrigger value='top-performers'>Top Performers</TabsTrigger>
-            </TabsList>
+            <div style={{ display: "flex", gap: 8 }}>
+              {/* Summary */}
+              <Popover>
+                <PopoverTrigger asChild>
+                  <button
+                    className='cm-btn cm-btn-ghost'
+                    style={{ width: "auto" }}>
+                    <BarChart3 size={14} /> Summary
+                  </button>
+                </PopoverTrigger>
+                <PopoverContent
+                  className='w-auto p-4'
+                  align='end'
+                  style={{
+                    background: "#ffffff",
+                    border: "1px solid #e4e6f0",
+                    borderRadius: 16,
+                    boxShadow: "0 8px 32px rgba(26,29,46,.1)",
+                  }}>
+                  <CommissionSummaryBadges
+                    type={summaryType}
+                    summary={currentSummary}
+                  />
+                </PopoverContent>
+              </Popover>
 
-            <TabsContent value='all-commissions' className='space-y-4'>
-              <Card>
-                <CardHeader>
-                  <CardTitle>All Commissions</CardTitle>
-                  <CardDescription>
-                    View and manage all commission records
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  {isLoading ? (
-                    <div className='flex justify-center items-center py-12'>
-                      <Loader2 className='h-8 w-8 animate-spin text-muted-foreground' />
-                    </div>
-                  ) : (
-                    <ProductCommissionTable
-                      commissions={commissions}
-                      onViewDetails={(commission) => {
-                        setViewDetailsCommission(commission);
-                      }}
-                      onUpdateStatus={(commission) => {
-                        setSelectedCommission(commission);
-                        setIsUpdateDialogOpen(true);
-                      }}
-                    />
-                  )}
-                </CardContent>
-              </Card>
-            </TabsContent>
+              {/* Export */}
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <button
+                    className='cm-btn cm-btn-primary'
+                    disabled={isExporting}>
+                    {isExporting ? (
+                      <>
+                        <Loader2 size={14} className='cm-spin' />{" "}
+                        {exportProgress > 0
+                          ? `${exportProgress}%`
+                          : "Exporting…"}
+                      </>
+                    ) : (
+                      <>
+                        <Download size={14} /> Export <ChevronDown size={12} />
+                      </>
+                    )}
+                  </button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent
+                  align='end'
+                  style={{
+                    background: "#ffffff",
+                    border: "1px solid #e4e6f0",
+                    borderRadius: 12,
+                    minWidth: 200,
+                    boxShadow: "0 8px 24px rgba(26,29,46,.1)",
+                  }}>
+                  <DropdownMenuItem onClick={() => handleExport("order-wise")}>
+                    <FileText size={14} style={{ marginRight: 8 }} /> Order-wise
+                    only
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => handleExport("user-wise")}>
+                    <Users size={14} style={{ marginRight: 8 }} /> User-wise
+                    only
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={() => handleExport("combined")}>
+                    <Layers size={14} style={{ marginRight: 8 }} /> Combined
+                    Report
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </div>
+          </div>
 
-            <TabsContent value='pending' className='space-y-4'>
-              <Card>
-                <CardHeader>
-                  <CardTitle>Pending Commissions</CardTitle>
-                  <CardDescription>Commissions awaiting review</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  {isLoading ? (
-                    <div className='flex justify-center items-center py-12'>
-                      <Loader2 className='h-8 w-8 animate-spin text-muted-foreground' />
-                    </div>
-                  ) : (
-                    <ProductCommissionTable
-                      commissions={commissions}
-                      onViewDetails={(commission) => {
-                        setViewDetailsCommission(commission);
-                      }}
-                      onUpdateStatus={(commission) => {
-                        setSelectedCommission(commission);
-                        setIsUpdateDialogOpen(true);
-                      }}
-                    />
-                  )}
-                </CardContent>
-              </Card>
-            </TabsContent>
-
-            <TabsContent value='unpaid' className='space-y-4'>
-              <Card>
-                <CardHeader>
-                  <CardTitle>Unpaid Commissions</CardTitle>
-                  <CardDescription>
-                    Commissions that are approved but not yet paid
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  {isLoading ? (
-                    <div className='flex justify-center items-center py-12'>
-                      <Loader2 className='h-8 w-8 animate-spin text-muted-foreground' />
-                    </div>
-                  ) : (
-                    <ProductCommissionTable
-                      commissions={commissions}
-                      onViewDetails={(commission) => {
-                        setViewDetailsCommission(commission);
-                      }}
-                      onUpdateStatus={(commission) => {
-                        setSelectedCommission(commission);
-                        setIsUpdateDialogOpen(true);
-                      }}
-                    />
-                  )}
-                </CardContent>
-              </Card>
-            </TabsContent>
-
-            <TabsContent value='paid' className='space-y-4'>
-              <Card>
-                <CardHeader>
-                  <CardTitle>Paid Commissions</CardTitle>
-                  <CardDescription>
-                    Successfully paid commissions
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  {isLoading ? (
-                    <div className='flex justify-center items-center py-12'>
-                      <Loader2 className='h-8 w-8 animate-spin text-muted-foreground' />
-                    </div>
-                  ) : (
-                    <ProductCommissionTable
-                      commissions={commissions}
-                      onViewDetails={(commission) => {
-                        setViewDetailsCommission(commission);
-                      }}
-                      onUpdateStatus={(commission) => {
-                        setSelectedCommission(commission);
-                        setIsUpdateDialogOpen(true);
-                      }}
-                    />
-                  )}
-                </CardContent>
-              </Card>
-            </TabsContent>
-
-            <TabsContent value='hold' className='space-y-4'>
-              <Card>
-                <CardHeader>
-                  <CardTitle>On Hold Commissions</CardTitle>
-                  <CardDescription>
-                    Commissions currently on hold
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  {isLoading ? (
-                    <div className='flex justify-center items-center py-12'>
-                      <Loader2 className='h-8 w-8 animate-spin text-muted-foreground' />
-                    </div>
-                  ) : (
-                    <ProductCommissionTable
-                      commissions={commissions}
-                      onViewDetails={(commission) => {
-                        setViewDetailsCommission(commission);
-                      }}
-                      onUpdateStatus={(commission) => {
-                        setSelectedCommission(commission);
-                        setIsUpdateDialogOpen(true);
-                      }}
-                    />
-                  )}
-                </CardContent>
-              </Card>
-            </TabsContent>
-
-            <TabsContent value='cancelled' className='space-y-4'>
-              <Card>
-                <CardHeader>
-                  <CardTitle>Cancelled Commissions</CardTitle>
-                  <CardDescription>
-                    Commissions that have been cancelled
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  {isLoading ? (
-                    <div className='flex justify-center items-center py-12'>
-                      <Loader2 className='h-8 w-8 animate-spin text-muted-foreground' />
-                    </div>
-                  ) : (
-                    <ProductCommissionTable
-                      commissions={commissions}
-                      onViewDetails={(commission) => {
-                        setViewDetailsCommission(commission);
-                      }}
-                      onUpdateStatus={(commission) => {
-                        setSelectedCommission(commission);
-                        setIsUpdateDialogOpen(true);
-                      }}
-                    />
-                  )}
-                </CardContent>
-              </Card>
-            </TabsContent>
-
-            <TabsContent value='removed' className='space-y-4'>
-              <Card>
-                <CardHeader>
-                  <CardTitle>Removed Commissions</CardTitle>
-                  <CardDescription>
-                    Commissions that have been removed
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  {isLoading ? (
-                    <div className='flex justify-center items-center py-12'>
-                      <Loader2 className='h-8 w-8 animate-spin text-muted-foreground' />
-                    </div>
-                  ) : (
-                    <ProductCommissionTable
-                      commissions={commissions}
-                      onViewDetails={(commission) => {
-                        setViewDetailsCommission(commission);
-                      }}
-                      onUpdateStatus={(commission) => {
-                        setSelectedCommission(commission);
-                        setIsUpdateDialogOpen(true);
-                      }}
-                    />
-                  )}
-                </CardContent>
-              </Card>
-            </TabsContent>
-
-            <TabsContent value='top-performers'>
-              <Card>
-                <CardHeader>
-                  <CardTitle>Top Performers</CardTitle>
-                  <CardDescription>
-                    View users with the highest commission earnings
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  {productSummary &&
-                  productSummary.topUsers &&
-                  productSummary.topUsers.length > 0 ? (
+          {/* ── Mobile Hero ── */}
+          <div className='cm-hero'>
+            <div className='cm-hero-bg' />
+            <div className='cm-hero-tag'>
+              <Sparkles size={11} /> Commission Report
+            </div>
+            <div className='flex justify-between items-center'>
+              <div>
+                <h1 className='cm-hero-title'>
+                  {viewMode === "product-wise" ? (
                     <>
-                      {/* Mobile: Card Grid */}
-                      <div className='md:hidden grid grid-cols-1 sm:grid-cols-2 gap-3'>
-                        {productSummary.topUsers.map(
-                          (user: any, index: number) => (
-                            <Card key={user.userId} className='hover:shadow-md transition-shadow'>
-                              <CardContent className='p-4'>
-                                <div className='flex items-start justify-between mb-3'>
-                                  <div className='flex items-center gap-3'>
-                                    <div className='text-2xl font-bold text-muted-foreground'>
-                                      #{index + 1}
-                                    </div>
-                                    <div className='h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center text-primary font-semibold text-sm'>
-                                      {user.userName.slice(0, 2).toUpperCase()}
-                                    </div>
-                                  </div>
-                                  <div className='text-right'>
-                                    <div className='text-lg font-bold text-primary'>
-                                      {formatCurrency(user.totalCommission)}
-                                    </div>
-                                    <div className='text-xs text-green-600'>
-                                      {formatCurrency(user.paidAmount)} paid
-                                    </div>
-                                  </div>
-                                </div>
-                                <div className='space-y-1'>
-                                  <div className='font-medium text-sm'>{user.userName}</div>
-                                  <div className='text-xs text-muted-foreground'>
-                                    {user.commissionCount} commission{user.commissionCount !== 1 ? 's' : ''}
-                                  </div>
-                                </div>
-                              </CardContent>
-                            </Card>
-                          ),
-                        )}
-                      </div>
-
-                      {/* Desktop: List View */}
-                      <div className='hidden md:block space-y-4'>
-                        {productSummary.topUsers.map(
-                          (user: any, index: number) => (
-                            <div
-                              key={user.userId}
-                              className='flex items-center justify-between p-4 border rounded-lg'>
-                              <div className='flex items-center gap-4'>
-                                <div className='text-2xl font-bold text-muted-foreground'>
-                                  #{index + 1}
-                                </div>
-                                <div>
-                                  <div className='font-medium'>
-                                    {user.userName}
-                                  </div>
-                                  <div className='text-sm text-muted-foreground'>
-                                    {user.commissionCount} commissions
-                                  </div>
-                                </div>
-                              </div>
-                              <div className='text-right'>
-                                <div className='text-lg font-bold'>
-                                  {formatCurrency(user.totalCommission)}
-                                </div>
-                                <div className='text-sm text-green-600'>
-                                  {formatCurrency(user.paidAmount)} paid
-                                </div>
-                              </div>
-                            </div>
-                          ),
-                        )}
-                      </div>
+                      <span>Product</span> Analysis
+                    </>
+                  ) : viewMode === "order-wise" ? (
+                    <>
+                      <span>Order</span> Analysis
                     </>
                   ) : (
-                    <p className='text-muted-foreground'>
-                      No top performers data available.
-                    </p>
+                    <>
+                      <span>User</span> Analysis
+                    </>
                   )}
-                </CardContent>
-              </Card>
-            </TabsContent>
-          </Tabs>
-        </TabsContent>
+                </h1>
+                <p className='cm-hero-sub'>{dateRangeLabel}</p>
+              </div>
 
-        {/* ORDER-WISE TAB CONTENT */}
-        <TabsContent value='order-wise' className='space-y-4'>
-          {/* Filters */}
-          <CommissionFilters
-            filters={orderFilters}
-            onFiltersChange={handleOrderFiltersChange}
-          />
+              {/* Mobile Action Bar */}
+              <div className='cm-action-bar'>
+                {/* Summary Drawer */}
+                <Drawer
+                  open={mobileSummaryOpen}
+                  onOpenChange={setMobileSummaryOpen}>
+                  <DrawerTrigger asChild>
+                    <button className='cm-btn cm-btn-ghost'>
+                      <BarChart3 size={14} />
+                    </button>
+                  </DrawerTrigger>
+                  <DrawerContent
+                    style={{
+                      background: "#ffffff",
+                      border: "1px solid #e4e6f0",
+                      borderRadius: "20px 20px 0 0",
+                      boxShadow: "0 -8px 32px rgba(26,29,46,.08)",
+                    }}>
+                    <div className='cm-drawer-inner'>
+                      <h3 className='cm-drawer-title'>Summary Overview</h3>
+                      <CommissionSummaryCards
+                        type={summaryType}
+                        summary={currentSummary}
+                      />
+                    </div>
+                  </DrawerContent>
+                </Drawer>
 
-          {/* Order Commission Table */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Order Commissions</CardTitle>
-              <CardDescription>
-                View commissions grouped by order
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <OrderCommissionTable
-                commissions={orderCommissions}
-                selectedIds={selectedOrderIds}
-                onSelect={handleSelectOrder}
-                onSelectAll={handleSelectAllOrders}
-                onViewDetails={handleViewOrderDetails}
-                loading={isLoading}
-              />
-            </CardContent>
-          </Card>
+                {/* Export */}
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <button
+                      className='cm-btn cm-btn-primary'
+                      disabled={isExporting}
+                      style={{ flex: 1, justifyContent: "center" }}>
+                      {isExporting ? (
+                        <>
+                          <Loader2 size={14} className='cm-spin' />{" "}
+                          {exportProgress > 0
+                            ? `${exportProgress}%`
+                            : "Exporting"}
+                        </>
+                      ) : (
+                        <>
+                          <Download size={14} />
+                          <ChevronDown size={12} />
+                        </>
+                      )}
+                    </button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent
+                    align='end'
+                    style={{
+                      background: "#ffffff",
+                      border: "1px solid #e4e6f0",
+                      borderRadius: 12,
+                      boxShadow: "0 8px 24px rgba(26,29,46,.1)",
+                    }}>
+                    <DropdownMenuItem
+                      onClick={() => handleExport("order-wise")}>
+                      <FileText size={14} style={{ marginRight: 8 }} />{" "}
+                      Order-wise
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => handleExport("user-wise")}>
+                      <Users size={14} style={{ marginRight: 8 }} /> User-wise
+                    </DropdownMenuItem>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem onClick={() => handleExport("combined")}>
+                      <Layers size={14} style={{ marginRight: 8 }} /> Combined
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </div>
+            </div>
+          </div>
 
-          {/* Bulk Actions (Desktop) */}
-          {selectedOrderIds.length > 0 && (
-            <BulkCommissionActionsBar
-              selectedCount={selectedOrderIds.length}
-              processing={bulkProcessing}
-              progress={bulkProgress}
-              errors={bulkErrors}
-              onApprove={() => handleBulkAction("paid")}
-              onMarkPaid={() => handleBulkAction("paid")}
-              onMarkUnpaid={() => handleBulkAction("unpaid")}
-              onHold={() => handleBulkAction("hold")}
-              onExport={() => handleExport("order-wise")}
-              onCancel={() => handleBulkAction("cancelled")}
-              onClearSelection={() => setSelectedOrderIds([])}
-            />
-          )}
+          {/* ── View Toggle ── */}
+          <div style={{ padding: "0 16px" }}>
+            <div className='cm-view-toggle'>
+              {VIEW_MODES.map(({ value, label, Icon }) => (
+                <button
+                  key={value}
+                  className={`cm-view-btn ${viewMode === value ? "active" : ""}`}
+                  onClick={() => setViewMode(value)}>
+                  <Icon size={13} />
+                  {label}
+                </button>
+              ))}
+            </div>
+          </div>
 
-          {/* Bulk Actions (Mobile) */}
-          {selectedOrderIds.length > 0 && (
-            <MobileBulkCommissionActions
-              selectedCount={selectedOrderIds.length}
-              processing={bulkProcessing}
-              progress={bulkProgress}
-              errors={bulkErrors}
-              onApprove={() => handleBulkAction("paid")}
-              onMarkPaid={() => handleBulkAction("paid")}
-              onMarkUnpaid={() => handleBulkAction("unpaid")}
-              onHold={() => handleBulkAction("hold")}
-              onExport={() => handleExport("order-wise")}
-              onCancel={() => handleBulkAction("cancelled")}
-              onClearSelection={() => setSelectedOrderIds([])}
-            />
-          )}
-        </TabsContent>
-
-        {/* USER-WISE TAB CONTENT */}
-        <TabsContent value='user-wise' className='space-y-4'>
-          {/* Filters */}
-          <CommissionFilters
-            filters={userFilters}
-            onFiltersChange={handleUserFiltersChange}
-          />
-
-          {/* User Commission Table */}
-          <Card>
-            <CardHeader>
-              <CardTitle>User Commissions</CardTitle>
-              <CardDescription>
-                View commissions grouped by user with performance metrics and
-                analytics
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              {isLoading ? (
-                <div className='flex justify-center items-center py-12'>
-                  <Loader2 className='h-8 w-8 animate-spin text-muted-foreground' />
-                </div>
-              ) : (
-                <UserCommissionTable
-                  commissions={userCommissions}
-                  selectedIds={selectedUserIds}
-                  onSelect={handleSelectUser}
-                  onSelectAll={handleSelectAllUsers}
-                  onViewDetails={handleViewUserDetails}
-                  loading={isLoading}
+          {/* ── Content ── */}
+          <div className='cm-content'>
+            {/* ─── PRODUCT-WISE ─── */}
+            {viewMode === "product-wise" && (
+              <div className='cm-fade-up'>
+                {/* Filters */}
+                <CommissionFilters
+                  filters={productFilters}
+                  onFiltersChange={handleProductFiltersChange}
                 />
-              )}
-            </CardContent>
-          </Card>
-        </TabsContent>
-      </Tabs>
 
-      {/* Product-wise Details Modal */}
+                {/* Status chips */}
+                <div className='cm-chip-row' style={{ marginTop: 12 }}>
+                  {STATUS_CHIPS.map((c) => (
+                    <button
+                      key={c.value}
+                      className={`cm-chip ${productActiveTab === c.value ? "active" : ""}`}
+                      onClick={() => handleProductTabChange(c.value)}>
+                      {c.label}
+                    </button>
+                  ))}
+                </div>
+
+                {/* Table Card */}
+                {productActiveTab !== "top-performers" ? (
+                  <div className='cm-section'>
+                    <div className='cm-section-head'>
+                      <div>
+                        <h3 className='cm-section-title'>
+                          {STATUS_CHIPS.find(
+                            (c) => c.value === productActiveTab,
+                          )?.label ?? "All"}{" "}
+                          Commissions
+                        </h3>
+                        <p className='cm-section-desc'>
+                          View and manage commission records
+                        </p>
+                      </div>
+                      <span className='cm-badge cm-badge-accent'>
+                        {commissions.length} records
+                      </span>
+                    </div>
+                    <div className='cm-section-body'>
+                      {isLoading ? (
+                        <div className='cm-loader'>
+                          <Loader2 size={24} className='cm-spin' />
+                        </div>
+                      ) : (
+                        <ProductCommissionTable
+                          commissions={commissions}
+                          onViewDetails={(c) => setViewDetailsCommission(c)}
+                          onUpdateStatus={(c) => {
+                            setSelectedCommission(c);
+                            setIsUpdateDialogOpen(true);
+                          }}
+                        />
+                      )}
+                    </div>
+                  </div>
+                ) : (
+                  /* Top Performers */
+                  <div className='cm-section'>
+                    <div className='cm-section-head'>
+                      <div>
+                        <h3 className='cm-section-title'>Top Performers</h3>
+                        <p className='cm-section-desc'>
+                          Highest earning commission users
+                        </p>
+                      </div>
+                      <Sparkles
+                        size={16}
+                        style={{ color: "#f59e0b", opacity: 0.9 }}
+                      />
+                    </div>
+                    <div className='cm-section-body'>
+                      {productSummary?.topUsers?.length > 0 ? (
+                        productSummary.topUsers.map((user, i) => (
+                          <div key={user.userId} className='cm-performer-item'>
+                            <span
+                              className={`cm-performer-rank ${i === 0 ? "gold" : i === 1 ? "silver" : i === 2 ? "bronze" : ""}`}>
+                              #{i + 1}
+                            </span>
+                            <div className='cm-performer-avatar'>
+                              {user.userName.slice(0, 2).toUpperCase()}
+                            </div>
+                            <div className='cm-performer-info'>
+                              <div className='cm-performer-name'>
+                                {user.userName}
+                              </div>
+                              <div className='cm-performer-count'>
+                                {user.commissionCount} commissions
+                              </div>
+                            </div>
+                            <div className='cm-performer-amounts'>
+                              <div className='cm-performer-total'>
+                                {formatCurrency(user.totalCommission)}
+                              </div>
+                              <div className='cm-performer-paid'>
+                                {formatCurrency(user.paidAmount)} paid
+                              </div>
+                            </div>
+                          </div>
+                        ))
+                      ) : (
+                        <div
+                          className='cm-loader'
+                          style={{ color: "#7b82a0", fontSize: 13 }}>
+                          No data available
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* ─── ORDER-WISE ─── */}
+            {viewMode === "order-wise" && (
+              <div className='cm-fade-up'>
+                <CommissionFilters
+                  filters={orderFilters}
+                  onFiltersChange={handleOrderFiltersChange}
+                />
+
+                <div className='cm-section' style={{ marginTop: 12 }}>
+                  <div className='cm-section-head'>
+                    <div>
+                      <h3 className='cm-section-title'>Order Commissions</h3>
+                      <p className='cm-section-desc'>
+                        Commissions grouped by order
+                      </p>
+                    </div>
+                    {selectedOrderIds.length > 0 && (
+                      <span className='cm-badge cm-badge-accent'>
+                        {selectedOrderIds.length} selected
+                      </span>
+                    )}
+                  </div>
+                  <div className='cm-section-body'>
+                    <OrderCommissionTable
+                      commissions={orderCommissions}
+                      selectedIds={selectedOrderIds}
+                      onSelect={handleSelectOrder}
+                      onSelectAll={handleSelectAllOrders}
+                      onViewDetails={handleViewOrderDetails}
+                      loading={isLoading}
+                    />
+                  </div>
+                </div>
+
+                {selectedOrderIds.length > 0 && (
+                  <>
+                    <BulkCommissionActionsBar
+                      selectedCount={selectedOrderIds.length}
+                      processing={bulkProcessing}
+                      progress={bulkProgress}
+                      errors={bulkErrors}
+                      onApprove={() => handleBulkAction("paid")}
+                      onMarkPaid={() => handleBulkAction("paid")}
+                      onMarkUnpaid={() => handleBulkAction("unpaid")}
+                      onHold={() => handleBulkAction("hold")}
+                      onExport={() => handleExport("order-wise")}
+                      onCancel={() => handleBulkAction("cancelled")}
+                      onClearSelection={() => setSelectedOrderIds([])}
+                    />
+                    <MobileBulkCommissionActions
+                      selectedCount={selectedOrderIds.length}
+                      processing={bulkProcessing}
+                      progress={bulkProgress}
+                      errors={bulkErrors}
+                      onApprove={() => handleBulkAction("paid")}
+                      onMarkPaid={() => handleBulkAction("paid")}
+                      onMarkUnpaid={() => handleBulkAction("unpaid")}
+                      onHold={() => handleBulkAction("hold")}
+                      onExport={() => handleExport("order-wise")}
+                      onCancel={() => handleBulkAction("cancelled")}
+                      onClearSelection={() => setSelectedOrderIds([])}
+                    />
+                  </>
+                )}
+              </div>
+            )}
+
+            {/* ─── USER-WISE ─── */}
+            {viewMode === "user-wise" && (
+              <div className='cm-fade-up'>
+                <CommissionFilters
+                  filters={userFilters}
+                  onFiltersChange={handleUserFiltersChange}
+                />
+
+                <div className='cm-section' style={{ marginTop: 12 }}>
+                  <div className='cm-section-head'>
+                    <div>
+                      <h3 className='cm-section-title'>User Commissions</h3>
+                      <p className='cm-section-desc'>
+                        Performance metrics by user
+                      </p>
+                    </div>
+                    {selectedUserIds.length > 0 && (
+                      <span className='cm-badge cm-badge-accent'>
+                        {selectedUserIds.length} selected
+                      </span>
+                    )}
+                  </div>
+                  <div className='cm-section-body'>
+                    {isLoading ? (
+                      <div className='cm-loader'>
+                        <Loader2 size={24} className='cm-spin' />
+                      </div>
+                    ) : (
+                      <UserCommissionTable
+                        commissions={userCommissions}
+                        selectedIds={selectedUserIds}
+                        onSelect={handleSelectUser}
+                        onSelectAll={handleSelectAllUsers}
+                        onViewDetails={handleViewUserDetails}
+                        loading={isLoading}
+                      />
+                    )}
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+
+      {/* ── Modals / Sheets (unchanged logic) ── */}
       <ProductCommissionDetailsModal
         commission={viewDetailsCommission}
         open={!!viewDetailsCommission}
@@ -1150,38 +1301,22 @@ export const CommissionManagementPage = () => {
           setIsUpdateDialogOpen(true);
         }}
       />
-
-      {/* Order-wise Details Sheet */}
       <OrderCommissionDetailsSheet
         orderDetails={viewOrderDetails}
         open={!!viewOrderDetails}
         onClose={() => setViewOrderDetails(null)}
       />
-
-      {/* User-wise Details Sheet */}
       <UserCommissionDetailsSheet
         userDetails={viewUserDetails}
         open={!!viewUserDetails}
         onClose={() => setViewUserDetails(null)}
       />
-
-      {/* Update Status Dialog (shared) */}
       <UpdateCommissionDialog
         commission={selectedCommission}
         open={isUpdateDialogOpen}
         onOpenChange={setIsUpdateDialogOpen}
         onUpdate={handleUpdateStatus}
       />
-    </div>
+    </>
   );
-};
-
-// Helper function
-const formatCurrency = (amount: number) => {
-  return new Intl.NumberFormat("en-BD", {
-    style: "currency",
-    currency: "BDT",
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  }).format(amount);
 };

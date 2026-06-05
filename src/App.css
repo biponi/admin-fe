@@ -54,6 +54,21 @@
   padding-right: env(safe-area-inset-right);
 }
 
+/* Hide scrollbar but keep functionality */
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+
+/* Safe area for notched devices - bottom padding variant */
+.pb-safe-bottom {
+  padding-bottom: calc(env(safe-area-inset-bottom, 0) + 1rem);
+}
+
 /* Custom animations for mobile components */
 @keyframes float {
   0%,

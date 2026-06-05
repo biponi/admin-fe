@@ -140,6 +140,10 @@ dist
 
 # production
 /build
+/dist-electron
+
+# Vite cache
+.vite
 
 # misc
 .DS_Store
