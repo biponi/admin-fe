@@ -24,7 +24,61 @@
   [headers.values]
     Cache-Control = "public, max-age=0, must-revalidate"
 
-# SPA catch-all only — Netlify serves real files before redirects
+# Ensure JavaScript files have correct Content-Type
+[[headers]]
+  for = "/*.js"
+  [headers.values]
+    Content-Type = "application/javascript; charset=utf-8"
+    Cache-Control = "public, max-age=31536000, immutable"
+
+[[headers]]
+  for = "/registerSW.js"
+  [headers.values]
+    Content-Type = "application/javascript; charset=utf-8"
+    Cache-Control = "public, max-age=0, must-revalidate"
+
+# Serve static assets directly (exclude from SPA routing)
+[[redirects]]
+  from = "/assets/*"
+  to = "/assets/:splat"
+  status = 200
+
+[[redirects]]
+  from = "/*.js"
+  to = "/:splat"
+  status = 200
+
+[[redirects]]
+  from = "/*.css"
+  to = "/:splat"
+  status = 200
+
+[[redirects]]
+  from = "/*.png"
+  to = "/:splat"
+  status = 200
+
+[[redirects]]
+  from = "/*.svg"
+  to = "/:splat"
+  status = 200
+
+[[redirects]]
+  from = "/*.ico"
+  to = "/:splat"
+  status = 200
+
+[[redirects]]
+  from = "/*.json"
+  to = "/:splat"
+  status = 200
+
+[[redirects]]
+  from = "/*.webmanifest"
+  to = "/:splat"
+  status = 200
+
+# SPA catch-all for non-file routes only
 [[redirects]]
   from = "/*"
   to = "/index.html"
