@@ -3,7 +3,6 @@ import { Search, User, Phone, Loader2, ChevronDown, ChevronUp } from "lucide-rea
 import { customerSearchAPI } from "../../../api/customerSearch";
 import type { CustomerListItem } from "../../../api/customerSearch";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "../../../components/ui/collapsible";
-import { ScrollArea } from "../../../components/ui/scroll-area";
 
 interface CustomerSearchCollapsibleProps {
   onSelect: (customer: CustomerListItem) => void;
@@ -24,11 +23,20 @@ export function CustomerSearchCollapsible({
   // Fetch customers when collapsible opens
   useEffect(() => {
     if (isOpen) {
-      fetchCustomers();
+      // Add a small delay before fetching to prevent sudden splash
+      const fetchTimer = setTimeout(() => {
+        fetchCustomers();
+      }, 300);
+
       // Focus input after it becomes visible
-      setTimeout(() => {
+      const focusTimer = setTimeout(() => {
         inputRef.current?.focus();
       }, 100);
+
+      return () => {
+        clearTimeout(fetchTimer);
+        clearTimeout(focusTimer);
+      };
     } else {
       // Reset state when closed
       setSearchQuery("");
@@ -115,8 +123,8 @@ export function CustomerSearchCollapsible({
         )}
       </CollapsibleTrigger>
 
-      <CollapsibleContent className='mt-2 overflow-hidden transition-all duration-300 ease-in-out'>
-        <div className='border border-gray-200 rounded-lg overflow-hidden bg-white shadow-sm'>
+      <CollapsibleContent className='mt-2 overflow-hidden data-[state=closed]:animate-collapsible-up data-[state=open]:animate-collapsible-down'>
+        <div className='border border-gray-200 rounded-lg overflow-hidden bg-white shadow-sm max-h-80 flex flex-col'>
           {/* Search Input */}
           <div className='p-3 border-b border-gray-100'>
             <div className='relative'>
@@ -134,9 +142,9 @@ export function CustomerSearchCollapsible({
           </div>
 
           {/* Customer List */}
-          <ScrollArea className='max-h-60'>
+          <div className='flex-1 overflow-y-auto smooth-scroll' style={{ maxHeight: '240px' }}>
             {loading ? (
-              <div className='flex items-center justify-center py-8'>
+              <div className='flex items-center justify-center py-8 animate-fade-in'>
                 <Loader2 className='h-6 w-6 animate-spin text-blue-600' />
                 <span className='ml-2 text-sm text-gray-500'>
                   Loading customers...
@@ -156,7 +164,7 @@ export function CustomerSearchCollapsible({
                   <li
                     key={customerItem.customer.mobile}
                     onClick={() => handleSelect(customerItem)}
-                    className={`px-3 py-2.5 cursor-pointer transition-colors ${
+                    className={`px-3 py-2.5 cursor-pointer transition-all duration-200 ${
                       index === selectedIndex
                         ? "bg-blue-50 border-l-4 border-blue-600"
                         : "hover:bg-gray-50"
@@ -185,7 +193,7 @@ export function CustomerSearchCollapsible({
                 ))}
               </ul>
             )}
-          </ScrollArea>
+          </div>
 
           {/* Footer */}
           {customers.length > 0 && (
