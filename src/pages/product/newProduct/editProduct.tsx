@@ -52,9 +52,11 @@ import {
   IProductUpdateData,
   IVariation,
   IVariantImageMapping,
+  IImageGroup,
 } from "../interface";
 import MultiCategorySelect from "../../../components/customComponent/MultiCategorySelect";
 import { VariantImageUploader } from "../../../components/product/VariantImageUploader";
+import { ImageGroupManager } from "../../../components/product/ImageGroupManager";
 
 interface Props {
   productData: IProductUpdateData;
@@ -94,6 +96,7 @@ const EditProduct: React.FC<Props> = ({
   const [removedVariantImageIndexes, setRemovedVariantImageIndexes] = useState<
     Record<string, number[]>
   >({});
+  const [imageGroups, setImageGroups] = useState<IImageGroup[]>([]);
   const fileRef = useRef(null);
   const fileRef2 = useRef(null);
   const dialogBtn = useRef(null);
@@ -143,6 +146,11 @@ const EditProduct: React.FC<Props> = ({
         }
       });
       setVariantImages(initialVariantImages);
+
+      // Initialize image groups from product data
+      if (productData.imageGroups && productData.imageGroups.length > 0) {
+        setImageGroups(productData.imageGroups);
+      }
     }
   }, [productData]);
 
@@ -779,11 +787,32 @@ const EditProduct: React.FC<Props> = ({
         imageIndexes,
       }));
 
+    // Prepare image group images for upload
+    const imageGroupImageList: File[] = [];
+    const imageGroupImageMappings: any[] = [];
+    let groupImageIndex = 0;
+
+    for (const group of imageGroups) {
+      const groupImages = group.images.filter((img) => img instanceof File) as File[];
+
+      groupImages.forEach(() => {
+        imageGroupImageMappings.push({
+          groupId: group.id,
+          imageIndex: groupImageIndex++,
+        });
+      });
+
+      imageGroupImageList.push(...groupImages);
+    }
+
     const productData = {
       ...formData,
       variantImages: variantImageFileList,
       variantImageMappings,
       removeVariantImageIndexes,
+      imageGroups: imageGroups.length > 0 ? imageGroups : undefined,
+      imageGroupImages: imageGroupImageList.length > 0 ? imageGroupImageList : undefined,
+      imageGroupImageMappings: imageGroupImageMappings.length > 0 ? imageGroupImageMappings : undefined,
     };
 
     const response = await updateProduct(productData);
@@ -1464,6 +1493,33 @@ const EditProduct: React.FC<Props> = ({
                 </div>
               </CardContent>
             </Card>
+
+            {/* Image Groups Card - NEW */}
+            {hasVariation && (
+              <Card className='border-none shadow-xl bg-white/80 dark:bg-slate-900/80 backdrop-blur-sm overflow-hidden'>
+                <CardHeader className='border-b border-slate-200 dark:border-slate-700'>
+                  <div className='flex justify-between items-center'>
+                    <div>
+                      <CardTitle className='text-lg flex items-center gap-2'>
+                        <Palette className='w-5 h-5 text-purple-500' />
+                        Image Groups
+                      </CardTitle>
+                      <CardDescription className='mt-1'>
+                        Organize images by color/attribute (optional)
+                      </CardDescription>
+                    </div>
+                  </div>
+                </CardHeader>
+                <CardContent className='pt-6'>
+                  <ImageGroupManager
+                    imageGroups={imageGroups}
+                    variations={formData.variation || []}
+                    onImageGroupsChange={setImageGroups}
+                    mode='edit'
+                  />
+                </CardContent>
+              </Card>
+            )}
           </div>
         </div>
 

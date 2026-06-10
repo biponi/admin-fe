@@ -5,6 +5,7 @@ import Link from '@tiptap/extension-link'
 import Image from '@tiptap/extension-image'
 import TextAlign from '@tiptap/extension-text-align'
 import Placeholder from '@tiptap/extension-placeholder'
+import Youtube from '@tiptap/extension-youtube'
 import {
   Bold,
   Italic,
@@ -28,8 +29,13 @@ import {
   Redo,
   WrapText,
   RemoveFormatting,
+  Video,
+  Youtube as YoutubeIcon,
 } from 'lucide-react'
-import { useCallback, useEffect } from 'react'
+import { useCallback, useEffect, useState } from 'react'
+import { VideoEmbed } from './extensions/VideoEmbed'
+import { SocialMediaEmbed } from './extensions/SocialMediaEmbed'
+import EmbedDialog from './EmbedDialog'
 
 interface TiptapEditorProps {
   content?: string
@@ -39,6 +45,8 @@ interface TiptapEditorProps {
 }
 
 const MenuBar = ({ editor }: { editor: any }) => {
+  const [videoDialogOpen, setVideoDialogOpen] = useState(false)
+
   const addImage = useCallback(() => {
     if (!editor) return
     const url = window.prompt('Enter image URL:')
@@ -53,6 +61,11 @@ const MenuBar = ({ editor }: { editor: any }) => {
     if (url) {
       editor.chain().focus().setLink({ href: url }).run()
     }
+  }, [editor])
+
+  const handleInsertVideo = useCallback((url: string) => {
+    if (!editor) return
+    editor.chain().focus().setVideoEmbed({ src: url }).run()
   }, [editor])
 
   if (!editor) {
@@ -261,6 +274,14 @@ const MenuBar = ({ editor }: { editor: any }) => {
         </button>
         <button
           type="button"
+          onClick={() => setVideoDialogOpen(true)}
+          className="p-2 rounded hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
+          title="Add Video (MP4, WebM)"
+        >
+          <Video className="w-4 h-4" />
+        </button>
+        <button
+          type="button"
           onClick={() => editor.chain().focus().setHorizontalRule().run()}
           className="p-2 rounded hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
           title="Horizontal Rule"
@@ -302,6 +323,14 @@ const MenuBar = ({ editor }: { editor: any }) => {
           <RemoveFormatting className="w-4 h-4" />
         </button>
       </div>
+
+      {/* Embed Dialog */}
+      <EmbedDialog
+        open={videoDialogOpen}
+        onOpenChange={setVideoDialogOpen}
+        onInsert={handleInsertVideo}
+        mode="video"
+      />
     </div>
   )
 }
@@ -338,6 +367,15 @@ export const TiptapEditor = ({
         placeholder,
         emptyEditorClass: 'is-editor-empty',
       }),
+      Youtube.configure({
+        controls: true,
+        nocookie: true,
+        HTMLAttributes: {
+          class: 'rounded-lg my-4',
+        },
+      }),
+      VideoEmbed,
+      SocialMediaEmbed,
     ],
     content,
     onUpdate: ({ editor }) => {

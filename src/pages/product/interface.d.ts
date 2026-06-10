@@ -29,6 +29,7 @@ export interface IProduct {
     createdAt: string;
     updatedAt: string;
   };
+  imageGroups?: IImageGroup[]; // NEW: Image groups for color/attribute-based image organization
 }
 
 export interface IOrderProduct extends IProduct {
@@ -46,6 +47,7 @@ export interface IVariation {
   quantity: number;
   unitPrice: number;
   images?: (File | string)[]; // Variant images (File for new uploads, string for existing URLs)
+  imageGroupId?: string; // NEW: Reference to image group this variant belongs to
 }
 
 // Variant image mapping for upload
@@ -244,4 +246,46 @@ export interface IAddCategoryRequest {
 export interface IRemoveCategoryRequest {
   productId: string;
   categoryId: string;
+}
+
+// ========================================================================
+// Image Group Interfaces for Color/Attribute-Based Image Organization
+// ========================================================================
+
+export interface IImageGroup {
+  id: string;
+  attribute: 'color' | 'material' | 'pattern' | 'fit' | 'size' | string; // Which variant attribute drives this group
+  value: string; // The attribute value (e.g., "Red", "Cotton", "Striped")
+  displayLabel: string; // Human-readable label for UI display
+  colorHex?: string; // Optional hex color code (only meaningful when attribute === "color")
+  images: (File | string)[]; // Images for this group (File for new uploads, string for existing URLs)
+  variantIds: string[]; // IDs of variants that belong to this group (auto-synced from variations)
+  variantOverrides?: IVariantImageOverride[]; // Per-variant image overrides within this group
+  sortOrder: number; // Display order in UI
+}
+
+export interface IVariantImageOverride {
+  variantId: string; // Variant ID to override
+  images: (File | string)[]; // Override images for this specific variant
+}
+
+export interface IImageGroupImageMapping {
+  groupId: string; // Image group ID
+  imageIndex: number; // Index pointing to a specific image in the imageGroupImages array
+}
+
+// Update product create/update interfaces to include image groups
+export interface IProductCreateDataWithImageGroups extends IProductCreateData {
+  imageGroups?: IImageGroup[]; // Image groups for color/attribute-based organization
+  imageGroupImages?: File[]; // New image group image files to upload
+  imageGroupImageMappings?: IImageGroupImageMapping[]; // Maps groupIds to image indices
+}
+
+export interface IProductUpdateDataWithImageGroups extends IProductUpdateData {
+  imageGroups?: IImageGroup[]; // Full replacement of image groups
+  addImageGroups?: IImageGroup[]; // Add new image groups
+  updateImageGroups?: IImageGroup[]; // Update existing image groups
+  removeImageGroupIds?: string[]; // Remove image groups by ID
+  imageGroupImages?: File[]; // New image group image files to upload
+  imageGroupImageMappings?: IImageGroupImageMapping[]; // Maps groupIds to image indices
 }
