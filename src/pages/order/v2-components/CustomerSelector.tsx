@@ -4,7 +4,7 @@ import { Input } from '../../../components/ui/input';
 import { Label } from '../../../components/ui/label';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '../../../components/ui/card';
 import { Badge } from '../../../components/ui/badge';
-import { CustomerSearchDropdown } from './CustomerSearchDropdown';
+import { CustomerSearchCollapsible } from './CustomerSearchCollapsible';
 import { AddressSelectionModal } from './AddressSelectionModal';
 import { customerSearchAPI } from '../../../api/customerSearch';
 import type { ICustomer, IShipping } from '../../order/interface.d';
@@ -115,13 +115,8 @@ export function CustomerSelector({
 
       <CardContent className="p-3 space-y-4">
         <div className="space-y-3.5">
-          {/* Customer Search Dropdown */}
-          <div className="space-y-1.5">
-            <Label className="flex items-center gap-1.5 font-medium text-sm">
-              Search Existing Customer
-            </Label>
-            <CustomerSearchDropdown onSelect={handleCustomerSelect} />
-          </div>
+          {/* Customer Search Collapsible */}
+          <CustomerSearchCollapsible onSelect={handleCustomerSelect} />
 
           {/* Manual Entry Separator */}
           <div className="relative py-2">
