@@ -205,14 +205,34 @@ const normalizeVariations = (product: IProduct | null): VariantDisplay[] => {
   if (!product?.variation || product.variation.length === 0) return [];
 
   return product.variation.map((v) => {
-    // Get first image if available
+    // Get first image if available with priority:
+    // 1. Variant's own images array
+    // 2. Image from imageGroupId via product's imageGroups
+    // 3. null/undefined (will trigger fallback UI)
     let imageUrl: string | undefined;
+
+    // Priority 1: Check variant's own images array
     if (v.images && v.images.length > 0) {
       const img = v.images[0];
       if (typeof img === "string") {
         imageUrl = img;
       } else if (img instanceof File) {
         imageUrl = URL.createObjectURL(img);
+      }
+    }
+
+    // Priority 2: Check imageGroupId → product's imageGroups
+    if (!imageUrl && v.imageGroupId && product.imageGroups) {
+      const imageGroup = product.imageGroups.find(
+        (group) => group.id === v.imageGroupId
+      );
+      if (imageGroup?.images && imageGroup.images.length > 0) {
+        const groupImg = imageGroup.images[0];
+        if (typeof groupImg === "string") {
+          imageUrl = groupImg;
+        } else if (groupImg instanceof File) {
+          imageUrl = URL.createObjectURL(groupImg);
+        }
       }
     }
 
@@ -629,6 +649,7 @@ const DesktopProductTable: React.FC<DesktopProductTableProps> = ({
       : ["No Variant"]) as string[],
     variationList: product?.variation,
     hasVariation: product?.hasVariation,
+    imageGroups: product?.imageGroups,
     handleUpdateProduct: onEdit,
     deleteExistingProduct: onDelete,
     updatedAt: product?.timestamps?.updatedAt,

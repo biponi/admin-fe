@@ -32,14 +32,42 @@ dayjs.extend(advancedFormat);
 
 // ─── Variation chip ───────────────────────────────────────────────────────────
 
-function VariationChip({ variation }: { variation: IVariation }) {
+function VariationChip({
+  variation,
+  imageGroups,
+}: {
+  variation: IVariation;
+  imageGroups?: any[];
+}) {
   const src = (() => {
+    let imageUrl: string | null = null;
+
+    // Priority 1: Check variant's own images array
     if (variation.images && variation.images.length > 0) {
       const img = variation.images[0];
-      if (typeof img === "string") return img;
-      if (img instanceof File) return URL.createObjectURL(img);
+      if (typeof img === "string") {
+        imageUrl = img;
+      } else if (img instanceof File) {
+        imageUrl = URL.createObjectURL(img);
+      }
     }
-    return null;
+
+    // Priority 2: Check imageGroupId → imageGroups array
+    if (!imageUrl && variation.imageGroupId && imageGroups) {
+      const imageGroup = imageGroups.find(
+        (group: any) => group.id === variation.imageGroupId
+      );
+      if (imageGroup?.images && imageGroup.images.length > 0) {
+        const groupImg = imageGroup.images[0];
+        if (typeof groupImg === "string") {
+          imageUrl = groupImg;
+        } else if (groupImg instanceof File) {
+          imageUrl = URL.createObjectURL(groupImg);
+        }
+      }
+    }
+
+    return imageUrl;
   })();
 
   const label =
@@ -87,9 +115,11 @@ function VariationChip({ variation }: { variation: IVariation }) {
 function VariationDisplayList({
   variationList,
   onExpand,
+  imageGroups,
 }: {
   variationList?: IVariation[];
   onExpand: () => void;
+  imageGroups?: any[];
 }) {
   if (!variationList || variationList.length === 0) {
     return (
@@ -105,7 +135,7 @@ function VariationDisplayList({
   return (
     <div className='flex items-center gap-1.5 flex-wrap'>
       {visible.map((v) => (
-        <VariationChip key={v.id} variation={v} />
+        <VariationChip key={v.id} variation={v} imageGroups={imageGroups} />
       ))}
       {remaining > 0 && (
         <button
@@ -122,8 +152,10 @@ function VariationDisplayList({
 
 function VariationPopoverContent({
   variationList,
+  imageGroups,
 }: {
   variationList?: IVariation[];
+  imageGroups?: any[];
 }) {
   if (!variationList || variationList.length === 0) {
     return (
@@ -142,7 +174,7 @@ function VariationPopoverContent({
       {rows.map((row, idx) => (
         <div key={idx} className='flex gap-2'>
           {row.map((v) => (
-            <VariationChip key={v.id} variation={v} />
+            <VariationChip key={v.id} variation={v} imageGroups={imageGroups} />
           ))}
         </div>
       ))}
@@ -154,8 +186,10 @@ function VariationPopoverContent({
 
 function VariationDisplayGrid({
   variationList,
+  imageGroups,
 }: {
   variationList?: IVariation[];
+  imageGroups?: any[];
 }) {
   if (!variationList || variationList.length === 0) {
     return (
@@ -176,7 +210,7 @@ function VariationDisplayGrid({
       {rows.map((row, rowIdx) => (
         <div key={rowIdx} className='flex gap-1.5'>
           {row.map((v, i) => (
-            <VariationChip key={v.id || `${rowIdx}-${i}`} variation={v} />
+            <VariationChip key={v.id || `${rowIdx}-${i}`} variation={v} imageGroups={imageGroups} />
           ))}
         </div>
       ))}
@@ -288,6 +322,7 @@ interface Props {
   variations: string[];
   variationList?: IVariation[];
   hasVariation?: boolean;
+  imageGroups?: any[];
   totalReturned: number;
   totalSold: number;
   handleUpdateProduct: (id: string) => void;
@@ -311,6 +346,7 @@ const SingleItem: React.FC<Props> = ({
   totalSold,
   variationList,
   hasVariation,
+  imageGroups,
   categoryName,
   totalReturned,
   refreshProductList,
@@ -383,15 +419,16 @@ const SingleItem: React.FC<Props> = ({
                 <VariationDisplayList
                   variationList={variationList}
                   onExpand={() => setIsVariationPopoverOpen(true)}
+                  imageGroups={imageGroups}
                 />
               </div>
             </PopoverTrigger>
             <PopoverContent className='w-96' side='bottom' align='start'>
-              <VariationPopoverContent variationList={variationList} />
+              <VariationPopoverContent variationList={variationList} imageGroups={imageGroups} />
             </PopoverContent>
           </Popover>
         ) : (
-          <VariationDisplayGrid variationList={variationList} />
+          <VariationDisplayGrid variationList={variationList} imageGroups={imageGroups} />
         )}
       </TableCell>
 

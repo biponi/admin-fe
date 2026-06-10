@@ -27,26 +27,28 @@ export function CustomerSearchDropdown({
   const inputRef = useRef<HTMLInputElement>(null);
   const triggerRef = useRef<HTMLButtonElement>(null);
 
-  // Fetch customers on mount and when dropdown opens
+  // Fetch customers when dropdown opens
   useEffect(() => {
     if (isOpen) {
       fetchCustomers();
       updateDropdownPosition();
+      // Focus input after portal renders with a small delay for mobile compatibility
+      setTimeout(() => {
+        inputRef.current?.focus();
+      }, 100);
     }
   }, [isOpen]);
 
-  // Debounced search
+  // Debounced search (only when searchQuery changes, not on isOpen change)
   useEffect(() => {
     const timer = setTimeout(() => {
       if (searchQuery.trim().length > 0) {
         fetchCustomers(searchQuery);
-      } else if (isOpen) {
-        fetchCustomers();
       }
     }, 500);
 
     return () => clearTimeout(timer);
-  }, [searchQuery, isOpen]);
+  }, [searchQuery]);
 
   // Close dropdown when clicking outside
   useEffect(() => {
@@ -150,10 +152,7 @@ export function CustomerSearchDropdown({
       <button
         ref={triggerRef}
         type='button'
-        onClick={() => {
-          setIsOpen(!isOpen);
-          inputRef.current?.focus();
-        }}
+        onClick={() => setIsOpen(!isOpen)}
         className='w-full flex items-center justify-between px-3 py-2.5 text-left bg-white border border-gray-200 rounded-lg hover:border-blue-400 focus:border-blue-400 focus:outline-none focus:ring-2 focus:ring-blue-400/20 transition-all'>
         <div className='flex items-center gap-2 flex-1 min-w-0'>
           <Search className='h-4 w-4 text-gray-400 shrink-0' />
@@ -188,7 +187,8 @@ export function CustomerSearchDropdown({
                   onChange={(e) => setSearchQuery(e.target.value)}
                   onKeyDown={handleKeyDown}
                   placeholder='Type to search...'
-                  className='w-full pl-10 pr-4 py-2 text-sm border border-gray-200 rounded-lg focus:border-blue-400 focus:outline-none focus:ring-2 focus:ring-blue-400/20'
+                  className='w-full pl-10 pr-4 py-2 text-sm border border-gray-200 rounded-lg focus:border-blue-400 focus:outline-none focus:ring-2 focus:ring-blue-400/20 touch-action-manipulation'
+                  style={{ touchAction: 'manipulation' }}
                   autoFocus
                 />
               </div>

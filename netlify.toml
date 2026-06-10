@@ -25,11 +25,19 @@
     Cache-Control = "public, max-age=0, must-revalidate"
 
 # Ensure JavaScript files have correct Content-Type
+# Cache set to 0 for instant updates - browsers will revalidate on every load
 [[headers]]
   for = "/*.js"
   [headers.values]
     Content-Type = "application/javascript; charset=utf-8"
-    Cache-Control = "public, max-age=31536000, immutable"
+    Cache-Control = "public, max-age=0, must-revalidate"
+
+# CSS files also need instant updates for UI changes
+[[headers]]
+  for = "/*.css"
+  [headers.values]
+    Content-Type = "text/css; charset=utf-8"
+    Cache-Control = "public, max-age=0, must-revalidate"
 
 [[headers]]
   for = "/registerSW.js"
