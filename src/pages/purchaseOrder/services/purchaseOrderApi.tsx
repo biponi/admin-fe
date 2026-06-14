@@ -5,7 +5,7 @@ import config from "../../../utils/config";
 
 export const fetchPurchaseOrders = async (
   page = 1,
-  limit = 20
+  limit = 20,
 ): Promise<ProductListResponse> => {
   const response = await axios.get(config.purchaseOrder.purchaseList(), {
     params: { page, limit },
@@ -15,15 +15,14 @@ export const fetchPurchaseOrders = async (
 
 export const searchProducts = async (
   query: string,
-  categoryId?: string
+  categoryId?: string,
 ): Promise<ProductSearchResponse[]> => {
   const params: any = { query };
   if (categoryId) params.categoryId = categoryId;
 
-  const response = await axios.get(
-    config.purchaseOrder.purchaseSearch(),
-    { params }
-  );
+  const response = await axios.get(config.purchaseOrder.purchaseSearch(), {
+    params,
+  });
   return response.data;
 };
 
@@ -31,7 +30,7 @@ export const searchProductsWithPagination = async (
   query?: string,
   categoryId?: string,
   page = 1,
-  limit = 20
+  limit = 20,
 ): Promise<{
   products: ProductSearchResponse[];
   totalPages: number;
@@ -43,18 +42,22 @@ export const searchProductsWithPagination = async (
   if (categoryId && categoryId !== "all") params.categoryId = categoryId;
 
   // Use the general product API that supports pagination
-  const response = await axios.get(config.purchaseOrder.purchaseSearch(), { params });
+  const response = await axios.get(config.purchaseOrder.purchaseSearch(), {
+    params,
+  });
 
   return {
-    products: response.data?.data?.products || [],
-    totalPages: response.data?.data?.totalPages || 1,
-    totalProduct: response.data?.data?.totalProduct || 0,
+    products: response.data?.products || [],
+    totalPages: Math.ceil(
+      (response.data?.pagination?.totalProduct || 1) / limit,
+    ),
+    totalProduct: response.data?.pagination?.totalProduct || 0,
     currentPage: page,
   };
 };
 
 export const createPurchaseOrder = async (
-  products: ProductSearchResponse[]
+  products: ProductSearchResponse[],
 ): Promise<void> => {
   const orderProducts = products.map((p) => ({
     sku: p.sku,
@@ -80,7 +83,7 @@ export const restorePurchaseOrder = async (id: string): Promise<void> => {
 // Fetch single purchase order for updating
 export const fetchPurchaseOrderById = async (id: string): Promise<any> => {
   const response = await axios.get(
-    config.purchaseOrder.getPuirchaseOrderById(id)
+    config.purchaseOrder.getPuirchaseOrderById(id),
   );
   return response.data;
 };
@@ -88,11 +91,11 @@ export const fetchPurchaseOrderById = async (id: string): Promise<any> => {
 // Update purchase order
 export const updatePurchaseOrder = async (
   id: string,
-  data: any
+  data: any,
 ): Promise<any> => {
   const response = await axios.put(
     config.purchaseOrder.updatePurchaseOrderById(id),
-    data
+    data,
   );
   return response.data;
 };
