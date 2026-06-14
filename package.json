@@ -1,6 +1,6 @@
 {
   "name": "prior-admin-fe",
-  "version": "3.0.3",
+  "version": "3.0.4",
   "private": true,
   "engines": {
     "node": ">=22.0.0"
@@ -153,8 +153,8 @@
     "vite-plugin-electron": "^1.0.2"
   },
   "build": {
-    "appId": "com.prior.admin",
-    "productName": "Prior Admin",
+    "appId": "com.xrn.admin",
+    "productName": "XRN Admin",
     "directories": {
       "output": "dist"
     },

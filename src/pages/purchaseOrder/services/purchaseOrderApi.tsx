@@ -43,7 +43,7 @@ export const searchProductsWithPagination = async (
   if (categoryId && categoryId !== "all") params.categoryId = categoryId;
 
   // Use the general product API that supports pagination
-  const response = await axios.get(config.product.getProductList(), { params });
+  const response = await axios.get(config.purchaseOrder.purchaseSearch(), { params });
 
   return {
     products: response.data?.data?.products || [],
