@@ -38,7 +38,11 @@ export default defineConfig({
       },
       workbox: {
         maximumFileSizeToCacheInBytes: 5 * 1024 * 1024, // 5MB
-        globPatterns: ["**/*.{js,css,html,ico,png,svg,woff2}"],
+        // Only cache non-hashed assets (images, icons, fonts)
+        // Don't cache hashed JS/CSS files - let Netlify handle them with cache headers
+        globPatterns: ["**/*.{ico,png,svg,woff2,webmanifest}"],
+        navigateFallback: "/index.html",
+        navigateFallbackDenylist: [/^\/assets/], // Don't intercept /assets/ requests
         runtimeCaching: [
           {
             urlPattern: /^https:\/\/api\./i,

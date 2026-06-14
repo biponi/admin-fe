@@ -13,30 +13,23 @@
     Referrer-Policy = "strict-origin-when-cross-origin"
     Permissions-Policy = "camera=(), microphone=(), geolocation=()"
 
-# Temporarily reduce cache TTL so old bad cached responses expire sooner
+# Hashed assets in /assets/ - cache forever (1 year) with immutable flag
+# These files have content hashes, so URL changes when content changes
 [[headers]]
   for = "/assets/*"
   [headers.values]
-    Cache-Control = "public, max-age=3600"
+    Cache-Control = "public, max-age=31536000, immutable"
 
+# HTML files - always revalidate to get latest asset references
 [[headers]]
   for = "/*.html"
   [headers.values]
     Cache-Control = "public, max-age=0, must-revalidate"
 
-# Ensure JavaScript files have correct Content-Type
-# Cache set to 0 for instant updates - browsers will revalidate on every load
+# Service worker files - must not be cached for proper updates
 [[headers]]
-  for = "/*.js"
+  for = "/sw.js"
   [headers.values]
-    Content-Type = "application/javascript; charset=utf-8"
-    Cache-Control = "public, max-age=0, must-revalidate"
-
-# CSS files also need instant updates for UI changes
-[[headers]]
-  for = "/*.css"
-  [headers.values]
-    Content-Type = "text/css; charset=utf-8"
     Cache-Control = "public, max-age=0, must-revalidate"
 
 [[headers]]

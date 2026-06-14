@@ -9,7 +9,6 @@ import { ProductPagination } from "./v2-components/ProductPagination";
 import { VariationModal } from "./v2-components/VariationModal";
 import { CartPanel } from "./v2-components/CartPanel";
 import { CartDrawer, CartTriggerButton } from "./v2-components/CartDrawer";
-import { searchProducts } from "../../api";
 import { getProducts } from "../../api/product";
 import { createOrder } from "../../api/order";
 import type { IProduct } from "../product/interface";
@@ -101,37 +100,16 @@ const CreateOrderV2 = () => {
   const fetchProducts = async () => {
     setLoadingProducts(true);
     try {
-      // If there's a search query OR category/brand filter, use searchProducts
-      if (
-        debouncedSearchQuery ||
-        (selectedCategory && selectedCategory !== "all") ||
-        (selectedBrand && selectedBrand !== "all")
-      ) {
-        const query = debouncedSearchQuery || "";
-        const categoryId =
-          selectedCategory !== "all" ? selectedCategory : undefined;
-        const response = await searchProducts(query, categoryId);
+      // Always use the paginated API to ensure pagination works
+      const response = await getProducts(pageSize, currentPage);
 
-        if (response?.success && response?.data) {
-          setProducts(response.data);
-          // Reset pagination info for searches (API doesn't support pagination)
-          setPaginationInfo({ totalPages: 1, totalProducts: response.data.length });
-        } else {
-          setProducts([]);
-          setPaginationInfo({ totalPages: 1, totalProducts: 0 });
-        }
+      if (response?.success && response?.data) {
+        const { products, totalPages, totalProducts } = response.data;
+        setProducts(products || []);
+        setPaginationInfo({ totalPages, totalProducts });
       } else {
-        // Initial load: Use getProducts with pagination
-        const response = await getProducts(pageSize, currentPage);
-
-        if (response?.success && response?.data) {
-          const { products, totalPages, totalProducts } = response.data;
-          setProducts(products || []);
-          setPaginationInfo({ totalPages, totalProducts });
-        } else {
-          setProducts([]);
-          setPaginationInfo({ totalPages: 1, totalProducts: 0 });
-        }
+        setProducts([]);
+        setPaginationInfo({ totalPages: 1, totalProducts: 0 });
       }
     } catch (error) {
       console.error("Error fetching products:", error);
