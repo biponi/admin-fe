@@ -1,6 +1,6 @@
 import React, { Fragment, useEffect, useState } from "react";
 import {
-  searchProducts,
+  searchProductsWithPagination,
   createPurchaseOrder,
 } from "./services/purchaseOrderApi";
 import { ProductSearchResponse } from "./types";
@@ -26,6 +26,7 @@ import {
 import { Dialog, DialogContent, DialogTitle } from "../../components/ui/dialog";
 import { ScrollArea } from "../../components/ui/scroll-area";
 import { Separator } from "../../components/ui/separator";
+import { ProductSelectionSheet } from "./components/ProductSelectionSheet";
 import useDebounce from "../../customHook/useDebounce";
 import { useIsMobile } from "../../hooks/use-mobile";
 import { cn } from "../../utils/functions";
@@ -568,6 +569,12 @@ const CreatePurchaseOrder: React.FC = () => {
   const [searching, setSearching] = useState(false);
   const [searchDialogOpen, setSearchDialogOpen] = useState(false);
 
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(20);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalProducts, setTotalProducts] = useState(0);
+
   const debounce = useDebounce(searchQuery, 500);
 
   // Fetch categories on mount
@@ -588,24 +595,39 @@ const CreatePurchaseOrder: React.FC = () => {
   }, []);
 
   useEffect(() => {
-    if (searchQuery.trim()) {
+    const fetchProducts = async () => {
       setSearching(true);
-      searchProducts(searchQuery, selectedCategory === "all" ? undefined : selectedCategory)
-        .then((res) => {
-          setProducts([...res]);
-          setSearching(false);
-        })
-        .catch((error) => {
-          if (axios.isAxiosError(error))
-            toast.error(error.response?.data?.message ?? "Search failed");
-          else toast.error("Something went wrong.");
-          setSearching(false);
-        });
-    } else {
-      setProducts([]);
+      try {
+        const result = await searchProductsWithPagination(
+          searchQuery,
+          selectedCategory === "all" ? undefined : selectedCategory,
+          currentPage,
+          pageSize
+        );
+
+        setProducts(result.products);
+        setTotalPages(result.totalPages);
+        setTotalProducts(result.totalProduct);
+      } catch (error) {
+        if (axios.isAxiosError(error))
+          toast.error(error.response?.data?.message ?? "Search failed");
+        else toast.error("Something went wrong.");
+      } finally {
+        setSearching(false);
+      }
+    };
+
+    fetchProducts();
+    // eslint-disable-next-line
+  }, [debounce, selectedCategory, currentPage, pageSize]);
+
+  // Reset to page 1 when filters change
+  useEffect(() => {
+    if (currentPage !== 1) {
+      setCurrentPage(1);
     }
     // eslint-disable-next-line
-  }, [debounce, selectedCategory]);
+  }, [selectedCategory]);
 
   const handleAddProduct = React.useCallback(
     (product: ProductSearchResponse) => {
@@ -923,9 +945,9 @@ const CreatePurchaseOrder: React.FC = () => {
             )}
           </div>
 
-          <ProductSearchDialog
+          <ProductSelectionSheet
             open={searchDialogOpen}
-            onClose={() => setSearchDialogOpen(false)}
+            onOpenChange={setSearchDialogOpen}
             searchQuery={searchQuery}
             setSearchQuery={setSearchQuery}
             selectedCategory={selectedCategory}
@@ -933,9 +955,17 @@ const CreatePurchaseOrder: React.FC = () => {
             categories={categories}
             products={products}
             selectedProducts={selectedProducts}
+            currentPage={currentPage}
+            totalPages={totalPages}
+            totalProducts={totalProducts}
+            pageSize={pageSize}
+            onPageChange={setCurrentPage}
+            onPageSizeChange={(size) => {
+              setPageSize(size);
+              setCurrentPage(1);
+            }}
             searching={searching}
             onAdd={handleAddProduct}
-            isMobile={isMobile}
           />
         </Fragment>
       </MainView>
@@ -1153,9 +1183,9 @@ const CreatePurchaseOrder: React.FC = () => {
             )}
         </div>
 
-        <ProductSearchDialog
+        <ProductSelectionSheet
           open={searchDialogOpen}
-          onClose={() => setSearchDialogOpen(false)}
+          onOpenChange={setSearchDialogOpen}
           searchQuery={searchQuery}
           setSearchQuery={setSearchQuery}
           selectedCategory={selectedCategory}
@@ -1163,9 +1193,17 @@ const CreatePurchaseOrder: React.FC = () => {
           categories={categories}
           products={products}
           selectedProducts={selectedProducts}
+          currentPage={currentPage}
+          totalPages={totalPages}
+          totalProducts={totalProducts}
+          pageSize={pageSize}
+          onPageChange={setCurrentPage}
+          onPageSizeChange={(size) => {
+            setPageSize(size);
+            setCurrentPage(1);
+          }}
           searching={searching}
           onAdd={handleAddProduct}
-          isMobile={isMobile}
         />
       </Fragment>
     </MainView>

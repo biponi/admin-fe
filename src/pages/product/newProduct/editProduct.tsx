@@ -817,6 +817,14 @@ const EditProduct: React.FC<Props> = ({
 
     const response = await updateProduct(productData);
     if (!!response) {
+      // Clear the removed image indexes state after successful update
+      // This ensures that removed images are not tracked again after the page refreshes
+      setRemovedVariantImageIndexes({});
+
+      // Note: The parent component (editProductIndex) updates productData prop after successful update
+      // The useEffect hook (lines 105-154) will automatically re-run and refresh variantImages state
+      // from the updated productData prop, ensuring UI matches the backend state
+
       // updateFormData({ ...defaultValue });
     }
   };

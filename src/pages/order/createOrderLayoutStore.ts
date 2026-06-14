@@ -34,6 +34,10 @@ interface CreateOrderLayoutState {
   selectedCategory: string;
   selectedBrand: string;
   isLoadingProducts: boolean;
+  currentPage: number;
+  totalPages: number;
+  totalProducts: number;
+  pageSize: number;
 
   // Cart State
   cart: CartItem[];
@@ -68,6 +72,9 @@ interface CreateOrderLayoutState {
   setSelectedBrand: (brandId: string) => void;
   filterProducts: () => void;
   setLoadingProducts: (isLoading: boolean) => void;
+  setCurrentPage: (page: number) => void;
+  setPageSize: (size: number) => void;
+  setPaginationInfo: (info: { totalPages: number; totalProducts: number }) => void;
 
   // Actions - Cart Management
   addToCart: (product: IProduct, variant?: IVariation) => void;
@@ -121,6 +128,10 @@ const initialState = {
   selectedCategory: "",
   selectedBrand: "",
   isLoadingProducts: false,
+  currentPage: 1,
+  totalPages: 1,
+  totalProducts: 0,
+  pageSize: 20,
 
   cart: [],
   isCartOpen: false,
@@ -210,6 +221,18 @@ export const useCreateOrderLayoutStore = create<CreateOrderLayoutState>()(
 
         setLoadingProducts: (isLoading) => {
           set({ isLoadingProducts: isLoading });
+        },
+
+        setCurrentPage: (page) => {
+          set({ currentPage: page });
+        },
+
+        setPageSize: (size) => {
+          set({ pageSize: size, currentPage: 1 }); // Reset to page 1 when changing page size
+        },
+
+        setPaginationInfo: (info) => {
+          set({ totalPages: info.totalPages, totalProducts: info.totalProducts });
         },
 
         // Cart Management

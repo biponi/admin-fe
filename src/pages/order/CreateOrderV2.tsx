@@ -5,6 +5,7 @@ import useDebounce from "../../customHook/useDebounce";
 import { useCreateOrderLayoutStore } from "./createOrderLayoutStore";
 import { FilterBar } from "./v2-components/FilterBar";
 import { ProductGrid } from "./v2-components/ProductGrid";
+import { ProductPagination } from "./v2-components/ProductPagination";
 import { VariationModal } from "./v2-components/VariationModal";
 import { CartPanel } from "./v2-components/CartPanel";
 import { CartDrawer, CartTriggerButton } from "./v2-components/CartDrawer";
@@ -27,6 +28,10 @@ const CreateOrderV2 = () => {
     selectedCategory,
     selectedBrand,
     isLoadingProducts,
+    currentPage,
+    totalPages,
+    totalProducts,
+    pageSize,
     // Cart
     cart,
     isCartOpen,
@@ -46,6 +51,9 @@ const CreateOrderV2 = () => {
     setSelectedCategory,
     setSelectedBrand,
     setLoadingProducts,
+    setCurrentPage,
+    setPageSize,
+    setPaginationInfo,
     addToCart,
     removeFromCart,
     updateCartQuantity,
@@ -76,11 +84,19 @@ const CreateOrderV2 = () => {
   // Debounced search
   const debouncedSearchQuery = useDebounce(searchQuery, 500);
 
-  // Fetch products on mount and when filters change
+  // Fetch products on mount and when filters or pagination changes
   useEffect(() => {
     fetchProducts();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [debouncedSearchQuery, selectedCategory]);
+  }, [debouncedSearchQuery, selectedCategory, selectedBrand, currentPage, pageSize]);
+
+  // Reset to page 1 when filters change
+  useEffect(() => {
+    if (currentPage !== 1) {
+      setCurrentPage(1);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedCategory, selectedBrand]);
 
   const fetchProducts = async () => {
     setLoadingProducts(true);
@@ -92,28 +108,36 @@ const CreateOrderV2 = () => {
         (selectedBrand && selectedBrand !== "all")
       ) {
         const query = debouncedSearchQuery || "";
-        const categoryId = selectedCategory !== "all" ? selectedCategory : undefined;
+        const categoryId =
+          selectedCategory !== "all" ? selectedCategory : undefined;
         const response = await searchProducts(query, categoryId);
 
         if (response?.success && response?.data) {
           setProducts(response.data);
+          // Reset pagination info for searches (API doesn't support pagination)
+          setPaginationInfo({ totalPages: 1, totalProducts: response.data.length });
         } else {
           setProducts([]);
+          setPaginationInfo({ totalPages: 1, totalProducts: 0 });
         }
       } else {
-        // Initial load: Use getProducts with limit of 50
-        const response = await getProducts(50, 1);
+        // Initial load: Use getProducts with pagination
+        const response = await getProducts(pageSize, currentPage);
 
         if (response?.success && response?.data) {
-          setProducts(response.data.products || []);
+          const { products, totalPages, totalProducts } = response.data;
+          setProducts(products || []);
+          setPaginationInfo({ totalPages, totalProducts });
         } else {
           setProducts([]);
+          setPaginationInfo({ totalPages: 1, totalProducts: 0 });
         }
       }
     } catch (error) {
       console.error("Error fetching products:", error);
       toast.error("Failed to fetch products");
       setProducts([]);
+      setPaginationInfo({ totalPages: 1, totalProducts: 0 });
     } finally {
       setLoadingProducts(false);
     }
@@ -176,7 +200,7 @@ const CreateOrderV2 = () => {
           if (
             item.selectedVariant.images &&
             item.selectedVariant.images.length > 0 &&
-            typeof item.selectedVariant.images[0] === 'string'
+            typeof item.selectedVariant.images[0] === "string"
           ) {
             transformedItem.thumbnail = item.selectedVariant.images[0];
           }
@@ -236,22 +260,21 @@ const CreateOrderV2 = () => {
   const cartItemCount = getCartItemCount();
 
   return (
-    <div className='flex flex-col lg:flex-row h-[calc(100vh-4rem)] py-2 bg-gray-100'>
+    <div className='flex flex-col lg:flex-row h-[calc(100vh-4rem)] md:py-2 bg-white'>
       {/* Product Section - 60% on desktop */}
       <div className='flex-1 lg:w-3/5 flex flex-col overflow-hidden'>
-        {/* Header */}
-        <div className='p-4 border-b bg-white rounded-md shadow mx-4'>
-          <h1 className='text-2xl font-bold flex items-center gap-2'>
-            <Package className='h-6 w-6' />
-            Create Order
-          </h1>
-          <p className='text-sm text-muted-foreground mt-1'>
-            Select products and fill in customer details
-          </p>
-        </div>
-
         {/* Filters and Product Grid */}
-        <div className='flex-1 overflow-auto p-4 bg-gray-50'>
+        <div className='flex-1 overflow-auto p-2 md:p-4 bg-gray-50'>
+          {/* Header */}
+          <div className='p-4 border-b bg-white rounded-md shadow mb-2'>
+            <h1 className='text-2xl font-bold flex items-center gap-2'>
+              <Package className='h-6 w-6' />
+              Create Order
+            </h1>
+            <p className='text-sm text-muted-foreground mt-1'>
+              Select products and fill in customer details
+            </p>
+          </div>
           <div className='max-w-7xl mx-auto space-y-6'>
             <FilterBar
               searchQuery={searchQuery}
@@ -269,6 +292,16 @@ const CreateOrderV2 = () => {
               products={filteredProducts}
               onAddToCart={handleAddToCart}
               onProductClick={handleProductClick}
+              isLoading={isLoadingProducts}
+            />
+
+            <ProductPagination
+              currentPage={currentPage}
+              totalPages={totalPages}
+              totalItems={totalProducts}
+              pageSize={pageSize}
+              onPageChange={setCurrentPage}
+              onPageSizeChange={setPageSize}
               isLoading={isLoadingProducts}
             />
           </div>

@@ -27,6 +27,32 @@ export const searchProducts = async (
   return response.data;
 };
 
+export const searchProductsWithPagination = async (
+  query?: string,
+  categoryId?: string,
+  page = 1,
+  limit = 20
+): Promise<{
+  products: ProductSearchResponse[];
+  totalPages: number;
+  totalProduct: number;
+  currentPage: number;
+}> => {
+  const params: any = { page, limit };
+  if (query && query.trim()) params.query = query;
+  if (categoryId && categoryId !== "all") params.categoryId = categoryId;
+
+  // Use the general product API that supports pagination
+  const response = await axios.get(config.product.getProductList(), { params });
+
+  return {
+    products: response.data?.data?.products || [],
+    totalPages: response.data?.data?.totalPages || 1,
+    totalProduct: response.data?.data?.totalProduct || 0,
+    currentPage: page,
+  };
+};
+
 export const createPurchaseOrder = async (
   products: ProductSearchResponse[]
 ): Promise<void> => {

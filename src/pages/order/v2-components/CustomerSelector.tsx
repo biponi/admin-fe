@@ -5,7 +5,7 @@ import { Label } from '../../../components/ui/label';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '../../../components/ui/card';
 import { Badge } from '../../../components/ui/badge';
 import { CustomerSearchCollapsible } from './CustomerSearchCollapsible';
-import { AddressSelectionModal } from './AddressSelectionModal';
+import { AddressSelectionSheet } from './AddressSelectionSheet';
 import { customerSearchAPI } from '../../../api/customerSearch';
 import type { ICustomer, IShipping } from '../../order/interface.d';
 import type { CustomerInfo, AddressDetails, CustomerListItem } from '../../../api/customerSearch';
@@ -22,7 +22,7 @@ export function CustomerSelector({
   onChange,
   onShippingChange,
 }: CustomerSelectorProps) {
-  const [addressModalOpen, setAddressModalOpen] = useState(false);
+  const [addressSheetOpen, setAddressSheetOpen] = useState(false);
   const [selectedCustomer, setSelectedCustomer] = useState<CustomerInfo | null>(null);
   const [customerAddresses, setCustomerAddresses] = useState<AddressDetails[]>([]);
 
@@ -54,9 +54,9 @@ export function CustomerSelector({
         }
         toast.success(`Customer "${customerInfo.name}" selected with address`);
       } else {
-        // Multiple addresses - show modal
+        // Multiple addresses - show sheet
         setCustomerAddresses(addresses);
-        setAddressModalOpen(true);
+        setAddressSheetOpen(true);
       }
     } else {
       // No addresses in the dropdown data, fetch them
@@ -78,7 +78,7 @@ export function CustomerSelector({
             toast.success(`Customer "${customerInfo.name}" selected with address`);
           } else {
             setCustomerAddresses(fetchedAddresses);
-            setAddressModalOpen(true);
+            setAddressSheetOpen(true);
           }
         } else {
           toast.success(`Customer "${customerInfo.name}" selected`);
@@ -204,11 +204,11 @@ export function CustomerSelector({
         </div>
       </CardContent>
 
-      {/* Address Selection Modal */}
+      {/* Address Selection Sheet */}
       {selectedCustomer && (
-        <AddressSelectionModal
-          open={addressModalOpen}
-          onOpenChange={setAddressModalOpen}
+        <AddressSelectionSheet
+          open={addressSheetOpen}
+          onOpenChange={setAddressSheetOpen}
           customer={selectedCustomer}
           addresses={customerAddresses}
           onSelect={handleAddressSelect}

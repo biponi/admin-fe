@@ -121,7 +121,10 @@ export function CartDrawer({
                 shipping={shippingInfo}
                 onChange={onShippingChange}
                 onDeliveryChargeChange={(charge) => {
-                  onTransactionChange({ ...transaction, deliveryCharge: charge });
+                  onTransactionChange({
+                    ...transaction,
+                    deliveryCharge: charge,
+                  });
                 }}
               />
             </div>
@@ -160,9 +163,8 @@ export function CartTriggerButton({
     <Button
       onClick={onClick}
       size='lg'
-      className='fixed bottom-20 right-4 z-40 h-14 px-6 rounded-full shadow-xl bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 transition-all duration-300 hover:scale-105 hover:shadow-2xl'>
-      <ShoppingCart className='h-5 w-5 mr-2' />
-      <span className='font-semibold'>Cart</span>
+      className='fixed bottom-20 sm:bottom-24 right-4 z-40 h-14 px-6 rounded-full shadow-xl bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 transition-all duration-300 hover:scale-105 hover:shadow-2xl'>
+      <ShoppingCart className='h-8 w-8' />
       {itemCount > 0 && (
         <Badge className='ml-2 bg-white text-blue-600 hover:bg-white shadow-md animate-pulse'>
           {itemCount}

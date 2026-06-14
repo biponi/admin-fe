@@ -136,7 +136,8 @@ export function CustomerSearchCollapsible({
                 onChange={(e) => setSearchQuery(e.target.value)}
                 onKeyDown={handleKeyDown}
                 placeholder='Type to search...'
-                className='w-full pl-10 pr-4 py-2 text-sm border border-gray-200 rounded-lg focus:border-blue-400 focus:outline-none focus:ring-2 focus:ring-blue-400/20'
+                className='w-full pl-10 pr-4 py-2 text-sm border border-gray-200 rounded-lg focus:border-blue-400 focus:outline-none focus:ring-2 focus:ring-blue-400/20 tap-target'
+                style={{ touchAction: 'manipulation' }}
               />
             </div>
           </div>
@@ -164,10 +165,10 @@ export function CustomerSearchCollapsible({
                   <li
                     key={customerItem.customer.mobile}
                     onClick={() => handleSelect(customerItem)}
-                    className={`px-3 py-2.5 cursor-pointer transition-all duration-200 ${
+                    className={`px-3 py-2.5 cursor-pointer transition-all duration-200 tap-target ${
                       index === selectedIndex
                         ? "bg-blue-50 border-l-4 border-blue-600"
-                        : "hover:bg-gray-50"
+                        : "hover:bg-gray-50 active:bg-gray-100"
                     }`}>
                     <div className='flex items-center gap-3'>
                       <div className='h-9 w-9 rounded-full bg-gradient-to-br from-blue-100 to-purple-100 flex items-center justify-center shrink-0'>

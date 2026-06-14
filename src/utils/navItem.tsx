@@ -40,6 +40,10 @@ export const navItems = [
         title: "Order Confirmation",
         url: "/order/confirmation",
       },
+      {
+        title: "Create Order",
+        url: "/order/create",
+      },
     ],
     roles: ["admin", "manager", "moderator"],
   },
