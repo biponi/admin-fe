@@ -16,8 +16,8 @@ import {
 import dayjs from "dayjs";
 import { Button } from "../../../components/ui/button";
 import { useRef, useState, useEffect, useCallback } from "react";
-import CustomAlertDialog from "../../../coreComponents/OptionModal";
 import useRoleCheck from "../../auth/hooks/useRoleCheck";
+import DeleteRequestDialog from "./DeleteRequestDialog";
 
 /* ─── Types ─────────────────────────────────────────────── */
 
@@ -631,14 +631,14 @@ const SingleProductCardItem: React.FC<Props> = ({
           </div>
         )}
 
-        <CustomAlertDialog
-          title='Are You Sure?'
-          description={`This will permanently delete "${title}". This action cannot be undone.`}
-          onSubmit={() => deleteExistingProduct(id)}>
+        <DeleteRequestDialog
+          productId={id}
+          productName={title}
+          onSuccess={deleteExistingProduct}>
           <button ref={dialogBtn} className='hidden'>
             confirm delete
           </button>
-        </CustomAlertDialog>
+        </DeleteRequestDialog>
       </div>
 
       <VariantDrawer

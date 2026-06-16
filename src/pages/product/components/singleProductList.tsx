@@ -21,10 +21,10 @@ import {
   PopoverTrigger,
 } from "../../../components/ui/popover";
 import { useRef, useState, memo } from "react";
-import CustomAlertDialog from "../../../coreComponents/OptionModal";
 import useRoleCheck from "../../auth/hooks/useRoleCheck";
 import { ProductAdjustmentDialog } from "./ProductAdjustmentDialog";
 import { ProductAdjustmentHistory } from "./ProductAdjustmentHistory";
+import DeleteRequestDialog from "./DeleteRequestDialog";
 import type { IVariation } from "../interface";
 import PlaceHolderImage from "../../../assets/placeholder.svg";
 
@@ -494,13 +494,13 @@ const SingleItem: React.FC<Props> = ({
         </TableCell>
       )}
 
-      {/* Hidden delete confirm trigger */}
-      <CustomAlertDialog
-        title='Are you sure?'
-        description={`Deleting "${title}". This action cannot be undone.`}
-        onSubmit={() => deleteExistingProduct(id)}>
+      {/* Hidden delete request trigger */}
+      <DeleteRequestDialog
+        productId={id}
+        productName={title}
+        onSuccess={refreshProductList}>
         <button className='hidden' ref={dialogBtn} />
-      </CustomAlertDialog>
+      </DeleteRequestDialog>
 
       {adjustDialogOpen && (
         <ProductAdjustmentDialog

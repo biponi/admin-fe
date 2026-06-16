@@ -19,6 +19,7 @@ import {
   Ticket,
   DollarSign,
   BarChart3,
+  ClipboardCheck,
 } from "lucide-react";
 
 export const navItems = [
@@ -137,6 +138,14 @@ export const navItems = [
     active: true,
     id: "DailyReport",
     roles: ["admin"],
+  },
+  {
+    icon: <ClipboardCheck className='w-5 h-5' />,
+    title: "Operation Requests",
+    link: "/operation-requests",
+    active: true,
+    id: "OperationRequest",
+    roles: ["admin", "manager"],
   },
 
   {

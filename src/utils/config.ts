@@ -302,6 +302,25 @@ const config = {
     // Commission export endpoints
     getExportReport: () => `${baseURL}/commission/export`,
   },
+  operationRequest: {
+    // Product deletion request endpoints
+    createProductDelete: (productId: string) =>
+      `${baseURL}/operation-request/product-delete/${productId}`,
+    // Get all requests (admin sees all, users see own)
+    getRequests: () => `${baseURL}/operation-request/requests`,
+    // Get single request by ID
+    getRequest: (id: string) => `${baseURL}/operation-request/request/${id}`,
+    // Approve request (admin only)
+    approve: (id: string) => `${baseURL}/operation-request/${id}/approve`,
+    // Reject request (admin only)
+    reject: (id: string) => `${baseURL}/operation-request/${id}/reject`,
+    // Cancel request (requester only)
+    cancel: (id: string) => `${baseURL}/operation-request/${id}/cancel`,
+    // Get current user's requests
+    myRequests: () => `${baseURL}/operation-request/my-requests`,
+    // Get statistics (admin only)
+    statistics: () => `${baseURL}/operation-request/statistics`,
+  },
 };
 
 export default config;

@@ -48,6 +48,7 @@ import GlobalCouponsPage from "../../pages/coupon/GlobalCoupons";
 import CreateGlobalCoupon from "../../pages/coupon/GlobalCoupons/CreateGlobalCoupon";
 import CustomerCouponsPage from "../../pages/coupon/CustomerCoupons";
 import CouponAnalyticsPage from "../../pages/coupon/Analytics";
+import OperationRequestsPage from "../../pages/operation-requests";
 
 // Layout switcher component for create order
 const CreateOrderLayoutSwitch = () => {
@@ -269,6 +270,16 @@ export const ProtectedRoutes = () => {
           <ProtectedRoute page='DailyReport' requiredAction='view'>
             <MainViewComponent title='Daily Reports'>
               <DailyReportPage />
+            </MainViewComponent>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path='/operation-requests'
+        element={
+          <ProtectedRoute page='OperationRequest' requiredAction='view'>
+            <MainViewComponent title='Operation Requests'>
+              <OperationRequestsPage />
             </MainViewComponent>
           </ProtectedRoute>
         }
