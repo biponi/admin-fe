@@ -39,5 +39,11 @@ export const protectedRouteConfigs: RouteConfig[] = [
     requiredAction: "view",
     title: "Reports & Analytics",
   },
+  {
+    path: "/daily-reports",
+    page: "DailyReport",
+    requiredAction: "view",
+    title: "Daily Reports",
+  },
   // Add more routes here...
 ];

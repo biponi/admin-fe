@@ -22,6 +22,7 @@ import {
 import { IImageGroup, IVariation } from "@/pages/product/interface";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
+import { validateImageGroup } from "@/utils/functions";
 
 interface ImageGroupManagerProps {
   imageGroups: IImageGroup[];
@@ -116,10 +117,11 @@ export const ImageGroupManager: React.FC<ImageGroupManagerProps> = ({
   };
 
   const handleAddNewGroup = () => {
+    // Create a temporary group with default values
     const newGroup: IImageGroup = {
       id: `group-${Date.now()}`,
       attribute: selectedAttribute,
-      value: "",
+      value: `New ${selectedAttribute}`, // Provide a default value instead of empty string
       displayLabel: `New ${selectedAttribute} Group`,
       colorHex: selectedAttribute === "color" ? "#6b7280" : undefined,
       images: [],
@@ -127,11 +129,23 @@ export const ImageGroupManager: React.FC<ImageGroupManagerProps> = ({
       sortOrder: imageGroups.length,
     };
 
+    // Validate the group before adding
+    if (!validateImageGroup(newGroup)) {
+      toast.error("Cannot add group: Missing required fields (attribute or value)");
+      return;
+    }
+
     onImageGroupsChange([...imageGroups, newGroup]);
-    toast.success("New group added. Edit the group details below.");
+    toast.success(`New ${selectedAttribute} group added. Edit the value field below.`);
   };
 
   const handleUpdateGroup = (updatedGroup: IImageGroup) => {
+    // Validate the updated group before saving
+    if (!validateImageGroup(updatedGroup)) {
+      toast.error("Cannot save group: Both attribute and value are required");
+      return;
+    }
+
     onImageGroupsChange(
       imageGroups.map((g) => (g.id === updatedGroup.id ? updatedGroup : g)),
     );
@@ -201,8 +215,8 @@ export const ImageGroupManager: React.FC<ImageGroupManagerProps> = ({
               </p>
 
               <div className='flex flex-wrap items-center gap-2'>
-                {/* Auto-generate only visible in create mode with no groups */}
-                {mode === "create" && !hasGroups && (
+                {/* Auto-generate visible when there are no groups */}
+                {!hasGroups && (
                   <>
                     <div className='w-[130px]'>
                       <Select

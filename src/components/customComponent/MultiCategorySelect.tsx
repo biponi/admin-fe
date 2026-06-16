@@ -12,13 +12,15 @@ import { Button } from "../ui/button";
 import { Input } from "../ui/input";
 import { Label } from "../ui/label";
 import { Badge } from "../ui/badge";
-import { ChevronDown, Search, X, Check } from "lucide-react";
+import { ChevronDown, Search, X, Check, Star } from "lucide-react";
 import { ICategory } from "../../pages/product/interface";
 
 interface MultiCategorySelectProps {
   categories: ICategory[];
   selectedCategoryIds: string[];
+  primaryCategoryId: string;
   setSelectedCategoryIds: (ids: string[]) => void;
+  setPrimaryCategoryId: (id: string) => void;
   maxCategories?: number;
   disabled?: boolean;
 }
@@ -26,7 +28,9 @@ interface MultiCategorySelectProps {
 const MultiCategorySelect: React.FC<MultiCategorySelectProps> = ({
   categories,
   selectedCategoryIds,
+  primaryCategoryId,
   setSelectedCategoryIds,
+  setPrimaryCategoryId,
   maxCategories = 5,
   disabled = false,
 }) => {
@@ -108,21 +112,27 @@ const MultiCategorySelect: React.FC<MultiCategorySelectProps> = ({
         return; // Must have at least one category
       }
 
-      // Prevent removing primary category (first selected)
-      if (selectedCategoryIds[0] === categoryId) {
-        return; // Cannot remove primary category
+      // Allow removing primary category - if removed, set first remaining as primary
+      const newSelectedIds = selectedCategoryIds.filter((id) => id !== categoryId);
+      if (categoryId === primaryCategoryId && newSelectedIds.length > 0) {
+        // Set new primary category
+        setPrimaryCategoryId(newSelectedIds[0]);
       }
 
-      setSelectedCategoryIds(
-        selectedCategoryIds.filter((id) => id !== categoryId),
-      );
+      setSelectedCategoryIds(newSelectedIds);
     } else {
       // Check max limit
       if (selectedCategoryIds.length >= maxCategories) {
         return; // Max categories reached
       }
 
-      setSelectedCategoryIds([...selectedCategoryIds, categoryId]);
+      // If this is the first category, make it primary
+      const newIds = [...selectedCategoryIds, categoryId];
+      if (newIds.length === 1) {
+        setPrimaryCategoryId(categoryId);
+      }
+
+      setSelectedCategoryIds(newIds);
     }
   };
 
@@ -135,14 +145,22 @@ const MultiCategorySelect: React.FC<MultiCategorySelectProps> = ({
       return;
     }
 
-    // Prevent removing primary category (first selected)
-    if (selectedCategoryIds[0] === categoryId) {
-      return;
+    // Allow removing primary category - if removed, set first remaining as primary
+    const newSelectedIds = selectedCategoryIds.filter((id) => id !== categoryId);
+    if (categoryId === primaryCategoryId && newSelectedIds.length > 0) {
+      // Set new primary category
+      setPrimaryCategoryId(newSelectedIds[0]);
     }
 
-    setSelectedCategoryIds(
-      selectedCategoryIds.filter((id) => id !== categoryId),
-    );
+    setSelectedCategoryIds(newSelectedIds);
+  };
+
+  // Set as primary category
+  const handleSetAsPrimary = (categoryId: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (selectedCategoryIds.includes(categoryId)) {
+      setPrimaryCategoryId(categoryId);
+    }
   };
 
   // Render category items recursively
@@ -153,7 +171,7 @@ const MultiCategorySelect: React.FC<MultiCategorySelectProps> = ({
     return categories.map((category) => {
       const hasChildren = category.children.length > 0;
       const isSelected = selectedCategoryIds.includes(category.id);
-      const isPrimary = selectedCategoryIds[0] === category.id;
+      const isPrimary = primaryCategoryId === category.id;
       const productCount =
         (category.totalProducts ?? 0) > 0 ? ` (${category.totalProducts})` : "";
 
@@ -260,7 +278,7 @@ const MultiCategorySelect: React.FC<MultiCategorySelectProps> = ({
 
     return flatCategories.map((category) => {
       const isSelected = selectedCategoryIds.includes(category.id);
-      const isPrimary = selectedCategoryIds[0] === category.id;
+      const isPrimary = primaryCategoryId === category.id;
       const productCount =
         (category.totalProducts ?? 0) > 0 ? ` (${category.totalProducts})` : "";
 
@@ -310,8 +328,8 @@ const MultiCategorySelect: React.FC<MultiCategorySelectProps> = ({
         {/* Selected Categories Badges */}
         {selectedCategories.length > 0 && (
           <div className='flex flex-wrap gap-2 mb-2'>
-            {selectedCategories.map((category, index) => {
-              const isPrimary = index === 0;
+            {selectedCategories.map((category) => {
+              const isPrimary = primaryCategoryId === category.id;
               return (
                 <Badge
                   key={category.id}
@@ -319,13 +337,22 @@ const MultiCategorySelect: React.FC<MultiCategorySelectProps> = ({
                   className='text-sm pr-1'>
                   {category.name}
                   {isPrimary && <span className='ml-1 text-xs'>(Primary)</span>}
-                  {selectedCategories.length > 1 && !isPrimary && (
-                    <button
-                      onClick={(e) => handleRemoveCategory(category.id, e)}
-                      className='ml-1 hover:bg-destructive/20 rounded-full p-0.5'
-                      disabled={disabled}>
-                      <X className='h-3 w-3' />
-                    </button>
+                  {selectedCategories.length > 1 && (
+                    <>
+                      <button
+                        onClick={(e) => handleSetAsPrimary(category.id, e)}
+                        className='ml-1 hover:bg-primary/20 rounded-full p-0.5'
+                        disabled={disabled}
+                        title='Set as primary category'>
+                        <Star className='h-3 w-3' fill={isPrimary ? 'currentColor' : 'none'} />
+                      </button>
+                      <button
+                        onClick={(e) => handleRemoveCategory(category.id, e)}
+                        className='ml-1 hover:bg-destructive/20 rounded-full p-0.5'
+                        disabled={disabled}>
+                        <X className='h-3 w-3' />
+                      </button>
+                    </>
                   )}
                 </Badge>
               );
@@ -391,8 +418,8 @@ const MultiCategorySelect: React.FC<MultiCategorySelectProps> = ({
 
         {/* Helper text */}
         <p className='text-xs text-muted-foreground'>
-          Select up to {maxCategories} categories. First selected will be
-          primary.
+          Select up to {maxCategories} categories. Click the star icon to set
+          the primary category.
         </p>
       </div>
     </div>

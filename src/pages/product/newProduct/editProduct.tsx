@@ -54,9 +54,12 @@ import {
   IVariantImageMapping,
   IImageGroup,
 } from "../interface";
+import { filterImageGroups } from "../../../utils/functions";
 import MultiCategorySelect from "../../../components/customComponent/MultiCategorySelect";
 import { VariantImageUploader } from "../../../components/product/VariantImageUploader";
 import { ImageGroupManager } from "../../../components/product/ImageGroupManager";
+import V2SimpleVariationManager from "../../../components/product/V2SimpleVariationManager";
+import V1VariationManager from "../../../components/product/V1VariationManager";
 
 interface Props {
   productData: IProductUpdateData;
@@ -86,10 +89,6 @@ const EditProduct: React.FC<Props> = ({
   );
   const [isSameUnitPrice, setSameunitPrice] = useState(true);
   const [variationTab, setVariationTab] = useState("v1");
-  const [v2Colors, setV2Colors] = useState<string[]>([]);
-  const [v2Sizes, setV2Sizes] = useState<string[]>([]);
-  const [newColor, setNewColor] = useState("");
-  const [newSize, setNewSize] = useState("");
   const [variantImages, setVariantImages] = useState<
     Record<string, (File | string)[]>
   >({});
@@ -329,396 +328,25 @@ const EditProduct: React.FC<Props> = ({
     });
   };
 
-  // V2 Variation Functions
-  const addColor = () => {
-    if (newColor.trim() && !v2Colors.includes(newColor.trim())) {
-      const newColors = [...v2Colors, newColor.trim()];
-      setV2Colors(newColors);
-      setNewColor("");
-      generateV2Variations(newColors, v2Sizes);
-    }
-  };
-
-  const addSize = () => {
-    if (newSize.trim() && !v2Sizes.includes(newSize.trim())) {
-      const newSizes = [...v2Sizes, newSize.trim()];
-      setV2Sizes(newSizes);
-      setNewSize("");
-      generateV2Variations(v2Colors, newSizes);
-    }
-  };
-
-  const removeColor = (colorToRemove: string) => {
-    const newColors = v2Colors.filter((color) => color !== colorToRemove);
-    setV2Colors(newColors);
-    generateV2Variations(newColors, v2Sizes);
-  };
-
-  const removeSize = (sizeToRemove: string) => {
-    const newSizes = v2Sizes.filter((size) => size !== sizeToRemove);
-    setV2Sizes(newSizes);
-    generateV2Variations(v2Colors, newSizes);
-  };
-
-  const generateV2Variations = (colors: string[], sizes: string[]) => {
-    const variations: IVariation[] = [];
-    let id = formData.variation?.length || 0;
-
-    for (const color of colors) {
-      for (const size of sizes) {
-        variations.push({
-          id: id.toString(),
-          size,
-          color,
-          name: `${color} - ${size}`,
-          title: `${color} ${size}`,
-          sku: `${formData.sku}-${id}`,
-          quantity: 0,
-          unitPrice: isSameUnitPrice ? formData.unitPrice : 0,
-        });
-        id++;
-      }
-    }
-
-    updateFormData({
-      ...formData,
-      variation: variations,
-      quantity: variations.reduce((sum, variant) => sum + variant.quantity, 0),
-    });
-  };
-
   // V1 Variation View - Advanced Mode
   const renderV1VariationView = () => {
     return (
-      <div className='space-y-4'>
-        {/* Variation Cards Grid */}
-        {!!formData.variation && formData.variation.length > 0 ? (
-          <div className='grid gap-4 sm:grid-cols-2 lg:grid-cols-3'>
-            {formData.variation.map((variation: IVariation, index: number) => (
-              <div
-                key={variation.id || index}
-                className='group relative bg-gradient-to-br from-white to-slate-50/50 dark:from-slate-800 dark:to-slate-800/50 rounded-xl border-2 border-slate-200 dark:border-slate-700 hover:border-indigo-300 dark:hover:border-indigo-600 shadow-sm hover:shadow-lg transition-all duration-300'>
-                {/* Delete Button */}
-                <button
-                  onClick={() => deleteVariation(index)}
-                  className='absolute top-2 right-2 p-1.5 bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400 rounded-lg opacity-0 group-hover:opacity-100 hover:bg-red-200 dark:hover:bg-red-900/50 transition-all duration-200 z-10'>
-                  <Trash className='h-3.5 w-3.5' />
-                </button>
-
-                <div className='p-4 space-y-3'>
-                  {/* SKU Header */}
-                  <div className='flex items-center gap-2 pb-2 border-b border-slate-200 dark:border-slate-700'>
-                    <div className='p-1.5 bg-indigo-100 dark:bg-indigo-900/30 rounded-lg'>
-                      <Hash className='h-3.5 w-3.5 text-indigo-600 dark:text-indigo-400' />
-                    </div>
-                    <span className='font-mono text-xs font-semibold text-slate-700 dark:text-slate-300 truncate'>
-                      {variation?.sku}
-                    </span>
-                  </div>
-
-                  {/* Inputs Grid */}
-                  <div className='space-y-3'>
-                    {/* Variant Name (Editable) */}
-                    <div className='space-y-1.5 hidden'>
-                      <Label className='text-[10px] font-semibold text-slate-600 dark:text-slate-400 flex items-center gap-1'>
-                        <Tag className='h-3 w-3 text-blue-500' />
-                        Variant Name
-                      </Label>
-                      <Input
-                        name='name'
-                        onChange={(e) => updateVariationData(index, e)}
-                        type='text'
-                        value={variation.name || ""}
-                        className='h-8 text-xs border-slate-300 dark:border-slate-600 focus:border-blue-400 dark:focus:border-blue-500'
-                        placeholder='e.g., Red - Large'
-                      />
-                    </div>
-
-                    {/* Stock (Read-only - Disabled) */}
-                    <div className='space-y-1.5'>
-                      <Label className='text-[10px] font-semibold text-slate-600 dark:text-slate-400 flex items-center gap-1'>
-                        <Package className='h-3 w-3 text-emerald-500' />
-                        Stock (Read-only)
-                      </Label>
-                      <div className='h-8 flex items-center px-3 rounded-md text-xs font-semibold border-2 bg-slate-50 dark:bg-slate-900 border-slate-300 dark:border-slate-600 text-slate-700 dark:text-slate-300'>
-                        {variation.quantity} units
-                      </div>
-                    </div>
-
-                    {/* Color & Size */}
-                    <div className='grid grid-cols-2 gap-2'>
-                      <div className='space-y-1.5'>
-                        <Label className='text-[10px] font-semibold text-slate-600 dark:text-slate-400 flex items-center gap-1'>
-                          <Palette className='h-3 w-3 text-purple-500' />
-                          Color
-                        </Label>
-                        <Input
-                          name='color'
-                          onChange={(e) => updateVariationData(index, e)}
-                          type='text'
-                          value={variation.color}
-                          className='h-8 text-xs border-slate-300 dark:border-slate-600 focus:border-purple-400 dark:focus:border-purple-500'
-                          placeholder='Enter color'
-                        />
-                      </div>
-
-                      <div className='space-y-1.5'>
-                        <Label className='text-[10px] font-semibold text-slate-600 dark:text-slate-400 flex items-center gap-1'>
-                          <Ruler className='h-3 w-3 text-blue-500' />
-                          Size
-                        </Label>
-                        <Input
-                          name='size'
-                          onChange={(e) => updateVariationData(index, e)}
-                          type='text'
-                          value={variation.size}
-                          className='h-8 text-xs border-slate-300 dark:border-slate-600 focus:border-blue-400 dark:focus:border-blue-500'
-                          placeholder='Enter size'
-                        />
-                      </div>
-                    </div>
-
-                    {/* Variant Images */}
-                    <VariantImageUploader
-                      variantId={variation.id}
-                      variantName={
-                        `${variation.color || ""} ${variation.size || ""}`.trim() ||
-                        variation.name ||
-                        `Variant ${index + 1}`
-                      }
-                      images={variantImages[variation.id] || []}
-                      onImagesChange={handleVariantImagesChange}
-                    />
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-        ) : (
-          <div className='text-center py-12 bg-gradient-to-br from-slate-50 to-blue-50/30 dark:from-slate-800 dark:to-slate-800/50 rounded-xl border-2 border-dashed border-slate-300 dark:border-slate-600'>
-            <div className='inline-flex items-center justify-center w-16 h-16 rounded-full bg-gradient-to-br from-slate-100 to-slate-200 dark:from-slate-700 dark:to-slate-600 mb-4'>
-              <Box className='w-8 h-8 text-slate-400 dark:text-slate-500' />
-            </div>
-            <p className='text-sm font-medium text-slate-700 dark:text-slate-300 mb-1'>
-              No variations added yet
-            </p>
-            <p className='text-xs text-slate-500 dark:text-slate-400'>
-              Click "Add New Variation" below to get started
-            </p>
-          </div>
-        )}
-      </div>
+      <V1VariationManager
+        variations={formData.variation || []}
+        variantImages={variantImages}
+        readonly={true}
+        showPrice={false}
+        showVariantName={true}
+        isSameUnitPrice={isSameUnitPrice}
+        gridColumns={{ sm: "2", lg: "3" }}
+        onUpdateVariation={updateVariationData}
+        onDeleteVariation={deleteVariation}
+        onVariantImagesChange={handleVariantImagesChange}
+      />
     );
   };
 
   // V2 Variation View - Simple Mode
-  const renderV2VariationView = () => {
-    return (
-      <div className='space-y-6'>
-        <div className='grid gap-4 sm:grid-cols-2'>
-          {/* Colors Section */}
-          <div className='space-y-3'>
-            <div className='flex items-center justify-between'>
-              <div className='flex items-center gap-2'>
-                <Palette className='w-4 h-4 text-purple-500' />
-                <Label className='text-base font-semibold'>Colors</Label>
-              </div>
-              <Badge
-                variant='secondary'
-                className='bg-purple-50 text-purple-700 dark:bg-purple-900/30 dark:text-purple-300 border-0'>
-                {v2Colors.length}
-              </Badge>
-            </div>
-
-            <div className='flex gap-2'>
-              <Input
-                placeholder='e.g., Red, Blue, Green'
-                value={newColor}
-                onChange={(e) => setNewColor(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter") {
-                    e.preventDefault();
-                    addColor();
-                  }
-                }}
-                className='flex-1 h-9 border-purple-200 focus:border-purple-400'
-              />
-              <Button
-                onClick={addColor}
-                size='sm'
-                className='h-9 bg-purple-500 hover:bg-purple-600'
-                disabled={
-                  !newColor.trim() || v2Colors.includes(newColor.trim())
-                }>
-                <Plus className='h-4 w-4' />
-              </Button>
-            </div>
-
-            <div className='flex flex-wrap gap-2 min-h-[70px] p-2.5 rounded-lg bg-gradient-to-br from-purple-50/50 to-pink-50/50 dark:from-purple-900/10 dark:to-pink-900/10 border border-purple-100 dark:border-purple-900/30'>
-              {v2Colors.length > 0 ? (
-                v2Colors.map((color) => (
-                  <Badge
-                    key={color}
-                    className='flex items-center gap-1.5 px-2.5 py-1 bg-white dark:bg-slate-800 border border-purple-200 dark:border-purple-800 text-purple-700 dark:text-purple-300 hover:bg-purple-50 dark:hover:bg-purple-900/20 transition-colors'>
-                    <Palette className='w-3 h-3' />
-                    {color}
-                    <button
-                      onClick={() => removeColor(color)}
-                      className='ml-0.5 hover:bg-red-100 dark:hover:bg-red-900/30 rounded-full p-0.5 transition-colors'>
-                      <X className='h-3 w-3 text-red-500' />
-                    </button>
-                  </Badge>
-                ))
-              ) : (
-                <p className='text-xs text-slate-500 dark:text-slate-400 flex items-center justify-center w-full h-12'>
-                  No colors added yet
-                </p>
-              )}
-            </div>
-          </div>
-
-          {/* Sizes Section */}
-          <div className='space-y-3'>
-            <div className='flex items-center justify-between'>
-              <div className='flex items-center gap-2'>
-                <Ruler className='w-4 h-4 text-blue-500' />
-                <Label className='text-base font-semibold'>Sizes</Label>
-              </div>
-              <Badge
-                variant='secondary'
-                className='bg-blue-50 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300 border-0'>
-                {v2Sizes.length}
-              </Badge>
-            </div>
-
-            <div className='flex gap-2'>
-              <Input
-                placeholder='e.g., S, M, L, XL'
-                value={newSize}
-                onChange={(e) => setNewSize(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter") {
-                    e.preventDefault();
-                    addSize();
-                  }
-                }}
-                className='flex-1 h-9 border-blue-200 focus:border-blue-400'
-              />
-              <Button
-                onClick={addSize}
-                size='sm'
-                className='h-9 bg-blue-500 hover:bg-blue-600'
-                disabled={!newSize.trim() || v2Sizes.includes(newSize.trim())}>
-                <Plus className='h-4 w-4' />
-              </Button>
-            </div>
-
-            <div className='flex flex-wrap gap-2 min-h-[70px] p-2.5 rounded-lg bg-gradient-to-br from-blue-50/50 to-cyan-50/50 dark:from-blue-900/10 dark:to-cyan-900/10 border border-blue-100 dark:border-blue-900/30'>
-              {v2Sizes.length > 0 ? (
-                v2Sizes.map((size) => (
-                  <Badge
-                    key={size}
-                    className='flex items-center gap-1.5 px-2.5 py-1 bg-white dark:bg-slate-800 border border-blue-200 dark:border-blue-800 text-blue-700 dark:text-blue-300 hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors'>
-                    <Ruler className='w-3 h-3' />
-                    {size}
-                    <button
-                      onClick={() => removeSize(size)}
-                      className='ml-0.5 hover:bg-red-100 dark:hover:bg-red-900/30 rounded-full p-0.5 transition-colors'>
-                      <X className='h-3 w-3 text-red-500' />
-                    </button>
-                  </Badge>
-                ))
-              ) : (
-                <p className='text-xs text-slate-500 dark:text-slate-400 flex items-center justify-center w-full h-12'>
-                  No sizes added yet
-                </p>
-              )}
-            </div>
-          </div>
-        </div>
-
-        {/* Generated Variations Preview */}
-        {formData.variation && formData.variation.length > 0 && (
-          <div className='space-y-3'>
-            <div className='flex items-center justify-between p-2.5 bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-900/10 dark:to-emerald-900/10 rounded-lg border border-green-200 dark:border-green-900/30'>
-              <div className='flex items-center gap-2'>
-                <Box className='w-4 h-4 text-green-600' />
-                <Label className='text-sm font-semibold text-green-700 dark:text-green-300'>
-                  Generated Variations
-                </Label>
-              </div>
-              <Badge className='bg-green-600 text-white border-0 shadow-sm'>
-                {formData.variation.length}
-              </Badge>
-            </div>
-
-            <div className='grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4'>
-              {formData.variation.map(
-                (variation: IVariation, index: number) => (
-                  <div
-                    key={variation.id || index}
-                    className='group p-3 rounded-lg bg-gradient-to-br from-slate-50 to-blue-50/30 dark:from-slate-800 dark:to-blue-900/10 border border-slate-200 dark:border-slate-700 hover:border-blue-300 dark:hover:border-blue-700 hover:shadow-md transition-all duration-200'>
-                    <div className='space-y-2.5'>
-                      {/* Header */}
-                      <div className='flex items-start justify-between gap-2'>
-                        <div className='flex-1 min-w-0'>
-                          <h4 className='font-semibold text-sm text-slate-800 dark:text-slate-200 truncate'>
-                            {variation.name}
-                          </h4>
-                          <p className='text-[10px] font-mono text-slate-500 dark:text-slate-400 truncate mt-0.5'>
-                            {variation.sku}
-                          </p>
-                        </div>
-                        <div className='flex-shrink-0'>
-                          <div className='p-1 bg-white dark:bg-slate-700 rounded-md shadow-sm'>
-                            <Package className='w-3.5 h-3.5 text-blue-500' />
-                          </div>
-                        </div>
-                      </div>
-
-                      {/* Inputs */}
-                      <div className='space-y-2'>
-                        {/* Variant Name (Editable) */}
-                        <div>
-                          <Label
-                            htmlFor={`name-${variation.id}`}
-                            className='text-[10px] font-semibold text-slate-600 dark:text-slate-400 flex items-center gap-1 mb-1'>
-                            <Tag className='w-3 h-3 text-blue-500' />
-                            Variant Name
-                          </Label>
-                          <Input
-                            id={`name-${variation.id}`}
-                            name='name'
-                            onChange={(e) => updateVariationData(index, e)}
-                            type='text'
-                            value={variation.name || ""}
-                            className='h-8 text-sm border-slate-200 dark:border-slate-600 focus:border-blue-400 bg-white dark:bg-slate-900'
-                            placeholder='e.g., Red - Large'
-                          />
-                        </div>
-
-                        {/* Stock (Read-only) */}
-                        <div>
-                          <Label className='text-[10px] font-semibold text-slate-600 dark:text-slate-400 flex items-center gap-1 mb-1'>
-                            <BarChart3 className='w-3 h-3' />
-                            Stock (Read-only)
-                          </Label>
-                          <div className='h-8 flex items-center px-3 rounded-md text-xs font-semibold border-2 bg-slate-50 dark:bg-slate-900 border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300'>
-                            {variation.quantity} units
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                ),
-              )}
-            </div>
-          </div>
-        )}
-      </div>
-    );
-  };
-
   const discardDialog = () => {
     return (
       <CustomAlertDialog
@@ -792,7 +420,15 @@ const EditProduct: React.FC<Props> = ({
     const imageGroupImageMappings: any[] = [];
     let groupImageIndex = 0;
 
-    for (const group of imageGroups) {
+    // Filter out incomplete imageGroups before processing
+    const { validGroups: validImageGroups, invalidCount } = filterImageGroups(imageGroups);
+
+    // Log warning if incomplete groups were found
+    if (invalidCount > 0) {
+      console.warn(`Filtered out ${invalidCount} incomplete imageGroup(s) missing attribute or value`);
+    }
+
+    for (const group of validImageGroups) {
       const groupImages = group.images.filter((img) => img instanceof File) as File[];
 
       groupImages.forEach(() => {
@@ -810,7 +446,7 @@ const EditProduct: React.FC<Props> = ({
       variantImages: variantImageFileList,
       variantImageMappings,
       removeVariantImageIndexes,
-      imageGroups: imageGroups.length > 0 ? imageGroups : undefined,
+      imageGroups: validImageGroups.length > 0 ? validImageGroups : undefined,
       imageGroupImages: imageGroupImageList.length > 0 ? imageGroupImageList : undefined,
       imageGroupImageMappings: imageGroupImageMappings.length > 0 ? imageGroupImageMappings : undefined,
     };
@@ -1029,11 +665,17 @@ const EditProduct: React.FC<Props> = ({
                     <MultiCategorySelect
                       categories={categories}
                       selectedCategoryIds={formData?.categoryIds || []}
+                      primaryCategoryId={formData?.categoryId || ""}
                       setSelectedCategoryIds={(ids: string[]) => {
                         updateFormData({
                           ...formData,
                           categoryIds: ids,
-                          categoryId: ids[0] || "", // First category is primary
+                        });
+                      }}
+                      setPrimaryCategoryId={(id: string) => {
+                        updateFormData({
+                          ...formData,
+                          categoryId: id,
                         });
                       }}
                     />
@@ -1689,7 +1331,12 @@ const EditProduct: React.FC<Props> = ({
                         <strong>Simple Mode:</strong> Quick setup for size and
                         color combinations. Variations are auto-generated.
                       </div>
-                      {renderV2VariationView()}
+                      <V2SimpleVariationManager
+                        formData={formData}
+                        updateFormData={updateFormData}
+                        isSameUnitPrice={isSameUnitPrice}
+                        mode='edit'
+                      />
                     </div>
                   </TabsContent>
                 </Tabs>

@@ -31,4 +31,5 @@ export const pagePermissions: Record<string, string[]> = {
   Customer: ["view", "edit"],
   Coupon: ["view", "create", "edit", "delete", "assign", "analytics"],
   Commission: ["view", "edit", "update_status", "delete", "personal_access"],
+  DailyReport: ["view"],
 };

@@ -18,6 +18,7 @@ import {
   Megaphone,
   Ticket,
   DollarSign,
+  BarChart3,
 } from "lucide-react";
 
 export const navItems = [
@@ -127,6 +128,14 @@ export const navItems = [
     link: "/reports",
     active: true,
     id: "report",
+    roles: ["admin"],
+  },
+  {
+    icon: <BarChart3 className='w-5 h-5' />,
+    title: "Daily Reports",
+    link: "/daily-reports",
+    active: true,
+    id: "DailyReport",
     roles: ["admin"],
   },
 

@@ -9,7 +9,7 @@ import { ProductPagination } from "./v2-components/ProductPagination";
 import { VariationModal } from "./v2-components/VariationModal";
 import { CartPanel } from "./v2-components/CartPanel";
 import { CartDrawer, CartTriggerButton } from "./v2-components/CartDrawer";
-import { getProducts } from "../../api/product";
+import { getProducts, getProductsByCategory } from "../../api/product";
 import { createOrder } from "../../api/order";
 import type { IProduct } from "../product/interface";
 import type { IVariation } from "../product/interface";
@@ -100,8 +100,18 @@ const CreateOrderV2 = () => {
   const fetchProducts = async () => {
     setLoadingProducts(true);
     try {
-      // Always use the paginated API to ensure pagination works
-      const response = await getProducts(pageSize, currentPage);
+      // Check if category filter is active
+      const shouldFilterByCategory = selectedCategory && selectedCategory !== "all";
+
+      let response;
+
+      if (shouldFilterByCategory) {
+        // Use category-filtered API with pagination
+        response = await getProductsByCategory(selectedCategory, currentPage, pageSize);
+      } else {
+        // Use regular paginated API for all products
+        response = await getProducts(pageSize, currentPage);
+      }
 
       if (response?.success && response?.data) {
         const { products, totalPages, totalProducts } = response.data;

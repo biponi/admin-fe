@@ -176,3 +176,33 @@ export const ArraysMatch = (array1:any[], array2:any[]) => {
 
   return sortedArray1.every((value, index) => value === sortedArray2[index]);
 };
+
+/**
+ * Validates that an imageGroup has all required fields
+ * @param group - The imageGroup object to validate
+ * @returns true if the group has both attribute and value with non-empty strings
+ */
+export const validateImageGroup = (group: any): boolean => {
+  if (!group) return false;
+
+  const hasAttribute = !!group.attribute && group.attribute.trim() !== '';
+  const hasValue = !!group.value && group.value.trim() !== '';
+
+  return hasAttribute && hasValue;
+};
+
+/**
+ * Filters out incomplete imageGroups from an array
+ * @param groups - Array of imageGroup objects
+ * @returns Object containing valid groups and invalid group count
+ */
+export const filterImageGroups = (groups: any[]): { validGroups: any[]; invalidCount: number } => {
+  if (!Array.isArray(groups)) {
+    return { validGroups: [], invalidCount: 0 };
+  }
+
+  const validGroups = groups.filter(validateImageGroup);
+  const invalidCount = groups.length - validGroups.length;
+
+  return { validGroups, invalidCount };
+};

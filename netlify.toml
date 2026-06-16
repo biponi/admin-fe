@@ -18,7 +18,7 @@
 [[headers]]
   for = "/assets/*"
   [headers.values]
-    Cache-Control = "public, max-age=31536000, immutable"
+    Cache-Control = "public, max-age=6000, immutable"
 
 # HTML files - always revalidate to get latest asset references
 [[headers]]

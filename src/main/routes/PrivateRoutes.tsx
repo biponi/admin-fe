@@ -21,6 +21,7 @@ import ViewRolePage from "../../pages/role/viewRolePage";
 import ChatPage from "../../pages/chat";
 import { JobsManagement } from "../../pages/settings";
 import ReportPage from "../../pages/report";
+import DailyReportPage from "../../pages/report/DailyReport";
 import DeliveryPage from "../../pages/delivery";
 import { NotificationPage } from "../../pages/notifications";
 import { AuditDashboard } from "../../pages/admin/components/AuditDashboard";
@@ -258,6 +259,16 @@ export const ProtectedRoutes = () => {
           <ProtectedRoute page='Report' requiredAction='view'>
             <MainViewComponent title='Reports & Analytics'>
               <ReportPage />
+            </MainViewComponent>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path='/daily-reports'
+        element={
+          <ProtectedRoute page='DailyReport' requiredAction='view'>
+            <MainViewComponent title='Daily Reports'>
+              <DailyReportPage />
             </MainViewComponent>
           </ProtectedRoute>
         }

@@ -41,10 +41,10 @@ const CreateNewProduct = () => {
         isValidate: false,
         message: "Enter a valid sku for the product",
       };
-    } else if (!productData?.categoryId) {
+    } else if (!productData?.categoryIds || productData?.categoryIds.length === 0) {
       return {
         isValidate: false,
-        message: "Select a valid category for the product",
+        message: "Select at least one category for the product",
       };
     } else if (
       productData?.variation.length < 0 &&
