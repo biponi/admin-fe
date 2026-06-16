@@ -170,18 +170,29 @@ const DailyReport = () => {
 
   const handleDownloadRequest = (type: "csv" | "pdf", reportType?: string) => {
     setDownloadAction({ type, reportType });
-    setShowOTPDialog(true);
+    // Download directly without OTP verification
+    handleDownloadAfterVerification();
   };
 
   const handleDownloadAfterVerification = async () => {
-    if (!downloadAction || reports.length === 0) return;
+    if (!downloadAction) {
+      toast.error("Download action not specified");
+      return;
+    }
+
+    if (reports.length === 0) {
+      toast.error("No report data available to export. Please generate a report first.");
+      setDownloadAction(null);
+      return;
+    }
 
     const { type, reportType } = downloadAction;
 
     try {
+      let result;
+
       if (type === "csv") {
         // Handle CSV export based on reportType
-        let result;
         const currentReport = reports[0];
 
         switch (reportType) {
@@ -221,13 +232,12 @@ const DailyReport = () => {
 
         if (result?.success) {
           toast.success("CSV exported successfully");
+          setDownloadAction(null);
         } else {
           toast.error(result?.error || "Failed to export CSV");
         }
       } else if (type === "pdf") {
         // Handle PDF export
-        let result;
-
         if (reports.length === 1) {
           result = await generateSingleReportPDF(reports[0]);
         } else {
@@ -236,6 +246,7 @@ const DailyReport = () => {
 
         if (result?.success) {
           toast.success("PDF generated successfully");
+          setDownloadAction(null);
         } else {
           toast.error(result?.error || "Failed to generate PDF");
         }
@@ -243,9 +254,6 @@ const DailyReport = () => {
     } catch (error) {
       console.error("Download error:", error);
       toast.error("Failed to complete download");
-    } finally {
-      setDownloadAction(null);
-      setShowOTPDialog(false);
     }
   };
 

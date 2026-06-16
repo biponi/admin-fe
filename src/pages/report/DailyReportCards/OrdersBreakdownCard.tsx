@@ -147,10 +147,10 @@ const OrdersBreakdownCard: React.FC<OrdersBreakdownCardProps> = ({
               <Button
                 variant="outline"
                 size="sm"
-                onClick={() => onDownload("pdf", "orders-breakdown")}
+                onClick={() => onDownload("csv", "orders-breakdown")}
                 className="gap-2">
                 <Download className="h-4 w-4" />
-                Export
+                Export CSV
               </Button>
             )}
           </div>
@@ -163,27 +163,29 @@ const OrdersBreakdownCard: React.FC<OrdersBreakdownCardProps> = ({
             <h4 className="text-sm font-medium mb-4 text-center">
               {chartType === "status" ? "Order Status Distribution" : "Payment Status Distribution"}
             </h4>
-            <ResponsiveContainer width="100%" height="100%">
-              <PieChart>
-                <Pie
-                  data={pieChartData}
-                  cx="50%"
-                  cy="50%"
-                  labelLine={false}
-                  label={({ name, percent }) =>
-                    `${name}: ${(percent * 100).toFixed(0)}%`
-                  }
-                  outerRadius={80}
-                  fill="#8884d8"
-                  dataKey="value">
-                  {pieChartData.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={entry.fill} />
-                  ))}
-                </Pie>
-                <Tooltip content={<ChartTooltipContent />} />
-                <Legend />
-              </PieChart>
-            </ResponsiveContainer>
+            <ChartContainer config={chartConfig}>
+              <ResponsiveContainer width="100%" height="100%">
+                <PieChart>
+                  <Pie
+                    data={pieChartData}
+                    cx="50%"
+                    cy="50%"
+                    labelLine={false}
+                    label={({ name, percent }) =>
+                      `${name}: ${(percent * 100).toFixed(0)}%`
+                    }
+                    outerRadius={80}
+                    fill="#8884d8"
+                    dataKey="value">
+                    {pieChartData.map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={entry.fill} />
+                    ))}
+                  </Pie>
+                  <Tooltip content={<ChartTooltipContent />} />
+                  <Legend />
+                </PieChart>
+              </ResponsiveContainer>
+            </ChartContainer>
           </div>
 
           {/* Bar Chart */}
@@ -191,24 +193,26 @@ const OrdersBreakdownCard: React.FC<OrdersBreakdownCardProps> = ({
             <h4 className="text-sm font-medium mb-4 text-center">
               {chartType === "status" ? "Order Status Count" : "Payment Status Count"}
             </h4>
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={barChartData}>
-                <XAxis
-                  dataKey="name"
-                  tick={{ fontSize: 12 }}
-                  angle={-45}
-                  textAnchor="end"
-                  height={60}
-                />
-                <YAxis />
-                <Tooltip content={<ChartTooltipContent />} />
-                <Bar dataKey="value" radius={[8, 8, 0, 0]}>
-                  {barChartData.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={entry.fill} />
-                  ))}
-                </Bar>
-              </BarChart>
-            </ResponsiveContainer>
+            <ChartContainer config={chartConfig}>
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={barChartData}>
+                  <XAxis
+                    dataKey="name"
+                    tick={{ fontSize: 12 }}
+                    angle={-45}
+                    textAnchor="end"
+                    height={60}
+                  />
+                  <YAxis />
+                  <Tooltip content={<ChartTooltipContent />} />
+                  <Bar dataKey="value" radius={[8, 8, 0, 0]}>
+                    {barChartData.map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={entry.fill} />
+                    ))}
+                  </Bar>
+                </BarChart>
+              </ResponsiveContainer>
+            </ChartContainer>
           </div>
 
           {/* Summary Stats */}

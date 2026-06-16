@@ -109,7 +109,8 @@ const ReportPage = ({ activeUsers }: { activeUsers: number }) => {
 
   const handleDownloadRequest = (type: "csv" | "pdf") => {
     setDownloadAction({ type });
-    setShowOTPDialog(true);
+    // Download directly without OTP verification
+    handleDownloadAfterVerification();
   };
 
   const handleDownloadAfterVerification = async () => {

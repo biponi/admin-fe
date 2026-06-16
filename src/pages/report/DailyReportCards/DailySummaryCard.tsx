@@ -52,7 +52,21 @@ const DailySummaryCard: React.FC<DailySummaryCardProps> = ({
   };
 
   const formatDate = (dateStr: string) => {
-    return format(new Date(dateStr), "PPP");
+    if (!dateStr) {
+      return "Date not available";
+    }
+    const date = new Date(dateStr);
+    if (isNaN(date.getTime())) {
+      return "Invalid date";
+    }
+    return format(date, "PPP");
+  };
+
+  const formatRangeDate = (date: Date) => {
+    if (!date || isNaN(date.getTime())) {
+      return "Invalid date";
+    }
+    return format(date, "MMM dd, yyyy");
   };
 
   return (
@@ -63,10 +77,9 @@ const DailySummaryCard: React.FC<DailySummaryCardProps> = ({
             <CardTitle className="text-2xl">Daily Summary</CardTitle>
             <CardDescription>
               {isSingleDate
-                ? `Report for ${formatDate(data.date)}`
-                : `Reports from ${format(dateRange.from, "MMM dd, yyyy")} to ${format(
-                    dateRange.to,
-                    "MMM dd, yyyy"
+                ? `Report for ${data.date ? formatDate(data.date) : "Date not available"}`
+                : `Reports from ${formatRangeDate(dateRange.from)} to ${formatRangeDate(
+                    dateRange.to
                   )}`}
             </CardDescription>
           </div>

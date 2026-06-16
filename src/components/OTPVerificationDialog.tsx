@@ -120,19 +120,6 @@ export const OTPVerificationDialog: React.FC<OTPVerificationDialogProps> = ({
     //eslint-disable-next-line
   }, [resendCooldown > 0]);
 
-  // Auto-send OTP when dialog opens
-  useEffect(() => {
-    if (open) {
-      resetOTPState();
-      setOtpValue("");
-
-      if (autoSendOnMount) {
-        handleSendOTP();
-      }
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [open]);
-
   const resetOTPState = useCallback(() => {
     setOtpSent(false);
     setIsVerifying(false);
@@ -160,6 +147,19 @@ export const OTPVerificationDialog: React.FC<OTPVerificationDialogProps> = ({
 
     setIsSending(false);
   }, [email, mobile_number, purpose]);
+
+  // Auto-send OTP when dialog opens
+  useEffect(() => {
+    if (open) {
+      resetOTPState();
+      setOtpValue("");
+
+      if (autoSendOnMount) {
+        handleSendOTP();
+      }
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open, autoSendOnMount, handleSendOTP, resetOTPState]);
 
   const handleClose = useCallback(() => {
     setOtpValue("");

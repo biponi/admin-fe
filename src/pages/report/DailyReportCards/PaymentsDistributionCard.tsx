@@ -103,10 +103,10 @@ const PaymentsDistributionCard: React.FC<PaymentsDistributionCardProps> = ({
             <Button
               variant="outline"
               size="sm"
-              onClick={() => onDownload("pdf", "payments-distribution")}
+              onClick={() => onDownload("csv", "payments-distribution")}
               className="gap-2">
               <Download className="h-4 w-4" />
-              Export
+              Export CSV
             </Button>
           )}
         </div>
@@ -118,27 +118,29 @@ const PaymentsDistributionCard: React.FC<PaymentsDistributionCardProps> = ({
             <h4 className="text-sm font-medium mb-4 text-center">
               Payment Method Distribution
             </h4>
-            <ResponsiveContainer width="100%" height="100%">
-              <PieChart>
-                <Pie
-                  data={chartData}
-                  cx="50%"
-                  cy="50%"
-                  labelLine={false}
-                  label={({ name, percent }) =>
-                    `${name}: ${(percent * 100).toFixed(0)}%`
-                  }
-                  outerRadius={80}
-                  fill="#8884d8"
-                  dataKey="value">
-                  {chartData.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={entry.fill} />
-                  ))}
-                </Pie>
-                <Tooltip content={<ChartTooltipContent />} />
-                <Legend />
-              </PieChart>
-            </ResponsiveContainer>
+            <ChartContainer config={chartConfig}>
+              <ResponsiveContainer width="100%" height="100%">
+                <PieChart>
+                  <Pie
+                    data={chartData}
+                    cx="50%"
+                    cy="50%"
+                    labelLine={false}
+                    label={({ name, percent }) =>
+                      `${name}: ${(percent * 100).toFixed(0)}%`
+                    }
+                    outerRadius={80}
+                    fill="#8884d8"
+                    dataKey="value">
+                    {chartData.map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={entry.fill} />
+                    ))}
+                  </Pie>
+                  <Tooltip content={<ChartTooltipContent />} />
+                  <Legend />
+                </PieChart>
+              </ResponsiveContainer>
+            </ChartContainer>
           </div>
 
           {/* Bar Chart */}
@@ -146,27 +148,29 @@ const PaymentsDistributionCard: React.FC<PaymentsDistributionCardProps> = ({
             <h4 className="text-sm font-medium mb-4 text-center">
               Payment Amount by Method
             </h4>
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={chartData} layout="horizontal">
-                <XAxis
-                  dataKey="name"
-                  tick={{ fontSize: 11 }}
-                  angle={-45}
-                  textAnchor="end"
-                  height={60}
-                />
-                <YAxis tick={{ fontSize: 11 }} />
-                <Tooltip
-                  content={<ChartTooltipContent />}
-                  formatter={(value: number) => [formatCurrency(value), "Amount"]}
-                />
-                <Bar dataKey="value" radius={[8, 8, 0, 0]}>
-                  {chartData.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={entry.fill} />
-                  ))}
-                </Bar>
-              </BarChart>
-            </ResponsiveContainer>
+            <ChartContainer config={chartConfig}>
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={chartData} layout="horizontal">
+                  <XAxis
+                    dataKey="name"
+                    tick={{ fontSize: 11 }}
+                    angle={-45}
+                    textAnchor="end"
+                    height={60}
+                  />
+                  <YAxis tick={{ fontSize: 11 }} />
+                  <Tooltip
+                    content={<ChartTooltipContent />}
+                    formatter={(value: number) => [formatCurrency(value), "Amount"]}
+                  />
+                  <Bar dataKey="value" radius={[8, 8, 0, 0]}>
+                    {chartData.map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={entry.fill} />
+                    ))}
+                  </Bar>
+                </BarChart>
+              </ResponsiveContainer>
+            </ChartContainer>
           </div>
 
           {/* Payment Method Cards */}
