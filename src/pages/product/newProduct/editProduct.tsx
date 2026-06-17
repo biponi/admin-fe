@@ -147,8 +147,14 @@ const EditProduct: React.FC<Props> = ({
       setVariantImages(initialVariantImages);
 
       // Initialize image groups from product data
-      if (productData.imageGroups && productData.imageGroups.length > 0) {
-        setImageGroups(productData.imageGroups);
+      const imageData = (productData as any).imageGroups;
+      if (imageData && imageData.length > 0) {
+        // Filter out any incomplete groups that might have come from the backend
+        const { validGroups, invalidCount } = filterImageGroups(imageData);
+        if (invalidCount > 0) {
+          console.warn(`Filtered out ${invalidCount} incomplete imageGroup(s) from backend data missing attribute or value`);
+        }
+        setImageGroups(validGroups);
       }
     }
   }, [productData]);
@@ -336,7 +342,7 @@ const EditProduct: React.FC<Props> = ({
         variantImages={variantImages}
         readonly={true}
         showPrice={false}
-        showVariantName={true}
+        showVariantName={false}
         isSameUnitPrice={isSameUnitPrice}
         gridColumns={{ sm: "2", lg: "3" }}
         onUpdateVariation={updateVariationData}
@@ -421,15 +427,28 @@ const EditProduct: React.FC<Props> = ({
     let groupImageIndex = 0;
 
     // Filter out incomplete imageGroups before processing
-    const { validGroups: validImageGroups, invalidCount } = filterImageGroups(imageGroups);
+    console.log("imageGroups before filtering:", imageGroups);
+
+    const { validGroups: validImageGroups, invalidCount } =
+      filterImageGroups(imageGroups);
+
+    console.log("imageGroups after filtering:", {
+      validGroups: validImageGroups,
+      invalidCount,
+      totalOriginal: imageGroups.length
+    });
 
     // Log warning if incomplete groups were found
     if (invalidCount > 0) {
-      console.warn(`Filtered out ${invalidCount} incomplete imageGroup(s) missing attribute or value`);
+      console.warn(
+        `Filtered out ${invalidCount} incomplete imageGroup(s) missing attribute or value`,
+      );
     }
 
     for (const group of validImageGroups) {
-      const groupImages = group.images.filter((img) => img instanceof File) as File[];
+      const groupImages = group.images.filter(
+        (img) => img instanceof File,
+      ) as File[];
 
       groupImages.forEach(() => {
         imageGroupImageMappings.push({
@@ -447,8 +466,12 @@ const EditProduct: React.FC<Props> = ({
       variantImageMappings,
       removeVariantImageIndexes,
       imageGroups: validImageGroups.length > 0 ? validImageGroups : undefined,
-      imageGroupImages: imageGroupImageList.length > 0 ? imageGroupImageList : undefined,
-      imageGroupImageMappings: imageGroupImageMappings.length > 0 ? imageGroupImageMappings : undefined,
+      imageGroupImages:
+        imageGroupImageList.length > 0 ? imageGroupImageList : undefined,
+      imageGroupImageMappings:
+        imageGroupImageMappings.length > 0
+          ? imageGroupImageMappings
+          : undefined,
     };
 
     const response = await updateProduct(productData);
@@ -638,7 +661,7 @@ const EditProduct: React.FC<Props> = ({
                     Description
                   </Label>
                   <TiptapEditor
-                    content={formData?.description || ''}
+                    content={formData?.description || ""}
                     onChange={handleDescriptionChange}
                     placeholder='Describe your product features, benefits, and specifications...'
                   />
@@ -1357,7 +1380,7 @@ const EditProduct: React.FC<Props> = ({
             </CardContent>
 
             {hasVariation && variationTab === "v1" && (
-              <CardFooter className='border-t bg-slate-50 dark:bg-slate-800/50'>
+              <CardFooter className='border-t bg-slate-50 dark:bg-slate-800/50 pt-4'>
                 <Button
                   onClick={addNewVariation}
                   variant='outline'

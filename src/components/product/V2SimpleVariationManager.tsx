@@ -21,6 +21,28 @@ interface V2SimpleVariationManagerProps {
   mode: "create" | "edit";
 }
 
+/* ── tiny field primitive ─────────────────────────────────────── */
+const Field = ({
+  icon,
+  label,
+  children,
+}: {
+  icon: React.ReactNode;
+  label: string;
+  children: React.ReactNode;
+}) => (
+  <div className='space-y-1'>
+    <div className='flex items-center gap-1 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground'>
+      {icon}
+      {label}
+    </div>
+    {children}
+  </div>
+);
+
+const fieldInput =
+  "h-8 flex items-center px-2.5 rounded-lg text-xs font-semibold bg-muted/50 border border-border/40 text-black cursor-not-allowed";
+
 /* ─── tiny primitives ───────────────────────────────────────────── */
 
 const SectionCard = ({ children }: { children: React.ReactNode }) => (
@@ -91,7 +113,11 @@ const V2SimpleVariationManager: React.FC<V2SimpleVariationManagerProps> = ({
 
   // Initialize colors and sizes from existing variations (for edit mode)
   useEffect(() => {
-    if (mode === "edit" && formData.variation && formData.variation.length > 0) {
+    if (
+      mode === "edit" &&
+      formData.variation &&
+      formData.variation.length > 0
+    ) {
       // Extract unique colors
       const colorsSet = new Set<string>();
       const sizesSet = new Set<string>();
@@ -443,18 +469,30 @@ const V2SimpleVariationManager: React.FC<V2SimpleVariationManagerProps> = ({
                   </div>
                 ) : (
                   <div className='space-y-2'>
-                    <div>
-                      <FieldLabel icon={<Tag className='w-3 h-3' />}>
-                        Variant name
-                      </FieldLabel>
-                      <Input
-                        name='name'
-                        type='text'
-                        value={variation.name || ""}
-                        onChange={(e) => updateVariationData(index, e)}
-                        className='h-8 text-xs px-2.5'
-                        placeholder='e.g. Red - Large'
-                      />
+                    {/* Color + Size */}
+                    <div className='grid grid-cols-2 gap-2'>
+                      <Field
+                        icon={<Palette className='w-3 h-3' />}
+                        label='Color'>
+                        <Input
+                          name='color'
+                          type='text'
+                          disabled
+                          value={variation.color}
+                          className={fieldInput}
+                          placeholder='Color'
+                        />
+                      </Field>
+                      <Field icon={<Ruler className='w-3 h-3' />} label='Size'>
+                        <Input
+                          name='size'
+                          type='text'
+                          disabled
+                          value={variation.size}
+                          className={fieldInput}
+                          placeholder='Size'
+                        />
+                      </Field>
                     </div>
 
                     <div>

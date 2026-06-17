@@ -1,16 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useAdminAudit } from "../../../hooks/useAdminAudit";
 import { DashboardOverviewResponse } from "../../../api/adminAudit";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "../../../components/ui/card";
 import { Badge } from "../../../components/ui/badge";
-import { Skeleton } from "../../../components/ui/skeleton";
-import { Alert, AlertDescription } from "../../../components/ui/alert";
 import {
   Avatar,
   AvatarFallback,
@@ -24,6 +15,7 @@ import {
   TrendingDown,
   Clock,
   User,
+  Activity,
 } from "lucide-react";
 import dayjs from "dayjs";
 import relativeTime from "dayjs/plugin/relativeTime";
@@ -33,7 +25,7 @@ import { UserPerformanceCard } from "./UserPerformanceCard";
 dayjs.extend(relativeTime);
 
 /**
- * Admin Audit Dashboard Component with shadcn/ui
+ * Admin Audit Dashboard Component with consistent theme
  */
 export const AuditDashboard: React.FC = () => {
   const { toast } = useToast();
@@ -64,17 +56,21 @@ export const AuditDashboard: React.FC = () => {
   if (isLoading && !dashboardData) {
     return (
       <div className='space-y-6'>
-        <div className='grid gap-4 md:grid-cols-2 lg:grid-cols-4'>
-          {[1, 2, 3, 4].map((i) => (
-            <Card key={i}>
-              <CardHeader>
-                <Skeleton className='h-4 w-32' />
-              </CardHeader>
-              <CardContent>
-                <Skeleton className='h-8 w-20' />
-              </CardContent>
-            </Card>
-          ))}
+        <div className='flex items-center justify-center py-12'>
+          <div className='flex flex-col items-center gap-4'>
+            <div className='relative'>
+              <div className='w-16 h-16 border-4 border-slate-200 rounded-full'></div>
+              <div className='absolute top-0 left-0 w-16 h-16 border-4 border-indigo-600 rounded-full border-t-transparent animate-spin'></div>
+            </div>
+            <div className='text-center'>
+              <h3 className='text-lg font-semibold text-slate-900'>
+                Loading Dashboard
+              </h3>
+              <p className='text-sm text-slate-500 mt-1'>
+                Please wait while we gather the data...
+              </p>
+            </div>
+          </div>
         </div>
       </div>
     );
@@ -82,38 +78,47 @@ export const AuditDashboard: React.FC = () => {
 
   if (error) {
     return (
-      <Alert variant='destructive'>
-        <AlertDescription>Error: {error}</AlertDescription>
-      </Alert>
+      <div className='bg-rose-50 border border-rose-200 rounded-xl p-4'>
+        <p className='text-sm text-rose-700'>Error: {error}</p>
+      </div>
     );
   }
 
   if (!dashboardData) {
     return (
-      <Alert>
-        <AlertDescription>No data available</AlertDescription>
-      </Alert>
+      <div className='bg-slate-50 border border-slate-200 rounded-xl p-4'>
+        <p className='text-sm text-slate-600'>No data available</p>
+      </div>
     );
   }
 
   return (
-    <div className='space-y-6 mx-2 md:container'>
+    <div className='container space-y-6'>
       {/* Header */}
-      <div className='flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4'>
-        <div>
-          <h2 className='text-3xl font-bold tracking-tight'>Audit Dashboard</h2>
-          <p className='text-muted-foreground'>System-wide activity overview</p>
+      <div className='flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4'>
+        <div className='flex items-center gap-3'>
+          <div className='flex items-center justify-center w-10 h-10 rounded-xl bg-indigo-600 shadow-sm shadow-indigo-200'>
+            <Activity className='h-5 w-5 text-white' />
+          </div>
+          <div>
+            <h2 className='text-xl font-semibold text-slate-900 leading-tight'>
+              Audit Dashboard
+            </h2>
+            <p className='text-sm text-slate-500 mt-0.5'>
+              System-wide activity overview
+            </p>
+          </div>
         </div>
-        <div className='flex gap-2 items-center'>
+        <div className='flex items-center gap-2'>
           <input
             type='datetime-local'
             value={dayjs(dateRange.startDate).format("YYYY-MM-DDTHH:mm")}
             onChange={(e) =>
               setDateRange({ ...dateRange, startDate: e.target.value })
             }
-            className='px-3 py-2 border rounded-md text-sm'
+            className='px-3 py-2 text-sm border border-slate-200 rounded-lg bg-white text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500'
           />
-          <span className='text-sm text-muted-foreground'>to</span>
+          <span className='text-sm text-slate-500'>to</span>
           <input
             type='datetime-local'
             value={dayjs(dateRange.endDate).format("YYYY-MM-DDTHH:mm")}
@@ -121,202 +126,192 @@ export const AuditDashboard: React.FC = () => {
               const endOfDay = dayjs(e.target.value).endOf("day").toISOString();
               setDateRange({ ...dateRange, endDate: endOfDay });
             }}
-            className='px-3 py-2 border rounded-md text-sm'
+            className='px-3 py-2 text-sm border border-slate-200 rounded-lg bg-white text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500'
           />
         </div>
       </div>
 
       {/* Summary Cards */}
-      <div className='grid gap-4 md:grid-cols-2 lg:grid-cols-4'>
-        <Card>
-          <CardHeader className='flex flex-row items-center justify-between space-y-0 pb-2'>
-            <CardTitle className='text-sm font-medium'>
-              Order Operations
-            </CardTitle>
-            <ShoppingCart className='h-4 w-4 text-muted-foreground' />
-          </CardHeader>
-          <CardContent>
-            <div className='text-2xl font-bold'>
-              {(dashboardData.orderAudits?.totalAudits || 0).toLocaleString()}
-            </div>
-            <p className='text-xs text-muted-foreground'>
-              {dashboardData.orderAudits?.uniqueOrdersCount || 0} unique orders
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className='flex flex-row items-center justify-between space-y-0 pb-2'>
-            <CardTitle className='text-sm font-medium'>
-              Stock Adjustments
-            </CardTitle>
-            <Package className='h-4 w-4 text-muted-foreground' />
-          </CardHeader>
-          <CardContent>
-            <div className='text-2xl font-bold'>
-              {(
-                dashboardData.productAdjustments?.totalAdjustments || 0
-              ).toLocaleString()}
-            </div>
-            <p className='text-xs text-muted-foreground'>
-              {dashboardData.productAdjustments?.uniqueProductsCount || 0}{" "}
-              products
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className='flex flex-row items-center justify-between space-y-0 pb-2'>
-            <CardTitle className='text-sm font-medium'>Active Users</CardTitle>
-            <Users className='h-4 w-4 text-muted-foreground' />
-          </CardHeader>
-          <CardContent>
-            <div className='text-2xl font-bold'>
-              {dashboardData.orderAudits?.uniqueUsersCount || 0}
-            </div>
-            <p className='text-xs text-muted-foreground'>
-              Performing operations
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className='flex flex-row items-center justify-between space-y-0 pb-2'>
-            <CardTitle className='text-sm font-medium'>Net Stock</CardTitle>
-            {(dashboardData.productAdjustments?.totalAdded || 0) -
-              (dashboardData.productAdjustments?.totalRemoved || 0) >
-            0 ? (
-              <TrendingUp className='h-4 w-4 text-green-600' />
-            ) : (
-              <TrendingDown className='h-4 w-4 text-red-600' />
-            )}
-          </CardHeader>
-          <CardContent>
-            <div className='text-2xl font-bold'>
-              {(dashboardData.productAdjustments?.totalAdded || 0) -
+      <div className='grid grid-cols-2 sm:grid-cols-4 gap-3'>
+        {[
+          {
+            label: "Order Operations",
+            value: (
+              dashboardData.orderAudits?.totalAudits || 0
+            ).toLocaleString(),
+            accent: "text-indigo-600",
+            bg: "bg-indigo-50",
+            icon: ShoppingCart,
+          },
+          {
+            label: "Stock Adjustments",
+            value: (
+              dashboardData.productAdjustments?.totalAdjustments || 0
+            ).toLocaleString(),
+            accent: "text-emerald-600",
+            bg: "bg-emerald-50",
+            icon: Package,
+          },
+          {
+            label: "Active Users",
+            value: dashboardData.orderAudits?.uniqueUsersCount || 0,
+            accent: "text-amber-600",
+            bg: "bg-amber-50",
+            icon: Users,
+          },
+          {
+            label: "Net Stock Change",
+            value: `${
+              (dashboardData.productAdjustments?.totalAdded || 0) -
                 (dashboardData.productAdjustments?.totalRemoved || 0) >
               0
                 ? "+"
-                : ""}
-              {(
-                (dashboardData.productAdjustments?.totalAdded || 0) -
-                (dashboardData.productAdjustments?.totalRemoved || 0)
-              ).toLocaleString()}
+                : ""
+            }${(
+              (dashboardData.productAdjustments?.totalAdded || 0) -
+              (dashboardData.productAdjustments?.totalRemoved || 0)
+            ).toLocaleString()}`,
+            accent:
+              (dashboardData.productAdjustments?.totalAdded || 0) -
+                (dashboardData.productAdjustments?.totalRemoved || 0) >
+              0
+                ? "text-emerald-600"
+                : "text-rose-600",
+            bg:
+              (dashboardData.productAdjustments?.totalAdded || 0) -
+                (dashboardData.productAdjustments?.totalRemoved || 0) >
+              0
+                ? "bg-emerald-50"
+                : "bg-rose-50",
+            icon:
+              (dashboardData.productAdjustments?.totalAdded || 0) -
+                (dashboardData.productAdjustments?.totalRemoved || 0) >
+              0
+                ? TrendingUp
+                : TrendingDown,
+          },
+        ].map((stat) => {
+          const Icon = stat.icon;
+          return (
+            <div
+              key={stat.label}
+              className='bg-white rounded-xl border border-slate-100 p-4 shadow-sm'>
+              <div className='flex items-center justify-between mb-2'>
+                <div className='flex items-center justify-center w-8 h-8 rounded-lg bg-indigo-50'>
+                  <Icon className='h-4 w-4 text-indigo-600' />
+                </div>
+                <div className='w-2 h-2 rounded-full bg-slate-200' />
+              </div>
+              <p
+                className={`text-lg font-semibold ${stat.accent} leading-none mb-1`}>
+                {stat.value}
+              </p>
+              <p className='text-xs text-slate-500'>{stat.label}</p>
             </div>
-            <div className='flex gap-2 text-xs text-muted-foreground mt-1'>
-              <span className='text-green-600'>
-                +{dashboardData.productAdjustments?.totalAdded || 0}
-              </span>
-              <span>/</span>
-              <span className='text-red-600'>
-                -{dashboardData.productAdjustments?.totalRemoved || 0}
-              </span>
-            </div>
-          </CardContent>
-        </Card>
+          );
+        })}
       </div>
 
       {/* Operation Breakdown */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Order Operations Breakdown</CardTitle>
-          <CardDescription>Distribution of order activities</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className='grid gap-4 md:grid-cols-2 lg:grid-cols-4'>
-            <div className='flex items-center justify-between p-4 border rounded-lg'>
-              <div>
-                <p className='text-sm font-medium text-muted-foreground'>
-                  Created
-                </p>
-                <p className='text-2xl font-bold text-green-600'>
-                  {(
-                    dashboardData.orderAudits?.operationCounts?.creates || 0
-                  ).toLocaleString()}
-                </p>
+      <div className='bg-white rounded-xl border border-slate-100 shadow-sm overflow-hidden'>
+        <div className='p-5 border-b border-slate-100'>
+          <h3 className='text-lg font-semibold text-slate-900'>
+            Order Operations Breakdown
+          </h3>
+          <p className='text-sm text-slate-500 mt-1'>
+            Distribution of order activities
+          </p>
+        </div>
+        <div className='p-5'>
+          <div className='grid grid-cols-2 sm:grid-cols-4 gap-3'>
+            {[
+              {
+                label: "Created",
+                value: (
+                  dashboardData.orderAudits?.operationCounts?.creates || 0
+                ).toLocaleString(),
+                color: "text-emerald-600",
+                bg: "bg-emerald-50",
+                badge: "bg-emerald-50 border-emerald-200 text-emerald-700",
+              },
+              {
+                label: "Status Updates",
+                value: (
+                  dashboardData.orderAudits?.operationCounts?.statusUpdates || 0
+                ).toLocaleString(),
+                color: "text-blue-600",
+                bg: "bg-blue-50",
+                badge: "bg-blue-50 border-blue-200 text-blue-700",
+              },
+              {
+                label: "Payments",
+                value: (
+                  dashboardData.orderAudits?.operationCounts?.paymentUpdates ||
+                  0
+                ).toLocaleString(),
+                color: "text-amber-600",
+                bg: "bg-amber-50",
+                badge: "bg-amber-50 border-amber-200 text-amber-700",
+              },
+              {
+                label: "Bulk Actions",
+                value: (
+                  dashboardData.orderAudits?.operationCounts?.bulkActions || 0
+                ).toLocaleString(),
+                color: "text-purple-600",
+                bg: "bg-purple-50",
+                badge: "bg-purple-50 border-purple-200 text-purple-700",
+              },
+            ].map((op) => (
+              <div
+                key={op.label}
+                className='flex items-center justify-between p-3 bg-slate-50 rounded-lg border border-slate-100'>
+                <div>
+                  <p className='text-xs text-slate-500 mb-1'>{op.label}</p>
+                  <p className={`text-xl font-semibold ${op.color}`}>
+                    {op.value}
+                  </p>
+                </div>
+                <Badge className={op.badge} variant='outline'>
+                  {op.label.slice(0, 4)}
+                </Badge>
               </div>
-              <Badge variant='outline' className='bg-green-50'>
-                New
-              </Badge>
-            </div>
-
-            <div className='flex items-center justify-between p-4 border rounded-lg'>
-              <div>
-                <p className='text-sm font-medium text-muted-foreground'>
-                  Status Updates
-                </p>
-                <p className='text-2xl font-bold text-blue-600'>
-                  {(
-                    dashboardData.orderAudits?.operationCounts?.statusUpdates ||
-                    0
-                  ).toLocaleString()}
-                </p>
-              </div>
-              <Badge variant='outline' className='bg-blue-50'>
-                Status
-              </Badge>
-            </div>
-
-            <div className='flex items-center justify-between p-4 border rounded-lg'>
-              <div>
-                <p className='text-sm font-medium text-muted-foreground'>
-                  Payments
-                </p>
-                <p className='text-2xl font-bold text-amber-600'>
-                  {(
-                    dashboardData.orderAudits?.operationCounts
-                      ?.paymentUpdates || 0
-                  ).toLocaleString()}
-                </p>
-              </div>
-              <Badge variant='outline' className='bg-amber-50'>
-                Payment
-              </Badge>
-            </div>
-
-            <div className='flex items-center justify-between p-4 border rounded-lg'>
-              <div>
-                <p className='text-sm font-medium text-muted-foreground'>
-                  Bulk Actions
-                </p>
-                <p className='text-2xl font-bold text-purple-600'>
-                  {(
-                    dashboardData.orderAudits?.operationCounts?.bulkActions || 0
-                  ).toLocaleString()}
-                </p>
-              </div>
-              <Badge variant='outline' className='bg-purple-50'>
-                Bulk
-              </Badge>
-            </div>
+            ))}
           </div>
-        </CardContent>
-      </Card>
+        </div>
+      </div>
 
       {/* Recent Activities */}
-      <div className='grid gap-4 md:grid-cols-2'>
-        <Card>
-          <CardHeader>
-            <CardTitle>Recent Order Actions</CardTitle>
-            <CardDescription>Latest order activities</CardDescription>
-          </CardHeader>
-          <CardContent>
+      <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
+        {/* Order Actions */}
+        <div className='bg-white rounded-xl border border-slate-100 shadow-sm overflow-hidden'>
+          <div className='p-5 border-b border-slate-100'>
+            <h3 className='text-lg font-semibold text-slate-900'>
+              Recent Order Actions
+            </h3>
+            <p className='text-sm text-slate-500 mt-1'>
+              Latest order activities
+            </p>
+          </div>
+          <div className='p-5'>
             {dashboardData.recentActivities?.orderActions?.length > 0 ? (
               <div className='space-y-4'>
                 {dashboardData.recentActivities.orderActions
                   .slice(0, 5)
                   .map((action) => (
-                    <div key={action.id} className='flex items-start gap-4'>
-                      <div className='p-2 bg-blue-50 rounded-lg'>
-                        <ShoppingCart className='h-4 w-4 text-blue-600' />
+                    <div
+                      key={action.id}
+                      className='flex items-start gap-3 pb-4 border-b border-slate-100 last:border-0 last:pb-0'>
+                      <div className='flex items-center justify-center w-8 h-8 rounded-lg bg-indigo-50 flex-shrink-0'>
+                        <ShoppingCart className='h-4 w-4 text-indigo-600' />
                       </div>
-                      <div className='flex-1 space-y-1'>
-                        <div className='flex items-center justify-between'>
-                          <p className='text-sm font-medium'>
+                      <div className='flex-1 space-y-1 min-w-0'>
+                        <div className='flex items-center justify-between gap-2'>
+                          <p className='text-sm font-medium text-slate-900 truncate'>
                             Order #{action.orderNumber}
                           </p>
                           <Badge
-                            className=' cursor-pointer'
+                            className='cursor-pointer flex-shrink-0'
                             variant='outline'
                             onClick={() => {
                               if (action?.reason)
@@ -329,11 +324,13 @@ export const AuditDashboard: React.FC = () => {
                             {action.operation}
                           </Badge>
                         </div>
-                        <div className='flex items-center gap-2 text-xs text-muted-foreground'>
+                        <div className='flex items-center gap-2 text-xs text-slate-500'>
                           {action.performedBy.userAvatar ? (
                             <Avatar className='h-5 w-5'>
-                              <AvatarImage src={action.performedBy.userAvatar} />
-                              <AvatarFallback>
+                              <AvatarImage
+                                src={action.performedBy.userAvatar}
+                              />
+                              <AvatarFallback className='text-xs'>
                                 {action.performedBy.userName
                                   .split(" ")
                                   .map((n) => n[0])
@@ -344,9 +341,11 @@ export const AuditDashboard: React.FC = () => {
                           ) : (
                             <User className='h-3 w-3' />
                           )}
-                          <span>{action.performedBy.userName}</span>
-                          <Clock className='h-3 w-3 ml-2' />
-                          <span>
+                          <span className='truncate'>
+                            {action.performedBy.userName}
+                          </span>
+                          <Clock className='h-3 w-3 ml-2 flex-shrink-0' />
+                          <span className='flex-shrink-0'>
                             {dayjs(action.timestamps.createdAt).fromNow()}
                           </span>
                         </div>
@@ -355,44 +354,47 @@ export const AuditDashboard: React.FC = () => {
                   ))}
               </div>
             ) : (
-              <p className='text-sm text-muted-foreground text-center py-8'>
-                No recent actions
-              </p>
+              <div className='text-center py-8'>
+                <ShoppingCart className='w-12 h-12 mx-auto mb-3 text-slate-300' />
+                <p className='text-sm text-slate-500'>No recent actions</p>
+              </div>
             )}
-          </CardContent>
-        </Card>
+          </div>
+        </div>
 
-        <Card>
-          <CardHeader>
-            <CardTitle>Recent Stock Adjustments</CardTitle>
-            <CardDescription>Latest inventory changes</CardDescription>
-          </CardHeader>
-          <CardContent>
+        {/* Stock Adjustments */}
+        <div className='bg-white rounded-xl border border-slate-100 shadow-sm overflow-hidden'>
+          <div className='p-5 border-b border-slate-100'>
+            <h3 className='text-lg font-semibold text-slate-900'>
+              Recent Stock Adjustments
+            </h3>
+            <p className='text-sm text-slate-500 mt-1'>
+              Latest inventory changes
+            </p>
+          </div>
+          <div className='p-5'>
             {dashboardData.recentActivities?.productAdjustments?.length > 0 ? (
               <div className='space-y-4'>
                 {dashboardData.recentActivities.productAdjustments
                   .slice(0, 5)
                   .map((adjustment) => (
-                    <div key={adjustment.id} className='flex items-start gap-4'>
-                      <div className='p-2 bg-purple-50 rounded-lg'>
-                        <Package className='h-4 w-4 text-purple-600' />
+                    <div
+                      key={adjustment.id}
+                      className='flex items-start gap-3 pb-4 border-b border-slate-100 last:border-0 last:pb-0'>
+                      <div className='flex items-center justify-center w-8 h-8 rounded-lg bg-indigo-50 flex-shrink-0'>
+                        <Package className='h-4 w-4 text-indigo-600' />
                       </div>
-                      <div className='flex-1 space-y-1'>
-                        <div className='flex items-center justify-between'>
-                          <p className='text-sm font-medium'>
+                      <div className='flex-1 space-y-1 min-w-0'>
+                        <div className='flex items-center justify-between gap-2'>
+                          <p className='text-sm font-medium text-slate-900 truncate'>
                             {adjustment.productName}
                           </p>
                           <Badge
-                            variant={
+                            className={`cursor-pointer flex-shrink-0 ${
                               adjustment.quantityChange > 0
-                                ? "default"
-                                : "destructive"
-                            }>
-                            {adjustment.quantityChange > 0 ? "+" : ""}
-                            {adjustment.quantityChange}
-                          </Badge>
-                          <Badge
-                            className=' cursor-pointer'
+                                ? "bg-emerald-50 text-emerald-700 border-emerald-200"
+                                : "bg-rose-50 text-rose-700 border-rose-200"
+                            }`}
                             variant='outline'
                             onClick={() => {
                               if (adjustment?.reason)
@@ -406,11 +408,13 @@ export const AuditDashboard: React.FC = () => {
                             {adjustment.quantityChange}
                           </Badge>
                         </div>
-                        <div className='flex items-center gap-2 text-xs text-muted-foreground'>
+                        <div className='flex items-center gap-2 text-xs text-slate-500'>
                           {adjustment.adjustedBy.userAvatar ? (
                             <Avatar className='h-5 w-5'>
-                              <AvatarImage src={adjustment.adjustedBy.userAvatar} />
-                              <AvatarFallback>
+                              <AvatarImage
+                                src={adjustment.adjustedBy.userAvatar}
+                              />
+                              <AvatarFallback className='text-xs'>
                                 {adjustment.adjustedBy.userName
                                   .split(" ")
                                   .map((n) => n[0])
@@ -421,9 +425,11 @@ export const AuditDashboard: React.FC = () => {
                           ) : (
                             <User className='h-3 w-3' />
                           )}
-                          <span>{adjustment.adjustedBy.userName}</span>
-                          <Clock className='h-3 w-3 ml-2' />
-                          <span>
+                          <span className='truncate'>
+                            {adjustment.adjustedBy.userName}
+                          </span>
+                          <Clock className='h-3 w-3 ml-2 flex-shrink-0' />
+                          <span className='flex-shrink-0'>
                             {dayjs(adjustment.timestamps.createdAt).fromNow()}
                           </span>
                         </div>
@@ -432,28 +438,31 @@ export const AuditDashboard: React.FC = () => {
                   ))}
               </div>
             ) : (
-              <p className='text-sm text-muted-foreground text-center py-8'>
-                No recent adjustments
-              </p>
+              <div className='text-center py-8'>
+                <Package className='w-12 h-12 mx-auto mb-3 text-slate-300' />
+                <p className='text-sm text-slate-500'>No recent adjustments</p>
+              </div>
             )}
-          </CardContent>
-        </Card>
+          </div>
+        </div>
       </div>
 
       {/* Today's Activity Chart */}
       {dashboardData.todayActivity &&
         dashboardData.todayActivity.length > 0 && (
-          <Card>
-            <CardHeader>
-              <CardTitle>Today's Activity</CardTitle>
-              <CardDescription>Hourly distribution</CardDescription>
-            </CardHeader>
-            <CardContent>
+          <div className='bg-white rounded-xl border border-slate-100 shadow-sm overflow-hidden'>
+            <div className='p-5 border-b border-slate-100'>
+              <h3 className='text-lg font-semibold text-slate-900'>
+                Today's Activity
+              </h3>
+              <p className='text-sm text-slate-500 mt-1'>Hourly distribution</p>
+            </div>
+            <div className='p-5'>
               <div className='flex items-end justify-between gap-2 h-64'>
                 {dashboardData.todayActivity.map((item) => {
                   const maxCount = Math.max(
                     ...dashboardData.todayActivity.map((d) => d.count),
-                    1
+                    1,
                   );
                   const height = (item.count / maxCount) * 100;
 
@@ -463,22 +472,26 @@ export const AuditDashboard: React.FC = () => {
                       className='flex-1 flex flex-col items-center gap-2'>
                       <div className='relative w-full flex items-end justify-center h-full'>
                         <div
-                          className='w-full bg-blue-500 rounded-t-md hover:bg-blue-600 transition-colors relative group'
+                          className='w-full bg-indigo-500 rounded-t-md hover:bg-indigo-600 transition-colors relative group'
                           style={{ height: `${height}%` }}>
                           <div className='absolute -top-6 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-opacity'>
-                            <Badge variant='secondary'>{item.count}</Badge>
+                            <Badge
+                              variant='secondary'
+                              className='bg-white border border-slate-200'>
+                              {item.count}
+                            </Badge>
                           </div>
                         </div>
                       </div>
-                      <span className='text-xs text-muted-foreground'>
+                      <span className='text-xs text-slate-500'>
                         {item.hour}:00
                       </span>
                     </div>
                   );
                 })}
               </div>
-            </CardContent>
-          </Card>
+            </div>
+          </div>
         )}
 
       {/* User Performance Overview */}

@@ -2,14 +2,6 @@
 // FILE: components/reports/OrderFulfillmentCard.tsx
 // ============================================
 import React from "react";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "../../components/ui/card";
-import { Button } from "../../components/ui/button";
 import { Download, Package, AlertCircle, Clock } from "lucide-react";
 import { Bar, BarChart, CartesianGrid, XAxis, YAxis } from "recharts";
 import {
@@ -28,11 +20,11 @@ interface OrderFulfillmentCardProps {
 const chartConfig = {
   count: {
     label: "Count",
-    color: "#636e72",
+    color: "#6366f1",
   },
   value: {
     label: "Value",
-    color: "#2d3436",
+    color: "#8b5cf6",
   },
 } satisfies ChartConfig;
 
@@ -56,55 +48,61 @@ const OrderFulfillmentCard: React.FC<OrderFulfillmentCardProps> = ({
     })) || [];
 
   return (
-    <Card>
-      <CardHeader className='flex flex-row items-center justify-between space-y-0 pb-4'>
-        <div>
-          <CardTitle className='flex items-center gap-2'>
-            <Package className='h-5 w-5' />
-            Order Fulfillment
-          </CardTitle>
-          <CardDescription>
-            Order status distribution and fulfillment metrics
-          </CardDescription>
+    <div className="bg-white rounded-xl border border-slate-100 shadow-sm overflow-hidden">
+      {/* Header */}
+      <div className="p-5 border-b border-slate-100">
+        <div className="flex items-start justify-between">
+          <div>
+            <h3 className="text-lg font-semibold text-slate-900">
+              Order Fulfillment
+            </h3>
+            <p className="text-sm text-slate-500 mt-1">
+              Order status distribution and fulfillment metrics
+            </p>
+          </div>
+          {useRoleCheck().hasRequiredPermission("Report", "download") && (
+            <button
+              onClick={onDownload}
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-slate-600 bg-white border border-slate-200 rounded-lg hover:bg-slate-50 transition-colors">
+              <Download className="h-3.5 w-3.5" />
+              Download
+            </button>
+          )}
         </div>
-        {useRoleCheck().hasRequiredPermission("Report", "download") && (
-          <Button onClick={onDownload} size='sm' variant='outline'>
-            <Download className='h-4 w-4 mr-2' />
-            Download
-          </Button>
-        )}
-      </CardHeader>
-      <CardContent className='space-y-6'>
+      </div>
+
+      {/* Content */}
+      <div className="p-5 space-y-6">
         {/* Stuck Orders Alert */}
-        <div className='w-full grid grid-cols-1 gap-2 md:grid-cols-2'>
+        <div className="w-full grid grid-cols-1 gap-3 md:grid-cols-2">
           {data.stuckOrders && data.stuckOrders.count > 0 && (
-            <div className='p-4 bg-red-50 dark:bg-red-950 border border-red-200 dark:border-red-900 rounded-lg'>
-              <div className='flex items-center gap-2 text-red-600 dark:text-red-400 mb-3'>
-                <AlertCircle className='h-5 w-5' />
-                <p className='font-semibold'>
+            <div className="p-4 bg-rose-50 border border-rose-200 rounded-lg">
+              <div className="flex items-center gap-2 text-rose-700 mb-3">
+                <AlertCircle className="h-5 w-5" />
+                <p className="font-semibold">
                   {data.stuckOrders.count} Orders Need Attention
                 </p>
               </div>
-              <div className='space-y-2'>
+              <div className="space-y-2">
                 {data.stuckOrders.orders
                   ?.slice(0, 4)
                   .map((order: any, index: number) => (
                     <div
                       key={index}
-                      className='flex items-center justify-between p-3 bg-white dark:bg-gray-900 rounded'>
+                      className="flex items-center justify-between p-3 bg-white rounded-lg border border-slate-100">
                       <div>
-                        <p className='font-medium'>
+                        <p className="font-medium text-slate-900">
                           Order #{order.orderNumber}
                         </p>
-                        <p className='text-sm text-muted-foreground'>
+                        <p className="text-sm text-slate-500">
                           {order.customerName} • {order.customerPhone}
                         </p>
                       </div>
-                      <div className='text-right'>
-                        <p className='font-bold'>
+                      <div className="text-right">
+                        <p className="font-bold text-slate-900">
                           {formatCurrency(order.totalPrice)}
                         </p>
-                        <p className='text-sm text-red-600 dark:text-red-400'>
+                        <p className="text-sm text-rose-600">
                           {order.ageInDays} days old
                         </p>
                       </div>
@@ -115,65 +113,68 @@ const OrderFulfillmentCard: React.FC<OrderFulfillmentCardProps> = ({
           )}
 
           {/* Status Distribution Chart */}
-          <div className='h-96 grid grid-cols-1 gap-2'>
-            <Card>
-              <CardHeader>
-                <CardTitle>Order Status Distribution</CardTitle>
-                <CardDescription>Number of orders by status</CardDescription>
-              </CardHeader>
-              <CardContent className='w-full'>
-                <ChartContainer config={chartConfig} className='h-64 w-full'>
-                  <BarChart accessibilityLayer data={statusChartData}>
-                    <CartesianGrid vertical={true} />
-                    <XAxis
-                      dataKey='status'
-                      tickLine={false}
-                      tickMargin={5}
-                      axisLine={false}
-                      fontWeight={500}
-                      fontSize={15}
-                    />
-                    <ChartTooltip
-                      cursor={false}
-                      content={<ChartTooltipContent indicator='dashed' />}
-                    />
-                    <YAxis yAxisId='left' orientation='left' hide />
-                    <YAxis yAxisId='right' orientation='right' hide />
-                    <Bar
-                      yAxisId='left'
-                      dataKey='count'
-                      fill='var(--color-count)'
-                      radius={5}
-                      name={"Orders"}
-                    />
-                    <Bar
-                      yAxisId='right'
-                      dataKey='value'
-                      fill='var(--color-value)'
-                      radius={5}
-                      name={"Total Value: "}
-                    />
-                  </BarChart>
-                </ChartContainer>
-              </CardContent>
-            </Card>
+          <div className="h-96 grid grid-cols-1 gap-3">
+            <div className="bg-slate-50 rounded-lg p-4 h-full">
+              <h4 className="text-sm font-semibold text-slate-900 mb-1">
+                Order Status Distribution
+              </h4>
+              <p className="text-xs text-slate-500 mb-4">
+                Number of orders by status
+              </p>
+              <ChartContainer config={chartConfig} className="h-64 w-full">
+                <BarChart accessibilityLayer data={statusChartData}>
+                  <CartesianGrid vertical={true} strokeDasharray="3 3" stroke="#e2e8f0" />
+                  <XAxis
+                    dataKey="status"
+                    tickLine={false}
+                    tickMargin={5}
+                    axisLine={false}
+                    fontWeight={500}
+                    fontSize={12}
+                    tick={{ fill: "#64748b" }}
+                  />
+                  <ChartTooltip
+                    cursor={false}
+                    content={<ChartTooltipContent indicator="dashed" />}
+                  />
+                  <YAxis yAxisId="left" orientation="left" hide />
+                  <YAxis yAxisId="right" orientation="right" hide />
+                  <Bar
+                    yAxisId="left"
+                    dataKey="count"
+                    fill="var(--color-count)"
+                    radius={5}
+                    name="Orders"
+                  />
+                  <Bar
+                    yAxisId="right"
+                    dataKey="value"
+                    fill="var(--color-value)"
+                    radius={5}
+                    name="Total Value: "
+                  />
+                </BarChart>
+              </ChartContainer>
+            </div>
           </div>
         </div>
 
         {/* Average Age by Status */}
         {data.averageAgeByStatus && data.averageAgeByStatus.length > 0 && (
           <div>
-            <h3 className='text-sm font-medium mb-3 flex items-center gap-2'>
-              <Clock className='h-4 w-4' />
+            <h3 className="text-sm font-semibold text-slate-900 mb-3 flex items-center gap-2">
+              <Clock className="h-4 w-4" />
               Average Order Age by Status
             </h3>
-            <div className='grid gap-3 grid-cols-2 md:grid-cols-4'>
+            <div className="grid gap-3 grid-cols-2 md:grid-cols-4">
               {data.averageAgeByStatus.map((item: any, index: number) => (
-                <div key={index} className='p-3 bg-muted rounded-lg'>
-                  <p className='text-sm text-muted-foreground capitalize'>
+                <div
+                  key={index}
+                  className="bg-slate-50 rounded-lg p-3 border border-slate-100">
+                  <p className="text-xs text-slate-500 uppercase tracking-wide">
                     {item.status}
                   </p>
-                  <p className='text-xl font-bold'>
+                  <p className="text-lg font-bold text-slate-900 mt-1">
                     {item.averageAgeInDays.toFixed(1)} days
                   </p>
                 </div>
@@ -181,8 +182,8 @@ const OrderFulfillmentCard: React.FC<OrderFulfillmentCardProps> = ({
             </div>
           </div>
         )}
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   );
 };
 

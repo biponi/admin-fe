@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { Button } from "../../../components/ui/button";
+import MainView from "../../../coreComponents/mainView";
 import { Input } from "../../../components/ui/input";
 import {
   Select,
@@ -18,13 +18,7 @@ import {
   TableRow,
 } from "../../../components/ui/table";
 import { Badge } from "../../../components/ui/badge";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from "../../../components/ui/card";
-import { Plus, Search, Edit, Trash2, Power } from "lucide-react";
+import { Plus, Search, Edit, Trash2, Power, Ticket } from "lucide-react";
 import Swal from "sweetalert2";
 import * as couponAPI from "../../../api/coupon";
 import type { GlobalCoupon, FilterOptions } from "../interface";
@@ -66,15 +60,15 @@ export default function GlobalCouponsPage() {
   const getStatusColor = (status: string) => {
     switch (status) {
       case "active":
-        return "bg-green-100 text-green-800 border-green-300";
+        return "bg-emerald-50 text-emerald-700 border-emerald-200";
       case "expired":
-        return "bg-gray-100 text-gray-800 border-gray-300";
+        return "bg-slate-50 text-slate-600 border-slate-200";
       case "disabled":
-        return "bg-red-100 text-red-800 border-red-300";
+        return "bg-rose-50 text-rose-700 border-rose-200";
       case "scheduled":
-        return "bg-blue-100 text-blue-800 border-blue-300";
+        return "bg-amber-50 text-amber-700 border-amber-200";
       default:
-        return "bg-gray-100 text-gray-800 border-gray-300";
+        return "bg-slate-50 text-slate-600 border-slate-200";
     }
   };
 
@@ -166,220 +160,317 @@ export default function GlobalCouponsPage() {
       coupon.name.toLowerCase().includes(searchQuery.toLowerCase()),
   );
 
+  // Calculate stats
+  const totalCoupons = coupons.length;
+  const activeCoupons = coupons.filter((c) => c.status === "active").length;
+  const expiredCoupons = coupons.filter((c) => c.status === "expired").length;
+  const totalUsed = coupons.reduce((sum, c) => sum + c.usedCount, 0);
+
   if (loading) {
     return (
-      <div className='flex justify-center items-center h-64'>Loading...</div>
+      <MainView title="Global Coupons">
+        <div className="min-h-screen bg-slate-50/60 flex items-center justify-center">
+          <div className="text-slate-500">Loading...</div>
+        </div>
+      </MainView>
     );
   }
 
   return (
-    <div className='space-y-6'>
-      <div className='flex justify-between items-center'>
-        <div>
-          <h1 className='text-3xl font-bold tracking-tight'>Global Coupons</h1>
-          <p className='text-muted-foreground mt-2'>
-            Manage public coupons available to all customers
-          </p>
-        </div>
-        <Button
-          onClick={() => navigate("/coupons/global/create")}
-          className='gap-2'>
-          <Plus className='w-4 h-4' />
-          Create Coupon
-        </Button>
-      </div>
-
-      <Card>
-        <CardHeader>
-          <CardTitle>Filters</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className='flex gap-4'>
-            <div className='flex-1'>
-              <label className='text-sm font-medium mb-2 block'>Status</label>
-              <Select
-                value={filters.status}
-                onValueChange={(value) =>
-                  setFilters({ ...filters, status: value as any })
-                }>
-                <SelectTrigger>
-                  <SelectValue placeholder='Select status' />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value='all'>All Statuses</SelectItem>
-                  <SelectItem value='active'>Active</SelectItem>
-                  <SelectItem value='expired'>Expired</SelectItem>
-                  <SelectItem value='disabled'>Disabled</SelectItem>
-                  <SelectItem value='scheduled'>Scheduled</SelectItem>
-                </SelectContent>
-              </Select>
+    <MainView title="Global Coupons">
+      <div className="min-h-screen bg-slate-50/60">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
+          {/* Page Header */}
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+            <div className="flex items-center gap-3">
+              <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-indigo-600 shadow-sm shadow-indigo-200">
+                <Ticket className="h-5 w-5 text-white" />
+              </div>
+              <div>
+                <h1 className="text-xl font-semibold text-slate-900 leading-tight">
+                  Global Coupons
+                </h1>
+                <p className="text-sm text-slate-500 mt-0.5">
+                  Manage public coupons available to all customers
+                </p>
+              </div>
             </div>
 
-            <div className='flex-1'>
-              <label className='text-sm font-medium mb-2 block'>
-                Discount Type
-              </label>
-              <Select
-                value={filters.discountType}
-                onValueChange={(value) =>
-                  setFilters({ ...filters, discountType: value as any })
-                }>
-                <SelectTrigger>
-                  <SelectValue placeholder='Select type' />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value='all'>All Types</SelectItem>
-                  <SelectItem value='fixed'>Fixed Amount</SelectItem>
-                  <SelectItem value='percentage'>Percentage</SelectItem>
-                </SelectContent>
-              </Select>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => navigate("/coupons/global/create")}
+                className="inline-flex items-center gap-1.5 px-4 py-2 text-sm font-medium text-white bg-indigo-600 rounded-lg hover:bg-indigo-700 active:bg-indigo-800 transition-all duration-150 shadow-sm shadow-indigo-200">
+                <Plus className="h-4 w-4" />
+                Create Coupon
+              </button>
             </div>
+          </div>
 
-            <div className='flex-1'>
-              <label className='text-sm font-medium mb-2 block'>Search</label>
-              <div className='relative'>
-                <Search className='absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground' />
-                <Input
-                  placeholder='Search by code or name...'
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className='pl-10'
+          {/* Summary Strip */}
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+            {[
+              {
+                label: "Total Coupons",
+                value: totalCoupons.toString(),
+                accent: "text-indigo-600",
+                bg: "bg-indigo-50",
+              },
+              {
+                label: "Active Coupons",
+                value: activeCoupons.toString(),
+                accent: "text-emerald-600",
+                bg: "bg-emerald-50",
+              },
+              {
+                label: "Expired Coupons",
+                value: expiredCoupons.toString(),
+                accent: "text-amber-600",
+                bg: "bg-amber-50",
+              },
+              {
+                label: "Total Used",
+                value: totalUsed.toString(),
+                accent: "text-rose-600",
+                bg: "bg-rose-50",
+              },
+            ].map((stat) => (
+              <div
+                key={stat.label}
+                className="flex items-center gap-3 bg-white rounded-xl border border-slate-100 px-4 py-3 shadow-sm">
+                <div
+                  className={`w-2 h-2 rounded-full ${stat.bg.replace("bg-", "bg-").replace("50", "400")}`}
                 />
+                <div className="min-w-0">
+                  <p
+                    className={`text-lg font-semibold ${stat.accent} leading-none`}>
+                    {stat.value}
+                  </p>
+                  <p className="text-xs text-slate-500 mt-0.5 truncate">
+                    {stat.label}
+                  </p>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* Filters */}
+          <div className="bg-white rounded-xl border border-slate-100 shadow-sm p-4 sm:p-5">
+            <div className="flex flex-col sm:flex-row gap-4">
+              <div className="flex-1">
+                <label className="text-sm font-medium text-slate-700 mb-1.5 block">
+                  Status
+                </label>
+                <Select
+                  value={filters.status}
+                  onValueChange={(value) =>
+                    setFilters({ ...filters, status: value as any })
+                  }>
+                  <SelectTrigger className="w-full">
+                    <SelectValue placeholder="Select status" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Statuses</SelectItem>
+                    <SelectItem value="active">Active</SelectItem>
+                    <SelectItem value="expired">Expired</SelectItem>
+                    <SelectItem value="disabled">Disabled</SelectItem>
+                    <SelectItem value="scheduled">Scheduled</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="flex-1">
+                <label className="text-sm font-medium text-slate-700 mb-1.5 block">
+                  Discount Type
+                </label>
+                <Select
+                  value={filters.discountType}
+                  onValueChange={(value) =>
+                    setFilters({ ...filters, discountType: value as any })
+                  }>
+                  <SelectTrigger className="w-full">
+                    <SelectValue placeholder="Select type" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Types</SelectItem>
+                    <SelectItem value="fixed">Fixed Amount</SelectItem>
+                    <SelectItem value="percentage">Percentage</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="flex-1">
+                <label className="text-sm font-medium text-slate-700 mb-1.5 block">
+                  Search
+                </label>
+                <div className="relative">
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-slate-400" />
+                  <Input
+                    placeholder="Search by code or name..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="pl-10"
+                  />
+                </div>
               </div>
             </div>
           </div>
-        </CardContent>
-      </Card>
 
-      <Card>
-        <CardContent className='p-0'>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Code</TableHead>
-                <TableHead>Name</TableHead>
-                <TableHead>Discount</TableHead>
-                <TableHead>Validity</TableHead>
-                <TableHead>Usage</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead>Auto-Apply</TableHead>
-                <TableHead className='text-right'>Actions</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {filteredCoupons.length === 0 ? (
-                <TableRow>
-                  <TableCell
-                    colSpan={8}
-                    className='text-center py-8 text-muted-foreground'>
-                    No coupons found. Create your first coupon to get started.
-                  </TableCell>
-                </TableRow>
-              ) : (
-                filteredCoupons.map((coupon) => (
-                  <TableRow key={coupon._id}>
-                    <TableCell className='font-mono font-medium'>
-                      {coupon.code}
-                    </TableCell>
-                    <TableCell>
-                      <div>
-                        <div className='font-medium'>{coupon.name}</div>
-                        {coupon.description && (
-                          <div className='text-sm text-muted-foreground truncate max-w-xs'>
-                            {coupon.description}
-                          </div>
-                        )}
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <div>
-                        <div className='font-medium'>
-                          {coupon.discountType === "fixed"
-                            ? `${coupon.discountValue} BDT`
-                            : `${coupon.discountValue}%`}
-                        </div>
-                        {coupon.maxDiscountAmount && (
-                          <div className='text-xs text-muted-foreground'>
-                            Max: {coupon.maxDiscountAmount} BDT
-                          </div>
-                        )}
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <div className='text-sm'>
-                        <div>
-                          From:{" "}
-                          {new Date(coupon.validFrom).toLocaleDateString()}
-                        </div>
-                        <div>
-                          Until:{" "}
-                          {new Date(coupon.validUntil).toLocaleDateString()}
-                        </div>
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <div className='text-sm'>
-                        <div>{coupon.usedCount} used</div>
-                        <div className='text-muted-foreground'>
-                          {coupon.totalUsageLimit
-                            ? `${coupon.totalUsageLimit} total`
-                            : "Unlimited"}
-                        </div>
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <Badge
-                        className={getStatusColor(coupon.status)}
-                        variant='outline'>
-                        {coupon.status}
-                      </Badge>
-                    </TableCell>
-                    <TableCell>
-                      {coupon.autoApply ? (
-                        <Badge
-                          variant='outline'
-                          className='bg-green-50 text-green-700 border-green-300'>
-                          Priority: {coupon.priority}
-                        </Badge>
-                      ) : (
-                        <span className='text-muted-foreground text-sm'>
-                          No
-                        </span>
-                      )}
-                    </TableCell>
-                    <TableCell className='text-right'>
-                      <div className='flex justify-end gap-2'>
-                        <Button
-                          variant='ghost'
-                          size='sm'
-                          onClick={() =>
-                            navigate(`/coupons/global/edit/${coupon.code}`)
-                          }>
-                          <Edit className='w-4 h-4' />
-                        </Button>
-                        {coupon.status === "active" && (
-                          <Button
-                            variant='ghost'
-                            size='sm'
-                            onClick={() => handleDisable(coupon.code)}>
-                            <Power className='w-4 h-4' />
-                          </Button>
-                        )}
-                        <Button
-                          variant='ghost'
-                          size='sm'
-                          onClick={() => handleDelete(coupon.code)}>
-                          <Trash2 className='w-4 h-4 text-red-600' />
-                        </Button>
-                      </div>
-                    </TableCell>
+          {/* Table */}
+          <div className="bg-white rounded-xl border border-slate-100 shadow-sm overflow-hidden">
+            <div className="overflow-x-auto">
+              <Table>
+                <TableHeader>
+                  <TableRow className="border-slate-100 hover:bg-slate-50/50">
+                    <TableHead className="font-semibold text-slate-700">
+                      Code
+                    </TableHead>
+                    <TableHead className="font-semibold text-slate-700">
+                      Name
+                    </TableHead>
+                    <TableHead className="font-semibold text-slate-700">
+                      Discount
+                    </TableHead>
+                    <TableHead className="font-semibold text-slate-700">
+                      Validity
+                    </TableHead>
+                    <TableHead className="font-semibold text-slate-700">
+                      Usage
+                    </TableHead>
+                    <TableHead className="font-semibold text-slate-700">
+                      Status
+                    </TableHead>
+                    <TableHead className="font-semibold text-slate-700">
+                      Auto-Apply
+                    </TableHead>
+                    <TableHead className="font-semibold text-slate-700 text-right">
+                      Actions
+                    </TableHead>
                   </TableRow>
-                ))
-              )}
-            </TableBody>
-          </Table>
-        </CardContent>
-      </Card>
-    </div>
+                </TableHeader>
+                <TableBody>
+                  {filteredCoupons.length === 0 ? (
+                    <TableRow>
+                      <TableCell
+                        colSpan={8}
+                        className="text-center py-12 text-slate-500">
+                        <div className="flex flex-col items-center gap-3">
+                          <Ticket className="w-12 h-12 text-slate-300" />
+                          <p>No coupons found. Create your first coupon to get started.</p>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ) : (
+                    filteredCoupons.map((coupon) => (
+                      <TableRow
+                        key={coupon._id}
+                        className="border-slate-100 hover:bg-slate-50/50">
+                        <TableCell className="font-mono font-medium text-slate-900">
+                          {coupon.code}
+                        </TableCell>
+                        <TableCell>
+                          <div>
+                            <div className="font-medium text-slate-900">
+                              {coupon.name}
+                            </div>
+                            {coupon.description && (
+                              <div className="text-sm text-slate-500 truncate max-w-xs">
+                                {coupon.description}
+                              </div>
+                            )}
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <div>
+                            <div className="font-medium text-slate-900">
+                              {coupon.discountType === "fixed"
+                                ? `${coupon.discountValue} BDT`
+                                : `${coupon.discountValue}%`}
+                            </div>
+                            {coupon.maxDiscountAmount && (
+                              <div className="text-xs text-slate-500">
+                                Max: {coupon.maxDiscountAmount} BDT
+                              </div>
+                            )}
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <div className="text-sm text-slate-600">
+                            <div>
+                              From:{" "}
+                              {new Date(coupon.validFrom).toLocaleDateString()}
+                            </div>
+                            <div>
+                              Until:{" "}
+                              {new Date(
+                                coupon.validUntil,
+                              ).toLocaleDateString()}
+                            </div>
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <div className="text-sm text-slate-600">
+                            <div className="font-medium text-slate-900">
+                              {coupon.usedCount} used
+                            </div>
+                            <div className="text-slate-500">
+                              {coupon.totalUsageLimit
+                                ? `${coupon.totalUsageLimit} total`
+                                : "Unlimited"}
+                            </div>
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <Badge
+                            className={getStatusColor(coupon.status)}
+                            variant="outline">
+                            {coupon.status}
+                          </Badge>
+                        </TableCell>
+                        <TableCell>
+                          {coupon.autoApply ? (
+                            <Badge
+                              variant="outline"
+                              className="bg-emerald-50 text-emerald-700 border-emerald-200">
+                              Priority: {coupon.priority}
+                            </Badge>
+                          ) : (
+                            <span className="text-slate-400 text-sm">No</span>
+                          )}
+                        </TableCell>
+                        <TableCell className="text-right">
+                          <div className="flex justify-end gap-1">
+                            <button
+                              onClick={() =>
+                                navigate(
+                                  `/coupons/global/edit/${coupon.code}`,
+                                )
+                              }
+                              className="inline-flex items-center justify-center w-8 h-8 rounded-lg text-slate-500 hover:text-slate-700 hover:bg-slate-100 transition-all duration-150">
+                              <Edit className="w-4 h-4" />
+                            </button>
+                            {coupon.status === "active" && (
+                              <button
+                                onClick={() => handleDisable(coupon.code)}
+                                className="inline-flex items-center justify-center w-8 h-8 rounded-lg text-slate-500 hover:text-amber-600 hover:bg-amber-50 transition-all duration-150">
+                                <Power className="w-4 h-4" />
+                              </button>
+                            )}
+                            <button
+                              onClick={() => handleDelete(coupon.code)}
+                              className="inline-flex items-center justify-center w-8 h-8 rounded-lg text-slate-500 hover:text-rose-600 hover:bg-rose-50 transition-all duration-150">
+                              <Trash2 className="w-4 h-4" />
+                            </button>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    ))
+                  )}
+                </TableBody>
+              </Table>
+            </div>
+          </div>
+        </div>
+      </div>
+    </MainView>
   );
 }

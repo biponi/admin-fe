@@ -2,14 +2,6 @@
 // FILE: components/reports/CustomerInsightsCard.tsx
 // ============================================
 import React from "react";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "../../components/ui/card";
-import { Button } from "../../components/ui/button";
 import { Download, Users, UserPlus, UserCheck } from "lucide-react";
 import {
   Bar,
@@ -36,14 +28,14 @@ interface CustomerInsightsCardProps {
 const chartConfig = {
   name: {
     label: "Name",
-    color: "#ffffff",
+    color: "#64748b",
   },
   spent: {
     label: "Spent",
-    color: "#f7f1e3",
+    color: "#6366f1",
   },
   label: {
-    color: "#ffffff",
+    color: "#94a3b8",
   },
 } satisfies ChartConfig;
 
@@ -61,53 +53,59 @@ const CustomerInsightsCard: React.FC<CustomerInsightsCardProps> = ({
     })) || [];
 
   return (
-    <Card className='bg-[#636e72] text-white'>
-      <CardHeader className='flex flex-row items-center justify-between space-y-0 pb-4'>
-        <div>
-          <CardTitle className='flex items-center gap-2'>
-            <Users className='h-5 w-5' />
-            Customer Insights
-          </CardTitle>
-          <CardDescription className='text-white'>
-            Customer analytics and top performers
-          </CardDescription>
+    <div className="bg-white rounded-xl border border-slate-100 shadow-sm overflow-hidden">
+      {/* Header */}
+      <div className="p-5 border-b border-slate-100">
+        <div className="flex items-start justify-between">
+          <div>
+            <h3 className="text-lg font-semibold text-slate-900">
+              Customer Insights
+            </h3>
+            <p className="text-sm text-slate-500 mt-1">
+              Customer analytics and top performers
+            </p>
+          </div>
+          {useRoleCheck().hasRequiredPermission("Report", "download") && (
+            <button
+              onClick={onDownload}
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-slate-600 bg-white border border-slate-200 rounded-lg hover:bg-slate-50 transition-colors">
+              <Download className="h-3.5 w-3.5" />
+              Download
+            </button>
+          )}
         </div>
-        {useRoleCheck().hasRequiredPermission("Report", "download") && (
-          <Button onClick={onDownload} size='sm' variant='outline'>
-            <Download className='h-4 w-4 mr-2' />
-            Download
-          </Button>
-        )}
-      </CardHeader>
-      <CardContent className='space-y-6'>
+      </div>
+
+      {/* Content */}
+      <div className="p-5 space-y-6">
         {/* Summary Metrics */}
-        <div className='grid gap-4 grid-cols-3'>
-          <div className='p-4 bg-cyan-50 dark:bg-cyan-950 rounded-lg'>
-            <div className='flex items-center gap-2 text-cyan-600 dark:text-cyan-400'>
-              <Users className='h-4 w-4' />
-              <p className='text-sm font-medium'>Total</p>
+        <div className="grid gap-3 grid-cols-3">
+          <div className="bg-indigo-50 rounded-lg p-4">
+            <div className="flex items-center gap-2 text-indigo-600 mb-2">
+              <Users className="h-4 w-4" />
+              <p className="text-sm font-medium">Total</p>
             </div>
-            <p className='text-2xl font-bold mt-2 text-cyan-600'>
+            <p className="text-2xl font-bold text-slate-900">
               {data.summary?.totalUniqueCustomers || 0}
             </p>
           </div>
 
-          <div className='p-4 bg-green-50 dark:bg-green-950 rounded-lg'>
-            <div className='flex items-center gap-2 text-green-600 dark:text-green-400'>
-              <UserPlus className='h-4 w-4' />
-              <p className='text-sm font-medium'>New</p>
+          <div className="bg-emerald-50 rounded-lg p-4">
+            <div className="flex items-center gap-2 text-emerald-600 mb-2">
+              <UserPlus className="h-4 w-4" />
+              <p className="text-sm font-medium">New</p>
             </div>
-            <p className='text-2xl font-bold mt-2 text-green-600'>
+            <p className="text-2xl font-bold text-slate-900">
               {data.summary?.newCustomers || 0}
             </p>
           </div>
 
-          <div className='p-4 bg-purple-50 dark:bg-purple-950 rounded-lg'>
-            <div className='flex items-center gap-2 text-purple-600 dark:text-purple-400'>
-              <UserCheck className='h-4 w-4' />
-              <p className='text-sm font-medium'>Returning</p>
+          <div className="bg-violet-50 rounded-lg p-4">
+            <div className="flex items-center gap-2 text-violet-600 mb-2">
+              <UserCheck className="h-4 w-4" />
+              <p className="text-sm font-medium">Returning</p>
             </div>
-            <p className='text-2xl font-bold mt-2 text-purple-600'>
+            <p className="text-2xl font-bold text-slate-900">
               {data.summary?.returningCustomers || 0}
             </p>
           </div>
@@ -116,54 +114,62 @@ const CustomerInsightsCard: React.FC<CustomerInsightsCardProps> = ({
         {/* Top Customers Chart */}
         {topCustomersData.length > 0 && (
           <div>
-            <h3 className='text-sm font-medium mb-4'>
+            <h3 className="text-sm font-semibold text-slate-900 mb-4">
               Top 5 Customers by Spending
             </h3>
-            <ChartContainer config={chartConfig} className='h-64 w-full'>
+            <ChartContainer config={chartConfig} className="h-64 w-full">
               <BarChart
                 accessibilityLayer
                 data={topCustomersData}
-                layout='vertical'
+                layout="vertical"
                 margin={{
                   right: 16,
                 }}>
                 <CartesianGrid horizontal={false} vertical={false} />
                 <YAxis
-                  dataKey='name'
-                  type='category'
+                  dataKey="name"
+                  type="category"
                   tickLine={false}
                   tickMargin={10}
                   axisLine={false}
-                  tickFormatter={(value) => value.slice(0, 3)}
-                  hide
+                  tickFormatter={(value) => value.slice(0, 10)}
+                  tick={{ fill: "#64748b", fontSize: 11 }}
+                  width={75}
                 />
-                <XAxis dataKey='spent' type='number' hide />
+                <XAxis dataKey="spent" type="number" hide />
                 <ChartTooltip
                   cursor={false}
-                  content={<ChartTooltipContent indicator='line' />}
+                  content={<ChartTooltipContent indicator="line" />}
                 />
-                <Bar dataKey='spent' fill='var(--color-spent)' radius={5}>
+                <Bar dataKey="spent" fill="var(--color-spent)" radius={5}>
                   <LabelList
-                    dataKey='name'
-                    position='insideLeft'
-                    className='fill-(--color-name)'
-                    fontSize={15}
-                    fontWeight={600}
+                    dataKey="name"
+                    position="insideLeft"
+                    className="fill-slate-700"
+                    fontSize={12}
+                    fontWeight={500}
                   />
                   <LabelList
-                    dataKey='spent'
-                    position='right'
-                    className='fill-white'
+                    dataKey="spent"
+                    position="right"
+                    className="fill-slate-900"
                     fontSize={12}
                     fontWeight={600}
+                    formatter={(value: number) =>
+                      new Intl.NumberFormat("en-BD", {
+                        style: "currency",
+                        currency: "BDT",
+                        minimumFractionDigits: 0,
+                      }).format(value)
+                    }
                   />
                 </Bar>
               </BarChart>
             </ChartContainer>
           </div>
         )}
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   );
 };
 

@@ -1,6 +1,11 @@
 import { useState, useEffect } from "react";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "../../../components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "../../../components/ui/tabs";
+import MainView from "../../../coreComponents/mainView";
+import {
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
+} from "../../../components/ui/tabs";
 import { Badge } from "../../../components/ui/badge";
 import {
   Table,
@@ -15,8 +20,12 @@ import * as couponAPI from "../../../api/coupon";
 import { SegmentSummary, GlobalCouponStats } from "../../../api/coupon";
 
 export default function CouponAnalyticsPage() {
-  const [segmentSummary, setSegmentSummary] = useState<SegmentSummary | null>(null);
-  const [globalStats, setGlobalStats] = useState<GlobalCouponStats | null>(null);
+  const [segmentSummary, setSegmentSummary] = useState<SegmentSummary | null>(
+    null,
+  );
+  const [globalStats, setGlobalStats] = useState<GlobalCouponStats | null>(
+    null,
+  );
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -46,7 +55,26 @@ export default function CouponAnalyticsPage() {
   };
 
   if (loading) {
-    return <div className="flex justify-center items-center h-64">Loading analytics...</div>;
+    return (
+      <MainView title="Coupon Analytics">
+        <div className="min-h-screen bg-slate-50/60 flex items-center justify-center">
+          <div className="flex flex-col items-center gap-4">
+            <div className="relative">
+              <div className="w-16 h-16 border-4 border-indigo-200 rounded-full"></div>
+              <div className="absolute top-0 left-0 w-16 h-16 border-4 border-indigo-600 rounded-full border-t-transparent animate-spin"></div>
+            </div>
+            <div className="text-center">
+              <h3 className="text-lg font-semibold text-slate-900">
+                Loading Analytics
+              </h3>
+              <p className="text-sm text-slate-500 mt-1">
+                Please wait while we gather your data...
+              </p>
+            </div>
+          </div>
+        </div>
+      </MainView>
+    );
   }
 
   const segmentCards = [
@@ -54,143 +82,177 @@ export default function CouponAnalyticsPage() {
       title: "New Customers",
       count: segmentSummary?.newCustomers.count || 0,
       icon: Users,
-      color: "text-blue-600",
-      bgColor: "bg-blue-50",
       customers: segmentSummary?.newCustomers.customers || [],
     },
     {
       title: "Inactive Customers",
       count: segmentSummary?.inactiveCustomers.count || 0,
       icon: Target,
-      color: "text-orange-600",
-      bgColor: "bg-orange-50",
       customers: segmentSummary?.inactiveCustomers.customers || [],
     },
     {
       title: "High-Value Customers",
       count: segmentSummary?.highValueCustomers.count || 0,
       icon: Award,
-      color: "text-green-600",
-      bgColor: "bg-green-50",
       customers: segmentSummary?.highValueCustomers.customers || [],
     },
     {
       title: "Frequent Customers",
       count: segmentSummary?.frequentCustomers.count || 0,
       icon: TrendingUp,
-      color: "text-purple-600",
-      bgColor: "bg-purple-50",
       customers: segmentSummary?.frequentCustomers.customers || [],
     },
   ];
 
   return (
-    <div className="space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold tracking-tight">Coupon Analytics</h1>
-        <p className="text-muted-foreground mt-2">
-          Track coupon performance and customer segments
-        </p>
-      </div>
+    <MainView title="Coupon Analytics">
+      <div className="min-h-screen bg-slate-50/60">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
+          {/* Page Header */}
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+            <div className="flex items-center gap-3">
+              <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-indigo-600 shadow-sm shadow-indigo-200">
+                <TrendingUp className="h-5 w-5 text-white" />
+              </div>
+              <div>
+                <h1 className="text-xl font-semibold text-slate-900 leading-tight">
+                  Coupon Analytics
+                </h1>
+                <p className="text-sm text-slate-500 mt-0.5">
+                  Track coupon performance and customer segments
+                </p>
+              </div>
+            </div>
+          </div>
 
-      {/* Global Coupon Statistics */}
-      {globalStats && (
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground">Total Coupons</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{globalStats.totalCoupons}</div>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground">Active Coupons</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold text-green-600">{globalStats.activeCoupons}</div>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground">Expired Coupons</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold text-gray-600">{globalStats.expiredCoupons}</div>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground">Disabled Coupons</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold text-red-600">{globalStats.disabledCoupons}</div>
-            </CardContent>
-          </Card>
-        </div>
-      )}
-
-      {/* Most Used Coupons */}
-      {globalStats && globalStats.mostUsed.length > 0 && (
-        <Card>
-          <CardHeader>
-            <CardTitle>Most Used Coupons</CardTitle>
-            <CardDescription>Top performing coupons by usage count</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              {globalStats.mostUsed.map((coupon, index) => (
-                <div key={index} className="flex items-center justify-between p-4 bg-muted rounded-lg">
-                  <div className="flex-1">
-                    <div className="font-mono font-semibold text-lg">{coupon.code}</div>
-                    <div className="text-sm text-muted-foreground">Total Discount: {coupon.totalDiscount} BDT</div>
-                  </div>
-                  <div className="text-right">
-                    <div className="text-2xl font-bold">{coupon.usageCount}</div>
-                    <div className="text-xs text-muted-foreground">uses</div>
+          {/* Global Statistics */}
+          {globalStats && (
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+              {[
+                {
+                  label: "Total Coupons",
+                  value: globalStats.totalCoupons.toString(),
+                  accent: "text-indigo-600",
+                  bg: "bg-indigo-50",
+                },
+                {
+                  label: "Active Coupons",
+                  value: globalStats.activeCoupons.toString(),
+                  accent: "text-emerald-600",
+                  bg: "bg-emerald-50",
+                },
+                {
+                  label: "Expired Coupons",
+                  value: globalStats.expiredCoupons.toString(),
+                  accent: "text-slate-600",
+                  bg: "bg-slate-50",
+                },
+                {
+                  label: "Disabled Coupons",
+                  value: globalStats.disabledCoupons.toString(),
+                  accent: "text-rose-600",
+                  bg: "bg-rose-50",
+                },
+              ].map((stat) => (
+                <div
+                  key={stat.label}
+                  className="flex items-center gap-3 bg-white rounded-xl border border-slate-100 px-4 py-3 shadow-sm">
+                  <div
+                    className={`w-2 h-2 rounded-full ${stat.bg.replace("bg-", "bg-").replace("50", "400")}`}
+                  />
+                  <div className="min-w-0">
+                    <p
+                      className={`text-lg font-semibold ${stat.accent} leading-none`}>
+                      {stat.value}
+                    </p>
+                    <p className="text-xs text-slate-500 mt-0.5 truncate">
+                      {stat.label}
+                    </p>
                   </div>
                 </div>
               ))}
             </div>
-          </CardContent>
-        </Card>
-      )}
+          )}
 
-      {/* Customer Segments */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Customer Segments</CardTitle>
-          <CardDescription>
-            Target customers with personalized coupons based on their behavior
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {segmentCards.map((segment) => {
-              const Icon = segment.icon;
-              return (
-                <Card key={segment.title} className="hover:shadow-lg transition-shadow">
-                  <CardHeader>
-                    <div className="flex items-center justify-between">
-                      <div className={`w-10 h-10 rounded-lg ${segment.bgColor} flex items-center justify-center`}>
-                        <Icon className={`w-5 h-5 ${segment.color}`} />
+          {/* Most Used Coupons */}
+          {globalStats && globalStats.mostUsed.length > 0 && (
+            <div className="bg-white rounded-xl border border-slate-100 shadow-sm overflow-hidden">
+              <div className="p-5 border-b border-slate-100">
+                <h2 className="text-lg font-semibold text-slate-900">
+                  Most Used Coupons
+                </h2>
+                <p className="text-sm text-slate-500 mt-1">
+                  Top performing coupons by usage count
+                </p>
+              </div>
+              <div className="p-5">
+                <div className="space-y-3">
+                  {globalStats.mostUsed.map((coupon, index) => (
+                    <div
+                      key={index}
+                      className="flex items-center justify-between p-4 bg-slate-50 rounded-lg border border-slate-100">
+                      <div className="flex-1">
+                        <div className="font-mono font-semibold text-lg text-slate-900">
+                          {coupon.code}
+                        </div>
+                        <div className="text-sm text-slate-500">
+                          Total Discount: {coupon.totalDiscount} BDT
+                        </div>
                       </div>
-                      <Badge variant="secondary" className="text-lg font-semibold">
-                        {segment.count}
-                      </Badge>
+                      <div className="text-right">
+                        <div className="text-2xl font-bold text-indigo-600">
+                          {coupon.usageCount}
+                        </div>
+                        <div className="text-xs text-slate-500">uses</div>
+                      </div>
                     </div>
-                    <CardTitle className="text-lg mt-4">{segment.title}</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="space-y-2">
-                      <p className="text-sm text-muted-foreground">
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Customer Segments */}
+          <div className="bg-white rounded-xl border border-slate-100 shadow-sm overflow-hidden">
+            <div className="p-5 border-b border-slate-100">
+              <h2 className="text-lg font-semibold text-slate-900">
+                Customer Segments
+              </h2>
+              <p className="text-sm text-slate-500 mt-1">
+                Target customers with personalized coupons based on their
+                behavior
+              </p>
+            </div>
+            <div className="p-5">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                {segmentCards.map((segment) => {
+                  const Icon = segment.icon;
+                  return (
+                    <div
+                      key={segment.title}
+                      className="group bg-slate-50 rounded-xl border border-slate-100 p-4 hover:shadow-md hover:border-slate-200 transition-all duration-200">
+                      <div className="flex items-center justify-between mb-3">
+                        <div className="flex items-center justify-center w-10 h-10 rounded-lg bg-indigo-50 group-hover:bg-indigo-100 transition-colors duration-200">
+                          <Icon className="h-5 w-5 text-indigo-600" />
+                        </div>
+                        <Badge
+                          variant="secondary"
+                          className="text-base font-semibold bg-white border border-slate-200">
+                          {segment.count}
+                        </Badge>
+                      </div>
+                      <h3 className="text-base font-semibold text-slate-900 mb-2">
+                        {segment.title}
+                      </h3>
+                      <p className="text-sm text-slate-500 mb-3">
                         {segment.count} {segment.title.toLowerCase()}
                       </p>
                       {segment.customers.slice(0, 3).length > 0 && (
-                        <div className="text-xs text-muted-foreground">
-                          Sample customers:
-                          <ul className="mt-1 space-y-1">
+                        <div className="text-xs text-slate-500">
+                          <div className="font-medium text-slate-600 mb-1">
+                            Sample customers:
+                          </div>
+                          <ul className="space-y-1">
                             {segment.customers.slice(0, 3).map((customer, idx) => (
                               <li key={idx} className="font-mono">
                                 {customer.phoneNumber}
@@ -200,150 +262,289 @@ export default function CouponAnalyticsPage() {
                         </div>
                       )}
                     </div>
-                  </CardContent>
-                </Card>
-              );
-            })}
+                  );
+                })}
+              </div>
+            </div>
           </div>
-        </CardContent>
-      </Card>
 
-      {/* Segment Details Tabs */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Segment Details</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <Tabs defaultValue="new">
-            <TabsList className="grid w-full grid-cols-4">
-              <TabsTrigger value="new">New</TabsTrigger>
-              <TabsTrigger value="inactive">Inactive</TabsTrigger>
-              <TabsTrigger value="highValue">High-Value</TabsTrigger>
-              <TabsTrigger value="frequent">Frequent</TabsTrigger>
-            </TabsList>
+          {/* Segment Details Tabs */}
+          <div className="bg-white rounded-xl border border-slate-100 shadow-sm overflow-hidden">
+            <div className="border-b border-slate-100">
+              <Tabs defaultValue="new" className="w-full">
+                <TabsList className="h-auto bg-transparent p-0 gap-0 rounded-none">
+                  <TabsTrigger
+                    value="new"
+                    className="relative flex items-center gap-2 px-4 py-4 text-sm font-medium rounded-none border-b-2 border-transparent text-slate-500 hover:text-slate-700 data-[state=active]:text-indigo-600 data-[state=active]:border-indigo-600 data-[state=active]:bg-transparent transition-all duration-150">
+                    <Users className="h-4 w-4" />
+                    New
+                  </TabsTrigger>
+                  <TabsTrigger
+                    value="inactive"
+                    className="relative flex items-center gap-2 px-4 py-4 text-sm font-medium rounded-none border-b-2 border-transparent text-slate-500 hover:text-slate-700 data-[state=active]:text-indigo-600 data-[state=active]:border-indigo-600 data-[state=active]:bg-transparent transition-all duration-150">
+                    <Target className="h-4 w-4" />
+                    Inactive
+                  </TabsTrigger>
+                  <TabsTrigger
+                    value="highValue"
+                    className="relative flex items-center gap-2 px-4 py-4 text-sm font-medium rounded-none border-b-2 border-transparent text-slate-500 hover:text-slate-700 data-[state=active]:text-indigo-600 data-[state=active]:border-indigo-600 data-[state=active]:bg-transparent transition-all duration-150">
+                    <Award className="h-4 w-4" />
+                    High-Value
+                  </TabsTrigger>
+                  <TabsTrigger
+                    value="frequent"
+                    className="relative flex items-center gap-2 px-4 py-4 text-sm font-medium rounded-none border-b-2 border-transparent text-slate-500 hover:text-slate-700 data-[state=active]:text-indigo-600 data-[state=active]:border-indigo-600 data-[state=active]:bg-transparent transition-all duration-150">
+                    <TrendingUp className="h-4 w-4" />
+                    Frequent
+                  </TabsTrigger>
+                </TabsList>
 
-            <TabsContent value="new" className="space-y-4">
-              {segmentSummary && segmentSummary.newCustomers.customers.length > 0 ? (
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Phone Number</TableHead>
-                      <TableHead>First Order</TableHead>
-                      <TableHead>Order Count</TableHead>
-                      <TableHead>Total Spent</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {segmentSummary.newCustomers.customers.slice(0, 10).map((customer, idx) => (
-                      <TableRow key={idx}>
-                        <TableCell className="font-mono">{customer.phoneNumber}</TableCell>
-                        <TableCell>{new Date(customer.firstOrderDate).toLocaleDateString()}</TableCell>
-                        <TableCell>{customer.orderCount}</TableCell>
-                        <TableCell>{customer.totalSpent} BDT</TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              ) : (
-                <div className="text-center py-8 text-muted-foreground">
-                  No new customers found
-                </div>
-              )}
-            </TabsContent>
+                <TabsContent
+                  value="new"
+                  className="p-4 sm:p-6 mt-0 focus-visible:outline-none">
+                  {segmentSummary &&
+                  segmentSummary.newCustomers.customers.length > 0 ? (
+                    <div className="overflow-x-auto">
+                      <Table>
+                        <TableHeader>
+                          <TableRow className="border-slate-100 hover:bg-slate-50/50">
+                            <TableHead className="font-semibold text-slate-700">
+                              Phone Number
+                            </TableHead>
+                            <TableHead className="font-semibold text-slate-700">
+                              First Order
+                            </TableHead>
+                            <TableHead className="font-semibold text-slate-700">
+                              Order Count
+                            </TableHead>
+                            <TableHead className="font-semibold text-slate-700">
+                              Total Spent
+                            </TableHead>
+                          </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                          {segmentSummary.newCustomers.customers
+                            .slice(0, 10)
+                            .map((customer, idx) => (
+                              <TableRow
+                                key={idx}
+                                className="border-slate-100 hover:bg-slate-50/50">
+                                <TableCell className="font-mono text-slate-900">
+                                  {customer.phoneNumber}
+                                </TableCell>
+                                <TableCell className="text-slate-600">
+                                  {new Date(
+                                    customer.firstOrderDate,
+                                  ).toLocaleDateString()}
+                                </TableCell>
+                                <TableCell className="text-slate-600">
+                                  {customer.orderCount}
+                                </TableCell>
+                                <TableCell className="text-slate-600">
+                                  {customer.totalSpent} BDT
+                                </TableCell>
+                              </TableRow>
+                            ))}
+                        </TableBody>
+                      </Table>
+                    </div>
+                  ) : (
+                    <div className="text-center py-12 text-slate-500">
+                      <Users className="w-12 h-12 mx-auto mb-3 text-slate-300" />
+                      <p>No new customers found</p>
+                    </div>
+                  )}
+                </TabsContent>
 
-            <TabsContent value="inactive" className="space-y-4">
-              {segmentSummary && segmentSummary.inactiveCustomers.customers.length > 0 ? (
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Phone Number</TableHead>
-                      <TableHead>Last Order</TableHead>
-                      <TableHead>Order Count</TableHead>
-                      <TableHead>Total Spent</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {segmentSummary.inactiveCustomers.customers.slice(0, 10).map((customer, idx) => (
-                      <TableRow key={idx}>
-                        <TableCell className="font-mono">{customer.phoneNumber}</TableCell>
-                        <TableCell>{new Date(customer.lastOrderDate).toLocaleDateString()}</TableCell>
-                        <TableCell>{customer.orderCount}</TableCell>
-                        <TableCell>{customer.totalSpent} BDT</TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              ) : (
-                <div className="text-center py-8 text-muted-foreground">
-                  No inactive customers found
-                </div>
-              )}
-            </TabsContent>
+                <TabsContent
+                  value="inactive"
+                  className="p-4 sm:p-6 mt-0 focus-visible:outline-none">
+                  {segmentSummary &&
+                  segmentSummary.inactiveCustomers.customers.length > 0 ? (
+                    <div className="overflow-x-auto">
+                      <Table>
+                        <TableHeader>
+                          <TableRow className="border-slate-100 hover:bg-slate-50/50">
+                            <TableHead className="font-semibold text-slate-700">
+                              Phone Number
+                            </TableHead>
+                            <TableHead className="font-semibold text-slate-700">
+                              Last Order
+                            </TableHead>
+                            <TableHead className="font-semibold text-slate-700">
+                              Order Count
+                            </TableHead>
+                            <TableHead className="font-semibold text-slate-700">
+                              Total Spent
+                            </TableHead>
+                          </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                          {segmentSummary.inactiveCustomers.customers
+                            .slice(0, 10)
+                            .map((customer, idx) => (
+                              <TableRow
+                                key={idx}
+                                className="border-slate-100 hover:bg-slate-50/50">
+                                <TableCell className="font-mono text-slate-900">
+                                  {customer.phoneNumber}
+                                </TableCell>
+                                <TableCell className="text-slate-600">
+                                  {new Date(
+                                    customer.lastOrderDate,
+                                  ).toLocaleDateString()}
+                                </TableCell>
+                                <TableCell className="text-slate-600">
+                                  {customer.orderCount}
+                                </TableCell>
+                                <TableCell className="text-slate-600">
+                                  {customer.totalSpent} BDT
+                                </TableCell>
+                              </TableRow>
+                            ))}
+                        </TableBody>
+                      </Table>
+                    </div>
+                  ) : (
+                    <div className="text-center py-12 text-slate-500">
+                      <Target className="w-12 h-12 mx-auto mb-3 text-slate-300" />
+                      <p>No inactive customers found</p>
+                    </div>
+                  )}
+                </TabsContent>
 
-            <TabsContent value="highValue" className="space-y-4">
-              {segmentSummary && segmentSummary.highValueCustomers.customers.length > 0 ? (
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Phone Number</TableHead>
-                      <TableHead>Total Spent</TableHead>
-                      <TableHead>Order Count</TableHead>
-                      <TableHead>Avg Order Value</TableHead>
-                      <TableHead>Last Order</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {segmentSummary.highValueCustomers.customers.slice(0, 10).map((customer, idx) => (
-                      <TableRow key={idx}>
-                        <TableCell className="font-mono">{customer.phoneNumber}</TableCell>
-                        <TableCell className="font-semibold">{customer.totalSpent} BDT</TableCell>
-                        <TableCell>{customer.orderCount}</TableCell>
-                        <TableCell>{customer.avgOrderValue} BDT</TableCell>
-                        <TableCell>{new Date(customer.lastOrderDate).toLocaleDateString()}</TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              ) : (
-                <div className="text-center py-8 text-muted-foreground">
-                  No high-value customers found
-                </div>
-              )}
-            </TabsContent>
+                <TabsContent
+                  value="highValue"
+                  className="p-4 sm:p-6 mt-0 focus-visible:outline-none">
+                  {segmentSummary &&
+                  segmentSummary.highValueCustomers.customers.length > 0 ? (
+                    <div className="overflow-x-auto">
+                      <Table>
+                        <TableHeader>
+                          <TableRow className="border-slate-100 hover:bg-slate-50/50">
+                            <TableHead className="font-semibold text-slate-700">
+                              Phone Number
+                            </TableHead>
+                            <TableHead className="font-semibold text-slate-700">
+                              Total Spent
+                            </TableHead>
+                            <TableHead className="font-semibold text-slate-700">
+                              Order Count
+                            </TableHead>
+                            <TableHead className="font-semibold text-slate-700">
+                              Avg Order Value
+                            </TableHead>
+                            <TableHead className="font-semibold text-slate-700">
+                              Last Order
+                            </TableHead>
+                          </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                          {segmentSummary.highValueCustomers.customers
+                            .slice(0, 10)
+                            .map((customer, idx) => (
+                              <TableRow
+                                key={idx}
+                                className="border-slate-100 hover:bg-slate-50/50">
+                                <TableCell className="font-mono text-slate-900">
+                                  {customer.phoneNumber}
+                                </TableCell>
+                                <TableCell className="font-semibold text-slate-900">
+                                  {customer.totalSpent} BDT
+                                </TableCell>
+                                <TableCell className="text-slate-600">
+                                  {customer.orderCount}
+                                </TableCell>
+                                <TableCell className="text-slate-600">
+                                  {customer.avgOrderValue} BDT
+                                </TableCell>
+                                <TableCell className="text-slate-600">
+                                  {new Date(
+                                    customer.lastOrderDate,
+                                  ).toLocaleDateString()}
+                                </TableCell>
+                              </TableRow>
+                            ))}
+                        </TableBody>
+                      </Table>
+                    </div>
+                  ) : (
+                    <div className="text-center py-12 text-slate-500">
+                      <Award className="w-12 h-12 mx-auto mb-3 text-slate-300" />
+                      <p>No high-value customers found</p>
+                    </div>
+                  )}
+                </TabsContent>
 
-            <TabsContent value="frequent" className="space-y-4">
-              {segmentSummary && segmentSummary.frequentCustomers.customers.length > 0 ? (
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Phone Number</TableHead>
-                      <TableHead>Order Count</TableHead>
-                      <TableHead>Total Spent</TableHead>
-                      <TableHead>First Order</TableHead>
-                      <TableHead>Last Order</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {segmentSummary.frequentCustomers.customers.slice(0, 10).map((customer, idx) => (
-                      <TableRow key={idx}>
-                        <TableCell className="font-mono">{customer.phoneNumber}</TableCell>
-                        <TableCell className="font-semibold">{customer.orderCount}</TableCell>
-                        <TableCell>{customer.totalSpent} BDT</TableCell>
-                        <TableCell>{new Date(customer.firstOrderDate).toLocaleDateString()}</TableCell>
-                        <TableCell>{new Date(customer.lastOrderDate).toLocaleDateString()}</TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              ) : (
-                <div className="text-center py-8 text-muted-foreground">
-                  No frequent customers found
-                </div>
-              )}
-            </TabsContent>
-          </Tabs>
-        </CardContent>
-      </Card>
-    </div>
+                <TabsContent
+                  value="frequent"
+                  className="p-4 sm:p-6 mt-0 focus-visible:outline-none">
+                  {segmentSummary &&
+                  segmentSummary.frequentCustomers.customers.length > 0 ? (
+                    <div className="overflow-x-auto">
+                      <Table>
+                        <TableHeader>
+                          <TableRow className="border-slate-100 hover:bg-slate-50/50">
+                            <TableHead className="font-semibold text-slate-700">
+                              Phone Number
+                            </TableHead>
+                            <TableHead className="font-semibold text-slate-700">
+                              Order Count
+                            </TableHead>
+                            <TableHead className="font-semibold text-slate-700">
+                              Total Spent
+                            </TableHead>
+                            <TableHead className="font-semibold text-slate-700">
+                              First Order
+                            </TableHead>
+                            <TableHead className="font-semibold text-slate-700">
+                              Last Order
+                            </TableHead>
+                          </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                          {segmentSummary.frequentCustomers.customers
+                            .slice(0, 10)
+                            .map((customer, idx) => (
+                              <TableRow
+                                key={idx}
+                                className="border-slate-100 hover:bg-slate-50/50">
+                                <TableCell className="font-mono text-slate-900">
+                                  {customer.phoneNumber}
+                                </TableCell>
+                                <TableCell className="font-semibold text-slate-900">
+                                  {customer.orderCount}
+                                </TableCell>
+                                <TableCell className="text-slate-600">
+                                  {customer.totalSpent} BDT
+                                </TableCell>
+                                <TableCell className="text-slate-600">
+                                  {new Date(
+                                    customer.firstOrderDate,
+                                  ).toLocaleDateString()}
+                                </TableCell>
+                                <TableCell className="text-slate-600">
+                                  {new Date(
+                                    customer.lastOrderDate,
+                                  ).toLocaleDateString()}
+                                </TableCell>
+                              </TableRow>
+                            ))}
+                        </TableBody>
+                      </Table>
+                    </div>
+                  ) : (
+                    <div className="text-center py-12 text-slate-500">
+                      <TrendingUp className="w-12 h-12 mx-auto mb-3 text-slate-300" />
+                      <p>No frequent customers found</p>
+                    </div>
+                  )}
+                </TabsContent>
+              </Tabs>
+            </div>
+          </div>
+        </div>
+      </div>
+    </MainView>
   );
 }

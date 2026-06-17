@@ -27,7 +27,7 @@ const Report: React.FC = () => {
     return () => clearInterval(interval);
   }, []);
   return (
-    <div className='w-full mx-auto p-2 space-y-6'>
+    <div className='space-y-6'>
       {/* <Tabs defaultValue='sales' className='w-full'>
         <TabsList>
           <TabsTrigger value='sales'>Sales Performance</TabsTrigger>

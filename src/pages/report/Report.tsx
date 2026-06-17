@@ -20,13 +20,14 @@ import {
   exportReportCSV,
   exportReportPDF,
 } from "../../api/report";
-import { CalendarIcon, Loader2 } from "lucide-react";
+import { CalendarIcon, BarChart3, Users } from "lucide-react";
 import { format, startOfDay, endOfDay } from "date-fns";
 import { cn } from "../../lib/utils";
 import { toast } from "react-hot-toast";
 import useLoginAuth from "../auth/hooks/useLoginAuth";
 import { DateRangePicker } from "../../coreComponents/DateRangePicker";
 import { DateRange } from "react-day-picker";
+import MainView from "../../coreComponents/mainView";
 
 // Import report components
 import SalesOverviewCard from "./SalesOverviewCard";
@@ -155,189 +156,216 @@ const ReportPage = ({ activeUsers }: { activeUsers: number }) => {
   };
 
   return (
-    <div className='w-full mx-auto p-2 space-y-6'>
-      {/* Header */}
-      <div className='flex flex-col md:flex-row md:items-center md:justify-between gap-4'>
-        <div>
-          <h1 className='text-3xl font-bold tracking-tight flex items-center'>
-            <span>Reports & Analytics</span>
-            <Badge
-              variant='secondary'
-              className='ml-4 p-2 text-sm font-semibold bg-orange-50'>
-              {" "}
-              <div className='inline rounded-full bg-orange-700 animate-pulse w-[4px] h-[4px] ml-1 mr-2 p-1' />{" "}
-              {activeUsers} Active Users
-            </Badge>
-          </h1>
-          <p className='text-muted-foreground'>
-            Comprehensive business insights and performance metrics
-          </p>
-        </div>
+    <MainView title="Reports & Analytics">
+      <div className="min-h-screen bg-slate-50/60">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
+          {/* Header */}
+          <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-4">
+            <div className="flex items-center gap-3">
+              <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-indigo-600 shadow-sm shadow-indigo-200">
+                <BarChart3 className="h-5 w-5 text-white" />
+              </div>
+              <div>
+                <h1 className="text-xl font-semibold text-slate-900 leading-tight">
+                  Reports & Analytics
+                </h1>
+                <p className="text-sm text-slate-500 mt-0.5">
+                  Comprehensive business insights and performance metrics
+                </p>
+              </div>
+            </div>
 
-        {/* Date Range Picker */}
-        <div className='flex gap-2'>
-          <div className='inline-flex items-center bg-muted p-1 rounded-lg gap-1'>
-            <Button
-              variant={dateMode === "single" ? "default" : "ghost"}
-              size='sm'
-              onClick={() => {
-                setDateMode("single");
-                // Set to today with full day time range
-                const today = new Date();
-                setDateRange({
-                  from: startOfDay(today),
-                  to: endOfDay(today),
-                });
-              }}
-              className={`rounded-md transition-all duration-200 ${
-                dateMode === "single"
-                  ? "shadow-sm"
-                  : "hover:bg-background/50"
-              }`}>
-              Single Date
-            </Button>
-            <Button
-              variant={dateMode === "range" ? "default" : "ghost"}
-              size='sm'
-              onClick={() => setDateMode("range")}
-              className={`rounded-md transition-all duration-200 ${
-                dateMode === "range"
-                  ? "shadow-sm"
-                  : "hover:bg-background/50"
-              }`}>
-              Date Range
-            </Button>
+            {/* Active Users Badge */}
+            <Badge
+              variant="secondary"
+              className="px-3 py-1.5 text-sm font-semibold bg-indigo-50 border border-indigo-200 text-indigo-700">
+              <div className="inline-flex items-center gap-2">
+                <div className="rounded-full bg-indigo-600 animate-pulse w-2 h-2" />
+                <Users className="h-3.5 w-3.5" />
+                {activeUsers} Active Users
+              </div>
+            </Badge>
           </div>
 
-          {dateMode === "single" ? (
-            <Popover>
-              <PopoverTrigger asChild>
+          {/* Date Range Picker */}
+          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 bg-white rounded-xl border border-slate-100 shadow-sm p-4">
+            <div className="flex items-center gap-2">
+              <div className="inline-flex items-center bg-slate-100 p-1 rounded-lg">
                 <Button
-                  variant='outline'
-                  className={cn(
-                    "justify-start text-left font-normal w-[280px]",
-                    !dateRange && "text-muted-foreground"
-                  )}>
-                  <CalendarIcon className='mr-2 h-4 w-4' />
-                  {dateRange.from ? (
-                    format(dateRange.from, "LLL dd, y")
-                  ) : (
-                    <span>Pick a date</span>
-                  )}
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent className='w-auto p-0' align='end'>
-                <Calendar
-                  mode='single'
-                  selected={dateRange.from}
-                  onSelect={(date: Date | undefined) => {
-                    if (date) {
-                      setDateRange({
-                        from: startOfDay(date),
-                        to: endOfDay(date),
-                      });
-                    }
+                  variant={dateMode === "single" ? "default" : "ghost"}
+                  size="sm"
+                  onClick={() => {
+                    setDateMode("single");
+                    const today = new Date();
+                    setDateRange({
+                      from: startOfDay(today),
+                      to: endOfDay(today),
+                    });
                   }}
-                  numberOfMonths={1}
+                  className={`rounded-md transition-all duration-200 ${
+                    dateMode === "single"
+                      ? "bg-white shadow-sm text-indigo-600"
+                      : "hover:bg-white/50 text-slate-600"
+                  }`}>
+                  Single Date
+                </Button>
+                <Button
+                  variant={dateMode === "range" ? "default" : "ghost"}
+                  size="sm"
+                  onClick={() => setDateMode("range")}
+                  className={`rounded-md transition-all duration-200 ${
+                    dateMode === "range"
+                      ? "bg-white shadow-sm text-indigo-600"
+                      : "hover:bg-white/50 text-slate-600"
+                  }`}>
+                  Date Range
+                </Button>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-2">
+              {dateMode === "single" ? (
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant="outline"
+                      className={cn(
+                        "justify-start text-left font-normal min-w-[280px] border-slate-200",
+                        !dateRange && "text-slate-400"
+                      )}>
+                      <CalendarIcon className="mr-2 h-4 w-4" />
+                      {dateRange.from ? (
+                        format(dateRange.from, "LLL dd, y")
+                      ) : (
+                        <span>Pick a date</span>
+                      )}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0" align="end">
+                    <Calendar
+                      mode="single"
+                      selected={dateRange.from}
+                      onSelect={(date: Date | undefined) => {
+                        if (date) {
+                          setDateRange({
+                            from: startOfDay(date),
+                            to: endOfDay(date),
+                          });
+                        }
+                      }}
+                      numberOfMonths={1}
+                    />
+                  </PopoverContent>
+                </Popover>
+              ) : (
+                <DateRangePicker
+                  key={dateMode}
+                  initialDateFrom={dateRange.from}
+                  initialDateTo={dateRange.to}
+                  showCompare={false}
+                  onUpdate={(values: {
+                    range: DateRange;
+                    rangeCompare?: DateRange | undefined;
+                  }) => {
+                    setDateRange({
+                      from: startOfDay(values.range.from || new Date()),
+                      to: endOfDay(values.range.to || new Date()),
+                    });
+                  }}
                 />
-              </PopoverContent>
-            </Popover>
-          ) : (
-            <DateRangePicker
-              key={dateMode}
-              initialDateFrom={dateRange.from}
-              initialDateTo={dateRange.to}
-              showCompare={false}
-              onUpdate={(values: {
-                range: DateRange;
-                rangeCompare?: DateRange | undefined;
-              }) => {
-                // For range mode, set from to 00:00 and to to 23:59
-                setDateRange({
-                  from: startOfDay(values.range.from || new Date()),
-                  to: endOfDay(values.range.to || new Date()),
-                });
-              }}
-            />
+              )}
+            </div>
+          </div>
+
+          {/* Loading State */}
+          {isLoadingReports && (
+            <div className="flex items-center justify-center py-16">
+              <div className="flex flex-col items-center gap-4">
+                <div className="relative">
+                  <div className="w-16 h-16 border-4 border-slate-200 rounded-full"></div>
+                  <div className="absolute top-0 left-0 w-16 h-16 border-4 border-indigo-600 rounded-full border-t-transparent animate-spin"></div>
+                </div>
+                <div className="text-center">
+                  <h3 className="text-lg font-semibold text-slate-900">
+                    Loading Reports
+                  </h3>
+                  <p className="text-sm text-slate-500 mt-1">
+                    Please wait while we gather your data...
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Reports Grid */}
+          {!isLoadingReports && (
+            <div className="space-y-6">
+              {/* Sales Overview */}
+              {salesOverview && (
+                <SalesOverviewCard
+                  data={salesOverview}
+                  duration={`${format(dateRange.from, "MMM dd")} -
+                      ${format(dateRange.to, "MMM dd")}`}
+                  onDownload={() => handleDownloadRequest("csv")}
+                />
+              )}
+
+              {/* Sales Trend Chart */}
+              {salesTrend && (
+                <SalesTrendChart
+                  data={salesTrend}
+                  onDownload={() => handleDownloadRequest("pdf")}
+                />
+              )}
+
+              {/* Two Column Layout */}
+              <div className="grid gap-6 lg:grid-cols-2">
+                {/* Customer Insights */}
+                {customerInsights && (
+                  <CustomerInsightsCard
+                    data={customerInsights}
+                    onDownload={() => handleDownloadRequest("csv")}
+                  />
+                )}
+
+                {/* Payment Methods */}
+                {paymentMethods && (
+                  <PaymentMethodsCard
+                    data={paymentMethods}
+                    onDownload={() => handleDownloadRequest("pdf")}
+                  />
+                )}
+              </div>
+
+              {/* Order Fulfillment */}
+              {orderFulfillment && (
+                <OrderFulfillmentCard
+                  data={orderFulfillment}
+                  onDownload={() => handleDownloadRequest("pdf")}
+                />
+              )}
+
+              {/* Geographic Distribution */}
+              {customerInsights?.geographicDistribution && (
+                <GeographicDistributionCard
+                  duration={`${format(dateRange.from, "MMM dd")} -
+                      ${format(dateRange.to, "MMM dd")}`}
+                  data={customerInsights.geographicDistribution}
+                  onDownload={() => handleDownloadRequest("csv")}
+                />
+              )}
+
+              {/* Product Performance */}
+              {productPerformance && (
+                <ProductPerformanceCard
+                  data={productPerformance}
+                  onDownload={() => handleDownloadRequest("csv")}
+                />
+              )}
+            </div>
           )}
         </div>
       </div>
-
-      {/* Loading State */}
-      {isLoadingReports && (
-        <div className='flex items-center justify-center py-12'>
-          <Loader2 className='h-8 w-8 animate-spin text-muted-foreground' />
-          <span className='ml-2 text-muted-foreground'>Loading reports...</span>
-        </div>
-      )}
-
-      {/* Reports Grid */}
-      {!isLoadingReports && (
-        <div className='space-y-6'>
-          {/* Sales Overview */}
-          {salesOverview && (
-            <SalesOverviewCard
-              data={salesOverview}
-              duration={`${format(dateRange.from, "MMM dd")} -
-                  ${format(dateRange.to, "MMM dd")}`}
-              onDownload={() => handleDownloadRequest("csv")}
-            />
-          )}
-
-          {/* Sales Trend Chart */}
-          {salesTrend && (
-            <SalesTrendChart
-              data={salesTrend}
-              onDownload={() => handleDownloadRequest("pdf")}
-            />
-          )}
-
-          {/* Two Column Layout */}
-          <div className='grid gap-6 md:grid-cols-2'>
-            {/* Customer Insights */}
-            {customerInsights && (
-              <CustomerInsightsCard
-                data={customerInsights}
-                onDownload={() => handleDownloadRequest("csv")}
-              />
-            )}
-
-            {/* Payment Methods */}
-            {paymentMethods && (
-              <PaymentMethodsCard
-                data={paymentMethods}
-                onDownload={() => handleDownloadRequest("pdf")}
-              />
-            )}
-          </div>
-
-          {/* Order Fulfillment */}
-          {orderFulfillment && (
-            <OrderFulfillmentCard
-              data={orderFulfillment}
-              onDownload={() => handleDownloadRequest("pdf")}
-            />
-          )}
-
-          {/* Geographic Distribution */}
-          {customerInsights?.geographicDistribution && (
-            <GeographicDistributionCard
-              duration={`${format(dateRange.from, "MMM dd")} -
-                  ${format(dateRange.to, "MMM dd")}`}
-              data={customerInsights.geographicDistribution}
-              onDownload={() => handleDownloadRequest("csv")}
-            />
-          )}
-
-          {/* Product Performance */}
-          {productPerformance && (
-            <ProductPerformanceCard
-              data={productPerformance}
-              onDownload={() => handleDownloadRequest("csv")}
-            />
-          )}
-        </div>
-      )}
 
       {/* OTP Verification Dialog */}
       {user?.email && (
@@ -346,14 +374,14 @@ const ReportPage = ({ activeUsers }: { activeUsers: number }) => {
           onOpenChange={(val) => setShowOTPDialog(val)}
           mobile_number={user.mobile_number || ""}
           email={user.email || ""}
-          purpose='account_verification'
-          title='Verify to Download Report'
-          description='For security purposes, please verify your phone number to download the report'
+          purpose="account_verification"
+          title="Verify to Download Report"
+          description="For security purposes, please verify your phone number to download the report"
           onVerificationSuccess={handleDownloadAfterVerification}
           autoSendOnMount={true}
         />
       )}
-    </div>
+    </MainView>
   );
 };
 

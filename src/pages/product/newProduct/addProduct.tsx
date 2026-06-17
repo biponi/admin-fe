@@ -335,7 +335,15 @@ const AddProduct: React.FC<Props> = ({ createProduct, categories }) => {
     let groupImageIndex = 0;
 
     // Filter out incomplete imageGroups before processing
+    console.log("addProduct - imageGroups before filtering:", imageGroups);
+
     const { validGroups: validImageGroups, invalidCount } = filterImageGroups(imageGroups);
+
+    console.log("addProduct - imageGroups after filtering:", {
+      validGroups: validImageGroups,
+      invalidCount,
+      totalOriginal: imageGroups.length
+    });
 
     // Log warning if incomplete groups were found
     if (invalidCount > 0) {
@@ -413,7 +421,15 @@ const AddProduct: React.FC<Props> = ({ createProduct, categories }) => {
     let groupImageIndex = 0;
 
     // Filter out incomplete imageGroups before processing
+    console.log("addProduct - imageGroups before filtering:", imageGroups);
+
     const { validGroups: validImageGroups, invalidCount } = filterImageGroups(imageGroups);
+
+    console.log("addProduct - imageGroups after filtering:", {
+      validGroups: validImageGroups,
+      invalidCount,
+      totalOriginal: imageGroups.length
+    });
 
     // Log warning if incomplete groups were found
     if (invalidCount > 0) {

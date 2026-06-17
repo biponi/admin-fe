@@ -2,13 +2,6 @@
 // FILE: components/reports/ProductPerformanceCard.tsx
 // ============================================
 import React, { useState } from "react";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "../../components/ui/card";
 import { Button } from "../../components/ui/button";
 import { Download, List, Package } from "lucide-react";
 import useRoleCheck from "../auth/hooks/useRoleCheck";
@@ -27,7 +20,7 @@ interface ProductPerformanceCardProps {
 
 export function EmptyMuted({ title = "" }: { title?: string }) {
   return (
-    <Empty className='from-muted/50 to-background h-full bg-gradient-to-b from-30%'>
+    <Empty className='from-slate-50 to-white h-full bg-gradient-to-b from-30%'>
       <EmptyHeader>
         <EmptyMedia variant='icon'>
           <List />
@@ -56,37 +49,57 @@ const ProductPerformanceCard: React.FC<ProductPerformanceCardProps> = ({
   };
 
   return (
-    <Card>
-      <CardHeader className='flex flex-row items-center justify-between space-y-0 pb-4'>
-        <div>
-          <CardTitle className='flex items-center gap-2'>
-            <Package className='h-5 w-5' />
-            Product Performance
-          </CardTitle>
-          <CardDescription>Top performing products by sales</CardDescription>
+    <div className='bg-white rounded-xl border border-slate-100 shadow-sm overflow-hidden'>
+      {/* Header */}
+      <div className='p-5 border-b border-slate-100'>
+        <div className='flex items-start justify-between'>
+          <div>
+            <h3 className='text-lg font-semibold text-slate-900'>
+              Product Performance
+            </h3>
+            <p className='text-sm text-slate-500 mt-1'>
+              Top performing products by sales
+            </p>
+          </div>
+          <div className='flex gap-2'>
+            <div className='inline-flex items-center bg-slate-100 p-1 rounded-lg'>
+              <Button
+                variant={metric === "order" ? "default" : "ghost"}
+                onClick={() => setMetric("order")}
+                size='sm'
+                className={`rounded-md transition-all duration-200 ${
+                  metric === "order"
+                    ? "bg-white shadow-sm text-indigo-600"
+                    : "hover:bg-white/50 text-slate-600"
+                }`}>
+                Order
+              </Button>
+              <Button
+                variant={metric === "return" ? "default" : "ghost"}
+                onClick={() => setMetric("return")}
+                size='sm'
+                className={`rounded-md transition-all duration-200 ${
+                  metric === "return"
+                    ? "bg-white shadow-sm text-indigo-600"
+                    : "hover:bg-white/50 text-slate-600"
+                }`}>
+                Returns
+              </Button>
+            </div>
+            {useRoleCheck().hasRequiredPermission("Report", "download") && (
+              <button
+                onClick={onDownload}
+                className='inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-slate-600 bg-white border border-slate-200 rounded-lg hover:bg-slate-50 transition-colors'>
+                <Download className='h-3.5 w-3.5' />
+                Download
+              </button>
+            )}
+          </div>
         </div>
-        <div className='flex gap-2'>
-          <Button
-            onClick={() => setMetric("order")}
-            size='sm'
-            variant={metric === "order" ? "default" : "outline"}>
-            Order
-          </Button>
-          <Button
-            onClick={() => setMetric("return")}
-            size='sm'
-            variant={metric === "return" ? "default" : "outline"}>
-            Returns
-          </Button>
-          {useRoleCheck().hasRequiredPermission("Report", "download") && (
-            <Button onClick={onDownload} size='sm' variant='outline'>
-              <Download className='h-4 w-4 mr-2' />
-              Download
-            </Button>
-          )}
-        </div>
-      </CardHeader>
-      <CardContent>
+      </div>
+
+      {/* Content */}
+      <div className='p-5'>
         {metric === "order" ? (
           <>
             <div className='space-y-3 max-h-96 overflow-y-auto'>
@@ -94,33 +107,33 @@ const ProductPerformanceCard: React.FC<ProductPerformanceCardProps> = ({
               {data?.order.products?.map((product: any, index: number) => (
                 <div
                   key={index}
-                  className='flex items-center gap-4 p-4 border rounded-lg hover:bg-muted/50 transition-colors'>
+                  className='flex items-center gap-4 p-4 border border-slate-100 rounded-lg hover:bg-slate-50 transition-colors'>
                   {product.thumbnail ? (
                     <img
                       src={product.thumbnail}
                       alt={product.productName}
-                      className='w-16 h-16 object-cover rounded'
+                      className='w-16 h-16 object-cover rounded-lg'
                     />
                   ) : (
-                    <div className='w-16 h-16 bg-muted rounded flex items-center justify-center'>
-                      <Package className='h-8 w-8 text-muted-foreground' />
+                    <div className='w-16 h-16 bg-slate-100 rounded-lg flex items-center justify-center'>
+                      <Package className='h-8 w-8 text-slate-400' />
                     </div>
                   )}
                   <div className='flex-1 min-w-0'>
-                    <p className='font-medium truncate'>
+                    <p className='font-medium text-slate-900 truncate'>
                       {product.productName}
                     </p>
-                    <div className='flex items-center gap-4 mt-1 text-sm text-muted-foreground'>
+                    <div className='flex items-center gap-4 mt-1 text-sm text-slate-500'>
                       <span>{product.totalUnitsSold} units sold</span>
                       <span>•</span>
                       <span>{product.orderCount} orders</span>
                     </div>
                   </div>
                   <div className='text-right'>
-                    <p className='font-bold text-lg'>
+                    <p className='font-bold text-lg text-slate-900'>
                       {formatCurrency(product.totalRevenue)}
                     </p>
-                    <p className='text-sm text-muted-foreground'>
+                    <p className='text-sm text-slate-500'>
                       Avg: {formatCurrency(product.averageUnitPrice)}
                     </p>
                   </div>
@@ -130,7 +143,7 @@ const ProductPerformanceCard: React.FC<ProductPerformanceCardProps> = ({
 
             {data?.order.pagination &&
               data?.order.pagination.totalPages > 1 && (
-                <div className='mt-4 flex items-center justify-center gap-2 text-sm text-muted-foreground'>
+                <div className='mt-4 flex items-center justify-center gap-2 text-sm text-slate-500'>
                   <p>
                     Showing page {data?.order.pagination.page} of{" "}
                     {data?.order.pagination.totalPages}
@@ -147,33 +160,33 @@ const ProductPerformanceCard: React.FC<ProductPerformanceCardProps> = ({
               {data?.return.products?.map((product: any, index: number) => (
                 <div
                   key={index}
-                  className='flex items-center gap-4 p-4 border rounded-lg hover:bg-muted/50 transition-colors'>
+                  className='flex items-center gap-4 p-4 border border-slate-100 rounded-lg hover:bg-slate-50 transition-colors'>
                   {product.thumbnail ? (
                     <img
                       src={product.thumbnail}
                       alt={product.productName}
-                      className='w-16 h-16 object-cover rounded'
+                      className='w-16 h-16 object-cover rounded-lg'
                     />
                   ) : (
-                    <div className='w-16 h-16 bg-muted rounded flex items-center justify-center'>
-                      <Package className='h-8 w-8 text-muted-foreground' />
+                    <div className='w-16 h-16 bg-slate-100 rounded-lg flex items-center justify-center'>
+                      <Package className='h-8 w-8 text-slate-400' />
                     </div>
                   )}
                   <div className='flex-1 min-w-0'>
-                    <p className='font-medium truncate'>
+                    <p className='font-medium text-slate-900 truncate'>
                       {product.productName}
                     </p>
-                    <div className='flex items-center gap-4 mt-1 text-sm text-muted-foreground'>
+                    <div className='flex items-center gap-4 mt-1 text-sm text-slate-500'>
                       <span>{product.totalUnitsSold} units sold</span>
                       <span>•</span>
                       <span>{product.orderCount} orders</span>
                     </div>
                   </div>
                   <div className='text-right'>
-                    <p className='font-bold text-lg'>
+                    <p className='font-bold text-lg text-slate-900'>
                       {formatCurrency(product.totalRevenue)}
                     </p>
-                    <p className='text-sm text-muted-foreground'>
+                    <p className='text-sm text-slate-500'>
                       Avg: {formatCurrency(product.averageUnitPrice)}
                     </p>
                   </div>
@@ -183,7 +196,7 @@ const ProductPerformanceCard: React.FC<ProductPerformanceCardProps> = ({
 
             {data?.return.pagination &&
               data?.return.pagination.totalPages > 1 && (
-                <div className='mt-4 flex items-center justify-center gap-2 text-sm text-muted-foreground'>
+                <div className='mt-4 flex items-center justify-center gap-2 text-sm text-slate-500'>
                   <p>
                     Showing page {data?.return.pagination.page} of{" "}
                     {data?.return.pagination.totalPages}
@@ -192,8 +205,8 @@ const ProductPerformanceCard: React.FC<ProductPerformanceCardProps> = ({
               )}
           </>
         )}
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   );
 };
 

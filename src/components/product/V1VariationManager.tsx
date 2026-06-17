@@ -79,7 +79,7 @@ const V1VariationManager: React.FC<V1VariationManagerProps> = ({
       {variations.map((variation: IVariation, index: number) => (
         <div
           key={variation.id || index}
-          className='group relative flex flex-col gap-3 p-3.5 rounded-xl border border-border/40 bg-background hover:border-border/80 transition-colors duration-150'>
+          className='group relative flex flex-col gap-3 p-3.5 rounded-xl border border-border/40 bg-background hover:border-border/80 transition-colors duration-150 shadow-md'>
           {/* Delete — appears on hover */}
           <button
             onClick={() => onDeleteVariation(index)}

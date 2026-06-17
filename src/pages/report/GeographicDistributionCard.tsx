@@ -3,19 +3,11 @@
 // ============================================
 import React from "react";
 import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "../../components/ui/card";
-import {
   Tabs,
   TabsContent,
   TabsList,
   TabsTrigger,
 } from "../../components/ui/tabs";
-import { Button } from "../../components/ui/button";
 import { Download, MapPin } from "lucide-react";
 import useRoleCheck from "../auth/hooks/useRoleCheck";
 
@@ -45,22 +37,30 @@ interface GeographicDistributionCardProps {
 const chartConfigForRevenue = {
   revenue: {
     label: "Revenue",
-    color: "#218c74",
+    color: "#10b981", // emerald-500
   },
   discounts: {
     label: "Discounts",
-    color: "#b33939",
+    color: "#ef4444", // red-500
   },
   paid: {
     label: "Paid",
-    color: "#218c74",
+    color: "#6366f1", // indigo-500
   },
   due: {
     label: "Due",
-    color: "#ff793f",
+    color: "#f59e0b", // amber-500
+  },
+  subtotal: {
+    label: "Subtotal",
+    color: "#8b5cf6", // violet-500
+  },
+  deliveryCharge: {
+    label: "Delivery Charge",
+    color: "#06b6d4", // cyan-500
   },
   backgroundGrid: {
-    color: "#aaa69d",
+    color: "#e2e8f0", // slate-200
   },
 } satisfies ChartConfig;
 
@@ -130,43 +130,49 @@ const GeographicDistributionCard: React.FC<GeographicDistributionCardProps> = ({
   }
 
   return (
-    <Card>
-      <CardHeader className='flex flex-row items-center justify-between space-y-0 pb-4'>
-        <div>
-          <CardTitle className='flex items-center gap-2 mb-2'>
-            <MapPin className='h-5 w-5' />
-            Geographic Distribution
-          </CardTitle>
-          <CardDescription>
-            Sales performance by geographic region
-          </CardDescription>
+    <div className="bg-white rounded-xl border border-slate-100 shadow-sm overflow-hidden">
+      {/* Header */}
+      <div className="p-5 border-b border-slate-100">
+        <div className="flex items-start justify-between">
+          <div>
+            <h3 className="text-lg font-semibold text-slate-900">
+              Geographic Distribution
+            </h3>
+            <p className="text-sm text-slate-500 mt-1">
+              Sales performance by geographic region
+            </p>
+          </div>
+          {hasRequiredPermission("Report", "download") && (
+            <button
+              onClick={onDownload}
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-slate-600 bg-white border border-slate-200 rounded-lg hover:bg-slate-50 transition-colors">
+              <Download className="h-3.5 w-3.5" />
+              Download
+            </button>
+          )}
         </div>
-        {hasRequiredPermission("Report", "download") && (
-          <Button onClick={onDownload} size='sm' variant='outline'>
-            <Download className='h-4 w-4 mr-2' />
-            Download
-          </Button>
-        )}
-      </CardHeader>
-      <CardContent>
-        <div className='space-y-6'>
-          <Tabs defaultValue='District'>
+      </div>
+
+      {/* Content */}
+      <div className="p-5">
+        <div className="space-y-6">
+          <Tabs defaultValue="District">
             <TabsList>
-              <TabsTrigger value='District'>District</TabsTrigger>
-              <TabsTrigger value='Area'>Area</TabsTrigger>
+              <TabsTrigger value="District">District</TabsTrigger>
+              <TabsTrigger value="Area">Area</TabsTrigger>
             </TabsList>
-            <TabsContent value='District'>
+            <TabsContent value="District">
               {/* Chart */}
-              <div className='h-auto w-full grid grid-cols-1 gap-2 sm:grid-cols-2 mb-3'>
+              <div className="h-auto w-full grid grid-cols-1 gap-3 sm:grid-cols-2 mb-3">
                 <BarChartActive
                   names={{
                     xKey: "District",
                     yKey: "Orders: ",
                   }}
                   data={metricsForDivision}
-                  label='Order Count by District'
+                  label="Order Count by District"
                   duration={duration}
-                  footer='Order Count Data'
+                  footer="Order Count Data"
                   footerDescription={
                     "Total Orders: " +
                     formatCurrency(
@@ -177,12 +183,12 @@ const GeographicDistributionCard: React.FC<GeographicDistributionCardProps> = ({
                 />
                 <BarChartWithLegend
                   data={metricsForDivisionWithRevenue}
-                  xKey='division'
+                  xKey="division"
                   barKeys={["subtotal", "revenue"]}
                   chartConfig={chartConfigForRevenue}
-                  label='Revenue vs Subtotal by District'
+                  label="Revenue vs Subtotal by District"
                   duration={duration}
-                  footer='Revenue Vs Subtotal'
+                  footer="Revenue Vs Subtotal"
                   footerDescription={
                     "Total Revenue " +
                     formatCurrency(
@@ -198,15 +204,15 @@ const GeographicDistributionCard: React.FC<GeographicDistributionCardProps> = ({
                 />
               </div>
 
-              <div className='h-auto w-full grid grid-cols-1 gap-2 sm:grid-cols-2'>
+              <div className="h-auto w-full grid grid-cols-1 gap-3 sm:grid-cols-2">
                 <BarChartWithLegend
                   data={metricsForDivisionWithRevenue}
-                  xKey='division'
+                  xKey="division"
                   barKeys={["discounts", "deliveryCharge"]}
                   chartConfig={chartConfigForRevenue}
-                  label='Discount vs Delivery Charge by District'
+                  label="Discount vs Delivery Charge by District"
                   duration={duration}
-                  footer='Discount Vs Delivery Charge'
+                  footer="Discount Vs Delivery Charge"
                   footerDescription={
                     "Total Discounts " +
                     formatCurrency(
@@ -225,12 +231,12 @@ const GeographicDistributionCard: React.FC<GeographicDistributionCardProps> = ({
                 />
                 <BarChartWithLegend
                   data={metricsForDivisionWithRevenue}
-                  xKey='division'
+                  xKey="division"
                   barKeys={["paid", "due"]}
                   chartConfig={chartConfigForRevenue}
-                  label='Paid vs Due by District'
+                  label="Paid vs Due by District"
                   duration={duration}
-                  footer='Paid Vs Due'
+                  footer="Paid Vs Due"
                   footerDescription={
                     "Total Paid " +
                     formatCurrency(
@@ -246,27 +252,41 @@ const GeographicDistributionCard: React.FC<GeographicDistributionCardProps> = ({
                 />
               </div>
             </TabsContent>
-            <TabsContent value='Area'>
+            <TabsContent value="Area">
               {/* Data Table */}
-              <div className='rounded-md border'>
-                <div className='max-h-96 overflow-y-auto overflow-x-auto'>
-                  <table className='w-full text-sm relative'>
-                    <thead className=' sticky top-0 bg-background'>
-                      <tr className='border-b bg-muted/50'>
-                        <th className='p-3 text-left font-medium'>Area</th>
-                        <th className='p-3 text-right font-medium'>Orders</th>
-                        <th className='p-3 text-right font-medium'>Subtotal</th>
-                        <th className='p-3 text-right font-medium'>
+              <div className="rounded-lg border border-slate-200">
+                <div className="max-h-96 overflow-y-auto overflow-x-auto">
+                  <table className="w-full text-sm relative">
+                    <thead className="sticky top-0 bg-white">
+                      <tr className="border-b border-slate-200 bg-slate-50">
+                        <th className="p-3 text-left font-medium text-slate-700">
+                          Area
+                        </th>
+                        <th className="p-3 text-right font-medium text-slate-700">
+                          Orders
+                        </th>
+                        <th className="p-3 text-right font-medium text-slate-700">
+                          Subtotal
+                        </th>
+                        <th className="p-3 text-right font-medium text-slate-700">
                           Discounts
                         </th>
-                        <th className='p-3 text-right font-medium'>Revenue</th>
-                        <th className='p-3 text-right font-medium'>
+                        <th className="p-3 text-right font-medium text-slate-700">
+                          Revenue
+                        </th>
+                        <th className="p-3 text-right font-medium text-slate-700">
                           Delivery Charge
                         </th>
-                        <th className='p-3 text-right font-medium'>Paid</th>
-                        <th className='p-3 text-right font-medium'>Due</th>
+                        <th className="p-3 text-right font-medium text-slate-700">
+                          Paid
+                        </th>
+                        <th className="p-3 text-right font-medium text-slate-700">
+                          Due
+                        </th>
 
-                        <th className='p-3 text-right font-medium'>Paid %</th>
+                        <th className="p-3 text-right font-medium text-slate-700">
+                          Paid %
+                        </th>
                       </tr>
                     </thead>
 
@@ -274,30 +294,34 @@ const GeographicDistributionCard: React.FC<GeographicDistributionCardProps> = ({
                       {data.map((item, index) => (
                         <tr
                           key={index}
-                          className='border-b last:border-0 hover:bg-muted/50 transition-colors'>
-                          <td className='p-3 font-medium'>{item.district}</td>
-                          <td className='p-3 text-right'>{item.orderCount}</td>
+                          className="border-b border-slate-100 last:border-0 hover:bg-slate-50 transition-colors">
+                          <td className="p-3 font-medium text-slate-900">
+                            {item.district}
+                          </td>
+                          <td className="p-3 text-right text-slate-700">
+                            {item.orderCount}
+                          </td>
 
-                          <td className='p-3 text-right'>
+                          <td className="p-3 text-right text-slate-700">
                             {formatCurrency(item.subtotal)}
                           </td>
-                          <td className='p-3 text-right text-destructive'>
+                          <td className="p-3 text-right text-rose-600">
                             {formatCurrency(item.discounts)}
                           </td>
-                          <td className='p-3 text-right font-semibold'>
+                          <td className="p-3 text-right font-semibold text-slate-900">
                             {formatCurrency(item.revenue)}
                           </td>
-                          <td className='p-3 text-right font-semibold'>
+                          <td className="p-3 text-right font-semibold text-slate-900">
                             {formatCurrency(item.deliveryCharge || 0)}
                           </td>
-                          <td className='p-3 text-right font-semibold'>
+                          <td className="p-3 text-right font-semibold text-slate-900">
                             {formatCurrency(item.paid || 0)}
                           </td>
-                          <td className='p-3 text-right font-semibold'>
+                          <td className="p-3 text-right font-semibold text-slate-900">
                             {formatCurrency(item.due || 0)}
                           </td>
 
-                          <td className='p-3 text-right'>
+                          <td className="p-3 text-right text-slate-700">
                             {(
                               ((item.paid || 0) /
                                 (item.revenue + (item.deliveryCharge || 0))) *
@@ -314,8 +338,8 @@ const GeographicDistributionCard: React.FC<GeographicDistributionCardProps> = ({
             </TabsContent>
           </Tabs>
         </div>
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   );
 };
 

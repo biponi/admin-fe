@@ -1,11 +1,5 @@
-import { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from '../../../components/ui/card';
+import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import {
   Table,
   TableBody,
@@ -13,27 +7,41 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from '../../../components/ui/table';
-import { Button } from '../../../components/ui/button';
-import { Input } from '../../../components/ui/input';
+} from "../../../components/ui/table";
+import { Input } from "../../../components/ui/input";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '../../../components/ui/select';
-import { Badge } from '../../../components/ui/badge';
+} from "../../../components/ui/select";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from '../../../components/ui/dropdown-menu';
-import { MoreHorizontal, Eye, Trash2, X, Filter } from 'lucide-react';
-import { useBulkCommunication } from '../hooks/useBulkCommunication';
-import { BulkMessageType, CampaignStatus, SMSCampaign, EmailCampaign, CampaignQueryParams } from '../interface';
-import { format } from 'date-fns';
+} from "../../../components/ui/dropdown-menu";
+import {
+  MoreHorizontal,
+  Eye,
+  Trash2,
+  X,
+  Search,
+  ChevronLeft,
+  ChevronRight,
+  Ban,
+  Inbox,
+} from "lucide-react";
+import { useBulkCommunication } from "../hooks/useBulkCommunication";
+import {
+  BulkMessageType,
+  CampaignStatus,
+  SMSCampaign,
+  EmailCampaign,
+  CampaignQueryParams,
+} from "../interface";
+import { format } from "date-fns";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -43,41 +51,104 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-} from '../../../components/ui/alert-dialog';
+} from "../../../components/ui/alert-dialog";
 
 interface CampaignListProps {
   type: BulkMessageType;
 }
 
+const STATUS_CONFIG: Record<
+  CampaignStatus,
+  { label: string; className: string; dot: string }
+> = {
+  completed: {
+    label: "Completed",
+    className: "bg-emerald-50 text-emerald-700 ring-1 ring-emerald-200",
+    dot: "bg-emerald-500",
+  },
+  queued: {
+    label: "Queued",
+    className: "bg-blue-50 text-blue-700 ring-1 ring-blue-200",
+    dot: "bg-blue-500",
+  },
+  processing: {
+    label: "Processing",
+    className: "bg-amber-50 text-amber-700 ring-1 ring-amber-200",
+    dot: "bg-amber-500 animate-pulse",
+  },
+  cancelled: {
+    label: "Cancelled",
+    className: "bg-slate-100 text-slate-500 ring-1 ring-slate-200",
+    dot: "bg-slate-400",
+  },
+  failed: {
+    label: "Failed",
+    className: "bg-rose-50 text-rose-700 ring-1 ring-rose-200",
+    dot: "bg-rose-500",
+  },
+  draft: {
+    label: "Draft",
+    className: "bg-violet-50 text-violet-700 ring-1 ring-violet-200",
+    dot: "bg-violet-400",
+  },
+};
+
+const StatusBadge = ({ status }: { status: CampaignStatus }) => {
+  const config = STATUS_CONFIG[status] ?? {
+    label: status,
+    className: "bg-slate-100 text-slate-600 ring-1 ring-slate-200",
+    dot: "bg-slate-400",
+  };
+  return (
+    <span
+      className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium ${config.className}`}>
+      <span className={`w-1.5 h-1.5 rounded-full ${config.dot}`} />
+      {config.label}
+    </span>
+  );
+};
+
+const ProgressBar = ({ value }: { value: number }) => (
+  <div className='flex items-center gap-2 min-w-[100px]'>
+    <div className='flex-1 h-1.5 bg-slate-100 rounded-full overflow-hidden'>
+      <div
+        className='h-full bg-indigo-500 rounded-full transition-all duration-300'
+        style={{ width: `${Math.min(value, 100)}%` }}
+      />
+    </div>
+    <span className='text-xs tabular-nums text-slate-500 w-8 text-right'>
+      {value}%
+    </span>
+  </div>
+);
+
 const CampaignList = ({ type }: CampaignListProps) => {
   const navigate = useNavigate();
-  const {
-    campaigns,
-    loading,
-    fetchCampaigns,
-    cancelCampaign,
-    deleteCampaign,
-  } = useBulkCommunication(type);
+  const { campaigns, loading, fetchCampaigns, cancelCampaign, deleteCampaign } =
+    useBulkCommunication(type);
 
-  const [statusFilter, setStatusFilter] = useState<string>('all');
-  const [searchQuery, setSearchQuery] = useState('');
+  const [statusFilter, setStatusFilter] = useState<string>("all");
+  const [searchQuery, setSearchQuery] = useState("");
   const [campaignToDelete, setCampaignToDelete] = useState<string | null>(null);
-  const [campaignToCancel, setCampaignToCancel] = useState<SMSCampaign | EmailCampaign | null>(null);
+  const [campaignToCancel, setCampaignToCancel] = useState<
+    SMSCampaign | EmailCampaign | null
+  >(null);
   const [params, setParams] = useState<CampaignQueryParams>({
     page: 1,
     limit: 20,
-    sortBy: 'createdAt',
-    sortOrder: 'desc',
+    sortBy: "createdAt",
+    sortOrder: "desc",
   });
 
   useEffect(() => {
     fetchCampaigns(params);
   }, [fetchCampaigns, params]);
 
-  const handleFilter = () => {
+  const applyFilters = () => {
     const newParams: CampaignQueryParams = {
       ...params,
-      status: statusFilter !== 'all' ? statusFilter as CampaignStatus : undefined,
+      status:
+        statusFilter !== "all" ? (statusFilter as CampaignStatus) : undefined,
       page: 1,
     };
     setParams(newParams);
@@ -85,290 +156,317 @@ const CampaignList = ({ type }: CampaignListProps) => {
   };
 
   const handleReset = () => {
-    setStatusFilter('all');
-    setSearchQuery('');
+    setStatusFilter("all");
+    setSearchQuery("");
     const newParams: CampaignQueryParams = {
       page: 1,
       limit: 20,
-      sortBy: 'createdAt',
-      sortOrder: 'desc',
+      sortBy: "createdAt",
+      sortOrder: "desc",
     };
     setParams(newParams);
     fetchCampaigns(newParams);
   };
 
-  const handleViewCampaign = (campaignId: string) => {
-    navigate(`/bulk-communication/${type}/${campaignId}`);
+  const handleViewCampaign = (id: string) => {
+    navigate(`/bulk-communication/${type}/${id}`);
   };
 
   const handleCancelCampaign = async () => {
     if (!campaignToCancel) return;
-
     const success = await cancelCampaign(campaignToCancel.id);
-    if (success) {
-      setCampaignToCancel(null);
-    }
+    if (success) setCampaignToCancel(null);
   };
 
   const handleDeleteCampaign = async () => {
     if (!campaignToDelete) return;
-
     const success = await deleteCampaign(campaignToDelete);
-    if (success) {
-      setCampaignToDelete(null);
-    }
+    if (success) setCampaignToDelete(null);
   };
 
-  const getStatusColor = (status: CampaignStatus) => {
-    switch (status) {
-      case 'completed':
-        return 'default';
-      case 'queued':
-        return 'secondary';
-      case 'processing':
-        return 'outline';
-      case 'cancelled':
-        return 'destructive';
-      case 'failed':
-        return 'destructive';
-      case 'draft':
-        return 'secondary';
-      default:
-        return 'outline';
-    }
-  };
+  const filteredCampaigns =
+    campaigns?.filter((c) =>
+      c.name.toLowerCase().includes(searchQuery.toLowerCase()),
+    ) ?? [];
 
-  const filteredCampaigns = campaigns?.filter(campaign =>
-    campaign.name.toLowerCase().includes(searchQuery.toLowerCase())
-  ) || [];
-
-  if (loading && !campaigns) {
-    return (
-      <div className="flex items-center justify-center h-64">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900 mx-auto mb-4"></div>
-          <p className="text-sm text-gray-500">Loading campaigns...</p>
-        </div>
-      </div>
-    );
-  }
+  const currentPage = params.page ?? 1;
+  const pageSize = params.limit ?? 20;
+  const totalItems = filteredCampaigns.length;
+  const rangeStart = (currentPage - 1) * pageSize + 1;
+  const rangeEnd = Math.min(currentPage * pageSize, totalItems);
+  const hasFilters = statusFilter !== "all" || searchQuery !== "";
 
   return (
-    <div className="space-y-4">
-      {/* Filter Section */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center text-lg">
-            <Filter className="mr-2 h-5 w-5" />
-            Filters
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-            <div>
-              <label className="text-sm font-medium">Search</label>
-              <Input
-                placeholder="Search campaigns..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-              />
-            </div>
-            <div>
-              <label className="text-sm font-medium">Status</label>
-              <Select value={statusFilter} onValueChange={setStatusFilter}>
-                <SelectTrigger>
-                  <SelectValue placeholder="All statuses" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Statuses</SelectItem>
-                  <SelectItem value="draft">Draft</SelectItem>
-                  <SelectItem value="queued">Queued</SelectItem>
-                  <SelectItem value="processing">Processing</SelectItem>
-                  <SelectItem value="completed">Completed</SelectItem>
-                  <SelectItem value="cancelled">Cancelled</SelectItem>
-                  <SelectItem value="failed">Failed</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="flex items-end space-x-2">
-              <Button onClick={handleFilter} className="flex-1">
-                Apply Filters
-              </Button>
-              <Button onClick={handleReset} variant="outline">
-                <X className="h-4 w-4 mr-1" />
-                Reset
-              </Button>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
+    <div className='space-y-4'>
+      {/* Filter Bar */}
+      <div className='flex flex-col sm:flex-row gap-3'>
+        {/* Search */}
+        <div className='relative flex-1 max-w-xs'>
+          <Search className='absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-slate-400 pointer-events-none' />
+          <Input
+            placeholder='Search campaigns...'
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            onKeyDown={(e) => e.key === "Enter" && applyFilters()}
+            className='pl-9 h-9 text-sm border-slate-200 bg-white focus-visible:ring-indigo-500'
+          />
+        </div>
 
-      {/* Campaigns Table */}
-      <Card>
-        <CardContent className="p-0">
-          <div className="max-h-[600px] overflow-y-auto">
-            <Table divClass="relative">
-              <TableHeader className="sticky top-0 bg-white border-b z-10">
-                <TableRow className="bg-sidebar">
-                  <TableHead>Campaign Name</TableHead>
-                  <TableHead>Recipients</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead>Progress</TableHead>
-                  <TableHead>Scheduled</TableHead>
-                  <TableHead>Created At</TableHead>
-                  <TableHead className="text-right">Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {filteredCampaigns.map((campaign) => (
-                  <TableRow key={campaign.id} className="hover:bg-gray-50">
-                    <TableCell className="font-medium">
-                      {campaign.name}
-                    </TableCell>
-                    <TableCell>
-                      {campaign.totalRecipients.toLocaleString()}
-                    </TableCell>
-                    <TableCell>
-                      <Badge variant={getStatusColor(campaign.status)}>
-                        {campaign.status}
-                      </Badge>
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex items-center space-x-2">
-                        <div className="w-full bg-gray-200 rounded-full h-2">
-                          <div
-                            className="bg-blue-600 h-2 rounded-full"
-                            style={{ width: `${campaign.progress}%` }}
-                          ></div>
+        {/* Status */}
+        <Select value={statusFilter} onValueChange={setStatusFilter}>
+          <SelectTrigger className='w-full sm:w-44 h-9 text-sm border-slate-200 bg-white focus:ring-indigo-500'>
+            <SelectValue placeholder='All statuses' />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value='all'>All Statuses</SelectItem>
+            <SelectItem value='draft'>Draft</SelectItem>
+            <SelectItem value='queued'>Queued</SelectItem>
+            <SelectItem value='processing'>Processing</SelectItem>
+            <SelectItem value='completed'>Completed</SelectItem>
+            <SelectItem value='cancelled'>Cancelled</SelectItem>
+            <SelectItem value='failed'>Failed</SelectItem>
+          </SelectContent>
+        </Select>
+
+        <button
+          onClick={applyFilters}
+          className='h-9 px-4 text-sm font-medium text-white bg-indigo-600 rounded-lg hover:bg-indigo-700 transition-colors shadow-sm'>
+          Apply
+        </button>
+
+        {hasFilters && (
+          <button
+            onClick={handleReset}
+            className='h-9 px-3 text-sm font-medium text-slate-600 bg-white border border-slate-200 rounded-lg hover:bg-slate-50 transition-colors inline-flex items-center gap-1.5'>
+            <X className='h-3.5 w-3.5' />
+            Clear
+          </button>
+        )}
+      </div>
+
+      {/* Table Card */}
+      <div className='rounded-xl border border-slate-100 bg-white shadow-sm overflow-hidden'>
+        {loading && !campaigns ? (
+          <div className='flex flex-col items-center justify-center h-64 gap-3'>
+            <div className='w-8 h-8 border-2 border-indigo-600 border-t-transparent rounded-full animate-spin' />
+            <p className='text-sm text-slate-500'>Loading campaigns…</p>
+          </div>
+        ) : (
+          <>
+            <div className='overflow-x-auto'>
+              <Table>
+                <TableHeader>
+                  <TableRow className='bg-slate-50 hover:bg-slate-50 border-b border-slate-100'>
+                    <TableHead className='text-xs font-semibold text-slate-500 uppercase tracking-wide py-3'>
+                      Campaign
+                    </TableHead>
+                    <TableHead className='text-xs font-semibold text-slate-500 uppercase tracking-wide py-3'>
+                      Recipients
+                    </TableHead>
+                    <TableHead className='text-xs font-semibold text-slate-500 uppercase tracking-wide py-3'>
+                      Status
+                    </TableHead>
+                    <TableHead className='text-xs font-semibold text-slate-500 uppercase tracking-wide py-3 min-w-[140px]'>
+                      Progress
+                    </TableHead>
+                    <TableHead className='text-xs font-semibold text-slate-500 uppercase tracking-wide py-3'>
+                      Scheduled
+                    </TableHead>
+                    <TableHead className='text-xs font-semibold text-slate-500 uppercase tracking-wide py-3'>
+                      Created
+                    </TableHead>
+                    <TableHead className='w-10' />
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {filteredCampaigns.length === 0 ? (
+                    <TableRow>
+                      <TableCell colSpan={7} className='py-16 text-center'>
+                        <div className='flex flex-col items-center gap-2 text-slate-400'>
+                          <Inbox className='h-8 w-8 opacity-40' />
+                          <p className='text-sm font-medium'>
+                            No campaigns found
+                          </p>
+                          {hasFilters && (
+                            <button
+                              onClick={handleReset}
+                              className='text-xs text-indigo-600 hover:underline mt-1'>
+                              Clear filters
+                            </button>
+                          )}
                         </div>
-                        <span className="text-xs">{campaign.progress}%</span>
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      {campaign.scheduledFor
-                        ? format(new Date(campaign.scheduledFor), 'MMM dd, yyyy HH:mm')
-                        : '-'}
-                    </TableCell>
-                    <TableCell>
-                      {format(new Date(campaign.createdAt), 'MMM dd, yyyy')}
-                    </TableCell>
-                    <TableCell className="text-right">
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button variant="ghost" size="sm">
-                            <MoreHorizontal className="h-4 w-4" />
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                          <DropdownMenuItem onClick={() => handleViewCampaign(campaign.id)}>
-                            <Eye className="h-4 w-4 mr-2" />
-                            View Details
-                          </DropdownMenuItem>
-                          {(campaign.status === 'queued' || campaign.status === 'processing') && (
-                            <DropdownMenuItem
-                              onClick={() => setCampaignToCancel(campaign)}
-                              className="text-yellow-600"
-                            >
-                              Cancel Campaign
-                            </DropdownMenuItem>
+                      </TableCell>
+                    </TableRow>
+                  ) : (
+                    filteredCampaigns.map((campaign) => (
+                      <TableRow
+                        key={campaign.id}
+                        className='border-b border-slate-50 hover:bg-slate-50/60 transition-colors cursor-default group'>
+                        <TableCell className='py-3.5'>
+                          <span
+                            className='font-medium text-slate-800 hover:text-indigo-600 cursor-pointer transition-colors'
+                            onClick={() => handleViewCampaign(campaign.id)}>
+                            {campaign.name}
+                          </span>
+                        </TableCell>
+                        <TableCell className='py-3.5 text-sm tabular-nums text-slate-600'>
+                          {campaign.totalRecipients.toLocaleString()}
+                        </TableCell>
+                        <TableCell className='py-3.5'>
+                          <StatusBadge status={campaign.status} />
+                        </TableCell>
+                        <TableCell className='py-3.5'>
+                          <ProgressBar value={campaign.progress} />
+                        </TableCell>
+                        <TableCell className='py-3.5 text-sm text-slate-500 whitespace-nowrap'>
+                          {campaign.scheduledFor ? (
+                            format(
+                              new Date(campaign.scheduledFor),
+                              "MMM d, yyyy · HH:mm",
+                            )
+                          ) : (
+                            <span className='text-slate-300'>—</span>
                           )}
-                          {campaign.status !== 'processing' && (
-                            <DropdownMenuItem
-                              onClick={() => setCampaignToDelete(campaign.id)}
-                              className="text-red-600"
-                            >
-                              <Trash2 className="h-4 w-4 mr-2" />
-                              Delete
-                            </DropdownMenuItem>
-                          )}
-                        </DropdownMenuContent>
-                      </DropdownMenu>
-                    </TableCell>
-                  </TableRow>
-                ))}
-                {filteredCampaigns.length === 0 && (
-                  <TableRow>
-                    <TableCell colSpan={7} className="text-center py-8 text-gray-500">
-                      No campaigns found
-                    </TableCell>
-                  </TableRow>
-                )}
-              </TableBody>
-            </Table>
-          </div>
+                        </TableCell>
+                        <TableCell className='py-3.5 text-sm text-slate-500 whitespace-nowrap'>
+                          {format(new Date(campaign.createdAt), "MMM d, yyyy")}
+                        </TableCell>
+                        <TableCell className='py-3.5 text-right pr-3'>
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <button className='inline-flex items-center justify-center w-8 h-8 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-100 opacity-0 group-hover:opacity-100 transition-all focus-visible:opacity-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500'>
+                                <MoreHorizontal className='h-4 w-4' />
+                              </button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent
+                              align='end'
+                              className='w-44 shadow-lg'>
+                              <DropdownMenuItem
+                                onClick={() => handleViewCampaign(campaign.id)}
+                                className='gap-2 cursor-pointer'>
+                                <Eye className='h-3.5 w-3.5 text-slate-500' />
+                                View details
+                              </DropdownMenuItem>
+                              {(campaign.status === "queued" ||
+                                campaign.status === "processing") && (
+                                <DropdownMenuItem
+                                  onClick={() => setCampaignToCancel(campaign)}
+                                  className='gap-2 cursor-pointer text-amber-600 focus:text-amber-700 focus:bg-amber-50'>
+                                  <Ban className='h-3.5 w-3.5' />
+                                  Cancel campaign
+                                </DropdownMenuItem>
+                              )}
+                              {campaign.status !== "processing" && (
+                                <DropdownMenuItem
+                                  onClick={() =>
+                                    setCampaignToDelete(campaign.id)
+                                  }
+                                  className='gap-2 cursor-pointer text-rose-600 focus:text-rose-700 focus:bg-rose-50'>
+                                  <Trash2 className='h-3.5 w-3.5' />
+                                  Delete
+                                </DropdownMenuItem>
+                              )}
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                        </TableCell>
+                      </TableRow>
+                    ))
+                  )}
+                </TableBody>
+              </Table>
+            </div>
 
-          {/* Pagination */}
-          {campaigns && campaigns.length > 0 && (
-            <div className="border-t p-4">
-              <div className="flex items-center justify-between">
-                <div className="text-sm text-gray-600">
-                  Showing {((params.page || 1) - 1) * (params.limit || 20) + 1}-
-                  {Math.min((params.page || 1) * (params.limit || 20), filteredCampaigns.length)}{' '}
-                  of {filteredCampaigns.length} campaigns
-                </div>
-                <div className="flex items-center space-x-2">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    disabled={(params.page || 1) === 1}
+            {/* Pagination */}
+            {totalItems > 0 && (
+              <div className='flex flex-col sm:flex-row items-center justify-between gap-3 px-4 py-3 border-t border-slate-100 bg-slate-50/50'>
+                <p className='text-xs text-slate-500 order-2 sm:order-1'>
+                  Showing{" "}
+                  <span className='font-medium text-slate-700'>
+                    {rangeStart}–{rangeEnd}
+                  </span>{" "}
+                  of{" "}
+                  <span className='font-medium text-slate-700'>
+                    {totalItems}
+                  </span>{" "}
+                  campaigns
+                </p>
+                <div className='flex items-center gap-1 order-1 sm:order-2'>
+                  <button
+                    disabled={currentPage === 1}
                     onClick={() => {
-                      const newParams: CampaignQueryParams = { ...params, page: (params.page || 1) - 1 };
-                      setParams(newParams);
-                      fetchCampaigns(newParams);
+                      const p = { ...params, page: currentPage - 1 };
+                      setParams(p);
+                      fetchCampaigns(p);
                     }}
-                  >
+                    className='inline-flex items-center gap-1 px-3 py-1.5 text-xs font-medium text-slate-600 bg-white border border-slate-200 rounded-lg hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors'>
+                    <ChevronLeft className='h-3.5 w-3.5' />
                     Previous
-                  </Button>
-                  <span className="text-sm">Page {params.page || 1}</span>
-                  <Button
-                    variant="outline"
-                    size="sm"
+                  </button>
+                  <span className='px-3 py-1.5 text-xs text-slate-500 font-medium'>
+                    Page {currentPage}
+                  </span>
+                  <button
                     onClick={() => {
-                      const newParams: CampaignQueryParams = { ...params, page: (params.page || 1) + 1 };
-                      setParams(newParams);
-                      fetchCampaigns(newParams);
+                      const p = { ...params, page: currentPage + 1 };
+                      setParams(p);
+                      fetchCampaigns(p);
                     }}
-                  >
+                    className='inline-flex items-center gap-1 px-3 py-1.5 text-xs font-medium text-slate-600 bg-white border border-slate-200 rounded-lg hover:bg-slate-50 transition-colors'>
                     Next
-                  </Button>
+                    <ChevronRight className='h-3.5 w-3.5' />
+                  </button>
                 </div>
               </div>
-            </div>
-          )}
-        </CardContent>
-      </Card>
+            )}
+          </>
+        )}
+      </div>
 
-      {/* Cancel Confirmation Dialog */}
-      <AlertDialog open={!!campaignToCancel} onOpenChange={() => setCampaignToCancel(null)}>
-        <AlertDialogContent>
+      {/* Cancel Dialog */}
+      <AlertDialog
+        open={!!campaignToCancel}
+        onOpenChange={() => setCampaignToCancel(null)}>
+        <AlertDialogContent className='max-w-md'>
           <AlertDialogHeader>
-            <AlertDialogTitle>Cancel Campaign?</AlertDialogTitle>
+            <AlertDialogTitle>Cancel this campaign?</AlertDialogTitle>
             <AlertDialogDescription>
-              Are you sure you want to cancel "{campaignToCancel?.name}"? This action cannot be undone.
+              <strong className='text-slate-700'>
+                "{campaignToCancel?.name}"
+              </strong>{" "}
+              will stop sending. Messages already delivered won't be recalled.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>No, keep it</AlertDialogCancel>
-            <AlertDialogAction onClick={handleCancelCampaign} className="bg-yellow-600">
+            <AlertDialogCancel className='text-sm'>
+              Keep running
+            </AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleCancelCampaign}
+              className='bg-amber-500 hover:bg-amber-600 text-sm'>
               Yes, cancel it
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
 
-      {/* Delete Confirmation Dialog */}
-      <AlertDialog open={!!campaignToDelete} onOpenChange={() => setCampaignToDelete(null)}>
-        <AlertDialogContent>
+      {/* Delete Dialog */}
+      <AlertDialog
+        open={!!campaignToDelete}
+        onOpenChange={() => setCampaignToDelete(null)}>
+        <AlertDialogContent className='max-w-md'>
           <AlertDialogHeader>
-            <AlertDialogTitle>Delete Campaign?</AlertDialogTitle>
+            <AlertDialogTitle>Delete campaign?</AlertDialogTitle>
             <AlertDialogDescription>
-              Are you sure you want to delete this campaign? This action cannot be undone.
+              This campaign and all its data will be permanently removed. This
+              cannot be undone.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={handleDeleteCampaign} className="bg-red-600">
-              Delete
+            <AlertDialogCancel className='text-sm'>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleDeleteCampaign}
+              className='bg-rose-600 hover:bg-rose-700 text-sm'>
+              Delete permanently
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

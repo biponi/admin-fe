@@ -25,6 +25,7 @@ import {
 import { IImageGroup, IVariation } from "@/pages/product/interface";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
+import { validateImageGroup } from "@/utils/functions";
 
 interface ImageGroupCardProps {
   group: IImageGroup;
@@ -163,6 +164,14 @@ export const ImageGroupCard: React.FC<ImageGroupCardProps> = ({
       toast.error("Display label cannot be empty");
       return;
     }
+
+    // Ensure required fields exist before saving
+    if (!validateImageGroup(group)) {
+      toast.error("Cannot save group: Missing required attribute or value");
+      setIsEditing(false);
+      return;
+    }
+
     onUpdate({
       ...group,
       displayLabel: editedLabel.trim(),
@@ -179,6 +188,11 @@ export const ImageGroupCard: React.FC<ImageGroupCardProps> = ({
   };
 
   const handleImagesChange = (_groupId: string, images: (File | string)[]) => {
+    // Ensure required fields exist before updating images
+    if (!validateImageGroup(group)) {
+      toast.error("Cannot update images: Group is missing required attribute or value");
+      return;
+    }
     onUpdate({ ...group, images });
   };
 
