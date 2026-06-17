@@ -41,7 +41,7 @@ const SMSPage = () => {
 
   return (
     <MainView title='Bulk SMS Campaigns'>
-      <div className='space-y-6'>
+      <div className='container space-y-6'>
         {/* Header with Create Button */}
         <div className='flex items-center justify-between'>
           <div className='flex items-center space-x-2'>
