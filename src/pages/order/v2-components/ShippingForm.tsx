@@ -1,15 +1,21 @@
 import { useState, useMemo, useEffect, useRef, useCallback } from "react";
-import { MapPin, Home, Truck, Search, CheckCircle2 } from "lucide-react";
-import { Input } from "../../../components/ui/input";
+import { MapPin, Home, Truck, CheckCircle2 } from "lucide-react";
 import { Label } from "../../../components/ui/label";
 import { Textarea } from "../../../components/ui/textarea";
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "../../../components/ui/select";
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "../../../components/ui/popover";
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+} from "../../../components/ui/command";
+import { Button } from "../../../components/ui/button";
 import {
   Card,
   CardHeader,
@@ -32,8 +38,16 @@ export function ShippingForm({
   onChange,
   onDeliveryChargeChange,
 }: ShippingFormProps) {
-  const [divisionSearch, setDivisionSearch] = useState("");
   const [districtSearch, setDistrictSearch] = useState("");
+  const [divisionOpen, setDivisionOpen] = useState(false);
+  const [districtOpen, setDistrictOpen] = useState(false);
+
+  // Reset district search when popover opens
+  useEffect(() => {
+    if (districtOpen) {
+      setDistrictSearch("");
+    }
+  }, [districtOpen]);
 
   // Store callbacks in refs so effects/handlers never need them as deps.
   // This prevents "new function reference on every render" from causing
@@ -98,12 +112,6 @@ export function ShippingForm({
     [],
   );
 
-  const filteredDivisions = useMemo(() => {
-    if (!divisionSearch) return BDDivisions;
-    const q = divisionSearch.toLowerCase();
-    return BDDivisions.filter((d) => d.name.toLowerCase().includes(q));
-  }, [divisionSearch]);
-
   const filteredDistricts = useMemo(() => {
     const base = BDDistrictList.filter(
       (d) => d.division_id === selectedDivision?.id,
@@ -135,39 +143,37 @@ export function ShippingForm({
               <MapPin className='w-3.5 h-3.5 text-green-600' />
               District *
             </Label>
-            <Select
-              value={shipping.division ?? ""}
-              onValueChange={handleDivisionChange}>
-              <SelectTrigger
-                id='division'
-                className='h-9 border-gray-200 focus:border-green-500 transition-all'>
-                <SelectValue placeholder='Select division' />
-              </SelectTrigger>
-              <SelectContent className='max-h-64'>
-                <div className='px-2 pt-2 pb-1'>
-                  <div className='relative'>
-                    <Search className='absolute left-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 pointer-events-none' />
-                    <Input
-                      placeholder='Search divisions...'
-                      value={divisionSearch}
-                      onChange={(e) => setDivisionSearch(e.target.value)}
-                      className='pl-9 h-9 text-sm'
-                      onClick={(e) => e.stopPropagation()}
-                    />
-                  </div>
-                </div>
-                <div className='max-h-48 overflow-y-auto'>
-                  {filteredDivisions.map((division) => (
-                    <SelectItem
-                      key={division.id}
-                      value={division.name}
-                      className='text-sm'>
-                      {division.name}
-                    </SelectItem>
-                  ))}
-                </div>
-              </SelectContent>
-            </Select>
+            <Popover open={divisionOpen} onOpenChange={setDivisionOpen}>
+              <PopoverTrigger asChild>
+                <Button
+                  id='division'
+                  variant='outline'
+                  className='w-full justify-start h-9 border-gray-200 focus:border-green-500 transition-all font-normal'>
+                  {shipping.division || "Select division"}
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className='w-[300px] p-0' align='start'>
+                <Command>
+                  <CommandInput placeholder='Search divisions...' />
+                  <CommandList>
+                    <CommandEmpty>No divisions found.</CommandEmpty>
+                    <CommandGroup>
+                      {BDDivisions.map((division) => (
+                        <CommandItem
+                          key={division.id}
+                          value={division.name}
+                          onSelect={(value) => {
+                            handleDivisionChange(value);
+                            setDivisionOpen(false);
+                          }}>
+                          {division.name}
+                        </CommandItem>
+                      ))}
+                    </CommandGroup>
+                  </CommandList>
+                </Command>
+              </PopoverContent>
+            </Popover>
           </div>
 
           {/* Area */}
@@ -178,47 +184,41 @@ export function ShippingForm({
               <Home className='w-3.5 h-3.5 text-green-600' />
               Area *
             </Label>
-            <Select
-              value={shipping.district ?? ""}
-              onValueChange={handleDistrictChange}
-              disabled={!selectedDivision}>
-              <SelectTrigger
-                id='district'
-                className='h-9 border-gray-200 focus:border-green-500 transition-all'>
-                <SelectValue
-                  placeholder={
-                    selectedDivision
+            <Popover open={districtOpen} onOpenChange={setDistrictOpen}>
+              <PopoverTrigger asChild>
+                <Button
+                  id='district'
+                  variant='outline'
+                  className='w-full justify-start h-9 border-gray-200 focus:border-green-500 transition-all font-normal'>
+                  {shipping.district ||
+                    (selectedDivision
                       ? "Select district"
-                      : "Select division first"
-                  }
-                />
-              </SelectTrigger>
-              <SelectContent className='max-h-64'>
-                <div className='px-2 pt-2 pb-1'>
-                  <div className='relative'>
-                    <Search className='absolute left-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 pointer-events-none' />
-                    <Input
-                      placeholder='Search districts...'
-                      value={districtSearch}
-                      onChange={(e) => setDistrictSearch(e.target.value)}
-                      className='pl-9 h-9 text-sm'
-                      onClick={(e) => e.stopPropagation()}
-                      disabled={!selectedDivision}
-                    />
-                  </div>
-                </div>
-                <div className='max-h-48 overflow-y-auto'>
-                  {filteredDistricts.map((district) => (
-                    <SelectItem
-                      key={district.id}
-                      value={district.name}
-                      className='text-sm hover:bg-green-50'>
-                      {district.name}
-                    </SelectItem>
-                  ))}
-                </div>
-              </SelectContent>
-            </Select>
+                      : "Select division first")}
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className='w-[300px] p-0' align='start'>
+                <Command>
+                  <CommandInput placeholder='Search districts...' />
+                  <CommandList>
+                    <CommandEmpty>No districts found.</CommandEmpty>
+                    <CommandGroup>
+                      {filteredDistricts.map((district) => (
+                        <CommandItem
+                          key={district.id}
+                          value={district.name}
+                          className='font-semibold text-black'
+                          onSelect={(value) => {
+                            handleDistrictChange(value);
+                            setDistrictOpen(false);
+                          }}>
+                          {district.name}
+                        </CommandItem>
+                      ))}
+                    </CommandGroup>
+                  </CommandList>
+                </Command>
+              </PopoverContent>
+            </Popover>
           </div>
 
           {/* Location summary */}

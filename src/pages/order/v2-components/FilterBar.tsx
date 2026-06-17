@@ -169,8 +169,8 @@ export const FilterBar = memo(
     }, [onCategoryChange, onBrandChange, onSearchChange]);
 
     return (
-      <div className='sticky top-0 z-20 bg-white/95 backdrop-blur-sm border-b border-gray-100 px-1 py-3'>
-        <div className='flex items-center gap-2.5'>
+      <div className='sticky top-0 z-20 bg-white/95 backdrop-blur-sm border-gray-100 px-0 md:px-1 py-1.5 md:py-3'>
+        <div className='flex items-center gap-2.5 px-1 md:px-0'>
           {/* Fully isolated search input — survives any parent re-render */}
           <SearchInput
             initialValue={searchQuery}

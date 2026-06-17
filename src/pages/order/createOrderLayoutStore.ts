@@ -1,6 +1,5 @@
 /**
  * Create Order Layout Store - Zustand State Management
- * Manages the new product-first create order layout state
  */
 
 import { create } from "zustand";
@@ -14,20 +13,17 @@ import type {
 } from "../order/interface.d";
 import type { IProduct, IVariation } from "../product/interface.d";
 
-// UUID generator for cart items
-const generateCartItemId = (): string => {
-  return `cart_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
-};
+const generateCartItemId = (): string =>
+  `cart_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
 
 export interface CartItem extends IOrderProduct {
-  cartItemId: string; // Unique identifier for cart items (UUID)
+  cartItemId: string;
   selectedVariant?: IVariation;
-  availableStock?: number; // Available stock for the product
-  variantStock?: number; // Available stock for the variant (if applicable)
+  availableStock?: number;
+  variantStock?: number;
 }
 
 interface CreateOrderLayoutState {
-  // Product Section State
   products: IProduct[];
   filteredProducts: IProduct[];
   searchQuery: string;
@@ -38,35 +34,27 @@ interface CreateOrderLayoutState {
   totalPages: number;
   totalProducts: number;
   pageSize: number;
-
-  // Cart State
   cart: CartItem[];
   isCartOpen: boolean;
-
-  // Customer State
   selectedCustomer: ICustomer | null;
   customerInfo: Partial<ICustomer>;
   shippingInfo: Partial<IShipping>;
-
-  // Transaction State
   transaction: Partial<ITransection>;
   notes: string;
-
-  // UI State
   isSubmitting: boolean;
   variationModalOpen: boolean;
   selectedProductForVariation: IProduct | null;
-
-  // Validation State
   validationErrors: Record<string, string[]>;
-
-  // Draft management
   draftId: string | null;
   lastSaved: Date | null;
   isDirty: boolean;
 
-  // Actions - Product Management
   setProducts: (products: IProduct[]) => void;
+  setProductsResponse: (payload: {
+    products: IProduct[];
+    totalPages: number;
+    totalProducts: number;
+  }) => void;
   setSearchQuery: (query: string) => void;
   setSelectedCategory: (categoryId: string) => void;
   setSelectedBrand: (brandId: string) => void;
@@ -74,9 +62,10 @@ interface CreateOrderLayoutState {
   setLoadingProducts: (isLoading: boolean) => void;
   setCurrentPage: (page: number) => void;
   setPageSize: (size: number) => void;
-  setPaginationInfo: (info: { totalPages: number; totalProducts: number }) => void;
-
-  // Actions - Cart Management
+  setPaginationInfo: (info: {
+    totalPages: number;
+    totalProducts: number;
+  }) => void;
   addToCart: (product: IProduct, variant?: IVariation) => void;
   removeFromCart: (cartItemId: string) => void;
   updateCartQuantity: (cartItemId: string, quantity: number) => void;
@@ -84,38 +73,22 @@ interface CreateOrderLayoutState {
   toggleCart: () => void;
   openCart: () => void;
   closeCart: () => void;
-
-  // Actions - Customer Management
   setCustomer: (customer: Partial<ICustomer>) => void;
   setSelectedCustomer: (customer: ICustomer | null) => void;
   setShippingInfo: (shipping: Partial<IShipping>) => void;
-
-  // Actions - Transaction
   setTransaction: (transaction: Partial<ITransection>) => void;
   calculateTotals: () => void;
   setNotes: (notes: string) => void;
-
-  // Actions - Variation Modal
   openVariationModal: (product: IProduct) => void;
   closeVariationModal: () => void;
-
-  // Actions - Validation
   validateOrder: () => boolean;
   setValidationErrors: (errors: Record<string, string[]>) => void;
   clearValidationErrors: () => void;
-
-  // Actions - Draft Management
   saveDraft: () => Promise<void>;
   loadDraft: (draftId: string) => Promise<void>;
   clearDraft: () => void;
-
-  // Actions - Submission
   setSubmitting: (isSubmitting: boolean) => void;
-
-  // Actions - Reset
   reset: () => void;
-
-  // Getters
   getCartTotal: () => number;
   getCartItemCount: () => number;
   getOrderData: () => any;
@@ -132,14 +105,11 @@ const initialState = {
   totalPages: 1,
   totalProducts: 0,
   pageSize: 20,
-
   cart: [],
   isCartOpen: false,
-
   selectedCustomer: null,
   customerInfo: {},
   shippingInfo: {},
-
   transaction: {
     totalPrice: 0,
     paid: 0,
@@ -148,13 +118,10 @@ const initialState = {
     deliveryCharge: 0,
   },
   notes: "",
-
   isSubmitting: false,
   variationModalOpen: false,
   selectedProductForVariation: null,
-
   validationErrors: {},
-
   draftId: null,
   lastSaved: null,
   isDirty: false,
@@ -166,151 +133,161 @@ export const useCreateOrderLayoutStore = create<CreateOrderLayoutState>()(
       (set, get) => ({
         ...initialState,
 
-        // Product Management
+        // ── Products ───────────────────────────────────────────────────────
+
         setProducts: (products) => {
           set({ products, filteredProducts: products });
         },
 
+        // Single atomic update — replaces 3-4 separate set() calls after API
+        setProductsResponse: ({ products, totalPages, totalProducts }) => {
+          set({
+            products,
+            filteredProducts: products,
+            totalPages,
+            totalProducts,
+            isLoadingProducts: false,
+          });
+        },
+
         setSearchQuery: (query) => {
+          // Guard: skip if unchanged
+          if (get().searchQuery === query) return;
           set({ searchQuery: query });
-          get().filterProducts();
         },
 
         setSelectedCategory: (categoryId) => {
+          if (get().selectedCategory === categoryId) return;
           set({ selectedCategory: categoryId });
-          get().filterProducts();
         },
 
         setSelectedBrand: (brandId) => {
+          if (get().selectedBrand === brandId) return;
           set({ selectedBrand: brandId });
-          get().filterProducts();
         },
 
         filterProducts: () => {
           const { products, searchQuery, selectedCategory, selectedBrand } =
             get();
-
           let filtered = products;
-
-          // Filter by search query
           if (searchQuery) {
-            const query = searchQuery.toLowerCase();
+            const q = searchQuery.toLowerCase();
             filtered = filtered.filter(
-              (product) =>
-                product.name.toLowerCase().includes(query) ||
-                product.sku.toLowerCase().includes(query),
+              (p) =>
+                p.name.toLowerCase().includes(q) ||
+                p.sku.toLowerCase().includes(q),
             );
           }
-
-          // Filter by category
           if (selectedCategory) {
-            filtered = filtered.filter((product) =>
-              product.categoryIds?.includes(selectedCategory),
+            filtered = filtered.filter((p) =>
+              p.categoryIds?.includes(selectedCategory),
             );
           }
-
-          // Filter by brand (manufacturer)
           if (selectedBrand) {
             filtered = filtered.filter(
-              (product) => product.manufactureId === selectedBrand,
+              (p) => p.manufactureId === selectedBrand,
             );
           }
-
           set({ filteredProducts: filtered });
         },
 
         setLoadingProducts: (isLoading) => {
+          if (get().isLoadingProducts === isLoading) return;
           set({ isLoadingProducts: isLoading });
         },
 
         setCurrentPage: (page) => {
+          if (get().currentPage === page) return;
           set({ currentPage: page });
         },
 
         setPageSize: (size) => {
-          set({ pageSize: size, currentPage: 1 }); // Reset to page 1 when changing page size
+          if (get().pageSize === size) return;
+          set({ pageSize: size, currentPage: 1 });
         },
 
-        setPaginationInfo: (info) => {
-          set({ totalPages: info.totalPages, totalProducts: info.totalProducts });
+        setPaginationInfo: ({ totalPages, totalProducts }) => {
+          if (
+            get().totalPages === totalPages &&
+            get().totalProducts === totalProducts
+          )
+            return;
+          set({ totalPages, totalProducts });
         },
 
-        // Cart Management
+        // ── Cart ───────────────────────────────────────────────────────────
+
         addToCart: (product, variant) => {
-          // Determine available stock
           const availableStock = product.quantity || 0;
           const variantStock = variant ? variant.quantity : 0;
           const maxStock = variant ? variantStock : availableStock;
 
+          let changed = false;
+
           set((state) => {
-            // Check if item already exists by comparing both productId and variantId
-            const existingItemIndex = state.cart.findIndex(
+            const existingIndex = state.cart.findIndex(
               (item) =>
                 item.productId === product.id &&
                 (variant ? item.variantId === variant.id : !item.variantId),
             );
 
-            if (existingItemIndex > -1) {
-              // Item exists - check if we can increase quantity
-              const existingItem = state.cart[existingItemIndex];
-              const newQuantity = existingItem.quantity + 1;
-
-              if (newQuantity > maxStock) {
+            if (existingIndex > -1) {
+              const existing = state.cart[existingIndex];
+              const newQty = existing.quantity + 1;
+              if (newQty > maxStock) {
                 toast.error(`Only ${maxStock} items available in stock`);
                 return state;
               }
-
-              // Update quantity - use the correct price source
-              const updatedCart = [...state.cart];
-              updatedCart[existingItemIndex].quantity = newQuantity;
-              // Use variant price if available, otherwise use the item's unit price
+              const updated = [...state.cart];
               const priceSource =
-                existingItem.selectedVariant?.unitPrice ||
-                existingItem.unitPrice;
-              updatedCart[existingItemIndex].totalPrice =
-                newQuantity * priceSource -
-                newQuantity * (existingItem?.discount ?? 0);
-              return { cart: updatedCart, isDirty: true };
-            } else {
-              // Add new item with plain productId and unique cartItemId
-              const cartItem: CartItem = {
-                cartItemId: generateCartItemId(),
-                id: product.id, // Use plain product ID
-                productId: product.id,
-                name: product.name,
-                thumbnail: product.thumbnail,
-                quantity: 1,
-                // Use variant price if it exists and is greater than 0, otherwise use product price
-                unitPrice:
-                  (variant && variant.unitPrice > 0
-                    ? variant.unitPrice
-                    : product.unitPrice) - (product.discount ?? 0),
+                existing.selectedVariant?.unitPrice || existing.unitPrice;
+              updated[existingIndex] = {
+                ...existing,
+                quantity: newQty,
                 totalPrice:
-                  (variant && variant.unitPrice > 0
-                    ? variant.unitPrice
-                    : product.unitPrice) - (product.discount ?? 0),
-                discount: product.discount,
-                hasVariation: product.hasVariation,
-                variantId: variant?.id,
-                variation: variant
-                  ? {
-                      id: variant.id,
-                      size: variant.size,
-                      color: variant.color,
-                    }
-                  : undefined,
-                selectedVariant: variant,
-                availableStock,
-                variantStock: variant ? variantStock : undefined,
+                  newQty * priceSource - newQty * (existing.discount ?? 0),
               };
-              return { cart: [...state.cart, cartItem], isDirty: true };
+              changed = true;
+              return { cart: updated, isDirty: true };
             }
+
+            const cartItem: CartItem = {
+              cartItemId: generateCartItemId(),
+              id: product.id,
+              productId: product.id,
+              name: product.name,
+              thumbnail: product.thumbnail,
+              quantity: 1,
+              unitPrice:
+                (variant && variant.unitPrice > 0
+                  ? variant.unitPrice
+                  : product.unitPrice) - (product.discount ?? 0),
+              totalPrice:
+                (variant && variant.unitPrice > 0
+                  ? variant.unitPrice
+                  : product.unitPrice) - (product.discount ?? 0),
+              discount: product.discount,
+              hasVariation: product.hasVariation,
+              variantId: variant?.id,
+              variation: variant
+                ? { id: variant.id, size: variant.size, color: variant.color }
+                : undefined,
+              selectedVariant: variant,
+              availableStock,
+              variantStock: variant ? variantStock : undefined,
+            };
+            changed = true;
+            return { cart: [...state.cart, cartItem], isDirty: true };
           });
 
-          get().calculateTotals();
+          if (changed) get().calculateTotals();
         },
 
         removeFromCart: (cartItemId) => {
+          const exists = get().cart.some(
+            (item) => item.cartItemId === cartItemId,
+          );
+          if (!exists) return;
           set((state) => ({
             cart: state.cart.filter((item) => item.cartItemId !== cartItemId),
             isDirty: true,
@@ -323,24 +300,24 @@ export const useCreateOrderLayoutStore = create<CreateOrderLayoutState>()(
             get().removeFromCart(cartItemId);
             return;
           }
-
+          let changed = false;
           set((state) => {
             const cartItem = state.cart.find(
               (item) => item.cartItemId === cartItemId,
             );
             if (!cartItem) return state;
 
-            // Determine max stock
             const maxStock = cartItem.selectedVariant
               ? cartItem.variantStock || cartItem.selectedVariant.quantity || 0
               : cartItem.availableStock || cartItem.quantity || 0;
 
-            // Validate against stock
             if (quantity > maxStock) {
               toast.error(`Maximum quantity is ${maxStock}`);
               return state;
             }
+            if (cartItem.quantity === quantity) return state;
 
+            changed = true;
             return {
               cart: state.cart.map((item) =>
                 item.cartItemId === cartItemId
@@ -356,61 +333,79 @@ export const useCreateOrderLayoutStore = create<CreateOrderLayoutState>()(
               isDirty: true,
             };
           });
-
-          get().calculateTotals();
+          if (changed) get().calculateTotals();
         },
 
         clearCart: () => {
+          if (get().cart.length === 0) return;
           set({ cart: [], isDirty: true });
           get().calculateTotals();
         },
 
-        toggleCart: () => {
-          set((state) => ({ isCartOpen: !state.isCartOpen }));
-        },
+        toggleCart: () => set((state) => ({ isCartOpen: !state.isCartOpen })),
+        openCart: () => set({ isCartOpen: true }),
+        closeCart: () => set({ isCartOpen: false }),
 
-        openCart: () => {
-          set({ isCartOpen: true });
-        },
+        // ── Customer ───────────────────────────────────────────────────────
 
-        closeCart: () => {
-          set({ isCartOpen: false });
-        },
-
-        // Customer Management
-        setCustomer: (customer) => {
-          set((state) => ({
-            customerInfo: { ...state.customerInfo, ...customer },
-            isDirty: true,
-          }));
+        setCustomer: (incoming) => {
+          const current = get().customerInfo;
+          // Only update fields that actually changed
+          const next: Partial<ICustomer> = { ...current };
+          let changed = false;
+          (Object.keys(incoming) as Array<keyof ICustomer>).forEach((key) => {
+            if (incoming[key] !== current[key]) {
+              (next as any)[key] = incoming[key];
+              changed = true;
+            }
+          });
+          if (!changed) return;
+          set({ customerInfo: next, isDirty: true });
         },
 
         setSelectedCustomer: (customer) => {
           set({ selectedCustomer: customer });
-          if (customer) {
-            get().setCustomer(customer);
-          }
+          if (customer) get().setCustomer(customer);
         },
 
-        setShippingInfo: (shipping) => {
-          set((state) => ({
-            shippingInfo: { ...state.shippingInfo, ...shipping },
-            isDirty: true,
-          }));
+        setShippingInfo: (incoming) => {
+          const current = get().shippingInfo;
+          // Guard: only update fields that actually changed — this is the
+          // critical protection against the infinite loop. If shipping values
+          // haven't changed, don't emit a new state object.
+          const next: Partial<IShipping> = { ...current };
+          let changed = false;
+          (Object.keys(incoming) as Array<keyof IShipping>).forEach((key) => {
+            if (incoming[key] !== current[key]) {
+              (next as any)[key] = incoming[key];
+              changed = true;
+            }
+          });
+          if (!changed) return; // ← loop stopper
+          set({ shippingInfo: next, isDirty: true });
         },
 
-        // Transaction
-        setTransaction: (transaction) => {
-          set((state) => ({
-            transaction: { ...state.transaction, ...transaction },
-            isDirty: true,
-          }));
+        // ── Transaction ────────────────────────────────────────────────────
 
-          // Automatically recalculate totals when delivery charge, discount, or paid amount changes
+        setTransaction: (incoming) => {
+          const current = get().transaction;
+          const next: Partial<ITransection> = { ...current };
+          let changed = false;
+          (Object.keys(incoming) as Array<keyof ITransection>).forEach(
+            (key) => {
+              if (incoming[key] !== current[key]) {
+                (next as any)[key] = incoming[key];
+                changed = true;
+              }
+            },
+          );
+          if (!changed) return;
+          set({ transaction: next, isDirty: true });
+
           if (
-            transaction.deliveryCharge !== undefined ||
-            transaction.discount !== undefined ||
-            transaction.paid !== undefined
+            incoming.deliveryCharge !== undefined ||
+            incoming.discount !== undefined ||
+            incoming.paid !== undefined
           ) {
             get().calculateTotals();
           }
@@ -418,30 +413,32 @@ export const useCreateOrderLayoutStore = create<CreateOrderLayoutState>()(
 
         calculateTotals: () => {
           const { cart, transaction } = get();
-
           const subtotal = cart.reduce((sum, item) => sum + item.totalPrice, 0);
-
           const discount = transaction.discount || 0;
           const deliveryCharge = transaction.deliveryCharge || 0;
-          const totalPrice = subtotal + deliveryCharge - discount;
+          const totalPrice = subtotal;
           const paid = transaction.paid || 0;
-          const remaining = totalPrice - paid;
+          const remaining = totalPrice + deliveryCharge - discount - paid;
+
+          // Guard: don't emit if nothing changed
+          if (
+            transaction.totalPrice === totalPrice &&
+            transaction.remaining === remaining
+          )
+            return;
 
           set((state) => ({
-            transaction: {
-              ...state.transaction,
-              totalPrice,
-              paid,
-              remaining,
-            },
+            transaction: { ...state.transaction, totalPrice, paid, remaining },
           }));
         },
 
         setNotes: (notes) => {
+          if (get().notes === notes) return;
           set({ notes, isDirty: true });
         },
 
-        // Variation Modal
+        // ── Modals ─────────────────────────────────────────────────────────
+
         openVariationModal: (product) => {
           set({
             variationModalOpen: true,
@@ -450,67 +447,49 @@ export const useCreateOrderLayoutStore = create<CreateOrderLayoutState>()(
         },
 
         closeVariationModal: () => {
-          set({
-            variationModalOpen: false,
-            selectedProductForVariation: null,
-          });
+          set({ variationModalOpen: false, selectedProductForVariation: null });
         },
 
-        // Validation
+        // ── Validation ─────────────────────────────────────────────────────
+
         validateOrder: () => {
           const state = get();
           const errors: Record<string, string[]> = {};
 
-          // Validate cart
-          if (state.cart.length === 0) {
+          if (state.cart.length === 0)
             errors.cart = ["Please add at least one product"];
-          }
 
-          // Validate stock levels for all cart items
           state.cart.forEach((item) => {
             const maxStock = item.selectedVariant
               ? item.variantStock || item.selectedVariant.quantity || 0
               : item.availableStock || item.quantity || 0;
-
             if (item.quantity > maxStock) {
               errors[item.cartItemId] = [
-                `Only ${maxStock} ${item.selectedVariant ? "of this variant" : "of this product"} available, you have ${item.quantity} in cart`,
+                `Only ${maxStock} ${item.selectedVariant ? "of this variant" : "of this product"} available`,
               ];
             }
           });
 
-          // Validate customer
-          if (!state.customerInfo.name) {
+          if (!state.customerInfo.name)
             errors.customerName = ["Customer name is required"];
-          }
-          if (!state.customerInfo.phoneNumber) {
+          if (!state.customerInfo.phoneNumber)
             errors.customerPhone = ["Phone number is required"];
-          }
-
-          // Validate shipping
-          if (!state.shippingInfo.division) {
+          if (!state.shippingInfo.division)
             errors.division = ["District is required"];
-          }
-          if (!state.shippingInfo.district) {
+          if (!state.shippingInfo.district)
             errors.district = ["Area is required"];
-          }
-          if (!state.shippingInfo.address) {
+          if (!state.shippingInfo.address)
             errors.address = ["Address is required"];
-          }
 
           set({ validationErrors: errors });
           return Object.keys(errors).length === 0;
         },
 
-        setValidationErrors: (errors) => {
-          set({ validationErrors: errors });
-        },
+        setValidationErrors: (errors) => set({ validationErrors: errors }),
+        clearValidationErrors: () => set({ validationErrors: {} }),
 
-        clearValidationErrors: () => {
-          set({ validationErrors: {} });
-        },
+        // ── Draft ──────────────────────────────────────────────────────────
 
-        // Draft Management
         saveDraft: async () => {
           const state = get();
           const draft = {
@@ -527,10 +506,7 @@ export const useCreateOrderLayoutStore = create<CreateOrderLayoutState>()(
               notes: state.notes,
             },
           };
-
-          // Save to localStorage
           localStorage.setItem("order_draft_layout", JSON.stringify(draft));
-
           set({
             draftId: draft.id,
             lastSaved: draft.updatedAt,
@@ -565,34 +541,23 @@ export const useCreateOrderLayoutStore = create<CreateOrderLayoutState>()(
 
         clearDraft: () => {
           localStorage.removeItem("order_draft_layout");
-          set({
-            draftId: null,
-            lastSaved: null,
-            isDirty: false,
-          });
+          set({ draftId: null, lastSaved: null, isDirty: false });
         },
 
-        // Submission
         setSubmitting: (isSubmitting) => {
+          if (get().isSubmitting === isSubmitting) return;
           set({ isSubmitting });
         },
 
-        // Reset
         reset: () => {
           set(initialState);
           get().clearDraft();
         },
 
-        // Getters
-        getCartTotal: () => {
-          const { cart } = get();
-          return cart.reduce((sum, item) => sum + item.totalPrice, 0);
-        },
-
-        getCartItemCount: () => {
-          const { cart } = get();
-          return cart.reduce((sum, item) => sum + item.quantity, 0);
-        },
+        getCartTotal: () =>
+          get().cart.reduce((sum, item) => sum + item.totalPrice, 0),
+        getCartItemCount: () =>
+          get().cart.reduce((sum, item) => sum + item.quantity, 0),
 
         getOrderData: () => {
           const state = get();
@@ -611,7 +576,6 @@ export const useCreateOrderLayoutStore = create<CreateOrderLayoutState>()(
       {
         name: "create-order-layout-store",
         partialize: (state) => ({
-          // Persist draft data
           draftId: state.draftId,
           lastSaved: state.lastSaved,
         }),

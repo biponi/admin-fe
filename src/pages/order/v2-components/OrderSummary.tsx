@@ -135,7 +135,12 @@ export function OrderSummary({
             <div className='flex justify-between text-lg font-bold'>
               <span>Total</span>
               <span className='text-white'>
-                ৳{(transaction.totalPrice || 0).toFixed(2)}
+                ৳
+                {(
+                  (transaction.totalPrice || 0) +
+                  (transaction.deliveryCharge || 0) -
+                  (transaction.discount || 0)
+                ).toFixed(2)}
               </span>
             </div>
           </div>

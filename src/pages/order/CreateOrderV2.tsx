@@ -8,7 +8,7 @@ import { ProductPagination } from "./v2-components/ProductPagination";
 import { VariationModal } from "./v2-components/VariationModal";
 import { CartPanel } from "./v2-components/CartPanel";
 import { CartDrawer, CartTriggerButton } from "./v2-components/CartDrawer";
-import { getProducts, getProductsByCategory } from "../../api/product";
+import { getProducts, searchActiveProducts } from "../../api/product";
 import { createOrder } from "../../api/order";
 import type { IProduct, IVariation } from "../product/interface";
 import { Package, ShoppingBag } from "lucide-react";
@@ -17,7 +17,7 @@ import useDebounce from "../../customHook/useDebounce";
 
 // ─── Header (stable — no props that change on every render) ───────────────────
 const OrderHeader = memo(() => (
-  <div className='px-5 py-4 mb-3 bg-gradient-to-r from-rose-500 via-red-500 to-orange-500 text-white rounded-xl shadow-sm'>
+  <div className='px-5 py-4 mb-3 bg-gradient-to-r from-rose-500 via-red-500 to-orange-500 text-white md:rounded-xl shadow-sm'>
     <div className='flex items-center gap-3'>
       <div className='h-9 w-9 rounded-lg bg-white/20 flex items-center justify-center backdrop-blur-sm shrink-0'>
         <Package className='h-4.5 w-4.5' />
@@ -97,10 +97,31 @@ const CreateOrderV2 = () => {
   const fetchProducts = useCallback(async () => {
     setLoadingProducts(true);
     try {
-      const isCategoryActive = selectedCategory && selectedCategory !== "all";
-      const response = isCategoryActive
-        ? await getProductsByCategory(selectedCategory, currentPage, pageSize)
-        : await getProducts(pageSize, currentPage);
+      let response;
+
+      // Use searchActiveProducts API when there's a search query
+      if (debouncedSearch) {
+        const categoryId =
+          selectedCategory && selectedCategory !== "all"
+            ? selectedCategory
+            : undefined;
+        response = await searchActiveProducts(
+          debouncedSearch,
+          categoryId,
+          true, // includeSubcategories
+          currentPage,
+          pageSize,
+        );
+      } else {
+        // Use getProducts API for regular listing/pagination
+        response = await getProducts(
+          pageSize,
+          currentPage,
+          selectedCategory && selectedCategory !== "all"
+            ? selectedCategory
+            : undefined,
+        );
+      }
 
       if (response?.success && response?.data) {
         const { products, totalPages, totalProducts } = response.data;
@@ -261,10 +282,10 @@ const CreateOrderV2 = () => {
     <div className='flex flex-row h-full bg-white'>
       {/* ── Product Section ─────────────────────────────────────── */}
       <div className='flex-1 flex flex-col overflow-hidden  border-gray-200'>
-        <div className='flex-1 overflow-auto px-4 bg-white'>
+        <div className='flex-1 overflow-auto md:px-4 bg-white'>
           <OrderHeader />
 
-          <div className='max-w-5xl mx-auto space-y-4'>
+          <div className='max-w-5xl mx-auto space-y-4 px-2 md:px-0'>
             <FilterBar
               searchQuery={searchQuery}
               onSearchChange={setSearchQuery}

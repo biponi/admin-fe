@@ -33,49 +33,79 @@ export const getProductById = async (id: string): Promise<ApiResponse<any>> => {
   }
 };
 
-// Function to search for products
+// Function to fetch products (with optional category filter)
 export const getProducts = async (
   limit = 20,
-  page = 1
+  page = 1,
+  categoryId?: string
 ): Promise<ApiResponse<any>> => {
   try {
+    const params: any = { limit, page };
+
+    // Only add categoryId if it's provided and not "all"
+    if (categoryId && categoryId !== "all") {
+      params.categoryId = categoryId;
+    }
+
     const response = await axios.get<any>(config.product.getProductList(), {
-      params: { limit, page },
+      params,
     });
     if (response.status === 200) {
       return { success: true, data: response.data?.data };
     } else {
       return {
         success: false,
-        error: response.data.error || "Failed to search products",
+        error: response.data.error || "Failed to fetch products",
       };
     }
   } catch (error: any) {
-    console.error("Error searching products:", error.message);
+    console.error("Error fetching products:", error.message);
     return handleApiError(error);
   }
 };
 
-// Function to search for products
-export const getProductsByCategory = async (
-  categoryId: any,
-  offset = 0,
-  limit = 10
+// Function to search active products
+export const searchActiveProducts = async (
+  query: string,
+  categoryId?: string,
+  includeSubcategories?: boolean,
+  page: number = 1,
+  limit: number = 20
 ): Promise<ApiResponse<any>> => {
   try {
-    const response = await axios.get<any>(config.product.getProductList(), {
-      params: { page:offset, limit, categoryId },
-    });
+    const params: any = { query, page, limit };
+
+    if (categoryId && categoryId !== "all") {
+      params.categoryId = categoryId;
+    }
+
+    if (includeSubcategories !== undefined) {
+      params.includeSubcategories = includeSubcategories;
+    }
+
+    const response = await axios.get<any>(
+      config.product.searchActiveProduct(),
+      { params }
+    );
+
     if (response.status === 200) {
-      return { success: true, data: response.data?.data };
+      return {
+        success: true,
+        data: {
+          products: response.data?.data?.products ?? response.data?.data,
+          totalPages: response.data?.data?.totalPages ?? 1,
+          totalProducts: response.data?.data?.totalProducts ?? 0,
+          currentPage: response.data?.data?.currentPage ?? page
+        }
+      };
     } else {
       return {
         success: false,
-        error: response.data.error || "Failed to search products",
+        error: response.data.error || "Failed to search active products",
       };
     }
   } catch (error: any) {
-    console.error("Error searching products:", error.message);
+    console.error("Error searching active products:", error.message);
     return handleApiError(error);
   }
 };

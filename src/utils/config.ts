@@ -27,6 +27,7 @@ const config = {
     updateProduct: () => `${baseURL}/product/update`,
     editProduct: () => `${baseURL}/product/edit`,
     searchProduct: () => `${baseURL}/product/search`,
+    searchActiveProduct: () => `${baseURL}/product/active-search`,
     multiProducts: () => `${baseURL}/product/multi`,
     deleteProduct: (id: string) => `${baseURL}/product/delete/${id}`,
     getProductByManufecturer: (manuId: number) =>

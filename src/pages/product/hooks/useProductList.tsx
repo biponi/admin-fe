@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { getProducts, getProductsByCategory } from "../../../api/product";
+import { getProducts } from "../../../api/product";
 import { useToast } from "../../../components/ui/use-toast";
 import { deleteProduct, searchProducts } from "../../../api";
 
@@ -58,10 +58,10 @@ export const useProductList = () => {
 
   const getProductListByCategoryId = async () => {
     setProductFetching(true);
-    const response = await getProductsByCategory(
-      selectedCategory,
+    const response = await getProducts(
+      limit,
       currentPageNum,
-      limit
+      selectedCategory
     );
     if (response?.success && !!response?.data) {
       const { totalProducts, totalPages, currentPage, products } =

@@ -76,8 +76,8 @@ export function CustomerSelector({
 
   const applyAddress = useCallback((address: AddressDetails) => {
     onShippingChangeRef.current?.({
-      division: address.division.replace("(", " ").split(" ")[0],
-      district: address.district.replace("(", " ").split(" ")[0],
+      division: address.division.replace("(", "--").split("--")[0],
+      district: address.district.replace("(", "--").split("--")[0],
       address: address.address,
     });
   }, []);

@@ -481,7 +481,9 @@ export const OrderDetailsSheet: React.FC<OrderDetailsSheetProps> = ({
                 <div className='flex items-center justify-between p-2 bg-white/70 rounded-lg'>
                   <span className='text-gray-600'>Subtotal</span>
                   <span className='font-semibold text-gray-900'>
-                    {formatCurrency(order.totalPrice)}
+                    {formatCurrency(
+                      order.products.reduce((sum, p) => sum + p.totalPrice, 0),
+                    )}
                   </span>
                 </div>
                 <div className='flex items-center justify-between p-2 bg-white/70 rounded-lg'>
