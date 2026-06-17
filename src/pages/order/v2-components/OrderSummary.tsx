@@ -52,7 +52,6 @@ export function OrderSummary({
               }
               onChange={(e) =>
                 onTransactionChange({
-                  ...transaction,
                   discount: parseFloat(e.target.value) || 0,
                 })
               }
@@ -77,7 +76,6 @@ export function OrderSummary({
               value={transaction.deliveryCharge || 0}
               onChange={(e) =>
                 onTransactionChange({
-                  ...transaction,
                   deliveryCharge: parseFloat(e.target.value) || 0,
                 })
               }
@@ -102,7 +100,6 @@ export function OrderSummary({
               value={(transaction.paid ?? 0) > 0 ? transaction.paid : ""}
               onChange={(e) =>
                 onTransactionChange({
-                  ...transaction,
                   paid: parseFloat(e.target.value) || 0,
                 })
               }

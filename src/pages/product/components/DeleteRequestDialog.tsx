@@ -10,12 +10,22 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
+import {
+  Drawer,
+  DrawerTrigger,
+  DrawerContent,
+  DrawerDescription,
+  DrawerFooter,
+  DrawerHeader,
+  DrawerTitle,
+} from "@/components/ui/drawer";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Loader2 } from "lucide-react";
 import { createProductDeleteRequest } from "@/api/operationRequest";
 import { toast } from "sonner";
+import { useIsMobile } from "@/components/hooks/use-mobile";
 
 interface Props {
   productId: string;
@@ -30,6 +40,7 @@ const DeleteRequestDialog: React.FC<Props> = ({
   onSuccess,
   children,
 }) => {
+  const isMobile = useIsMobile();
   const [open, setOpen] = useState(false);
   const [reason, setReason] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -73,61 +84,128 @@ const DeleteRequestDialog: React.FC<Props> = ({
   };
 
   return (
-    <AlertDialog open={open} onOpenChange={setOpen}>
-      <AlertDialogTrigger asChild>
-        {children || <Button variant="outline">Request Delete</Button>}
-      </AlertDialogTrigger>
-      <AlertDialogContent className="max-w-md">
-        <AlertDialogHeader>
-          <AlertDialogTitle>Request Product Deletion</AlertDialogTitle>
-          <AlertDialogDescription>
-            Are you sure you want to request deletion for <strong>"{productName}"</strong>?
-            This will make the product inactive and send a request to administrators for approval.
-          </AlertDialogDescription>
-        </AlertDialogHeader>
+    <>
+      {!isMobile ? (
+        <AlertDialog open={open} onOpenChange={setOpen}>
+          <AlertDialogTrigger asChild>
+            {children || <Button variant="outline">Request Delete</Button>}
+          </AlertDialogTrigger>
+          <AlertDialogContent className="max-w-md">
+            <AlertDialogHeader>
+              <AlertDialogTitle>Request Product Deletion</AlertDialogTitle>
+              <AlertDialogDescription>
+                Are you sure you want to request deletion for <strong>"{productName}"</strong>?
+                This will make the product inactive and send a request to administrators for approval.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
 
-        <div className="my-4">
-          <Label htmlFor="reason" className="text-sm font-medium">
-            Reason for deletion <span className="text-red-500">*</span>
-          </Label>
-          <Textarea
-            id="reason"
-            placeholder="Please explain why this product should be deleted..."
-            value={reason}
-            onChange={(e) => setReason(e.target.value)}
-            className="mt-2"
-            rows={3}
-            disabled={isSubmitting}
-          />
-          <p className="text-xs text-muted-foreground mt-1">
-            This reason will be reviewed by administrators.
-          </p>
-        </div>
+            <div className="my-4">
+              <Label htmlFor="reason" className="text-sm font-medium">
+                Reason for deletion <span className="text-red-500">*</span>
+              </Label>
+              <Textarea
+                id="reason"
+                placeholder="Please explain why this product should be deleted..."
+                value={reason}
+                onChange={(e) => setReason(e.target.value)}
+                className="mt-2"
+                rows={3}
+                disabled={isSubmitting}
+              />
+              <p className="text-xs text-muted-foreground mt-1">
+                This reason will be reviewed by administrators.
+              </p>
+            </div>
 
-        <AlertDialogFooter>
-          <AlertDialogCancel onClick={handleCancel} disabled={isSubmitting}>
-            Cancel
-          </AlertDialogCancel>
-          <AlertDialogAction
-            onClick={(e) => {
-              e.preventDefault();
-              handleSubmit();
-            }}
-            disabled={isSubmitting || !reason.trim()}
-            className="bg-red-600 hover:bg-red-700"
-          >
-            {isSubmitting ? (
-              <>
-                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                Creating Request...
-              </>
-            ) : (
-              "Request Deletion"
-            )}
-          </AlertDialogAction>
-        </AlertDialogFooter>
-      </AlertDialogContent>
-    </AlertDialog>
+            <AlertDialogFooter>
+              <AlertDialogCancel onClick={handleCancel} disabled={isSubmitting}>
+                Cancel
+              </AlertDialogCancel>
+              <AlertDialogAction
+                onClick={(e) => {
+                  e.preventDefault();
+                  handleSubmit();
+                }}
+                disabled={isSubmitting || !reason.trim()}
+                className="bg-red-600 hover:bg-red-700"
+              >
+                {isSubmitting ? (
+                  <>
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    Creating Request...
+                  </>
+                ) : (
+                  "Request Deletion"
+                )}
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+      ) : (
+        <Drawer open={open} onOpenChange={setOpen}>
+          <DrawerTrigger asChild>
+            {children || <Button variant="outline">Request Delete</Button>}
+          </DrawerTrigger>
+          <DrawerContent>
+            <DrawerHeader>
+              <DrawerTitle>Request Product Deletion</DrawerTitle>
+              <DrawerDescription>
+                Are you sure you want to request deletion for <strong>"{productName}"</strong>?
+                This will make the product inactive and send a request to administrators for approval.
+              </DrawerDescription>
+            </DrawerHeader>
+
+            <div className="w-full px-4">
+              <div className="my-4">
+                <Label htmlFor="reason" className="text-sm font-medium">
+                  Reason for deletion <span className="text-red-500">*</span>
+                </Label>
+                <Textarea
+                  id="reason"
+                  placeholder="Please explain why this product should be deleted..."
+                  value={reason}
+                  onChange={(e) => setReason(e.target.value)}
+                  className="mt-2"
+                  rows={3}
+                  disabled={isSubmitting}
+                />
+                <p className="text-xs text-muted-foreground mt-1">
+                  This reason will be reviewed by administrators.
+                </p>
+              </div>
+            </div>
+
+            <DrawerFooter>
+              <Button
+                variant="outline"
+                onClick={handleCancel}
+                disabled={isSubmitting}
+                className="w-full"
+              >
+                Cancel
+              </Button>
+              <Button
+                onClick={(e) => {
+                  e.preventDefault();
+                  handleSubmit();
+                }}
+                disabled={isSubmitting || !reason.trim()}
+                className="w-full bg-red-600 hover:bg-red-700"
+              >
+                {isSubmitting ? (
+                  <>
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    Creating Request...
+                  </>
+                ) : (
+                  "Request Deletion"
+                )}
+              </Button>
+            </DrawerFooter>
+          </DrawerContent>
+        </Drawer>
+      )}
+    </>
   );
 };
 

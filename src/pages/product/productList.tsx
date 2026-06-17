@@ -1178,7 +1178,6 @@ const ProductList: React.FC<Props> = ({ handleEditProduct }) => {
                       product.timestamps?.updatedAt || new Date().toISOString()
                     }
                     onEdit={handleEditProduct}
-                    onDelete={deleteProductData}
                     onViewVariations={() => handleOpenVariationDrawer(product)}
                   />
                 ))}

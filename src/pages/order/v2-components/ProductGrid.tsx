@@ -1,6 +1,7 @@
 import { Loader2 } from "lucide-react";
 import { ProductCard } from "./ProductCard";
 import type { IProduct } from "../../product/interface";
+import { cn } from "@/lib/utils";
 
 interface ProductGridProps {
   products: IProduct[];
@@ -25,8 +26,8 @@ export function ProductGrid({
   // 3xl: 5 columns
   const gridClasses = `
     grid grid-cols-2 gap-4 sm:gap-4
-    sm:grid-cols-2
-    xl:grid-cols-3
+    sm:grid-cols-3
+    xl:grid-cols-4
   `;
 
   if (isLoading) {
@@ -52,7 +53,8 @@ export function ProductGrid({
   }
 
   return (
-    <div className={gridClasses}>
+    <div
+      className={cn(gridClasses, "md:max-h-[65vh] md:overflow-y-auto md:pr-1")}>
       {products.map((product) => (
         <ProductCard
           key={product.id}

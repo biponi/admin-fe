@@ -30,6 +30,7 @@ import useRoleCheck from "../../auth/hooks/useRoleCheck";
 import dayjs from "dayjs";
 import ShareButton from "../../../common/ShareButton";
 import { BRAND_CONFIG } from "../../../config/brand";
+import DeleteRequestDialog from "./DeleteRequestDialog";
 
 /* ─── Types ─────────────────────────────────────────────── */
 
@@ -57,7 +58,6 @@ interface MobileProductCardProps {
   variations: string[] | Variation[];
   updatedAt: string;
   onEdit: (id: string) => void;
-  onDelete: (id: string) => void;
   onViewVariations?: () => void;
 }
 
@@ -445,11 +445,11 @@ const MobileProductCard: React.FC<MobileProductCardProps> = ({
   variations,
   updatedAt,
   onEdit,
-  onDelete,
   onViewVariations,
 }) => {
   const { hasRequiredPermission, hasSomePermissionsForPage } = useRoleCheck();
   const [drawerOpen, setDrawerOpen] = useState(false);
+  const dialogBtn = React.useRef<HTMLButtonElement>(null);
 
   const handleVariantClick = () => {
     if (onViewVariations) onViewVariations();
@@ -547,7 +547,7 @@ const MobileProductCard: React.FC<MobileProductCardProps> = ({
                       <>
                         <DropdownMenuSeparator />
                         <DropdownMenuItem
-                          onClick={() => onDelete(id)}
+                          onClick={() => dialogBtn.current?.click()}
                           className='text-red-600 focus:text-red-600'>
                           <Trash2 className='h-4 w-4 mr-2' />
                           Delete
@@ -673,6 +673,12 @@ const MobileProductCard: React.FC<MobileProductCardProps> = ({
         productTitle={title}
         productImage={image}
       />
+
+      <DeleteRequestDialog productId={id} productName={title}>
+        <button ref={dialogBtn} className='hidden'>
+          Trigger Delete Dialog
+        </button>
+      </DeleteRequestDialog>
     </>
   );
 };

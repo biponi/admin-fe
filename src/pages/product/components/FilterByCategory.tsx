@@ -117,7 +117,7 @@ const CategoryFilterDropdown: React.FC<CategoryFilterDropdownProps> = ({
         <Button
           variant='outline'
           size='sm'
-          className='h-[40px] md:h-9 gap-1 w-full md:w-auto'>
+          className='h-[42px] gap-1 w-full md:w-auto'>
           <ListFilter className='h-4 w-4 sm:h-3.5 sm:w-3.5' />
           <span className=' sm:whitespace-nowrap'>
             Categories

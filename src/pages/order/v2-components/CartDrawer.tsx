@@ -60,10 +60,17 @@ export function CartDrawer({
   const cartSubtotal = cart.reduce((sum, item) => sum + item.totalPrice, 0);
 
   return (
-    <Drawer open={open} onOpenChange={onOpenChange}>
-      <DrawerContent className='h-[92vh] max-h-[900px] rounded-t-2xl'>
-        {/* Premium Header with White Background */}
-        <DrawerHeader className='px-4 py-4 border-b bg-white'>
+    // FIX 1: modal={false} prevents the Drawer from trapping focus and
+    // intercepting outside-clicks from Radix popovers (CustomerSelector
+    // dropdown). Without this, closing the popover causes the Drawer body
+    // to remeasure with height:0 on mobile → white screen.
+    <Drawer open={open} onOpenChange={onOpenChange} modal={false}>
+      {/* FIX 2: Added `flex flex-col` so DrawerHeader + ScrollArea form a
+          proper flex column. Without this, ScrollArea has no bounded height
+          and collapses after any child interaction. */}
+      <DrawerContent className='h-[92vh] max-h-[900px] rounded-t-2xl flex flex-col'>
+        {/* Header — fixed height, does not grow */}
+        <DrawerHeader className='px-4 py-4 border-b bg-white flex-shrink-0'>
           <div className='flex items-center justify-between'>
             <div className='flex items-center gap-3'>
               <div className='h-10 w-10 rounded-full bg-gradient-to-br from-blue-100 to-purple-100 flex items-center justify-center'>
@@ -90,7 +97,12 @@ export function CartDrawer({
           </div>
         </DrawerHeader>
 
-        <ScrollArea className='flex-1 px-3 sm:px-4 overflow-x-hidden'>
+        {/* FIX 3: `flex-1 min-h-0` is the critical pair.
+            - flex-1  → takes all remaining space after the header
+            - min-h-0 → overrides the default min-height:auto on flex children,
+              which otherwise prevents the ScrollArea from shrinking and causes
+              the container to overflow invisibly (white screen, no scroll). */}
+        <ScrollArea className='flex-1 min-h-0 px-3 sm:px-4 overflow-x-hidden'>
           <div className='py-5 space-y-5 px-1'>
             {/* Cart Items */}
             <div className='space-y-3'>
@@ -107,16 +119,19 @@ export function CartDrawer({
 
             <Separator className='bg-gradient-to-r from-transparent via-gray-200 to-transparent' />
 
-            {/* Customer & Shipping Information - Stacked for Mobile */}
+            {/* Customer & Shipping Information */}
             <div className='space-y-5'>
-              {/* Customer Information */}
-              <CustomerSelector
-                customer={customerInfo}
-                onChange={onCustomerChange}
-                onShippingChange={onShippingChange}
-              />
+              {/* FIX 4: Wrap CustomerSelector in a relative-positioned
+                  container so its Popover/Command portal stays anchored
+                  correctly when rendered inside a ScrollArea on mobile. */}
+              <div className='relative'>
+                <CustomerSelector
+                  customer={customerInfo}
+                  onChange={onCustomerChange}
+                  onShippingChange={onShippingChange}
+                />
+              </div>
 
-              {/* Shipping Information */}
               <ShippingForm
                 shipping={shippingInfo}
                 onChange={onShippingChange}

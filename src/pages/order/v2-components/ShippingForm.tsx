@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo, useEffect, useRef, useCallback } from "react";
 import { MapPin, Home, Truck, Search, CheckCircle2 } from "lucide-react";
 import { Input } from "../../../components/ui/input";
 import { Label } from "../../../components/ui/label";
@@ -35,43 +35,82 @@ export function ShippingForm({
   const [divisionSearch, setDivisionSearch] = useState("");
   const [districtSearch, setDistrictSearch] = useState("");
 
-  const selectedDivision = BDDivisions.find(
-    (d) => d.name === shipping.division,
+  // Store callbacks in refs so effects/handlers never need them as deps.
+  // This prevents "new function reference on every render" from causing
+  // infinite loops when these are in dependency arrays or called in effects.
+  const onChangeRef = useRef(onChange);
+  const onDeliveryChargeChangeRef = useRef(onDeliveryChargeChange);
+  useEffect(() => {
+    onChangeRef.current = onChange;
+  });
+  useEffect(() => {
+    onDeliveryChargeChangeRef.current = onDeliveryChargeChange;
+  });
+
+  const selectedDivision = useMemo(
+    () => BDDivisions.find((d) => d.name === shipping.division),
+    [shipping.division],
   );
 
-  // Auto-calculate delivery charge when division and district are set
+  // Track last calculated charge to prevent duplicate calls
+  const lastChargeRef = useRef<number | null>(null);
+
+  // Auto-calculate delivery charge when both fields are set.
+  // Uses refs for callbacks so this effect ONLY re-runs when the actual
+  // location values change — not when the callback reference changes.
   useEffect(() => {
-    if (shipping.division && shipping.district && onDeliveryChargeChange) {
+    if (
+      shipping.division &&
+      shipping.district &&
+      onDeliveryChargeChangeRef.current
+    ) {
       const chargeInfo = calculateDeliveryCharge(
         shipping.district,
-        shipping.division
+        shipping.division,
       );
-      onDeliveryChargeChange(chargeInfo.charge);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [shipping.division, shipping.district]);
+      const newCharge = chargeInfo.charge;
 
-  // Filter divisions based on search
+      // Only call callback if charge actually changed (idempotency guard)
+      if (lastChargeRef.current !== newCharge) {
+        lastChargeRef.current = newCharge;
+        onDeliveryChargeChangeRef.current(newCharge);
+      }
+    }
+  }, [shipping.division, shipping.district]); // ← safe: only location values
+
+  // FIX: Send ONLY the changed field — never spread `shipping` here.
+  // The store's setShippingInfo already merges: { ...state.shippingInfo, ...incoming }
+  // Spreading shipping inside the handler creates a new object every render,
+  // which makes the store think something changed and triggers another render → loop.
+  const handleDivisionChange = useCallback((value: string) => {
+    onChangeRef.current({ division: value, district: undefined });
+    setDistrictSearch("");
+  }, []);
+
+  const handleDistrictChange = useCallback((value: string) => {
+    onChangeRef.current({ district: value });
+  }, []);
+
+  const handleAddressChange = useCallback(
+    (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+      onChangeRef.current({ address: e.target.value });
+    },
+    [],
+  );
+
   const filteredDivisions = useMemo(() => {
     if (!divisionSearch) return BDDivisions;
-    return BDDivisions.filter((division) =>
-      division.name.toLowerCase().includes(divisionSearch.toLowerCase()),
-    );
+    const q = divisionSearch.toLowerCase();
+    return BDDivisions.filter((d) => d.name.toLowerCase().includes(q));
   }, [divisionSearch]);
 
-  // Filter districts based on search and selected division
   const filteredDistricts = useMemo(() => {
-    let districts = BDDistrictList.filter(
-      (district) => district.division_id === selectedDivision?.id,
+    const base = BDDistrictList.filter(
+      (d) => d.division_id === selectedDivision?.id,
     );
-
-    if (districtSearch) {
-      districts = districts.filter((district) =>
-        district.name.toLowerCase().includes(districtSearch.toLowerCase()),
-      );
-    }
-
-    return districts;
+    if (!districtSearch) return base;
+    const q = districtSearch.toLowerCase();
+    return base.filter((d) => d.name.toLowerCase().includes(q));
   }, [selectedDivision, districtSearch]);
 
   return (
@@ -88,7 +127,7 @@ export function ShippingForm({
 
       <CardContent className='p-3 space-y-4'>
         <div className='space-y-3.5'>
-          {/* District */}
+          {/* Division / District */}
           <div className='space-y-1.5'>
             <Label
               htmlFor='division'
@@ -97,18 +136,14 @@ export function ShippingForm({
               District *
             </Label>
             <Select
-              value={shipping.division}
-              onValueChange={(value) => {
-                onChange({ ...shipping, division: value, district: undefined });
-                setDistrictSearch("");
-              }}>
+              value={shipping.division ?? ""}
+              onValueChange={handleDivisionChange}>
               <SelectTrigger
                 id='division'
                 className='h-9 border-gray-200 focus:border-green-500 transition-all'>
                 <SelectValue placeholder='Select division' />
               </SelectTrigger>
               <SelectContent className='max-h-64'>
-                {/* Search Input in Dropdown */}
                 <div className='px-2 pt-2 pb-1'>
                   <div className='relative'>
                     <Search className='absolute left-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 pointer-events-none' />
@@ -144,20 +179,8 @@ export function ShippingForm({
               Area *
             </Label>
             <Select
-              value={shipping.district}
-              onValueChange={(value) => {
-                const newShipping = { ...shipping, district: value };
-                onChange(newShipping);
-
-                // Auto-calculate delivery charge when district is selected
-                if (shipping.division && value && onDeliveryChargeChange) {
-                  const chargeInfo = calculateDeliveryCharge(
-                    value,
-                    shipping.division,
-                  );
-                  onDeliveryChargeChange(chargeInfo.charge);
-                }
-              }}
+              value={shipping.district ?? ""}
+              onValueChange={handleDistrictChange}
               disabled={!selectedDivision}>
               <SelectTrigger
                 id='district'
@@ -171,7 +194,6 @@ export function ShippingForm({
                 />
               </SelectTrigger>
               <SelectContent className='max-h-64'>
-                {/* Search Input in Dropdown */}
                 <div className='px-2 pt-2 pb-1'>
                   <div className='relative'>
                     <Search className='absolute left-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 pointer-events-none' />
@@ -199,7 +221,7 @@ export function ShippingForm({
             </Select>
           </div>
 
-          {/* Location Summary */}
+          {/* Location summary */}
           {shipping.division && shipping.district && (
             <div className='mt-4 p-3 bg-green-50 rounded-lg border border-green-200'>
               <h4 className='font-medium text-green-800 text-sm flex items-center gap-2'>
@@ -228,10 +250,8 @@ export function ShippingForm({
             <Textarea
               id='address'
               placeholder='Enter detailed address including house number, road, area, landmarks, etc.'
-              value={shipping.address || ""}
-              onChange={(e) =>
-                onChange({ ...shipping, address: e.target.value })
-              }
+              value={shipping.address ?? ""}
+              onChange={handleAddressChange}
               className='min-h-24 resize-none text-sm border-gray-200 focus:border-green-500 transition-all'
               rows={3}
               maxLength={500}
@@ -241,7 +261,7 @@ export function ShippingForm({
                 Be specific to ensure successful delivery
               </p>
               <span className='text-xs text-gray-400'>
-                {(shipping.address || "").length}/500
+                {(shipping.address ?? "").length}/500
               </span>
             </div>
           </div>

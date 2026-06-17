@@ -48,7 +48,7 @@ export function ProductCard({
   return (
     <div
       className={`
-        group relative overflow-hidden rounded-xl border border-zinc-200
+        group relative overflow-hidden rounded-md border border-zinc-200
         bg-white transition-all duration-300
         ${
           inStock
