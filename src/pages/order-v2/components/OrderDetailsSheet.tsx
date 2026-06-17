@@ -1,10 +1,9 @@
 /**
- * OrderDetailsSheet Component
- * Sheet view for displaying full order details
+ * OrderDetailsSheet Component — Redesigned
+ * Clean, flat, professional, fully responsive
  */
 
 import React, { useState } from "react";
-import { motion } from "framer-motion";
 import {
   Sheet,
   SheetContent,
@@ -34,6 +33,8 @@ import {
   FileText,
   Clock,
   Box,
+  ChevronRight,
+  Hash,
 } from "lucide-react";
 import { Badge } from "../../../components/ui/badge";
 import { Separator } from "../../../components/ui/separator";
@@ -64,6 +65,111 @@ interface OrderDetailsSheetProps {
   onEdit?: (order: IOrder) => void;
 }
 
+/** Thin row used for key→value pairs inside info sections */
+const InfoRow = ({
+  icon: Icon,
+  label,
+  value,
+  valueClassName,
+}: {
+  icon?: React.ElementType;
+  label: string;
+  value: React.ReactNode;
+  valueClassName?: string;
+}) => (
+  <div className='flex items-center justify-between gap-4 py-2.5 border-b border-gray-100 last:border-0'>
+    <span className='flex items-center gap-2 text-xs text-gray-500 shrink-0'>
+      {Icon && <Icon className='h-3.5 w-3.5 text-gray-400' />}
+      {label}
+    </span>
+    <span
+      className={cn(
+        "text-xs font-medium text-gray-900 text-right truncate max-w-[55%]",
+        valueClassName,
+      )}>
+      {value}
+    </span>
+  </div>
+);
+
+/** Section wrapper — card with label */
+const Section = ({
+  title,
+  icon: Icon,
+  iconColor = "text-gray-500",
+  iconBg = "bg-gray-100",
+  children,
+  className,
+}: {
+  title: string;
+  icon: React.ElementType;
+  iconColor?: string;
+  iconBg?: string;
+  children: React.ReactNode;
+  className?: string;
+}) => (
+  <div
+    className={cn(
+      "rounded-xl border border-gray-100 bg-white overflow-hidden",
+      className,
+    )}>
+    <div className='flex items-center gap-2.5 px-4 py-3 border-b border-gray-100 bg-gray-50/60'>
+      <span className={cn("p-1.5 rounded-lg", iconBg)}>
+        <Icon className={cn("h-3.5 w-3.5", iconColor)} />
+      </span>
+      <span className='text-xs font-semibold text-gray-700 tracking-wide uppercase'>
+        {title}
+      </span>
+    </div>
+    <div className='px-4 py-1'>{children}</div>
+  </div>
+);
+
+/** Icon action button in header toolbar */
+const ToolbarButton = ({
+  icon: Icon,
+  label,
+  onClick,
+  active,
+}: {
+  icon: React.ElementType;
+  label: string;
+  onClick: () => void;
+  active?: boolean;
+}) => (
+  <button
+    type='button'
+    title={label}
+    onClick={onClick}
+    className={cn(
+      "h-8 w-8 flex items-center justify-center rounded-lg border border-gray-200 bg-white hover:bg-gray-50 hover:border-gray-300 transition-colors text-gray-600 hover:text-gray-900",
+      active && "border-green-300 bg-green-50 text-green-700",
+    )}>
+    <Icon className='h-3.5 w-3.5' />
+  </button>
+);
+
+const RISK_CONFIG = {
+  green: {
+    icon: ShieldCheck,
+    label: "Low risk",
+    className: "bg-emerald-50 text-emerald-700 border border-emerald-200",
+    iconClass: "text-emerald-500",
+  },
+  yellow: {
+    icon: Shield,
+    label: "Medium risk",
+    className: "bg-amber-50 text-amber-700 border border-amber-200",
+    iconClass: "text-amber-500",
+  },
+  red: {
+    icon: ShieldAlert,
+    label: "High risk",
+    className: "bg-red-50 text-red-700 border border-red-200",
+    iconClass: "text-red-500",
+  },
+};
+
 export const OrderDetailsSheet: React.FC<OrderDetailsSheetProps> = ({
   order,
   open,
@@ -78,30 +184,37 @@ export const OrderDetailsSheet: React.FC<OrderDetailsSheetProps> = ({
   const hasHighRisk =
     order.customerRiskLevel === "red" || order.requiresManualReview;
 
+  const isCancelledOrFailed = [
+    "cancel",
+    "cancelled",
+    "fail",
+    "failed",
+    "delete",
+  ].includes(order.status);
+
+  const subtotal = order.products.reduce((sum, p) => sum + p.totalPrice, 0);
+  const total = order.totalPrice + order.deliveryCharge - (order.discount || 0);
+
+  const riskConfig =
+    order.fraudDetection &&
+    RISK_CONFIG[order.fraudDetection.riskLevel as keyof typeof RISK_CONFIG];
+
+  /* ---------- Handlers ---------- */
+
   const handleCopyOrderNumber = async () => {
     await navigator.clipboard.writeText(
-      `${BRAND_CONFIG.website}/order/${order?.orderNumber}`,
+      `${BRAND_CONFIG.website}/order/${order.orderNumber}`,
     );
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
   };
 
   const handlePrint = async () => {
-    // Generate invoice HTML
-    // Generate the PDF blob
     const blob = await pdf(<InvoiceDocument order={order} />).toBlob();
-
-    // Create a URL for the blob
     const url = URL.createObjectURL(blob);
-
-    // Open in new tab - user can print from there
     const printWindow = window.open(url, "_blank");
-
-    // Clean up the URL after a delay
     setTimeout(() => URL.revokeObjectURL(url), 10000);
-
     if (printWindow) {
-      // Wait for content to load, then print
       printWindow.onload = () => {
         printWindow.focus();
         printWindow.print();
@@ -110,157 +223,100 @@ export const OrderDetailsSheet: React.FC<OrderDetailsSheetProps> = ({
   };
 
   const handleDownloadInvoice = () => {
-    // Generate invoice HTML
     generateReactPdfInvoice(order);
-
-    // Note: For PDF generation, you would need a library like jsPDF or html2pdf
-    // For now, downloading as HTML which can be opened and saved as PDF by the browser
   };
 
   const handleDownloadPackingSlip = () => {
-    // Generate packing slip
     generateReactPdfPackingSlip(order);
-
-    toast.success("Packing slip downloaded successfully!");
+    toast.success("Packing slip downloaded.");
   };
 
   const handleShare = async () => {
-    const shareData = {
-      title: `Order ${formatOrderNumber(order.orderNumber)}`,
-      text: `Order details for ${order.customer.name}`,
-      url: `${BRAND_CONFIG.website}/order/${order?.orderNumber}`,
-    };
-
+    const url = `${BRAND_CONFIG.website}/order/${order.orderNumber}`;
     if (navigator.share) {
-      await navigator.share(shareData);
+      await navigator.share({
+        title: `Order ${formatOrderNumber(order.orderNumber)}`,
+        text: `Order details for ${order.customer.name}`,
+        url,
+      });
     } else {
-      // Fallback: copy link to clipboard
-      await navigator.clipboard.writeText(
-        `${BRAND_CONFIG.website}/order/${order?.orderNumber}`,
-      );
-      toast.success("Link copied to clipboard!");
+      await navigator.clipboard.writeText(url);
+      toast.success("Link copied to clipboard.");
     }
   };
 
   const handleEmailCustomer = () => {
-    const subject = `Order Update - ${formatOrderNumber(order.orderNumber)}`;
-    const mailto = `mailto:${
-      order.customer.email || ""
-    }?subject=${encodeURIComponent(subject)}`;
-    window.location.href = mailto;
+    const subject = `Order Update — ${formatOrderNumber(order.orderNumber)}`;
+    window.location.href = `mailto:${order.customer.email || ""}?subject=${encodeURIComponent(subject)}`;
   };
+
+  /* ---------- Render ---------- */
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent className='w-full sm:max-w-2xl overflow-y-auto bg-gradient-to-br from-slate-50 to-slate-100'>
-        <SheetHeader className='space-y-3'>
-          <div className='flex items-center justify-between'>
-            <SheetTitle className='flex items-center gap-2 text-xl'>
-              <motion.div
-                initial={{ rotate: 0 }}
-                animate={{ rotate: 360 }}
-                transition={{ duration: 0.5 }}>
-                <Package className='h-5 w-5 text-blue-600' />
-              </motion.div>
-              Order Details
-            </SheetTitle>
+      <SheetContent
+        className={cn(
+          "flex flex-col gap-0 p-0",
+          "w-full sm:max-w-lg md:max-w-xl",
+          "bg-gray-50 border-l border-gray-200",
+        )}>
+        {/* ── Header ── */}
+        <SheetHeader className='px-5 pt-5 pb-4 bg-white border-b border-gray-100 space-y-0'>
+          {/* Top row: title + toolbar */}
+          <div className='flex items-start justify-between gap-3'>
+            <div className='min-w-0'>
+              <SheetTitle className='flex items-center gap-2 text-base font-semibold text-gray-900 leading-tight'>
+                <Package className='h-4 w-4 text-blue-500 shrink-0' />
+                Order Details
+              </SheetTitle>
+              <p className='mt-0.5 flex items-center gap-1.5 text-xs text-gray-500'>
+                <Hash className='h-3 w-3' />
+                <span className='font-mono font-semibold text-blue-600'>
+                  {formatOrderNumber(order.orderNumber)}
+                </span>
+                <span className='text-gray-300'>·</span>
+                <span>{formatDate(order.timestamps.createdAt)}</span>
+              </p>
+            </div>
 
-            {/* Action Buttons */}
-            <div className='flex items-center gap-2 border rounded-md border-gray-900 bg-gray-100 shadow mr-8'>
-              <motion.div
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}>
-                <Button
-                  variant='ghost'
-                  size='sm'
-                  onClick={handleCopyOrderNumber}
-                  className='h-8 w-8 p-0'
-                  title='Copy Order Number'>
-                  {copied ? (
-                    <CheckCircle2 className='h-4 w-4 text-green-600' />
-                  ) : (
-                    <Copy className='h-4 w-4' />
-                  )}
-                </Button>
-              </motion.div>
-              <motion.div
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}>
-                <Button
-                  variant='ghost'
-                  size='sm'
-                  onClick={handleShare}
-                  className='h-8 w-8 p-0'
-                  title='Share'>
-                  <Share2 className='h-4 w-4' />
-                </Button>
-              </motion.div>
-              {!["cancel", "cancelled", "fail", "failed", "delete"].includes(
-                order.status,
-              ) && (
+            {/* Toolbar */}
+            <div className='flex items-center gap-1.5 shrink-0'>
+              <ToolbarButton
+                icon={copied ? CheckCircle2 : Copy}
+                label='Copy order link'
+                onClick={handleCopyOrderNumber}
+                active={copied}
+              />
+              <ToolbarButton
+                icon={Share2}
+                label='Share order'
+                onClick={handleShare}
+              />
+              {!isCancelledOrFailed && (
                 <>
-                  <motion.div
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}>
-                    <Button
-                      variant='ghost'
-                      size='sm'
-                      onClick={handlePrint}
-                      className='h-8 w-8 p-0'
-                      title='Print'>
-                      <Printer className='h-4 w-4' />
-                    </Button>
-                  </motion.div>
-                  <motion.div
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}>
-                    <Button
-                      variant='ghost'
-                      size='sm'
-                      onClick={handleDownloadInvoice}
-                      className='h-8 w-8 p-0'
-                      title='Download Invoice'>
-                      <Download className='h-4 w-4' />
-                    </Button>
-                  </motion.div>
-                  <motion.div
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}>
-                    <Button
-                      variant='ghost'
-                      size='sm'
-                      onClick={handleDownloadPackingSlip}
-                      className='h-8 w-8 p-0'
-                      title='Download Packing Slip'>
-                      <Box className='h-4 w-4' />
-                    </Button>
-                  </motion.div>
+                  <ToolbarButton
+                    icon={Printer}
+                    label='Print invoice'
+                    onClick={handlePrint}
+                  />
+                  <ToolbarButton
+                    icon={Download}
+                    label='Download invoice'
+                    onClick={handleDownloadInvoice}
+                  />
+                  <ToolbarButton
+                    icon={Box}
+                    label='Download packing slip'
+                    onClick={handleDownloadPackingSlip}
+                  />
                 </>
-              )}
-              {order.customer.email && (
-                <motion.div
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}>
-                  <Button
-                    variant='ghost'
-                    size='sm'
-                    onClick={handleEmailCustomer}
-                    className='h-8 w-8 p-0 hidden'
-                    title='Email Customer'>
-                    <Mail className='h-4 w-4' />
-                  </Button>
-                </motion.div>
               )}
             </div>
           </div>
 
-          <div className='flex items-center gap-2 flex-wrap'>
-            <span className='font-mono font-semibold text-sm text-blue-600 bg-blue-50 px-2.5 py-0.5 rounded-full'>
-              {formatOrderNumber(order.orderNumber)}
-            </span>
-            {order.status === "shipped" &&
-            !!order?.deliveryTimeline &&
-            order?.deliveryTimeline.length > 0 ? (
+          {/* Status badges row */}
+          <div className='mt-3 flex items-center gap-2 flex-wrap'>
+            {order.status === "shipped" && !!order?.deliveryTimeline?.length ? (
               <DeliveryTimelineBadge
                 deliveryTimeline={order.deliveryTimeline}
                 provider={order?.courier?.provider ?? ""}
@@ -274,505 +330,359 @@ export const OrderDetailsSheet: React.FC<OrderDetailsSheetProps> = ({
                     : undefined
                 }
                 size='sm'
-                animated={true}
+                animated
               />
             )}
-            <PaymentStatusBadge
-              status={paymentStatus}
-              size='sm'
-              animated={true}
-            />
-            {order.fraudDetection && (
-              <motion.div
-                whileHover={{ scale: 1.05 }}
+            <PaymentStatusBadge status={paymentStatus} size='sm' animated />
+            {riskConfig && (
+              <span
                 className={cn(
-                  "inline-flex items-center gap-1 px-2 py-0.5 rounded-full cursor-pointer transition-all text-xs",
-                  order.fraudDetection.riskLevel === "green" &&
-                    "bg-green-50 hover:bg-green-100 border border-green-200",
-                  order.fraudDetection.riskLevel === "yellow" &&
-                    "bg-yellow-50 hover:bg-yellow-100 border border-yellow-200",
-                  order.fraudDetection.riskLevel === "red" &&
-                    "bg-red-50 hover:bg-red-100 border border-red-200",
+                  "inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-medium",
+                  riskConfig.className,
                 )}>
-                {order.fraudDetection.riskLevel === "green" && (
-                  <ShieldCheck className='h-3 w-3 text-green-600' />
-                )}
-                {order.fraudDetection.riskLevel === "yellow" && (
-                  <Shield className='h-3 w-3 text-yellow-600' />
-                )}
-                {order.fraudDetection.riskLevel === "red" && (
-                  <ShieldAlert className='h-3 w-3 text-red-600 animate-pulse' />
-                )}
-                <span
-                  className={cn(
-                    "font-semibold",
-                    order.fraudDetection.riskLevel === "green" &&
-                      "text-green-700",
-                    order.fraudDetection.riskLevel === "yellow" &&
-                      "text-yellow-700",
-                    order.fraudDetection.riskLevel === "red" && "text-red-700",
-                  )}>
-                  {order.fraudDetection.riskLevel === "green" && "Low"}
-                  {order.fraudDetection.riskLevel === "yellow" && "Medium"}
-                  {order.fraudDetection.riskLevel === "red" && "High"}
-                </span>
-              </motion.div>
+                <riskConfig.icon
+                  className={cn("h-3 w-3", riskConfig.iconClass)}
+                />
+                {riskConfig.label}
+              </span>
             )}
           </div>
         </SheetHeader>
 
-        <ScrollArea className='h-[calc(100vh-180px)] pr-4'>
-          <div className='space-y-3 mt-4'>
-            {/* Alert for high risk */}
-            {hasHighRisk && (
-              <motion.div
-                initial={{ opacity: 0, y: -10 }}
-                animate={{ opacity: 1, y: 0 }}
-                className='flex items-center gap-2.5 p-3 bg-gradient-to-r from-red-50 to-red-100 border-l-4 border-red-500 rounded-lg shadow-sm'>
-                <AlertTriangle className='h-4 w-4 text-red-600 animate-pulse flex-shrink-0' />
-                <div>
-                  <p className='text-xs font-semibold text-red-900'>
-                    High Risk - Manual Review Required
-                  </p>
-                  <p className='text-[11px] text-red-700 mt-0.5'>
-                    Verify customer info before processing
-                  </p>
-                </div>
-              </motion.div>
-            )}
+        {/* ── High-risk alert ── */}
+        {hasHighRisk && (
+          <div className='mx-4 mt-3 flex items-start gap-3 rounded-lg border border-red-200 bg-red-50 px-4 py-3'>
+            <AlertTriangle className='h-4 w-4 text-red-500 shrink-0 mt-0.5' />
+            <div>
+              <p className='text-xs font-semibold text-red-800'>
+                Manual review required
+              </p>
+              <p className='text-[11px] text-red-600 mt-0.5'>
+                Verify customer information before processing this order.
+              </p>
+            </div>
+          </div>
+        )}
 
-            <Separator className='bg-gradient-to-r from-transparent via-gray-300 to-transparent' />
-
+        {/* ── Scrollable body ── */}
+        <ScrollArea className='flex-1 min-h-0'>
+          <div className='px-4 py-4 space-y-3'>
             {/* Products */}
-            <motion.div
-              initial={{ opacity: 0, x: -20 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: 0.3 }}
-              className='bg-white/80 backdrop-blur-sm rounded-xl p-3 shadow-sm border border-white/60'>
-              <h3 className='font-semibold text-sm text-gray-900 flex items-center gap-2 mb-2.5'>
-                <div className='p-1.5 bg-gradient-to-br from-purple-100 to-purple-200 rounded-lg'>
-                  <Package className='h-3.5 w-3.5 text-purple-700' />
-                </div>
-                Products
-                <Badge
-                  variant='secondary'
-                  className='ml-1 text-[11px] px-1.5 py-0'>
-                  {order.products.length}
-                </Badge>
-              </h3>
-              <div className='space-y-2'>
-                {order.products.map((product, index) => (
-                  <motion.div
-                    key={index}
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.3 + index * 0.05 }}
-                    className='flex items-start gap-2.5 p-2 bg-gradient-to-br from-gray-50 to-gray-100 rounded-lg border border-gray-200 hover:shadow-md transition-all'>
-                    {product.thumbnail && (
-                      <div className='relative flex-shrink-0'>
-                        <img
-                          src={product.thumbnail}
-                          alt={product.name}
-                          className='w-12 h-12 object-cover rounded-lg ring-2 ring-white shadow-sm'
-                        />
-                        <div className='absolute -top-1 -right-1 w-4 h-4 bg-blue-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center shadow-sm'>
-                          {product.quantity}
+            <Section
+              title='Products'
+              icon={Package}
+              iconBg='bg-blue-50'
+              iconColor='text-blue-600'>
+              <div className='py-1 space-y-0'>
+                {order.products.map((product, index) => {
+                  const variationData = product.variation || product.variant;
+                  const hasVariationData =
+                    (product.hasVariation || product.variant) &&
+                    variationData &&
+                    (variationData.size || variationData.color);
+
+                  return (
+                    <div
+                      key={index}
+                      className='flex items-start gap-3 py-3 border-b border-gray-100 last:border-0'>
+                      {/* Thumbnail */}
+                      {product.thumbnail ? (
+                        <div className='relative shrink-0'>
+                          <img
+                            src={product.thumbnail}
+                            alt={product.name}
+                            className='w-11 h-11 object-cover rounded-lg border border-gray-200'
+                          />
+                          <span className='absolute -top-1.5 -right-1.5 min-w-[18px] h-[18px] flex items-center justify-center rounded-full bg-blue-600 text-white text-[10px] font-bold px-1 shadow-sm'>
+                            {product.quantity}
+                          </span>
+                        </div>
+                      ) : (
+                        <div className='w-11 h-11 rounded-lg border border-dashed border-gray-200 bg-gray-50 flex items-center justify-center shrink-0'>
+                          <Package className='h-4 w-4 text-gray-300' />
+                        </div>
+                      )}
+
+                      {/* Details */}
+                      <div className='flex-1 min-w-0'>
+                        <p className='text-xs font-semibold text-gray-900 leading-snug line-clamp-2 mb-1'>
+                          {product.name}
+                        </p>
+                        <div className='flex items-center gap-1.5 flex-wrap'>
+                          <span className='text-[11px] text-gray-500'>
+                            {product.quantity} ×{" "}
+                            {formatCurrency(product.unitPrice)}
+                          </span>
+                          {hasVariationData && variationData.size && (
+                            <span className='text-[10px] font-medium px-1.5 py-0.5 rounded bg-blue-50 text-blue-700 border border-blue-100'>
+                              {variationData.size}
+                            </span>
+                          )}
+                          {hasVariationData && variationData.color && (
+                            <span className='text-[10px] font-medium px-1.5 py-0.5 rounded bg-purple-50 text-purple-700 border border-purple-100'>
+                              {variationData.color}
+                            </span>
+                          )}
                         </div>
                       </div>
-                    )}
-                    <div className='flex-1 min-w-0'>
-                      <p className='font-semibold text-xs text-gray-900 mb-0.5 line-clamp-2'>
-                        {product.name}
-                      </p>
-                      <div className='flex items-center gap-1.5 flex-wrap'>
-                        <span className='text-[11px] text-gray-600 bg-white px-1.5 py-0.5 rounded'>
-                          {product.quantity} ×{" "}
-                          {formatCurrency(product.unitPrice)}
-                        </span>
-                        {/* Variant badges */}
-                        {product.hasVariation && product.variation && (
-                          <>
-                            {product.variation.size && (
-                              <Badge
-                                variant='outline'
-                                className='text-[10px] h-5 px-1.5 bg-blue-50 border-blue-200 text-blue-700 font-medium'>
-                                Size: {product.variation.size}
-                              </Badge>
-                            )}
-                            {product.variation.color && (
-                              <Badge
-                                variant='outline'
-                                className='text-[10px] h-5 px-1.5 bg-purple-50 border-purple-200 text-purple-700 font-medium'>
-                                Color: {product.variation.color}
-                              </Badge>
-                            )}
-                          </>
-                        )}
-                      </div>
-                    </div>
-                    <div className='text-right flex-shrink-0'>
-                      <p className='font-bold text-sm text-gray-900'>
+
+                      {/* Price */}
+                      <p className='text-sm font-semibold text-gray-900 shrink-0 tabular-nums'>
                         {formatCurrency(product.totalPrice)}
                       </p>
                     </div>
-                  </motion.div>
-                ))}
+                  );
+                })}
               </div>
-            </motion.div>
+            </Section>
 
-            {/* Customer Information */}
-            <motion.div
-              initial={{ opacity: 0, x: -20 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: 0.1 }}
-              className='bg-white/80 backdrop-blur-sm rounded-xl p-3 shadow-sm border border-white/60'>
-              <h3 className='font-semibold text-sm text-gray-900 flex items-center gap-2 mb-2.5'>
-                <div className='p-1.5 bg-gradient-to-br from-blue-100 to-blue-200 rounded-lg'>
-                  <User className='h-3.5 w-3.5 text-blue-700' />
-                </div>
-                Customer Information
-              </h3>
-              <div className='space-y-2 text-xs'>
-                <div className='flex items-center justify-between p-1.5 hover:bg-gray-50 rounded-lg transition-colors'>
-                  <span className='text-gray-500 flex items-center gap-1.5'>
-                    <span className='w-1 h-1 bg-gray-400 rounded-full'></span>
-                    Name
-                  </span>
-                  <span className='font-semibold text-gray-900'>
-                    {order.customer.name}
-                  </span>
-                </div>
-                <div className='flex items-center justify-between p-1.5 hover:bg-gray-50 rounded-lg transition-colors'>
-                  <span className='text-gray-500 flex items-center gap-1.5'>
-                    <Phone className='h-3 w-3' />
-                    Phone
-                  </span>
-                  <span className='font-medium text-gray-900'>
-                    {order.customer.phoneNumber}
-                  </span>
-                </div>
+            {/* Payment Summary */}
+            <Section
+              title='Payment Summary'
+              icon={DollarSign}
+              iconBg='bg-emerald-50'
+              iconColor='text-emerald-600'>
+              <InfoRow label='Subtotal' value={formatCurrency(subtotal)} />
+              <InfoRow
+                icon={Truck}
+                label='Delivery'
+                value={formatCurrency(order.deliveryCharge || 0)}
+              />
+              {order.discount > 0 && (
+                <InfoRow
+                  label='Discount'
+                  value={`− ${formatCurrency(order.discount)}`}
+                  valueClassName='text-emerald-700'
+                />
+              )}
+
+              {/* Total bar */}
+              <div className='flex items-center justify-between px-3 py-2.5 mt-1 mb-1 rounded-lg bg-gray-900 text-white'>
+                <span className='text-xs font-semibold'>Total</span>
+                <span className='text-sm font-bold tabular-nums'>
+                  {formatCurrency(total)}
+                </span>
+              </div>
+
+              <InfoRow
+                icon={CheckCircle2}
+                label='Paid'
+                value={formatCurrency(order.paid)}
+                valueClassName='text-emerald-700'
+              />
+              {order.remaining > 0 && (
+                <InfoRow
+                  icon={AlertTriangle}
+                  label='Due'
+                  value={formatCurrency(order.remaining)}
+                  valueClassName='text-red-600 font-bold'
+                />
+              )}
+            </Section>
+
+            {/* Two-column grid: Customer + Shipping side by side on ≥sm */}
+            <div className='grid grid-cols-1 sm:grid-cols-2 gap-3'>
+              {/* Customer */}
+              <Section
+                title='Customer'
+                icon={User}
+                iconBg='bg-indigo-50'
+                iconColor='text-indigo-600'>
+                <InfoRow label='Name' value={order.customer.name} />
+                <InfoRow
+                  icon={Phone}
+                  label='Phone'
+                  value={order.customer.phoneNumber}
+                />
                 {order.customer.email && (
-                  <div className='flex items-center justify-between p-1.5 hover:bg-gray-50 rounded-lg transition-colors'>
-                    <span className='text-gray-500 flex items-center gap-1.5'>
-                      <Mail className='h-3 w-3' />
-                      Email
+                  <InfoRow
+                    icon={Mail}
+                    label='Email'
+                    value={order.customer.email}
+                    valueClassName='text-blue-600 truncate'
+                  />
+                )}
+              </Section>
+
+              {/* Shipping */}
+              <Section
+                title='Shipping'
+                icon={MapPin}
+                iconBg='bg-green-50'
+                iconColor='text-green-600'>
+                <div className='py-3'>
+                  <p className='text-xs text-gray-700 leading-relaxed'>
+                    {order.shipping.address}
+                  </p>
+                  <div className='mt-2 flex items-center gap-1.5 flex-wrap'>
+                    <span className='text-[11px] font-medium px-2 py-0.5 rounded bg-blue-50 text-blue-700 border border-blue-100'>
+                      {order.shipping.district}
                     </span>
-                    <span className='font-medium text-gray-900'>
-                      {order.customer.email}
+                    <span className='text-[11px] font-medium px-2 py-0.5 rounded bg-purple-50 text-purple-700 border border-purple-100'>
+                      {order.shipping.division}
                     </span>
                   </div>
-                )}
-              </div>
-            </motion.div>
+                </div>
+              </Section>
+            </div>
 
-            {/* Payment Details */}
-            <motion.div
-              initial={{ opacity: 0, x: -20 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: 0.4 }}
-              className='bg-gradient-to-br from-emerald-50 to-emerald-100 rounded-xl p-3 shadow-sm border border-emerald-200'>
-              <h3 className='font-semibold text-sm text-gray-900 flex items-center gap-2 mb-2.5'>
-                <div className='p-1.5 bg-gradient-to-br from-emerald-100 to-emerald-200 rounded-lg'>
-                  <DollarSign className='h-3.5 w-3.5 text-emerald-700' />
-                </div>
-                Payment Summary
-              </h3>
-              <div className='space-y-1.5 text-xs'>
-                <div className='flex items-center justify-between p-2 bg-white/70 rounded-lg'>
-                  <span className='text-gray-600'>Subtotal</span>
-                  <span className='font-semibold text-gray-900'>
-                    {formatCurrency(
-                      order.products.reduce((sum, p) => sum + p.totalPrice, 0),
-                    )}
-                  </span>
-                </div>
-                <div className='flex items-center justify-between p-2 bg-white/70 rounded-lg'>
-                  <span className='text-gray-600 flex items-center gap-1'>
-                    <Truck className='h-3 w-3' />
-                    Delivery
-                  </span>
-                  <span className='font-semibold text-gray-900'>
-                    {formatCurrency(order.deliveryCharge || 0)}
-                  </span>
-                </div>
-                {order.discount > 0 && (
-                  <div className='flex items-center justify-between p-2 bg-green-50 border border-green-200 rounded-lg'>
-                    <span className='text-green-700 font-medium'>Discount</span>
-                    <span className='font-semibold text-green-700'>
-                      - {formatCurrency(order.discount)}
+            {/* Additional Info */}
+            <Section
+              title='Additional Info'
+              icon={Calendar}
+              iconBg='bg-amber-50'
+              iconColor='text-amber-600'>
+              <InfoRow
+                icon={Calendar}
+                label='Created'
+                value={formatDate(order.timestamps.createdAt)}
+              />
+              {order.payment?.length > 0 && (
+                <InfoRow
+                  icon={CreditCard}
+                  label='Payment method'
+                  value={
+                    <Badge
+                      variant='outline'
+                      className='text-[11px] px-1.5 py-0 font-medium'>
+                      {order.payment[0].paymentType}
+                    </Badge>
+                  }
+                />
+              )}
+              {order.courier?.trackingCode && (
+                <InfoRow
+                  icon={Truck}
+                  label='Tracking code'
+                  value={
+                    <span className='font-mono text-[11px] bg-blue-50 text-blue-700 px-2 py-0.5 rounded border border-blue-100 font-semibold'>
+                      {order.courier.trackingCode}
                     </span>
-                  </div>
-                )}
-                <Separator className='bg-emerald-300' />
-                <div className='flex items-center justify-between p-2 bg-gradient-to-r from-blue-500 to-blue-600 rounded-lg text-white shadow-md'>
-                  <span className='font-bold text-sm'>Total</span>
-                  <span className='font-bold text-base'>
-                    {formatCurrency(
-                      order.totalPrice +
-                        order.deliveryCharge -
-                        (order.discount || 0),
-                    )}
-                  </span>
-                </div>
-                <div className='flex items-center justify-between p-2 bg-green-50 border border-green-200 rounded-lg'>
-                  <span className='text-green-700 font-medium flex items-center gap-1'>
-                    <CheckCircle2 className='h-3 w-3' />
-                    Paid
-                  </span>
-                  <span className='font-bold text-green-700'>
-                    {formatCurrency(order.paid)}
-                  </span>
-                </div>
-                {order.remaining > 0 && (
-                  <div className='flex items-center justify-between p-2 bg-red-50 border border-red-200 rounded-lg'>
-                    <span className='text-red-700 font-medium flex items-center gap-1'>
-                      <AlertTriangle className='h-3 w-3' />
-                      Due
-                    </span>
-                    <span className='font-bold text-red-700'>
-                      {formatCurrency(order.remaining)}
-                    </span>
-                  </div>
-                )}
-              </div>
-            </motion.div>
+                  }
+                />
+              )}
+            </Section>
 
-            {/* Shipping Address */}
-            <motion.div
-              initial={{ opacity: 0, x: -20 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: 0.2 }}
-              className='bg-white/80 backdrop-blur-sm rounded-xl p-3 shadow-sm border border-white/60'>
-              <h3 className='font-semibold text-sm text-gray-900 flex items-center gap-2 mb-2.5'>
-                <div className='p-1.5 bg-gradient-to-br from-green-100 to-green-200 rounded-lg'>
-                  <MapPin className='h-3.5 w-3.5 text-green-700' />
-                </div>
-                Shipping Address
-              </h3>
-              <div className='text-xs space-y-1.5'>
-                <p className='text-gray-700 font-medium bg-gray-50 p-2 rounded-lg leading-relaxed'>
-                  {order.shipping.address}
-                </p>
-                <div className='flex items-center gap-1.5 text-gray-600'>
-                  <span className='px-1.5 py-0.5 bg-blue-50 text-blue-700 rounded text-[11px] font-medium'>
-                    {order.shipping.district}
-                  </span>
-                  <span className='text-gray-400'>•</span>
-                  <span className='px-1.5 py-0.5 bg-purple-50 text-purple-700 rounded text-[11px] font-medium'>
-                    {order.shipping.division}
-                  </span>
-                </div>
-              </div>
-            </motion.div>
-
-            {/* Return Information - Only show if order is a return */}
+            {/* Return Info (conditional) */}
             {order.status === "return" && (
-              <motion.div
-                initial={{ opacity: 0, x: -20 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: 0.3 }}
-                className='bg-gradient-to-br from-orange-50 to-orange-100/50 backdrop-blur-sm rounded-xl p-3 shadow-sm border-2 border-orange-200'>
-                <h3 className='font-semibold text-sm text-orange-900 flex items-center gap-2 mb-2.5'>
-                  <div className='p-1.5 bg-gradient-to-br from-orange-200 to-orange-300 rounded-lg'>
-                    <RotateCcw className='h-3.5 w-3.5 text-orange-800' />
+              <div className='rounded-xl border-2 border-orange-200 bg-orange-50/40 overflow-hidden'>
+                <div className='flex items-center justify-between gap-2 px-4 py-3 border-b border-orange-200/60 bg-orange-50'>
+                  <div className='flex items-center gap-2.5'>
+                    <span className='p-1.5 rounded-lg bg-orange-100'>
+                      <RotateCcw className='h-3.5 w-3.5 text-orange-700' />
+                    </span>
+                    <span className='text-xs font-semibold text-orange-800 tracking-wide uppercase'>
+                      Return Information
+                    </span>
                   </div>
-                  Return Information
-                  <Badge
-                    variant='outline'
-                    className='ml-auto bg-orange-100 text-orange-700 border-orange-300 text-[10px]'>
+                  <span className='text-[10px] font-semibold px-2 py-0.5 rounded-full bg-orange-200 text-orange-800'>
                     Returned
-                  </Badge>
-                </h3>
-                <div className='space-y-2.5'>
-                  {/* Return Reason */}
-                  <div className='bg-white/70 rounded-lg p-2.5 border border-orange-200/50'>
-                    <div className='flex items-start gap-2 mb-1.5'>
-                      <FileText className='h-3.5 w-3.5 text-orange-600 mt-0.5 flex-shrink-0' />
-                      <span className='text-xs font-semibold text-orange-900'>
-                        Reason
-                      </span>
-                    </div>
-                    <p className='text-xs text-orange-800 font-medium ml-5 bg-orange-50 px-2 py-1.5 rounded border border-orange-100'>
-                      {order.returnReason
+                  </span>
+                </div>
+                <div className='px-4 py-1'>
+                  <InfoRow
+                    icon={FileText}
+                    label='Reason'
+                    value={
+                      order.returnReason
                         ? order.returnReason
                             .split("_")
-                            .map(
-                              (word) =>
-                                word.charAt(0).toUpperCase() + word.slice(1),
-                            )
+                            .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
                             .join(" ")
-                        : "Not specified"}
-                    </p>
-                  </div>
-
-                  {/* Return Details */}
+                        : "Not specified"
+                    }
+                    valueClassName='text-orange-800'
+                  />
                   {order.returnReasonDetails && (
-                    <div className='bg-white/70 rounded-lg p-2.5 border border-orange-200/50'>
-                      <div className='flex items-start gap-2 mb-1.5'>
-                        <FileText className='h-3.5 w-3.5 text-orange-600 mt-0.5 flex-shrink-0' />
-                        <span className='text-xs font-semibold text-orange-900'>
-                          Details
-                        </span>
-                      </div>
-                      <p className='text-xs text-gray-700 leading-relaxed ml-5 bg-white px-2 py-1.5 rounded border border-orange-100'>
+                    <div className='py-3 border-b border-orange-100 last:border-0'>
+                      <p className='text-[11px] font-medium text-gray-500 mb-1'>
+                        Details
+                      </p>
+                      <p className='text-xs text-gray-700 leading-relaxed bg-white rounded-lg border border-orange-100 px-3 py-2'>
                         {order.returnReasonDetails}
                       </p>
                     </div>
                   )}
-
-                  {/* Return Date */}
                   {order.returnedAt && (
-                    <div className='flex items-center justify-between p-2 bg-white/70 rounded-lg border border-orange-200/50'>
-                      <span className='text-xs text-orange-700 flex items-center gap-1.5 font-medium'>
-                        <Clock className='h-3 w-3' />
-                        Returned On
-                      </span>
-                      <span className='text-xs font-semibold text-orange-900'>
-                        {formatDate(order.returnedAt)}
-                      </span>
-                    </div>
+                    <InfoRow
+                      icon={Clock}
+                      label='Returned on'
+                      value={formatDate(order.returnedAt)}
+                      valueClassName='text-orange-800'
+                    />
                   )}
                 </div>
-              </motion.div>
+              </div>
             )}
 
-            {/* Additional Information */}
-            <motion.div
-              initial={{ opacity: 0, x: -20 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: order.status === "return" ? 0.4 : 0.3 }}
-              className='bg-white/80 backdrop-blur-sm rounded-xl p-3 shadow-sm border border-white/60'>
-              <h3 className='font-semibold text-sm text-gray-900 flex items-center gap-2 mb-2.5'>
-                <div className='p-1.5 bg-gradient-to-br from-amber-100 to-amber-200 rounded-lg'>
-                  <Calendar className='h-3.5 w-3.5 text-amber-700' />
-                </div>
-                Additional Info
-              </h3>
-              <div className='space-y-2 text-xs'>
-                <div className='flex items-center justify-between p-1.5 hover:bg-gray-50 rounded-lg transition-colors'>
-                  <span className='text-gray-500 flex items-center gap-1.5'>
-                    <Calendar className='h-3 w-3' />
-                    Created
-                  </span>
-                  <span className='font-medium text-gray-900'>
-                    {formatDate(order.timestamps.createdAt)}
-                  </span>
-                </div>
-                {order.payment && order.payment.length > 0 && (
-                  <div className='flex items-center justify-between p-1.5 hover:bg-gray-50 rounded-lg transition-colors'>
-                    <span className='text-gray-500 flex items-center gap-1.5'>
-                      <CreditCard className='h-3 w-3' />
-                      Payment
-                    </span>
-                    <Badge
-                      variant='outline'
-                      className='font-medium text-[11px] px-1.5 py-0'>
-                      {order.payment[0].paymentType}
-                    </Badge>
-                  </div>
-                )}
-                {order.courier?.trackingCode && (
-                  <div className='flex items-center justify-between p-1.5 hover:bg-gray-50 rounded-lg transition-colors'>
-                    <span className='text-gray-500 flex items-center gap-1.5'>
-                      <Truck className='h-3 w-3' />
-                      Tracking
-                    </span>
-                    <span className='font-mono text-[11px] bg-gradient-to-r from-blue-50 to-blue-100 text-blue-700 px-2 py-1 rounded font-semibold'>
-                      {order.courier.trackingCode}
-                    </span>
-                  </div>
-                )}
-              </div>
-            </motion.div>
-
-            {/* Notes */}
+            {/* Notes (conditional) */}
             {order.notes && (
-              <motion.div
-                initial={{ opacity: 0, x: -20 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: 0.6 }}
-                className='bg-gradient-to-br from-yellow-50 to-yellow-100 rounded-xl p-3 shadow-sm border border-yellow-200'>
-                <h3 className='font-semibold text-sm text-gray-900 flex items-center gap-2 mb-2'>
-                  <div className='p-1 bg-yellow-200 rounded-lg'>
-                    <span className='text-sm'>📝</span>
-                  </div>
+              <div className='rounded-xl border border-amber-200 bg-amber-50 px-4 py-3'>
+                <p className='text-[11px] font-semibold text-amber-700 uppercase tracking-wide mb-1.5'>
                   Notes
-                </h3>
-                <p className='text-xs text-gray-700 bg-white/70 p-2.5 rounded-lg leading-relaxed italic'>
+                </p>
+                <p className='text-xs text-gray-700 leading-relaxed italic'>
                   "{order.notes}"
                 </p>
-              </motion.div>
+              </div>
             )}
+
+            {/* Spacer so last card isn't flush with footer */}
+            <div className='h-1' />
           </div>
         </ScrollArea>
 
-        {/* Footer Actions */}
-        <div className='mt-4 pt-3 border-t bg-gradient-to-r from-gray-50 to-gray-100 -mx-6 px-6 -mb-6 pb-4 rounded-b-xl'>
-          <div className='flex gap-1.5 flex-wrap'>
-            <motion.div
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
-              className='flex-1'>
-              <Button
-                variant='outline'
-                className='w-full border-gray-300 hover:bg-white'
-                onClick={() => onOpenChange(false)}>
-                Close
-              </Button>
-            </motion.div>
-            {!["cancel", "cancelled", "fail", "failed", "delete"].includes(
-              order?.status,
-            ) && (
+        {/* ── Footer ── */}
+        <div className='shrink-0 px-4 py-3 bg-white border-t border-gray-100'>
+          <div className='flex items-center gap-2 flex-wrap'>
+            <Button
+              variant='outline'
+              size='sm'
+              className='flex-1 min-w-[80px] text-xs border-gray-200 text-gray-600 hover:text-gray-900'
+              onClick={() => onOpenChange(false)}>
+              Close
+            </Button>
+
+            {!isCancelledOrFailed && (
               <>
-                <motion.div
-                  whileHover={{ scale: 1.02 }}
-                  whileTap={{ scale: 0.98 }}>
-                  <Button
-                    variant='outline'
-                    className='gap-2 border-blue-300 hover:bg-blue-50 text-blue-700'
-                    onClick={handlePrint}>
-                    <Printer className='h-4 w-4' />
-                    Print
-                  </Button>
-                </motion.div>
-                <motion.div
-                  whileHover={{ scale: 1.02 }}
-                  whileTap={{ scale: 0.98 }}>
-                  <Button
-                    variant='outline'
-                    className='gap-2 border-green-300 hover:bg-green-50 text-green-700'
-                    onClick={handleDownloadInvoice}>
-                    <Download className='h-4 w-4' />
-                    Invoice
-                  </Button>
-                </motion.div>
-                <motion.div
-                  whileHover={{ scale: 1.02 }}
-                  whileTap={{ scale: 0.98 }}>
-                  <Button
-                    variant='outline'
-                    className='gap-2 border-orange-300 hover:bg-orange-50 text-orange-700'
-                    onClick={handleDownloadPackingSlip}>
-                    <Box className='h-4 w-4' />
-                    Packing Slip
-                  </Button>
-                </motion.div>
+                <Button
+                  variant='outline'
+                  size='sm'
+                  className='text-xs gap-1.5 border-gray-200 text-gray-700 hover:text-gray-900'
+                  onClick={handlePrint}>
+                  <Printer className='h-3.5 w-3.5' />
+                  <span className='hidden sm:inline'>Print</span>
+                </Button>
+                <Button
+                  variant='outline'
+                  size='sm'
+                  className='text-xs gap-1.5 border-gray-200 text-gray-700 hover:text-gray-900'
+                  onClick={handleDownloadInvoice}>
+                  <Download className='h-3.5 w-3.5' />
+                  <span className='hidden sm:inline'>Invoice</span>
+                </Button>
+                <Button
+                  variant='outline'
+                  size='sm'
+                  className='text-xs gap-1.5 border-gray-200 text-gray-700 hover:text-gray-900'
+                  onClick={handleDownloadPackingSlip}>
+                  <Box className='h-3.5 w-3.5' />
+                  <span className='hidden sm:inline'>Packing slip</span>
+                </Button>
               </>
             )}
+
             {onEdit && (
-              <motion.div
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
-                className='flex-1'>
-                <Button
-                  className='w-full bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700'
-                  onClick={() => {
-                    onEdit(order);
-                    onOpenChange(false);
-                  }}>
-                  Edit Order
-                </Button>
-              </motion.div>
+              <Button
+                size='sm'
+                className='flex-1 min-w-[100px] text-xs bg-blue-600 hover:bg-blue-700 text-white gap-1.5'
+                onClick={() => {
+                  onEdit(order);
+                  onOpenChange(false);
+                }}>
+                Edit Order
+                <ChevronRight className='h-3.5 w-3.5' />
+              </Button>
             )}
           </div>
         </div>

@@ -476,11 +476,18 @@ export const ReturnOrderSheet: React.FC<ReturnOrderSheetProps> = ({
                     {/* Table Body - Scrollable */}
                     <div className='divide-y divide-gray-100'>
                       {order.products.map((product, index) => {
+                        // Get variation data from either property
+                        const variationData = product.variation || product.variant;
+                        // Check if product has variation with actual data
+                        const hasVariationData = (product.hasVariation || product.variant) && variationData && (
+                          variationData.size || variationData.color
+                        );
+
                         const selectedProduct = selectedProducts.find(
                           (sp) =>
                             sp.productId === product.productId &&
                             (!sp.variation ||
-                              sp.variation.id === product.variation?.id)
+                              sp.variation.id === (variationData?.id))
                         );
                         const returnQuantity = selectedProduct?.quantity || 0;
                         const unitPrice = product.totalPrice / product.quantity;
@@ -489,7 +496,7 @@ export const ReturnOrderSheet: React.FC<ReturnOrderSheetProps> = ({
                         return (
                           <motion.div
                             key={`${product.productId}-${
-                              product.variation?.id || "no-variant"
+                              (variationData?.id) || "no-variant"
                             }`}
                             initial={{ opacity: 0 }}
                             animate={{ opacity: 1 }}
@@ -508,16 +515,16 @@ export const ReturnOrderSheet: React.FC<ReturnOrderSheetProps> = ({
                                 <div className='font-medium text-gray-900 truncate'>
                                   {product.name}
                                 </div>
-                                {product.hasVariation && product.variation && (
+                                {hasVariationData && (
                                   <div className='text-[10px] text-gray-500 flex items-center gap-1 mt-0.5'>
-                                    {product.variation.color && (
+                                    {(variationData.color) && (
                                       <span className='px-1.5 py-0.5 bg-blue-50 text-blue-600 rounded'>
-                                        {product.variation.color}
+                                        {variationData.color}
                                       </span>
                                     )}
-                                    {product.variation.size && (
+                                    {(variationData.size) && (
                                       <span className='px-1.5 py-0.5 bg-purple-50 text-purple-600 rounded'>
-                                        {product.variation.size}
+                                        {variationData.size}
                                       </span>
                                     )}
                                   </div>
@@ -542,9 +549,7 @@ export const ReturnOrderSheet: React.FC<ReturnOrderSheetProps> = ({
                                 onClick={() =>
                                   handleQuantityChange(
                                     product.productId,
-                                    product.hasVariation
-                                      ? product.variation?.id || null
-                                      : null,
+                                    hasVariationData ? (variationData?.id) || null : null,
                                     Math.max(0, returnQuantity - 1)
                                   )
                                 }
@@ -560,9 +565,7 @@ export const ReturnOrderSheet: React.FC<ReturnOrderSheetProps> = ({
                                   const val = parseInt(e.target.value) || 0;
                                   handleQuantityChange(
                                     product.productId,
-                                    product.hasVariation
-                                      ? product.variation?.id || null
-                                      : null,
+                                    hasVariationData ? (variationData?.id) || null : null,
                                     val
                                   );
                                 }}
@@ -577,9 +580,7 @@ export const ReturnOrderSheet: React.FC<ReturnOrderSheetProps> = ({
                                 onClick={() =>
                                   handleQuantityChange(
                                     product.productId,
-                                    product.hasVariation
-                                      ? product.variation?.id || null
-                                      : null,
+                                    hasVariationData ? (variationData?.id) || null : null,
                                     Math.min(
                                       product.quantity,
                                       returnQuantity + 1
@@ -620,11 +621,13 @@ export const ReturnOrderSheet: React.FC<ReturnOrderSheetProps> = ({
                         size='sm'
                         onClick={() => {
                           order.products.forEach((product) => {
+                            const productVariationData = product.variation || product.variant;
+                            const productHasVariationData = (product.hasVariation || product.variant) && productVariationData && (
+                              productVariationData.size || productVariationData.color
+                            );
                             handleQuantityChange(
                               product.productId,
-                              product.hasVariation
-                                ? product.variation?.id || null
-                                : null,
+                              productHasVariationData ? (productVariationData?.id) || null : null,
                               product.quantity
                             );
                           });

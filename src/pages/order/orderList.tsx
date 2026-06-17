@@ -14,6 +14,8 @@ import {
   Search,
   Download,
   RefreshCw,
+  RefreshCcw,
+  RotateCcw,
   Package,
   Users,
   DollarSign,
@@ -34,6 +36,7 @@ import {
   Edit3,
   Filter,
   PackageCheck,
+  PencilLine,
 } from "lucide-react";
 import { Button } from "../../components/ui/button";
 import { Tabs, TabsList, TabsTrigger } from "../../components/ui/tabs";
@@ -132,6 +135,7 @@ import { CourierSelector } from "./components/CourierSelector";
 import { useIsMobile } from "../../hooks/use-mobile";
 import { BRAND_CONFIG } from "../../config/brand";
 import PlaceHolderImage from "../../assets/placeholder.svg";
+import { cn } from "@/lib/utils";
 
 const OrderList = () => {
   const isMobile = useIsMobile();
@@ -1068,348 +1072,568 @@ const OrderList = () => {
     );
   };
 
+  /**
+   * renderOrderDetailsPanel — Redesigned
+   * Clean, flat, professional. Fully responsive.
+   *
+   * Drop-in replacement for the inline render function.
+   * All props/state (selectedOrder, showDetails, setShowDetails,
+   * isCopied, handleCopy, handleGenerateInvoice, updateOrderStatus,
+   * refresh, hasRequiredPermission, setCourierSelectorOpen,
+   * setPendingStatusChange) must be in the parent component's scope.
+   */
+
   const renderOrderDetailsPanel = () => {
-    const getStatusColor = (status: string) => {
-      switch (status) {
-        case "processing":
-          return "bg-blue-500";
-        case "shipped":
-          return "bg-purple-500";
-        case "completed":
-          return "bg-green-500";
-        case "cancel":
-          return "bg-red-500";
-        case "return":
-          return "bg-orange-500";
-        default:
-          return "bg-gray-500";
-      }
+    // ── Status config ─────────────────────────────────────────
+    const STATUS_CONFIG: Record<
+      string,
+      { pill: string; icon: React.ElementType; label: string }
+    > = {
+      processing: {
+        pill: "bg-blue-50 text-blue-800 border-blue-200",
+        icon: RefreshCcw,
+        label: "Processing",
+      },
+      shipped: {
+        pill: "bg-purple-50 text-purple-800 border-purple-200",
+        icon: Truck,
+        label: "Shipped",
+      },
+      completed: {
+        pill: "bg-green-50 text-green-800 border-green-200",
+        icon: CheckCircle,
+        label: "Completed",
+      },
+      cancel: {
+        pill: "bg-red-50 text-red-800 border-red-200",
+        icon: XCircle,
+        label: "Cancelled",
+      },
+      cancelled: {
+        pill: "bg-red-50 text-red-800 border-red-200",
+        icon: XCircle,
+        label: "Cancelled",
+      },
+      return: {
+        pill: "bg-orange-50 text-orange-800 border-orange-200",
+        icon: RotateCcw,
+        label: "Returned",
+      },
     };
 
+    const status = selectedOrder?.status ?? "";
+    const cfg = STATUS_CONFIG[status] ?? {
+      pill: "bg-gray-50 text-gray-700 border-gray-200",
+      icon: Package,
+      label: status,
+    };
+    const StatusIcon = cfg.icon;
+
+    const canEdit =
+      hasRequiredPermission("order", "edit") &&
+      !!selectedOrder &&
+      !selectedOrder.status.includes("return");
+
+    const isProcessing = selectedOrder?.status === "processing";
+    const isShipped = selectedOrder?.status === "shipped";
+    const isNotProcessing = selectedOrder?.status !== "processing";
+
+    const subtotal = selectedOrder?.totalPrice ?? 0;
+    const delivery = selectedOrder?.deliveryCharge ?? 0;
+    const discount = selectedOrder?.discount ?? 0;
+    const total = subtotal + delivery - discount;
+
+    const customerInitial =
+      selectedOrder?.customer.name?.charAt(0)?.toUpperCase() ?? "?";
+
+    // ── Helpers ───────────────────────────────────────────────
+    const Section = ({
+      title,
+      icon: Icon,
+      iconBg,
+      iconColor,
+      children,
+      trailing,
+    }: {
+      title: string;
+      icon: React.ElementType;
+      iconBg: string;
+      iconColor: string;
+      children: React.ReactNode;
+      trailing?: React.ReactNode;
+    }) => (
+      <div className='rounded-xl border border-gray-100 bg-white overflow-hidden'>
+        <div className='flex items-center gap-2.5 px-4 py-2.5 bg-gray-50/70 border-b border-gray-100'>
+          <span className={cn("p-1.5 rounded-lg", iconBg)}>
+            <Icon className={cn("h-3.5 w-3.5", iconColor)} />
+          </span>
+          <span className='text-[12px] font-bold uppercase tracking-widest text-gray-500'>
+            {title}
+          </span>
+          {trailing && <div className='ml-auto'>{trailing}</div>}
+        </div>
+        <div className='px-4 py-1'>{children}</div>
+      </div>
+    );
+
+    const InfoRow = ({
+      icon: Icon,
+      label,
+      value,
+      valueClass,
+    }: {
+      icon?: React.ElementType;
+      label: string;
+      value: React.ReactNode;
+      valueClass?: string;
+    }) => (
+      <div className='flex items-center justify-between gap-4 py-2.5 border-b border-gray-50 last:border-0'>
+        <span className='flex items-center gap-1.5 text-xs font-medium text-gray-400 shrink-0'>
+          {Icon && <Icon className='h-3 w-3' />}
+          {label}
+        </span>
+        <span
+          className={cn(
+            "text-sm font-semibold text-gray-900 text-right truncate",
+            valueClass,
+          )}>
+          {value}
+        </span>
+      </div>
+    );
+
+    // ── Render ────────────────────────────────────────────────
     return (
       <Sheet
         open={showDetails}
         onOpenChange={(value: boolean) => setShowDetails(value)}>
-        <SheetContent className=' px-0'>
-          <ScrollArea className='h-full'>
-            <div className='px-4 py-6 w-full '>
-              {/* Header */}
-              <div className='space-y-4 pb-6 border-b'>
-                <div className='flex items-start justify-between'>
-                  <div className='space-y-2'>
-                    <div className='flex items-center gap-3'>
-                      <div
-                        className={`w-10 h-10 ${getStatusColor(
-                          selectedOrder?.status || "",
-                        )} rounded-xl flex items-center justify-center`}>
-                        <Package className='w-5 h-5 text-white' />
-                      </div>
-                      <div>
-                        <h2 className='text-xl font-bold text-gray-900'>
-                          Order #{selectedOrder?.orderNumber}
-                        </h2>
-                        <div className='flex items-center gap-2 mt-1'>
-                          <Badge
-                            className={`${getStatusColor(
-                              selectedOrder?.status || "",
-                            )} text-white border-0`}>
-                            {selectedOrder?.status?.toUpperCase()}
-                          </Badge>
-                          <span className='text-sm text-gray-500'>
-                            {dayjs(selectedOrder?.timestamps.createdAt).format(
-                              "MMM D, YYYY",
-                            )}
-                          </span>
-                        </div>
-                      </div>
-                    </div>
+        <SheetContent
+          className={cn(
+            "flex flex-col gap-0 p-0",
+            "w-full sm:max-w-md",
+            "bg-gray-50 border-l border-gray-100",
+          )}>
+          {/* ── Header ── */}
+          <div className='px-5 pt-5 pb-4 bg-white border-b border-gray-100'>
+            {/* Top row */}
+            <div className='flex items-start justify-between gap-3'>
+              <div className='flex items-start gap-3 min-w-0'>
+                {/* Status-colored icon */}
+                <div
+                  className={cn(
+                    "w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0",
+                    status === "processing" && "bg-blue-50",
+                    status === "shipped" && "bg-purple-50",
+                    status === "completed" && "bg-green-50",
+                    (status === "cancel" || status === "cancelled") &&
+                      "bg-red-50",
+                    status === "return" && "bg-orange-50",
+                    !STATUS_CONFIG[status] && "bg-gray-100",
+                  )}>
+                  <StatusIcon
+                    className={cn(
+                      "h-4.5 w-4.5",
+                      status === "processing" && "text-blue-600",
+                      status === "shipped" && "text-purple-600",
+                      status === "completed" && "text-green-600",
+                      (status === "cancel" || status === "cancelled") &&
+                        "text-red-600",
+                      status === "return" && "text-orange-600",
+                      !STATUS_CONFIG[status] && "text-gray-500",
+                    )}
+                  />
+                </div>
 
-                    <div className='flex items-center gap-2 p-3 bg-gray-50 rounded-lg'>
-                      <span className='text-sm font-medium text-gray-600'>
-                        Tracking ID:
-                      </span>
-                      <code className='text-sm bg-white px-2 py-1 rounded border'>
-                        {selectedOrder?.id}
-                      </code>
-                      <Button
-                        size='sm'
-                        variant='ghost'
-                        onClick={handleCopy}
-                        className='p-1 h-auto'>
-                        {isCopied ? (
-                          <Check className='w-4 h-4 text-green-600' />
-                        ) : (
-                          <Clipboard className='w-4 h-4 text-gray-500' />
-                        )}
-                      </Button>
-                      {isCopied && (
-                        <span className='text-xs text-green-600 font-medium'>
-                          Copied!
-                        </span>
+                <div className='min-w-0'>
+                  <h2 className='text-base font-semibold text-gray-900 leading-tight'>
+                    Order #{selectedOrder?.orderNumber}
+                  </h2>
+                  <div className='flex items-center gap-2 mt-1.5 flex-wrap'>
+                    <span
+                      className={cn(
+                        "inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-sm font-semibold border",
+                        cfg.pill,
+                      )}>
+                      <StatusIcon className='h-2.5 w-2.5' />
+                      {cfg.label}
+                    </span>
+                    <span className='text-xs font-medium text-gray-400'>
+                      {dayjs(selectedOrder?.timestamps.createdAt).format(
+                        "MMM D, YYYY",
                       )}
-                    </div>
-                  </div>
-
-                  {/* Action Buttons */}
-                  <div className='flex items-center gap-2'>
-                    <Button
-                      size='sm'
-                      variant='outline'
-                      onClick={() => handleGenerateInvoice()}
-                      className='gap-2'>
-                      <Download className='w-4 h-4' />
-                      <span className='hidden sm:inline'>Invoice</span>
-                    </Button>
-
-                    {/* Create Courier Order Button */}
-                    {hasRequiredPermission("order", "edit") &&
-                      selectedOrder &&
-                      !selectedOrder?.status.includes("return") && (
-                        <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
-                            <Button size='sm' variant='outline'>
-                              <MoreVertical className='w-4 h-4' />
-                            </Button>
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent align='end' className='w-48'>
-                            <DropdownMenuLabel>Change Status</DropdownMenuLabel>
-                            <DropdownMenuSeparator />
-                            {selectedOrder?.status === "processing" && (
-                              <DropdownMenuItem
-                                onClick={() => {
-                                  setPendingStatusChange({
-                                    orderId: `${selectedOrder?.id}`,
-                                    status: "shipped",
-                                  });
-                                  setCourierSelectorOpen(true);
-                                }}
-                                className='gap-2'>
-                                <Truck className='w-4 h-4 text-purple-600' />
-                                Mark as Shipped
-                              </DropdownMenuItem>
-                            )}
-                            {selectedOrder?.status === "shipped" && (
-                              <DropdownMenuItem
-                                onClick={() => {
-                                  updateOrderStatus(
-                                    `${selectedOrder?.id}`,
-                                    "completed",
-                                    () => {
-                                      refresh();
-                                      setShowDetails(false);
-                                    },
-                                  );
-                                }}
-                                className='gap-2'>
-                                <CheckCircle className='w-4 h-4 text-green-600' />
-                                Mark as Completed
-                              </DropdownMenuItem>
-                            )}
-                            {selectedOrder?.status !== "processing" && (
-                              <DropdownMenuItem
-                                onClick={() => {
-                                  updateOrderStatus(
-                                    `${selectedOrder?.id}`,
-                                    "processing",
-                                    () => {
-                                      refresh();
-                                      setShowDetails(false);
-                                    },
-                                  );
-                                }}
-                                className='gap-2'>
-                                <Clock className='w-4 h-4 text-blue-600' />
-                                Reset to Processing
-                              </DropdownMenuItem>
-                            )}
-                          </DropdownMenuContent>
-                        </DropdownMenu>
-                      )}
+                    </span>
                   </div>
                 </div>
               </div>
 
+              {/* Actions */}
+              <div className='flex items-center gap-1.5 shrink-0'>
+                <Button
+                  size='sm'
+                  variant='outline'
+                  onClick={() => handleGenerateInvoice()}
+                  className='h-8 gap-1.5 text-xs border-gray-200 text-gray-700 hover:text-gray-900 px-2.5'>
+                  <Download className='h-3.5 w-3.5' />
+                  <span className='hidden sm:inline'>Invoice</span>
+                </Button>
+                {canEdit && (
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button
+                        size='sm'
+                        variant='outline'
+                        className='h-8 w-8 p-0 border-gray-200'>
+                        <MoreVertical className='h-3.5 w-3.5' />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align='end' className='w-48'>
+                      <DropdownMenuLabel className='text-xs'>
+                        Change status
+                      </DropdownMenuLabel>
+                      <DropdownMenuSeparator />
+                      {isProcessing && (
+                        <DropdownMenuItem
+                          className='gap-2 text-xs'
+                          onClick={() => {
+                            setPendingStatusChange({
+                              orderId: `${selectedOrder?.id}`,
+                              status: "shipped",
+                            });
+                            setCourierSelectorOpen(true);
+                          }}>
+                          <Truck className='h-3.5 w-3.5 text-purple-600' />
+                          Mark as shipped
+                        </DropdownMenuItem>
+                      )}
+                      {isShipped && (
+                        <DropdownMenuItem
+                          className='gap-2 text-xs'
+                          onClick={() =>
+                            updateOrderStatus(
+                              `${selectedOrder?.id}`,
+                              "completed",
+                              () => {
+                                refresh();
+                                setShowDetails(false);
+                              },
+                            )
+                          }>
+                          <CheckCircle className='h-3.5 w-3.5 text-green-600' />
+                          Mark as completed
+                        </DropdownMenuItem>
+                      )}
+                      {isNotProcessing && (
+                        <DropdownMenuItem
+                          className='gap-2 text-xs'
+                          onClick={() =>
+                            updateOrderStatus(
+                              `${selectedOrder?.id}`,
+                              "processing",
+                              () => {
+                                refresh();
+                                setShowDetails(false);
+                              },
+                            )
+                          }>
+                          <Clock className='h-3.5 w-3.5 text-blue-600' />
+                          Reset to processing
+                        </DropdownMenuItem>
+                      )}
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                )}
+              </div>
+            </div>
+
+            {/* Tracking ID bar */}
+            <div className='mt-3 flex items-center gap-2 px-3 py-2 bg-gray-50 border border-gray-100 rounded-lg'>
+              <span className='text-sm font-semibold text-gray-400 shrink-0'>
+                Tracking ID
+              </span>
+              <code className='flex-1 text-xs font-mono font-bold text-blue-700 bg-blue-50 border border-blue-100 px-2 py-0.5 rounded truncate'>
+                {selectedOrder?.id}
+              </code>
+              <Button
+                size='sm'
+                variant='ghost'
+                onClick={handleCopy}
+                className='h-6 w-6 p-0 shrink-0'>
+                {isCopied ? (
+                  <Check className='h-3.5 w-3.5 text-green-600' />
+                ) : (
+                  <Clipboard className='h-3.5 w-3.5 text-gray-400' />
+                )}
+              </Button>
+              {isCopied && (
+                <span className='text-[12px] text-green-600 font-semibold shrink-0'>
+                  Copied!
+                </span>
+              )}
+            </div>
+
+            {/* Inline quick-status buttons (permission-gated) */}
+            {canEdit && (
+              <div className='mt-3 flex items-center gap-2 flex-wrap'>
+                <span className='text-[12px] font-bold uppercase tracking-widest text-gray-400'>
+                  Quick status
+                </span>
+                {isProcessing && (
+                  <button
+                    onClick={() => {
+                      setPendingStatusChange({
+                        orderId: `${selectedOrder?.id}`,
+                        status: "shipped",
+                      });
+                      setCourierSelectorOpen(true);
+                    }}
+                    className='inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-sm font-semibold bg-purple-50 text-purple-800 border border-purple-200 hover:bg-purple-100 transition-colors'>
+                    <Truck className='h-3 w-3' />
+                    Mark as shipped
+                  </button>
+                )}
+                {isShipped && (
+                  <button
+                    onClick={() =>
+                      updateOrderStatus(
+                        `${selectedOrder?.id}`,
+                        "completed",
+                        () => {
+                          refresh();
+                          setShowDetails(false);
+                        },
+                      )
+                    }
+                    className='inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-sm font-semibold bg-green-50 text-green-800 border border-green-200 hover:bg-green-100 transition-colors'>
+                    <CheckCircle className='h-3 w-3' />
+                    Mark as completed
+                  </button>
+                )}
+                {isNotProcessing && (
+                  <button
+                    onClick={() =>
+                      updateOrderStatus(
+                        `${selectedOrder?.id}`,
+                        "processing",
+                        () => {
+                          refresh();
+                          setShowDetails(false);
+                        },
+                      )
+                    }
+                    className='inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-sm font-semibold bg-blue-50 text-blue-800 border border-blue-200 hover:bg-blue-100 transition-colors'>
+                    <Clock className='h-3 w-3' />
+                    Reset to processing
+                  </button>
+                )}
+              </div>
+            )}
+          </div>
+
+          {/* ── Scrollable body ── */}
+          <ScrollArea className='flex-1 min-h-0'>
+            <div className='px-4 py-4 space-y-3'>
               {/* Order Items */}
-              <div className='space-y-4 py-6 border-b'>
-                <h3 className='text-lg font-semibold text-gray-900 flex items-center gap-2'>
-                  <ShoppingBag className='w-5 h-5' />
-                  Order Items
-                </h3>
-                <div className='space-y-3'>
+              <Section
+                title='Order items'
+                icon={ShoppingBag}
+                iconBg='bg-blue-50'
+                iconColor='text-blue-600'
+                trailing={
+                  <span className='text-[12px] font-semibold px-2 py-0.5 rounded-full bg-gray-100 text-gray-500 border border-gray-200'>
+                    {selectedOrder?.products.length ?? 0} items
+                  </span>
+                }>
+                <div className='py-1'>
                   {selectedOrder?.products.map((product, index) => (
                     <div
                       key={index}
-                      className='flex items-start gap-3 p-3 bg-gray-50 rounded-lg'>
-                      {/* Product Image */}
-                      {product?.thumbnail && (
+                      className='flex items-start gap-2.5 py-3 border-b border-gray-50 last:border-0'>
+                      {product?.thumbnail ? (
                         <img
                           src={product.thumbnail}
-                          alt={product?.name || "Product"}
-                          className='w-16 h-16 rounded-lg object-cover flex-shrink-0 border border-gray-200 bg-white'
+                          alt={product?.name ?? "Product"}
+                          className='w-11 h-11 rounded-lg object-cover border border-gray-100 flex-shrink-0 bg-white'
                           onError={(e) => {
                             (e.target as HTMLImageElement).src =
                               PlaceHolderImage;
                           }}
                         />
+                      ) : (
+                        <div className='w-11 h-11 rounded-lg border border-dashed border-gray-200 bg-gray-50 flex items-center justify-center flex-shrink-0'>
+                          <Package className='h-4 w-4 text-gray-300' />
+                        </div>
                       )}
 
-                      <div className='flex-1 space-y-1'>
-                        <div className='font-medium text-gray-900 uppercase'>
+                      <div className='flex-1 min-w-0'>
+                        <p className='text-sm font-semibold text-gray-900 uppercase leading-snug mb-1 line-clamp-2'>
                           {product?.name}
-                        </div>
+                        </p>
+                        <p className='text-[12px] text-gray-400 mb-1.5'>
+                          Qty: {product?.quantity}
+                        </p>
                         {product?.hasVariation && (
-                          <div className='text-sm w-auto'>
-                            <Badge className='border-0 bg-orange-100 text-orange-600'>
-                              {!!product?.variation && product?.variation.color}{" "}
-                              {!!product?.variation &&
-                                product?.variation.color &&
-                                product?.variation.size &&
-                                "•"}{" "}
-                              {!!product?.variation && product?.variation.size}
-                            </Badge>
-                          </div>
+                          <span className='inline-flex items-center gap-1 text-[12px] font-semibold px-1.5 py-0.5 rounded bg-orange-50 text-orange-700 border border-orange-100'>
+                            {[
+                              product?.variation?.color,
+                              product?.variation?.size,
+                            ]
+                              .filter(Boolean)
+                              .join(" • ")}
+                          </span>
                         )}
-                        <div className='text-sm text-gray-500'>
-                          Quantity: {product?.quantity}
-                        </div>
                       </div>
-                      <div className='text-right space-y-6'>
-                        <div className='font-semibold text-gray-900'>
+
+                      <div className='text-right shrink-0'>
+                        <p className='text-sm font-bold text-gray-900 tabular-nums'>
                           ৳{product?.totalPrice}
-                        </div>
-                        <div className='text-sm text-gray-500'>
+                        </p>
+                        <p className='text-[12px] text-gray-400 mt-1 tabular-nums'>
                           ৳
                           {(product?.totalPrice / product?.quantity).toFixed(2)}{" "}
                           each
-                        </div>
+                        </p>
                       </div>
                     </div>
                   ))}
                 </div>
-              </div>
+              </Section>
 
               {/* Order Summary */}
-              <div className='space-y-4 py-6 border-b'>
-                <h3 className='text-lg font-semibold text-gray-900 flex items-center gap-2'>
-                  <DollarSign className='w-5 h-5' />
-                  Order Summary
-                </h3>
-                <div className='space-y-3 bg-gray-50 p-4 rounded-lg'>
-                  <div className='flex justify-between text-sm'>
-                    <span className='text-gray-600'>Subtotal</span>
-                    <span className='font-medium'>
-                      ৳{selectedOrder?.totalPrice}
-                    </span>
-                  </div>
-                  <div className='flex justify-between text-sm'>
-                    <span className='text-gray-600'>Delivery Charge</span>
-                    <span className='font-medium'>
-                      ৳{selectedOrder?.deliveryCharge}
-                    </span>
-                  </div>
-                  <div className='flex justify-between text-sm'>
-                    <span className='text-gray-600'>Discount</span>
-                    <span className='font-medium text-red-600'>
-                      -৳{selectedOrder?.discount}
-                    </span>
-                  </div>
-                  <Separator />
-                  <div className='flex justify-between text-sm'>
-                    <span className='text-gray-600'>Paid Amount</span>
-                    <span className='font-medium text-green-600'>
-                      ৳{selectedOrder?.paid}
-                    </span>
-                  </div>
-                  <div className='flex justify-between text-lg font-semibold'>
-                    <span className='text-gray-900'>Remaining</span>
-                    <span
-                      className={`${
-                        (selectedOrder?.remaining || 0) > 0
-                          ? "text-red-600"
-                          : "text-green-600"
-                      }`}>
-                      ৳{selectedOrder?.remaining || 0}
-                    </span>
-                  </div>
+              <Section
+                title='Order summary'
+                icon={DollarSign}
+                iconBg='bg-emerald-50'
+                iconColor='text-emerald-600'>
+                <InfoRow label='Subtotal' value={`৳${subtotal}`} />
+                <InfoRow icon={Truck} label='Delivery' value={`৳${delivery}`} />
+                <InfoRow
+                  label='Discount'
+                  value={`− ৳${discount}`}
+                  valueClass='text-emerald-700'
+                />
+                {/* Total bar */}
+                <div className='flex items-center justify-between px-3 py-2.5 my-1 rounded-lg bg-gray-900 text-white'>
+                  <span className='text-sm font-semibold'>Total</span>
+                  <span className='text-sm font-bold tabular-nums'>
+                    ৳{total}
+                  </span>
                 </div>
-              </div>
+                <InfoRow
+                  icon={CheckCircle}
+                  label='Paid amount'
+                  value={`৳${selectedOrder?.paid ?? 0}`}
+                  valueClass='text-emerald-700'
+                />
+                <InfoRow
+                  label='Remaining'
+                  value={`৳${selectedOrder?.remaining ?? 0}`}
+                  valueClass={
+                    (selectedOrder?.remaining ?? 0) > 0
+                      ? "text-red-600 font-bold"
+                      : "text-emerald-700"
+                  }
+                />
+              </Section>
 
-              {/* Customer Information */}
-              <div className='space-y-4 py-6 border-b'>
-                <h3 className='text-lg font-semibold text-gray-900 flex items-center gap-2'>
-                  <Users className='w-5 h-5' />
-                  Customer Details
-                </h3>
-                <div className='grid grid-cols-1 gap-4'>
-                  <div className='flex items-center gap-3 p-3 bg-gray-50 rounded-lg'>
-                    <Avatar className='w-10 h-10'>
-                      <AvatarFallback className='bg-blue-100 text-blue-600 font-semibold'>
-                        {selectedOrder?.customer.name?.charAt(0)?.toUpperCase()}
+              {/* Customer + Shipping — responsive 2-col */}
+              <div className='grid grid-cols-1 sm:grid-cols-2 gap-3'>
+                {/* Customer */}
+                <Section
+                  title='Customer'
+                  icon={Users}
+                  iconBg='bg-indigo-50'
+                  iconColor='text-indigo-600'>
+                  <div className='flex items-center gap-3 py-3'>
+                    <Avatar className='h-9 w-9 shrink-0'>
+                      <AvatarFallback className='bg-blue-50 text-blue-800 text-sm font-bold'>
+                        {customerInitial}
                       </AvatarFallback>
                     </Avatar>
-                    <div>
-                      <div className='font-medium text-gray-900'>
+                    <div className='min-w-0'>
+                      <p className='text-sm font-semibold text-gray-900 truncate'>
                         {selectedOrder?.customer.name}
-                      </div>
-                      <div className='text-sm text-gray-600 flex items-center gap-1'>
-                        <Phone className='w-3 h-3' />
+                      </p>
+                      <p className='flex items-center gap-1 text-xs font-medium text-gray-500 mt-0.5'>
+                        <Phone className='h-3 w-3 text-gray-300' />
                         {selectedOrder?.customer.phoneNumber}
-                      </div>
+                      </p>
                       {selectedOrder?.customer.email && (
-                        <div className='text-sm text-gray-600 flex items-center gap-1'>
-                          <Mail className='w-3 h-3' />
+                        <p className='flex items-center gap-1 text-xs font-medium text-gray-500 mt-0.5 truncate'>
+                          <Mail className='h-3 w-3 text-gray-300' />
                           {selectedOrder?.customer.email}
-                        </div>
+                        </p>
                       )}
                     </div>
                   </div>
-                </div>
-              </div>
+                </Section>
 
-              {/* Shipping Information */}
-              <div className='space-y-4 py-6'>
-                <h3 className='text-lg font-semibold text-gray-900 flex items-center gap-2'>
-                  <MapPin className='w-5 h-5' />
-                  Shipping Address
-                </h3>
-                <div className='p-3 bg-gray-50 rounded-lg'>
-                  <div className='text-gray-900 font-medium'>
-                    {selectedOrder?.shipping.division}
+                {/* Shipping */}
+                <Section
+                  title='Shipping address'
+                  icon={MapPin}
+                  iconBg='bg-green-50'
+                  iconColor='text-green-600'>
+                  <div className='py-3 space-y-2'>
+                    <p className='text-sm font-semibold text-gray-800'>
+                      {selectedOrder?.shipping.division}
+                    </p>
+                    <p className='text-xs font-medium text-gray-700'>
+                      {selectedOrder?.shipping.district}
+                    </p>
+                    <p className='text-xs font-medium text-gray-500 leading-relaxed'>
+                      {selectedOrder?.shipping.address}
+                    </p>
                   </div>
-                  <div className='text-gray-700'>
-                    {selectedOrder?.shipping.district}
-                  </div>
-                  <div className='text-gray-600 text-sm'>
-                    {selectedOrder?.shipping.address}
-                  </div>
-                </div>
+                </Section>
               </div>
 
               {/* Notes */}
               {selectedOrder?.notes && (
-                <div className='space-y-4 py-6 border-t'>
-                  <h3 className='text-lg font-semibold text-gray-900 flex items-center gap-2'>
-                    <AlertCircle className='w-5 h-5' />
-                    Order Notes
-                  </h3>
-                  <Alert>
-                    <AlertDescription>{selectedOrder.notes}</AlertDescription>
-                  </Alert>
+                <div className='rounded-xl border border-amber-100 bg-amber-50 px-4 py-3'>
+                  <div className='flex items-center gap-2 mb-2'>
+                    <AlertCircle className='h-3.5 w-3.5 text-amber-600' />
+                    <span className='text-[12px] font-bold uppercase tracking-widest text-amber-700'>
+                      Order notes
+                    </span>
+                  </div>
+                  <p className='text-xs font-medium text-gray-700 leading-relaxed italic'>
+                    "{selectedOrder.notes}"
+                  </p>
                 </div>
               )}
 
-              {/* Footer */}
-              <div className='pt-6 border-t'>
-                <div className='text-xs text-gray-500 flex items-center gap-2'>
-                  <Clock className='w-3 h-3' />
-                  Last updated{" "}
-                  {dayjs(selectedOrder?.timestamps.updatedAt).format(
-                    "MMM D, YYYY [at] h:mm A",
-                  )}
-                </div>
-              </div>
+              <div className='h-1' />
             </div>
           </ScrollArea>
+
+          {/* ── Footer ── */}
+          <div className='shrink-0 px-4 py-3 bg-white border-t border-gray-100 flex items-center justify-between gap-3'>
+            <div className='flex items-center gap-1.5 text-xs font-medium text-gray-400 min-w-0'>
+              <Clock className='h-3 w-3 shrink-0' />
+              <span className='truncate'>
+                Updated{" "}
+                {dayjs(selectedOrder?.timestamps.updatedAt).format(
+                  "MMM D, YYYY [at] h:mm A",
+                )}
+              </span>
+            </div>
+            <div className='flex gap-2 shrink-0'>
+              <Button
+                variant='outline'
+                size='sm'
+                className='text-xs border-gray-200 text-gray-600 hover:text-gray-900'
+                onClick={() => setShowDetails(false)}>
+                Close
+              </Button>
+              <Button
+                size='sm'
+                className='text-xs bg-gray-900 hover:bg-gray-800 text-white gap-1.5'
+                onClick={() => setShowDetails(false)}>
+                <PencilLine className='h-3.5 w-3.5' />
+                Edit order
+              </Button>
+            </div>
+          </div>
         </SheetContent>
       </Sheet>
     );
