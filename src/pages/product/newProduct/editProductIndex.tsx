@@ -5,7 +5,7 @@ import MainView from "../../../coreComponents/mainView";
 import { IProductUpdateData, IVariation } from "../interface";
 import DefaultLoading from "../../../coreComponents/defaultLoading";
 import useCategory from "../hooks/useCategory";
-import { buildFormDataFromObject } from "../../../utils/functions";
+import { buildFormDataFromObject, filterImageGroups } from "../../../utils/functions";
 import { useNavigate, useParams } from "react-router-dom";
 import EditProduct from "./editProduct";
 import { getProductById } from "../../../api/product";
@@ -108,6 +108,25 @@ const UpdateProduct = () => {
         variant: "destructive",
       });
     } else {
+      // Safety check: validate imageGroups before building FormData
+      const imageData = (productData as any).imageGroups;
+      if (imageData && Array.isArray(imageData)) {
+        console.log('editProductIndex - imageGroups before API call:', imageData);
+
+        const { validGroups, invalidCount } = filterImageGroups(imageData);
+
+        console.log('editProductIndex - imageGroups validation:', {
+          validGroups,
+          invalidCount,
+          totalOriginal: imageData.length
+        });
+
+        if (invalidCount > 0) {
+          console.warn(`editProductIndex - Found ${invalidCount} invalid imageGroup(s), replacing with valid groups`);
+          (productData as any).imageGroups = validGroups;
+        }
+      }
+
       setLoading(true);
       const response = await editProduct(buildFormDataFromObject(productData));
       setLoading(false);

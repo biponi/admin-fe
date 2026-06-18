@@ -493,21 +493,23 @@ const MobileProductCard: React.FC<MobileProductCardProps> = ({
               <Package className='h-12 w-12 text-gray-400' />
             </div>
 
-            {/* SKU Badge - Top Left */}
+            {/* SKU Badge - Top Left
             <div className='absolute top-2.5 left-2.5 px-2 py-0.5 rounded-full bg-black/30 text-white text-[10px] font-mono tracking-wider'>
               {sku}
-            </div>
+            </div> */}
 
             {/* Stock Status Badge - Top Right */}
             <div
               className={`absolute top-2.5 right-2.5 flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-semibold border ${
                 quantity > 0
-                  ? "bg-emerald-500/20 border-emerald-400/40 text-emerald-100"
-                  : "bg-red-500/20 border-red-400/40 text-red-100"
+                  ? "bg-emerald-500/20 border-emerald-400/40 text-white"
+                  : "bg-red-500/20 border-red-400/40 text-white"
               }`}>
               <span
                 className={`inline-block w-1.5 h-1.5 rounded-full ${
-                  quantity > 0 ? "bg-emerald-400 animate-pulse" : "bg-red-400"
+                  quantity > 0
+                    ? "bg-emerald-400 text-emerald-600 animate-pulse"
+                    : "bg-red-400 text-red-600"
                 }`}
               />
               {quantity > 0 ? "In Stock" : "Out of Stock"}
@@ -520,7 +522,7 @@ const MobileProductCard: React.FC<MobileProductCardProps> = ({
 
             {/* Actions Dropdown - Top Right */}
             {hasSomePermissionsForPage("product", ["edit", "delete"]) && (
-              <div className='absolute top-1.5 right-1.5'>
+              <div className='absolute bottom-1.5 right-1.5'>
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
                     <Button

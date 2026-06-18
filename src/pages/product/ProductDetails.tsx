@@ -103,14 +103,14 @@ const ProductDetails = () => {
 
   return (
     <MainView title='Product Details'>
-      <div className='space-y-6'>
+      <div className='mx-2 md:container space-y-6'>
         {/* Header with Back Button and Refresh */}
         <div className='flex items-center justify-between'>
           <Button
             variant='ghost'
             size='sm'
             onClick={() => navigate("/products")}
-            className='hover:bg-blue-50'>
+            className='text-slate-600 hover:text-slate-900 hover:bg-slate-100'>
             <ArrowLeft className='mr-2 h-4 w-4' />
             Back to Products
           </Button>
@@ -119,7 +119,7 @@ const ProductDetails = () => {
             size='sm'
             onClick={handleRefresh}
             disabled={refreshing}
-            className='hover:bg-blue-50'>
+            className='border-slate-200 text-slate-600 hover:text-slate-900 hover:bg-slate-50'>
             <RefreshCw
               className={`mr-2 h-4 w-4 ${refreshing ? "animate-spin" : ""}`}
             />
@@ -131,57 +131,59 @@ const ProductDetails = () => {
         <ProductInfoCard product={productData} />
 
         {/* Analytics Tabs */}
-        <Tabs defaultValue='orders' className='w-full'>
-          <TabsList className='grid w-full grid-cols-5 bg-gradient-to-r from-gray-50 to-blue-50 border-2 border-gray-200 rounded-xl p-1 shadow-sm'>
+        <Tabs
+          defaultValue='orders'
+          className='w-full rounded-lg border border-slate-200 bg-white shadow'>
+          <TabsList className='h-auto bg-transparent p-0 rounded-none border-b flex justify-start w-full overflow-x-auto'>
             <TabsTrigger
               value='orders'
-              className='data-[state=active]:bg-white data-[state=active]:shadow-sm data-[state=active]:border-blue-200 transition-all'>
-              <ShoppingCart className='h-4 w-4 mr-2' />
+              className='relative flex items-center gap-2 px-4 py-3 text-sm font-medium rounded-none border-b-2 border-transparent text-slate-500 hover:text-slate-700 data-[state=active]:text-indigo-600 data-[state=active]:border-indigo-600 data-[state=active]:bg-transparent transition-all whitespace-nowrap'>
+              <ShoppingCart className='h-4 w-4' />
               Orders
             </TabsTrigger>
             <TabsTrigger
               value='customers'
-              className='data-[state=active]:bg-white data-[state=active]:shadow-sm data-[state=active]:border-blue-200 transition-all'>
-              <Users className='h-4 w-4 mr-2' />
+              className='relative flex items-center gap-2 px-4 py-3 text-sm font-medium rounded-none border-b-2 border-transparent text-slate-500 hover:text-slate-700 data-[state=active]:text-indigo-600 data-[state=active]:border-indigo-600 data-[state=active]:bg-transparent transition-all whitespace-nowrap'>
+              <Users className='h-4 w-4' />
               Customers
             </TabsTrigger>
             <TabsTrigger
               value='purchase-orders'
-              className='data-[state=active]:bg-white data-[state=active]:shadow-sm data-[state=active]:border-blue-200 transition-all'>
-              <Package className='h-4 w-4 mr-2' />
+              className='relative flex items-center gap-2 px-4 py-3 text-sm font-medium rounded-none border-b-2 border-transparent text-slate-500 hover:text-slate-700 data-[state=active]:text-indigo-600 data-[state=active]:border-indigo-600 data-[state=active]:bg-transparent transition-all whitespace-nowrap'>
+              <Package className='h-4 w-4' />
               Purchase Orders
             </TabsTrigger>
             <TabsTrigger
               value='adjustments'
-              className='data-[state=active]:bg-white data-[state=active]:shadow-sm data-[state=active]:border-blue-200 transition-all'>
-              <BarChart3 className='h-4 w-4 mr-2' />
+              className='relative flex items-center gap-2 px-4 py-3 text-sm font-medium rounded-none border-b-2 border-transparent text-slate-500 hover:text-slate-700 data-[state=active]:text-indigo-600 data-[state=active]:border-indigo-600 data-[state=active]:bg-transparent transition-all whitespace-nowrap'>
+              <BarChart3 className='h-4 w-4' />
               Adjustments
             </TabsTrigger>
             <TabsTrigger
               value='store-reserve'
-              className='data-[state=active]:bg-white data-[state=active]:shadow-sm data-[state=active]:border-blue-200 transition-all'>
-              <History className='h-4 w-4 mr-2' />
+              className='relative flex items-center gap-2 px-4 py-3 text-sm font-medium rounded-none border-b-2 border-transparent text-slate-500 hover:text-slate-700 data-[state=active]:text-indigo-600 data-[state=active]:border-indigo-600 data-[state=active]:bg-transparent transition-all whitespace-nowrap'>
+              <History className='h-4 w-4' />
               Store Reserve
             </TabsTrigger>
           </TabsList>
 
-          <TabsContent value='orders' className='mt-6'>
+          <TabsContent value='orders' className='p-2 md:p-4'>
             <OrderHistoryTab productId={id} />
           </TabsContent>
 
-          <TabsContent value='customers' className='mt-6'>
+          <TabsContent value='customers' className='p-2 md:p-4'>
             <CustomerHistoryTab productId={id} productName={productData.name} />
           </TabsContent>
 
-          <TabsContent value='purchase-orders' className='mt-6'>
+          <TabsContent value='purchase-orders' className='p-2 md:p-4'>
             <PurchaseOrderHistoryTab productId={id} />
           </TabsContent>
 
-          <TabsContent value='adjustments' className='mt-6'>
+          <TabsContent value='adjustments' className='p-2 md:p-4'>
             <AdjustmentHistoryTab productId={id} />
           </TabsContent>
 
-          <TabsContent value='store-reserve' className='mt-6'>
+          <TabsContent value='store-reserve' className='p-2 md:p-4'>
             <StoreReserveHistoryTab productId={id} />
           </TabsContent>
         </Tabs>

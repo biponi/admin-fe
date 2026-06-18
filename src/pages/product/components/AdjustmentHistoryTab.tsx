@@ -1,12 +1,6 @@
 import { useEffect, useState } from "react";
 import { useIsMobile } from "../../../hooks/use-mobile";
 import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from "../../../components/ui/card";
-import {
   Table,
   TableBody,
   TableCell,
@@ -173,8 +167,8 @@ const AdjustmentHistoryTab = ({ productId }: AdjustmentHistoryTabProps) => {
     return (
       <div className='flex items-center justify-center h-64'>
         <div className='text-center'>
-          <div className='animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900 mx-auto mb-4'></div>
-          <p className='text-sm text-gray-500'>Loading adjustment history...</p>
+          <div className='animate-spin rounded-full h-8 w-8 border-b-2 border-slate-900 mx-auto mb-4'></div>
+          <p className='text-sm text-slate-500'>Loading adjustment history...</p>
         </div>
       </div>
     );
@@ -184,111 +178,113 @@ const AdjustmentHistoryTab = ({ productId }: AdjustmentHistoryTabProps) => {
     <div className='space-y-4'>
       {/* Summary Cards */}
       <div className='grid grid-cols-1 md:grid-cols-5 gap-4'>
-        <Card>
-          <CardContent className='pt-6'>
-            <div className='flex items-center justify-between'>
-              <div>
-                <p className='text-sm text-gray-500'>Total Adjustments</p>
-                <p className='text-2xl font-bold'>
-                  {adjustmentHistory?.summary.totalAdjustments || 0}
-                </p>
-              </div>
-              <AlignCenter className='h-8 w-8 text-blue-500' />
+        <div className='bg-white rounded-lg border border-slate-100 p-6 shadow-sm'>
+          <div className='flex items-center justify-between'>
+            <div>
+              <p className='text-sm text-slate-500'>Total Adjustments</p>
+              <p className='text-2xl font-bold'>
+                {adjustmentHistory?.summary.totalAdjustments || 0}
+              </p>
             </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className='pt-6'>
-            <div className='flex items-center justify-between'>
-              <div>
-                <p className='text-sm text-gray-500'>Total Added</p>
-                <p className='text-2xl font-bold text-green-600'>
-                  +{adjustmentHistory?.summary.totalAdded || 0}
-                </p>
-              </div>
-              <TrendingUp className='h-8 w-8 text-green-500' />
+            <div className='h-12 w-12 rounded-full bg-indigo-100 flex items-center justify-center'>
+              <AlignCenter className='h-6 w-6 text-indigo-600' />
             </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className='pt-6'>
-            <div className='flex items-center justify-between'>
-              <div>
-                <p className='text-sm text-gray-500'>Total Removed</p>
-                <p className='text-2xl font-bold text-red-600'>
-                  -{adjustmentHistory?.summary.totalRemoved || 0}
-                </p>
-              </div>
-              <TrendingDown className='h-8 w-8 text-red-500' />
+          </div>
+        </div>
+        <div className='bg-white rounded-lg border border-slate-100 p-6 shadow-sm'>
+          <div className='flex items-center justify-between'>
+            <div>
+              <p className='text-sm text-slate-500'>Total Added</p>
+              <p className='text-2xl font-bold text-green-600'>
+                +{adjustmentHistory?.summary.totalAdded || 0}
+              </p>
             </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className='pt-6'>
-            <div className='flex items-center justify-between'>
-              <div>
-                <p className='text-sm text-gray-500'>Net Change</p>
-                <p
-                  className={`text-2xl font-bold ${
-                    (adjustmentHistory?.summary.netChange || 0) >= 0
-                      ? "text-green-600"
-                      : "text-red-600"
-                  }`}>
-                  {(adjustmentHistory?.summary.netChange || 0) >= 0 ? "+" : ""}
-                  {adjustmentHistory?.summary.netChange || 0}
-                </p>
-              </div>
-              <RotateCcw className='h-8 w-8 text-purple-500' />
+            <div className='h-12 w-12 rounded-full bg-green-100 flex items-center justify-center'>
+              <TrendingUp className='h-6 w-6 text-green-600' />
             </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className='pt-6'>
-            <div className='flex items-center justify-between'>
-              <div>
-                <p className='text-sm text-gray-500'>Pending</p>
-                <p className='text-2xl font-bold'>
-                  {adjustmentHistory?.summary.pendingApprovals || 0}
-                </p>
-              </div>
-              <Clock className='h-8 w-8 text-orange-500' />
+          </div>
+        </div>
+        <div className='bg-white rounded-lg border border-slate-100 p-6 shadow-sm'>
+          <div className='flex items-center justify-between'>
+            <div>
+              <p className='text-sm text-slate-500'>Total Removed</p>
+              <p className='text-2xl font-bold text-red-600'>
+                -{adjustmentHistory?.summary.totalRemoved || 0}
+              </p>
             </div>
-          </CardContent>
-        </Card>
+            <div className='h-12 w-12 rounded-full bg-red-100 flex items-center justify-center'>
+              <TrendingDown className='h-6 w-6 text-red-600' />
+            </div>
+          </div>
+        </div>
+        <div className='bg-white rounded-lg border border-slate-100 p-6 shadow-sm'>
+          <div className='flex items-center justify-between'>
+            <div>
+              <p className='text-sm text-slate-500'>Net Change</p>
+              <p
+                className={`text-2xl font-bold ${
+                  (adjustmentHistory?.summary.netChange || 0) >= 0
+                    ? "text-green-600"
+                    : "text-red-600"
+                }`}>
+                {(adjustmentHistory?.summary.netChange || 0) >= 0 ? "+" : ""}
+                {adjustmentHistory?.summary.netChange || 0}
+              </p>
+            </div>
+            <div className='h-12 w-12 rounded-full bg-purple-100 flex items-center justify-center'>
+              <RotateCcw className='h-6 w-6 text-purple-600' />
+            </div>
+          </div>
+        </div>
+        <div className='bg-white rounded-lg border border-slate-100 p-6 shadow-sm'>
+          <div className='flex items-center justify-between'>
+            <div>
+              <p className='text-sm text-slate-500'>Pending</p>
+              <p className='text-2xl font-bold'>
+                {adjustmentHistory?.summary.pendingApprovals || 0}
+              </p>
+            </div>
+            <div className='h-12 w-12 rounded-full bg-orange-100 flex items-center justify-center'>
+              <Clock className='h-6 w-6 text-orange-600' />
+            </div>
+          </div>
+        </div>
       </div>
 
       {/* Filter Section */}
-      <Card>
-        <CardHeader>
-          <CardTitle className='flex items-center text-lg'>
-            <Filter className='mr-2 h-5 w-5' />
-            Filters
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
+      <div className='bg-white rounded-lg border border-slate-100 shadow-sm'>
+        <div className='p-6 border-b border-slate-100'>
+          <div className='flex items-center'>
+            <Filter className='mr-2 h-5 w-5 text-slate-700' />
+            <h3 className='text-lg font-semibold text-slate-900'>Filters</h3>
+          </div>
+        </div>
+        <div className='p-6'>
           <div className='grid grid-cols-1 md:grid-cols-6 gap-4'>
             <div>
-              <label className='text-sm font-medium'>Start Date</label>
+              <label className='text-sm font-medium text-slate-700'>Start Date</label>
               <Input
                 type='date'
                 value={startDate}
                 onChange={(e) => setStartDate(e.target.value)}
+                className='mt-1'
               />
             </div>
             <div>
-              <label className='text-sm font-medium'>End Date</label>
+              <label className='text-sm font-medium text-slate-700'>End Date</label>
               <Input
                 type='date'
                 value={endDate}
                 onChange={(e) => setEndDate(e.target.value)}
+                className='mt-1'
               />
             </div>
             <div>
-              <label className='text-sm font-medium'>Type</label>
+              <label className='text-sm font-medium text-slate-700'>Type</label>
               <Select
                 value={adjustmentTypeFilter}
                 onValueChange={setAdjustmentTypeFilter}>
-                <SelectTrigger>
+                <SelectTrigger className='mt-1'>
                   <SelectValue placeholder='All types' />
                 </SelectTrigger>
                 <SelectContent>
@@ -300,9 +296,9 @@ const AdjustmentHistoryTab = ({ productId }: AdjustmentHistoryTabProps) => {
               </Select>
             </div>
             <div>
-              <label className='text-sm font-medium'>Status</label>
+              <label className='text-sm font-medium text-slate-700'>Status</label>
               <Select value={statusFilter} onValueChange={setStatusFilter}>
-                <SelectTrigger>
+                <SelectTrigger className='mt-1'>
                   <SelectValue placeholder='All statuses' />
                 </SelectTrigger>
                 <SelectContent>
@@ -315,9 +311,9 @@ const AdjustmentHistoryTab = ({ productId }: AdjustmentHistoryTabProps) => {
               </Select>
             </div>
             <div>
-              <label className='text-sm font-medium'>Sort By</label>
+              <label className='text-sm font-medium text-slate-700'>Sort By</label>
               <Select value={sortBy} onValueChange={setSortBy}>
-                <SelectTrigger>
+                <SelectTrigger className='mt-1'>
                   <SelectValue placeholder='Sort by' />
                 </SelectTrigger>
                 <SelectContent>
@@ -331,195 +327,195 @@ const AdjustmentHistoryTab = ({ productId }: AdjustmentHistoryTabProps) => {
               </Select>
             </div>
             <div className='flex items-end space-x-2'>
-              <Button onClick={handleFilter} className='flex-1'>
+              <Button onClick={handleFilter} className='flex-1 bg-indigo-600 hover:bg-indigo-700'>
                 Apply Filters
               </Button>
-              <Button onClick={handleReset} variant='outline'>
+              <Button onClick={handleReset} variant='outline' className='border-slate-300 text-slate-700 hover:bg-slate-50'>
                 <X className='h-4 w-4 mr-1' />
                 Reset
               </Button>
             </div>
           </div>
-        </CardContent>
-      </Card>
+        </div>
+      </div>
 
       {/* DataTable with Sticky Header */}
-      <Card>
-        <CardContent className='p-0'>
-          <div className='max-h-[600px] overflow-y-auto'>
-            <Table divClass='relative'>
-              <TableHeader className='sticky top-0 bg-white border-b z-10'>
-                <TableRow className='bg-sidebar'>
-                  <TableHead>Type</TableHead>
-                  <TableHead>Variant</TableHead>
-                  <TableHead className='text-right'>Old Qty</TableHead>
-                  <TableHead className='text-right'>New Qty</TableHead>
-                  <TableHead className='text-right'>Change</TableHead>
-                  <TableHead>Reason</TableHead>
-                  <TableHead>Adjusted By</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead>Date</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {adjustmentHistory?.adjustments?.map((adjustment) => (
-                  <TableRow
-                    key={adjustment.adjustmentId}
-                    className='cursor-pointer hover:bg-gray-50'
-                    onClick={() => handleAdjustmentClick(adjustment)}>
-                    <TableCell>
-                      <Badge
-                        variant={getAdjustmentTypeBadgeVariant(
-                          adjustment.adjustmentType,
-                        )}
-                        className='flex items-center space-x-1'>
-                        {getAdjustmentTypeIcon(adjustment.adjustmentType)}
-                        <span className='ml-1 capitalize'>
-                          {adjustment.adjustmentType}
-                        </span>
-                      </Badge>
-                    </TableCell>
-                    <TableCell>
-                      {adjustment.variationDetails ? (
-                        <span className='text-sm'>
-                          {adjustment.variationDetails.color && (
-                            <span>{adjustment.variationDetails.color}</span>
-                          )}
-                          {adjustment.variationDetails.color &&
-                            adjustment.variationDetails.size && (
-                              <span> - </span>
-                            )}
-                          {adjustment.variationDetails.size && (
-                            <span>{adjustment.variationDetails.size}</span>
-                          )}
-                        </span>
-                      ) : (
-                        <span className='text-gray-400 text-sm'>Standard</span>
+      <div className='bg-white rounded-lg border border-slate-100 shadow-sm'>
+        <div className='max-h-[600px] overflow-y-auto'>
+          <Table divClass='relative'>
+            <TableHeader className='sticky top-0 bg-white border-b border-slate-200 z-10'>
+              <TableRow className='bg-slate-50 hover:bg-slate-50'>
+                <TableHead className='text-slate-700 font-semibold'>Type</TableHead>
+                <TableHead className='text-slate-700 font-semibold'>Variant</TableHead>
+                <TableHead className='text-right text-slate-700 font-semibold'>Old Qty</TableHead>
+                <TableHead className='text-right text-slate-700 font-semibold'>New Qty</TableHead>
+                <TableHead className='text-right text-slate-700 font-semibold'>Change</TableHead>
+                <TableHead className='text-slate-700 font-semibold'>Reason</TableHead>
+                <TableHead className='text-slate-700 font-semibold'>Adjusted By</TableHead>
+                <TableHead className='text-slate-700 font-semibold'>Status</TableHead>
+                <TableHead className='text-slate-700 font-semibold'>Date</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {adjustmentHistory?.adjustments?.map((adjustment) => (
+                <TableRow
+                  key={adjustment.adjustmentId}
+                  className='cursor-pointer hover:bg-slate-50'
+                  onClick={() => handleAdjustmentClick(adjustment)}>
+                  <TableCell>
+                    <Badge
+                      variant={getAdjustmentTypeBadgeVariant(
+                        adjustment.adjustmentType,
                       )}
-                    </TableCell>
-                    <TableCell className='text-right'>
-                      {adjustment.oldQuantity}
-                    </TableCell>
-                    <TableCell className='text-right'>
-                      {adjustment.newQuantity}
-                    </TableCell>
-                    <TableCell
-                      className={`text-right font-semibold ${
-                        adjustment.quantityChange > 0
-                          ? "text-green-600"
-                          : adjustment.quantityChange < 0
-                            ? "text-red-600"
-                            : "text-gray-600"
-                      }`}>
-                      {adjustment.quantityChange > 0 ? "+" : ""}
-                      {adjustment.quantityChange}
-                    </TableCell>
-                    <TableCell
-                      className='max-w-xs truncate'
-                      title={adjustment.reason}>
-                      {adjustment.reason}
-                    </TableCell>
-                    <TableCell>
-                      <div className='text-sm'>
-                        <p className='font-medium'>
-                          {adjustment.adjustedBy.userName}
-                        </p>
-                        <p className='text-xs text-gray-500'>
-                          {adjustment.adjustedBy.userType}
-                        </p>
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <Badge
-                        variant={getStatusBadgeVariant(adjustment.status)}
-                        className='flex items-center space-x-1'>
-                        {getStatusIcon(adjustment.status)}
-                        <span className='ml-1 capitalize'>
-                          {adjustment.status}
-                        </span>
-                      </Badge>
-                    </TableCell>
-                    <TableCell>
-                      {format(new Date(adjustment.createdAt), "MMM dd, yyyy")}
-                    </TableCell>
-                  </TableRow>
-                ))}
-                {(!adjustmentHistory?.adjustments ||
-                  adjustmentHistory.adjustments.length === 0) && (
-                  <TableRow>
-                    <TableCell
-                      colSpan={9}
-                      className='text-center py-8 text-gray-500'>
-                      No adjustments found
-                    </TableCell>
-                  </TableRow>
-                )}
-              </TableBody>
-            </Table>
-          </div>
+                      className='flex items-center space-x-1'>
+                      {getAdjustmentTypeIcon(adjustment.adjustmentType)}
+                      <span className='ml-1 capitalize'>
+                        {adjustment.adjustmentType}
+                      </span>
+                    </Badge>
+                  </TableCell>
+                  <TableCell>
+                    {adjustment.variationDetails ? (
+                      <span className='text-sm'>
+                        {adjustment.variationDetails.color && (
+                          <span>{adjustment.variationDetails.color}</span>
+                        )}
+                        {adjustment.variationDetails.color &&
+                          adjustment.variationDetails.size && (
+                            <span> - </span>
+                          )}
+                        {adjustment.variationDetails.size && (
+                          <span>{adjustment.variationDetails.size}</span>
+                        )}
+                      </span>
+                    ) : (
+                      <span className='text-slate-400 text-sm'>Standard</span>
+                    )}
+                  </TableCell>
+                  <TableCell className='text-right'>
+                    {adjustment.oldQuantity}
+                  </TableCell>
+                  <TableCell className='text-right'>
+                    {adjustment.newQuantity}
+                  </TableCell>
+                  <TableCell
+                    className={`text-right font-semibold ${
+                      adjustment.quantityChange > 0
+                        ? "text-green-600"
+                        : adjustment.quantityChange < 0
+                          ? "text-red-600"
+                          : "text-slate-600"
+                    }`}>
+                    {adjustment.quantityChange > 0 ? "+" : ""}
+                    {adjustment.quantityChange}
+                  </TableCell>
+                  <TableCell
+                    className='max-w-xs truncate'
+                    title={adjustment.reason}>
+                    {adjustment.reason}
+                  </TableCell>
+                  <TableCell>
+                    <div className='text-sm'>
+                      <p className='font-medium'>
+                        {adjustment.adjustedBy.userName}
+                      </p>
+                      <p className='text-xs text-slate-500'>
+                        {adjustment.adjustedBy.userType}
+                      </p>
+                    </div>
+                  </TableCell>
+                  <TableCell>
+                    <Badge
+                      variant={getStatusBadgeVariant(adjustment.status)}
+                      className='flex items-center space-x-1'>
+                      {getStatusIcon(adjustment.status)}
+                      <span className='ml-1 capitalize'>
+                        {adjustment.status}
+                      </span>
+                    </Badge>
+                  </TableCell>
+                  <TableCell>
+                    {format(new Date(adjustment.createdAt), "MMM dd, yyyy")}
+                  </TableCell>
+                </TableRow>
+              ))}
+              {(!adjustmentHistory?.adjustments ||
+                adjustmentHistory.adjustments.length === 0) && (
+                <TableRow>
+                  <TableCell
+                    colSpan={9}
+                    className='text-center py-8 text-slate-500'>
+                    No adjustments found
+                  </TableCell>
+                </TableRow>
+              )}
+            </TableBody>
+          </Table>
+        </div>
 
-          {/* Pagination */}
-          <div className='border-t p-4'>
-            <div className='flex items-center justify-between'>
-              <div className='text-sm text-gray-600'>
-                Showing{" "}
-                {((adjustmentHistory?.pagination.currentPage || 1) - 1) *
-                  (adjustmentParams.limit || 20) +
-                  1}
-                -
-                {Math.min(
-                  (adjustmentHistory?.pagination.currentPage || 1) *
-                    (adjustmentParams.limit || 20),
-                  adjustmentHistory?.pagination.totalItems || 0,
-                )}{" "}
-                of {adjustmentHistory?.pagination.totalItems || 0} adjustments
-              </div>
-              <div className='flex items-center space-x-2'>
-                <Select
-                  value={`${adjustmentParams.limit}`}
-                  onValueChange={(value) =>
-                    fetchAdjustmentHistory({ limit: Number(value), page: 1 })
-                  }>
-                  <SelectTrigger className='w-20'>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value='20'>20</SelectItem>
-                    <SelectItem value='50'>50</SelectItem>
-                    <SelectItem value='100'>100</SelectItem>
-                  </SelectContent>
-                </Select>
-                <Button
-                  variant='outline'
-                  size='sm'
-                  disabled={!adjustmentHistory?.pagination.hasPreviousPage}
-                  onClick={() =>
-                    fetchAdjustmentHistory({
-                      page: (adjustmentParams.page || 1) - 1,
-                    })
-                  }>
-                  Previous
-                </Button>
-                <span className='text-sm'>
-                  Page {adjustmentHistory?.pagination.currentPage} of{" "}
-                  {adjustmentHistory?.pagination.totalPages}
-                </span>
-                <Button
-                  variant='outline'
-                  size='sm'
-                  disabled={!adjustmentHistory?.pagination.hasNextPage}
-                  onClick={() =>
-                    fetchAdjustmentHistory({
-                      page: (adjustmentParams.page || 1) + 1,
-                    })
-                  }>
-                  Next
-                </Button>
-              </div>
+        {/* Pagination */}
+        <div className='border-t border-slate-200 p-4'>
+          <div className='flex items-center justify-between'>
+            <div className='text-sm text-slate-600'>
+              Showing{" "}
+              {((adjustmentHistory?.pagination.currentPage || 1) - 1) *
+                (adjustmentParams.limit || 20) +
+                1}
+              -
+              {Math.min(
+                (adjustmentHistory?.pagination.currentPage || 1) *
+                  (adjustmentParams.limit || 20),
+                adjustmentHistory?.pagination.totalItems || 0,
+              )}{" "}
+              of {adjustmentHistory?.pagination.totalItems || 0} adjustments
+            </div>
+            <div className='flex items-center space-x-2'>
+              <Select
+                value={`${adjustmentParams.limit}`}
+                onValueChange={(value) =>
+                  fetchAdjustmentHistory({ limit: Number(value), page: 1 })
+                }>
+                <SelectTrigger className='w-20'>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value='20'>20</SelectItem>
+                  <SelectItem value='50'>50</SelectItem>
+                  <SelectItem value='100'>100</SelectItem>
+                </SelectContent>
+              </Select>
+              <Button
+                variant='outline'
+                size='sm'
+                disabled={!adjustmentHistory?.pagination.hasPreviousPage}
+                onClick={() =>
+                  fetchAdjustmentHistory({
+                    page: (adjustmentParams.page || 1) - 1,
+                  })
+                }
+                className='border-slate-300 text-slate-700 hover:bg-slate-50'>
+                Previous
+              </Button>
+              <span className='text-sm text-slate-700'>
+                Page {adjustmentHistory?.pagination.currentPage} of{" "}
+                {adjustmentHistory?.pagination.totalPages}
+              </span>
+              <Button
+                variant='outline'
+                size='sm'
+                disabled={!adjustmentHistory?.pagination.hasNextPage}
+                onClick={() =>
+                  fetchAdjustmentHistory({
+                    page: (adjustmentParams.page || 1) + 1,
+                  })
+                }
+                className='border-slate-300 text-slate-700 hover:bg-slate-50'>
+                Next
+              </Button>
             </div>
           </div>
-        </CardContent>
-      </Card>
+        </div>
+      </div>
 
       {/* Adjustment Details Sheet (Desktop) / Drawer (Mobile) */}
       {isMobile ? (
@@ -544,21 +540,21 @@ const AdjustmentHistoryTab = ({ productId }: AdjustmentHistoryTabProps) => {
                   <h3 className='font-semibold mb-2'>Adjustment Details</h3>
                   <div className='space-y-1 text-sm'>
                     <p>
-                      <span className='text-gray-500'>Type:</span>{" "}
-                      <Badge variant='outline'>
+                      <span className='text-slate-500'>Type:</span>{" "}
+                      <Badge variant='outline' className='border-slate-300'>
                         {selectedAdjustment?.adjustmentType}
                       </Badge>
                     </p>
                     <p>
-                      <span className='text-gray-500'>Old Quantity:</span>{" "}
+                      <span className='text-slate-500'>Old Quantity:</span>{" "}
                       {selectedAdjustment?.oldQuantity}
                     </p>
                     <p>
-                      <span className='text-gray-500'>New Quantity:</span>{" "}
+                      <span className='text-slate-500'>New Quantity:</span>{" "}
                       {selectedAdjustment?.newQuantity}
                     </p>
                     <p>
-                      <span className='text-gray-500'>Change:</span>{" "}
+                      <span className='text-slate-500'>Change:</span>{" "}
                       <span
                         className={`font-semibold ${
                           (selectedAdjustment?.quantityChange || 0) > 0
@@ -578,15 +574,15 @@ const AdjustmentHistoryTab = ({ productId }: AdjustmentHistoryTabProps) => {
                     <h3 className='font-semibold mb-2'>Variant Details</h3>
                     <div className='space-y-1 text-sm'>
                       <p>
-                        <span className='text-gray-500'>SKU:</span>{" "}
+                        <span className='text-slate-500'>SKU:</span>{" "}
                         {selectedAdjustment.variationDetails.sku || "N/A"}
                       </p>
                       <p>
-                        <span className='text-gray-500'>Color:</span>{" "}
+                        <span className='text-slate-500'>Color:</span>{" "}
                         {selectedAdjustment.variationDetails.color || "N/A"}
                       </p>
                       <p>
-                        <span className='text-gray-500'>Size:</span>{" "}
+                        <span className='text-slate-500'>Size:</span>{" "}
                         {selectedAdjustment.variationDetails.size || "N/A"}
                       </p>
                     </div>
@@ -596,18 +592,18 @@ const AdjustmentHistoryTab = ({ productId }: AdjustmentHistoryTabProps) => {
                   <h3 className='font-semibold mb-2'>Reason & Notes</h3>
                   <div className='space-y-1 text-sm'>
                     <p>
-                      <span className='text-gray-500'>Reason:</span>{" "}
+                      <span className='text-slate-500'>Reason:</span>{" "}
                       {selectedAdjustment?.reason}
                     </p>
                     {selectedAdjustment?.notes && (
                       <p>
-                        <span className='text-gray-500'>Notes:</span>{" "}
+                        <span className='text-slate-500'>Notes:</span>{" "}
                         {selectedAdjustment.notes}
                       </p>
                     )}
                     {selectedAdjustment?.referenceNumber && (
                       <p>
-                        <span className='text-gray-500'>Reference:</span>{" "}
+                        <span className='text-slate-500'>Reference:</span>{" "}
                         {selectedAdjustment.referenceNumber}
                       </p>
                     )}
@@ -617,12 +613,12 @@ const AdjustmentHistoryTab = ({ productId }: AdjustmentHistoryTabProps) => {
                   <h3 className='font-semibold mb-2'>User Information</h3>
                   <div className='space-y-1 text-sm'>
                     <p>
-                      <span className='text-gray-500'>Adjusted By:</span>{" "}
+                      <span className='text-slate-500'>Adjusted By:</span>{" "}
                       {selectedAdjustment?.adjustedBy.userName} (
                       {selectedAdjustment?.adjustedBy.userType})
                     </p>
                     <p>
-                      <span className='text-gray-500'>Email:</span>{" "}
+                      <span className='text-slate-500'>Email:</span>{" "}
                       {selectedAdjustment?.adjustedBy.userEmail}
                     </p>
                   </div>
@@ -631,8 +627,8 @@ const AdjustmentHistoryTab = ({ productId }: AdjustmentHistoryTabProps) => {
                   <h3 className='font-semibold mb-2'>Status</h3>
                   <div className='space-y-1 text-sm'>
                     <p>
-                      <span className='text-gray-500'>Current Status:</span>{" "}
-                      <Badge variant='outline'>
+                      <span className='text-slate-500'>Current Status:</span>{" "}
+                      <Badge variant='outline' className='border-slate-300'>
                         {getStatusIcon(selectedAdjustment?.status)}
                         <span className='ml-1 capitalize'>
                           {selectedAdjustment?.status}
@@ -641,7 +637,7 @@ const AdjustmentHistoryTab = ({ productId }: AdjustmentHistoryTabProps) => {
                     </p>
                     {selectedAdjustment?.approvedBy && (
                       <p>
-                        <span className='text-gray-500'>Approved By:</span>{" "}
+                        <span className='text-slate-500'>Approved By:</span>{" "}
                         {selectedAdjustment.approvedBy.userName}
                       </p>
                     )}
@@ -651,7 +647,7 @@ const AdjustmentHistoryTab = ({ productId }: AdjustmentHistoryTabProps) => {
                   <h3 className='font-semibold mb-2'>Timestamps</h3>
                   <div className='space-y-1 text-sm'>
                     <p>
-                      <span className='text-gray-500'>Created At:</span>{" "}
+                      <span className='text-slate-500'>Created At:</span>{" "}
                       {selectedAdjustment &&
                         format(
                           new Date(selectedAdjustment.createdAt),
@@ -660,7 +656,7 @@ const AdjustmentHistoryTab = ({ productId }: AdjustmentHistoryTabProps) => {
                     </p>
                     {selectedAdjustment?.approvedBy?.approvedAt && (
                       <p>
-                        <span className='text-gray-500'>Approved At:</span>{" "}
+                        <span className='text-slate-500'>Approved At:</span>{" "}
                         {format(
                           new Date(selectedAdjustment.approvedBy.approvedAt),
                           "MMM dd, yyyy HH:mm",
@@ -689,37 +685,37 @@ const AdjustmentHistoryTab = ({ productId }: AdjustmentHistoryTabProps) => {
                 </Badge>
                 <span className='ml-2'>Adjustment Details</span>
               </SheetTitle>
-              <SheetDescription>
+              <SheetDescription className='text-slate-500'>
                 Full inventory adjustment information
               </SheetDescription>
             </SheetHeader>
             <ScrollArea className='h-[calc(100vh-200px)] mt-6'>
               <div className='space-y-6'>
                 <div>
-                  <h3 className='font-semibold mb-3 text-lg'>
+                  <h3 className='font-semibold mb-3 text-lg text-slate-900'>
                     Adjustment Details
                   </h3>
-                  <div className='space-y-2 text-sm bg-gray-50 p-4 rounded-lg'>
+                  <div className='space-y-2 text-sm bg-slate-50 p-4 rounded-lg border border-slate-100'>
                     <div className='flex justify-between'>
-                      <span className='text-gray-500 font-medium'>Type:</span>
-                      <Badge variant='outline'>
+                      <span className='text-slate-600 font-medium'>Type:</span>
+                      <Badge variant='outline' className='border-slate-300'>
                         {selectedAdjustment?.adjustmentType}
                       </Badge>
                     </div>
                     <div className='flex justify-between'>
-                      <span className='text-gray-500 font-medium'>
+                      <span className='text-slate-600 font-medium'>
                         Old Quantity:
                       </span>
                       <span>{selectedAdjustment?.oldQuantity}</span>
                     </div>
                     <div className='flex justify-between'>
-                      <span className='text-gray-500 font-medium'>
+                      <span className='text-slate-600 font-medium'>
                         New Quantity:
                       </span>
                       <span>{selectedAdjustment?.newQuantity}</span>
                     </div>
                     <div className='flex justify-between'>
-                      <span className='text-gray-500 font-medium'>
+                      <span className='text-slate-600 font-medium'>
                         Quantity Change:
                       </span>
                       <span
@@ -739,18 +735,18 @@ const AdjustmentHistoryTab = ({ productId }: AdjustmentHistoryTabProps) => {
 
                 {selectedAdjustment?.variationDetails && (
                   <div>
-                    <h3 className='font-semibold mb-3 text-lg'>
+                    <h3 className='font-semibold mb-3 text-lg text-slate-900'>
                       Variant Details
                     </h3>
-                    <div className='space-y-2 text-sm bg-gray-50 p-4 rounded-lg'>
+                    <div className='space-y-2 text-sm bg-slate-50 p-4 rounded-lg border border-slate-100'>
                       <div className='flex justify-between'>
-                        <span className='text-gray-500 font-medium'>SKU:</span>
+                        <span className='text-slate-600 font-medium'>SKU:</span>
                         <span>
                           {selectedAdjustment.variationDetails.sku || "N/A"}
                         </span>
                       </div>
                       <div className='flex justify-between'>
-                        <span className='text-gray-500 font-medium'>
+                        <span className='text-slate-600 font-medium'>
                           Color:
                         </span>
                         <span>
@@ -758,7 +754,7 @@ const AdjustmentHistoryTab = ({ productId }: AdjustmentHistoryTabProps) => {
                         </span>
                       </div>
                       <div className='flex justify-between'>
-                        <span className='text-gray-500 font-medium'>Size:</span>
+                        <span className='text-slate-600 font-medium'>Size:</span>
                         <span>
                           {selectedAdjustment.variationDetails.size || "N/A"}
                         </span>
@@ -768,16 +764,16 @@ const AdjustmentHistoryTab = ({ productId }: AdjustmentHistoryTabProps) => {
                 )}
 
                 <div>
-                  <h3 className='font-semibold mb-3 text-lg'>Reason & Notes</h3>
-                  <div className='space-y-2 text-sm bg-gray-50 p-4 rounded-lg'>
+                  <h3 className='font-semibold mb-3 text-lg text-slate-900'>Reason & Notes</h3>
+                  <div className='space-y-2 text-sm bg-slate-50 p-4 rounded-lg border border-slate-100'>
                     <p>
-                      <span className='text-gray-500 font-medium'>Reason:</span>
+                      <span className='text-slate-600 font-medium'>Reason:</span>
                     </p>
                     <p className='text-base'>{selectedAdjustment?.reason}</p>
                     {selectedAdjustment?.notes && (
                       <>
                         <p>
-                          <span className='text-gray-500 font-medium'>
+                          <span className='text-slate-600 font-medium'>
                             Notes:
                           </span>
                         </p>
@@ -786,7 +782,7 @@ const AdjustmentHistoryTab = ({ productId }: AdjustmentHistoryTabProps) => {
                     )}
                     {selectedAdjustment?.referenceNumber && (
                       <div className='flex justify-between pt-2'>
-                        <span className='text-gray-500 font-medium'>
+                        <span className='text-slate-600 font-medium'>
                           Reference Number:
                         </span>
                         <span className='font-mono'>
@@ -798,28 +794,28 @@ const AdjustmentHistoryTab = ({ productId }: AdjustmentHistoryTabProps) => {
                 </div>
 
                 <div>
-                  <h3 className='font-semibold mb-3 text-lg'>
+                  <h3 className='font-semibold mb-3 text-lg text-slate-900'>
                     User Information
                   </h3>
-                  <div className='space-y-2 text-sm bg-gray-50 p-4 rounded-lg'>
+                  <div className='space-y-2 text-sm bg-slate-50 p-4 rounded-lg border border-slate-100'>
                     <div className='flex justify-between'>
-                      <span className='text-gray-500 font-medium'>
+                      <span className='text-slate-600 font-medium'>
                         Adjusted By:
                       </span>
                       <span>
                         {selectedAdjustment?.adjustedBy.userName}{" "}
-                        <span className='text-gray-500'>
+                        <span className='text-slate-500'>
                           ({selectedAdjustment?.adjustedBy.userType})
                         </span>
                       </span>
                     </div>
                     <div className='flex justify-between'>
-                      <span className='text-gray-500 font-medium'>Email:</span>
+                      <span className='text-slate-600 font-medium'>Email:</span>
                       <span>{selectedAdjustment?.adjustedBy.userEmail}</span>
                     </div>
                     {selectedAdjustment?.ipAddress && (
                       <div className='flex justify-between'>
-                        <span className='text-gray-500 font-medium'>
+                        <span className='text-slate-600 font-medium'>
                           IP Address:
                         </span>
                         <span className='font-mono'>
@@ -831,10 +827,10 @@ const AdjustmentHistoryTab = ({ productId }: AdjustmentHistoryTabProps) => {
                 </div>
 
                 <div>
-                  <h3 className='font-semibold mb-3 text-lg'>Status</h3>
-                  <div className='space-y-2 text-sm bg-gray-50 p-4 rounded-lg'>
+                  <h3 className='font-semibold mb-3 text-lg text-slate-900'>Status</h3>
+                  <div className='space-y-2 text-sm bg-slate-50 p-4 rounded-lg border border-slate-100'>
                     <div className='flex justify-between items-center'>
-                      <span className='text-gray-500 font-medium'>
+                      <span className='text-slate-600 font-medium'>
                         Current Status:
                       </span>
                       <Badge>
@@ -847,13 +843,13 @@ const AdjustmentHistoryTab = ({ productId }: AdjustmentHistoryTabProps) => {
                     {selectedAdjustment?.approvedBy && (
                       <>
                         <div className='flex justify-between'>
-                          <span className='text-gray-500 font-medium'>
+                          <span className='text-slate-600 font-medium'>
                             Approved By:
                           </span>
                           <span>{selectedAdjustment.approvedBy.userName}</span>
                         </div>
                         <div className='flex justify-between'>
-                          <span className='text-gray-500 font-medium'>
+                          <span className='text-slate-600 font-medium'>
                             Approved At:
                           </span>
                           <span>
@@ -871,10 +867,10 @@ const AdjustmentHistoryTab = ({ productId }: AdjustmentHistoryTabProps) => {
                 </div>
 
                 <div>
-                  <h3 className='font-semibold mb-3 text-lg'>Timestamps</h3>
-                  <div className='space-y-2 text-sm bg-gray-50 p-4 rounded-lg'>
+                  <h3 className='font-semibold mb-3 text-lg text-slate-900'>Timestamps</h3>
+                  <div className='space-y-2 text-sm bg-slate-50 p-4 rounded-lg border border-slate-100'>
                     <div className='flex justify-between'>
-                      <span className='text-gray-500 font-medium'>
+                      <span className='text-slate-600 font-medium'>
                         Created At:
                       </span>
                       <span>

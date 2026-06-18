@@ -7,10 +7,6 @@ import {
   List,
   PlusCircle,
   Package,
-  TrendingUp,
-  TrendingDown,
-  AlertCircle,
-  CheckCircle,
   Search,
   MoreHorizontal,
   ShoppingBag,
@@ -18,26 +14,9 @@ import {
   Activity,
   FilePieChart,
   X,
-  ZoomIn,
-  BoxIcon,
-  ImageOff,
-  SlidersHorizontal,
   RefreshCw,
 } from "lucide-react";
 import { Button } from "../../components/ui/button";
-import {
-  Tabs,
-  TabsContent,
-  TabsList,
-  TabsTrigger,
-} from "../../components/ui/tabs";
-import {
-  Card,
-  CardContent,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from "../../components/ui/card";
 import {
   Table,
   TableBody,
@@ -54,7 +33,7 @@ import {
   StockSummaryResponse,
 } from "./interface";
 import useCategory from "./hooks/useCategory";
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
 import { Input } from "../../components/ui/input";
 import useDebounce from "../../customHook/useDebounce";
 import { useNavigate } from "react-router-dom";
@@ -67,7 +46,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "../../components/ui/select";
-import { SkeletonCard } from "../../coreComponents/sekeleton";
 import SingleProductCardItem from "./components/singleProductCard";
 import { getProductSummary } from "../../api/product";
 import { errorToast } from "../../utils/toast";
@@ -83,10 +61,6 @@ import {
   DrawerTrigger,
 } from "../../components/ui/drawer";
 import {
-  Collapsible,
-  CollapsibleContent,
-} from "../../components/ui/collapsible";
-import {
   Sheet as SheetContainer,
   SheetContent,
   SheetDescription,
@@ -96,13 +70,9 @@ import {
 } from "../../components/ui/sheet";
 import useRoleCheck from "../auth/hooks/useRoleCheck";
 import CategoryFilterDropdown from "./components/FilterByCategory";
-import MobileProductHeader from "./components/MobileProductHeader";
 import MobileProductCard from "./components/MobileProductCard";
-import MobileProductFilters from "./components/MobileProductFilters";
-import MobileProductEmpty from "./components/MobileProductEmpty";
-import MobileProductSummary from "./components/MobileProductSummary";
 
-// ─── Helpers ────────────────────────────────────────────────────────────────
+// ─── Helpers ─────────────────────────────────────────────────────────────────
 
 const formatNumber = (num: number | undefined): string => {
   if (num === undefined || num === null) return "0";
@@ -114,56 +84,46 @@ const formatNumber = (num: number | undefined): string => {
       });
 };
 
-// ─── Tab Config ─────────────────────────────────────────────────────────────
+// ─── Tab Config ───────────────────────────────────────────────────────────────
 
 type TabKey = "all" | "active" | "inactive" | "instock" | "outofstock";
 
 const TAB_CONFIG: {
   value: TabKey;
   label: string;
-  shortLabel: string;
-  icon: React.ReactNode;
-  emptyIcon: React.ReactNode;
   emptyTitle: string;
   emptyDescription: string;
+  badgeClass: string;
   filter: (p: IProduct) => boolean;
 }[] = [
   {
     value: "all",
     label: "All",
-    shortLabel: "All",
-    icon: null,
-    emptyIcon: <Package className='h-10 w-10 text-zinc-300' />,
+    badgeClass: "bg-zinc-100 text-zinc-600",
     emptyTitle: "No products found",
-    emptyDescription: "Get started by adding your first product",
+    emptyDescription: "Add your first product to get started",
     filter: () => true,
   },
   {
     value: "active",
     label: "Active",
-    shortLabel: "Active",
-    icon: <CheckCircle className='h-3.5 w-3.5' />,
-    emptyIcon: <CheckCircle className='h-10 w-10 text-zinc-300' />,
+    badgeClass: "bg-emerald-100 text-emerald-700",
     emptyTitle: "No active products",
-    emptyDescription: "All your products are currently inactive",
+    emptyDescription: "All products are currently inactive",
     filter: (p) => p.active,
   },
   {
     value: "inactive",
     label: "Inactive",
-    shortLabel: "Inactive",
-    icon: <AlertCircle className='h-3.5 w-3.5' />,
-    emptyIcon: <AlertCircle className='h-10 w-10 text-zinc-300' />,
+    badgeClass: "bg-orange-100 text-orange-700",
     emptyTitle: "No inactive products",
-    emptyDescription: "All your products are currently active",
+    emptyDescription: "All products are active — great!",
     filter: (p) => !p.active,
   },
   {
     value: "instock",
     label: "In Stock",
-    shortLabel: "In Stock",
-    icon: <TrendingUp className='h-3.5 w-3.5' />,
-    emptyIcon: <TrendingUp className='h-10 w-10 text-zinc-300' />,
+    badgeClass: "bg-blue-100 text-blue-700",
     emptyTitle: "No products in stock",
     emptyDescription: "Time to restock your inventory",
     filter: (p) => p.quantity > 0,
@@ -171,579 +131,271 @@ const TAB_CONFIG: {
   {
     value: "outofstock",
     label: "Out of Stock",
-    shortLabel: "Out",
-    icon: <TrendingDown className='h-3.5 w-3.5' />,
-    emptyIcon: <TrendingDown className='h-10 w-10 text-emerald-400' />,
+    badgeClass: "bg-red-100 text-red-600",
     emptyTitle: "All products are stocked",
     emptyDescription: "Your inventory is in great shape",
     filter: (p) => p.quantity <= 0,
   },
 ];
 
-// ─── Variant Display Types & Helpers ─────────────────────────────────────────
+// ─── Stat Card ────────────────────────────────────────────────────────────────
 
-interface VariantDisplay {
-  name: string;
-  image?: string;
-  sku?: string;
-  stock?: number;
-  price?: number;
-}
-
-const normalizeVariations = (product: IProduct | null): VariantDisplay[] => {
-  if (!product?.variation || product.variation.length === 0) return [];
-  return product.variation.map((v) => {
-    let imageUrl: string | undefined;
-    if (v.images && v.images.length > 0) {
-      const img = v.images[0];
-      if (typeof img === "string") imageUrl = img;
-      else if (img instanceof File) imageUrl = URL.createObjectURL(img);
-    }
-    if (!imageUrl && v.imageGroupId && product.imageGroups) {
-      const imageGroup = product.imageGroups.find(
-        (g) => g.id === v.imageGroupId,
-      );
-      if (imageGroup?.images?.length > 0) {
-        const gi = imageGroup.images[0];
-        if (typeof gi === "string") imageUrl = gi;
-        else if (gi instanceof File) imageUrl = URL.createObjectURL(gi);
-      }
-    }
-    return {
-      name:
-        v.name ||
-        v.title ||
-        `${v.color || ""} ${v.size || ""}`.trim() ||
-        "Variant",
-      image: imageUrl,
-      sku: v.sku,
-      stock: v.quantity,
-      price: v.unitPrice,
-    };
-  });
-};
-
-// ─── Variant Lightbox ────────────────────────────────────────────────────────
-
-interface VariantLightboxProps {
-  variants: VariantDisplay[];
-  startIndex: number;
-  onClose: () => void;
-}
-
-const VariantLightbox: React.FC<VariantLightboxProps> = ({
-  variants,
-  startIndex,
-  onClose,
-}) => {
-  const [idx, setIdx] = useState(startIndex);
-  const withImages = variants.filter((v) => v.image);
-  const current = withImages[idx];
-
-  const prev = useCallback(
-    () => setIdx((i) => (i - 1 + withImages.length) % withImages.length),
-    [withImages.length],
-  );
-  const next = useCallback(
-    () => setIdx((i) => (i + 1) % withImages.length),
-    [withImages.length],
-  );
-
-  useEffect(() => {
-    const handler = (e: KeyboardEvent) => {
-      if (e.key === "Escape") onClose();
-      if (e.key === "ArrowLeft") prev();
-      if (e.key === "ArrowRight") next();
-    };
-    window.addEventListener("keydown", handler);
-    return () => window.removeEventListener("keydown", handler);
-  }, [onClose, prev, next]);
-
-  if (!current) return null;
-
-  return (
-    <div
-      className='fixed inset-0 z-[200] flex items-center justify-center bg-black/80 backdrop-blur-sm'
-      onClick={onClose}>
-      <div
-        className='relative max-w-lg w-full mx-4 rounded-2xl overflow-hidden bg-zinc-900 shadow-2xl'
-        onClick={(e) => e.stopPropagation()}>
-        <button
-          onClick={onClose}
-          className='absolute top-3 right-3 z-10 w-8 h-8 flex items-center justify-center rounded-full bg-black/50 text-white hover:bg-black/70 transition-colors'
-          aria-label='Close lightbox'>
-          <X className='w-4 h-4' />
-        </button>
-        <div className='aspect-square w-full bg-zinc-800'>
-          <img
-            src={current.image}
-            alt={current.name}
-            className='w-full h-full object-contain'
-          />
-        </div>
-        <div className='px-5 py-4 flex items-center justify-between'>
-          <div>
-            <p className='text-white font-semibold text-sm'>{current.name}</p>
-            {current.sku && (
-              <p className='text-zinc-400 text-xs font-mono mt-0.5'>
-                {current.sku}
-              </p>
-            )}
-          </div>
-          <span className='text-zinc-500 text-xs'>
-            {idx + 1} / {withImages.length}
-          </span>
-        </div>
-        {withImages.length > 1 && (
-          <>
-            <button
-              onClick={prev}
-              className='absolute left-3 top-[45%] -translate-y-1/2 w-9 h-9 flex items-center justify-center rounded-full bg-black/50 text-white hover:bg-black/70 transition-colors'>
-              <ChevronLeft className='w-5 h-5' />
-            </button>
-            <button
-              onClick={next}
-              className='absolute right-3 top-[45%] -translate-y-1/2 w-9 h-9 flex items-center justify-center rounded-full bg-black/50 text-white hover:bg-black/70 transition-colors'>
-              <ChevronRight className='w-5 h-5' />
-            </button>
-          </>
-        )}
-        {withImages.length > 1 && (
-          <div className='flex gap-2 px-5 pb-4 overflow-x-auto'>
-            {withImages.map((v, i) => (
-              <button
-                key={i}
-                onClick={() => setIdx(i)}
-                className={`shrink-0 w-12 h-12 rounded-lg overflow-hidden border-2 transition-all ${i === idx ? "border-indigo-400 scale-105" : "border-transparent opacity-50 hover:opacity-100"}`}>
-                <img
-                  src={v.image}
-                  alt={v.name}
-                  className='w-full h-full object-cover'
-                />
-              </button>
-            ))}
-          </div>
-        )}
-      </div>
-    </div>
-  );
-};
-
-// ─── ProductVariationDrawer ──────────────────────────────────────────────────
-
-const ProductVariationDrawer: React.FC<{
-  isOpen: boolean;
-  onClose: () => void;
-  product: IProduct | null;
-}> = ({ isOpen, onClose, product }) => {
-  const [query, setQuery] = useState("");
-  const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
-
-  const normalized = normalizeVariations(product);
-  const hasVars = normalized.length > 0;
-  const withImages = normalized.filter((v) => v.image);
-  const filtered = hasVars
-    ? normalized.filter((v) =>
-        v.name.toLowerCase().includes(query.toLowerCase()),
-      )
-    : [];
-
-  useEffect(() => {
-    if (!isOpen) return;
-    const h = (e: KeyboardEvent) =>
-      e.key === "Escape" && !lightboxIndex && onClose();
-    window.addEventListener("keydown", h);
-    return () => window.removeEventListener("keydown", h);
-  }, [isOpen, onClose, lightboxIndex]);
-
-  useEffect(() => {
-    document.body.style.overflow = isOpen ? "hidden" : "";
-    return () => {
-      document.body.style.overflow = "";
-    };
-  }, [isOpen]);
-
-  if (!product || !isOpen) return null;
-
-  return (
-    <>
-      <div
-        className='fixed inset-0 z-[100] bg-black/40 backdrop-blur-[2px]'
-        onClick={onClose}
-      />
-      <div className='fixed bottom-0 left-0 right-0 z-[110] max-h-[90dvh] flex flex-col rounded-t-3xl bg-white dark:bg-zinc-900 shadow-2xl overflow-hidden animate-in slide-in-from-bottom duration-300'>
-        <div className='flex justify-center pt-3 pb-1 shrink-0'>
-          <div className='w-10 h-1 rounded-full bg-zinc-200 dark:bg-zinc-700' />
-        </div>
-        <div className='px-5 pt-2 pb-4 border-b border-zinc-100 dark:border-zinc-800 shrink-0'>
-          <div className='flex items-start justify-between gap-3 mb-3'>
-            <div className='flex items-center gap-3 min-w-0'>
-              <div className='w-11 h-11 rounded-xl overflow-hidden bg-zinc-100 dark:bg-zinc-800 shrink-0 ring-1 ring-zinc-200 dark:ring-zinc-700'>
-                {product.thumbnail ? (
-                  <img
-                    src={product.thumbnail}
-                    alt={product.name}
-                    className='w-full h-full object-cover'
-                    onError={(e) => {
-                      (e.target as HTMLImageElement).style.display = "none";
-                    }}
-                  />
-                ) : (
-                  <div className='w-full h-full flex items-center justify-center'>
-                    <Package className='h-5 w-5 text-gray-400' />
-                  </div>
-                )}
-              </div>
-              <div className='min-w-0'>
-                <h3 className='text-[15px] font-semibold text-zinc-900 dark:text-white leading-tight truncate'>
-                  {product.name}
-                </h3>
-                <p className='text-xs text-zinc-500 dark:text-zinc-400 mt-0.5'>
-                  {hasVars ? normalized.length : 0} variant
-                  {normalized.length !== 1 ? "s" : ""}
-                  {withImages.length > 0 && (
-                    <span className='ml-1.5 text-indigo-500 dark:text-indigo-400'>
-                      · {withImages.length} with photos
-                    </span>
-                  )}
-                </p>
-              </div>
-            </div>
-            <button
-              onClick={onClose}
-              className='w-8 h-8 flex items-center justify-center rounded-full bg-zinc-100 dark:bg-zinc-800 text-zinc-500 hover:bg-zinc-200 dark:hover:bg-zinc-700 transition-colors shrink-0'>
-              <X className='w-4 h-4' />
-            </button>
-          </div>
-          {hasVars && normalized.length > 3 && (
-            <div className='relative'>
-              <Search className='absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-zinc-400 pointer-events-none' />
-              <input
-                type='text'
-                placeholder='Search variants…'
-                value={query}
-                onChange={(e) => setQuery(e.target.value)}
-                className='w-full pl-8 pr-8 py-2.5 text-sm rounded-xl bg-zinc-100 dark:bg-zinc-800 text-zinc-900 dark:text-white placeholder-zinc-400 border border-transparent focus:border-indigo-300 dark:focus:border-indigo-700 outline-none transition-all'
-              />
-              {query && (
-                <button
-                  onClick={() => setQuery("")}
-                  className='absolute right-3 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-zinc-600'>
-                  <X className='w-3.5 h-3.5' />
-                </button>
-              )}
-            </div>
-          )}
-        </div>
-        <div className='flex-1 overflow-y-auto overscroll-contain px-4 py-4'>
-          {!hasVars ? (
-            <div className='flex flex-col items-center justify-center py-14 text-zinc-400 dark:text-zinc-600'>
-              <div className='w-16 h-16 rounded-2xl bg-zinc-100 dark:bg-zinc-800 flex items-center justify-center mb-4'>
-                <Package className='w-7 h-7 opacity-40' />
-              </div>
-              <p className='text-sm font-medium text-zinc-500 dark:text-zinc-400'>
-                No variants for this product
-              </p>
-              <p className='text-xs text-zinc-400 dark:text-zinc-600 mt-1'>
-                Add variants to offer different options
-              </p>
-            </div>
-          ) : filtered.length === 0 ? (
-            <div className='flex flex-col items-center justify-center py-10 text-zinc-400'>
-              <Search className='w-6 h-6 mb-2 opacity-40' />
-              <p className='text-sm'>No variants match "{query}"</p>
-            </div>
-          ) : (
-            <div className='grid grid-cols-2 sm:grid-cols-3 gap-3'>
-              {filtered.map((variant, index) => {
-                const imgIndex = withImages.findIndex(
-                  (v) => v.name === variant.name,
-                );
-                return (
-                  <div
-                    key={index}
-                    className='group relative flex flex-col rounded-2xl border border-zinc-100 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-800/60 overflow-hidden hover:border-indigo-200 dark:hover:border-indigo-700 hover:shadow-md transition-all duration-200'>
-                    {variant.image ? (
-                      <div className='relative aspect-square overflow-hidden bg-zinc-100 dark:bg-zinc-800'>
-                        <img
-                          src={variant.image}
-                          alt={variant.name}
-                          className='w-full h-full object-cover group-hover:scale-105 transition-transform duration-300'
-                        />
-                        <button
-                          onClick={() =>
-                            imgIndex >= 0 && setLightboxIndex(imgIndex)
-                          }
-                          className='absolute inset-0 flex items-center justify-center bg-black/0 group-hover:bg-black/25 transition-colors'>
-                          <ZoomIn className='w-6 h-6 text-white opacity-0 group-hover:opacity-100 transition-opacity drop-shadow' />
-                        </button>
-                      </div>
-                    ) : (
-                      <div className='aspect-square flex flex-col items-center justify-center bg-zinc-100 dark:bg-zinc-800 gap-1.5'>
-                        <ImageOff className='w-6 h-6 text-zinc-300 dark:text-zinc-600' />
-                        <span className='text-[9px] text-zinc-400 dark:text-zinc-500 font-medium'>
-                          No image
-                        </span>
-                      </div>
-                    )}
-                    <div className='p-2.5 flex flex-col gap-1'>
-                      <p className='text-[12px] font-semibold text-zinc-800 dark:text-zinc-200 leading-tight line-clamp-2'>
-                        {variant.name}
-                      </p>
-                      {variant.sku && (
-                        <span className='text-[10px] font-mono text-zinc-400 dark:text-zinc-500 truncate'>
-                          {variant.sku}
-                        </span>
-                      )}
-                      {(variant.stock !== undefined ||
-                        variant.price !== undefined) && (
-                        <div className='flex items-center gap-1.5 flex-wrap mt-0.5'>
-                          {variant.stock !== undefined && (
-                            <span
-                              className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[9px] font-semibold ${variant.stock > 0 ? "bg-emerald-50 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400" : "bg-red-50 text-red-600 dark:bg-red-900/30 dark:text-red-400"}`}>
-                              <BoxIcon className='w-2.5 h-2.5' />
-                              {variant.stock}
-                            </span>
-                          )}
-                          {variant.price !== undefined && (
-                            <span className='inline-flex items-center px-1.5 py-0.5 rounded-full text-[9px] font-semibold bg-indigo-50 text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-400'>
-                              ৳{formatNumber(variant.price)}
-                            </span>
-                          )}
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          )}
-        </div>
-        <div className='px-5 py-4 border-t border-zinc-100 dark:border-zinc-800 shrink-0'>
-          <button
-            onClick={onClose}
-            className='w-full py-3 rounded-2xl bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 text-sm font-semibold hover:bg-zinc-200 dark:hover:bg-zinc-700 active:scale-[0.98] transition-all'>
-            Done
-          </button>
-        </div>
-      </div>
-      {lightboxIndex !== null && (
-        <VariantLightbox
-          variants={normalized}
-          startIndex={lightboxIndex}
-          onClose={() => setLightboxIndex(null)}
-        />
-      )}
-    </>
-  );
-};
-
-// ─── Table headers ───────────────────────────────────────────────────────────
-
-const STYLED_TABLE_HEADERS = [
-  "Product",
-  "Category",
-  "Price",
-  "Variant",
-  "Stock",
-  "Sold | Returned",
-  "Last Updated",
-] as const;
-
-// ─── DesktopProductTable ──────────────────────────────────────────────────────
-
-interface DesktopProductTableProps {
-  products: IProduct[];
-  viewType: "list" | "grid";
-  onEdit: (id: string) => void;
-  onDelete: (id: string) => void;
-  onRefresh: () => void;
-  onViewDetails: (id: string) => void;
-  renderGridView: () => React.ReactNode;
-}
-
-const DesktopProductTable: React.FC<DesktopProductTableProps> = ({
-  products,
-  viewType,
-  onEdit,
-  onDelete,
-  onRefresh,
-  onViewDetails,
-  renderGridView,
-}) => {
-  const sharedItemProps = (product: IProduct) => ({
-    key: product?.id,
-    id: product?.id,
-    sku: product?.sku,
-    slug: product?.slug,
-    image: product?.thumbnail,
-    title: product?.name,
-    categoryName: product?.categoryName ?? "Not Added",
-    active: product?.active,
-    quantity: product?.quantity,
-    unitPrice: product?.unitPrice,
-    totalSold: product?.totalSold ?? 0,
-    totalReturned: product?.totalReturned ?? 0,
-    variations: (product?.variantList?.length
-      ? product.variantList
-      : ["No Variant"]) as string[],
-    variationList: product?.variation,
-    hasVariation: product?.hasVariation,
-    imageGroups: product?.imageGroups,
-    handleUpdateProduct: onEdit,
-    deleteExistingProduct: onDelete,
-    updatedAt: product?.timestamps?.updatedAt,
-    refreshProductList: onRefresh,
-    handleViewProductDetails: onViewDetails,
-    variationDisplayMode: viewType === "grid" ? "grid" : "list",
-  });
-
-  return (
-    <Table divClass='relative' className=''>
-      <TableHeader className='sticky top-0 z-10'>
-        <TableRow className='bg-zinc-50 border-b border-zinc-200 hover:bg-zinc-50'>
-          <TableHead className='w-12 bg-zinc-50 text-zinc-400 py-2.5'>
-            <Image className='h-3.5 w-3.5' />
-          </TableHead>
-          {STYLED_TABLE_HEADERS.map((h) => (
-            <TableHead
-              key={h}
-              className='bg-zinc-50 text-zinc-500 text-xs font-semibold uppercase tracking-wide py-2.5'>
-              {h}
-            </TableHead>
-          ))}
-          <TableHead className='w-10 bg-zinc-50 text-zinc-400 py-2.5'>
-            <MoreHorizontal className='h-3.5 w-3.5' />
-          </TableHead>
-        </TableRow>
-      </TableHeader>
-      <TableBody>
-        {products.map((product) => (
-          <SingleItem {...sharedItemProps(product)} />
-        ))}
-      </TableBody>
-    </Table>
-  );
-};
-
-// ─── TabProductContent ────────────────────────────────────────────────────────
-
-interface TabProductContentProps {
-  tabConfig: (typeof TAB_CONFIG)[number];
-  allProducts: IProduct[];
-  viewType: "list" | "grid";
-  inputValue: string;
-  onEdit: (id: string) => void;
-  onDelete: (id: string) => void;
-  onRefresh: () => void;
-  onViewDetails: (id: string) => void;
-  renderGridView: () => React.ReactNode;
-  renderMobileCard: (product: IProduct, index: number) => React.ReactNode;
-  hasCreatePermission: boolean;
-  onCreateProduct: () => void;
-}
-
-const TabProductContent: React.FC<TabProductContentProps> = ({
-  tabConfig,
-  allProducts,
-  viewType,
-  inputValue,
-  onEdit,
-  onDelete,
-  onRefresh,
-  onViewDetails,
-  renderGridView,
-  renderMobileCard,
-  hasCreatePermission,
-  onCreateProduct,
-}) => {
-  const filtered = allProducts.filter(tabConfig.filter);
-
-  return (
-    <TabsContent
-      value={tabConfig.value}
-      className='m-0 focus-visible:outline-none'>
-      {filtered.length === 0 ? (
-        <div className='flex flex-col items-center justify-center py-16 text-center px-4'>
-          <div className='w-16 h-16 rounded-2xl bg-zinc-100 flex items-center justify-center mb-4'>
-            {tabConfig.emptyIcon}
-          </div>
-          <h3 className='text-base font-semibold text-zinc-800 mb-1'>
-            {tabConfig.emptyTitle}
-          </h3>
-          <p className='text-sm text-zinc-500 mb-5 max-w-xs'>
-            {tabConfig.value === "all" && inputValue
-              ? `No products match "${inputValue}"`
-              : tabConfig.emptyDescription}
-          </p>
-          {tabConfig.value === "all" && hasCreatePermission && !inputValue && (
-            <Button
-              onClick={onCreateProduct}
-              size='sm'
-              className='bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg h-9 px-4 text-sm'>
-              <PlusCircle className='h-4 w-4 mr-1.5' /> Add Product
-            </Button>
-          )}
-        </div>
-      ) : (
-        <>
-          {/* Mobile */}
-          <div className='md:hidden p-3'>
-            <div className='grid grid-cols-2 gap-2.5 sm:grid-cols-3'>
-              {filtered.map(renderMobileCard)}
-            </div>
-          </div>
-          {/* Desktop */}
-          <div className='hidden md:block'>
-            <DesktopProductTable
-              products={filtered}
-              viewType={viewType}
-              onEdit={onEdit}
-              onDelete={onDelete}
-              onRefresh={onRefresh}
-              onViewDetails={onViewDetails}
-              renderGridView={renderGridView}
-            />
-          </div>
-        </>
-      )}
-    </TabsContent>
-  );
-};
-
-// ─── Stat Card ───────────────────────────────────────────────────────────────
-
-interface StatCardProps {
+const StatCard: React.FC<{
   title: string;
   value: string;
   description: string;
   icon: React.ReactNode;
   accent: string;
-}
-
-const StatCard: React.FC<StatCardProps> = ({
-  title,
-  value,
-  description,
-  icon,
-  accent,
-}) => (
+}> = ({ title, value, description, icon, accent }) => (
   <div
     className={`relative overflow-hidden rounded-xl border bg-white p-4 ${accent}`}>
     <div className='flex items-start justify-between gap-2'>
       <div className='min-w-0'>
-        <p className='text-xs font-semibold text-zinc-500 uppercase tracking-wide mb-1'>
+        <p className='text-[10px] font-semibold text-zinc-400 uppercase tracking-wider mb-1'>
           {title}
         </p>
         <p className='text-2xl font-bold text-zinc-900 leading-tight'>
           {value}
         </p>
-        <p className='text-xs text-zinc-400 mt-1 truncate'>{description}</p>
+        <p className='text-[11px] text-zinc-400 mt-1 truncate'>{description}</p>
       </div>
-      <div className='shrink-0 w-9 h-9 rounded-lg flex items-center justify-center bg-zinc-100'>
+      <div className='shrink-0 w-9 h-9 rounded-lg flex items-center justify-center bg-zinc-50 border border-zinc-100'>
         {icon}
       </div>
     </div>
+  </div>
+);
+
+// ─── Table skeleton overlay ───────────────────────────────────────────────────
+
+const TableLoadingOverlay: React.FC = () => (
+  <div className='absolute inset-0 bg-white/70 backdrop-blur-[1px] z-20 flex items-start pt-12 justify-center'>
+    <div className='flex flex-col items-center gap-3'>
+      <div className='w-5 h-5 rounded-full border-2 border-indigo-600 border-t-transparent animate-spin' />
+      <span className='text-xs text-zinc-500 font-medium'>Loading…</span>
+    </div>
+  </div>
+);
+
+const TableRowSkeleton: React.FC = () => (
+  <tr className='border-b border-zinc-100 animate-pulse'>
+    <td className='py-3 px-4 w-12'>
+      <div className='w-9 h-9 rounded-lg bg-zinc-100' />
+    </td>
+    <td className='py-3 px-4'>
+      <div className='space-y-1.5'>
+        <div className='h-3.5 w-36 bg-zinc-200 rounded' />
+        <div className='h-2.5 w-20 bg-zinc-100 rounded' />
+      </div>
+    </td>
+    <td className='py-3 px-4'>
+      <div className='h-3 w-20 bg-zinc-100 rounded' />
+    </td>
+    <td className='py-3 px-4'>
+      <div className='h-3 w-16 bg-zinc-100 rounded' />
+    </td>
+    <td className='py-3 px-4'>
+      <div className='h-3 w-12 bg-zinc-100 rounded' />
+    </td>
+    <td className='py-3 px-4'>
+      <div className='h-3 w-10 bg-zinc-100 rounded' />
+    </td>
+    <td className='py-3 px-4'>
+      <div className='h-3 w-14 bg-zinc-100 rounded' />
+    </td>
+    <td className='py-3 px-4'>
+      <div className='h-3 w-20 bg-zinc-100 rounded' />
+    </td>
+    <td className='py-3 px-4 w-10'>
+      <div className='w-5 h-5 rounded bg-zinc-100' />
+    </td>
+  </tr>
+);
+
+// ─── Mobile Stat Strip ────────────────────────────────────────────────────────
+
+const MobileStatStrip: React.FC<{ summary: StockSummaryResponse | null }> = ({
+  summary,
+}) => {
+  const items = [
+    {
+      label: "Active",
+      value: formatNumber(summary?.totalActiveProductType),
+      color: "text-emerald-600",
+    },
+    {
+      label: "Stock",
+      value: formatNumber(summary?.totalActiveProducts),
+      color: "text-blue-600",
+    },
+    {
+      label: "Variants",
+      value: formatNumber(summary?.totalActiveProductVariations),
+      color: "text-violet-600",
+    },
+    {
+      label: "Value",
+      value: summary
+        ? `৳${formatNumber(summary.totalActiveProductPrice)}`
+        : "—",
+      color: "text-amber-600",
+    },
+  ];
+  return (
+    <div className='grid grid-cols-4 gap-px bg-zinc-200 rounded-xl overflow-hidden border border-zinc-200'>
+      {items.map((item, i) => (
+        <div key={i} className='bg-white px-2 py-2.5 text-center'>
+          <p className={`text-sm font-bold ${item.color} leading-tight`}>
+            {item.value}
+          </p>
+          <p className='text-[9px] text-zinc-400 font-medium mt-0.5 uppercase tracking-wide'>
+            {item.label}
+          </p>
+        </div>
+      ))}
+    </div>
+  );
+};
+
+// ─── Mobile Tab Pill ──────────────────────────────────────────────────────────
+
+const MobileTabPills: React.FC<{
+  selectedTab: string;
+  onTabChange: (tab: string) => void;
+  counts: Record<string, number>;
+}> = ({ selectedTab, onTabChange, counts }) => {
+  const scrollRef = useRef<HTMLDivElement>(null);
+  return (
+    <div
+      ref={scrollRef}
+      className='flex gap-2 overflow-x-auto scrollbar-hide pb-0.5 px-4'>
+      {TAB_CONFIG.map(({ value, label, badgeClass }) => {
+        const active = selectedTab === value;
+        return (
+          <button
+            key={value}
+            onClick={() => onTabChange(value)}
+            className={`shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold transition-all ${
+              active
+                ? "bg-zinc-900 text-white shadow-sm"
+                : "bg-white text-zinc-500 border border-zinc-200"
+            }`}>
+            {label}
+            <span
+              className={`text-[9px] font-bold px-1.5 py-0.5 rounded-full min-w-[18px] text-center ${active ? "bg-white/20 text-white" : badgeClass}`}>
+              {counts[value]}
+            </span>
+          </button>
+        );
+      })}
+    </div>
+  );
+};
+
+// ─── Mobile Empty ─────────────────────────────────────────────────────────────
+
+const MobileEmptyState: React.FC<{
+  type: "no-products" | "no-results";
+  searchQuery?: string;
+  hasCreatePermission?: boolean;
+  onCreateProduct?: () => void;
+  onClearFilters?: () => void;
+}> = ({
+  type,
+  searchQuery,
+  hasCreatePermission,
+  onCreateProduct,
+  onClearFilters,
+}) => (
+  <div className='flex flex-col items-center justify-center py-16 px-6 text-center'>
+    <div className='w-16 h-16 rounded-2xl bg-zinc-100 flex items-center justify-center mb-4'>
+      {type === "no-products" ? (
+        <Package className='w-7 h-7 text-zinc-300' />
+      ) : (
+        <Search className='w-7 h-7 text-zinc-300' />
+      )}
+    </div>
+    <h3 className='text-base font-semibold text-zinc-800 mb-1'>
+      {type === "no-products" ? "No products yet" : "No results found"}
+    </h3>
+    <p className='text-sm text-zinc-500 mb-5'>
+      {type === "no-products"
+        ? "Add your first product to start managing inventory."
+        : searchQuery
+          ? `No products match "${searchQuery}"`
+          : "Try adjusting your filters."}
+    </p>
+    {type === "no-products" && hasCreatePermission && onCreateProduct && (
+      <button
+        onClick={onCreateProduct}
+        className='inline-flex items-center gap-2 bg-indigo-600 text-white text-sm font-semibold px-4 py-2.5 rounded-xl'>
+        <PlusCircle className='w-4 h-4' /> Add Product
+      </button>
+    )}
+    {type === "no-results" && onClearFilters && (
+      <button
+        onClick={onClearFilters}
+        className='inline-flex items-center gap-2 bg-zinc-100 text-zinc-700 text-sm font-semibold px-4 py-2.5 rounded-xl'>
+        Clear filters
+      </button>
+    )}
+  </div>
+);
+
+// ─── Mobile Pagination ────────────────────────────────────────────────────────
+
+const MobilePagination: React.FC<{
+  currentPageNum: number;
+  totalPages: number;
+  totalProducts: number;
+  limit: number;
+  onPrev: () => void;
+  onNext: () => void;
+}> = ({ currentPageNum, totalPages, totalProducts, limit, onPrev, onNext }) => (
+  <div className='flex items-center justify-between bg-white border-t border-zinc-100 px-4 py-3'>
+    <button
+      disabled={currentPageNum < 2}
+      onClick={onPrev}
+      className='flex items-center gap-1.5 text-sm font-medium text-zinc-600 disabled:opacity-30 disabled:cursor-not-allowed active:scale-95 transition-transform'>
+      <ChevronLeft className='h-4 w-4' /> Prev
+    </button>
+    <div className='text-center'>
+      <p className='text-xs font-semibold text-zinc-800'>
+        {currentPageNum} / {totalPages}
+      </p>
+      <p className='text-[10px] text-zinc-400'>
+        {Math.max(1, (currentPageNum - 1) * limit + 1)}–
+        {Math.min(currentPageNum * limit, totalProducts)} of {totalProducts}
+      </p>
+    </div>
+    <button
+      disabled={currentPageNum >= totalPages}
+      onClick={onNext}
+      className='flex items-center gap-1.5 text-sm font-medium text-zinc-600 disabled:opacity-30 disabled:cursor-not-allowed active:scale-95 transition-transform'>
+      Next <ChevronRight className='h-4 w-4' />
+    </button>
+  </div>
+);
+
+// ─── Mobile Loading Skeleton ──────────────────────────────────────────────────
+
+const MobileLoadingSkeleton: React.FC = () => (
+  <div className='px-4 grid grid-cols-2 gap-2.5'>
+    {[...Array(6)].map((_, i) => (
+      <div
+        key={i}
+        className='bg-white rounded-xl border border-zinc-100 overflow-hidden animate-pulse'>
+        <div className='aspect-[4/3] bg-zinc-100' />
+        <div className='p-2.5 space-y-2'>
+          <div className='h-3.5 bg-zinc-200 rounded w-4/5' />
+          <div className='h-3 bg-zinc-100 rounded w-3/5' />
+          <div className='flex gap-1.5'>
+            <div className='flex-1 h-6 bg-zinc-100 rounded-lg' />
+            <div className='flex-1 h-6 bg-zinc-100 rounded-lg' />
+          </div>
+        </div>
+      </div>
+    ))}
   </div>
 );
 
@@ -778,20 +430,18 @@ const ProductList: React.FC<Props> = ({ handleEditProduct }) => {
 
   const [viewType, setViewType] = useState<"list" | "grid">("list");
   const [summary, setSummary] = useState<StockSummaryResponse | null>(null);
-  const [showFilters, setShowFilters] = useState(true);
-  const [selectedTab, setSelectedTab] = useState("all");
-  const [isMobileSummaryOpen, setIsMobileSummaryOpen] = useState(false);
-  const [isVariationDrawerOpen, setIsVariationDrawerOpen] = useState(false);
-  const [selectedProductForVariations, setSelectedProductForVariations] =
-    useState<IProduct | null>(null);
+  const [selectedTab, setSelectedTab] = useState<TabKey>("all");
+  const [mobileSelectedTab, setMobileSelectedTab] = useState<TabKey>("all");
+  const [isMobileSearchOpen, setIsMobileSearchOpen] = useState(false);
+  // ← KEY: separate "table only" loading state so page chrome never re-mounts
+  const [isTableLoading, setIsTableLoading] = useState(false);
 
   const handleViewProductDetails = (id: string) => navigate(`/products/${id}`);
 
   const getProductSummaryDetails = async () => {
     const response = await getProductSummary();
-    if (response?.success) {
-      setSummary(response?.data);
-    } else {
+    if (response?.success) setSummary(response?.data);
+    else {
       errorToast(
         response?.error ?? "Something went wrong. Please try again",
         "top-center",
@@ -803,32 +453,40 @@ const ProductList: React.FC<Props> = ({ handleEditProduct }) => {
   useEffect(() => {
     fetchCategories();
     getProductSummaryDetails();
-    //eslint-disable-next-line
   }, []);
-
   useEffect(() => {
     setSearchQuery(inputValue);
-    //eslint-disable-next-line
   }, [debounceHandler]);
 
-  const handleOpenVariationDrawer = (product: IProduct) => {
-    setSelectedProductForVariations(product);
-    setIsVariationDrawerOpen(true);
-  };
+  // Wrap page-change to use table-only loading state
+  const handlePageChange = useCallback(
+    async (delta: number) => {
+      setIsTableLoading(true);
+      try {
+        await updateCurrentPage(delta);
+      } finally {
+        // give the products state time to settle
+        setTimeout(() => setIsTableLoading(false), 400);
+      }
+    },
+    [updateCurrentPage],
+  );
 
-  const handleCloseVariationDrawer = () => {
-    setIsVariationDrawerOpen(false);
-    setSelectedProductForVariations(null);
-  };
+  // Also track when productFetching transitions (for search/filter changes — those are fine to show overlay too)
+  const prevFetching = useRef(productFetching);
+  useEffect(() => {
+    if (prevFetching.current && !productFetching) setIsTableLoading(false);
+    prevFetching.current = productFetching;
+  }, [productFetching]);
 
-  // ── Summary stats ──────────────────────────────────────────────────────────
+  // ── Summary stat data ──────────────────────────────────────────────────────
 
   const statCards = [
     {
       title: "Active Products",
       value: summary ? formatNumber(summary.totalActiveProductType) : "—",
       description: "Available for sale",
-      icon: <Package className='h-4.5 w-4.5 text-blue-500' />,
+      icon: <Package className='h-4 w-4 text-blue-500' />,
       accent: "border-blue-100",
       key: "totalActiveProducts",
       total: summary?.totalActiveProductType,
@@ -836,8 +494,8 @@ const ProductList: React.FC<Props> = ({ handleEditProduct }) => {
     {
       title: "Total Stock",
       value: summary ? formatNumber(summary.totalActiveProducts) : "—",
-      description: "Units across all products",
-      icon: <Archive className='h-4.5 w-4.5 text-emerald-500' />,
+      description: "Units in inventory",
+      icon: <Archive className='h-4 w-4 text-emerald-500' />,
       accent: "border-emerald-100",
       key: "totalStock",
       total: summary?.totalActiveProducts,
@@ -845,8 +503,8 @@ const ProductList: React.FC<Props> = ({ handleEditProduct }) => {
     {
       title: "Variations",
       value: summary ? formatNumber(summary.totalActiveProductVariations) : "—",
-      description: "Distinct variants available",
-      icon: <Activity className='h-4.5 w-4.5 text-violet-500' />,
+      description: "Distinct variants",
+      icon: <Activity className='h-4 w-4 text-violet-500' />,
       accent: "border-violet-100",
       key: "totalVariants",
       total: summary?.totalActiveProductVariations,
@@ -856,48 +514,17 @@ const ProductList: React.FC<Props> = ({ handleEditProduct }) => {
       value: summary
         ? `৳${formatNumber(summary.totalActiveProductPrice)}`
         : "—",
-      description: "Total stock valuation",
-      icon: <TrendingUp className='h-4.5 w-4.5 text-amber-500' />,
+      description: "Total valuation",
+      icon: <FilePieChart className='h-4 w-4 text-amber-500' />,
       accent: "border-amber-100",
       key: "totalPrice",
       total: summary?.totalActiveProductPrice,
     },
   ];
 
-  // ── Renderers ──────────────────────────────────────────────────────────────
-
-  const renderMobileProductCard = (product: IProduct, _index: number) => (
-    <SingleProductCardItem
-      key={product?.id}
-      id={product?.id}
-      sku={product?.sku}
-      image={product?.thumbnail}
-      title={product?.name}
-      categoryName={product?.categoryName ?? "Not Added"}
-      active={product?.active}
-      quantity={product?.quantity}
-      unitPrice={product?.unitPrice}
-      totalSold={product?.totalSold ?? 0}
-      totalReturned={product?.totalReturned ?? 0}
-      variations={
-        product?.variantList?.length ? product.variantList : ["No Variant"]
-      }
-      handleUpdateProduct={handleEditProduct}
-      deleteExistingProduct={deleteProductData}
-      updatedAt={product?.timestamps?.updatedAt}
-      onViewVariations={() => handleOpenVariationDrawer(product)}
-    />
-  );
-
-  const renderGridView = () => (
-    <div className='grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 p-4'>
-      {products.map(renderMobileProductCard)}
-    </div>
-  );
-
   // ── Tab counts ─────────────────────────────────────────────────────────────
 
-  const tabCounts = {
+  const tabCounts: Record<TabKey, number> = {
     all: products.length,
     active: products.filter((p: IProduct) => p.active).length,
     inactive: products.filter((p: IProduct) => !p.active).length,
@@ -905,7 +532,7 @@ const ProductList: React.FC<Props> = ({ handleEditProduct }) => {
     outofstock: products.filter((p: IProduct) => p.quantity <= 0).length,
   };
 
-  // ── Pagination ─────────────────────────────────────────────────────────────
+  // ── Pagination select ──────────────────────────────────────────────────────
 
   const PaginationSelect = ({ className }: { className?: string }) => (
     <Select value={`${limit}`} onValueChange={(v) => setLimit(parseInt(v, 10))}>
@@ -932,8 +559,7 @@ const ProductList: React.FC<Props> = ({ handleEditProduct }) => {
       <SheetContainer>
         <SheetTrigger asChild>
           <Button variant='outline' size='sm' className='h-8 text-xs gap-1.5'>
-            <BarChartHorizontalBig className='h-3.5 w-3.5' />
-            By Category
+            <BarChartHorizontalBig className='h-3.5 w-3.5' /> By Category
           </Button>
         </SheetTrigger>
         <SheetContent className='w-full sm:max-w-2xl overflow-y-auto'>
@@ -985,197 +611,370 @@ const ProductList: React.FC<Props> = ({ handleEditProduct }) => {
       </SheetContainer>
     ) : null;
 
-  // ── Mobile view ────────────────────────────────────────────────────────────
+  // ── Table headers ──────────────────────────────────────────────────────────
 
-  const renderMobileView = () => {
-    const tabFiltered =
-      TAB_CONFIG.find((t) => t.value === selectedTab)?.filter ?? (() => true);
-    const displayProducts = products.filter(tabFiltered);
+  const TABLE_HEADERS = [
+    "Product",
+    "Category",
+    "Price",
+    "Variant",
+    "Stock",
+    "Sold | Returned",
+    "Last Updated",
+  ] as const;
 
+  // ── Filtered products for current tab ─────────────────────────────────────
+
+  const tabFilter =
+    TAB_CONFIG.find((t) => t.value === selectedTab)?.filter ?? (() => true);
+  const filteredProducts = products.filter(tabFilter);
+  const mobileTabFilter =
+    TAB_CONFIG.find((t) => t.value === mobileSelectedTab)?.filter ??
+    (() => true);
+  const mobileFilteredProducts = products.filter(mobileTabFilter);
+
+  // ─── INITIAL full-page loading ─────────────────────────────────────────────
+
+  if (productFetching && products.length === 0) {
     return (
-      <div className='min-h-screen bg-gray-50 sm:hidden'>
-        <MobileProductHeader
-          totalProducts={totalProducts}
-          hasCreatePermission={hasRequiredPermission("product", "create")}
-          onCreateProduct={() => navigate("/products/create")}
-          selectedTab={selectedTab}
-          summary={summary}
-          onOpenSummary={
-            hasRequiredPermission("product", "summary")
-              ? () => setIsMobileSummaryOpen(true)
-              : undefined
-          }
-        />
-        <MobileProductSummary
-          isOpen={isMobileSummaryOpen}
-          onClose={() => setIsMobileSummaryOpen(false)}
-          summary={summary}
-        />
-        <MobileProductFilters
-          searchValue={inputValue}
-          onSearchChange={setInputValue}
-          selectedTab={selectedTab}
-          onTabChange={setSelectedTab}
-          selectedCategory={selectedCategory}
-          onCategoryChange={setSelectedCategory}
-          categories={categories}
-          totalProducts={tabCounts.all}
-          activeCount={tabCounts.active}
-          inactiveCount={tabCounts.inactive}
-          inStockCount={tabCounts.instock}
-          outOfStockCount={tabCounts.outofstock}
-          onRefresh={getProductSummaryDetails}
-        />
-        <div className='px-4 py-2'>
-          {displayProducts.length === 0 ? (
+      <>
+        {/* Mobile loading */}
+        <div className='sm:hidden bg-gray-50 min-h-screen'>
+          <div className='bg-white border-b border-zinc-200 px-4 py-3 flex items-center justify-between'>
+            <div className='space-y-1'>
+              <div className='h-5 w-24 bg-zinc-200 rounded animate-pulse' />
+              <div className='h-3 w-16 bg-zinc-100 rounded animate-pulse' />
+            </div>
+            <div className='h-8 w-28 bg-zinc-200 rounded-xl animate-pulse' />
+          </div>
+          <div className='px-4 py-3'>
+            <div className='h-10 bg-zinc-200 rounded-xl animate-pulse mb-3' />
+            <div className='grid grid-cols-4 gap-px bg-zinc-200 rounded-xl overflow-hidden border border-zinc-200 mb-3'>
+              {[...Array(4)].map((_, i) => (
+                <div key={i} className='bg-white px-2 py-2.5 text-center'>
+                  <div className='h-5 bg-zinc-200 rounded mb-1 animate-pulse' />
+                  <div className='h-2 bg-zinc-100 rounded animate-pulse' />
+                </div>
+              ))}
+            </div>
+          </div>
+          <MobileLoadingSkeleton />
+        </div>
+        {/* Desktop loading */}
+        <div className='hidden sm:block space-y-3'>
+          <div className='flex items-center justify-between'>
+            <div className='flex items-center gap-2.5'>
+              <div className='w-8 h-8 rounded-lg bg-zinc-200 animate-pulse' />
+              <div className='space-y-1'>
+                <div className='h-4 w-24 bg-zinc-200 rounded animate-pulse' />
+                <div className='h-3 w-16 bg-zinc-100 rounded animate-pulse' />
+              </div>
+            </div>
+            <div className='h-8 w-28 bg-zinc-200 rounded-lg animate-pulse' />
+          </div>
+          <div className='grid grid-cols-4 gap-3'>
+            {[...Array(4)].map((_, i) => (
+              <div
+                key={i}
+                className='rounded-xl border border-zinc-100 bg-white p-4 animate-pulse'>
+                <div className='h-3 w-20 bg-zinc-100 rounded mb-2' />
+                <div className='h-7 w-16 bg-zinc-200 rounded mb-1' />
+                <div className='h-2.5 w-24 bg-zinc-100 rounded' />
+              </div>
+            ))}
+          </div>
+          <div className='rounded-xl border border-zinc-200 bg-white overflow-hidden'>
+            <div className='p-3 border-b border-zinc-100 bg-zinc-50/50'>
+              <div className='h-8 w-64 bg-zinc-200 rounded-lg animate-pulse' />
+            </div>
+            <div className='divide-y divide-zinc-100'>
+              {[...Array(8)].map((_, i) => (
+                <div key={i} className='flex items-center gap-4 px-4 py-3'>
+                  <div className='w-9 h-9 rounded-lg bg-zinc-100 animate-pulse shrink-0' />
+                  <div className='flex-1 space-y-1.5'>
+                    <div className='h-3.5 w-40 bg-zinc-200 rounded animate-pulse' />
+                    <div className='h-2.5 w-24 bg-zinc-100 rounded animate-pulse' />
+                  </div>
+                  <div className='h-3 w-16 bg-zinc-100 rounded animate-pulse' />
+                  <div className='h-3 w-12 bg-zinc-100 rounded animate-pulse' />
+                  <div className='h-3 w-10 bg-zinc-100 rounded animate-pulse' />
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </>
+    );
+  }
+
+  // ─── Empty state ───────────────────────────────────────────────────────────
+
+  if (
+    !productFetching &&
+    products.length === 0 &&
+    !inputValue &&
+    !selectedCategory
+  ) {
+    return (
+      <>
+        <div className='sm:hidden'>
+          <MobileEmptyState
+            type='no-products'
+            hasCreatePermission={hasRequiredPermission("product", "create")}
+            onCreateProduct={() => navigate("/products/create")}
+          />
+        </div>
+        <div className='hidden sm:block'>
+          {hasRequiredPermission("product", "create") ? (
+            <EmptyView
+              title='No products yet'
+              description='Add your first product to start managing inventory.'
+              buttonText='Add Product'
+              handleButtonClick={() => navigate("/products/create")}
+            />
+          ) : (
+            <EmptyView
+              title='No products yet'
+              description='Add your first product to start managing inventory.'
+            />
+          )}
+        </div>
+      </>
+    );
+  }
+
+  // ─── Main render ───────────────────────────────────────────────────────────
+
+  return (
+    <>
+      {/* ══════════════════════════════════════════════════════════════════════
+          MOBILE VIEW (< sm)
+      ═══════════════════════════════════════════════════════════════════════ */}
+      <div className='sm:hidden bg-zinc-50 min-h-screen flex flex-col'>
+        {/* Sticky top bar */}
+        <div className='sticky top-0 z-30 bg-white border-b border-zinc-200 shadow-sm'>
+          {/* Header row */}
+          <div className='flex items-center justify-between px-4 py-3'>
+            <div>
+              <h1 className='text-[15px] font-bold text-zinc-900 leading-tight'>
+                Products
+              </h1>
+              <p className='text-[11px] text-zinc-400'>
+                {totalProducts.toLocaleString()} total
+              </p>
+            </div>
+            <div className='flex items-center gap-2'>
+              <button
+                onClick={() => setIsMobileSearchOpen((v) => !v)}
+                className={`w-8 h-8 flex items-center justify-center rounded-xl border transition-colors ${isMobileSearchOpen ? "border-indigo-300 bg-indigo-50 text-indigo-600" : "border-zinc-200 bg-white text-zinc-500"}`}>
+                <Search className='w-4 h-4' />
+              </button>
+              {hasRequiredPermission("product", "create") && (
+                <button
+                  onClick={() => navigate("/products/create")}
+                  className='flex items-center gap-1.5 bg-indigo-600 text-white text-xs font-semibold px-3 py-2 rounded-xl'>
+                  <PlusCircle className='w-3.5 h-3.5' /> New
+                </button>
+              )}
+            </div>
+          </div>
+
+          {/* Collapsible search */}
+          {isMobileSearchOpen && (
+            <div className='px-4 pb-3'>
+              <div className='relative'>
+                <Search className='absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-zinc-400 pointer-events-none' />
+                <input
+                  autoFocus
+                  type='text'
+                  placeholder='Search products…'
+                  value={inputValue}
+                  onChange={(e) => setInputValue(e.target.value)}
+                  className='w-full pl-9 pr-8 py-2.5 text-sm rounded-xl bg-zinc-100 text-zinc-900 placeholder-zinc-400 border border-transparent focus:border-indigo-300 outline-none transition-all'
+                />
+                {inputValue && (
+                  <button
+                    onClick={() => setInputValue("")}
+                    className='absolute right-3 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-zinc-600'>
+                    <X className='w-3.5 h-3.5' />
+                  </button>
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* Tab pills */}
+          <div className='py-2'>
+            <MobileTabPills
+              selectedTab={mobileSelectedTab}
+              onTabChange={(t) => setMobileSelectedTab(t as TabKey)}
+              counts={tabCounts}
+            />
+          </div>
+        </div>
+
+        {/* Stats strip */}
+        <div className='px-4 pt-3 pb-2'>
+          <MobileStatStrip summary={summary} />
+        </div>
+
+        {/* Product grid */}
+        <div className='flex-1 px-4 pb-4'>
+          {isTableLoading && products.length > 0 ? (
+            <MobileLoadingSkeleton />
+          ) : mobileFilteredProducts.length === 0 ? (
             inputValue || selectedCategory ? (
-              <MobileProductEmpty
-                type='no-search-results'
+              <MobileEmptyState
+                type='no-results'
                 searchQuery={inputValue}
                 onClearFilters={() => {
                   setInputValue("");
                   setSelectedCategory("");
                 }}
-                onRetry={getProductSummaryDetails}
               />
             ) : (
-              <MobileProductEmpty
+              <MobileEmptyState
                 type='no-products'
                 hasCreatePermission={hasRequiredPermission("product", "create")}
                 onCreateProduct={() => navigate("/products/create")}
-                onRetry={getProductSummaryDetails}
               />
             )
           ) : (
-            <>
-              <div className='grid grid-cols-2 gap-2 pb-4'>
-                {displayProducts.map((product: IProduct) => (
-                  <MobileProductCard
-                    key={product.id}
-                    id={product.id}
-                    sku={product.sku}
-                    slug={product.slug}
-                    image={product.thumbnail}
-                    title={product.name}
-                    categoryName={product.categoryName ?? "Not Added"}
-                    active={product.active}
-                    quantity={product.quantity}
-                    unitPrice={product.unitPrice}
-                    totalSold={product.totalSold ?? 0}
-                    totalReturned={product.totalReturned ?? 0}
-                    variations={
-                      product?.variantList?.length
-                        ? product.variantList
-                        : ["No Variant"]
-                    }
-                    updatedAt={
-                      product.timestamps?.updatedAt || new Date().toISOString()
-                    }
-                    onEdit={handleEditProduct}
-                    onViewVariations={() => handleOpenVariationDrawer(product)}
-                  />
-                ))}
-              </div>
-              {inputValue === "" && (
-                <div className='bg-white rounded-xl border border-gray-200 p-4 mt-4 mb-20 shadow-sm'>
-                  <div className='text-center text-sm text-gray-600 mb-4'>
-                    Showing{" "}
-                    <span className='font-semibold text-gray-900'>
-                      {Math.max(1, (currentPageNum - 1) * limit + 1)}–
-                      {Math.min(currentPageNum * limit, totalProducts)}
-                    </span>{" "}
-                    of{" "}
-                    <span className='font-semibold text-gray-900'>
-                      {totalProducts}
-                    </span>
-                  </div>
-                  <div className='flex items-center justify-between gap-4'>
-                    <Button
-                      disabled={currentPageNum < 2}
-                      variant='outline'
-                      size='sm'
-                      onClick={() => updateCurrentPage(-1)}
-                      className='flex items-center gap-2 touch-manipulation'>
-                      <ChevronLeft className='h-4 w-4' /> Prev
-                    </Button>
-                    <div className='flex items-center gap-2'>
-                      <span className='text-sm font-medium text-gray-700'>
-                        {currentPageNum} / {totalPages}
-                      </span>
-                      <PaginationSelect className='w-16 h-8' />
+            <div className='grid grid-cols-2 gap-2.5'>
+              {mobileFilteredProducts.map((product: IProduct) => (
+                <MobileProductCard
+                  key={product.id}
+                  id={product.id}
+                  sku={product.sku}
+                  slug={product.slug}
+                  image={product.thumbnail}
+                  title={product.name}
+                  categoryName={product.categoryName ?? "Not Added"}
+                  categoryNames={product.categoryNames}
+                  active={product.active}
+                  quantity={product.quantity}
+                  unitPrice={product.unitPrice}
+                  totalSold={product.totalSold ?? 0}
+                  totalReturned={product.totalReturned ?? 0}
+                  variations={
+                    product.variantList?.length
+                      ? product.variantList
+                      : ["No Variant"]
+                  }
+                  updatedAt={
+                    product.timestamps?.updatedAt || new Date().toISOString()
+                  }
+                  onEdit={handleEditProduct}
+                  onDelete={deleteProductData}
+                  onViewDetails={handleViewProductDetails}
+                />
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* Sticky bottom pagination */}
+        {inputValue === "" && totalPages > 1 && (
+          <div className='sticky bottom-0 z-20 border-t border-zinc-200 bg-white/95 backdrop-blur-sm safe-area-bottom'>
+            <MobilePagination
+              currentPageNum={currentPageNum}
+              totalPages={totalPages}
+              totalProducts={totalProducts}
+              limit={limit}
+              onPrev={() => handlePageChange(-1)}
+              onNext={() => handlePageChange(1)}
+            />
+          </div>
+        )}
+      </div>
+
+      {/* ══════════════════════════════════════════════════════════════════════
+          DESKTOP VIEW (≥ sm)
+      ═══════════════════════════════════════════════════════════════════════ */}
+      <div className='hidden sm:block space-y-3'>
+        {/* Page header */}
+        <div className='flex items-center justify-between'>
+          <div className='flex items-center gap-2.5'>
+            <div className='w-8 h-8 rounded-lg bg-indigo-600 flex items-center justify-center'>
+              <ShoppingBag className='h-4 w-4 text-white' />
+            </div>
+            <div>
+              <h1 className='text-lg font-semibold text-zinc-900 leading-tight'>
+                Products
+              </h1>
+              <p className='text-xs text-zinc-500'>
+                {totalProducts > 0
+                  ? `${totalProducts.toLocaleString()} total`
+                  : "No products yet"}
+              </p>
+            </div>
+          </div>
+          <div className='flex items-center gap-2'>
+            {hasRequiredPermission("product", "summary") && (
+              <Drawer>
+                <DrawerTrigger asChild>
+                  <Button
+                    variant='outline'
+                    size='sm'
+                    className='h-8 text-xs gap-1.5 text-zinc-600'>
+                    <FilePieChart className='h-3.5 w-3.5' /> Summary
+                  </Button>
+                </DrawerTrigger>
+                <DrawerContent>
+                  <div className='mx-auto w-full max-w-3xl'>
+                    <DrawerHeader className='pb-3'>
+                      <DrawerTitle className='flex items-center gap-2 text-base'>
+                        <Package className='h-4 w-4 text-zinc-500' />
+                        Inventory Summary
+                      </DrawerTitle>
+                      <DrawerDescription className='text-sm'>
+                        Overview of stock, value, and variants
+                      </DrawerDescription>
+                    </DrawerHeader>
+                    <div className='px-4 pb-4'>
+                      <div className='grid grid-cols-2 md:grid-cols-4 gap-3 mb-4'>
+                        {statCards.map((card, i) => (
+                          <StatCard key={i} {...card} />
+                        ))}
+                      </div>
+                      {renderCategoryBreakdown()}
                     </div>
-                    <Button
-                      disabled={currentPageNum >= totalPages}
-                      variant='outline'
-                      size='sm'
-                      onClick={() => updateCurrentPage(1)}
-                      className='flex items-center gap-2 touch-manipulation'>
-                      Next <ChevronRight className='h-4 w-4' />
-                    </Button>
+                    <DrawerFooter className='pt-2'>
+                      <DrawerClose asChild>
+                        <Button
+                          variant='outline'
+                          size='sm'
+                          className='h-8 text-sm'>
+                          Close
+                        </Button>
+                      </DrawerClose>
+                    </DrawerFooter>
                   </div>
-                </div>
-              )}
-            </>
-          )}
-        </div>
-      </div>
-    );
-  };
-
-  // ── Desktop view ───────────────────────────────────────────────────────────
-
-  const renderDesktopView = () => (
-    <div className='space-y-3'>
-      {/* ── Page Header ── */}
-      <div className='flex items-center justify-between'>
-        <div className='flex items-center gap-2.5'>
-          <div className='w-8 h-8 rounded-lg bg-indigo-600 flex items-center justify-center'>
-            <ShoppingBag className='h-4 w-4 text-white' />
-          </div>
-          <div>
-            <h1 className='text-lg font-semibold text-zinc-900 leading-tight'>
-              Products
-            </h1>
-            <p className='text-xs text-zinc-500'>
-              {totalProducts > 0
-                ? `${totalProducts.toLocaleString()} total`
-                : "No products yet"}
-            </p>
+                </DrawerContent>
+              </Drawer>
+            )}
+            {hasRequiredPermission("product", "create") && (
+              <Button
+                size='sm'
+                onClick={() => navigate("/products/create")}
+                className='h-8 text-xs gap-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg px-3'>
+                <PlusCircle className='h-3.5 w-3.5' /> New Product
+              </Button>
+            )}
           </div>
         </div>
 
-        <div className='flex items-center gap-2'>
-          {/* Summary drawer trigger */}
-          {hasRequiredPermission("product", "summary") &&
-            renderCategoryBreakdown()}
-
-          {hasRequiredPermission("product", "create") && (
-            <Button
-              size='sm'
-              onClick={() => navigate("/products/create")}
-              className='h-8 text-xs gap-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg px-3'>
-              <PlusCircle className='h-3.5 w-3.5' />
-              New Product
-            </Button>
-          )}
-        </div>
-      </div>
-
-      {/* ── Stats row (inline, compact) ── */}
-      {hasRequiredPermission("product", "summary") && (
+        {/* Stats row */}
         <div className='grid grid-cols-4 gap-3'>
           {statCards.map((card, i) => (
-            <StatCard {...card} />
+            <StatCard key={i} {...card} />
           ))}
         </div>
-      )}
 
-      {/* ── Main content panel ── */}
-      <div className='rounded-xl border border-zinc-200 bg-white overflow-hidden shadow-sm'>
-        {/* Command bar: search + filters + tabs */}
-        <div className='border-b border-zinc-100 bg-zinc-50/50'>
-          {/* Top row: search + actions */}
-          <div className='flex items-center gap-2 px-4 py-2.5'>
+        {/* Main panel */}
+        <div className='rounded-xl border border-zinc-200 bg-white overflow-hidden shadow-sm'>
+          {/* Command bar */}
+          <div className='flex items-center gap-2 px-4 py-2.5 border-b border-zinc-100 bg-zinc-50/50'>
             <div className='relative flex-1 max-w-sm'>
               <Search className='absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-zinc-400 pointer-events-none' />
               <Input
@@ -1193,13 +992,11 @@ const ProductList: React.FC<Props> = ({ handleEditProduct }) => {
                 </button>
               )}
             </div>
-
             <CategoryFilterDropdown
               categories={categories}
               setSelectedCategory={setSelectedCategory}
               selectedCategory={selectedCategory}
             />
-
             {(inputValue || selectedCategory) && (
               <Button
                 variant='ghost'
@@ -1212,8 +1009,8 @@ const ProductList: React.FC<Props> = ({ handleEditProduct }) => {
                 Clear
               </Button>
             )}
-
             <div className='ml-auto flex items-center gap-1.5'>
+              {renderCategoryBreakdown()}
               <div className='flex items-center rounded-lg border border-zinc-200 bg-white p-0.5'>
                 {(["list", "grid"] as const).map((type) => (
                   <button
@@ -1237,209 +1034,196 @@ const ProductList: React.FC<Props> = ({ handleEditProduct }) => {
             </div>
           </div>
 
-          {/* Tabs row */}
-          <Tabs defaultValue='all' className='w-full'>
-            <div className='px-4 border-t border-zinc-100'>
-              <TabsList className='h-auto bg-transparent p-0 gap-0 rounded-none'>
-                {TAB_CONFIG.map(({ value, label, icon }) => (
-                  <TabsTrigger
-                    key={value}
-                    value={value}
-                    className='relative h-9 px-3 rounded-none bg-transparent text-zinc-500 text-sm font-medium border-b-2 border-transparent data-[state=active]:border-indigo-600 data-[state=active]:text-indigo-600 data-[state=active]:bg-transparent data-[state=active]:shadow-none transition-colors gap-1.5'>
-                    {icon}
-                    <span>{label}</span>
-                    <span
-                      className={`text-[10px] font-semibold px-1.5 py-0.5 rounded-full min-w-[20px] text-center ${value === "all" ? "bg-zinc-200 text-zinc-600" : value === "active" ? "bg-emerald-100 text-emerald-700" : value === "inactive" ? "bg-zinc-200 text-zinc-600" : value === "instock" ? "bg-blue-100 text-blue-700" : "bg-red-100 text-red-600"}`}>
-                      {tabCounts[value]}
-                    </span>
-                  </TabsTrigger>
-                ))}
-              </TabsList>
-            </div>
-
-            {/* Tab contents */}
-            <div className='max-h-[560px] overflow-y-auto'>
-              {TAB_CONFIG.map((tabConfig) => (
-                <TabProductContent
-                  key={tabConfig.value}
-                  tabConfig={tabConfig}
-                  allProducts={products}
-                  viewType={viewType}
-                  inputValue={inputValue}
-                  onEdit={handleEditProduct}
-                  onDelete={deleteProductData}
-                  onRefresh={refreshList}
-                  onViewDetails={handleViewProductDetails}
-                  renderGridView={renderGridView}
-                  renderMobileCard={renderMobileProductCard}
-                  hasCreatePermission={hasRequiredPermission(
-                    "product",
-                    "create",
-                  )}
-                  onCreateProduct={() => navigate("/products/create")}
-                />
-              ))}
-            </div>
-
-            {/* Pagination */}
-            {inputValue === "" && (
-              <div className='border-t border-zinc-100 px-4 py-2.5 flex items-center justify-between bg-zinc-50/50'>
-                <p className='text-xs text-zinc-500'>
-                  Showing{" "}
-                  <span className='font-semibold text-zinc-700'>
-                    {Math.max(1, (currentPageNum - 1) * limit + 1)}–
-                    {Math.min(currentPageNum * limit, totalProducts)}
-                  </span>{" "}
-                  of{" "}
-                  <span className='font-semibold text-zinc-700'>
-                    {totalProducts}
-                  </span>{" "}
-                  products
-                </p>
-                <div className='flex items-center gap-1.5'>
-                  <PaginationSelect className='h-7 w-[70px] text-xs border-zinc-200' />
-                  <div className='flex items-center gap-1'>
-                    <Button
-                      disabled={currentPageNum < 2}
-                      variant='outline'
-                      size='sm'
-                      onClick={() => updateCurrentPage(-1)}
-                      className='h-7 w-7 p-0 rounded-md'>
-                      <ChevronLeft className='h-3.5 w-3.5' />
-                    </Button>
-                    <span className='text-xs text-zinc-600 font-medium px-2 min-w-[60px] text-center'>
-                      {currentPageNum} / {totalPages}
-                    </span>
-                    <Button
-                      disabled={currentPageNum >= totalPages}
-                      variant='outline'
-                      size='sm'
-                      onClick={() => updateCurrentPage(1)}
-                      className='h-7 w-7 p-0 rounded-md'>
-                      <ChevronRight className='h-3.5 w-3.5' />
-                    </Button>
-                  </div>
-                </div>
-              </div>
-            )}
-          </Tabs>
-        </div>
-      </div>
-    </div>
-  );
-
-  // ── Loading state ──────────────────────────────────────────────────────────
-
-  if (productFetching) {
-    return (
-      <>
-        <div className='sm:hidden'>
-          <MobileProductEmpty type='loading' />
-        </div>
-        <div className='hidden sm:block space-y-3'>
-          {/* Header skeleton */}
-          <div className='flex items-center justify-between'>
-            <div className='flex items-center gap-2.5'>
-              <div className='w-8 h-8 rounded-lg bg-zinc-200 animate-pulse' />
-              <div className='space-y-1'>
-                <div className='h-4 w-24 bg-zinc-200 rounded animate-pulse' />
-                <div className='h-3 w-16 bg-zinc-100 rounded animate-pulse' />
-              </div>
-            </div>
-            <div className='h-8 w-28 bg-zinc-200 rounded-lg animate-pulse' />
-          </div>
-          {/* Stats skeleton */}
-          <div className='grid grid-cols-4 gap-3'>
-            {[...Array(4)].map((_, i) => (
-              <div
-                key={i}
-                className='rounded-xl border border-zinc-100 bg-white p-4 animate-pulse'>
-                <div className='h-3 w-20 bg-zinc-100 rounded mb-2' />
-                <div className='h-7 w-16 bg-zinc-200 rounded mb-1' />
-                <div className='h-2.5 w-24 bg-zinc-100 rounded' />
-              </div>
+          {/* Tab strip */}
+          <div className='flex items-center gap-0 px-4 border-b border-zinc-100 overflow-x-auto scrollbar-hide'>
+            {TAB_CONFIG.map(({ value, label, badgeClass }) => (
+              <button
+                key={value}
+                onClick={() => setSelectedTab(value)}
+                className={`relative flex items-center gap-2 h-10 px-3 text-sm font-medium whitespace-nowrap border-b-2 transition-colors ${
+                  selectedTab === value
+                    ? "border-indigo-600 text-indigo-600"
+                    : "border-transparent text-zinc-500 hover:text-zinc-700"
+                }`}>
+                {label}
+                <span
+                  className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full min-w-[20px] text-center ${badgeClass}`}>
+                  {tabCounts[value]}
+                </span>
+              </button>
             ))}
           </div>
-          {/* Table skeleton */}
-          <div className='rounded-xl border border-zinc-200 bg-white overflow-hidden'>
-            <div className='p-3 border-b border-zinc-100 bg-zinc-50/50'>
-              <div className='h-8 w-64 bg-zinc-200 rounded-lg animate-pulse' />
-            </div>
-            <div className='divide-y divide-zinc-100'>
-              {[...Array(6)].map((_, i) => (
-                <div key={i} className='flex items-center gap-4 px-4 py-3'>
-                  <div className='w-10 h-10 rounded-lg bg-zinc-100 animate-pulse shrink-0' />
-                  <div className='flex-1 space-y-1.5'>
-                    <div className='h-3.5 w-40 bg-zinc-200 rounded animate-pulse' />
-                    <div className='h-3 w-24 bg-zinc-100 rounded animate-pulse' />
+
+          {/* Table area — relative so the overlay can position against it */}
+          <div className='relative'>
+            {/* Overlay for table-only loading (pagination / filter) */}
+            {isTableLoading && <TableLoadingOverlay />}
+
+            {viewType === "list" ? (
+              filteredProducts.length === 0 ? (
+                <div className='flex flex-col items-center justify-center py-16 text-center px-4'>
+                  <div className='w-14 h-14 rounded-2xl bg-zinc-100 flex items-center justify-center mb-4'>
+                    <Package className='h-7 w-7 text-zinc-300' />
                   </div>
-                  <div className='h-3 w-16 bg-zinc-100 rounded animate-pulse' />
-                  <div className='h-3 w-12 bg-zinc-100 rounded animate-pulse' />
-                  <div className='h-3 w-10 bg-zinc-100 rounded animate-pulse' />
+                  <h3 className='text-base font-semibold text-zinc-800 mb-1'>
+                    {TAB_CONFIG.find((t) => t.value === selectedTab)
+                      ?.emptyTitle ?? "No products"}
+                  </h3>
+                  <p className='text-sm text-zinc-500 mb-5 max-w-xs'>
+                    {inputValue
+                      ? `No products match "${inputValue}"`
+                      : TAB_CONFIG.find((t) => t.value === selectedTab)
+                          ?.emptyDescription}
+                  </p>
+                  {selectedTab === "all" &&
+                    hasRequiredPermission("product", "create") &&
+                    !inputValue && (
+                      <Button
+                        onClick={() => navigate("/products/create")}
+                        size='sm'
+                        className='bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg h-9 px-4 text-sm'>
+                        <PlusCircle className='h-4 w-4 mr-1.5' /> Add Product
+                      </Button>
+                    )}
                 </div>
-              ))}
-            </div>
+              ) : (
+                <div className='max-h-[560px] overflow-y-auto'>
+                  <Table divClass='relative'>
+                    <TableHeader className='sticky top-0 z-10'>
+                      <TableRow className='bg-zinc-50 border-b border-zinc-200 hover:bg-zinc-50'>
+                        <TableHead className='w-12 bg-zinc-50 text-zinc-400 py-2.5'>
+                          <Image className='h-3.5 w-3.5' />
+                        </TableHead>
+                        {TABLE_HEADERS.map((h) => (
+                          <TableHead
+                            key={h}
+                            className='bg-zinc-50 text-zinc-500 text-xs font-semibold uppercase tracking-wide py-2.5'>
+                            {h}
+                          </TableHead>
+                        ))}
+                        <TableHead className='w-10 bg-zinc-50 text-zinc-400 py-2.5'>
+                          <MoreHorizontal className='h-3.5 w-3.5' />
+                        </TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {filteredProducts.map((product: IProduct) => (
+                        <SingleItem
+                          key={product?.id}
+                          id={product?.id}
+                          sku={product?.sku}
+                          slug={product?.slug}
+                          image={product?.thumbnail}
+                          title={product?.name}
+                          categoryName={product?.categoryName ?? "Not Added"}
+                          active={product?.active}
+                          quantity={product?.quantity}
+                          unitPrice={product?.unitPrice}
+                          totalSold={product?.totalSold ?? 0}
+                          totalReturned={product?.totalReturned ?? 0}
+                          variations={
+                            (product?.variantList?.length
+                              ? product.variantList
+                              : ["No Variant"]) as string[]
+                          }
+                          variationList={product?.variation}
+                          hasVariation={product?.hasVariation}
+                          imageGroups={product?.imageGroups}
+                          handleUpdateProduct={handleEditProduct}
+                          deleteExistingProduct={deleteProductData}
+                          updatedAt={product?.timestamps?.updatedAt}
+                          refreshProductList={refreshList}
+                          handleViewProductDetails={handleViewProductDetails}
+                          variationDisplayMode='list'
+                        />
+                      ))}
+                    </TableBody>
+                  </Table>
+                </div>
+              )
+            ) : (
+              <div className='max-h-[560px] overflow-y-auto p-4'>
+                {filteredProducts.length === 0 ? (
+                  <div className='flex flex-col items-center justify-center py-12 text-center'>
+                    <Package className='h-10 w-10 text-zinc-300 mb-3' />
+                    <p className='text-sm font-medium text-zinc-500'>
+                      No products in this view
+                    </p>
+                  </div>
+                ) : (
+                  <div className='grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4'>
+                    {filteredProducts.map((product: IProduct) => (
+                      <SingleProductCardItem
+                        key={product?.id}
+                        id={product?.id}
+                        sku={product?.sku}
+                        image={product?.thumbnail}
+                        title={product?.name}
+                        categoryName={product?.categoryName ?? "Not Added"}
+                        active={product?.active}
+                        quantity={product?.quantity}
+                        unitPrice={product?.unitPrice}
+                        totalSold={product?.totalSold ?? 0}
+                        totalReturned={product?.totalReturned ?? 0}
+                        variations={
+                          product?.variantList?.length
+                            ? product.variantList
+                            : ["No Variant"]
+                        }
+                        handleUpdateProduct={handleEditProduct}
+                        deleteExistingProduct={deleteProductData}
+                        updatedAt={product?.timestamps?.updatedAt}
+                      />
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
           </div>
-        </div>
-      </>
-    );
-  }
 
-  // ── Empty state (no products at all) ──────────────────────────────────────
-
-  if (inputValue === "" && products?.length === 0) {
-    return (
-      <>
-        <div className='sm:hidden'>
-          {inputValue || selectedCategory ? (
-            <MobileProductEmpty
-              type='no-search-results'
-              searchQuery={inputValue}
-              onClearFilters={() => {
-                setInputValue("");
-                setSelectedCategory("");
-              }}
-              onRetry={getProductSummaryDetails}
-            />
-          ) : (
-            <MobileProductEmpty
-              type='no-products'
-              hasCreatePermission={hasRequiredPermission("product", "create")}
-              onCreateProduct={() => navigate("/products/create")}
-              onRetry={getProductSummaryDetails}
-            />
+          {/* Pagination footer */}
+          {inputValue === "" && (
+            <div className='border-t border-zinc-100 px-4 py-2.5 flex items-center justify-between bg-zinc-50/50'>
+              <p className='text-xs text-zinc-500'>
+                Showing{" "}
+                <span className='font-semibold text-zinc-700'>
+                  {Math.max(1, (currentPageNum - 1) * limit + 1)}–
+                  {Math.min(currentPageNum * limit, totalProducts)}
+                </span>{" "}
+                of{" "}
+                <span className='font-semibold text-zinc-700'>
+                  {totalProducts}
+                </span>{" "}
+                products
+              </p>
+              <div className='flex items-center gap-1.5'>
+                <PaginationSelect className='h-7 w-[70px] text-xs border-zinc-200' />
+                <div className='flex items-center gap-1'>
+                  <Button
+                    disabled={currentPageNum < 2 || isTableLoading}
+                    variant='outline'
+                    size='sm'
+                    onClick={() => handlePageChange(-1)}
+                    className='h-7 w-7 p-0 rounded-md'>
+                    <ChevronLeft className='h-3.5 w-3.5' />
+                  </Button>
+                  <span className='text-xs text-zinc-600 font-medium px-2 min-w-[60px] text-center'>
+                    {currentPageNum} / {totalPages}
+                  </span>
+                  <Button
+                    disabled={currentPageNum >= totalPages || isTableLoading}
+                    variant='outline'
+                    size='sm'
+                    onClick={() => handlePageChange(1)}
+                    className='h-7 w-7 p-0 rounded-md'>
+                    <ChevronRight className='h-3.5 w-3.5' />
+                  </Button>
+                </div>
+              </div>
+            </div>
           )}
         </div>
-        <div className='hidden sm:block'>
-          {hasRequiredPermission("product", "create") ? (
-            <EmptyView
-              title='No products yet'
-              description='Add your first product to start managing inventory.'
-              buttonText='Add Product'
-              handleButtonClick={() => navigate("/products/create")}
-            />
-          ) : (
-            <EmptyView
-              title='No products yet'
-              description='Add your first product to start managing inventory.'
-            />
-          )}
-        </div>
-      </>
-    );
-  }
-
-  // ── Main render ────────────────────────────────────────────────────────────
-
-  return (
-    <>
-      {renderMobileView()}
-      <div className='hidden sm:block'>{renderDesktopView()}</div>
-      <ProductVariationDrawer
-        isOpen={isVariationDrawerOpen}
-        onClose={handleCloseVariationDrawer}
-        product={selectedProductForVariations}
-      />
+      </div>
     </>
   );
 };

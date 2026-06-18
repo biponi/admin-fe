@@ -19,14 +19,29 @@ export const buildFormDataFromObject = (data: any): FormData => {
 
   // Helper function to append nested arrays to FormData
   const appendArrayValues = (key: string, arr: any[]) => {
-    console.log(`${key}:`, arr);
+    if (key === 'imageGroups') {
+      console.log(`appendArrayValues - Processing ${arr.length} imageGroups:`, arr);
+    } else {
+      console.log(`${key}:`, arr);
+    }
+
     arr.forEach((item, index) => {
       if (item instanceof File) {
         // Append the file directly without stringifying
         formData.append(key, item);
       } else if (typeof item === "object") {
         // Convert object to JSON string and append with indexed key
-        formData.append(`${key}[${index}]`, JSON.stringify(item));
+        if (key === 'imageGroups') {
+          // Validate each group before appending
+          if (validateImageGroup(item)) {
+            console.log(`appendArrayValues - Appending valid imageGroup[${index}]:`, item);
+            formData.append(`${key}[${index}]`, JSON.stringify(item));
+          } else {
+            console.warn(`appendArrayValues - Skipping invalid imageGroup[${index}]:`, item);
+          }
+        } else {
+          formData.append(`${key}[${index}]`, JSON.stringify(item));
+        }
       } else {
         // Append value directly with indexed key
         formData.append(`${key}[${index}]`, item);
@@ -112,6 +127,26 @@ export const buildFormDataFromObject = (data: any): FormData => {
 
           formData.append(`variation[${index}]`, JSON.stringify(variationData));
         });
+      } else if (key === 'imageGroups' && Array.isArray(value)) {
+        // Special handling for imageGroups array - validate before processing
+        console.log('buildFormDataFromObject - imageGroups before filtering:', value);
+
+        const { validGroups, invalidCount } = filterImageGroups(value);
+
+        console.log('buildFormDataFromObject - imageGroups after filtering:', {
+          validGroups,
+          invalidCount,
+          totalOriginal: value.length
+        });
+
+        if (invalidCount > 0) {
+          console.warn(`buildFormDataFromObject - Filtered out ${invalidCount} incomplete imageGroup(s) before sending to API`);
+        }
+
+        // Only process valid groups
+        if (validGroups.length > 0) {
+          appendArrayValues(key, validGroups);
+        }
       } else if (Array.isArray(value)) {
         // Handle nested arrays
         appendArrayValues(key, value);
