@@ -55,7 +55,7 @@ export function MobileTopbar({ onMenuClick }: MobileTopbarProps) {
     <header className='sticky top-0 z-30 flex h-16 items-center gap-4 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 px-4 sm:hidden'>
       {/* Hamburger Menu Button */}
       <Button
-        variant='ghost'
+        variant='secondary'
         size='icon'
         onClick={onMenuClick}
         className='shrink-0'>
@@ -77,7 +77,7 @@ export function MobileTopbar({ onMenuClick }: MobileTopbarProps) {
       <div className='flex items-center gap-2'>
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Avatar className='h-9 w-9 border border-border cursor-pointer'>
+            <Avatar className='h-10 w-10 border border-border cursor-pointer p-1'>
               {user?.avatar ? (
                 <AvatarImage src={user?.avatar} alt={user.name} />
               ) : null}

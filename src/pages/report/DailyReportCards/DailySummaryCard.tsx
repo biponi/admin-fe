@@ -70,12 +70,12 @@ const DailySummaryCard: React.FC<DailySummaryCardProps> = ({
   };
 
   return (
-    <Card>
+    <Card className="border-slate-100 shadow-[0_1px_3px_rgba(0,0,0,0.04)]">
       <CardHeader>
         <div className="flex items-center justify-between">
           <div>
-            <CardTitle className="text-2xl">Daily Summary</CardTitle>
-            <CardDescription>
+            <CardTitle className="text-[15px] font-semibold text-slate-900">Daily Summary</CardTitle>
+            <CardDescription className="text-[12px] text-slate-400">
               {isSingleDate
                 ? `Report for ${data.date ? formatDate(data.date) : "Date not available"}`
                 : `Reports from ${formatRangeDate(dateRange.from)} to ${formatRangeDate(
@@ -88,8 +88,8 @@ const DailySummaryCard: React.FC<DailySummaryCardProps> = ({
               variant="outline"
               size="sm"
               onClick={() => onDownload("csv", "daily-summary")}
-              className="gap-2">
-              <Download className="h-4 w-4" />
+              className="h-8 px-3 gap-1.5 text-[13px] font-medium text-slate-600 border-slate-200 hover:border-slate-300 hover:bg-slate-50 shadow-[0_1px_2px_rgba(0,0,0,0.04)] transition-all duration-150">
+              <Download className="h-3.5 w-3.5" />
               Export CSV
             </Button>
           )}
@@ -99,25 +99,25 @@ const DailySummaryCard: React.FC<DailySummaryCardProps> = ({
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
           {/* Products Section */}
           <div className="space-y-3">
-            <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
-              <Package className="h-4 w-4" />
+            <div className="flex items-center gap-2 text-[11px] font-medium tracking-widest uppercase text-slate-400">
+              <Package className="h-3.5 w-3.5" />
               Products
             </div>
             <div className="space-y-2">
               <div className="flex justify-between items-baseline">
-                <span className="text-sm text-muted-foreground">Total Processed</span>
-                <span className="text-2xl font-bold">{data.products.totalProcessed}</span>
+                <span className="text-[12px] text-slate-500">Total Processed</span>
+                <span className="text-[22px] font-semibold text-slate-900 leading-none">{data.products.totalProcessed}</span>
               </div>
               <div className="flex justify-between items-baseline">
-                <span className="text-sm text-muted-foreground">Items Updated</span>
-                <span className="text-lg font-semibold">
+                <span className="text-[12px] text-slate-500">Items Updated</span>
+                <span className="text-[15px] font-semibold text-slate-900">
                   {data.products.itemsUpdated}
                 </span>
               </div>
               {data.products.processingTime && (
                 <div className="flex justify-between items-baseline">
-                  <span className="text-xs text-muted-foreground">Processing Time</span>
-                  <span className="text-xs font-mono">
+                  <span className="text-[11px] text-slate-500">Processing Time</span>
+                  <span className="text-[11px] font-mono text-slate-600">
                     {data.products.processingTime}
                   </span>
                 </div>
@@ -127,26 +127,26 @@ const DailySummaryCard: React.FC<DailySummaryCardProps> = ({
 
           {/* Sales Section */}
           <div className="space-y-3">
-            <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
-              <DollarSign className="h-4 w-4" />
+            <div className="flex items-center gap-2 text-[11px] font-medium tracking-widest uppercase text-slate-400">
+              <DollarSign className="h-3.5 w-3.5" />
               Sales
             </div>
             <div className="space-y-2">
               <div className="flex justify-between items-baseline">
-                <span className="text-sm text-muted-foreground">Total Revenue</span>
-                <span className="text-2xl font-bold text-green-600">
+                <span className="text-[12px] text-slate-500">Total Revenue</span>
+                <span className="text-[22px] font-semibold text-emerald-600 leading-none">
                   {formatCurrency(data.sales.totalRevenue)}
                 </span>
               </div>
               <div className="flex justify-between items-baseline">
-                <span className="text-sm text-muted-foreground">Total Paid</span>
-                <span className="text-lg font-semibold">
+                <span className="text-[12px] text-slate-500">Total Paid</span>
+                <span className="text-[15px] font-semibold text-slate-900">
                   {formatCurrency(data.sales.totalPaid)}
                 </span>
               </div>
               <div className="flex justify-between items-baseline">
-                <span className="text-sm text-muted-foreground">Avg Order Value</span>
-                <span className="text-lg font-semibold">
+                <span className="text-[12px] text-slate-500">Avg Order Value</span>
+                <span className="text-[15px] font-semibold text-slate-900">
                   {formatCurrency(data.sales.averageOrderValue)}
                 </span>
               </div>
@@ -155,24 +155,24 @@ const DailySummaryCard: React.FC<DailySummaryCardProps> = ({
 
           {/* Orders Section */}
           <div className="space-y-3">
-            <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
-              <ShoppingCart className="h-4 w-4" />
+            <div className="flex items-center gap-2 text-[11px] font-medium tracking-widest uppercase text-slate-400">
+              <ShoppingCart className="h-3.5 w-3.5" />
               Orders
             </div>
             <div className="space-y-2">
               <div className="flex justify-between items-baseline">
-                <span className="text-sm text-muted-foreground">Total Orders</span>
-                <span className="text-2xl font-bold">{data.orders.totalCount}</span>
+                <span className="text-[12px] text-slate-500">Total Orders</span>
+                <span className="text-[22px] font-semibold text-slate-900 leading-none">{data.orders.totalCount}</span>
               </div>
               <div className="flex justify-between items-baseline">
-                <span className="text-sm text-muted-foreground">Completed</span>
-                <span className="text-lg font-semibold text-green-600">
+                <span className="text-[12px] text-slate-500">Completed</span>
+                <span className="text-[15px] font-semibold text-emerald-600">
                   {data.orders.byStatus.completed || 0}
                 </span>
               </div>
               <div className="flex justify-between items-baseline">
-                <span className="text-sm text-muted-foreground">Pending</span>
-                <span className="text-lg font-semibold text-amber-600">
+                <span className="text-[12px] text-slate-500">Pending</span>
+                <span className="text-[15px] font-semibold text-amber-600">
                   {data.orders.byStatus.pending || 0}
                 </span>
               </div>
@@ -181,27 +181,27 @@ const DailySummaryCard: React.FC<DailySummaryCardProps> = ({
 
           {/* Additional Metrics */}
           <div className="space-y-3 md:col-span-2 lg:col-span-3">
-            <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
-              <TrendingUp className="h-4 w-4" />
+            <div className="flex items-center gap-2 text-[11px] font-medium tracking-widest uppercase text-slate-400">
+              <TrendingUp className="h-3.5 w-3.5" />
               Additional Metrics
             </div>
             <div className="grid gap-4 md:grid-cols-3">
-              <div className="bg-muted/50 p-3 rounded-lg">
-                <p className="text-xs text-muted-foreground">Total Discount</p>
-                <p className="text-lg font-semibold">
+              <div className="bg-white border border-slate-100 rounded-xl shadow-[0_1px_3px_rgba(0,0,0,0.04)] p-3">
+                <p className="text-[11px] text-slate-500">Total Discount</p>
+                <p className="text-[15px] font-semibold text-slate-900">
                   {formatCurrency(data.sales.totalDiscount)}
                 </p>
               </div>
-              <div className="bg-muted/50 p-3 rounded-lg">
-                <p className="text-xs text-muted-foreground">Delivery Charge</p>
-                <p className="text-lg font-semibold">
+              <div className="bg-white border border-slate-100 rounded-xl shadow-[0_1px_3px_rgba(0,0,0,0.04)] p-3">
+                <p className="text-[11px] text-slate-500">Delivery Charge</p>
+                <p className="text-[15px] font-semibold text-slate-900">
                   {formatCurrency(data.sales.totalDeliveryCharge)}
                 </p>
               </div>
               {data.processingTime && (
-                <div className="bg-muted/50 p-3 rounded-lg">
-                  <p className="text-xs text-muted-foreground">Report Generation</p>
-                  <p className="text-lg font-semibold">{data.processingTime}</p>
+                <div className="bg-white border border-slate-100 rounded-xl shadow-[0_1px_3px_rgba(0,0,0,0.04)] p-3">
+                  <p className="text-[11px] text-slate-500">Report Generation</p>
+                  <p className="text-[15px] font-semibold text-slate-900">{data.processingTime}</p>
                 </div>
               )}
             </div>

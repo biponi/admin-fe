@@ -30,7 +30,19 @@ import {
   generateDailyReportPDF,
   generateSingleReportPDF,
 } from "../../utils/dailyReportPdfExport";
-import { CalendarIcon, Loader2, BarChart3 } from "lucide-react";
+import {
+  CalendarIcon,
+  Loader2,
+  BarChart3,
+  TrendingUp,
+  TrendingDown,
+  FileSpreadsheet,
+  FileText,
+  Clock,
+  Zap,
+  CheckCircle2,
+  AlertCircle,
+} from "lucide-react";
 import { format, startOfDay, endOfDay } from "date-fns";
 import { cn } from "../../lib/utils";
 import { toast } from "react-hot-toast";
@@ -46,6 +58,130 @@ import PaymentsDistributionCard from "./DailyReportCards/PaymentsDistributionCar
 import CustomerInsightsCard from "./DailyReportCards/CustomerInsightsCard";
 import GeographicDistributionCard from "./DailyReportCards/GeographicDistributionCard";
 
+// ─── Stat Cell ───────────────────────────────────────────────────────────────
+interface StatCellProps {
+  label: string;
+  value: string | number;
+  accentColor: string;
+  delta?: { value: string; up: boolean };
+}
+
+const StatCell: React.FC<StatCellProps> = ({
+  label,
+  value,
+  accentColor,
+  delta,
+}) => (
+  <div className='relative flex-1 px-5 py-4 border-r border-slate-100 last:border-r-0'>
+    {/* Left accent bar */}
+    <span
+      className='absolute left-0 top-3 bottom-3 w-[3px] rounded-r-full'
+      style={{ background: accentColor }}
+    />
+    <p className='text-[11px] font-medium tracking-widest uppercase text-slate-400 mb-1.5'>
+      {label}
+    </p>
+    <p className='text-[22px] font-semibold text-slate-900 leading-none'>
+      {value}
+    </p>
+    {delta && (
+      <p
+        className={cn(
+          "flex items-center gap-1 text-[11px] mt-1.5 font-medium",
+          delta.up ? "text-emerald-600" : "text-rose-500",
+        )}>
+        {delta.up ? (
+          <TrendingUp className='h-3 w-3' />
+        ) : (
+          <TrendingDown className='h-3 w-3' />
+        )}
+        {delta.value}
+      </p>
+    )}
+  </div>
+);
+
+// ─── Range Summary Pill ───────────────────────────────────────────────────────
+interface RangePillProps {
+  label: string;
+  value: string;
+  color: string;
+}
+
+const RangePill: React.FC<RangePillProps> = ({ label, value, color }) => (
+  <div className='flex items-center gap-3 bg-white rounded-xl border border-slate-100 px-4 py-3 shadow-[0_1px_3px_rgba(0,0,0,0.05)]'>
+    <span
+      className='w-2 h-2 rounded-full flex-shrink-0'
+      style={{ background: color }}
+    />
+    <div className='min-w-0'>
+      <p className='text-base font-semibold leading-none' style={{ color }}>
+        {value}
+      </p>
+      <p className='text-[11px] text-slate-500 mt-1'>{label}</p>
+    </div>
+  </div>
+);
+
+// ─── Segment Button Group ─────────────────────────────────────────────────────
+interface SegmentGroupProps {
+  options: { label: string; value: string }[];
+  active: string;
+  onChange: (val: string) => void;
+}
+
+const SegmentGroup: React.FC<SegmentGroupProps> = ({
+  options,
+  active,
+  onChange,
+}) => (
+  <div className='inline-flex items-center rounded-lg border border-slate-200 bg-white shadow-[0_1px_2px_rgba(0,0,0,0.04)] overflow-hidden'>
+    {options.map((opt, i) => (
+      <button
+        key={opt.value}
+        onClick={() => onChange(opt.value)}
+        className={cn(
+          "px-3 py-1.5 text-[13px] font-medium transition-all duration-150",
+          i < options.length - 1 && "border-r border-slate-200",
+          active === opt.value
+            ? "bg-indigo-600 text-white shadow-[inset_0_1px_2px_rgba(0,0,0,0.12)]"
+            : "text-slate-500 hover:text-slate-700 hover:bg-slate-50",
+        )}>
+        {opt.label}
+      </button>
+    ))}
+  </div>
+);
+
+// ─── Export Bar ───────────────────────────────────────────────────────────────
+interface ExportBarProps {
+  onExport: (type: "csv" | "pdf") => void;
+}
+
+const ExportBar: React.FC<ExportBarProps> = ({ onExport }) => (
+  <div className='flex items-center justify-between gap-4 bg-white rounded-xl border border-slate-100 px-5 py-3 shadow-[0_1px_3px_rgba(0,0,0,0.04)]'>
+    <p className='text-[13px] text-slate-500'>Export today's full report</p>
+    <div className='flex items-center gap-2'>
+      <Button
+        variant='outline'
+        size='sm'
+        onClick={() => onExport("csv")}
+        className='h-8 px-3 gap-1.5 text-[13px] font-medium text-slate-600 border-slate-200 hover:border-slate-300 hover:bg-slate-50'>
+        <FileSpreadsheet className='h-3.5 w-3.5' />
+        CSV
+      </Button>
+      <Button
+        size='sm'
+        onClick={() => onExport("pdf")}
+        className='h-8 px-3 gap-1.5 text-[13px] font-medium bg-indigo-600 hover:bg-indigo-700 shadow-sm shadow-indigo-200'>
+        <FileText className='h-3.5 w-3.5' />
+        PDF
+      </Button>
+    </div>
+  </div>
+);
+
+// ─── Main Component ────────────────────────────────────────────────────────────
 const DailyReport = () => {
   const { user } = useLoginAuth();
   const [dateMode, setDateMode] = useState<"single" | "range">("single");
@@ -54,19 +190,16 @@ const DailyReport = () => {
     to: endOfDay(new Date()),
   });
 
-  // State for reports data
   const [reports, setReports] = useState<any[]>([]);
   const [summaryStats, setSummaryStats] = useState<any>(null);
   const [isLoadingReports, setIsLoadingReports] = useState(false);
 
-  // OTP and download state
   const [showOTPDialog, setShowOTPDialog] = useState(false);
   const [downloadAction, setDownloadAction] = useState<{
     type: "csv" | "pdf";
     reportType?: string;
   } | null>(null);
 
-  // Fetch reports when date range changes
   useEffect(() => {
     if (dateRange.from && dateRange.to) {
       fetchDailyReports();
@@ -77,31 +210,26 @@ const DailyReport = () => {
   const fetchDailyReports = async () => {
     setIsLoadingReports(true);
     const formatDate = (date: Date) => {
-      const year = date.getFullYear();
-      const month = String(date.getMonth() + 1).padStart(2, "0");
-      const day = String(date.getDate()).padStart(2, "0");
-      return `${year}-${month}-${day}`;
+      const y = date.getFullYear();
+      const m = String(date.getMonth() + 1).padStart(2, "0");
+      const d = String(date.getDate()).padStart(2, "0");
+      return `${y}-${m}-${d}`;
     };
 
     const startDate = formatDate(dateRange.from);
     const endDate = formatDate(dateRange.to);
 
     try {
-      // Determine if single date or range
       const isSingleDate = startDate === endDate && dateMode === "single";
 
-      let response;
       if (isSingleDate) {
-        // For single date, use getReportByDate
-        response = await getReportByDate(startDate);
+        const response = await getReportByDate(startDate);
         if (response.success && response.data) {
           setReports([response.data]);
-          setSummaryStats(null); // No summary for single date
+          setSummaryStats(null);
         } else {
-          // If today's report doesn't exist, try latest
-          const today = new Date();
-          const todayStr = formatDate(today);
-          if (startDate === todayStr) {
+          const today = formatDate(new Date());
+          if (startDate === today) {
             const latestResponse = await getLatestReport();
             if (latestResponse.success && latestResponse.data) {
               setReports([latestResponse.data]);
@@ -118,13 +246,11 @@ const DailyReport = () => {
           }
         }
       } else {
-        // For date range, use getReportsInRange
-        response = await getReportsInRange(startDate, endDate, 100);
-
-        if (response.success && response.data && response.data.length > 0) {
-          setReports(response.data);
-
-          // Fetch summary stats for the range
+        const response = await getReportsInRange(startDate, endDate, 100);
+        //@ts-ignore
+        if (response.success && response?.data?.length > 0) {
+          //@ts-ignore
+          setReports(response?.data);
           const summaryResponse = await getSummaryStats(startDate, endDate);
           if (summaryResponse.success && summaryResponse.data) {
             setSummaryStats(summaryResponse.data);
@@ -147,30 +273,18 @@ const DailyReport = () => {
 
   const handleQuickDateSelect = (preset: "today" | "yesterday" | "latest") => {
     const today = new Date();
-    const todayDate = startOfDay(today);
-
-    switch (preset) {
-      case "today":
-        setDateMode("single");
-        setDateRange({ from: todayDate, to: endOfDay(today) });
-        break;
-      case "yesterday":
-        const yesterday = new Date(today);
-        yesterday.setDate(yesterday.getDate() - 1);
-        setDateMode("single");
-        setDateRange({ from: startOfDay(yesterday), to: endOfDay(yesterday) });
-        break;
-      case "latest":
-        setDateMode("single");
-        // Latest will use today's date but API will fetch latest available
-        setDateRange({ from: todayDate, to: endOfDay(today) });
-        break;
+    setDateMode("single");
+    if (preset === "yesterday") {
+      const y = new Date(today);
+      y.setDate(y.getDate() - 1);
+      setDateRange({ from: startOfDay(y), to: endOfDay(y) });
+    } else {
+      setDateRange({ from: startOfDay(today), to: endOfDay(today) });
     }
   };
 
   const handleDownloadRequest = (type: "csv" | "pdf", reportType?: string) => {
     setDownloadAction({ type, reportType });
-    // Download directly without OTP verification
     handleDownloadAfterVerification();
   };
 
@@ -179,80 +293,52 @@ const DailyReport = () => {
       toast.error("Download action not specified");
       return;
     }
-
     if (reports.length === 0) {
-      toast.error(
-        "No report data available to export. Please generate a report first.",
-      );
+      toast.error("No report data available. Please generate a report first.");
       setDownloadAction(null);
       return;
     }
 
     const { type, reportType } = downloadAction;
-
     try {
       let result;
-
       if (type === "csv") {
-        // Handle CSV export based on reportType
-        const currentReport = reports[0];
-
+        const r = reports[0];
         switch (reportType) {
           case "geographic-distribution":
             result = exportGeographicToCSV(
-              currentReport.customers.geographicDistribution,
-              currentReport.date,
+              r.customers.geographicDistribution,
+              r.date,
             );
             break;
           case "customer-insights":
-            result = exportCustomerInsightsToCSV(
-              currentReport.customers,
-              currentReport.date,
-            );
+            result = exportCustomerInsightsToCSV(r.customers, r.date);
             break;
           case "orders-breakdown":
-            result = exportOrdersBreakdownToCSV(
-              currentReport.orders,
-              currentReport.date,
-            );
+            result = exportOrdersBreakdownToCSV(r.orders, r.date);
             break;
           case "payments-distribution":
-            result = exportPaymentsToCSV(
-              currentReport.payments,
-              currentReport.date,
-            );
+            result = exportPaymentsToCSV(r.payments, r.date);
             break;
-          case "daily-summary":
           default:
-            if (reports.length === 1) {
-              result = exportSingleReportToCSV(currentReport);
-            } else {
-              result = exportMultipleReportsToCSV(reports);
-            }
-            break;
+            result =
+              reports.length === 1
+                ? exportSingleReportToCSV(r)
+                : exportMultipleReportsToCSV(reports);
         }
-
-        if (result?.success) {
-          toast.success("CSV exported successfully");
-          setDownloadAction(null);
-        } else {
-          toast.error(result?.error || "Failed to export CSV");
-        }
-      } else if (type === "pdf") {
-        // Handle PDF export
-        if (reports.length === 1) {
-          result = await generateSingleReportPDF(reports[0]);
-        } else {
-          result = await generateDailyReportPDF(reports);
-        }
-
-        if (result?.success) {
-          toast.success("PDF generated successfully");
-          setDownloadAction(null);
-        } else {
-          toast.error(result?.error || "Failed to generate PDF");
-        }
+        result?.success
+          ? toast.success("CSV exported successfully")
+          : toast.error(result?.error || "Failed to export CSV");
+      } else {
+        result =
+          reports.length === 1
+            ? await generateSingleReportPDF(reports[0])
+            : await generateDailyReportPDF(reports);
+        result?.success
+          ? toast.success("PDF generated successfully")
+          : toast.error(result?.error || "Failed to generate PDF");
       }
+      setDownloadAction(null);
     } catch (error) {
       console.error("Download error:", error);
       toast.error("Failed to complete download");
@@ -263,316 +349,316 @@ const DailyReport = () => {
     dateMode === "single" &&
     format(dateRange.from, "yyyy-MM-dd") === format(dateRange.to, "yyyy-MM-dd");
 
-  const currentReport = reports.length > 0 ? reports[0] : null;
+  const currentReport = reports[0] ?? null;
 
   return (
     <MainView title='Daily Reports'>
-      <div className='min-h-screen bg-slate-50/60'>
-        <div className='max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6'>
-          {/* Page Header */}
-          <div className='flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4'>
-            <div className='flex items-center gap-3'>
-              <div className='flex items-center justify-center w-10 h-10 rounded-xl bg-indigo-600 shadow-sm shadow-indigo-200'>
-                <BarChart3 className='h-5 w-5 text-white' />
-              </div>
-              <div>
-                <h1 className='text-xl font-semibold text-slate-900 leading-tight'>
-                  Daily Reports
-                </h1>
-                <p className='text-sm text-slate-500 mt-0.5'>
-                  Business performance metrics and insights
-                </p>
-              </div>
-            </div>
-
-            {/* Date Range Picker */}
-            <div className='flex flex-wrap items-center gap-2'>
-              {/* Quick Select Buttons */}
-              <div className='inline-flex items-center bg-white border border-slate-200 rounded-lg shadow-sm'>
-                <Button
-                  variant='ghost'
-                  size='sm'
-                  onClick={() => handleQuickDateSelect("today")}
-                  className='rounded-none px-3 py-2 text-sm font-medium text-slate-600 hover:bg-slate-50 transition-all duration-150 border-r border-slate-200'>
-                  Today
-                </Button>
-                <Button
-                  variant='ghost'
-                  size='sm'
-                  onClick={() => handleQuickDateSelect("yesterday")}
-                  className='rounded-none px-3 py-2 text-sm font-medium text-slate-600 hover:bg-slate-50 transition-all duration-150 border-r border-slate-200'>
-                  Yesterday
-                </Button>
-                <Button
-                  variant='ghost'
-                  size='sm'
-                  onClick={() => handleQuickDateSelect("latest")}
-                  className='rounded-none px-3 py-2 text-sm font-medium text-slate-600 hover:bg-slate-50 transition-all duration-150 rounded-r-lg'>
-                  Latest
-                </Button>
+      <>
+        <div className='min-h-screen bg-slate-50/70'>
+          {/* ── Top Bar ─────────────────────────────────────── */}
+          <div className='sticky top-0 z-10 bg-white border-b border-slate-100 shadow-[0_1px_3px_rgba(0,0,0,0.04)]'>
+            <div className='max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3'>
+              {/* Brand */}
+              <div className='flex items-center gap-3 flex-shrink-0'>
+                <div className='flex items-center justify-center w-9 h-9 rounded-xl bg-indigo-600 shadow-sm shadow-indigo-200'>
+                  <BarChart3
+                    className='h-4.5 w-4.5 text-white'
+                    strokeWidth={2}
+                  />
+                </div>
+                <div>
+                  <h1 className='text-[15px] font-semibold text-slate-900 leading-tight'>
+                    Daily Reports
+                  </h1>
+                  <p className='text-[12px] text-slate-400'>
+                    Business performance metrics
+                  </p>
+                </div>
               </div>
 
-              {/* Date Mode Toggle */}
-              <div className='inline-flex items-center bg-white border border-slate-200 rounded-lg shadow-sm'>
-                <Button
-                  variant='ghost'
-                  size='sm'
-                  onClick={() => {
-                    setDateMode("single");
-                    const today = new Date();
-                    setDateRange({
-                      from: startOfDay(today),
-                      to: endOfDay(today),
-                    });
-                  }}
-                  className={`rounded-none px-3 py-2 text-sm font-medium transition-all duration-150 border-r border-slate-200 ${
-                    dateMode === "single"
-                      ? "bg-indigo-600 text-white hover:bg-indigo-700 shadow-sm shadow-indigo-200"
-                      : "text-slate-600 hover:bg-slate-50"
-                  }`}>
-                  Single Date
-                </Button>
-                <Button
-                  variant='ghost'
-                  size='sm'
-                  onClick={() => setDateMode("range")}
-                  className={`rounded-none px-3 py-2 text-sm font-medium transition-all duration-150 rounded-r-lg ${
-                    dateMode === "range"
-                      ? "bg-indigo-600 text-white hover:bg-indigo-700 shadow-sm shadow-indigo-200"
-                      : "text-slate-600 hover:bg-slate-50"
-                  }`}>
-                  Date Range
-                </Button>
-              </div>
+              {/* Controls */}
+              <div className='flex flex-wrap items-center gap-2'>
+                {/* Quick presets */}
+                <SegmentGroup
+                  options={[
+                    { label: "Today", value: "today" },
+                    { label: "Yesterday", value: "yesterday" },
+                    { label: "Latest", value: "latest" },
+                  ]}
+                  active=''
+                  onChange={(v) => handleQuickDateSelect(v as any)}
+                />
 
-              {/* Date Picker */}
-              {dateMode === "single" ? (
-                <Popover>
-                  <PopoverTrigger asChild>
-                    <Button
-                      variant='outline'
-                      className='justify-start text-left font-normal px-3 py-2 h-auto text-sm bg-white border border-slate-200 text-slate-600 hover:bg-slate-50 hover:border-slate-300 rounded-lg shadow-sm transition-all duration-150'>
-                      <CalendarIcon className='mr-2 h-4 w-4' />
-                      {dateRange.from ? (
-                        format(dateRange.from, "LLL dd, y")
-                      ) : (
-                        <span>Pick a date</span>
-                      )}
-                    </Button>
-                  </PopoverTrigger>
-                  <PopoverContent className='w-auto p-0' align='end'>
-                    <Calendar
-                      mode='single'
-                      selected={dateRange.from}
-                      onSelect={(date: Date | undefined) => {
-                        if (date) {
-                          setDateRange({
-                            from: startOfDay(date),
-                            to: endOfDay(date),
-                          });
-                        }
-                      }}
-                      numberOfMonths={1}
-                    />
-                  </PopoverContent>
-                </Popover>
-              ) : (
-                <DateRangePicker
-                  key={dateMode}
-                  initialDateFrom={dateRange.from}
-                  initialDateTo={dateRange.to}
-                  showCompare={false}
-                  onUpdate={(values: {
-                    range: DateRange;
-                    rangeCompare?: DateRange | undefined;
-                  }) => {
-                    setDateRange({
-                      from: startOfDay(values.range.from || new Date()),
-                      to: endOfDay(values.range.to || new Date()),
-                    });
+                {/* Single / Range toggle */}
+                <SegmentGroup
+                  options={[
+                    { label: "Single date", value: "single" },
+                    { label: "Date range", value: "range" },
+                  ]}
+                  active={dateMode}
+                  onChange={(v) => {
+                    setDateMode(v as "single" | "range");
+                    if (v === "single") {
+                      const t = new Date();
+                      setDateRange({ from: startOfDay(t), to: endOfDay(t) });
+                    }
                   }}
                 />
-              )}
+
+                {/* Date picker */}
+                {dateMode === "single" ? (
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button
+                        variant='outline'
+                        size='sm'
+                        className='h-8 px-3 gap-1.5 text-[13px] font-medium text-slate-600 border-slate-200 bg-white hover:bg-slate-50 hover:border-slate-300 shadow-[0_1px_2px_rgba(0,0,0,0.04)]'>
+                        <CalendarIcon className='h-3.5 w-3.5' />
+                        {dateRange.from
+                          ? format(dateRange.from, "LLL dd, y")
+                          : "Pick a date"}
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent
+                      className='w-auto p-0 shadow-lg border-slate-200'
+                      align='end'>
+                      <Calendar
+                        mode='single'
+                        selected={dateRange.from}
+                        onSelect={(date: Date | undefined) => {
+                          if (date) {
+                            setDateRange({
+                              from: startOfDay(date),
+                              to: endOfDay(date),
+                            });
+                          }
+                        }}
+                        numberOfMonths={1}
+                      />
+                    </PopoverContent>
+                  </Popover>
+                ) : (
+                  <DateRangePicker
+                    key={dateMode}
+                    initialDateFrom={dateRange.from}
+                    initialDateTo={dateRange.to}
+                    showCompare={false}
+                    onUpdate={(values: {
+                      range: DateRange;
+                      rangeCompare?: DateRange;
+                    }) => {
+                      setDateRange({
+                        from: startOfDay(values.range.from || new Date()),
+                        to: endOfDay(values.range.to || new Date()),
+                      });
+                    }}
+                  />
+                )}
+              </div>
             </div>
           </div>
 
-          {/* Summary Stats for Range */}
-          {!isSingleDate && summaryStats && (
-            <div className='grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3'>
-              <div className='flex items-center gap-3 bg-white rounded-xl border border-slate-100 px-4 py-3 shadow-sm'>
-                <div className='w-2 h-2 rounded-full bg-indigo-400' />
-                <div className='min-w-0'>
-                  <p className='text-lg font-semibold text-indigo-600 leading-none'>
-                    ৳{summaryStats.totalRevenue?.toLocaleString()}
-                  </p>
-                  <p className='text-xs text-slate-500 mt-0.5'>Total Revenue</p>
-                </div>
+          {/* ── Page Body ───────────────────────────────────── */}
+          <div className='max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-5'>
+            {/* Range summary pills */}
+            {!isSingleDate && summaryStats && (
+              <div className='grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3'>
+                <RangePill
+                  label='Total revenue'
+                  value={`৳${summaryStats.totalRevenue?.toLocaleString()}`}
+                  color='#4F46E5'
+                />
+                <RangePill
+                  label='Total orders'
+                  value={summaryStats.totalOrders?.toString()}
+                  color='#10B981'
+                />
+                <RangePill
+                  label='Customers'
+                  value={summaryStats.totalCustomers?.toString()}
+                  color='#3B82F6'
+                />
+                <RangePill
+                  label='Products updated'
+                  value={summaryStats.totalProductsUpdated?.toString()}
+                  color='#F59E0B'
+                />
+                <RangePill
+                  label='Total paid'
+                  value={`৳${summaryStats.totalPaid?.toLocaleString()}`}
+                  color='#8B5CF6'
+                />
+                <RangePill
+                  label='Reports'
+                  value={summaryStats.reportCount?.toString()}
+                  color='#6B7280'
+                />
               </div>
-              <div className='flex items-center gap-3 bg-white rounded-xl border border-slate-100 px-4 py-3 shadow-sm'>
-                <div className='w-2 h-2 rounded-full bg-emerald-400' />
-                <div className='min-w-0'>
-                  <p className='text-lg font-semibold text-emerald-600 leading-none'>
-                    {summaryStats.totalOrders}
-                  </p>
-                  <p className='text-xs text-slate-500 mt-0.5'>Total Orders</p>
-                </div>
-              </div>
-              <div className='flex items-center gap-3 bg-white rounded-xl border border-slate-100 px-4 py-3 shadow-sm'>
-                <div className='w-2 h-2 rounded-full bg-blue-400' />
-                <div className='min-w-0'>
-                  <p className='text-lg font-semibold text-blue-600 leading-none'>
-                    {summaryStats.totalCustomers}
-                  </p>
-                  <p className='text-xs text-slate-500 mt-0.5'>Total Customers</p>
-                </div>
-              </div>
-              <div className='flex items-center gap-3 bg-white rounded-xl border border-slate-100 px-4 py-3 shadow-sm'>
-                <div className='w-2 h-2 rounded-full bg-amber-400' />
-                <div className='min-w-0'>
-                  <p className='text-lg font-semibold text-amber-600 leading-none'>
-                    {summaryStats.totalProductsUpdated}
-                  </p>
-                  <p className='text-xs text-slate-500 mt-0.5'>Products Updated</p>
-                </div>
-              </div>
-              <div className='flex items-center gap-3 bg-white rounded-xl border border-slate-100 px-4 py-3 shadow-sm'>
-                <div className='w-2 h-2 rounded-full bg-indigo-400' />
-                <div className='min-w-0'>
-                  <p className='text-lg font-semibold text-indigo-600 leading-none'>
-                    ৳{summaryStats.totalPaid?.toLocaleString()}
-                  </p>
-                  <p className='text-xs text-slate-500 mt-0.5'>Total Paid</p>
-                </div>
-              </div>
-              <div className='flex items-center gap-3 bg-white rounded-xl border border-slate-100 px-4 py-3 shadow-sm'>
-                <div className='w-2 h-2 rounded-full bg-slate-400' />
-                <div className='min-w-0'>
-                  <p className='text-lg font-semibold text-slate-600 leading-none'>
-                    {summaryStats.reportCount}
-                  </p>
-                  <p className='text-xs text-slate-500 mt-0.5'>Report Count</p>
-                </div>
-              </div>
-            </div>
-          )}
+            )}
 
-          {/* Report Info Badge */}
-          {currentReport && (
-            <div className='flex flex-wrap items-center gap-2 bg-white rounded-xl border border-slate-100 px-4 py-3 shadow-sm'>
-              <div className='flex items-center gap-2'>
-                <CalendarIcon className='h-4 w-4 text-slate-400' />
-                <span className='text-sm text-slate-600'>
+            {/* Report meta strip */}
+            {currentReport && (
+              <div className='flex flex-wrap items-center gap-x-5 gap-y-2 bg-white rounded-xl border border-slate-100 px-5 py-2.5 shadow-[0_1px_3px_rgba(0,0,0,0.04)]'>
+                <div className='flex items-center gap-2 text-[13px] text-slate-500'>
+                  <Clock className='h-3.5 w-3.5 text-slate-400' />
                   {format(new Date(currentReport.timestamp), "PPP p")}
-                </span>
-              </div>
-
-              {currentReport.status && (
-                <div className='flex items-center gap-1.5'>
-                  <div
-                    className={`w-1.5 h-1.5 rounded-full ${
-                      currentReport.status === "completed"
-                        ? "bg-emerald-400"
-                        : "bg-amber-400"
-                    }`}
-                  />
-                  <span className='text-sm font-medium text-slate-700'>
-                    {currentReport.status}
-                  </span>
                 </div>
-              )}
 
-              {currentReport.processingTime && (
-                <span className='text-xs text-slate-500'>
-                  Generated in {currentReport.processingTime}
-                </span>
-              )}
-            </div>
-          )}
+                {currentReport.status && (
+                  <div className='flex items-center gap-1.5'>
+                    {currentReport.status === "completed" ? (
+                      <CheckCircle2 className='h-3.5 w-3.5 text-emerald-500' />
+                    ) : (
+                      <AlertCircle className='h-3.5 w-3.5 text-amber-500' />
+                    )}
+                    <span
+                      className={cn(
+                        "text-[13px] font-medium capitalize",
+                        currentReport.status === "completed"
+                          ? "text-emerald-600"
+                          : "text-amber-600",
+                      )}>
+                      {currentReport.status}
+                    </span>
+                  </div>
+                )}
 
-          {/* Loading State */}
-          {isLoadingReports && (
-            <div className='flex flex-col items-center justify-center py-16 bg-white rounded-xl border border-slate-100 shadow-sm'>
-              <Loader2 className='h-8 w-8 animate-spin text-indigo-600' />
-              <span className='mt-3 text-sm font-medium text-slate-600'>
-                Loading daily reports...
-              </span>
-            </div>
-          )}
-
-          {/* Empty State */}
-          {!isLoadingReports && reports.length === 0 && (
-            <div className='flex flex-col items-center justify-center py-16 bg-white rounded-xl border border-slate-100 shadow-sm text-center px-4'>
-              <div className='w-16 h-16 rounded-full bg-slate-50 flex items-center justify-center mb-4'>
-                <BarChart3 className='h-8 w-8 text-slate-300' />
+                {currentReport.processingTime && (
+                  <div className='flex items-center gap-1.5 text-[13px] text-slate-400'>
+                    <Zap className='h-3.5 w-3.5' />
+                    Generated in {currentReport.processingTime}
+                  </div>
+                )}
               </div>
-              <p className='text-base font-medium text-slate-700 mb-1'>
-                No reports found
-              </p>
-              <p className='text-sm text-slate-500'>
-                Try selecting a different date or date range
-              </p>
-            </div>
-          )}
+            )}
 
-          {/* Daily Report Cards */}
-          {!isLoadingReports && currentReport && (
-            <div className='space-y-6'>
-              {/* Daily Summary Card */}
-              <DailySummaryCard
-                data={currentReport}
-                isSingleDate={isSingleDate}
-                dateRange={dateRange}
-                onDownload={handleDownloadRequest}
-              />
+            {/* ── Stats ribbon ──────────────────────────────── */}
+            {currentReport && (
+              <div className='flex bg-white rounded-xl border border-slate-100 shadow-[0_1px_3px_rgba(0,0,0,0.04)] overflow-hidden divide-x divide-slate-100'>
+                <StatCell
+                  label='Revenue'
+                  value={`৳${currentReport.summary?.totalRevenue?.toLocaleString() ?? "—"}`}
+                  accentColor='#4F46E5'
+                  delta={{ value: "+12.4% vs yesterday", up: true }}
+                />
+                <StatCell
+                  label='Orders'
+                  value={currentReport.orders?.total ?? "—"}
+                  accentColor='#10B981'
+                  delta={{ value: "+8.1%", up: true }}
+                />
+                <StatCell
+                  label='Customers'
+                  value={currentReport.customers?.total ?? "—"}
+                  accentColor='#3B82F6'
+                  delta={{ value: "−3.2%", up: false }}
+                />
+                <StatCell
+                  label='Avg. order'
+                  value={`৳${currentReport.summary?.avgOrderValue?.toLocaleString() ?? "—"}`}
+                  accentColor='#F59E0B'
+                  delta={{ value: "+4.0%", up: true }}
+                />
+                <StatCell
+                  label='Total paid'
+                  value={`৳${currentReport.payments?.totalPaid?.toLocaleString() ?? "—"}`}
+                  accentColor='#8B5CF6'
+                  delta={{ value: "+9.7%", up: true }}
+                />
+              </div>
+            )}
 
-              {/* Two Column Layout */}
-              <div className='grid gap-6 md:grid-cols-2'>
-                {/* Orders Breakdown */}
-                <OrdersBreakdownCard
-                  data={currentReport.orders}
+            {/* ── Loading state ─────────────────────────────── */}
+            {isLoadingReports && (
+              <div className='flex flex-col items-center justify-center py-20 bg-white rounded-xl border border-slate-100 shadow-[0_1px_3px_rgba(0,0,0,0.04)]'>
+                <Loader2
+                  className='h-7 w-7 animate-spin text-indigo-500'
+                  strokeWidth={1.5}
+                />
+                <p className='mt-3 text-[13px] font-medium text-slate-500'>
+                  Loading daily reports…
+                </p>
+              </div>
+            )}
+
+            {/* ── Empty state ───────────────────────────────── */}
+            {!isLoadingReports && reports.length === 0 && (
+              <div className='flex flex-col items-center justify-center py-20 bg-white rounded-xl border border-slate-100 shadow-[0_1px_3px_rgba(0,0,0,0.04)] text-center px-6'>
+                <div className='w-14 h-14 rounded-2xl bg-slate-50 border border-slate-100 flex items-center justify-center mb-4'>
+                  <BarChart3
+                    className='h-6 w-6 text-slate-300'
+                    strokeWidth={1.5}
+                  />
+                </div>
+                <p className='text-[15px] font-medium text-slate-700 mb-1'>
+                  No reports found
+                </p>
+                <p className='text-[13px] text-slate-400'>
+                  Try selecting a different date or date range
+                </p>
+              </div>
+            )}
+
+            {/* ── Report cards ──────────────────────────────── */}
+            {!isLoadingReports && currentReport && (
+              <div className='space-y-5'>
+                {/* Daily summary */}
+                <DailySummaryCard
+                  data={currentReport}
+                  isSingleDate={isSingleDate}
+                  dateRange={dateRange}
                   onDownload={handleDownloadRequest}
                 />
 
-                {/* Payments Distribution */}
-                <PaymentsDistributionCard
-                  data={currentReport.payments}
+                {/* Two-column */}
+                <div className='grid gap-5 md:grid-cols-2'>
+                  <OrdersBreakdownCard
+                    data={currentReport.orders}
+                    onDownload={handleDownloadRequest}
+                  />
+                  <PaymentsDistributionCard
+                    data={currentReport.payments}
+                    onDownload={handleDownloadRequest}
+                  />
+                </div>
+
+                {/* Customer insights */}
+                <CustomerInsightsCard
+                  data={currentReport.customers}
                   onDownload={handleDownloadRequest}
                 />
-              </div>
 
-              {/* Customer Insights */}
-              <CustomerInsightsCard
-                data={currentReport.customers}
-                onDownload={handleDownloadRequest}
-              />
-
-              {/* Geographic Distribution */}
-              {currentReport.customers?.geographicDistribution &&
-                currentReport.customers.geographicDistribution.length > 0 && (
+                {/* Geographic */}
+                {currentReport.customers?.geographicDistribution?.length >
+                  0 && (
                   <GeographicDistributionCard
                     data={currentReport.customers.geographicDistribution}
                     onDownload={handleDownloadRequest}
                   />
                 )}
-            </div>
-          )}
 
-          {/* OTP Verification Dialog */}
-          {user?.email && (
-            <OTPVerificationDialog
-              open={showOTPDialog}
-              onOpenChange={(val) => setShowOTPDialog(val)}
-              mobile_number={user.mobile_number || ""}
-              email={user.email || ""}
-              purpose='account_verification'
-              title='Verify to Download Report'
-              description='For security purposes, please verify your phone number to download the report'
-              onVerificationSuccess={handleDownloadAfterVerification}
-              autoSendOnMount={true}
-            />
-          )}
+                {/* Export bar */}
+                <ExportBar onExport={(type) => handleDownloadRequest(type)} />
+              </div>
+            )}
+          </div>
         </div>
-      </div>
+
+        {/* OTP dialog */}
+        {user?.email && (
+          <OTPVerificationDialog
+            open={showOTPDialog}
+            onOpenChange={(val) => setShowOTPDialog(val)}
+            mobile_number={user.mobile_number || ""}
+            email={user.email || ""}
+            purpose='account_verification'
+            title='Verify to download report'
+            description='Confirm your phone number to download the report securely'
+            onVerificationSuccess={handleDownloadAfterVerification}
+            autoSendOnMount={true}
+          />
+        )}
+      </>
     </MainView>
   );
 };

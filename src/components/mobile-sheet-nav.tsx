@@ -4,7 +4,7 @@ import useRoleCheck from "../pages/auth/hooks/useRoleCheck";
 import { cn } from "../utils/functions";
 import { BRAND_CONFIG } from "../config/brand";
 import BrandLogo from "../assets/Biponi-lg.png";
-import { ChevronDown, ChevronRight } from "lucide-react";
+import { ChevronDown, ChevronRight, LogOut, Settings } from "lucide-react";
 import { useState, useEffect } from "react";
 import {
   Sheet,
@@ -15,7 +15,6 @@ import {
 } from "./ui/sheet";
 import { Button } from "./ui/button";
 import { ScrollArea } from "./ui/scroll-area";
-import { Separator } from "./ui/separator";
 import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
 import { getInitialsWord } from "../utils/functions";
 import useLoginAuth from "../pages/auth/hooks/useLoginAuth";
@@ -40,15 +39,13 @@ export function MobileSheetNav({
   const open = controlledOpen !== undefined ? controlledOpen : internalOpen;
   const setOpen = onOpenChange || setInternalOpen;
 
-  // Filter nav items based on permissions
   const filteredNavItems = navItems.filter(
     (nav) => nav.active && hasRequiredPermission(nav.id, "view"),
   );
 
-  // Close sheet when route changes
   useEffect(() => {
     setOpen(false);
-  }, [pathName, setOpen]);
+  }, [pathName]);
 
   const toggleSubmenu = (itemId: string) => {
     setExpandedMenus((prev) =>
@@ -75,59 +72,93 @@ export function MobileSheetNav({
   return (
     <Sheet open={open} onOpenChange={setOpen}>
       <SheetTrigger asChild className='sm:hidden'>
-        <Button variant='ghost' size='icon' className='hidden'>
-          {/* This trigger is hidden - the topbar button controls the sheet */}
-        </Button>
+        <Button variant='ghost' size='icon' className='hidden' />
       </SheetTrigger>
+
       <SheetContent
         side='left'
-        className='w-full sm:w-[350px] p-0 gap-0 bg-gradient-to-b from-slate-50 to-slate-100 dark:from-gray-900 dark:to-black'>
-        {/* Header */}
-        <SheetHeader className='p-6 pb-4 border-b border-border/40'>
-          <div className='flex items-center justify-between'>
-            <div className='flex items-center gap-3'>
+        className={cn(
+          "w-full p-0 gap-0 border-r-0 ",
+          // Glass layer
+          "bg-purple-500 backdrop-blur-2xl",
+          // The solid purple gradient sits behind the blur
+          "[&]:before:content-[''] [&]:before:absolute [&]:before:inset-0",
+          "[&]:before:-z-10 [&]:before:bg-gradient-to-b",
+          "[&]:before:from-purple-400 [&]:before:to-rose-700",
+          // Subtle inner border
+          "border-r border-white/20 shadow-[4px_0_32px_rgba(0,0,0,0.15)]",
+        )}
+        // Override shadcn default white bg
+        style={{
+          background:
+            "linear-gradient(160deg, #38bdf8cc, #0ea5e9cc, #06b6d4cc)",
+        }}>
+        {/* Top highlight line */}
+        <div className='pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-white/50 to-transparent z-10' />
+
+        {/* ── Header ── */}
+        <SheetHeader className='px-5 pt-6 pb-4 border-b border-white/15'>
+          <div className='flex items-center gap-3'>
+            {/* Logo pill */}
+            <div className='flex items-center justify-center size-11 rounded-2xl bg-white/20 ring-1 ring-white/30 backdrop-blur-sm shadow-inner'>
               <img
                 src={BrandLogo}
-                className='h-10 w-auto bg-white dark:bg-gray-800 rounded-lg p-1'
+                className='size-7 object-contain'
                 alt='logo'
               />
-              <div>
-                <SheetTitle className='text-lg font-bold'>{BRAND_CONFIG.shortName}</SheetTitle>
-                <p className='text-xs text-muted-foreground'>
-                  {user?.name || "Welcome"}
-                </p>
-              </div>
+            </div>
+            <div>
+              <SheetTitle className='text-base font-semibold text-white tracking-tight'>
+                {BRAND_CONFIG.shortName}
+              </SheetTitle>
+              <p className='text-[11px] text-white/55 uppercase tracking-widest font-medium mt-0.5'>
+                Management
+              </p>
             </div>
           </div>
         </SheetHeader>
 
-        {/* User Info Card */}
-        <div className='p-4'>
-          <div className='flex items-center gap-3 p-3 rounded-lg bg-white dark:bg-gray-800 border border-border/40 shadow-sm'>
-            <Avatar className='h-10 w-10'>
+        {/* ── User Card ── */}
+        <div className='px-4 py-3 border-b border-white/10'>
+          <div className='flex items-center gap-3 px-3 py-3 rounded-2xl bg-white/15 ring-1 ring-white/20 backdrop-blur-sm'>
+            <Avatar className='size-10 p-2 shadow bg-white'>
               {user?.avatar ? (
                 <AvatarImage src={user.avatar} alt={user.name} />
               ) : null}
-              <AvatarFallback className='bg-primary text-primary-foreground text-sm font-semibold'>
-                {getInitialsWord(user?.name || "User")}
+              <AvatarFallback className='bg-white/30 text-white text-sm font-semibold backdrop-blur-sm'>
+                {getInitialsWord(user?.name || "U")}
               </AvatarFallback>
             </Avatar>
             <div className='flex-1 min-w-0'>
-              <p className='text-sm font-medium truncate'>
+              <p className='text-sm font-semibold text-white truncate'>
                 {user?.name || "User"}
               </p>
-              <p className='text-xs text-muted-foreground truncate'>
+              <p className='text-[11px] text-white/55 truncate mt-0.5'>
                 {user?.email || ""}
               </p>
             </div>
+            {/* Settings shortcut */}
+            <button
+              onClick={() => {
+                navigate("/settings");
+                setOpen(false);
+              }}
+              className='flex items-center justify-center size-8 rounded-xl bg-white/10 hover:bg-white/20 text-white/60 hover:text-white transition-all duration-150'>
+              <Settings className='size-3.5' />
+            </button>
           </div>
         </div>
 
-        <Separator />
+        {/* ── Nav Label ── */}
+        <div className='px-5 pt-4 pb-1'>
+          <span className='text-[9px] font-semibold tracking-[0.18em] uppercase text-white/40'>
+            Navigation
+          </span>
+        </div>
 
-        {/* Navigation Menu */}
-        <ScrollArea className='flex-1 h-[calc(100vh-240px)]'>
-          <nav className='p-4 space-y-1'>
+        {/* ── Nav Items ── */}
+        <ScrollArea className='flex-1 h-[calc(100dvh-260px)] px-3'>
+          <nav className='space-y-0.5 pb-4'>
             {filteredNavItems.map((item) => {
               const isActive = pathName.includes(item.link);
               const hasChildren = item.items && item.items.length > 0;
@@ -135,64 +166,71 @@ export function MobileSheetNav({
 
               return (
                 <div key={item.id}>
-                  {/* Main Item */}
+                  {/* Main nav item */}
                   <button
                     onClick={() => handleNavItemClick(item)}
                     className={cn(
-                      "w-full flex items-center justify-between px-4 py-2 rounded-lg transition-all duration-200 active:scale-[0.98]",
+                      "w-full flex items-center gap-3 px-3 py-2.5 rounded-xl",
+                      "text-sm font-medium transition-all duration-150 active:scale-[0.98]",
+                      "relative",
                       isActive
-                        ? "bg-primary/10 text-primary shadow-sm"
-                        : "text-foreground/80 hover:bg-accent hover:text-accent-foreground",
+                        ? [
+                            "bg-white/20 text-white",
+                            "ring-1 ring-white/25",
+                            "shadow-[inset_0_1px_0_rgba(255,255,255,0.2)]",
+                          ]
+                        : "text-white/65 hover:bg-white/10 hover:text-white",
                     )}>
-                    <div className='flex items-center gap-3'>
-                      <div
-                        className={cn(
-                          "flex items-center justify-center h-8 w-8 rounded-lg transition-all",
-                          isActive
-                            ? "bg-primary/20 text-primary"
-                            : "bg-accent text-accent-foreground/70",
-                        )}>
-                        {item.icon}
-                      </div>
-                      <span className='font-medium text-sm'>{item.title}</span>
-                    </div>
+                    {/* Active left bar */}
+                    {isActive && (
+                      <span className='absolute left-0 top-1/2 -translate-y-1/2 w-0.5 h-5 rounded-r-full bg-white/80' />
+                    )}
 
-                    {hasChildren && (
+                    {/* Icon container */}
+                    <span
+                      className={cn(
+                        "flex items-center justify-center size-8 rounded-xl shrink-0 transition-all duration-150",
+                        isActive
+                          ? "bg-white/20 text-white"
+                          : "bg-white/10 text-white/50 group-hover:text-white",
+                      )}>
+                      {/* item.icon is already a React element from navItems */}
+                      <span className='[&_svg]:size-4'>{item.icon}</span>
+                    </span>
+
+                    <span className='flex-1 text-left truncate'>
+                      {item.title}
+                    </span>
+
+                    {hasChildren ? (
                       <ChevronDown
                         className={cn(
-                          "h-4 w-4 text-muted-foreground transition-transform duration-200",
-                          isExpanded && "rotate-180",
+                          "size-3.5 text-white/40 transition-transform duration-200 shrink-0",
+                          isExpanded && "rotate-180 text-white/70",
                         )}
                       />
-                    )}
+                    ) : isActive ? (
+                      <span className='size-1.5 rounded-full bg-white/60 shrink-0' />
+                    ) : null}
                   </button>
 
-                  {/* Nested/Dropdown Items */}
+                  {/* Submenu */}
                   {hasChildren && isExpanded && (
-                    <div className='ml-8 mt-1 mb-2 space-y-1 border-l-2 border-primary/30 pl-2 animate-in slide-in-from-top-2 duration-200'>
-                      {/* Parent link as first item */}
+                    <div className='ml-4 mt-0.5 mb-1 pl-3 border-l border-white/15 space-y-0.5'>
+                      {/* All parent link */}
                       <button
                         onClick={() => handleChildClick(item.link)}
                         className={cn(
-                          "w-full flex items-center gap-2 px-3 py-2.5 rounded-md transition-all duration-200 text-sm active:scale-[0.98] group",
-                          isActive
-                            ? "bg-primary/10 text-primary font-medium"
-                            : "text-muted-foreground hover:bg-accent hover:text-accent-foreground",
+                          "w-full flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-medium",
+                          "transition-all duration-150 active:scale-[0.98] group",
+                          pathName === item.link
+                            ? "bg-white/15 text-white"
+                            : "text-white/50 hover:bg-white/10 hover:text-white",
                         )}>
-                        <ChevronRight
-                          className={cn(
-                            "h-3.5 w-3.5 transition-transform group-hover:translate-x-0.5",
-                            isActive
-                              ? "text-primary"
-                              : "text-muted-foreground/50",
-                          )}
-                        />
+                        <ChevronRight className='size-3 shrink-0 transition-transform group-hover:translate-x-0.5 text-white/30' />
                         <span className='flex-1 text-left'>
                           All {item.title}
                         </span>
-                        {isActive && (
-                          <div className='w-1.5 h-1.5 bg-primary rounded-full' />
-                        )}
                       </button>
 
                       {/* Child items */}
@@ -203,24 +241,18 @@ export function MobileSheetNav({
                             key={child.url}
                             onClick={() => handleChildClick(child.url)}
                             className={cn(
-                              "w-full flex items-center gap-2 px-3 py-2.5 rounded-md transition-all duration-200 text-sm active:scale-[0.98] group",
+                              "w-full flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-medium",
+                              "transition-all duration-150 active:scale-[0.98] group",
                               isChildActive
-                                ? "bg-primary/10 text-primary font-medium"
-                                : "text-muted-foreground hover:bg-accent hover:text-accent-foreground",
+                                ? "bg-white/15 text-white"
+                                : "text-white/50 hover:bg-white/10 hover:text-white",
                             )}>
-                            <ChevronRight
-                              className={cn(
-                                "h-3.5 w-3.5 transition-transform group-hover:translate-x-0.5",
-                                isChildActive
-                                  ? "text-primary"
-                                  : "text-muted-foreground/50",
-                              )}
-                            />
+                            <ChevronRight className='size-3 shrink-0 transition-transform group-hover:translate-x-0.5 text-white/30' />
                             <span className='flex-1 text-left'>
                               {child.title}
                             </span>
                             {isChildActive && (
-                              <div className='w-1.5 h-1.5 bg-primary rounded-full' />
+                              <span className='size-1.5 rounded-full bg-white/60 shrink-0' />
                             )}
                           </button>
                         );
@@ -233,13 +265,20 @@ export function MobileSheetNav({
           </nav>
         </ScrollArea>
 
-        {/* Footer */}
-        <div className='p-4 border-t border-border/40 bg-background/50'>
-          <div className='text-xs text-center text-muted-foreground'>
-            <p>{BRAND_CONFIG.name} Panel</p>
-            <p className='mt-1'>
-              © {new Date().getFullYear()} {BRAND_CONFIG.companyName}. All rights reserved
+        {/* ── Footer ── */}
+        <div className='absolute bottom-0 inset-x-0 px-4 py-4 border-t border-white/10 bg-black/10 backdrop-blur-sm'>
+          <div className='flex items-center justify-between'>
+            <p className='text-[10px] text-white/35 font-medium'>
+              © {new Date().getFullYear()} {BRAND_CONFIG.companyName}
             </p>
+            <button
+              className='flex items-center gap-1.5 text-[11px] text-white/40 hover:text-white/70 transition-colors duration-150'
+              onClick={() => {
+                /* hook up logout */
+              }}>
+              <LogOut className='size-3' />
+              Sign out
+            </button>
           </div>
         </div>
       </SheetContent>

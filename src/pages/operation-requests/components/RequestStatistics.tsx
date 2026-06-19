@@ -1,4 +1,3 @@
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { RequestStatistics } from "../hooks/useOperationRequests";
 import { CheckCircle, XCircle, Clock, Ban, Hourglass, TrendingUp } from "lucide-react";
 
@@ -10,17 +9,15 @@ interface RequestStatisticsProps {
 export const RequestStatistics = ({ statistics, isLoading = false }: RequestStatisticsProps) => {
   if (isLoading) {
     return (
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        {[1, 2, 3, 4].map((i) => (
-          <Card key={i} className="animate-pulse">
-            <CardHeader className="pb-2">
-              <div className="h-4 bg-muted rounded w-1/2"></div>
-            </CardHeader>
-            <CardContent>
-              <div className="h-8 bg-muted rounded w-3/4"></div>
-            </CardContent>
-          </Card>
-        ))}
+      <div className="bg-white border border-slate-100 rounded-xl shadow-[0_1px_3px_rgba(0,0,0,0.04)] p-5">
+        <div className="grid gap-4 md:grid-cols-3">
+          {[1, 2, 3].map((i) => (
+            <div key={i} className="animate-pulse">
+              <div className="h-3 bg-slate-100 rounded w-1/3 mb-2"></div>
+              <div className="h-6 bg-slate-100 rounded w-1/2"></div>
+            </div>
+          ))}
+        </div>
       </div>
     );
   }
@@ -32,71 +29,49 @@ export const RequestStatistics = ({ statistics, isLoading = false }: RequestStat
     return null;
   }
 
-  const statCards = [
+  const statItems = [
     {
-      title: "Total Requests",
+      label: "Total Requests",
       value: stats.totalRequests,
       icon: TrendingUp,
-      color: "text-blue-600",
-      bgColor: "bg-blue-50",
+      color: "text-indigo-600",
+      dotColor: "bg-indigo-600",
     },
     {
-      title: "Pending",
+      label: "Pending",
       value: stats.pending,
       icon: Clock,
-      color: "text-yellow-600",
-      bgColor: "bg-yellow-50",
+      color: "text-amber-600",
+      dotColor: "bg-amber-600",
     },
     {
-      title: "Approved",
+      label: "Approved",
       value: stats.approved,
       icon: CheckCircle,
-      color: "text-green-600",
-      bgColor: "bg-green-50",
-    },
-    {
-      title: "Rejected",
-      value: stats.rejected,
-      icon: XCircle,
-      color: "text-red-600",
-      bgColor: "bg-red-50",
-    },
-    {
-      title: "Cancelled",
-      value: stats.cancelled,
-      icon: Ban,
-      color: "text-gray-600",
-      bgColor: "bg-gray-50",
-    },
-    {
-      title: "Timeout Expired",
-      value: stats.timeoutExpired,
-      icon: Hourglass,
-      color: "text-orange-600",
-      bgColor: "bg-orange-50",
+      color: "text-emerald-600",
+      dotColor: "bg-emerald-600",
     },
   ];
 
   return (
-    <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-      {statCards.map((stat) => {
-        const Icon = stat.icon;
-        return (
-          <Card key={stat.title}>
-            <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground">
-                {stat.title}
-              </CardTitle>
-              <div className={`p-2 rounded-lg ${stat.bgColor}`}>
-                <Icon className={`h-4 w-4 ${stat.color}`} />
+    <div className="bg-white border border-slate-100 rounded-xl shadow-[0_1px_3px_rgba(0,0,0,0.04)] p-5">
+      <div className="grid gap-6 md:grid-cols-3">
+        {statItems.map((stat) => {
+          const Icon = stat.icon;
+          return (
+            <div key={stat.label} className="flex items-center gap-3">
+              <div className={`w-2 h-2 rounded-full ${stat.dotColor} shrink-0`} />
+              <div className="flex items-center gap-2 min-w-0 flex-1">
+                <Icon className={`h-4 w-4 ${stat.color} shrink-0`} />
+                <p className="text-[12px] text-slate-500 font-medium truncate">{stat.label}</p>
               </div>
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{stat.value}</div>
-            </CardContent>
-          </Card>
-        );
-      })}
+              <p className={`text-[15px] font-semibold ${stat.color} leading-none`}>
+                {stat.value}
+              </p>
+            </div>
+          );
+        })}
+      </div>
     </div>
   );
 };

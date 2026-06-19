@@ -162,3 +162,22 @@
 .animate-fade-in {
   animation: fade-in 0.2s ease-in;
 }
+
+@layer utilities {
+  .glass-scrollbar::-webkit-scrollbar {
+    width: 6px;
+  }
+
+  .glass-scrollbar::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  .glass-scrollbar::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.15);
+    border-radius: 9999px;
+  }
+
+  .glass-scrollbar::-webkit-scrollbar-thumb:hover {
+    background: rgba(255, 255, 255, 0.3);
+  }
+}

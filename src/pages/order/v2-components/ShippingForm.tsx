@@ -1,7 +1,8 @@
 import { useState, useMemo, useEffect, useRef, useCallback } from "react";
-import { MapPin, Home, Truck, CheckCircle2 } from "lucide-react";
+import { MapPin, Home, Truck, CheckCircle2, AlertCircle } from "lucide-react";
 import { Label } from "../../../components/ui/label";
 import { Textarea } from "../../../components/ui/textarea";
+import { Alert, AlertDescription } from "../../../components/ui/alert";
 import {
   Popover,
   PopoverContent,
@@ -31,23 +32,25 @@ interface ShippingFormProps {
   shipping: Partial<IShipping>;
   onChange: (shipping: Partial<IShipping>) => void;
   onDeliveryChargeChange?: (charge: number) => void;
+  validationErrors?: Record<string, string[]>;
 }
 
 export function ShippingForm({
   shipping,
   onChange,
   onDeliveryChargeChange,
+  validationErrors,
 }: ShippingFormProps) {
   const [districtSearch, setDistrictSearch] = useState("");
   const [divisionOpen, setDivisionOpen] = useState(false);
-  const [districtOpen, setDistrictOpen] = useState(false);
+  const [districtPopoverOpen, setDistrictPopoverOpen] = useState(false);
 
   // Reset district search when popover opens
   useEffect(() => {
-    if (districtOpen) {
+    if (districtPopoverOpen) {
       setDistrictSearch("");
     }
-  }, [districtOpen]);
+  }, [districtPopoverOpen]);
 
   // Store callbacks in refs so effects/handlers never need them as deps.
   // This prevents "new function reference on every render" from causing
@@ -174,6 +177,15 @@ export function ShippingForm({
                 </Command>
               </PopoverContent>
             </Popover>
+            {/* Division error */}
+            {validationErrors?.division && (
+              <Alert className='mt-2 border-red-200 bg-red-50 py-2'>
+                <AlertCircle className='w-4 h-4 text-red-500' />
+                <AlertDescription className='text-red-700 text-sm'>
+                  {validationErrors.division[0]}
+                </AlertDescription>
+              </Alert>
+            )}
           </div>
 
           {/* Area */}
@@ -184,7 +196,7 @@ export function ShippingForm({
               <Home className='w-3.5 h-3.5 text-green-600' />
               Area *
             </Label>
-            <Popover open={districtOpen} onOpenChange={setDistrictOpen}>
+            <Popover open={districtPopoverOpen} onOpenChange={setDistrictPopoverOpen}>
               <PopoverTrigger asChild>
                 <Button
                   id='district'
@@ -209,7 +221,7 @@ export function ShippingForm({
                           className='font-semibold text-black'
                           onSelect={(value) => {
                             handleDistrictChange(value);
-                            setDistrictOpen(false);
+                            setDistrictPopoverOpen(false);
                           }}>
                           {district.name}
                         </CommandItem>
@@ -219,6 +231,15 @@ export function ShippingForm({
                 </Command>
               </PopoverContent>
             </Popover>
+            {/* District error */}
+            {validationErrors?.district && (
+              <Alert className='mt-2 border-red-200 bg-red-50 py-2'>
+                <AlertCircle className='w-4 h-4 text-red-500' />
+                <AlertDescription className='text-red-700 text-sm'>
+                  {validationErrors.district[0]}
+                </AlertDescription>
+              </Alert>
+            )}
           </div>
 
           {/* Location summary */}
@@ -264,6 +285,15 @@ export function ShippingForm({
                 {(shipping.address ?? "").length}/500
               </span>
             </div>
+            {/* Address error */}
+            {validationErrors?.address && (
+              <Alert className='mt-2 border-red-200 bg-red-50 py-2'>
+                <AlertCircle className='w-4 h-4 text-red-500' />
+                <AlertDescription className='text-red-700 text-sm'>
+                  {validationErrors.address[0]}
+                </AlertDescription>
+              </Alert>
+            )}
           </div>
         </div>
       </CardContent>

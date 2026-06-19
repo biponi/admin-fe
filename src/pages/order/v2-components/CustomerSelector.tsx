@@ -1,7 +1,8 @@
 import { useState, useCallback, useRef, useEffect } from "react";
-import { User, Phone, Mail, UserCheck, CheckCircle2 } from "lucide-react";
+import { User, Phone, Mail, UserCheck, CheckCircle2, AlertCircle } from "lucide-react";
 import { Input } from "../../../components/ui/input";
 import { Label } from "../../../components/ui/label";
+import { Alert, AlertDescription } from "../../../components/ui/alert";
 import {
   Card,
   CardHeader,
@@ -25,12 +26,14 @@ interface CustomerSelectorProps {
   customer: Partial<ICustomer>;
   onChange: (customer: Partial<ICustomer>) => void;
   onShippingChange?: (shipping: Partial<IShipping>) => void;
+  validationErrors?: Record<string, string[]>;
 }
 
 export function CustomerSelector({
   customer,
   onChange,
   onShippingChange,
+  validationErrors,
 }: CustomerSelectorProps) {
   const [addressSheetOpen, setAddressSheetOpen] = useState(false);
   const [selectedCustomer, setSelectedCustomer] = useState<CustomerInfo | null>(
@@ -189,6 +192,15 @@ export function CustomerSelector({
                 <CheckCircle2 className='absolute right-2.5 top-1/2 -translate-y-1/2 w-4 h-4 text-green-500 pointer-events-none' />
               )}
             </div>
+            {/* Name error */}
+            {validationErrors?.customerName && (
+              <Alert className='mt-2 border-red-200 bg-red-50 py-2'>
+                <AlertCircle className='w-4 h-4 text-red-500' />
+                <AlertDescription className='text-red-700 text-sm'>
+                  {validationErrors.customerName[0]}
+                </AlertDescription>
+              </Alert>
+            )}
           </div>
 
           {/* Phone */}
@@ -216,6 +228,15 @@ export function CustomerSelector({
             <p className='text-xs text-gray-500'>
               BD mobile format (11 digits, starts with 01)
             </p>
+            {/* Phone error */}
+            {validationErrors?.customerPhone && (
+              <Alert className='mt-2 border-red-200 bg-red-50 py-2'>
+                <AlertCircle className='w-4 h-4 text-red-500' />
+                <AlertDescription className='text-red-700 text-sm'>
+                  {validationErrors.customerPhone[0]}
+                </AlertDescription>
+              </Alert>
+            )}
           </div>
 
           {/* Email */}

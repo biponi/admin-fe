@@ -34,7 +34,7 @@ export const DeliveryDashboard: React.FC = () => {
 
   const renderFilters = () => {
     return (
-      <Card className='mb-6'>
+      <Card className='mb-6 border-slate-200 shadow-sm'>
         <CardHeader>
           <CardTitle className='flex items-center gap-2'>
             <Filter className='w-5 h-5' />
@@ -45,7 +45,7 @@ export const DeliveryDashboard: React.FC = () => {
           <div className='grid grid-cols-1 md:grid-cols-4 gap-4'>
             {/* Start Date */}
             <div className='space-y-2'>
-              <label className='text-sm font-medium text-gray-700 flex items-center gap-2'>
+              <label className='text-sm font-medium text-slate-600 flex items-center gap-2'>
                 <Calendar className='w-4 h-4' />
                 Start Date
               </label>
@@ -53,13 +53,13 @@ export const DeliveryDashboard: React.FC = () => {
                 type='date'
                 value={startDate}
                 onChange={(e) => setStartDate(e.target.value)}
-                className='w-full'
+                className='w-full border-slate-200 focus:border-indigo-300'
               />
             </div>
 
             {/* End Date */}
             <div className='space-y-2'>
-              <label className='text-sm font-medium text-gray-700 flex items-center gap-2'>
+              <label className='text-sm font-medium text-slate-600 flex items-center gap-2'>
                 <Calendar className='w-4 h-4' />
                 End Date
               </label>
@@ -67,19 +67,19 @@ export const DeliveryDashboard: React.FC = () => {
                 type='date'
                 value={endDate}
                 onChange={(e) => setEndDate(e.target.value)}
-                className='w-full'
+                className='w-full border-slate-200 focus:border-indigo-300'
               />
             </div>
 
             {/* Status Filter */}
             <div className='space-y-2'>
-              <label className='text-sm font-medium text-gray-700'>
+              <label className='text-sm font-medium text-slate-600'>
                 Delivery Status
               </label>
               <Select
                 value={selectedStatus || 'all'}
                 onValueChange={(val) => setSelectedStatus(val === 'all' ? '' : val)}>
-                <SelectTrigger>
+                <SelectTrigger className='border-slate-200 focus:border-indigo-300'>
                   <SelectValue placeholder='All Statuses' />
                 </SelectTrigger>
                 <SelectContent>
@@ -99,17 +99,17 @@ export const DeliveryDashboard: React.FC = () => {
 
             {/* Actions */}
             <div className='space-y-2'>
-              <label className='text-sm font-medium text-gray-700 invisible'>
+              <label className='text-sm font-medium text-slate-600 invisible'>
                 Actions
               </label>
               <div className='flex gap-2'>
                 <Button
                   variant='outline'
                   onClick={clearFilters}
-                  className='flex-1'>
+                  className='flex-1 border-slate-200 text-slate-600 hover:bg-slate-50 transition-all duration-150'>
                   Clear
                 </Button>
-                <Button onClick={refresh} className='flex-1 gap-2'>
+                <Button onClick={refresh} className='flex-1 gap-2 bg-indigo-600 text-white hover:bg-indigo-700 shadow-sm shadow-indigo-200 transition-all duration-150'>
                   <RefreshCw className='w-4 h-4' />
                   Refresh
                 </Button>
@@ -124,11 +124,11 @@ export const DeliveryDashboard: React.FC = () => {
   const renderLoading = () => {
     return (
       <div className='space-y-4'>
-        <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4'>
+        <div className='grid grid-cols-2 sm:grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4'>
           {[1, 2, 3, 4, 5, 6, 7, 8].map((i) => (
-            <Card key={i}>
+            <Card key={i} className='border-slate-100 shadow-sm'>
               <CardContent className='p-4'>
-                <Skeleton className='h-20 w-full' />
+                <Skeleton className='h-20 w-full bg-slate-100' />
               </CardContent>
             </Card>
           ))}
@@ -139,10 +139,10 @@ export const DeliveryDashboard: React.FC = () => {
 
   const renderError = () => {
     return (
-      <Card className='border-red-200 bg-red-50'>
+      <Card className='border-rose-200 bg-rose-50'>
         <CardContent className='p-6 text-center'>
-          <p className='text-red-600 mb-4'>{error}</p>
-          <Button onClick={refresh} variant='outline' className='gap-2'>
+          <p className='text-rose-600 mb-4'>{error}</p>
+          <Button onClick={refresh} variant='outline' className='gap-2 border-slate-200 text-slate-600 hover:bg-slate-50 transition-all duration-150'>
             <RefreshCw className='w-4 h-4' />
             Try Again
           </Button>
@@ -185,9 +185,9 @@ export const DeliveryDashboard: React.FC = () => {
 
       {/* Status Breakdown Chart */}
       {dashboardData && dashboardData.statusBreakdown.length > 0 && (
-        <Card>
+        <Card className='border-slate-100 shadow-sm'>
           <CardHeader>
-            <CardTitle>Status Breakdown</CardTitle>
+            <CardTitle className='text-slate-900'>Status Breakdown</CardTitle>
           </CardHeader>
           <CardContent>
             <div className='space-y-4'>
@@ -197,20 +197,20 @@ export const DeliveryDashboard: React.FC = () => {
                 return (
                   <div key={index} className='space-y-2'>
                     <div className='flex items-center justify-between text-sm'>
-                      <span className='font-medium capitalize'>
+                      <span className='font-medium capitalize text-slate-900'>
                         {status._id.replace(/_/g, " ")}
                       </span>
-                      <span className='text-gray-600'>
+                      <span className='text-slate-600'>
                         {status.count} orders ({percentage.toFixed(1)}%)
                       </span>
                     </div>
-                    <div className='w-full bg-gray-200 rounded-full h-2.5'>
+                    <div className='w-full bg-slate-200 rounded-full h-2.5'>
                       <div
-                        className='bg-blue-600 h-2.5 rounded-full transition-all duration-300'
+                        className='bg-indigo-600 h-2.5 rounded-full transition-all duration-300'
                         style={{ width: `${percentage}%` }}
                       />
                     </div>
-                    <div className='flex items-center justify-between text-xs text-gray-500'>
+                    <div className='flex items-center justify-between text-xs text-slate-500'>
                       <span>COD: ৳{status.totalCOD.toLocaleString()}</span>
                       <span>
                         Collected: ৳{status.totalCollected.toLocaleString()}

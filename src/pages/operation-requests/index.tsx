@@ -139,7 +139,7 @@ const OperationRequestsPage = () => {
           <div className='bg-white rounded-xl border border-slate-100 shadow-sm px-5 py-4'>
             <div className='flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3'>
               <div className='flex items-center gap-3'>
-                <div className='flex items-center justify-center w-10 h-10 rounded-xl bg-violet-600 shadow-sm shadow-violet-200'>
+                <div className='flex items-center justify-center w-10 h-10 rounded-xl bg-indigo-600 shadow-sm shadow-indigo-200'>
                   <ClipboardList
                     className='h-5 w-5 text-white'
                     strokeWidth={2}
@@ -242,7 +242,7 @@ const OperationRequestsPage = () => {
           {loading && requests.length === 0 ? (
             <div className='bg-white rounded-xl border border-slate-100 shadow-sm'>
               <div className='flex flex-col items-center justify-center py-20 gap-3'>
-                <div className='w-8 h-8 rounded-full border-2 border-violet-200 border-t-violet-500 animate-spin' />
+                <div className='w-8 h-8 rounded-full border-2 border-indigo-200 border-t-indigo-500 animate-spin' />
                 <p className='text-sm font-medium text-slate-600'>
                   Loading requests…
                 </p>
@@ -251,9 +251,9 @@ const OperationRequestsPage = () => {
           ) : requests.length === 0 ? (
             <div className='bg-white rounded-xl border border-slate-100 shadow-sm'>
               <div className='flex flex-col items-center justify-center py-20 gap-3'>
-                <div className='w-14 h-14 rounded-2xl bg-violet-50 flex items-center justify-center'>
+                <div className='w-14 h-14 rounded-2xl bg-indigo-50 flex items-center justify-center'>
                   <ClipboardList
-                    className='w-7 h-7 text-violet-300'
+                    className='w-7 h-7 text-indigo-300'
                     strokeWidth={1.5}
                   />
                 </div>

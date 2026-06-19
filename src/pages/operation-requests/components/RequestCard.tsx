@@ -57,7 +57,7 @@ const STATUS_CONFIG: Record<
   cancelled: {
     icon: <Ban className='w-3 h-3' />,
     label: "Cancelled",
-    className: "bg-gray-50 text-gray-600 border-gray-200",
+    className: "bg-slate-50 text-slate-600 border-slate-200",
   },
   timeout_expired: {
     icon: <Hourglass className='w-3 h-3' />,
@@ -103,30 +103,30 @@ const VariationChip = ({ variation }: { variation: any }) => {
     [variation.color, variation.size].filter(Boolean).join(" · ");
   const qty = variation.quantity ?? 0;
   const qtyClass =
-    qty <= 0 ? "text-rose-500" : qty <= 5 ? "text-amber-600" : "text-gray-400";
+    qty <= 0 ? "text-rose-500" : qty <= 5 ? "text-amber-600" : "text-slate-400";
   const qtyLabel =
     qty <= 0 ? "Out of stock" : qty <= 5 ? `${qty} left` : `${qty} in stock`;
 
   return (
-    <div className='inline-flex items-center gap-1.5 px-2 py-1 rounded-lg bg-gray-50 border border-gray-100 text-xs'>
+    <div className='inline-flex items-center gap-1.5 px-2 py-1 rounded-lg bg-slate-50 border border-slate-100 text-xs'>
       {src ? (
         <img
           src={src}
           alt={label}
-          className='w-6 h-6 rounded-md object-cover border border-gray-200 shrink-0'
+          className='w-6 h-6 rounded-md object-cover border border-slate-200 shrink-0'
           onError={(e) => {
             (e.target as HTMLImageElement).src = PlaceHolderImage;
           }}
         />
       ) : (
-        <div className='w-6 h-6 rounded-md bg-violet-50 border border-violet-100 flex items-center justify-center shrink-0'>
-          <span className='text-[10px] font-bold text-violet-500'>
+        <div className='w-6 h-6 rounded-md bg-indigo-50 border border-indigo-100 flex items-center justify-center shrink-0'>
+          <span className='text-[10px] font-bold text-indigo-500'>
             {variation.size || variation.color?.slice(0, 1) || "?"}
           </span>
         </div>
       )}
       <div className='flex flex-col leading-tight'>
-        <span className='font-medium text-gray-800 whitespace-nowrap'>
+        <span className='font-medium text-slate-800 whitespace-nowrap'>
           {label}
         </span>
         <span className={`text-[10px] whitespace-nowrap ${qtyClass}`}>
@@ -174,12 +174,12 @@ export const RequestCard = ({
   }, [request.operationType, request.targetId, fetchProduct, getProduct]);
 
   return (
-    <div className='bg-white rounded-2xl border border-gray-100 shadow-sm hover:shadow-md hover:border-gray-200 transition-all flex flex-col overflow-hidden'>
+    <div className='bg-white rounded-2xl border border-slate-100 shadow-sm hover:shadow-md hover:border-slate-200 transition-all duration-150 flex flex-col overflow-hidden'>
       {/* Card header */}
-      <div className='px-4 pt-4 pb-3 flex items-start justify-between gap-2 border-b border-gray-50'>
+      <div className='px-4 pt-4 pb-3 flex items-start justify-between gap-2 border-b border-slate-50'>
         <div className='min-w-0'>
           <div className='flex items-center gap-1.5'>
-            <span className='text-sm font-semibold text-gray-900 leading-tight truncate'>
+            <span className='text-sm font-semibold text-slate-900 leading-tight truncate'>
               {getOperationTypeLabel(request.operationType)}
             </span>
             {isExpiringSoon && (
@@ -189,7 +189,7 @@ export const RequestCard = ({
               />
             )}
           </div>
-          <p className='text-xs text-gray-400 mt-0.5 truncate'>
+          <p className='text-xs text-slate-400 mt-0.5 truncate'>
             {request.targetName}
           </p>
         </div>
@@ -200,20 +200,20 @@ export const RequestCard = ({
       <div className='px-4 py-3 flex-1 space-y-3'>
         {/* Product preview */}
         {product && request.operationType === "product_delete" && (
-          <div className='rounded-xl border border-gray-100 bg-gray-50/60 p-3 space-y-2.5'>
+          <div className='rounded-xl border border-slate-100 bg-slate-50/60 p-3 space-y-2.5'>
             <div className='flex items-start gap-3'>
               <img
                 src={
                   product.thumbnail || product.images?.[0] || PlaceHolderImage
                 }
                 alt={product.title || product.name}
-                className='w-14 h-14 rounded-xl object-cover border border-gray-200 shrink-0'
+                className='w-14 h-14 rounded-xl object-cover border border-slate-200 shrink-0'
                 onError={(e) => {
                   (e.target as HTMLImageElement).src = PlaceHolderImage;
                 }}
               />
               <div className='flex-1 min-w-0 space-y-1.5'>
-                <p className='text-xs font-semibold text-gray-800 truncate'>
+                <p className='text-xs font-semibold text-slate-800 truncate'>
                   {product.title || product.name}
                 </p>
                 <div className='grid grid-cols-2 gap-x-3 gap-y-1'>
@@ -238,7 +238,7 @@ export const RequestCard = ({
                     .map((item, i) => (
                       <div
                         key={i}
-                        className='flex items-center gap-1 text-[11px] text-gray-400'>
+                        className='flex items-center gap-1 text-[11px] text-slate-400'>
                         {item!.icon}
                         <span className='truncate'>{item!.text}</span>
                       </div>
@@ -248,12 +248,12 @@ export const RequestCard = ({
             </div>
 
             {product.variations && product.variations.length > 0 && (
-              <div className='flex flex-wrap gap-1.5 pt-1 border-t border-gray-100'>
+              <div className='flex flex-wrap gap-1.5 pt-1 border-t border-slate-100'>
                 {product.variations.slice(0, 3).map((v) => (
                   <VariationChip key={v.id} variation={v} />
                 ))}
                 {product.variations.length > 3 && (
-                  <span className='self-center text-[11px] text-gray-400'>
+                  <span className='self-center text-[11px] text-slate-400'>
                     +{product.variations.length - 3} more
                   </span>
                 )}
@@ -264,11 +264,11 @@ export const RequestCard = ({
 
         {/* Meta row */}
         <div className='grid grid-cols-2 gap-2'>
-          <div className='flex items-center gap-1.5 text-[11px] text-gray-400'>
+          <div className='flex items-center gap-1.5 text-[11px] text-slate-400'>
             <User className='w-3.5 h-3.5 shrink-0' />
             <span className='truncate'>{request.requester}</span>
           </div>
-          <div className='flex items-center gap-1.5 text-[11px] text-gray-400'>
+          <div className='flex items-center gap-1.5 text-[11px] text-slate-400'>
             <Calendar className='w-3.5 h-3.5 shrink-0' />
             <span className='truncate'>
               {formatDistanceToNow(new Date(request.requestedAt), {
@@ -280,8 +280,8 @@ export const RequestCard = ({
 
         {/* Reason */}
         {request.reason && (
-          <p className='text-xs text-gray-500 line-clamp-2 leading-relaxed'>
-            <span className='font-medium text-gray-700'>Reason: </span>
+          <p className='text-xs text-slate-500 line-clamp-2 leading-relaxed'>
+            <span className='font-medium text-slate-700'>Reason: </span>
             {request.reason}
           </p>
         )}
@@ -290,11 +290,11 @@ export const RequestCard = ({
         {isPending && request.expiresAt && (
           <div className='flex items-center gap-1.5 text-[11px]'>
             <Clock
-              className={`w-3.5 h-3.5 shrink-0 ${isExpiringSoon ? "text-orange-500" : "text-gray-300"}`}
+              className={`w-3.5 h-3.5 shrink-0 ${isExpiringSoon ? "text-orange-500" : "text-slate-300"}`}
             />
             <span
               className={
-                isExpiringSoon ? "text-orange-600 font-medium" : "text-gray-400"
+                isExpiringSoon ? "text-orange-600 font-medium" : "text-slate-400"
               }>
               Expires{" "}
               {formatDistanceToNow(new Date(request.expiresAt), {
@@ -317,9 +317,9 @@ export const RequestCard = ({
         {/* Processed by */}
         {request.approver &&
           (request.status === "approved" || request.status === "rejected") && (
-            <p className='text-[11px] text-gray-400'>
+            <p className='text-[11px] text-slate-400'>
               Processed by{" "}
-              <span className='font-medium text-gray-600'>
+              <span className='font-medium text-slate-600'>
                 {request.approver}
               </span>
             </p>
@@ -327,10 +327,10 @@ export const RequestCard = ({
       </div>
 
       {/* Card footer */}
-      <div className='px-4 pb-4 pt-3 border-t border-gray-50 flex items-center gap-2'>
+      <div className='px-4 pb-4 pt-3 border-t border-slate-50 flex items-center gap-2'>
         <button
           onClick={() => onViewDetails(request)}
-          className='flex-1 h-8 inline-flex items-center justify-center gap-1.5 rounded-xl border border-gray-200 text-xs font-medium text-gray-600 hover:bg-gray-50 transition-colors'>
+          className='flex-1 h-8 inline-flex items-center justify-center gap-1.5 rounded-xl border border-slate-200 text-xs font-medium text-slate-600 hover:bg-slate-50 transition-all duration-150'>
           <Eye className='w-3.5 h-3.5' />
           View
         </button>
@@ -341,13 +341,13 @@ export const RequestCard = ({
               <>
                 <button
                   onClick={() => onApprove(request.id)}
-                  className='flex-1 h-8 inline-flex items-center justify-center gap-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-medium transition-colors'>
+                  className='flex-1 h-8 inline-flex items-center justify-center gap-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-medium transition-all duration-150'>
                   <Check className='w-3.5 h-3.5' />
                   Approve
                 </button>
                 <button
                   onClick={() => onReject(request.id)}
-                  className='flex-1 h-8 inline-flex items-center justify-center gap-1.5 rounded-xl bg-rose-600 hover:bg-rose-700 text-white text-xs font-medium transition-colors'>
+                  className='flex-1 h-8 inline-flex items-center justify-center gap-1.5 rounded-xl bg-rose-600 hover:bg-rose-700 text-white text-xs font-medium transition-all duration-150'>
                   <X className='w-3.5 h-3.5' />
                   Reject
                 </button>
@@ -357,7 +357,7 @@ export const RequestCard = ({
             {canCancel && onCancel && (
               <button
                 onClick={() => onCancel(request.id)}
-                className='flex-1 h-8 inline-flex items-center justify-center gap-1.5 rounded-xl border border-gray-200 text-xs font-medium text-gray-600 hover:bg-gray-50 transition-colors'>
+                className='flex-1 h-8 inline-flex items-center justify-center gap-1.5 rounded-xl border border-slate-200 text-xs font-medium text-slate-600 hover:bg-slate-50 transition-all duration-150'>
                 <Ban className='w-3.5 h-3.5' />
                 Cancel
               </button>

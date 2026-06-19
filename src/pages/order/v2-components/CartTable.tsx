@@ -1,6 +1,7 @@
 import { Minus, Plus, Trash2, Package } from "lucide-react";
 import PlaceHolderImage from "../../../assets/placeholder.svg";
 import type { CartItem } from "../createOrderLayoutStore";
+import { getVariationImageUrl } from "../../../utils/functions";
 
 interface CartTableProps {
   cart: CartItem[];
@@ -14,13 +15,10 @@ export function CartTable({
   onRemove,
 }: CartTableProps) {
   const getImageUrl = (item: CartItem): string => {
-    if (
-      item.selectedVariant?.images &&
-      item.selectedVariant.images.length > 0
-    ) {
-      const image = item.selectedVariant.images[0];
-      if (typeof image === "string") return image;
-    }
+    // Try variation images → image groups
+    const url = getVariationImageUrl(item.selectedVariant, item.imageGroups);
+    if (url) return url;
+
     return item.thumbnail || PlaceHolderImage;
   };
 

@@ -12,6 +12,7 @@ import {
 import PlaceHolderImage from "../../../assets/placeholder.svg";
 import type { IProduct, IVariation } from "../../product/interface";
 import { useIsMobile } from "../../../hooks/use-mobile";
+import { getVariationImageUrl } from "../../../utils/functions";
 
 interface VariationModalProps {
   product: IProduct | null;
@@ -169,11 +170,11 @@ export function VariationModal({
     product.variation?.filter((v) => v.quantity > 0) || [];
 
   const getImageUrl = (variation?: IVariation): string => {
-    if (variation?.images && variation.images.length > 0) {
-      const image = variation.images[0];
-      if (typeof image === "string") return image;
-      if (image instanceof File) return URL.createObjectURL(image);
-    }
+    // Try the helper function first (checks variation.images → imageGroups)
+    const url = getVariationImageUrl(variation, product.imageGroups);
+    if (url) return url;
+
+    // Final fallback to product thumbnail
     return product.thumbnail || PlaceHolderImage;
   };
 

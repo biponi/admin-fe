@@ -64,7 +64,7 @@ const STATUS_CONFIG: Record<
   cancelled: {
     icon: <Ban className='w-3 h-3' />,
     label: "Cancelled",
-    className: "bg-gray-50 text-gray-600 border-gray-200",
+    className: "bg-slate-50 text-slate-600 border-slate-200",
   },
   timeout_expired: {
     icon: <Hourglass className='w-3 h-3' />,
@@ -75,7 +75,7 @@ const STATUS_CONFIG: Record<
 
 const StatusBadge = ({ status }: { status: OperationRequest["status"] }) => {
   const cfg = STATUS_CONFIG[status];
-  if (!cfg) return <span className='text-xs text-gray-400'>{status}</span>;
+  if (!cfg) return <span className='text-xs text-slate-400'>{status}</span>;
   return (
     <span
       className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full border text-[11px] font-medium ${cfg.className}`}>
@@ -102,10 +102,10 @@ const Section: React.FC<{
   icon?: React.ReactNode;
   children: React.ReactNode;
 }> = ({ title, icon, children }) => (
-  <div className='rounded-xl border border-gray-100 bg-gray-50/60 overflow-hidden'>
-    <div className='px-4 py-2.5 border-b border-gray-100 flex items-center gap-2'>
-      {icon && <span className='text-gray-400'>{icon}</span>}
-      <p className='text-xs font-semibold text-gray-700 uppercase tracking-wide'>
+  <div className='rounded-xl border border-slate-100 bg-slate-50/60 overflow-hidden'>
+    <div className='px-4 py-2.5 border-b border-slate-100 flex items-center gap-2'>
+      {icon && <span className='text-slate-400'>{icon}</span>}
+      <p className='text-xs font-semibold text-slate-700 uppercase tracking-wide'>
         {title}
       </p>
     </div>
@@ -121,11 +121,11 @@ const MetaRow: React.FC<{
   span?: boolean;
 }> = ({ label, value, mono, span }) => (
   <div className={span ? "col-span-2" : ""}>
-    <p className='text-[10px] font-medium text-gray-400 uppercase tracking-wide mb-0.5'>
+    <p className='text-[10px] font-medium text-slate-400 uppercase tracking-wide mb-0.5'>
       {label}
     </p>
     <p
-      className={`text-xs font-medium text-gray-800 ${mono ? "font-mono" : ""}`}>
+      className={`text-xs font-medium text-slate-800 ${mono ? "font-mono" : ""}`}>
       {value}
     </p>
   </div>
@@ -139,30 +139,30 @@ const VariationChip = ({ variation }: { variation: any }) => {
     [variation.color, variation.size].filter(Boolean).join(" · ");
   const qty = variation.quantity ?? 0;
   const qtyClass =
-    qty <= 0 ? "text-rose-500" : qty <= 5 ? "text-amber-600" : "text-gray-400";
+    qty <= 0 ? "text-rose-500" : qty <= 5 ? "text-amber-600" : "text-slate-400";
   const qtyLabel =
     qty <= 0 ? "Out of stock" : qty <= 5 ? `${qty} left` : `${qty} in stock`;
 
   return (
-    <div className='inline-flex items-center gap-1.5 px-2 py-1 rounded-lg bg-white border border-gray-100 text-xs'>
+    <div className='inline-flex items-center gap-1.5 px-2 py-1 rounded-lg bg-white border border-slate-100 text-xs'>
       {src ? (
         <img
           src={src}
           alt={label}
-          className='w-6 h-6 rounded-md object-cover border border-gray-200 shrink-0'
+          className='w-6 h-6 rounded-md object-cover border border-slate-200 shrink-0'
           onError={(e) => {
             (e.target as HTMLImageElement).src = PlaceHolderImage;
           }}
         />
       ) : (
-        <div className='w-6 h-6 rounded-md bg-violet-50 border border-violet-100 flex items-center justify-center shrink-0'>
-          <span className='text-[10px] font-bold text-violet-500'>
+        <div className='w-6 h-6 rounded-md bg-indigo-50 border border-indigo-100 flex items-center justify-center shrink-0'>
+          <span className='text-[10px] font-bold text-indigo-500'>
             {variation.size || variation.color?.slice(0, 1) || "?"}
           </span>
         </div>
       )}
       <div className='flex flex-col leading-tight'>
-        <span className='font-medium text-gray-800 whitespace-nowrap'>
+        <span className='font-medium text-slate-800 whitespace-nowrap'>
           {label}
         </span>
         <span className={`text-[10px] whitespace-nowrap ${qtyClass}`}>
@@ -249,15 +249,15 @@ export const RequestDetailsModal = ({
           if (!v) setAdminNotes("");
         }
       }}>
-      <DialogContent className='max-w-2xl max-h-[92vh] overflow-y-auto p-0 gap-0 rounded-2xl border border-gray-100 shadow-xl'>
+      <DialogContent className='max-w-2xl max-h-[92vh] overflow-y-auto p-0 gap-0 rounded-2xl border border-slate-100 shadow-xl'>
         {/* Dialog header */}
-        <DialogHeader className='px-6 pt-6 pb-4 border-b border-gray-100'>
+        <DialogHeader className='px-6 pt-6 pb-4 border-b border-slate-100'>
           <div className='flex items-start justify-between gap-3'>
             <div>
-              <DialogTitle className='text-base font-bold text-gray-900 leading-tight'>
+              <DialogTitle className='text-base font-bold text-slate-900 leading-tight'>
                 {getOperationTypeLabel(request.operationType)}
               </DialogTitle>
-              <DialogDescription className='mt-1 flex items-center gap-1 text-[11px] text-gray-400'>
+              <DialogDescription className='mt-1 flex items-center gap-1 text-[11px] text-slate-400'>
                 <Hash className='w-3 h-3' />
                 <span className='font-mono'>{request.id}</span>
               </DialogDescription>
@@ -278,13 +278,13 @@ export const RequestDetailsModal = ({
                     product.thumbnail || product.images?.[0] || PlaceHolderImage
                   }
                   alt={product.title || product.name}
-                  className='w-20 h-20 rounded-xl object-cover border border-gray-200 shrink-0'
+                  className='w-20 h-20 rounded-xl object-cover border border-slate-200 shrink-0'
                   onError={(e) => {
                     (e.target as HTMLImageElement).src = PlaceHolderImage;
                   }}
                 />
                 <div className='flex-1 min-w-0 space-y-2'>
-                  <p className='text-sm font-semibold text-gray-900 truncate'>
+                  <p className='text-sm font-semibold text-slate-900 truncate'>
                     {product.title || product.name}
                   </p>
                   <div className='grid grid-cols-3 gap-x-4 gap-y-2'>
@@ -306,8 +306,8 @@ export const RequestDetailsModal = ({
 
               {/* Variations */}
               {product.variations && product.variations.length > 0 && (
-                <div className='mt-3 pt-3 border-t border-gray-100'>
-                  <p className='text-[10px] font-semibold text-gray-400 uppercase tracking-wide mb-2'>
+                <div className='mt-3 pt-3 border-t border-slate-100'>
+                  <p className='text-[10px] font-semibold text-slate-400 uppercase tracking-wide mb-2'>
                     Variations ({product.variations.length})
                   </p>
                   <div className='flex flex-wrap gap-1.5'>
@@ -320,8 +320,8 @@ export const RequestDetailsModal = ({
 
               {/* Image gallery */}
               {product.images && product.images.length > 1 && (
-                <div className='mt-3 pt-3 border-t border-gray-100'>
-                  <p className='text-[10px] font-semibold text-gray-400 uppercase tracking-wide mb-2 flex items-center gap-1'>
+                <div className='mt-3 pt-3 border-t border-slate-100'>
+                  <p className='text-[10px] font-semibold text-slate-400 uppercase tracking-wide mb-2 flex items-center gap-1'>
                     <ImageIcon className='w-3 h-3' />
                     Images ({product.images.length})
                   </p>
@@ -331,7 +331,7 @@ export const RequestDetailsModal = ({
                         key={i}
                         src={img}
                         alt={`${product.title || product.name} ${i + 1}`}
-                        className='w-14 h-14 rounded-xl object-cover border border-gray-200 shrink-0'
+                        className='w-14 h-14 rounded-xl object-cover border border-slate-200 shrink-0'
                         onError={(e) => {
                           (e.target as HTMLImageElement).src = PlaceHolderImage;
                         }}
@@ -359,8 +359,8 @@ export const RequestDetailsModal = ({
                 label='Requested by'
                 value={
                   <span className='flex items-center gap-1.5'>
-                    <span className='w-5 h-5 rounded-full bg-violet-100 inline-flex items-center justify-center shrink-0'>
-                      <span className='text-[10px] font-bold text-violet-600'>
+                    <span className='w-5 h-5 rounded-full bg-indigo-100 inline-flex items-center justify-center shrink-0'>
+                      <span className='text-[10px] font-bold text-indigo-600'>
                         {request.requester?.[0]?.toUpperCase() ?? "?"}
                       </span>
                     </span>
@@ -385,7 +385,7 @@ export const RequestDetailsModal = ({
           {/* Reason */}
           {request.reason && (
             <Section title='Reason'>
-              <p className='text-xs text-gray-700 leading-relaxed'>
+              <p className='text-xs text-slate-700 leading-relaxed'>
                 {request.reason}
               </p>
             </Section>
@@ -397,7 +397,7 @@ export const RequestDetailsModal = ({
               className={`flex items-center gap-2 px-3 py-2.5 rounded-xl border text-xs font-medium ${
                 isExpiringSoon
                   ? "bg-orange-50 border-orange-100 text-orange-700"
-                  : "bg-gray-50 border-gray-100 text-gray-500"
+                  : "bg-slate-50 border-slate-100 text-slate-500"
               }`}>
               {isExpiringSoon ? (
                 <AlertCircle className='w-3.5 h-3.5 shrink-0' />
@@ -430,9 +430,9 @@ export const RequestDetailsModal = ({
           {request.approver &&
             (request.status === "approved" ||
               request.status === "rejected") && (
-              <p className='text-[11px] text-gray-400'>
+              <p className='text-[11px] text-slate-400'>
                 Processed by{" "}
-                <span className='font-semibold text-gray-600'>
+                <span className='font-semibold text-slate-600'>
                   {request.approver}
                 </span>
                 {request.actionAt && (
@@ -449,9 +449,9 @@ export const RequestDetailsModal = ({
           {/* Admin notes input (for rejection) */}
           {isPending && canApproveReject && onReject && (
             <div className='space-y-1.5'>
-              <label className='text-xs font-semibold text-gray-600 uppercase tracking-wide'>
+              <label className='text-xs font-semibold text-slate-600 uppercase tracking-wide'>
                 Rejection Notes{" "}
-                <span className='text-gray-400 font-normal normal-case tracking-normal'>
+                <span className='text-slate-400 font-normal normal-case tracking-normal'>
                   (optional)
                 </span>
               </label>
@@ -460,21 +460,21 @@ export const RequestDetailsModal = ({
                 value={adminNotes}
                 onChange={(e) => setAdminNotes(e.target.value)}
                 rows={3}
-                className='text-xs rounded-xl border-gray-200 resize-none focus:border-violet-300 focus:ring-violet-100'
+                className='text-xs rounded-xl border-slate-200 resize-none focus:border-indigo-300 focus:ring-indigo-100'
               />
             </div>
           )}
         </div>
 
         {/* Footer */}
-        <div className='px-6 py-4 border-t border-gray-100 bg-gray-50/50 flex items-center justify-end gap-2'>
+        <div className='px-6 py-4 border-t border-slate-100 bg-slate-50/50 flex items-center justify-end gap-2'>
           <button
             onClick={() => {
               onOpenChange(false);
               setAdminNotes("");
             }}
             disabled={isProcessing}
-            className='h-8 px-4 text-xs font-medium text-gray-600 rounded-xl border border-gray-200 hover:bg-white transition-colors disabled:opacity-50'>
+            className='h-8 px-4 text-xs font-medium text-slate-600 rounded-xl border border-slate-200 hover:bg-white transition-all duration-150 disabled:opacity-50'>
             Close
           </button>
 
@@ -484,7 +484,7 @@ export const RequestDetailsModal = ({
                 <button
                   onClick={handleCancel}
                   disabled={isProcessing}
-                  className='h-8 px-4 text-xs font-medium text-gray-600 rounded-xl border border-gray-200 hover:bg-white transition-colors disabled:opacity-50 flex items-center gap-1.5'>
+                  className='h-8 px-4 text-xs font-medium text-slate-600 rounded-xl border border-slate-200 hover:bg-white transition-all duration-150 disabled:opacity-50 flex items-center gap-1.5'>
                   <Ban className='w-3.5 h-3.5' />
                   {isProcessing ? "Processing…" : "Cancel Request"}
                 </button>
@@ -495,14 +495,14 @@ export const RequestDetailsModal = ({
                   <button
                     onClick={handleReject}
                     disabled={isProcessing}
-                    className='h-8 px-4 text-xs font-medium text-white rounded-xl bg-rose-600 hover:bg-rose-700 transition-colors disabled:opacity-50 flex items-center gap-1.5 shadow-sm'>
+                    className='h-8 px-4 text-xs font-medium text-white rounded-xl bg-rose-600 hover:bg-rose-700 transition-all duration-150 disabled:opacity-50 flex items-center gap-1.5 shadow-sm'>
                     <X className='w-3.5 h-3.5' />
                     {isProcessing ? "Processing…" : "Reject"}
                   </button>
                   <button
                     onClick={handleApprove}
                     disabled={isProcessing}
-                    className='h-8 px-4 text-xs font-medium text-white rounded-xl bg-emerald-600 hover:bg-emerald-700 transition-colors disabled:opacity-50 flex items-center gap-1.5 shadow-sm'>
+                    className='h-8 px-4 text-xs font-medium text-white rounded-xl bg-emerald-600 hover:bg-emerald-700 transition-all duration-150 disabled:opacity-50 flex items-center gap-1.5 shadow-sm'>
                     <Check className='w-3.5 h-3.5' />
                     {isProcessing ? "Processing…" : "Approve"}
                   </button>

@@ -87,15 +87,15 @@ const PaymentsDistributionCard: React.FC<PaymentsDistributionCardProps> = ({
   const totalAmount = Object.values(data.byMethod).reduce((sum, amount) => sum + amount, 0);
 
   return (
-    <Card>
+    <Card className="border-slate-100 shadow-[0_1px_3px_rgba(0,0,0,0.04)]">
       <CardHeader>
         <div className="flex items-center justify-between">
           <div>
-            <CardTitle className="flex items-center gap-2">
-              <Wallet className="h-5 w-5" />
+            <CardTitle className="flex items-center gap-2 text-[15px] font-semibold text-slate-900">
+              <Wallet className="h-4 w-4" />
               Payment Methods Distribution
             </CardTitle>
-            <CardDescription>
+            <CardDescription className="text-[12px] text-slate-400">
               Total: {formatCurrency(totalAmount)}
             </CardDescription>
           </div>
@@ -104,8 +104,8 @@ const PaymentsDistributionCard: React.FC<PaymentsDistributionCardProps> = ({
               variant="outline"
               size="sm"
               onClick={() => onDownload("csv", "payments-distribution")}
-              className="gap-2">
-              <Download className="h-4 w-4" />
+              className="h-8 px-3 gap-1.5 text-[13px] font-medium text-slate-600 border-slate-200 hover:border-slate-300 hover:bg-slate-50 shadow-[0_1px_2px_rgba(0,0,0,0.04)] transition-all duration-150">
+              <Download className="h-3.5 w-3.5" />
               Export CSV
             </Button>
           )}
@@ -115,7 +115,7 @@ const PaymentsDistributionCard: React.FC<PaymentsDistributionCardProps> = ({
         <div className="space-y-6">
           {/* Pie Chart */}
           <div className="h-[280px]">
-            <h4 className="text-sm font-medium mb-4 text-center">
+            <h4 className="text-[13px] font-semibold text-slate-900 mb-4 text-center">
               Payment Method Distribution
             </h4>
             <ChartContainer config={chartConfig}>
@@ -145,7 +145,7 @@ const PaymentsDistributionCard: React.FC<PaymentsDistributionCardProps> = ({
 
           {/* Bar Chart */}
           <div className="h-[220px]">
-            <h4 className="text-sm font-medium mb-4 text-center">
+            <h4 className="text-[13px] font-semibold text-slate-900 mb-4 text-center">
               Payment Amount by Method
             </h4>
             <ChartContainer config={chartConfig}>
@@ -174,7 +174,7 @@ const PaymentsDistributionCard: React.FC<PaymentsDistributionCardProps> = ({
           </div>
 
           {/* Payment Method Cards */}
-          <div className="grid grid-cols-2 gap-3 pt-4 border-t">
+          <div className="grid grid-cols-2 gap-3 pt-4 border-t border-slate-200">
             {chartData.map((item) => {
               const percentage = totalAmount > 0
                 ? ((item.value / totalAmount) * 100).toFixed(1)
@@ -183,14 +183,15 @@ const PaymentsDistributionCard: React.FC<PaymentsDistributionCardProps> = ({
               return (
                 <div
                   key={item.name}
-                  className="bg-muted/50 p-3 rounded-lg space-y-1">
-                  <p className="text-xs font-medium text-muted-foreground">
+                  className="bg-white border border-slate-100 rounded-xl shadow-[0_1px_3px_rgba(0,0,0,0.04)] p-3 space-y-1 relative overflow-hidden">
+                  <div className="absolute left-0 top-0 bottom-0 w-1" style={{ backgroundColor: item.fill }} />
+                  <p className="text-[11px] font-medium text-slate-500">
                     {item.name}
                   </p>
-                  <p className="text-lg font-bold" style={{ color: item.fill }}>
+                  <p className="text-[15px] font-semibold text-slate-900" style={{ color: item.fill }}>
                     {formatCurrency(item.value)}
                   </p>
-                  <p className="text-xs text-muted-foreground">{percentage}%</p>
+                  <p className="text-[11px] text-slate-400">{percentage}%</p>
                 </div>
               );
             })}

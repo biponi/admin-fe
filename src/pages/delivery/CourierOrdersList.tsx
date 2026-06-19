@@ -133,17 +133,17 @@ export const CourierOrdersList: React.FC = () => {
     return (
       <div className='flex flex-col md:flex-row gap-4 mb-6'>
         <div className='flex-1 relative'>
-          <Search className='absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4' />
+          <Search className='absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 w-4 h-4' />
           <Input
             type='text'
             placeholder='Search by invoice, consignment ID, tracking code, name, or phone...'
             value={searchInput}
             onChange={(e) => setSearchInput(e.target.value)}
             onKeyDown={(e) => e.key === "Enter" && handleSearch()}
-            className='pl-10 pr-4'
+            className='pl-10 pr-4 border-slate-200 focus:border-indigo-300'
           />
         </div>
-        <Button onClick={handleSearch} className='gap-2'>
+        <Button onClick={handleSearch} className='gap-2 bg-indigo-600 text-white hover:bg-indigo-700 shadow-sm shadow-indigo-200 transition-all duration-150'>
           <Search className='w-4 h-4' />
           Search
         </Button>
@@ -157,7 +157,7 @@ export const CourierOrdersList: React.FC = () => {
         <Select
           value={statusFilter || "all"}
           onValueChange={(val) => filterByStatus(val === "all" ? "" : val)}>
-          <SelectTrigger className='w-full md:w-[200px]'>
+          <SelectTrigger className='w-full md:w-[200px] border-slate-200 focus:border-indigo-300'>
             <SelectValue placeholder='All Statuses' />
           </SelectTrigger>
           <SelectContent>
@@ -177,7 +177,7 @@ export const CourierOrdersList: React.FC = () => {
         <Select
           value={provider || "all"}
           onValueChange={(val) => filterByProvider(val === "all" ? "" : val)}>
-          <SelectTrigger className='w-full md:w-[200px]'>
+          <SelectTrigger className='w-full md:w-[200px] border-slate-200 focus:border-indigo-300'>
             <SelectValue placeholder='All Couriers' />
           </SelectTrigger>
           <SelectContent>
@@ -191,10 +191,10 @@ export const CourierOrdersList: React.FC = () => {
         </Select>
 
         <div className='flex gap-2 flex-1 md:flex-none'>
-          <Button variant='outline' onClick={clearFilters} className='flex-1'>
+          <Button variant='outline' onClick={clearFilters} className='flex-1 border-slate-200 text-slate-600 hover:bg-slate-50 transition-all duration-150'>
             Clear Filters
           </Button>
-          <Button onClick={refresh} className='flex-1 gap-2'>
+          <Button onClick={refresh} className='flex-1 gap-2 bg-indigo-600 text-white hover:bg-indigo-700 shadow-sm shadow-indigo-200 transition-all duration-150'>
             <RefreshCw className='w-4 h-4' />
             Refresh
           </Button>
@@ -207,9 +207,9 @@ export const CourierOrdersList: React.FC = () => {
     return (
       <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4'>
         {[1, 2, 3, 4, 5, 6].map((i) => (
-          <Card key={i}>
+          <Card key={i} className='border-slate-100 shadow-sm'>
             <CardContent className='p-4'>
-              <Skeleton className='h-64 w-full' />
+              <Skeleton className='h-64 w-full bg-slate-100' />
             </CardContent>
           </Card>
         ))}
@@ -219,10 +219,10 @@ export const CourierOrdersList: React.FC = () => {
 
   const renderError = () => {
     return (
-      <Card className='border-red-200 bg-red-50'>
+      <Card className='border-rose-200 bg-rose-50'>
         <CardContent className='p-6 text-center'>
-          <p className='text-red-600 mb-4'>{error}</p>
-          <Button onClick={refresh} variant='outline' className='gap-2'>
+          <p className='text-rose-600 mb-4'>{error}</p>
+          <Button onClick={refresh} variant='outline' className='gap-2 border-slate-200 text-slate-600 hover:bg-slate-50 transition-all duration-150'>
             <RefreshCw className='w-4 h-4' />
             Try Again
           </Button>
@@ -233,15 +233,15 @@ export const CourierOrdersList: React.FC = () => {
 
   const renderEmptyState = () => {
     return (
-      <Card className='border-dashed border-2'>
+      <Card className='border-dashed border-2 border-slate-200'>
         <CardContent className='flex flex-col items-center justify-center py-16 text-center'>
-          <div className='w-20 h-20 bg-gray-100 rounded-full flex items-center justify-center mb-6'>
-            <Package className='w-10 h-10 text-gray-400' />
+          <div className='w-20 h-20 bg-slate-100 rounded-full flex items-center justify-center mb-6'>
+            <Package className='w-10 h-10 text-slate-400' />
           </div>
-          <h3 className='text-xl font-semibold text-gray-900 mb-2'>
+          <h3 className='text-xl font-semibold text-slate-900 mb-2'>
             {searchQuery ? "No Orders Found" : "No Courier Orders Yet"}
           </h3>
-          <p className='text-gray-600 mb-6 max-w-sm'>
+          <p className='text-slate-600 mb-6 max-w-sm'>
             {searchQuery
               ? `No courier orders match your search for "${searchQuery}".`
               : "You haven't created any courier orders yet."}
@@ -252,7 +252,8 @@ export const CourierOrdersList: React.FC = () => {
                 setSearchInput("");
                 search("");
               }}
-              variant='outline'>
+              variant='outline'
+              className='border-slate-200 text-slate-600 hover:bg-slate-50 transition-all duration-150'>
               Clear Search
             </Button>
           )}
@@ -264,19 +265,19 @@ export const CourierOrdersList: React.FC = () => {
   const renderPagination = () => {
     return (
       <CardFooter className='flex flex-col sm:flex-row justify-between items-center gap-4 mt-4'>
-        <div className='text-sm text-gray-600'>
+        <div className='text-sm text-slate-600'>
           Showing{" "}
-          <span className='font-semibold'>
+          <span className='font-semibold text-slate-900'>
             {(currentPage - 1) * pageLimit + 1}-
             {Math.min(currentPage * pageLimit, pagination.total)}
           </span>{" "}
-          of <span className='font-semibold'>{pagination.total}</span> orders
+          of <span className='font-semibold text-slate-900'>{pagination.total}</span> orders
         </div>
         <div className='flex items-center gap-2'>
           <Select
             value={`${pageLimit}`}
             onValueChange={(value) => changeLimit(parseInt(value))}>
-            <SelectTrigger className='w-24'>
+            <SelectTrigger className='w-24 border-slate-200 focus:border-indigo-300'>
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -294,14 +295,16 @@ export const CourierOrdersList: React.FC = () => {
               disabled={currentPage <= 1}
               variant='outline'
               size='sm'
-              onClick={prevPage}>
+              onClick={prevPage}
+              className='border-slate-200 text-slate-600 hover:bg-slate-50 transition-all duration-150'>
               <ChevronLeft className='h-4 w-4' />
             </Button>
             <Button
               disabled={currentPage >= pagination.totalPages}
               variant='outline'
               size='sm'
-              onClick={nextPage}>
+              onClick={nextPage}
+              className='border-slate-200 text-slate-600 hover:bg-slate-50 transition-all duration-150'>
               <ChevronRight className='h-4 w-4' />
             </Button>
           </div>
@@ -333,29 +336,29 @@ export const CourierOrdersList: React.FC = () => {
 
               {/* Delivery Status Info */}
               {deliveryStatusData && (
-                <Card className='bg-blue-50 border-blue-200'>
+                <Card className='bg-indigo-50 border-indigo-200'>
                   <CardContent className='p-4'>
-                    <h4 className='font-semibold text-blue-900 mb-2'>
+                    <h4 className='font-semibold text-indigo-900 mb-2'>
                       Latest Status Update
                     </h4>
                     <div className='space-y-1 text-sm'>
-                      <p className='text-blue-800'>
+                      <p className='text-indigo-800'>
                         <span className='font-medium'>Status:</span>{" "}
                         {deliveryStatusData.delivery_status}
                       </p>
                       {deliveryStatusData.location && (
-                        <p className='text-blue-800'>
+                        <p className='text-indigo-800'>
                           <span className='font-medium'>Location:</span>{" "}
                           {deliveryStatusData.location}
                         </p>
                       )}
                       {deliveryStatusData.remarks && (
-                        <p className='text-blue-800'>
+                        <p className='text-indigo-800'>
                           <span className='font-medium'>Remarks:</span>{" "}
                           {deliveryStatusData.remarks}
                         </p>
                       )}
-                      <p className='text-blue-600 text-xs mt-2'>
+                      <p className='text-indigo-600 text-xs mt-2'>
                         Last updated:{" "}
                         {new Date(
                           deliveryStatusData.updated_at
@@ -368,18 +371,18 @@ export const CourierOrdersList: React.FC = () => {
 
               {/* Timeline */}
               <div>
-                <h3 className='text-lg font-semibold mb-4 flex items-center gap-2'>
+                <h3 className='text-lg font-semibold mb-4 flex items-center gap-2 text-slate-900'>
                   <Package className='w-5 h-5' />
                   Delivery Timeline
                 </h3>
-                <p className='text-sm text-gray-600 mb-4'>
+                <p className='text-sm text-slate-600 mb-4'>
                   Track the delivery status updates for this order.
                 </p>
 
                 {isLoadingStatus ? (
                   <div className='flex items-center justify-center py-8'>
-                    <Loader2 className='w-8 h-8 animate-spin text-blue-600' />
-                    <span className='ml-3 text-gray-600'>
+                    <Loader2 className='w-8 h-8 animate-spin text-indigo-600' />
+                    <span className='ml-3 text-slate-600'>
                       Fetching latest status...
                     </span>
                   </div>
@@ -389,8 +392,8 @@ export const CourierOrdersList: React.FC = () => {
                     provider={selectedOrder?.provider}
                   />
                 ) : (
-                  <div className='text-center text-gray-500 py-8 bg-gray-50 rounded-lg border-2 border-dashed'>
-                    <Package className='w-12 h-12 mx-auto mb-3 text-gray-400' />
+                  <div className='text-center text-slate-500 py-8 bg-slate-50 rounded-lg border-2 border-dashed border-slate-200'>
+                    <Package className='w-12 h-12 mx-auto mb-3 text-slate-400' />
                     <p>No timeline data available yet.</p>
                     <p className='text-sm mt-2'>
                       Status updates will appear here as the order progresses.
@@ -408,9 +411,9 @@ export const CourierOrdersList: React.FC = () => {
   if (isLoading && orders.length === 0) {
     return (
       <div className='space-y-4'>
-        <Card>
+        <Card className='border-slate-100 shadow-sm'>
           <CardHeader>
-            <CardTitle>Courier Orders</CardTitle>
+            <CardTitle className='text-slate-900'>Courier Orders</CardTitle>
           </CardHeader>
           <CardContent>
             {renderSearchBar()}
@@ -425,9 +428,9 @@ export const CourierOrdersList: React.FC = () => {
   if (error && orders.length === 0) {
     return (
       <div className='space-y-4'>
-        <Card>
+        <Card className='border-slate-100 shadow-sm'>
           <CardHeader>
-            <CardTitle>Courier Orders</CardTitle>
+            <CardTitle className='text-slate-900'>Courier Orders</CardTitle>
           </CardHeader>
           <CardContent>
             {renderSearchBar()}
@@ -441,14 +444,14 @@ export const CourierOrdersList: React.FC = () => {
 
   return (
     <div className='space-y-4'>
-      <Card>
+      <Card className='border-slate-100 shadow-sm'>
         <CardHeader>
           <div className='flex items-center justify-between'>
-            <CardTitle className='flex items-center gap-2'>
+            <CardTitle className='flex items-center gap-2 text-slate-900'>
               <Package className='w-5 h-5' />
               Courier Orders
             </CardTitle>
-            <p className='text-sm text-gray-600'>
+            <p className='text-sm text-slate-600'>
               Total: {pagination.total} orders
             </p>
           </div>

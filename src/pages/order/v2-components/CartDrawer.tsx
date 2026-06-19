@@ -29,6 +29,7 @@ interface CartDrawerProps {
   shippingInfo: Partial<IShipping>;
   transaction: Partial<ITransection>;
   notes: string;
+  validationErrors?: Record<string, string[]>;
   onUpdateQuantity: (cartItemId: string, quantity: number) => void;
   onRemove: (cartItemId: string) => void;
   onCustomerChange: (customer: Partial<ICustomer>) => void;
@@ -47,6 +48,7 @@ export function CartDrawer({
   shippingInfo,
   transaction,
   notes,
+  validationErrors,
   onUpdateQuantity,
   onRemove,
   onCustomerChange,
@@ -129,6 +131,7 @@ export function CartDrawer({
                   customer={customerInfo}
                   onChange={onCustomerChange}
                   onShippingChange={onShippingChange}
+                  validationErrors={validationErrors}
                 />
               </div>
 
@@ -141,6 +144,7 @@ export function CartDrawer({
                     deliveryCharge: charge,
                   });
                 }}
+                validationErrors={validationErrors}
               />
             </div>
 

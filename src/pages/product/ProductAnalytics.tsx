@@ -1,23 +1,22 @@
 import { useEffect, useState } from "react";
 import {
-  Package,
-  Archive,
-  Activity,
-  TrendingUp,
   Download,
   FileText,
   FileType,
   BarChartHorizontalBig,
   ChevronRight,
+  Package,
+  Layers,
+  GitBranch,
+  DollarSign,
+  CheckCircle2,
+  AlertTriangle,
+  XCircle,
+  RefreshCw,
+  TrendingUp,
+  Clock,
 } from "lucide-react";
 import { Button } from "../../components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "../../components/ui/card";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -48,20 +47,91 @@ import {
 } from "../../utils/productReportExport";
 import { CategoryStockSummary, StockSummaryResponse } from "./interface";
 import { InventoryReportsSection } from "./components/inventory/InventoryReportsSection";
+import MainView from "../../coreComponents/mainView";
 
-/**
- * Product Analytics Page
- * Displays comprehensive product inventory analytics with export functionality
- */
+// ─── Types ───────────────────────────────────────────────────────────────────
+
+interface StatConfig {
+  label: string;
+  value: number | undefined;
+  key: keyof CategoryStockSummary;
+  icon: React.ReactNode;
+  colorClasses: {
+    bg: string;
+    icon: string;
+    value: string;
+    barBg: string;
+    bar: string;
+  };
+}
+
+interface HealthMetric {
+  label: string;
+  value: number;
+  unit: string;
+  icon: React.ReactNode;
+  iconColor: string;
+  badge: {
+    text: string;
+    bg: string;
+    text_color: string;
+  };
+}
+
+// ─── Sub-components ──────────────────────────────────────────────────────────
+
+const LoadingSpinner = () => (
+  <div className='bg-white rounded-2xl border border-slate-100 shadow-sm'>
+    <div className='flex items-center justify-center py-16'>
+      <div className='text-center'>
+        <div className='relative mx-auto mb-5 w-12 h-12'>
+          <div className='absolute inset-0 rounded-full border-2 border-slate-100' />
+          <div className='absolute inset-0 rounded-full border-2 border-indigo-500 border-t-transparent animate-spin' />
+        </div>
+        <p className='text-sm text-slate-500'>Loading analytics…</p>
+      </div>
+    </div>
+  </div>
+);
+
+const AccessDenied = () => (
+  <div className='flex items-center justify-center h-screen bg-slate-50'>
+    <div className='text-center p-8 bg-white rounded-2xl border border-slate-100 shadow-sm max-w-sm'>
+      <div className='w-12 h-12 rounded-xl bg-red-50 flex items-center justify-center mx-auto mb-4'>
+        <XCircle className='h-6 w-6 text-red-500' />
+      </div>
+      <h2 className='text-lg font-semibold text-slate-900 mb-1'>
+        Access denied
+      </h2>
+      <p className='text-sm text-slate-500'>
+        You don't have permission to view product analytics.
+      </p>
+    </div>
+  </div>
+);
+
+// ─── Helpers ─────────────────────────────────────────────────────────────────
+
+const formatNumber = (num: number | undefined): string => {
+  if (num === undefined || num === null) return "0";
+  return Number(num) % 1 < 1
+    ? Math.floor(num).toLocaleString()
+    : num.toLocaleString(undefined, {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2,
+      });
+};
+
+// ─── Main Component ───────────────────────────────────────────────────────────
+
 const ProductAnalytics = () => {
   const { hasRequiredPermission } = useRoleCheck();
-
-  // State
   const [summary, setSummary] = useState<StockSummaryResponse | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isDownloadingReport, setIsDownloadingReport] = useState(false);
 
-  // Fetch product summary
+  // ── Data fetching ──────────────────────────────────────────────────────────
+
   const getProductSummaryDetails = async () => {
     setIsLoading(true);
     try {
@@ -75,7 +145,7 @@ const ProductAnalytics = () => {
         );
         setSummary(null);
       }
-    } catch (error) {
+    } catch {
       errorToast("Failed to load analytics data", "top-center");
       setSummary(null);
     } finally {
@@ -83,18 +153,12 @@ const ProductAnalytics = () => {
     }
   };
 
-  // Format number for display
-  const formatNumber = (num: number | undefined): string => {
-    if (num === undefined || num === null) return "0";
-    return Number(num) % 1 < 1
-      ? Math.floor(num).toLocaleString()
-      : num.toLocaleString(undefined, {
-          minimumFractionDigits: 2,
-          maximumFractionDigits: 2,
-        });
-  };
+  useEffect(() => {
+    getProductSummaryDetails();
+  }, []);
 
-  // Report download handlers
+  // ── Download handlers ──────────────────────────────────────────────────────
+
   const handleReportDownload = async (
     downloadFunction: () => Promise<any>,
     reportName: string,
@@ -118,374 +182,494 @@ const ProductAnalytics = () => {
   };
 
   const handleDownloadPdfFlat = () =>
-    handleReportDownload(
-      () => downloadPdfFlat(null, false),
-      "PDF Report (Flat)",
-    );
-
+    handleReportDownload(() => downloadPdfFlat(null, false), "PDF (Flat)");
   const handleDownloadPdfGrouped = () =>
     handleReportDownload(
       () => downloadPdfGrouped(null, false),
-      "PDF Report (Grouped)",
+      "PDF (Grouped)",
     );
-
   const handleDownloadPdfSplit = () =>
-    handleReportDownload(
-      () => downloadPdfSplit(null, false),
-      "PDF Report (Split)",
-    );
-
+    handleReportDownload(() => downloadPdfSplit(null, false), "PDF (Split)");
   const handleDownloadCsvFlat = () =>
-    handleReportDownload(
-      () => downloadCsvFlat(null, false),
-      "CSV Report (Flat)",
-    );
-
+    handleReportDownload(() => downloadCsvFlat(null, false), "CSV (Flat)");
   const handleDownloadCsvGrouped = () =>
     handleReportDownload(
       () => downloadCsvGrouped(null, false),
-      "CSV Report (Grouped)",
+      "CSV (Grouped)",
     );
-
   const handleDownloadCsvSplit = () =>
-    handleReportDownload(
-      () => downloadCsvSplit(null, false),
-      "CSV Report (Split)",
-    );
+    handleReportDownload(() => downloadCsvSplit(null, false), "CSV (Split)");
 
-  // Card data configuration
-  const cardData = [
+  // ── Config ─────────────────────────────────────────────────────────────────
+
+  const statsData: StatConfig[] = [
     {
-      title: "Active Products",
-      total: summary?.totalActiveProductType,
+      label: "Active products",
+      value: summary?.totalActiveProductType,
       key: "totalActiveProducts",
-      description: "Products currently available for sale",
-      icon: <Package className='h-8 w-8' />,
-      gradient: "from-blue-50 to-blue-100",
-      borderColor: "border-blue-200",
-      iconColor: "text-blue-600",
-      textColor: "text-blue-700",
+      icon: <Package className='h-4 w-4' />,
+      colorClasses: {
+        bg: "bg-blue-50",
+        icon: "text-blue-600",
+        value: "text-blue-700",
+        barBg: "bg-blue-100",
+        bar: "bg-blue-500",
+      },
     },
     {
-      title: "Total Stock",
-      total: summary?.totalActiveProducts,
+      label: "Total stock",
+      value: summary?.totalActiveProducts,
       key: "totalStock",
-      description: "Total quantity across all products",
-      icon: <Archive className='h-8 w-8' />,
-      gradient: "from-green-50 to-green-100",
-      borderColor: "border-green-200",
-      iconColor: "text-green-600",
-      textColor: "text-green-700",
+      icon: <Layers className='h-4 w-4' />,
+      colorClasses: {
+        bg: "bg-emerald-50",
+        icon: "text-emerald-600",
+        value: "text-emerald-700",
+        barBg: "bg-emerald-100",
+        bar: "bg-emerald-500",
+      },
     },
     {
-      title: "Product Variations",
-      total: summary?.totalActiveProductVariations,
+      label: "Variations",
+      value: summary?.totalActiveProductVariations,
       key: "totalVariants",
-      description: "Different variants available",
-      icon: <Activity className='h-8 w-8' />,
-      gradient: "from-purple-50 to-purple-100",
-      borderColor: "border-purple-200",
-      iconColor: "text-purple-600",
-      textColor: "text-purple-700",
+      icon: <GitBranch className='h-4 w-4' />,
+      colorClasses: {
+        bg: "bg-violet-50",
+        icon: "text-violet-600",
+        value: "text-violet-700",
+        barBg: "bg-violet-100",
+        bar: "bg-violet-500",
+      },
     },
     {
-      title: "Total Value",
-      total: summary?.totalActiveProductPrice,
+      label: "Total value",
+      value: summary?.totalActiveProductPrice,
       key: "totalPrice",
-      description: "Combined inventory valuation",
-      icon: <TrendingUp className='h-8 w-8' />,
-      gradient: "from-amber-50 to-amber-100",
-      borderColor: "border-amber-200",
-      iconColor: "text-amber-600",
-      textColor: "text-amber-700",
+      icon: <DollarSign className='h-4 w-4' />,
+      colorClasses: {
+        bg: "bg-amber-50",
+        icon: "text-amber-600",
+        value: "text-amber-700",
+        barBg: "bg-amber-100",
+        bar: "bg-amber-500",
+      },
     },
   ];
 
-  // Render detailed category breakdown in a sheet
-  const renderCategoryBreakdown = () => {
-    return (
-      <>
-        {/* Category Breakdown Button */}
-        {summary?.categories && summary.categories.length > 0 && (
-          <div className='flex justify-center lg:justify-start'>
-            <Sheet>
-              <SheetTrigger asChild>
-                <Button variant='outline' className='w-full lg:w-auto'>
-                  <BarChartHorizontalBig className='h-4 w-4 mr-2' />
-                  View Category Breakdown
-                  <ChevronRight className='h-4 w-4 ml-2' />
-                </Button>
-              </SheetTrigger>
-              <SheetContent className='w-full sm:max-w-2xl'>
-                <SheetHeader>
-                  <SheetTitle className='flex items-center space-x-2'>
-                    <BarChartHorizontalBig className='h-5 w-5 text-gray-600' />
-                    <span>Category Breakdown</span>
-                  </SheetTitle>
-                  <SheetDescription>
-                    Distribution of products across different categories
-                  </SheetDescription>
-                </SheetHeader>
-                <div className='mt-6 space-y-6 max-h-[calc(100vh-200px)] overflow-y-auto'>
-                  <div className='grid grid-cols-1 gap-6 lg:grid-cols-2'>
-                    {cardData.map(({ title, total, key }, cardIndex) => (
-                      <div key={cardIndex} className='space-y-4'>
-                        <h4 className='text-lg font-semibold text-gray-700 border-b pb-2 uppercase'>
-                          {title}
-                        </h4>
-                        <div className='space-y-3'>
-                          {!summary || !summary.categories ? (
-                            <div className='flex justify-center items-center p-6 text-gray-500'>
-                              No category data available
-                            </div>
-                          ) : (
-                            summary.categories.map(
-                              (res: CategoryStockSummary, index: number) => (
-                                <div
-                                  key={index}
-                                  className='space-y-2 p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors'>
-                                  <div className='flex items-center justify-between'>
-                                    <span className='text-sm font-medium text-gray-700 truncate uppercase'>
-                                      {res.categoryName}
-                                    </span>
-                                    <span className='text-sm font-bold text-gray-900'>
-                                      {formatNumber(
-                                        res[
-                                          key as keyof CategoryStockSummary
-                                        ] as number,
-                                      )}
-                                    </span>
-                                  </div>
-                                  <Progress
-                                    value={
-                                      ((res[
-                                        key as keyof CategoryStockSummary
-                                      ] as number) /
-                                        (total ?? 1)) *
-                                      100
-                                    }
-                                    className='h-2'
-                                  />
-                                  <div className='text-xs text-gray-500'>
-                                    {(
-                                      ((res[
-                                        key as keyof CategoryStockSummary
-                                      ] as number) /
-                                        (total ?? 1)) *
-                                      100
-                                    ).toFixed(1)}
-                                    % of total
-                                  </div>
-                                </div>
-                              ),
-                            )
-                          )}
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              </SheetContent>
-            </Sheet>
+  const healthMetrics: HealthMetric[] = [
+    {
+      label: "Healthy stock",
+      value: 1104,
+      unit: "products",
+      icon: <CheckCircle2 className='h-5 w-5' />,
+      iconColor: "text-emerald-500",
+      badge: {
+        text: "86% of total",
+        bg: "bg-emerald-50",
+        text_color: "text-emerald-700",
+      },
+    },
+    {
+      label: "Low stock",
+      value: 147,
+      unit: "products",
+      icon: <AlertTriangle className='h-5 w-5' />,
+      iconColor: "text-amber-500",
+      badge: {
+        text: "Needs reorder",
+        bg: "bg-amber-50",
+        text_color: "text-amber-700",
+      },
+    },
+    {
+      label: "Out of stock",
+      value: 33,
+      unit: "products",
+      icon: <XCircle className='h-5 w-5' />,
+      iconColor: "text-red-500",
+      badge: { text: "Urgent", bg: "bg-red-50", text_color: "text-red-700" },
+    },
+    {
+      label: "Pending restock",
+      value: 58,
+      unit: "items",
+      icon: <RefreshCw className='h-5 w-5' />,
+      iconColor: "text-blue-500",
+      badge: {
+        text: "In transit",
+        bg: "bg-blue-50",
+        text_color: "text-blue-700",
+      },
+    },
+    {
+      label: "Fast movers",
+      value: 219,
+      unit: "products",
+      icon: <TrendingUp className='h-5 w-5' />,
+      iconColor: "text-violet-500",
+      badge: {
+        text: "Top sellers",
+        bg: "bg-violet-50",
+        text_color: "text-violet-700",
+      },
+    },
+    {
+      label: "Slow movers",
+      value: 91,
+      unit: "products",
+      icon: <Clock className='h-5 w-5' />,
+      iconColor: "text-slate-400",
+      badge: {
+        text: "Review needed",
+        bg: "bg-slate-100",
+        text_color: "text-slate-600",
+      },
+    },
+  ];
+
+  // ── Renders ────────────────────────────────────────────────────────────────
+
+  const renderStatCards = () => (
+    <div className='grid grid-cols-2 sm:grid-cols-4 gap-3'>
+      {statsData.map((stat) => (
+        <div
+          key={stat.key}
+          className='bg-white rounded-2xl border border-slate-100 px-4 py-4 flex items-center gap-3 hover:border-slate-200 transition-colors'>
+          <div
+            className={`w-9 h-9 rounded-xl ${stat.colorClasses.bg} flex items-center justify-center flex-shrink-0`}>
+            <span className={stat.colorClasses.icon}>{stat.icon}</span>
           </div>
-        )}
-      </>
-    );
-  };
+          <div className='min-w-0'>
+            <p
+              className={`text-xl font-semibold ${stat.colorClasses.value} leading-none tabular-nums`}>
+              {formatNumber(stat.value)}
+            </p>
+            <p className='text-xs text-slate-400 mt-1 truncate'>{stat.label}</p>
+          </div>
+        </div>
+      ))}
+    </div>
+  );
 
-  // Render summary cards with enhanced UX
-  const renderSummaryCards = () => {
+  const renderCategoryRows = () => {
+    if (!summary?.categories || summary.categories.length === 0) {
+      return (
+        <p className='text-sm text-slate-400 py-6 text-center'>
+          No category data available
+        </p>
+      );
+    }
+
+    const barColors = [
+      "bg-blue-500",
+      "bg-violet-500",
+      "bg-emerald-500",
+      "bg-amber-500",
+      "bg-rose-500",
+      "bg-teal-500",
+    ];
+
     return (
-      <div className='grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6'>
-        {cardData.map((card) => (
-          <Card
-            key={card.key}
-            className='group relative overflow-hidden border border-gray-200 bg-white hover:shadow-xl hover:scale-[1.02] transition-all duration-300 ease-out cursor-pointer'>
-            {/* Subtle gradient overlay */}
-            <div
-              className={`absolute inset-0 bg-gradient-to-br ${card.gradient} opacity-0 group-hover:opacity-5 transition-opacity duration-300`}
-            />
-
-            <CardHeader className='pb-4 relative z-10'>
-              <div className='flex items-start justify-between gap-3'>
-                {/* Icon container with modern styling */}
-                <div
-                  className={`flex-shrink-0 flex justify-center items-center p-3 rounded-xl bg-gradient-to-br ${card.gradient} shadow-sm group-hover:shadow-md transition-shadow duration-300`}>
-                  <div className={`${card.iconColor} w-8 h-8`}>{card.icon}</div>
-                </div>
-
-                {/* Count badge with better positioning */}
-                <div className='flex flex-col items-end'>
-                  <span
-                    className={`text-2xl font-bold ${card.textColor} tabular-nums`}>
-                    {formatNumber(card.total)}
+      <div className='space-y-4'>
+        {summary.categories.map((cat: CategoryStockSummary, i: number) => {
+          const value = cat.totalStock as number;
+          const total = summary.totalActiveProducts ?? 1;
+          const pct = ((value / total) * 100).toFixed(1);
+          return (
+            <div key={i} className='space-y-1.5'>
+              <div className='flex items-center justify-between'>
+                <span className='text-sm font-medium text-slate-700 uppercase tracking-wide'>
+                  {cat.categoryName}
+                </span>
+                <div className='flex items-center gap-2'>
+                  <span className='text-xs text-slate-400'>{pct}%</span>
+                  <span className='text-sm font-semibold text-slate-900 tabular-nums'>
+                    {formatNumber(value)}
                   </span>
-                  <div
-                    className={`h-1 w-12 rounded-full bg-gradient-to-r ${card.gradient} mt-1 group-hover:w-16 transition-all duration-300`}
-                  />
                 </div>
               </div>
-            </CardHeader>
-
-            <CardContent className='relative z-10 pt-0'>
-              <CardTitle className='text-base font-semibold text-gray-900 mb-1.5 group-hover:text-gray-950 transition-colors'>
-                {card.title}
-              </CardTitle>
-              <CardDescription className='text-sm text-gray-600 leading-relaxed'>
-                {card.description}
-              </CardDescription>
-            </CardContent>
-
-            {/* Decorative corner accent */}
-            <div
-              className={`absolute -bottom-6 -right-6 w-24 h-24 rounded-full bg-gradient-to-br ${card.gradient} opacity-5 group-hover:opacity-10 transition-opacity duration-300`}
-            />
-          </Card>
-        ))}
+              <div className='h-1.5 bg-slate-100 rounded-full overflow-hidden'>
+                <div
+                  className={`h-full rounded-full ${barColors[i % barColors.length]} transition-all duration-500`}
+                  style={{ width: `${pct}%` }}
+                />
+              </div>
+            </div>
+          );
+        })}
       </div>
     );
   };
-  useEffect(() => {
-    getProductSummaryDetails();
-  }, []);
+
+  const renderCategoryBreakdown = () => {
+    if (!summary?.categories || summary.categories.length === 0) return null;
+
+    return (
+      <Sheet>
+        <SheetTrigger asChild>
+          <Button
+            variant='outline'
+            className='w-full sm:w-auto rounded-xl border-slate-200 text-slate-600 hover:bg-slate-50 hover:border-slate-300 transition-all text-sm'>
+            <BarChartHorizontalBig className='h-4 w-4 mr-2 text-slate-400' />
+            Full category breakdown
+            <ChevronRight className='h-4 w-4 ml-1 text-slate-400' />
+          </Button>
+        </SheetTrigger>
+        <SheetContent className='w-full sm:max-w-2xl'>
+          <SheetHeader className='mb-6'>
+            <SheetTitle className='flex items-center gap-2 text-slate-900'>
+              <BarChartHorizontalBig className='h-5 w-5 text-indigo-500' />
+              Category breakdown
+            </SheetTitle>
+            <SheetDescription className='text-slate-500'>
+              Distribution of products across all categories
+            </SheetDescription>
+          </SheetHeader>
+
+          <div className='space-y-8 max-h-[calc(100vh-200px)] overflow-y-auto pr-1'>
+            <div className='grid grid-cols-1 lg:grid-cols-2 gap-8'>
+              {statsData.map(({ label, value, key }, statIdx) => (
+                <div key={statIdx}>
+                  <h4 className='text-xs font-semibold text-slate-400 uppercase tracking-widest mb-4'>
+                    {label}
+                  </h4>
+                  <div className='space-y-4'>
+                    {summary?.categories?.map(
+                      (cat: CategoryStockSummary, i: number) => {
+                        const catVal = cat[key] as number;
+                        const pct = (
+                          ((catVal ?? 0) / (value ?? 1)) *
+                          100
+                        ).toFixed(1);
+                        return (
+                          <div key={i} className='space-y-1.5'>
+                            <div className='flex items-center justify-between'>
+                              <span className='text-sm font-medium text-slate-700 uppercase tracking-wide'>
+                                {cat.categoryName}
+                              </span>
+                              <div className='flex items-center gap-2'>
+                                <span className='text-xs text-slate-400'>
+                                  {pct}%
+                                </span>
+                                <span className='text-sm font-semibold text-slate-900 tabular-nums'>
+                                  {formatNumber(catVal)}
+                                </span>
+                              </div>
+                            </div>
+                            <Progress
+                              value={parseFloat(pct)}
+                              className='h-1.5'
+                            />
+                          </div>
+                        );
+                      },
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </SheetContent>
+      </Sheet>
+    );
+  };
+
+  const renderHealthGrid = () => (
+    <div className='grid grid-cols-2 sm:grid-cols-3 gap-3'>
+      {healthMetrics.map((metric, i) => (
+        <div
+          key={i}
+          className='bg-slate-50 rounded-xl p-4 hover:bg-slate-100 transition-colors'>
+          <span className={`${metric.iconColor} block mb-3`}>
+            {metric.icon}
+          </span>
+          <p className='text-xs text-slate-500 mb-1'>{metric.label}</p>
+          <p className='text-xl font-semibold text-slate-900 tabular-nums leading-none'>
+            {metric.value.toLocaleString()}
+            <span className='text-sm font-normal text-slate-400 ml-1'>
+              {metric.unit}
+            </span>
+          </p>
+          <span
+            className={`inline-block mt-2 text-xs font-medium px-2 py-0.5 rounded-full ${metric.badge.bg} ${metric.badge.text_color}`}>
+            {metric.badge.text}
+          </span>
+        </div>
+      ))}
+    </div>
+  );
+
+  // ── Guard ──────────────────────────────────────────────────────────────────
 
   if (!hasRequiredPermission("product", "summary")) {
-    return (
-      <div className='flex items-center justify-center h-screen'>
-        <div className='text-center'>
-          <h2 className='text-2xl font-bold text-gray-900 mb-2'>
-            Access Denied
-          </h2>
-          <p className='text-gray-600'>
-            You don't have permission to view product analytics.
-          </p>
-        </div>
-      </div>
-    );
+    return <AccessDenied />;
   }
 
+  // ── Page ───────────────────────────────────────────────────────────────────
+
   return (
-    <div className='w-full mx-auto p-6 space-y-6'>
-      {/* Header */}
-      <div className='flex items-center justify-between'>
-        <div>
-          <h1 className='text-3xl font-bold text-gray-900'>
-            Product Analytics
-          </h1>
-          <p className='text-gray-600 mt-1'>
-            Comprehensive overview of your inventory and performance metrics
-          </p>
-        </div>
-
-        {/* Export Button */}
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button
-              variant='outline'
-              size='lg'
-              disabled={isDownloadingReport}
-              className='flex items-center space-x-2'>
-              <Download className='h-4 w-4' />
-              <span>Export Report</span>
-              {isDownloadingReport && (
-                <span className='ml-2 h-4 w-4 animate-spin rounded-full border-2 border-primary border-t-transparent' />
-              )}
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align='end' className='w-56'>
-            <DropdownMenuLabel>Product Reports</DropdownMenuLabel>
-            <DropdownMenuSeparator />
-
-            {/* PDF Reports */}
-            <DropdownMenuLabel className='text-xs text-muted-foreground'>
-              PDF Format
-            </DropdownMenuLabel>
-            <DropdownMenuItem onClick={handleDownloadPdfFlat}>
-              <FileText className='mr-2 h-4 w-4' />
-              <span>Flat Version</span>
-              <span className='ml-auto text-xs text-muted-foreground'>
-                All items
-              </span>
-            </DropdownMenuItem>
-            <DropdownMenuItem onClick={handleDownloadPdfGrouped}>
-              <FileText className='mr-2 h-4 w-4' />
-              <span>Grouped Version</span>
-              <span className='ml-auto text-xs text-muted-foreground'>
-                Organized
-              </span>
-            </DropdownMenuItem>
-            <DropdownMenuItem onClick={handleDownloadPdfSplit}>
-              <FileText className='mr-2 h-4 w-4' />
-              <span>Split Version</span>
-              <span className='ml-auto text-xs text-muted-foreground'>
-                Sections
-              </span>
-            </DropdownMenuItem>
-
-            <DropdownMenuSeparator />
-
-            {/* CSV Reports */}
-            <DropdownMenuLabel className='text-xs text-muted-foreground'>
-              CSV Format
-            </DropdownMenuLabel>
-            <DropdownMenuItem onClick={handleDownloadCsvFlat}>
-              <FileType className='mr-2 h-4 w-4' />
-              <span>Flat Version</span>
-              <span className='ml-auto text-xs text-muted-foreground'>
-                All items
-              </span>
-            </DropdownMenuItem>
-            <DropdownMenuItem onClick={handleDownloadCsvGrouped}>
-              <FileType className='mr-2 h-4 w-4' />
-              <span>Grouped Version</span>
-              <span className='ml-auto text-xs text-muted-foreground'>
-                Organized
-              </span>
-            </DropdownMenuItem>
-            <DropdownMenuItem onClick={handleDownloadCsvSplit}>
-              <FileType className='mr-2 h-4 w-4' />
-              <span>Split Version</span>
-              <span className='ml-auto text-xs text-muted-foreground'>
-                Sections
-              </span>
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
-      </div>
-
-      {/* Loading State */}
-      {isLoading ? (
-        <Card>
-          <CardContent className='flex items-center justify-center py-12'>
-            <div className='text-center'>
-              <div className='animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4' />
-              <p className='text-gray-600'>Loading analytics...</p>
+    <MainView title='Product Analytics'>
+      <div className='min-h-screen bg-slate-50/70'>
+        <div className='max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-5'>
+          {/* Header */}
+          <div className='flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4'>
+            <div className='flex items-center gap-3.5'>
+              <div className='w-11 h-11 rounded-xl bg-indigo-600 flex items-center justify-center flex-shrink-0 shadow-sm shadow-indigo-200'>
+                <BarChartHorizontalBig className='h-5 w-5 text-white' />
+              </div>
+              <div>
+                <h1 className='text-lg font-semibold text-slate-900 leading-tight'>
+                  Product analytics
+                </h1>
+                <p className='text-sm text-slate-400 mt-0.5'>
+                  Inventory and performance overview
+                </p>
+              </div>
             </div>
-          </CardContent>
-        </Card>
-      ) : (
-        <>
-          {/* Summary Cards */}
-          {renderSummaryCards()}
 
-          {/* Category Breakdown Section */}
-          <Card>
-            <CardHeader>
-              <CardTitle className='text-xl font-bold text-gray-900'>
-                Category Breakdown
-              </CardTitle>
-              <CardDescription>
-                Inventory distribution across product categories
-              </CardDescription>
-            </CardHeader>
-            <CardContent>{renderCategoryBreakdown()}</CardContent>
-          </Card>
+            {/* Export */}
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <button
+                  disabled={isDownloadingReport}
+                  className='inline-flex items-center gap-2 px-3.5 py-2 text-sm font-medium text-slate-600 bg-white border border-slate-200 rounded-xl hover:bg-slate-50 hover:border-slate-300 transition-all disabled:opacity-50 shadow-sm'>
+                  {isDownloadingReport ? (
+                    <span className='h-3.5 w-3.5 animate-spin rounded-full border-2 border-slate-400 border-t-transparent' />
+                  ) : (
+                    <Download className='h-3.5 w-3.5' />
+                  )}
+                  Export report
+                </button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent
+                align='end'
+                className='w-52 rounded-xl shadow-lg border-slate-100'>
+                <DropdownMenuLabel className='text-xs text-slate-400 font-medium'>
+                  Product reports
+                </DropdownMenuLabel>
+                <DropdownMenuSeparator />
 
-          {/* Advanced Inventory Reports Section */}
-          <InventoryReportsSection />
-        </>
-      )}
-    </div>
+                <DropdownMenuLabel className='text-xs text-slate-400'>
+                  PDF format
+                </DropdownMenuLabel>
+                <DropdownMenuItem
+                  onClick={handleDownloadPdfFlat}
+                  className='rounded-lg'>
+                  <FileText className='mr-2 h-4 w-4 text-slate-400' />
+                  Flat
+                  <span className='ml-auto text-xs text-slate-400'>
+                    All items
+                  </span>
+                </DropdownMenuItem>
+                <DropdownMenuItem
+                  onClick={handleDownloadPdfGrouped}
+                  className='rounded-lg'>
+                  <FileText className='mr-2 h-4 w-4 text-slate-400' />
+                  Grouped
+                  <span className='ml-auto text-xs text-slate-400'>
+                    Organised
+                  </span>
+                </DropdownMenuItem>
+                <DropdownMenuItem
+                  onClick={handleDownloadPdfSplit}
+                  className='rounded-lg'>
+                  <FileText className='mr-2 h-4 w-4 text-slate-400' />
+                  Split
+                  <span className='ml-auto text-xs text-slate-400'>
+                    Sections
+                  </span>
+                </DropdownMenuItem>
+
+                <DropdownMenuSeparator />
+
+                <DropdownMenuLabel className='text-xs text-slate-400'>
+                  CSV format
+                </DropdownMenuLabel>
+                <DropdownMenuItem
+                  onClick={handleDownloadCsvFlat}
+                  className='rounded-lg'>
+                  <FileType className='mr-2 h-4 w-4 text-slate-400' />
+                  Flat
+                  <span className='ml-auto text-xs text-slate-400'>
+                    All items
+                  </span>
+                </DropdownMenuItem>
+                <DropdownMenuItem
+                  onClick={handleDownloadCsvGrouped}
+                  className='rounded-lg'>
+                  <FileType className='mr-2 h-4 w-4 text-slate-400' />
+                  Grouped
+                  <span className='ml-auto text-xs text-slate-400'>
+                    Organised
+                  </span>
+                </DropdownMenuItem>
+                <DropdownMenuItem
+                  onClick={handleDownloadCsvSplit}
+                  className='rounded-lg'>
+                  <FileType className='mr-2 h-4 w-4 text-slate-400' />
+                  Split
+                  <span className='ml-auto text-xs text-slate-400'>
+                    Sections
+                  </span>
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
+
+          {/* Body */}
+          {isLoading ? (
+            <LoadingSpinner />
+          ) : (
+            <>
+              {/* Stats strip */}
+              {renderStatCards()}
+
+              {/* Category card */}
+              <div className='bg-white rounded-2xl border border-slate-100 p-5'>
+                <div className='flex items-start justify-between gap-4 mb-5'>
+                  <div>
+                    <h2 className='text-sm font-semibold text-slate-900'>
+                      Category breakdown
+                    </h2>
+                    <p className='text-xs text-slate-400 mt-0.5'>
+                      Inventory distributed across product categories
+                    </p>
+                  </div>
+                  {renderCategoryBreakdown()}
+                </div>
+              </div>
+
+              {/* Inventory health */}
+              <div className='bg-white rounded-2xl border border-slate-100 p-5'>
+                <div className='mb-5'>
+                  <h2 className='text-sm font-semibold text-slate-900'>
+                    Inventory health
+                  </h2>
+                  <p className='text-xs text-slate-400 mt-0.5'>
+                    Real-time stock status across all product lines
+                  </p>
+                </div>
+                {renderHealthGrid()}
+              </div>
+
+              {/* Advanced reports */}
+              <div className='bg-white rounded-2xl border border-slate-100 p-5'>
+                <div className='mb-5'>
+                  <h2 className='text-sm font-semibold text-slate-900'>
+                    Inventory reports
+                  </h2>
+                  <p className='text-xs text-slate-400 mt-0.5'>
+                    Detailed reports and advanced analytics
+                  </p>
+                </div>
+                <InventoryReportsSection />
+              </div>
+            </>
+          )}
+        </div>
+      </div>
+    </MainView>
   );
 };
 

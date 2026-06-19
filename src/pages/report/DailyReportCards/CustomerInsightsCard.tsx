@@ -11,7 +11,14 @@ import {
 } from "../../../components/ui/card";
 import { Button } from "../../../components/ui/button";
 import { Download, Users, UserPlus, Repeat } from "lucide-react";
-import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip } from "recharts";
+import {
+  PieChart,
+  Pie,
+  Cell,
+  ResponsiveContainer,
+  Legend,
+  Tooltip,
+} from "recharts";
 import useRoleCheck from "../../auth/hooks/useRoleCheck";
 
 interface CustomerInsightsCardProps {
@@ -65,51 +72,51 @@ const CustomerInsightsCard: React.FC<CustomerInsightsCardProps> = ({
       : "0";
 
   return (
-    <Card>
+    <Card className='border-slate-100 shadow-[0_1px_3px_rgba(0,0,0,0.04)]'>
       <CardHeader>
-        <div className="flex items-center justify-between">
+        <div className='flex items-center justify-between'>
           <div>
-            <CardTitle className="flex items-center gap-2">
-              <Users className="h-5 w-5" />
+            <CardTitle className='flex items-center gap-2 text-[15px] font-semibold text-slate-900'>
+              <Users className='h-4 w-4' />
               Customer Insights
             </CardTitle>
-            <CardDescription>
+            <CardDescription className='text-[12px] text-slate-400'>
               Total Customers: {data.totalCustomers}
             </CardDescription>
           </div>
           {hasRequiredPermission("Report", "download") && (
             <Button
-              variant="outline"
-              size="sm"
+              variant='outline'
+              size='sm'
               onClick={() => onDownload("csv", "customer-insights")}
-              className="gap-2">
-              <Download className="h-4 w-4" />
+              className='h-8 px-3 gap-1.5 text-[13px] font-medium text-slate-600 border-slate-200 hover:border-slate-300 hover:bg-slate-50 shadow-[0_1px_2px_rgba(0,0,0,0.04)] transition-all duration-150'>
+              <Download className='h-3.5 w-3.5' />
               Export CSV
             </Button>
           )}
         </div>
       </CardHeader>
       <CardContent>
-        <div className="space-y-6">
+        <div className='space-y-6'>
           {/* Customer Distribution Pie Chart */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div className="h-[250px]">
-              <h4 className="text-sm font-medium mb-4 text-center">
+          <div className='grid grid-cols-1 md:grid-cols-2 gap-6'>
+            <div className='h-[250px]'>
+              <h4 className='text-[13px] font-semibold text-slate-900 mb-4 text-center'>
                 Customer Type Distribution
               </h4>
-              <ResponsiveContainer width="100%" height="100%">
+              <ResponsiveContainer width='100%' height='100%'>
                 <PieChart>
                   <Pie
                     data={chartData}
-                    cx="50%"
-                    cy="50%"
+                    cx='50%'
+                    cy='50%'
                     labelLine={false}
                     label={({ name, percent }) =>
                       `${name}: ${(percent * 100).toFixed(0)}%`
                     }
                     outerRadius={80}
-                    fill="#8884d8"
-                    dataKey="value">
+                    fill='#8884d8'
+                    dataKey='value'>
                     {chartData.map((entry, index) => (
                       <Cell key={`cell-${index}`} fill={entry.fill} />
                     ))}
@@ -121,53 +128,58 @@ const CustomerInsightsCard: React.FC<CustomerInsightsCardProps> = ({
             </div>
 
             {/* Customer Metrics */}
-            <div className="space-y-4">
-              <h4 className="text-sm font-medium">Customer Metrics</h4>
+            <div className='space-y-4'>
+              <h4 className='text-[13px] font-semibold text-slate-900'>
+                Customer Metrics
+              </h4>
 
               {/* Total Customers */}
-              <div className="bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-900/20 dark:to-blue-800/20 p-4 rounded-lg border border-blue-200 dark:border-blue-800">
-                <div className="flex items-center gap-2 mb-2">
-                  <Users className="h-5 w-5 text-blue-600" />
-                  <p className="text-sm font-medium text-blue-900 dark:text-blue-100">
+              <div className='bg-white border border-slate-100 rounded-xl shadow-[0_1px_3px_rgba(0,0,0,0.04)] p-4 relative overflow-hidden'>
+                <div className='absolute left-0 top-0 bottom-0 w-[3px] my-2.5 rounded-full bg-indigo-500' />
+                <div className='flex items-center gap-2 mb-2'>
+                  <Users className='h-4 w-4 text-indigo-600' />
+                  <p className='text-[12px] font-medium text-slate-900'>
                     Total Customers
                   </p>
                 </div>
-                <p className="text-3xl font-bold text-blue-600">
+                <p className='text-[22px] font-semibold text-indigo-600 leading-none'>
                   {data.totalCustomers}
                 </p>
               </div>
 
               {/* New Customers */}
-              <div className="bg-gradient-to-br from-green-50 to-green-100 dark:from-green-900/20 dark:to-green-800/20 p-4 rounded-lg border border-green-200 dark:border-green-800">
-                <div className="flex items-center gap-2 mb-2">
-                  <UserPlus className="h-5 w-5 text-green-600" />
-                  <p className="text-sm font-medium text-green-900 dark:text-green-100">
+              <div className='bg-white border border-slate-100 rounded-xl shadow-[0_1px_3px_rgba(0,0,0,0.04)] p-4 relative overflow-hidden'>
+                <div className='absolute left-0 top-0 bottom-0 w-[3px] my-2.5 rounded-full bg-emerald-500' />
+                <div className='flex items-center gap-2 mb-2'>
+                  <UserPlus className='h-4 w-4 text-emerald-600' />
+                  <p className='text-[12px] font-medium text-slate-900'>
                     New Customers
                   </p>
                 </div>
-                <div className="flex items-baseline justify-between">
-                  <p className="text-2xl font-bold text-green-600">
+                <div className='flex items-baseline justify-between'>
+                  <p className='text-[15px] font-semibold text-emerald-600'>
                     {data.newCustomers}
                   </p>
-                  <p className="text-sm font-semibold text-green-700">
+                  <p className='text-[12px] font-semibold text-emerald-600'>
                     {newCustomerPercentage}%
                   </p>
                 </div>
               </div>
 
               {/* Returning Customers */}
-              <div className="bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-indigo-900/20 dark:to-indigo-800/20 p-4 rounded-lg border border-blue-200 dark:border-indigo-800">
-                <div className="flex items-center gap-2 mb-2">
-                  <Repeat className="h-5 w-5 text-indigo-600" />
-                  <p className="text-sm font-medium text-indigo-900 dark:text-indigo-100">
+              <div className='bg-white border border-slate-100 rounded-xl shadow-[0_1px_3px_rgba(0,0,0,0.04)] p-4 relative overflow-hidden'>
+                <div className='absolute left-0 top-0 bottom-0 w-[3px] my-2.5 rounded-full bg-blue-500' />
+                <div className='flex items-center gap-2 mb-2'>
+                  <Repeat className='h-4 w-4 text-blue-600' />
+                  <p className='text-[12px] font-medium text-slate-900'>
                     Returning Customers
                   </p>
                 </div>
-                <div className="flex items-baseline justify-between">
-                  <p className="text-2xl font-bold text-indigo-600">
+                <div className='flex items-baseline justify-between'>
+                  <p className='text-[15px] font-semibold text-blue-600'>
                     {data.returningCustomers}
                   </p>
-                  <p className="text-sm font-semibold text-indigo-700">
+                  <p className='text-[12px] font-semibold text-blue-600'>
                     {returningCustomerPercentage}%
                   </p>
                 </div>
@@ -176,28 +188,36 @@ const CustomerInsightsCard: React.FC<CustomerInsightsCardProps> = ({
           </div>
 
           {/* Customer Acquisition Insights */}
-          <div className="bg-muted/50 p-4 rounded-lg">
-            <h4 className="text-sm font-medium mb-3">Acquisition Insights</h4>
-            <div className="grid grid-cols-3 gap-4">
-              <div className="text-center">
-                <p className="text-2xl font-bold text-green-600">
+          <div className='bg-white border border-slate-100 rounded-xl shadow-[0_1px_3px_rgba(0,0,0,0.04)] p-4'>
+            <h4 className='text-[13px] font-semibold text-slate-900 mb-3'>
+              Acquisition Insights
+            </h4>
+            <div className='grid grid-cols-3 gap-4'>
+              <div className='text-center'>
+                <p className='text-[22px] font-semibold text-emerald-600 leading-none'>
                   {newCustomerPercentage}%
                 </p>
-                <p className="text-xs text-muted-foreground">New Customer Rate</p>
+                <p className='text-[11px] text-slate-500 mt-1'>
+                  New Customer Rate
+                </p>
               </div>
-              <div className="text-center">
-                <p className="text-2xl font-bold text-blue-600">
+              <div className='text-center'>
+                <p className='text-[22px] font-semibold text-blue-600 leading-none'>
                   {returningCustomerPercentage}%
                 </p>
-                <p className="text-xs text-muted-foreground">Retention Rate</p>
+                <p className='text-[11px] text-slate-500 mt-1'>
+                  Retention Rate
+                </p>
               </div>
-              <div className="text-center">
-                <p className="text-2xl font-bold text-purple-600">
+              <div className='text-center'>
+                <p className='text-[22px] font-semibold text-violet-600 leading-none'>
                   {data.totalCustomers > 0 && data.newCustomers > 0
                     ? (data.totalCustomers / data.newCustomers).toFixed(1)
                     : "0"}
                 </p>
-                <p className="text-xs text-muted-foreground">Ratio (Total/New)</p>
+                <p className='text-[11px] text-slate-500 mt-1'>
+                  Ratio (Total/New)
+                </p>
               </div>
             </div>
           </div>

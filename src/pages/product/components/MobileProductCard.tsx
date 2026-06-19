@@ -25,12 +25,13 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "../../../components/ui/dropdown-menu";
-import { cn } from "../../../utils/functions";
+import { cn, getVariationImageUrl } from "../../../utils/functions";
 import useRoleCheck from "../../auth/hooks/useRoleCheck";
 import dayjs from "dayjs";
 import ShareButton from "../../../common/ShareButton";
 import { BRAND_CONFIG } from "../../../config/brand";
 import DeleteRequestDialog from "./DeleteRequestDialog";
+import type { IVariation, IImageGroup } from "../interface";
 
 /* ─── Types ─────────────────────────────────────────────── */
 
@@ -56,6 +57,8 @@ interface MobileProductCardProps {
   totalSold: number;
   totalReturned: number;
   variations: string[] | Variation[];
+  variationList?: IVariation[]; // Full variation objects with all fields
+  imageGroups?: IImageGroup[]; // Image groups from the product
   updatedAt: string;
   onEdit: (id: string) => void;
   onViewVariations?: () => void;
@@ -195,6 +198,8 @@ interface VariantDrawerProps {
   variants: string[] | Variation[];
   productTitle: string;
   productImage?: string;
+  imageGroups?: IImageGroup[];
+  fullVariations?: IVariation[]; // Full variation objects with all fields
 }
 
 const VariantDrawer: React.FC<VariantDrawerProps> = ({
@@ -203,16 +208,38 @@ const VariantDrawer: React.FC<VariantDrawerProps> = ({
   variants,
   productTitle,
   productImage,
+  imageGroups,
+  fullVariations,
 }) => {
   const [query, setQuery] = useState("");
   const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
 
   const normalized = normalizeVariations(variants);
-  const hasVars = !isNoVariant(normalized);
-  const withImages = normalized.filter((v) => v.image);
+
+  // Enrich normalized variations with images from image groups
+  const enrichedVariations = normalized.map((v) => {
+    // If already has image, keep it
+    if (v.image) return v;
+
+    // Try to find matching full variation by name to get imageGroupId
+    if (fullVariations) {
+      const fullVar = fullVariations.find((fv) => fv.name === v.name);
+      if (fullVar) {
+        const imgUrl = getVariationImageUrl(fullVar, imageGroups);
+        if (imgUrl) {
+          return { ...v, image: imgUrl };
+        }
+      }
+    }
+
+    return v;
+  });
+
+  const hasVars = !isNoVariant(enrichedVariations);
+  const withImages = enrichedVariations.filter((v) => v.image);
 
   const filtered = hasVars
-    ? normalized.filter((v) =>
+    ? enrichedVariations.filter((v) =>
         v.name.toLowerCase().includes(query.toLowerCase()),
       )
     : [];
@@ -274,8 +301,8 @@ const VariantDrawer: React.FC<VariantDrawerProps> = ({
                   {productTitle}
                 </h3>
                 <p className='text-xs text-zinc-500 dark:text-zinc-400 mt-0.5'>
-                  {hasVars ? normalized.length : 0} variant
-                  {normalized.length !== 1 ? "s" : ""}
+                  {hasVars ? enrichedVariations.length : 0} variant
+                  {enrichedVariations.length !== 1 ? "s" : ""}
                   {withImages.length > 0 && (
                     <span className='ml-1.5 text-indigo-500 dark:text-indigo-400'>
                       · {withImages.length} with photos
@@ -293,7 +320,7 @@ const VariantDrawer: React.FC<VariantDrawerProps> = ({
           </div>
 
           {/* Search bar */}
-          {hasVars && normalized.length > 3 && (
+          {hasVars && enrichedVariations.length > 3 && (
             <div className='relative'>
               <Search className='absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-zinc-400 pointer-events-none' />
               <input
@@ -420,7 +447,7 @@ const VariantDrawer: React.FC<VariantDrawerProps> = ({
       {/* Lightbox — z above drawer */}
       {lightboxIndex !== null && (
         <VariantLightbox
-          variants={normalized}
+          variants={enrichedVariations}
           startIndex={lightboxIndex}
           onClose={() => setLightboxIndex(null)}
         />
@@ -443,6 +470,8 @@ const MobileProductCard: React.FC<MobileProductCardProps> = ({
   totalSold,
   totalReturned,
   variations,
+  variationList,
+  imageGroups,
   updatedAt,
   onEdit,
   onViewVariations,
@@ -674,6 +703,8 @@ const MobileProductCard: React.FC<MobileProductCardProps> = ({
         variants={variations}
         productTitle={title}
         productImage={image}
+        imageGroups={imageGroups}
+        fullVariations={variationList}
       />
 
       <DeleteRequestDialog productId={id} productName={title}>

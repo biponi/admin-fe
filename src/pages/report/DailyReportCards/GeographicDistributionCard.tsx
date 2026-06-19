@@ -64,15 +64,15 @@ const GeographicDistributionCard: React.FC<GeographicDistributionCardProps> = ({
   const totalCustomers = sortedData.reduce((sum, item) => sum + item.count, 0);
 
   return (
-    <Card>
+    <Card className="border-slate-100 shadow-[0_1px_3px_rgba(0,0,0,0.04)]">
       <CardHeader>
         <div className="flex items-center justify-between">
           <div>
-            <CardTitle className="flex items-center gap-2">
-              <MapPin className="h-5 w-5" />
+            <CardTitle className="flex items-center gap-2 text-[15px] font-semibold text-slate-900">
+              <MapPin className="h-4 w-4" />
               Geographic Distribution
             </CardTitle>
-            <CardDescription>
+            <CardDescription className="text-[12px] text-slate-400">
               Revenue and customer distribution by division
             </CardDescription>
           </div>
@@ -81,8 +81,8 @@ const GeographicDistributionCard: React.FC<GeographicDistributionCardProps> = ({
               variant="outline"
               size="sm"
               onClick={() => onDownload("csv", "geographic-distribution")}
-              className="gap-2">
-              <Download className="h-4 w-4" />
+              className="h-8 px-3 gap-1.5 text-[13px] font-medium text-slate-600 border-slate-200 hover:border-slate-300 hover:bg-slate-50 shadow-[0_1px_2px_rgba(0,0,0,0.04)] transition-all duration-150">
+              <Download className="h-3.5 w-3.5" />
               Export CSV
             </Button>
           )}
@@ -92,7 +92,7 @@ const GeographicDistributionCard: React.FC<GeographicDistributionCardProps> = ({
         <div className="space-y-6">
           {/* Revenue Bar Chart */}
           <div className="h-[350px]">
-            <h4 className="text-sm font-medium mb-4 text-center">
+            <h4 className="text-[13px] font-semibold text-slate-900 mb-4 text-center">
               Revenue by Division
             </h4>
             <ResponsiveContainer width="100%" height="100%">
@@ -108,9 +108,9 @@ const GeographicDistributionCard: React.FC<GeographicDistributionCardProps> = ({
                   content={({ active, payload }) => {
                     if (active && payload && payload.length) {
                       return (
-                        <div className="bg-white dark:bg-gray-800 p-2 border rounded shadow-lg">
-                          <p className="text-sm font-medium">{payload[0].payload.division}</p>
-                          <p className="text-sm">
+                        <div className="bg-white p-2 border border-slate-200 rounded shadow-lg">
+                          <p className="text-sm font-medium text-slate-900">{payload[0].payload.division}</p>
+                          <p className="text-sm text-slate-600">
                             Revenue: {formatCurrency(payload[0].value as number)}
                           </p>
                         </div>
@@ -130,7 +130,7 @@ const GeographicDistributionCard: React.FC<GeographicDistributionCardProps> = ({
 
           {/* Customer Count Bar Chart */}
           <div className="h-[250px]">
-            <h4 className="text-sm font-medium mb-4 text-center">
+            <h4 className="text-[13px] font-semibold text-slate-900 mb-4 text-center">
               Customer Count by Division
             </h4>
             <ResponsiveContainer width="100%" height="100%">
@@ -147,9 +147,9 @@ const GeographicDistributionCard: React.FC<GeographicDistributionCardProps> = ({
                   content={({ active, payload }) => {
                     if (active && payload && payload.length) {
                       return (
-                        <div className="bg-white dark:bg-gray-800 p-2 border rounded shadow-lg">
-                          <p className="text-sm font-medium">{payload[0].payload.division}</p>
-                          <p className="text-sm">
+                        <div className="bg-white p-2 border border-slate-200 rounded shadow-lg">
+                          <p className="text-sm font-medium text-slate-900">{payload[0].payload.division}</p>
+                          <p className="text-sm text-slate-600">
                             Customers: {payload[0].value as number}
                           </p>
                         </div>
@@ -168,7 +168,7 @@ const GeographicDistributionCard: React.FC<GeographicDistributionCardProps> = ({
           </div>
 
           {/* Division Summary Cards */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 pt-4 border-t">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 pt-4 border-t border-slate-200">
             {sortedData.slice(0, 6).map((item, index) => {
               const revenuePercentage = totalRevenue > 0
                 ? ((item.revenue / totalRevenue) * 100).toFixed(1)
@@ -180,9 +180,10 @@ const GeographicDistributionCard: React.FC<GeographicDistributionCardProps> = ({
               return (
                 <div
                   key={item.division}
-                  className="bg-muted/50 p-4 rounded-lg space-y-2">
+                  className="bg-white border border-slate-100 rounded-xl shadow-[0_1px_3px_rgba(0,0,0,0.04)] p-4 space-y-2 relative overflow-hidden">
+                  <div className="absolute left-0 top-0 bottom-0 w-1" style={{ backgroundColor: COLORS[index % COLORS.length] }} />
                   <div className="flex items-center justify-between">
-                    <p className="font-medium text-sm">{item.division}</p>
+                    <p className="font-medium text-[13px] text-slate-900">{item.division}</p>
                     <div
                       className="w-3 h-3 rounded-full"
                       style={{ backgroundColor: COLORS[index % COLORS.length] }}
@@ -190,21 +191,21 @@ const GeographicDistributionCard: React.FC<GeographicDistributionCardProps> = ({
                   </div>
                   <div className="space-y-1">
                     <div className="flex justify-between text-sm">
-                      <span className="text-muted-foreground">Revenue</span>
-                      <span className="font-semibold">
+                      <span className="text-[12px] text-slate-500">Revenue</span>
+                      <span className="font-semibold text-slate-900">
                         {formatCurrency(item.revenue)}
                       </span>
                     </div>
                     <div className="flex justify-between text-sm">
-                      <span className="text-muted-foreground">Customers</span>
-                      <span className="font-semibold">{item.count}</span>
+                      <span className="text-[12px] text-slate-500">Customers</span>
+                      <span className="font-semibold text-slate-900">{item.count}</span>
                     </div>
                   </div>
                   <div className="flex gap-2 text-xs">
-                    <span className="bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 px-2 py-1 rounded">
+                    <span className="bg-emerald-50 text-emerald-700 px-2 py-1 rounded border border-emerald-200">
                       {revenuePercentage}% rev
                     </span>
-                    <span className="bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 px-2 py-1 rounded">
+                    <span className="bg-blue-50 text-blue-700 px-2 py-1 rounded border border-blue-200">
                       {customerPercentage}% cust
                     </span>
                   </div>
@@ -214,16 +215,18 @@ const GeographicDistributionCard: React.FC<GeographicDistributionCardProps> = ({
           </div>
 
           {/* Summary Stats */}
-          <div className="grid grid-cols-2 gap-4 pt-4 border-t">
-            <div className="bg-gradient-to-br from-green-50 to-green-100 dark:from-green-900/20 dark:to-green-800/20 p-4 rounded-lg">
-              <p className="text-sm text-muted-foreground mb-1">Total Revenue</p>
-              <p className="text-2xl font-bold text-green-600">
+          <div className="grid grid-cols-2 gap-4 pt-4 border-t border-slate-200">
+            <div className="bg-white border border-slate-100 rounded-xl shadow-[0_1px_3px_rgba(0,0,0,0.04)] p-4 relative overflow-hidden">
+              <div className="absolute left-0 top-0 bottom-0 w-1 bg-emerald-500" />
+              <p className="text-[11px] text-slate-500 mb-1">Total Revenue</p>
+              <p className="text-[22px] font-semibold text-emerald-600 leading-none">
                 {formatCurrency(totalRevenue)}
               </p>
             </div>
-            <div className="bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-900/20 dark:to-blue-800/20 p-4 rounded-lg">
-              <p className="text-sm text-muted-foreground mb-1">Total Customers</p>
-              <p className="text-2xl font-bold text-blue-600">{totalCustomers}</p>
+            <div className="bg-white border border-slate-100 rounded-xl shadow-[0_1px_3px_rgba(0,0,0,0.04)] p-4 relative overflow-hidden">
+              <div className="absolute left-0 top-0 bottom-0 w-1 bg-blue-500" />
+              <p className="text-[11px] text-slate-500 mb-1">Total Customers</p>
+              <p className="text-[22px] font-semibold text-blue-600 leading-none">{totalCustomers}</p>
             </div>
           </div>
         </div>

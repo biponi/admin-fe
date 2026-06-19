@@ -52,7 +52,7 @@ export function NavMain({
 
   return (
     <SidebarGroup className='px-0'>
-      <SidebarMenu className='space-y-0.5'>
+      <SidebarMenu className='space-y-0.5 '>
         {items.map((item) => {
           const hasSubItems = item.items && item.items.length > 0;
           const isOpen = openStates[item.title] || false;

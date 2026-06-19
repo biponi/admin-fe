@@ -11,7 +11,7 @@ import type {
   IShipping,
   ITransection,
 } from "../order/interface.d";
-import type { IProduct, IVariation } from "../product/interface.d";
+import type { IProduct, IVariation, IImageGroup } from "../product/interface.d";
 
 const generateCartItemId = (): string =>
   `cart_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
@@ -19,6 +19,7 @@ const generateCartItemId = (): string =>
 export interface CartItem extends IOrderProduct {
   cartItemId: string;
   selectedVariant?: IVariation;
+  imageGroups?: IImageGroup[]; // Store product's image groups for image fallback
   availableStock?: number;
   variantStock?: number;
 }
@@ -273,6 +274,7 @@ export const useCreateOrderLayoutStore = create<CreateOrderLayoutState>()(
                 ? { id: variant.id, size: variant.size, color: variant.color }
                 : undefined,
               selectedVariant: variant,
+              imageGroups: product.imageGroups, // Store image groups for image fallback
               availableStock,
               variantStock: variant ? variantStock : undefined,
             };

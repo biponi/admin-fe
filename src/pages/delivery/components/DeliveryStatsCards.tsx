@@ -43,92 +43,80 @@ export const DeliveryStatsCards: React.FC<DeliveryStatsCardsProps> = ({
       title: "Total Orders",
       value: totalOrders,
       icon: Package,
-      bgColor: "bg-gradient-to-r from-blue-500 to-blue-600",
-      textColor: "text-blue-100",
-      valueColor: "text-white",
+      accentColor: "bg-indigo-400",
+      valueColor: "text-indigo-600",
     },
     {
       title: "Pending Pickup",
       value: pending,
       icon: Clock,
-      bgColor: "bg-gradient-to-r from-yellow-500 to-yellow-600",
-      textColor: "text-yellow-100",
-      valueColor: "text-white",
+      accentColor: "bg-amber-400",
+      valueColor: "text-amber-600",
     },
     {
       title: "In Transit",
       value: inTransit,
       icon: Truck,
-      bgColor: "bg-gradient-to-r from-purple-500 to-purple-600",
-      textColor: "text-purple-100",
-      valueColor: "text-white",
+      accentColor: "bg-blue-400",
+      valueColor: "text-blue-600",
     },
     {
       title: "Delivered",
       value: delivered,
       icon: CheckCircle,
-      bgColor: "bg-gradient-to-r from-green-500 to-green-600",
-      textColor: "text-green-100",
-      valueColor: "text-white",
+      accentColor: "bg-emerald-400",
+      valueColor: "text-emerald-600",
     },
     {
       title: "Cancelled",
       value: cancelled,
       icon: XCircle,
-      bgColor: "bg-gradient-to-r from-red-500 to-red-600",
-      textColor: "text-red-100",
-      valueColor: "text-white",
+      accentColor: "bg-rose-400",
+      valueColor: "text-rose-600",
     },
     {
       title: "Account Balance (only steadfast)",
       value: `৳${balance.toLocaleString()}`,
       icon: DollarSign,
-      bgColor: "bg-gradient-to-r from-indigo-500 to-indigo-600",
-      textColor: "text-indigo-100",
-      valueColor: "text-white",
+      accentColor: "bg-violet-400",
+      valueColor: "text-violet-600",
     },
     {
       title: "Total COD",
       value: `৳${totalCOD.toLocaleString()}`,
       icon: AlertCircle,
-      bgColor: "bg-gradient-to-r from-orange-500 to-orange-600",
-      textColor: "text-orange-100",
-      valueColor: "text-white",
+      accentColor: "bg-orange-400",
+      valueColor: "text-orange-600",
     },
     {
       title: "Total Collected",
       value: `৳${totalCollected.toLocaleString()}`,
       icon: CheckCircle,
-      bgColor: "bg-gradient-to-r from-teal-500 to-teal-600",
-      textColor: "text-teal-100",
-      valueColor: "text-white",
+      accentColor: "bg-teal-400",
+      valueColor: "text-teal-600",
     },
   ];
 
   return (
-    <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6'>
+    <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4">
       {stats.map((stat, index) => {
         const Icon = stat.icon;
         return (
-          <Card
+          <div
             key={index}
-            className={`${stat.bgColor} border-0 text-white shadow-lg hover:shadow-xl transition-shadow duration-200`}>
-            <CardContent className='p-4'>
-              <div className='flex items-center justify-between'>
-                <div>
-                  <p className={`${stat.textColor} text-sm font-medium mb-1`}>
-                    {stat.title}
-                  </p>
-                  <p className={`${stat.valueColor} text-2xl font-bold`}>
-                    {stat.value}
-                  </p>
-                </div>
-                <div className={`${stat.textColor} opacity-80`}>
-                  <Icon className='w-8 h-8' />
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+            className="flex items-center gap-3 bg-white rounded-xl border border-slate-100 px-4 py-3 shadow-sm hover:shadow-md transition-all duration-200"
+          >
+            <div className={`w-2 h-2 rounded-full ${stat.accentColor}`} />
+            <div className="min-w-0 flex-1">
+              <p className={`text-lg font-semibold ${stat.valueColor} leading-none`}>
+                {stat.value}
+              </p>
+              <p className="text-xs text-slate-500 mt-0.5">{stat.title}</p>
+            </div>
+            <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-slate-50 shrink-0">
+              <Icon className="w-4 h-4 text-slate-400" />
+            </div>
+          </div>
         );
       })}
     </div>

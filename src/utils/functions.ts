@@ -246,3 +246,46 @@ export const filterImageGroups = (groups: any[]): { validGroups: any[]; invalidC
 
   return { validGroups, invalidCount };
 };
+
+/**
+ * Gets the image URL for a variation with proper fallback logic:
+ * 1. Check variation's own images array
+ * 2. Check variation's imageGroupId → imageGroups array
+ * 3. Return null (caller should show fallback)
+ *
+ * @param variation - The variation object
+ * @param imageGroups - Array of image groups from the product
+ * @returns Image URL as string, or null if no image found
+ */
+export const getVariationImageUrl = (
+  variation: { images?: (File | string)[]; imageGroupId?: string },
+  imageGroups?: Array<{ id: string; images: (File | string)[] }>
+): string | null => {
+  // Priority 1: Check variant's own images array
+  if (variation.images && variation.images.length > 0) {
+    const img = variation.images[0];
+    if (typeof img === "string") {
+      return img;
+    } else if (img instanceof File) {
+      return URL.createObjectURL(img);
+    }
+  }
+
+  // Priority 2: Check imageGroupId → imageGroups array
+  if (variation.imageGroupId && imageGroups && imageGroups.length > 0) {
+    const imageGroup = imageGroups.find(
+      (group) => group.id === variation.imageGroupId
+    );
+    if (imageGroup?.images && imageGroup.images.length > 0) {
+      const groupImg = imageGroup.images[0];
+      if (typeof groupImg === "string") {
+        return groupImg;
+      } else if (groupImg instanceof File) {
+        return URL.createObjectURL(groupImg);
+      }
+    }
+  }
+
+  // No image found
+  return null;
+};

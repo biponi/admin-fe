@@ -19,7 +19,7 @@ export const DeliveryTimeline: React.FC<DeliveryTimelineProps> = ({
 }) => {
   if (!timeline || timeline.length === 0) {
     return (
-      <div className='text-center py-8 text-gray-500'>
+      <div className='text-center py-8 text-slate-500'>
         <p>No timeline data available</p>
       </div>
     );
@@ -28,7 +28,7 @@ export const DeliveryTimeline: React.FC<DeliveryTimelineProps> = ({
   return (
     <div className='relative space-y-6'>
       {/* Vertical line */}
-      <div className='absolute left-[15px] top-0 bottom-0 w-0.5 bg-gray-200' />
+      <div className='absolute left-[15px] top-0 bottom-0 w-0.5 bg-slate-200' />
 
       {timeline.map((entry, index) => {
         const statusClasses = getStatusBadgeClasses(entry.status);
@@ -40,7 +40,7 @@ export const DeliveryTimeline: React.FC<DeliveryTimelineProps> = ({
             {/* // {entry.status==='pending'} */}
             <div
               className={`absolute left-0 w-8 h-8 rounded-full border-4 border-white ${
-                isLatest ? statusClasses.bg : "bg-gray-300"
+                isLatest ? statusClasses.bg : "bg-slate-300"
               } flex items-center justify-center`}>
               <div className='w-3 h-3 bg-white rounded-full' />
             </div>
@@ -48,7 +48,7 @@ export const DeliveryTimeline: React.FC<DeliveryTimelineProps> = ({
             {/* Content card */}
             <div
               className={`bg-white border rounded-lg p-4 shadow-sm ${
-                isLatest ? "border-blue-300 shadow-md" : "border-gray-200"
+                isLatest ? "border-indigo-300 shadow-md" : "border-slate-200"
               }`}>
               {/* Status badge */}
               <div className='flex items-center justify-between mb-2'>
@@ -72,14 +72,14 @@ export const DeliveryTimeline: React.FC<DeliveryTimelineProps> = ({
                   </Badge>
                 </div>
                 {isLatest && (
-                  <span className='text-xs font-semibold text-blue-600 uppercase tracking-wide'>
+                  <span className='text-xs font-semibold text-indigo-600 uppercase tracking-wide'>
                     Current
                   </span>
                 )}
               </div>
 
               {/* Timestamp */}
-              <div className='flex items-center gap-2 text-sm text-gray-600 mb-2'>
+              <div className='flex items-center gap-2 text-sm text-slate-600 mb-2'>
                 <Calendar className='w-4 h-4' />
                 <span>
                   {dayjs(entry.timestamp).format("MMM D, YYYY [at] h:mm A")}
@@ -88,7 +88,7 @@ export const DeliveryTimeline: React.FC<DeliveryTimelineProps> = ({
 
               {/* Location */}
               {entry.location && (
-                <div className='flex items-center gap-2 text-sm text-gray-700 mb-2'>
+                <div className='flex items-center gap-2 text-sm text-slate-700 mb-2'>
                   <MapPin className='w-4 h-4' />
                   <span className='font-medium'>{entry.location}</span>
                 </div>
@@ -96,13 +96,13 @@ export const DeliveryTimeline: React.FC<DeliveryTimelineProps> = ({
 
               {/* Remarks */}
               {entry.remarks && (
-                <p className='text-sm text-gray-800 mb-2 pl-6'>
+                <p className='text-sm text-slate-800 mb-2 pl-6'>
                   {entry.remarks}
                 </p>
               )}
 
               {/* Updated by */}
-              <div className='flex items-center gap-2 text-xs text-gray-500 pl-6'>
+              <div className='flex items-center gap-2 text-xs text-slate-500 pl-6'>
                 <User className='w-3 h-3' />
                 <span>Updated by: {entry.updatedBy}</span>
               </div>

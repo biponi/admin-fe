@@ -14,6 +14,7 @@ import type { IProduct, IVariation } from "../product/interface";
 import { Package, ShoppingBag } from "lucide-react";
 import useCategory from "../product/hooks/useCategory";
 import useDebounce from "../../customHook/useDebounce";
+import { getVariationImageUrl } from "../../utils/functions";
 
 // ─── Header (stable — no props that change on every render) ───────────────────
 const OrderHeader = memo(() => (
@@ -53,6 +54,7 @@ const CreateOrderV2 = () => {
     shippingInfo,
     transaction,
     notes,
+    validationErrors,
     isSubmitting,
     variationModalOpen,
     selectedProductForVariation,
@@ -199,8 +201,14 @@ const CreateOrderV2 = () => {
 
         if (item.selectedVariant) {
           transformed.variation = item.selectedVariant;
-          const img = item.selectedVariant.images?.[0];
-          if (typeof img === "string") transformed.thumbnail = img;
+          // Try variation images → image groups for thumbnail
+          const variantImageUrl = getVariationImageUrl(
+            item.selectedVariant,
+            item.imageGroups
+          );
+          if (variantImageUrl) {
+            transformed.thumbnail = variantImageUrl;
+          }
         } else if (item.variation) {
           transformed.variation = item.variation;
         }
@@ -268,6 +276,7 @@ const CreateOrderV2 = () => {
     shippingInfo,
     transaction,
     notes,
+    validationErrors,
     onUpdateQuantity: updateCartQuantity,
     onRemove: removeFromCart,
     onCustomerChange: setCustomer,

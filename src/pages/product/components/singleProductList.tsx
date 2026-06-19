@@ -27,6 +27,7 @@ import { ProductAdjustmentHistory } from "./ProductAdjustmentHistory";
 import DeleteRequestDialog from "./DeleteRequestDialog";
 import type { IVariation } from "../interface";
 import PlaceHolderImage from "../../../assets/placeholder.svg";
+import { getVariationImageUrl } from "../../../utils/functions";
 
 dayjs.extend(advancedFormat);
 
@@ -39,36 +40,7 @@ function VariationChip({
   variation: IVariation;
   imageGroups?: any[];
 }) {
-  const src = (() => {
-    let imageUrl: string | null = null;
-
-    // Priority 1: Check variant's own images array
-    if (variation.images && variation.images.length > 0) {
-      const img = variation.images[0];
-      if (typeof img === "string") {
-        imageUrl = img;
-      } else if (img instanceof File) {
-        imageUrl = URL.createObjectURL(img);
-      }
-    }
-
-    // Priority 2: Check imageGroupId → imageGroups array
-    if (!imageUrl && variation.imageGroupId && imageGroups) {
-      const imageGroup = imageGroups.find(
-        (group: any) => group.id === variation.imageGroupId
-      );
-      if (imageGroup?.images && imageGroup.images.length > 0) {
-        const groupImg = imageGroup.images[0];
-        if (typeof groupImg === "string") {
-          imageUrl = groupImg;
-        } else if (groupImg instanceof File) {
-          imageUrl = URL.createObjectURL(groupImg);
-        }
-      }
-    }
-
-    return imageUrl;
-  })();
+  const src = getVariationImageUrl(variation, imageGroups);
 
   const label =
     variation.name ||

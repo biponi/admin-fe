@@ -19,6 +19,7 @@ interface CartPanelProps {
   shippingInfo: Partial<IShipping>;
   transaction: Partial<ITransection>;
   notes: string;
+  validationErrors?: Record<string, string[]>;
   onUpdateQuantity: (cartItemId: string, quantity: number) => void;
   onRemove: (cartItemId: string) => void;
   onCustomerChange: (customer: Partial<ICustomer>) => void;
@@ -35,6 +36,7 @@ export function CartPanel({
   shippingInfo,
   transaction,
   notes,
+  validationErrors,
   onUpdateQuantity,
   onRemove,
   onCustomerChange,
@@ -104,11 +106,13 @@ export function CartPanel({
               customer={customerInfo}
               onChange={onCustomerChange}
               onShippingChange={onShippingChange}
+              validationErrors={validationErrors}
             />
             <ShippingForm
               shipping={shippingInfo}
               onChange={onShippingChange}
               onDeliveryChargeChange={handleDeliveryChargeChange}
+              validationErrors={validationErrors}
             />
           </div>
 
