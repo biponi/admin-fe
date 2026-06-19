@@ -109,12 +109,12 @@ export const OrderManagement: React.FC = () => {
               initial={{ scale: 0, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               transition={{ delay: 0.5 }}
-              className={`fixed top-24 ${
-                currentView === "v1" ? "right-14" : "right-72"
+              className={`fixed  ${
+                currentView === "v1" ? "right-14 top-24" : "right-72 top-[85px]"
               } z-50`}>
               <Button
                 size='lg'
-                className='rounded-full shadow-xl bg-gradient-to-r from-blue-600 to-purple-600 hover:shadow-2xl transition-shadow'>
+                className='rounded-md shadow-xl bg-gradient-to-r from-blue-600 to-purple-600 hover:shadow-2xl transition-shadow'>
                 <Settings className='h-5 w-5 mr-2' />
                 View Settings
               </Button>

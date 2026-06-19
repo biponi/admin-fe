@@ -1,10 +1,24 @@
 import { useState, useEffect } from "react";
 import { OperationRequest } from "../hooks/useOperationRequests";
 import { useProductData, ProductData } from "../hooks/useProductData";
-import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Clock, Calendar, User, AlertCircle, CheckCircle, XCircle, Ban, Hourglass, Package, DollarSign, Box } from "lucide-react";
+import {
+  Clock,
+  Calendar,
+  User,
+  AlertCircle,
+  CheckCircle2,
+  XCircle,
+  Ban,
+  Hourglass,
+  Package,
+  DollarSign,
+  Box,
+  Eye,
+  Check,
+  X,
+} from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import PlaceHolderImage from "@/assets/placeholder.svg";
 
@@ -20,61 +34,110 @@ interface RequestCardProps {
   isCurrentUserRequest?: boolean;
 }
 
-const getStatusBadge = (status: OperationRequest["status"]) => {
-  switch (status) {
-    case "pending":
-      return (
-        <Badge variant="outline" className="bg-yellow-50 text-yellow-700 border-yellow-200">
-          <Clock className="w-3 h-3 mr-1" />
-          Pending
-        </Badge>
-      );
-    case "approved":
-      return (
-        <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
-          <CheckCircle className="w-3 h-3 mr-1" />
-          Approved
-        </Badge>
-      );
-    case "rejected":
-      return (
-        <Badge variant="outline" className="bg-red-50 text-red-700 border-red-200">
-          <XCircle className="w-3 h-3 mr-1" />
-          Rejected
-        </Badge>
-      );
-    case "cancelled":
-      return (
-        <Badge variant="outline" className="bg-gray-50 text-gray-700 border-gray-200">
-          <Ban className="w-3 h-3 mr-1" />
-          Cancelled
-        </Badge>
-      );
-    case "timeout_expired":
-      return (
-        <Badge variant="outline" className="bg-orange-50 text-orange-700 border-orange-200">
-          <Hourglass className="w-3 h-3 mr-1" />
-          Timeout Expired
-        </Badge>
-      );
-    default:
-      return <Badge variant="outline">{status}</Badge>;
-  }
+// ─── Status badge ─────────────────────────────────────────────────────────────
+const STATUS_CONFIG: Record<
+  string,
+  { icon: React.ReactNode; label: string; className: string }
+> = {
+  pending: {
+    icon: <Clock className='w-3 h-3' />,
+    label: "Pending",
+    className: "bg-amber-50 text-amber-700 border-amber-200",
+  },
+  approved: {
+    icon: <CheckCircle2 className='w-3 h-3' />,
+    label: "Approved",
+    className: "bg-emerald-50 text-emerald-700 border-emerald-200",
+  },
+  rejected: {
+    icon: <XCircle className='w-3 h-3' />,
+    label: "Rejected",
+    className: "bg-rose-50 text-rose-700 border-rose-200",
+  },
+  cancelled: {
+    icon: <Ban className='w-3 h-3' />,
+    label: "Cancelled",
+    className: "bg-gray-50 text-gray-600 border-gray-200",
+  },
+  timeout_expired: {
+    icon: <Hourglass className='w-3 h-3' />,
+    label: "Timeout Expired",
+    className: "bg-orange-50 text-orange-700 border-orange-200",
+  },
 };
 
-const getOperationTypeLabel = (operationType: string) => {
-  switch (operationType) {
-    case "product_delete":
-      return "Product Deletion";
-    case "category_delete":
-      return "Category Deletion";
-    case "manufacturer_delete":
-      return "Manufacturer Deletion";
-    default:
-      return operationType.replace(/_/g, " ").replace(/\b\w/g, (l) => l.toUpperCase());
-  }
+const StatusBadge = ({ status }: { status: OperationRequest["status"] }) => {
+  const cfg = STATUS_CONFIG[status];
+  if (!cfg)
+    return (
+      <Badge variant='outline' className='text-xs'>
+        {status}
+      </Badge>
+    );
+  return (
+    <span
+      className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full border text-[11px] font-medium ${cfg.className}`}>
+      {cfg.icon}
+      {cfg.label}
+    </span>
+  );
 };
 
+// ─── Operation type label ─────────────────────────────────────────────────────
+const getOperationTypeLabel = (t: string) => {
+  const map: Record<string, string> = {
+    product_delete: "Product Deletion",
+    category_delete: "Category Deletion",
+    manufacturer_delete: "Manufacturer Deletion",
+  };
+  return (
+    map[t] ?? t.replace(/_/g, " ").replace(/\b\w/g, (l) => l.toUpperCase())
+  );
+};
+
+// ─── Variation chip ───────────────────────────────────────────────────────────
+const VariationChip = ({ variation }: { variation: any }) => {
+  const src = variation.images?.[0];
+  const label =
+    variation.name ||
+    [variation.color, variation.size].filter(Boolean).join(" · ");
+  const qty = variation.quantity ?? 0;
+  const qtyClass =
+    qty <= 0 ? "text-rose-500" : qty <= 5 ? "text-amber-600" : "text-gray-400";
+  const qtyLabel =
+    qty <= 0 ? "Out of stock" : qty <= 5 ? `${qty} left` : `${qty} in stock`;
+
+  return (
+    <div className='inline-flex items-center gap-1.5 px-2 py-1 rounded-lg bg-gray-50 border border-gray-100 text-xs'>
+      {src ? (
+        <img
+          src={src}
+          alt={label}
+          className='w-6 h-6 rounded-md object-cover border border-gray-200 shrink-0'
+          onError={(e) => {
+            (e.target as HTMLImageElement).src = PlaceHolderImage;
+          }}
+        />
+      ) : (
+        <div className='w-6 h-6 rounded-md bg-violet-50 border border-violet-100 flex items-center justify-center shrink-0'>
+          <span className='text-[10px] font-bold text-violet-500'>
+            {variation.size || variation.color?.slice(0, 1) || "?"}
+          </span>
+        </div>
+      )}
+      <div className='flex flex-col leading-tight'>
+        <span className='font-medium text-gray-800 whitespace-nowrap'>
+          {label}
+        </span>
+        <span className={`text-[10px] whitespace-nowrap ${qtyClass}`}>
+          {qtyLabel}
+        </span>
+      </div>
+    </div>
+  );
+};
+
+// ─── Main component ────────────────────────────────────────────────────────────
 export const RequestCard = ({
   request,
   onViewDetails,
@@ -86,246 +149,222 @@ export const RequestCard = ({
   canReject = false,
   isCurrentUserRequest = false,
 }: RequestCardProps) => {
-  const { fetchProduct, getProduct, isLoading } = useProductData();
+  const { fetchProduct, getProduct } = useProductData();
   const [product, setProduct] = useState<ProductData | null>(null);
 
   const isPending = request.status === "pending";
   const isExpiringSoon =
     isPending &&
     request.expiresAt &&
-    new Date(request.expiresAt) < new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 hours
+    new Date(request.expiresAt) < new Date(Date.now() + 24 * 60 * 60 * 1000);
 
-  const canApproveReject = (canApprove && canReject) && isPending;
+  const canApproveReject = canApprove && canReject && isPending;
   const canCancel = isCurrentUserRequest && isPending;
 
-  // Fetch product data for product_delete requests
   useEffect(() => {
-    if (request.operationType === "product_delete" && request.targetId) {
-      const cachedProduct = getProduct(request.targetId);
-      if (cachedProduct) {
-        setProduct(cachedProduct);
-      } else {
-        fetchProduct(request.targetId).then((fetchedProduct) => {
-          if (fetchedProduct) {
-            setProduct(fetchedProduct);
-          }
-        });
-      }
+    if (request.operationType !== "product_delete" || !request.targetId) return;
+    const cached = getProduct(request.targetId);
+    if (cached) {
+      setProduct(cached);
+      return;
     }
+    fetchProduct(request.targetId).then((p) => {
+      if (p) setProduct(p);
+    });
   }, [request.operationType, request.targetId, fetchProduct, getProduct]);
 
-  // Debug logging
-  console.log("=== RequestCard Debug ===", {
-    requestId: request.id,
-    status: request.status,
-    isPending,
-    canApprove,
-    canReject,
-    isCurrentUserRequest,
-    showActions,
-    canApproveReject,
-    canCancel,
-    hasOnApprove: !!onApprove,
-    hasOnReject: !!onReject,
-    hasOnCancel: !!onCancel,
-    productLoaded: !!product,
-  });
-
-  // Render product variation chip
-  const renderVariationChip = (variation: any) => {
-    const src = variation.images?.[0];
-    const label = variation.name || [variation.color, variation.size].filter(Boolean).join(" · ");
-    const qty = variation.quantity ?? 0;
-    const qtyColor = qty <= 0 ? "text-red-600" : qty <= 5 ? "text-amber-700" : "text-zinc-500";
-    const qtyLabel = qty <= 0 ? "out of stock" : qty <= 5 ? `${qty} left` : `${qty} in stock`;
-
-    return (
-      <div className="flex items-center gap-1.5 rounded-lg border border-zinc-200 bg-white px-2 py-1 text-xs">
-        {src ? (
-          <img
-            src={src}
-            alt={label}
-            className="h-6 w-6 flex-shrink-0 rounded-md object-cover border border-zinc-100"
-            onError={(e) => {
-              (e.target as HTMLImageElement).src = PlaceHolderImage;
-            }}
-          />
-        ) : (
-          <div className="flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-md border border-zinc-100 bg-zinc-50 text-[10px] font-semibold text-zinc-600">
-            {variation.size || variation.color?.slice(0, 1) || "?"}
-          </div>
-        )}
-        <div className="flex flex-col">
-          <span className="font-semibold leading-tight text-zinc-900 whitespace-nowrap">{label}</span>
-          <span className={`font-medium leading-tight whitespace-nowrap ${qtyColor}`}>{qtyLabel}</span>
-        </div>
-      </div>
-    );
-  };
-
   return (
-    <Card className="hover:shadow-md transition-shadow">
-      <CardHeader className="pb-3">
-        <div className="flex items-start justify-between">
-          <div className="flex-1">
-            <CardTitle className="text-lg flex items-center gap-2">
+    <div className='bg-white rounded-2xl border border-gray-100 shadow-sm hover:shadow-md hover:border-gray-200 transition-all flex flex-col overflow-hidden'>
+      {/* Card header */}
+      <div className='px-4 pt-4 pb-3 flex items-start justify-between gap-2 border-b border-gray-50'>
+        <div className='min-w-0'>
+          <div className='flex items-center gap-1.5'>
+            <span className='text-sm font-semibold text-gray-900 leading-tight truncate'>
               {getOperationTypeLabel(request.operationType)}
-              {isExpiringSoon && (
-                <AlertCircle className="w-4 h-4 text-orange-500" title="Expiring soon" />
-              )}
-            </CardTitle>
-            <p className="text-sm text-muted-foreground mt-1">
-              Target: <span className="font-medium">{request.targetName}</span>
-            </p>
+            </span>
+            {isExpiringSoon && (
+              <AlertCircle
+                className='w-3.5 h-3.5 text-orange-500 shrink-0'
+                title='Expiring soon'
+              />
+            )}
           </div>
-          {getStatusBadge(request.status)}
+          <p className='text-xs text-gray-400 mt-0.5 truncate'>
+            {request.targetName}
+          </p>
         </div>
-      </CardHeader>
+        <StatusBadge status={request.status} />
+      </div>
 
-      <CardContent className="space-y-3 pb-3">
-        {/* Product Information */}
+      {/* Card body */}
+      <div className='px-4 py-3 flex-1 space-y-3'>
+        {/* Product preview */}
         {product && request.operationType === "product_delete" && (
-          <div className="bg-muted/50 rounded-lg p-3 space-y-2">
-            <div className="flex items-start gap-3">
-              {/* Product Image */}
-              <div className="flex-shrink-0">
-                <img
-                  src={product.thumbnail || product.images?.[0] || PlaceHolderImage}
-                  alt={product.title || product.name}
-                  className="w-16 h-16 rounded-lg object-cover border border-zinc-200"
-                  onError={(e) => {
-                    (e.target as HTMLImageElement).src = PlaceHolderImage;
-                  }}
-                />
-              </div>
-
-              {/* Product Details */}
-              <div className="flex-1 min-w-0 space-y-1">
-                <div className="font-medium text-sm truncate">{product.title || product.name}</div>
-                <div className="grid grid-cols-2 gap-2 text-xs text-muted-foreground">
-                  <div className="flex items-center gap-1">
-                    <Package className="w-3 h-3" />
-                    <span className="font-mono">{product.sku}</span>
-                  </div>
-                  <div className="flex items-center gap-1">
-                    <DollarSign className="w-3 h-3" />
-                    <span>৳{product.price}</span>
-                  </div>
-                  <div className="flex items-center gap-1">
-                    <Box className="w-3 h-3" />
-                    <span>Stock: {product.quantity}</span>
-                  </div>
-                  {product.categoryName && (
-                    <div className="truncate">{product.categoryName}</div>
-                  )}
+          <div className='rounded-xl border border-gray-100 bg-gray-50/60 p-3 space-y-2.5'>
+            <div className='flex items-start gap-3'>
+              <img
+                src={
+                  product.thumbnail || product.images?.[0] || PlaceHolderImage
+                }
+                alt={product.title || product.name}
+                className='w-14 h-14 rounded-xl object-cover border border-gray-200 shrink-0'
+                onError={(e) => {
+                  (e.target as HTMLImageElement).src = PlaceHolderImage;
+                }}
+              />
+              <div className='flex-1 min-w-0 space-y-1.5'>
+                <p className='text-xs font-semibold text-gray-800 truncate'>
+                  {product.title || product.name}
+                </p>
+                <div className='grid grid-cols-2 gap-x-3 gap-y-1'>
+                  {[
+                    {
+                      icon: <Package className='w-3 h-3' />,
+                      text: product.sku,
+                    },
+                    {
+                      icon: <DollarSign className='w-3 h-3' />,
+                      text: `৳${product.price}`,
+                    },
+                    {
+                      icon: <Box className='w-3 h-3' />,
+                      text: `Stock: ${product.quantity}`,
+                    },
+                    product.categoryName
+                      ? { icon: null, text: product.categoryName }
+                      : null,
+                  ]
+                    .filter(Boolean)
+                    .map((item, i) => (
+                      <div
+                        key={i}
+                        className='flex items-center gap-1 text-[11px] text-gray-400'>
+                        {item!.icon}
+                        <span className='truncate'>{item!.text}</span>
+                      </div>
+                    ))}
                 </div>
               </div>
             </div>
 
-            {/* Product Variations */}
             {product.variations && product.variations.length > 0 && (
-              <div className="flex flex-wrap gap-1.5 pt-1">
-                {product.variations.slice(0, 3).map((variation) => (
-                  <div key={variation.id}>{renderVariationChip(variation)}</div>
+              <div className='flex flex-wrap gap-1.5 pt-1 border-t border-gray-100'>
+                {product.variations.slice(0, 3).map((v) => (
+                  <VariationChip key={v.id} variation={v} />
                 ))}
                 {product.variations.length > 3 && (
-                  <div className="text-xs text-muted-foreground self-center">
+                  <span className='self-center text-[11px] text-gray-400'>
                     +{product.variations.length - 3} more
-                  </div>
+                  </span>
                 )}
               </div>
             )}
           </div>
         )}
 
-        {/* Request Info */}
-        <div className="grid grid-cols-2 gap-2 text-sm">
-          <div className="flex items-center gap-2 text-muted-foreground">
-            <User className="w-4 h-4" />
-            <span className="truncate">{request.requester}</span>
+        {/* Meta row */}
+        <div className='grid grid-cols-2 gap-2'>
+          <div className='flex items-center gap-1.5 text-[11px] text-gray-400'>
+            <User className='w-3.5 h-3.5 shrink-0' />
+            <span className='truncate'>{request.requester}</span>
           </div>
-          <div className="flex items-center gap-2 text-muted-foreground">
-            <Calendar className="w-4 h-4" />
-            <span>{formatDistanceToNow(new Date(request.requestedAt), { addSuffix: true })}</span>
+          <div className='flex items-center gap-1.5 text-[11px] text-gray-400'>
+            <Calendar className='w-3.5 h-3.5 shrink-0' />
+            <span className='truncate'>
+              {formatDistanceToNow(new Date(request.requestedAt), {
+                addSuffix: true,
+              })}
+            </span>
           </div>
         </div>
 
+        {/* Reason */}
         {request.reason && (
-          <div className="text-sm">
-            <span className="text-muted-foreground">Reason: </span>
-            <span className="line-clamp-2">{request.reason}</span>
-          </div>
+          <p className='text-xs text-gray-500 line-clamp-2 leading-relaxed'>
+            <span className='font-medium text-gray-700'>Reason: </span>
+            {request.reason}
+          </p>
         )}
 
+        {/* Expiry */}
         {isPending && request.expiresAt && (
-          <div className="flex items-center gap-2 text-sm">
-            <Clock className="w-4 h-4 text-muted-foreground" />
-            <span className={isExpiringSoon ? "text-orange-600 font-medium" : "text-muted-foreground"}>
-              Expires {formatDistanceToNow(new Date(request.expiresAt), { addSuffix: true })}
+          <div className='flex items-center gap-1.5 text-[11px]'>
+            <Clock
+              className={`w-3.5 h-3.5 shrink-0 ${isExpiringSoon ? "text-orange-500" : "text-gray-300"}`}
+            />
+            <span
+              className={
+                isExpiringSoon ? "text-orange-600 font-medium" : "text-gray-400"
+              }>
+              Expires{" "}
+              {formatDistanceToNow(new Date(request.expiresAt), {
+                addSuffix: true,
+              })}
             </span>
           </div>
         )}
 
+        {/* Admin notes */}
         {request.adminNotes && request.status === "rejected" && (
-          <div className="text-sm bg-red-50 border border-red-200 rounded-md p-2 mt-2">
-            <span className="font-medium text-red-700">Admin Notes: </span>
-            <span className="text-red-600">{request.adminNotes}</span>
+          <div className='rounded-xl bg-rose-50 border border-rose-100 px-3 py-2 text-xs'>
+            <p className='font-semibold text-rose-700 mb-0.5'>Admin Notes</p>
+            <p className='text-rose-600 leading-relaxed'>
+              {request.adminNotes}
+            </p>
           </div>
         )}
 
-        {request.approver && (request.status === "approved" || request.status === "rejected") && (
-          <div className="text-sm text-muted-foreground">
-            Processed by <span className="font-medium">{request.approver}</span>
-          </div>
-        )}
-      </CardContent>
+        {/* Processed by */}
+        {request.approver &&
+          (request.status === "approved" || request.status === "rejected") && (
+            <p className='text-[11px] text-gray-400'>
+              Processed by{" "}
+              <span className='font-medium text-gray-600'>
+                {request.approver}
+              </span>
+            </p>
+          )}
+      </div>
 
-      <CardFooter className="flex gap-2 pt-3">
-        <Button
-          variant="outline"
-          size="sm"
-          className="flex-1"
+      {/* Card footer */}
+      <div className='px-4 pb-4 pt-3 border-t border-gray-50 flex items-center gap-2'>
+        <button
           onClick={() => onViewDetails(request)}
-        >
-          View Details
-        </Button>
+          className='flex-1 h-8 inline-flex items-center justify-center gap-1.5 rounded-xl border border-gray-200 text-xs font-medium text-gray-600 hover:bg-gray-50 transition-colors'>
+          <Eye className='w-3.5 h-3.5' />
+          View
+        </button>
 
         {showActions && isPending && (
           <>
             {canApproveReject && onApprove && onReject && (
               <>
-                <Button
-                  variant="default"
-                  size="sm"
-                  className="flex-1 bg-green-600 hover:bg-green-700"
+                <button
                   onClick={() => onApprove(request.id)}
-                >
+                  className='flex-1 h-8 inline-flex items-center justify-center gap-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-medium transition-colors'>
+                  <Check className='w-3.5 h-3.5' />
                   Approve
-                </Button>
-                <Button
-                  variant="destructive"
-                  size="sm"
-                  className="flex-1"
+                </button>
+                <button
                   onClick={() => onReject(request.id)}
-                >
+                  className='flex-1 h-8 inline-flex items-center justify-center gap-1.5 rounded-xl bg-rose-600 hover:bg-rose-700 text-white text-xs font-medium transition-colors'>
+                  <X className='w-3.5 h-3.5' />
                   Reject
-                </Button>
+                </button>
               </>
             )}
 
             {canCancel && onCancel && (
-              <Button
-                variant="outline"
-                size="sm"
-                className="flex-1"
+              <button
                 onClick={() => onCancel(request.id)}
-              >
+                className='flex-1 h-8 inline-flex items-center justify-center gap-1.5 rounded-xl border border-gray-200 text-xs font-medium text-gray-600 hover:bg-gray-50 transition-colors'>
+                <Ban className='w-3.5 h-3.5' />
                 Cancel
-              </Button>
+              </button>
             )}
           </>
         )}
-      </CardFooter>
-    </Card>
+      </div>
+    </div>
   );
 };

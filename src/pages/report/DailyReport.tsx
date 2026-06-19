@@ -30,14 +30,14 @@ import {
   generateDailyReportPDF,
   generateSingleReportPDF,
 } from "../../utils/dailyReportPdfExport";
-import { CalendarIcon, Loader2 } from "lucide-react";
+import { CalendarIcon, Loader2, BarChart3 } from "lucide-react";
 import { format, startOfDay, endOfDay } from "date-fns";
 import { cn } from "../../lib/utils";
 import { toast } from "react-hot-toast";
 import useLoginAuth from "../auth/hooks/useLoginAuth";
 import { DateRangePicker } from "../../coreComponents/DateRangePicker";
 import { DateRange } from "react-day-picker";
-import { Badge } from "../../components/ui/badge";
+import MainView from "../../coreComponents/mainView";
 
 // Import daily report card components
 import DailySummaryCard from "./DailyReportCards/DailySummaryCard";
@@ -181,7 +181,9 @@ const DailyReport = () => {
     }
 
     if (reports.length === 0) {
-      toast.error("No report data available to export. Please generate a report first.");
+      toast.error(
+        "No report data available to export. Please generate a report first.",
+      );
       setDownloadAction(null);
       return;
     }
@@ -264,262 +266,314 @@ const DailyReport = () => {
   const currentReport = reports.length > 0 ? reports[0] : null;
 
   return (
-    <div className='w-full mx-auto p-2 space-y-6'>
-      {/* Header */}
-      <div className='flex flex-col md:flex-row md:items-center md:justify-between gap-4'>
-        <div>
-          <h1 className='text-3xl font-bold tracking-tight'>Daily Reports</h1>
-          <p className='text-muted-foreground'>
-            Daily business performance metrics and insights
-          </p>
-        </div>
+    <MainView title='Daily Reports'>
+      <div className='min-h-screen bg-slate-50/60'>
+        <div className='max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6'>
+          {/* Page Header */}
+          <div className='flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4'>
+            <div className='flex items-center gap-3'>
+              <div className='flex items-center justify-center w-10 h-10 rounded-xl bg-indigo-600 shadow-sm shadow-indigo-200'>
+                <BarChart3 className='h-5 w-5 text-white' />
+              </div>
+              <div>
+                <h1 className='text-xl font-semibold text-slate-900 leading-tight'>
+                  Daily Reports
+                </h1>
+                <p className='text-sm text-slate-500 mt-0.5'>
+                  Business performance metrics and insights
+                </p>
+              </div>
+            </div>
 
-        {/* Date Range Picker */}
-        <div className='flex flex-wrap gap-2'>
-          {/* Quick Select Buttons */}
-          <div className='inline-flex items-center bg-muted p-1 rounded-lg gap-1'>
-            <Button
-              variant='ghost'
-              size='sm'
-              onClick={() => handleQuickDateSelect("today")}
-              className='rounded-md transition-all duration-200 hover:bg-background/50'>
-              Today
-            </Button>
-            <Button
-              variant='ghost'
-              size='sm'
-              onClick={() => handleQuickDateSelect("yesterday")}
-              className='rounded-md transition-all duration-200 hover:bg-background/50'>
-              Yesterday
-            </Button>
-            <Button
-              variant='ghost'
-              size='sm'
-              onClick={() => handleQuickDateSelect("latest")}
-              className='rounded-md transition-all duration-200 hover:bg-background/50'>
-              Latest
-            </Button>
-          </div>
-
-          {/* Date Mode Toggle */}
-          <div className='inline-flex items-center bg-muted p-1 rounded-lg gap-1'>
-            <Button
-              variant={dateMode === "single" ? "default" : "ghost"}
-              size='sm'
-              onClick={() => {
-                setDateMode("single");
-                const today = new Date();
-                setDateRange({
-                  from: startOfDay(today),
-                  to: endOfDay(today),
-                });
-              }}
-              className={`rounded-md transition-all duration-200 ${
-                dateMode === "single" ? "shadow-sm" : "hover:bg-background/50"
-              }`}>
-              Single Date
-            </Button>
-            <Button
-              variant={dateMode === "range" ? "default" : "ghost"}
-              size='sm'
-              onClick={() => setDateMode("range")}
-              className={`rounded-md transition-all duration-200 ${
-                dateMode === "range" ? "shadow-sm" : "hover:bg-background/50"
-              }`}>
-              Date Range
-            </Button>
-          </div>
-
-          {/* Date Picker */}
-          {dateMode === "single" ? (
-            <Popover>
-              <PopoverTrigger asChild>
+            {/* Date Range Picker */}
+            <div className='flex flex-wrap items-center gap-2'>
+              {/* Quick Select Buttons */}
+              <div className='inline-flex items-center bg-white border border-slate-200 rounded-lg shadow-sm'>
                 <Button
-                  variant='outline'
-                  className={cn(
-                    "justify-start text-left font-normal w-[200px]",
-                    !dateRange && "text-muted-foreground",
-                  )}>
-                  <CalendarIcon className='mr-2 h-4 w-4' />
-                  {dateRange.from ? (
-                    format(dateRange.from, "LLL dd, y")
-                  ) : (
-                    <span>Pick a date</span>
-                  )}
+                  variant='ghost'
+                  size='sm'
+                  onClick={() => handleQuickDateSelect("today")}
+                  className='rounded-none px-3 py-2 text-sm font-medium text-slate-600 hover:bg-slate-50 transition-all duration-150 border-r border-slate-200'>
+                  Today
                 </Button>
-              </PopoverTrigger>
-              <PopoverContent className='w-auto p-0' align='end'>
-                <Calendar
-                  mode='single'
-                  selected={dateRange.from}
-                  onSelect={(date: Date | undefined) => {
-                    if (date) {
-                      setDateRange({
-                        from: startOfDay(date),
-                        to: endOfDay(date),
-                      });
-                    }
+                <Button
+                  variant='ghost'
+                  size='sm'
+                  onClick={() => handleQuickDateSelect("yesterday")}
+                  className='rounded-none px-3 py-2 text-sm font-medium text-slate-600 hover:bg-slate-50 transition-all duration-150 border-r border-slate-200'>
+                  Yesterday
+                </Button>
+                <Button
+                  variant='ghost'
+                  size='sm'
+                  onClick={() => handleQuickDateSelect("latest")}
+                  className='rounded-none px-3 py-2 text-sm font-medium text-slate-600 hover:bg-slate-50 transition-all duration-150 rounded-r-lg'>
+                  Latest
+                </Button>
+              </div>
+
+              {/* Date Mode Toggle */}
+              <div className='inline-flex items-center bg-white border border-slate-200 rounded-lg shadow-sm'>
+                <Button
+                  variant='ghost'
+                  size='sm'
+                  onClick={() => {
+                    setDateMode("single");
+                    const today = new Date();
+                    setDateRange({
+                      from: startOfDay(today),
+                      to: endOfDay(today),
+                    });
                   }}
-                  numberOfMonths={1}
+                  className={`rounded-none px-3 py-2 text-sm font-medium transition-all duration-150 border-r border-slate-200 ${
+                    dateMode === "single"
+                      ? "bg-indigo-600 text-white hover:bg-indigo-700 shadow-sm shadow-indigo-200"
+                      : "text-slate-600 hover:bg-slate-50"
+                  }`}>
+                  Single Date
+                </Button>
+                <Button
+                  variant='ghost'
+                  size='sm'
+                  onClick={() => setDateMode("range")}
+                  className={`rounded-none px-3 py-2 text-sm font-medium transition-all duration-150 rounded-r-lg ${
+                    dateMode === "range"
+                      ? "bg-indigo-600 text-white hover:bg-indigo-700 shadow-sm shadow-indigo-200"
+                      : "text-slate-600 hover:bg-slate-50"
+                  }`}>
+                  Date Range
+                </Button>
+              </div>
+
+              {/* Date Picker */}
+              {dateMode === "single" ? (
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant='outline'
+                      className='justify-start text-left font-normal px-3 py-2 h-auto text-sm bg-white border border-slate-200 text-slate-600 hover:bg-slate-50 hover:border-slate-300 rounded-lg shadow-sm transition-all duration-150'>
+                      <CalendarIcon className='mr-2 h-4 w-4' />
+                      {dateRange.from ? (
+                        format(dateRange.from, "LLL dd, y")
+                      ) : (
+                        <span>Pick a date</span>
+                      )}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className='w-auto p-0' align='end'>
+                    <Calendar
+                      mode='single'
+                      selected={dateRange.from}
+                      onSelect={(date: Date | undefined) => {
+                        if (date) {
+                          setDateRange({
+                            from: startOfDay(date),
+                            to: endOfDay(date),
+                          });
+                        }
+                      }}
+                      numberOfMonths={1}
+                    />
+                  </PopoverContent>
+                </Popover>
+              ) : (
+                <DateRangePicker
+                  key={dateMode}
+                  initialDateFrom={dateRange.from}
+                  initialDateTo={dateRange.to}
+                  showCompare={false}
+                  onUpdate={(values: {
+                    range: DateRange;
+                    rangeCompare?: DateRange | undefined;
+                  }) => {
+                    setDateRange({
+                      from: startOfDay(values.range.from || new Date()),
+                      to: endOfDay(values.range.to || new Date()),
+                    });
+                  }}
                 />
-              </PopoverContent>
-            </Popover>
-          ) : (
-            <DateRangePicker
-              key={dateMode}
-              initialDateFrom={dateRange.from}
-              initialDateTo={dateRange.to}
-              showCompare={false}
-              onUpdate={(values: {
-                range: DateRange;
-                rangeCompare?: DateRange | undefined;
-              }) => {
-                setDateRange({
-                  from: startOfDay(values.range.from || new Date()),
-                  to: endOfDay(values.range.to || new Date()),
-                });
-              }}
+              )}
+            </div>
+          </div>
+
+          {/* Summary Stats for Range */}
+          {!isSingleDate && summaryStats && (
+            <div className='grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3'>
+              <div className='flex items-center gap-3 bg-white rounded-xl border border-slate-100 px-4 py-3 shadow-sm'>
+                <div className='w-2 h-2 rounded-full bg-indigo-400' />
+                <div className='min-w-0'>
+                  <p className='text-lg font-semibold text-indigo-600 leading-none'>
+                    ৳{summaryStats.totalRevenue?.toLocaleString()}
+                  </p>
+                  <p className='text-xs text-slate-500 mt-0.5'>Total Revenue</p>
+                </div>
+              </div>
+              <div className='flex items-center gap-3 bg-white rounded-xl border border-slate-100 px-4 py-3 shadow-sm'>
+                <div className='w-2 h-2 rounded-full bg-emerald-400' />
+                <div className='min-w-0'>
+                  <p className='text-lg font-semibold text-emerald-600 leading-none'>
+                    {summaryStats.totalOrders}
+                  </p>
+                  <p className='text-xs text-slate-500 mt-0.5'>Total Orders</p>
+                </div>
+              </div>
+              <div className='flex items-center gap-3 bg-white rounded-xl border border-slate-100 px-4 py-3 shadow-sm'>
+                <div className='w-2 h-2 rounded-full bg-blue-400' />
+                <div className='min-w-0'>
+                  <p className='text-lg font-semibold text-blue-600 leading-none'>
+                    {summaryStats.totalCustomers}
+                  </p>
+                  <p className='text-xs text-slate-500 mt-0.5'>Total Customers</p>
+                </div>
+              </div>
+              <div className='flex items-center gap-3 bg-white rounded-xl border border-slate-100 px-4 py-3 shadow-sm'>
+                <div className='w-2 h-2 rounded-full bg-amber-400' />
+                <div className='min-w-0'>
+                  <p className='text-lg font-semibold text-amber-600 leading-none'>
+                    {summaryStats.totalProductsUpdated}
+                  </p>
+                  <p className='text-xs text-slate-500 mt-0.5'>Products Updated</p>
+                </div>
+              </div>
+              <div className='flex items-center gap-3 bg-white rounded-xl border border-slate-100 px-4 py-3 shadow-sm'>
+                <div className='w-2 h-2 rounded-full bg-indigo-400' />
+                <div className='min-w-0'>
+                  <p className='text-lg font-semibold text-indigo-600 leading-none'>
+                    ৳{summaryStats.totalPaid?.toLocaleString()}
+                  </p>
+                  <p className='text-xs text-slate-500 mt-0.5'>Total Paid</p>
+                </div>
+              </div>
+              <div className='flex items-center gap-3 bg-white rounded-xl border border-slate-100 px-4 py-3 shadow-sm'>
+                <div className='w-2 h-2 rounded-full bg-slate-400' />
+                <div className='min-w-0'>
+                  <p className='text-lg font-semibold text-slate-600 leading-none'>
+                    {summaryStats.reportCount}
+                  </p>
+                  <p className='text-xs text-slate-500 mt-0.5'>Report Count</p>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Report Info Badge */}
+          {currentReport && (
+            <div className='flex flex-wrap items-center gap-2 bg-white rounded-xl border border-slate-100 px-4 py-3 shadow-sm'>
+              <div className='flex items-center gap-2'>
+                <CalendarIcon className='h-4 w-4 text-slate-400' />
+                <span className='text-sm text-slate-600'>
+                  {format(new Date(currentReport.timestamp), "PPP p")}
+                </span>
+              </div>
+
+              {currentReport.status && (
+                <div className='flex items-center gap-1.5'>
+                  <div
+                    className={`w-1.5 h-1.5 rounded-full ${
+                      currentReport.status === "completed"
+                        ? "bg-emerald-400"
+                        : "bg-amber-400"
+                    }`}
+                  />
+                  <span className='text-sm font-medium text-slate-700'>
+                    {currentReport.status}
+                  </span>
+                </div>
+              )}
+
+              {currentReport.processingTime && (
+                <span className='text-xs text-slate-500'>
+                  Generated in {currentReport.processingTime}
+                </span>
+              )}
+            </div>
+          )}
+
+          {/* Loading State */}
+          {isLoadingReports && (
+            <div className='flex flex-col items-center justify-center py-16 bg-white rounded-xl border border-slate-100 shadow-sm'>
+              <Loader2 className='h-8 w-8 animate-spin text-indigo-600' />
+              <span className='mt-3 text-sm font-medium text-slate-600'>
+                Loading daily reports...
+              </span>
+            </div>
+          )}
+
+          {/* Empty State */}
+          {!isLoadingReports && reports.length === 0 && (
+            <div className='flex flex-col items-center justify-center py-16 bg-white rounded-xl border border-slate-100 shadow-sm text-center px-4'>
+              <div className='w-16 h-16 rounded-full bg-slate-50 flex items-center justify-center mb-4'>
+                <BarChart3 className='h-8 w-8 text-slate-300' />
+              </div>
+              <p className='text-base font-medium text-slate-700 mb-1'>
+                No reports found
+              </p>
+              <p className='text-sm text-slate-500'>
+                Try selecting a different date or date range
+              </p>
+            </div>
+          )}
+
+          {/* Daily Report Cards */}
+          {!isLoadingReports && currentReport && (
+            <div className='space-y-6'>
+              {/* Daily Summary Card */}
+              <DailySummaryCard
+                data={currentReport}
+                isSingleDate={isSingleDate}
+                dateRange={dateRange}
+                onDownload={handleDownloadRequest}
+              />
+
+              {/* Two Column Layout */}
+              <div className='grid gap-6 md:grid-cols-2'>
+                {/* Orders Breakdown */}
+                <OrdersBreakdownCard
+                  data={currentReport.orders}
+                  onDownload={handleDownloadRequest}
+                />
+
+                {/* Payments Distribution */}
+                <PaymentsDistributionCard
+                  data={currentReport.payments}
+                  onDownload={handleDownloadRequest}
+                />
+              </div>
+
+              {/* Customer Insights */}
+              <CustomerInsightsCard
+                data={currentReport.customers}
+                onDownload={handleDownloadRequest}
+              />
+
+              {/* Geographic Distribution */}
+              {currentReport.customers?.geographicDistribution &&
+                currentReport.customers.geographicDistribution.length > 0 && (
+                  <GeographicDistributionCard
+                    data={currentReport.customers.geographicDistribution}
+                    onDownload={handleDownloadRequest}
+                  />
+                )}
+            </div>
+          )}
+
+          {/* OTP Verification Dialog */}
+          {user?.email && (
+            <OTPVerificationDialog
+              open={showOTPDialog}
+              onOpenChange={(val) => setShowOTPDialog(val)}
+              mobile_number={user.mobile_number || ""}
+              email={user.email || ""}
+              purpose='account_verification'
+              title='Verify to Download Report'
+              description='For security purposes, please verify your phone number to download the report'
+              onVerificationSuccess={handleDownloadAfterVerification}
+              autoSendOnMount={true}
             />
           )}
         </div>
       </div>
-
-      {/* Summary Stats for Range */}
-      {!isSingleDate && summaryStats && (
-        <div className='grid gap-4 md:grid-cols-6'>
-          <div className='bg-white dark:bg-gray-800 p-4 rounded-lg border'>
-            <p className='text-sm text-muted-foreground'>Total Revenue</p>
-            <p className='text-2xl font-bold'>
-              ৳{summaryStats.totalRevenue?.toLocaleString()}
-            </p>
-          </div>
-          <div className='bg-white dark:bg-gray-800 p-4 rounded-lg border'>
-            <p className='text-sm text-muted-foreground'>Total Orders</p>
-            <p className='text-2xl font-bold'>{summaryStats.totalOrders}</p>
-          </div>
-          <div className='bg-white dark:bg-gray-800 p-4 rounded-lg border'>
-            <p className='text-sm text-muted-foreground'>Total Customers</p>
-            <p className='text-2xl font-bold'>{summaryStats.totalCustomers}</p>
-          </div>
-          <div className='bg-white dark:bg-gray-800 p-4 rounded-lg border'>
-            <p className='text-sm text-muted-foreground'>Products Updated</p>
-            <p className='text-2xl font-bold'>
-              {summaryStats.totalProductsUpdated}
-            </p>
-          </div>
-          <div className='bg-white dark:bg-gray-800 p-4 rounded-lg border'>
-            <p className='text-sm text-muted-foreground'>Total Paid</p>
-            <p className='text-2xl font-bold'>
-              ৳{summaryStats.totalPaid?.toLocaleString()}
-            </p>
-          </div>
-          <div className='bg-white dark:bg-gray-800 p-4 rounded-lg border'>
-            <p className='text-sm text-muted-foreground'>Report Count</p>
-            <p className='text-2xl font-bold'>{summaryStats.reportCount}</p>
-          </div>
-        </div>
-      )}
-
-      {/* Report Info Badge */}
-      {currentReport && (
-        <div className='flex items-center gap-2'>
-          <Badge variant='secondary'>
-            {format(new Date(currentReport.timestamp), "PPP p")}
-          </Badge>
-          {currentReport.status && (
-            <Badge
-              variant={
-                currentReport.status === "completed" ? "default" : "secondary"
-              }>
-              Status: {currentReport.status}
-            </Badge>
-          )}
-          {currentReport.processingTime && (
-            <Badge variant='outline'>
-              Generated in {currentReport.processingTime}
-            </Badge>
-          )}
-        </div>
-      )}
-
-      {/* Loading State */}
-      {isLoadingReports && (
-        <div className='flex items-center justify-center py-12'>
-          <Loader2 className='h-8 w-8 animate-spin text-muted-foreground' />
-          <span className='ml-2 text-muted-foreground'>
-            Loading daily reports...
-          </span>
-        </div>
-      )}
-
-      {/* Empty State */}
-      {!isLoadingReports && reports.length === 0 && (
-        <div className='flex flex-col items-center justify-center py-12 text-center'>
-          <p className='text-muted-foreground text-lg mb-2'>No reports found</p>
-          <p className='text-muted-foreground text-sm'>
-            Try selecting a different date or date range
-          </p>
-        </div>
-      )}
-
-      {/* Daily Report Cards */}
-      {!isLoadingReports && currentReport && (
-        <div className='space-y-6'>
-          {/* Daily Summary Card */}
-          <DailySummaryCard
-            data={currentReport}
-            isSingleDate={isSingleDate}
-            dateRange={dateRange}
-            onDownload={handleDownloadRequest}
-          />
-
-          {/* Two Column Layout */}
-          <div className='grid gap-6 md:grid-cols-2'>
-            {/* Orders Breakdown */}
-            <OrdersBreakdownCard
-              data={currentReport.orders}
-              onDownload={handleDownloadRequest}
-            />
-
-            {/* Payments Distribution */}
-            <PaymentsDistributionCard
-              data={currentReport.payments}
-              onDownload={handleDownloadRequest}
-            />
-          </div>
-
-          {/* Customer Insights */}
-          <CustomerInsightsCard
-            data={currentReport.customers}
-            onDownload={handleDownloadRequest}
-          />
-
-          {/* Geographic Distribution */}
-          {currentReport.customers?.geographicDistribution &&
-            currentReport.customers.geographicDistribution.length > 0 && (
-              <GeographicDistributionCard
-                data={currentReport.customers.geographicDistribution}
-                onDownload={handleDownloadRequest}
-              />
-            )}
-        </div>
-      )}
-
-      {/* OTP Verification Dialog */}
-      {user?.email && (
-        <OTPVerificationDialog
-          open={showOTPDialog}
-          onOpenChange={(val) => setShowOTPDialog(val)}
-          mobile_number={user.mobile_number || ""}
-          email={user.email || ""}
-          purpose='account_verification'
-          title='Verify to Download Report'
-          description='For security purposes, please verify your phone number to download the report'
-          onVerificationSuccess={handleDownloadAfterVerification}
-          autoSendOnMount={true}
-        />
-      )}
-    </div>
+    </MainView>
   );
 };
 

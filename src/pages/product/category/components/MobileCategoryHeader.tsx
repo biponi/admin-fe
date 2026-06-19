@@ -66,7 +66,7 @@ const MobileCategoryHeader: React.FC<MobileCategoryHeaderProps> = ({
   return (
     <div className='bg-gradient-to-br from-gray-50 to-white sm:hidden'>
       {/* Header Section */}
-      <div className='px-4 pt-0 pb-4'>
+      <div className='hidden md:block px-4 pt-0 pb-4'>
         <div className=' items-center justify-between mb-6 hidden'>
           <div className='flex items-center gap-3'>
             <div className='h-12 w-12 bg-gradient-to-br from-primary to-primary/80 rounded-2xl flex items-center justify-center shadow-lg'>
@@ -111,7 +111,7 @@ const MobileCategoryHeader: React.FC<MobileCategoryHeaderProps> = ({
                 key={index}
                 className={cn(
                   "relative overflow-hidden rounded-2xl shadow-sm hover:shadow-md transition-all duration-200 active:scale-95",
-                  stat.color
+                  stat.color,
                 )}>
                 {/* Background Pattern */}
                 <div className='absolute inset-0 bg-black/5' />
@@ -146,17 +146,15 @@ const MobileCategoryHeader: React.FC<MobileCategoryHeaderProps> = ({
       </div>
 
       {/* Quick Actions */}
-      <div className='px-4 pb-4'>
-        <div className='bg-white rounded-2xl border border-gray-100 p-4 shadow-sm'>
+      <div className='mb-2'>
+        <div className='bg-gradient-to-r from-violet-600 to-indigo-600 p-4 shadow-sm'>
           <div className='flex items-center gap-3'>
             <div className='h-10 w-10 bg-gray-100 rounded-xl flex items-center justify-center'>
               <FolderTree className='h-5 w-5 text-gray-600' />
             </div>
             <div className='flex-1'>
-              <h3 className='font-semibold text-gray-900'>
-                Category Management
-              </h3>
-              <p className='text-xs text-gray-600'>
+              <h3 className='font-semibold text-white'>Category Management</h3>
+              <p className='text-xs text-white'>
                 Organize and manage product categories
               </p>
             </div>
@@ -164,8 +162,8 @@ const MobileCategoryHeader: React.FC<MobileCategoryHeaderProps> = ({
               <Button
                 onClick={onCreateCategory}
                 size='sm'
-                className='h-8 w-8 p-0 rounded-lg'>
-                <CirclePlus className='h-4 w-4' />
+                className='h-10 w-10 p-0 rounded-lg bg-white'>
+                <CirclePlus className='h-4 w-4 text-zinc-900' />
               </Button>
             )}
           </div>

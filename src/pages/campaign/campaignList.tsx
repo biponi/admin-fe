@@ -18,7 +18,29 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "../../components/ui/dropdown-menu";
-import { Ellipsis, Plus } from "lucide-react";
+import {
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
+} from "../../components/ui/tabs";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "../../components/ui/select";
+import {
+  Ellipsis,
+  Plus,
+  RefreshCw,
+  Search,
+  Zap,
+  CheckCircle,
+  Clock,
+  XCircle,
+} from "lucide-react";
 import {
   Drawer,
   DrawerClose,
@@ -51,8 +73,76 @@ const CampaignList = () => {
   const [query, setQuery] = useState("");
   const [loading, setLoading] = useState(false);
   const [selectedCamIdToDelete, setSelectedCamIdToDelete] = useState("");
+  const [activeTab, setActiveTab] = useState("all");
+  const [statusFilter, setStatusFilter] = useState("all");
+  const [isRefreshing, setIsRefreshing] = useState(false);
 
   const deleteBtnRef = useRef<any>(null);
+
+  const handleRefresh = () => {
+    setIsRefreshing(true);
+    fetchCampaignList().then((list) => {
+      setCampaigns(list);
+      setTimeout(() => setIsRefreshing(false), 800);
+    });
+  };
+
+  // Calculate statistics
+  const totalCampaigns = campaigns.length;
+  const activeCampaigns = campaigns.filter((c: ICampaign) => {
+    const now = new Date();
+    const startDate = new Date(c.startDate);
+    const endDate = new Date(c.endDate);
+    return c.active && now >= startDate && now <= endDate;
+  }).length;
+
+  const upcomingCampaigns = campaigns.filter((c: ICampaign) => {
+    const now = new Date();
+    const startDate = new Date(c.startDate);
+    return c.active && now < startDate;
+  }).length;
+
+  const expiredCampaigns = campaigns.filter((c: ICampaign) => {
+    const now = new Date();
+    const endDate = new Date(c.endDate);
+    return now > endDate;
+  }).length;
+
+  // Filter campaigns by tab and status
+  const getFilteredCampaigns = () => {
+    let filtered = campaigns;
+
+    // Apply tab filter
+    if (activeTab === "active") {
+      const now = new Date();
+      filtered = campaigns.filter((c: ICampaign) => {
+        const startDate = new Date(c.startDate);
+        const endDate = new Date(c.endDate);
+        return c.active && now >= startDate && now <= endDate;
+      });
+    } else if (activeTab === "upcoming") {
+      const now = new Date();
+      filtered = campaigns.filter((c: ICampaign) => {
+        const startDate = new Date(c.startDate);
+        return c.active && now < startDate;
+      });
+    } else if (activeTab === "expired") {
+      const now = new Date();
+      filtered = campaigns.filter((c: ICampaign) => {
+        const endDate = new Date(c.endDate);
+        return now > endDate;
+      });
+    }
+
+    // Apply search query
+    filtered = filtered.filter(
+      (c: ICampaign) =>
+        c?.title.toLowerCase().includes(query.toLowerCase()) ||
+        c?.id?.toLowerCase().includes(query.toLowerCase()),
+    );
+
+    return filtered;
+  };
 
   useEffect(() => {
     const getCampaigns = async () => {
@@ -82,9 +172,7 @@ const CampaignList = () => {
     navigate("/campaign/create");
   };
 
-  const filteredCampaigns = campaigns.filter(
-    (c: ICampaign) => c?.title.includes(query) || c?.id?.includes(query)
-  );
+  const filteredCampaigns = getFilteredCampaigns();
 
   const renderDeleteDrawerView = () => {
     return (
@@ -139,7 +227,8 @@ const CampaignList = () => {
           <TableCell>{cam?.title}</TableCell>
           <TableCell>{cam?.products?.length ?? 0}</TableCell>
           <TableCell>
-            {!cam?.deliveryDiscountType || cam?.deliveryDiscountType === "none" ? (
+            {!cam?.deliveryDiscountType ||
+            cam?.deliveryDiscountType === "none" ? (
               <Badge variant='secondary'>None</Badge>
             ) : cam?.deliveryDiscountType === "free" ? (
               <Badge className='bg-green-100 text-green-800 border-green-300'>
@@ -197,17 +286,29 @@ const CampaignList = () => {
       <Table>
         <TableCaption>A list of your recent campaigns.</TableCaption>
         <TableHeader>
-          <TableRow>
-            <TableHead>#</TableHead>
-            <TableHead className='w-[100px] truncate text-left'>
+          <TableRow className='bg-slate-50 hover:bg-slate-50 border-b border-slate-100'>
+            <TableHead className='text-xs font-semibold text-slate-500 uppercase tracking-wide py-3'>
+              #
+            </TableHead>
+            <TableHead className='w-[100px] truncate text-left text-xs font-semibold text-slate-500 uppercase tracking-wide py-3'>
               Title
             </TableHead>
-            <TableHead>Total Products</TableHead>
-            <TableHead>Delivery Discount</TableHead>
-            <TableHead>Start Date</TableHead>
-            <TableHead>End Date</TableHead>
+            <TableHead className='text-xs font-semibold text-slate-500 uppercase tracking-wide py-3'>
+              Total Products
+            </TableHead>
+            <TableHead className='text-xs font-semibold text-slate-500 uppercase tracking-wide py-3'>
+              Delivery Discount
+            </TableHead>
+            <TableHead className='text-xs font-semibold text-slate-500 uppercase tracking-wide py-3'>
+              Start Date
+            </TableHead>
+            <TableHead className='text-xs font-semibold text-slate-500 uppercase tracking-wide py-3'>
+              End Date
+            </TableHead>
             {hasSomePermissionsForPage("campaign", ["edit", "delete"]) && (
-              <TableHead>Action</TableHead>
+              <TableHead className='text-xs font-semibold text-slate-500 uppercase tracking-wide py-3'>
+                Action
+              </TableHead>
             )}
           </TableRow>
         </TableHeader>
@@ -215,20 +316,88 @@ const CampaignList = () => {
       </Table>
     );
   };
+
+  const renderCampaignContent = () => {
+    if (filteredCampaigns.length === 0) {
+      return (
+        <div className='text-center py-12'>
+          <Zap className='mx-auto h-12 w-12 text-slate-300 mb-4' />
+          <h3 className='text-lg font-semibold text-slate-900 mb-2'>
+            No campaigns found
+          </h3>
+          <p className='text-sm text-slate-500'>
+            {query
+              ? "Try adjusting your search query"
+              : "Get started by creating your first campaign"}
+          </p>
+          {hasRequiredPermission("campaign", "create") && !query && (
+            <button
+              onClick={handleCreateCampaign}
+              className='mt-4 inline-flex items-center gap-1.5 px-4 py-2 text-sm font-medium text-white bg-purple-600 rounded-lg hover:bg-purple-700 transition-all duration-150 shadow-sm shadow-purple-200'>
+              <Plus className='h-4 w-4' />
+              Create Campaign
+            </button>
+          )}
+        </div>
+      );
+    }
+
+    return (
+      <div className='space-y-4'>
+        {/* Filter Bar */}
+        <div className='flex flex-col sm:flex-row gap-3 items-start sm:items-center justify-between'>
+          <div className='flex flex-col sm:flex-row gap-3 flex-1'>
+            {/* Search */}
+            <div className='relative flex-1 max-w-xs'>
+              <Search className='absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-slate-400' />
+              <Input
+                placeholder='Search campaigns...'
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+                className='pl-9 h-9 text-sm border-slate-200 bg-white focus-visible:ring-purple-500'
+              />
+            </div>
+          </div>
+
+          {/* Clear Filters Button */}
+          {query && (
+            <button
+              onClick={() => setQuery("")}
+              className='text-sm text-slate-600 hover:text-slate-800 font-medium'>
+              Clear search
+            </button>
+          )}
+        </div>
+
+        {/* Table Container */}
+        <div className='rounded-xl border border-slate-100 bg-white shadow-sm overflow-hidden'>
+          {renderCampaignList()}
+        </div>
+
+        {/* Footer Count */}
+        <div className='text-xs text-slate-500'>
+          Showing <strong>{filteredCampaigns.length}</strong> of{" "}
+          <strong>{campaigns.length}</strong> campaigns
+        </div>
+      </div>
+    );
+  };
+
   return (
     <MainView title='Campaign'>
-      <div className='w-full my-2'>
+      <div className='w-full mb-2 md:my-2'>
         {loading && (
-          <div className="flex justify-center py-10">
-            <Badge variant={"outline"} className='mx-auto'>
-              Loading...
-            </Badge>
+          <div className='flex justify-center items-center py-12'>
+            <div className='text-center'>
+              <RefreshCw className='h-8 w-8 text-purple-600 animate-spin mx-auto mb-3' />
+              <p className='text-sm text-slate-600'>Loading campaigns...</p>
+            </div>
           </div>
         )}
 
         {!loading && isMobile ? (
           /* Mobile View */
-          <div className="space-y-3 pb-safe">
+          <div className='space-y-3 pb-safe'>
             <MobileCampaignHeader
               searchValue={query}
               onSearchChange={(value) => setQuery(value)}
@@ -240,7 +409,7 @@ const CampaignList = () => {
                 onCreateCampaign={handleCreateCampaign}
               />
             ) : (
-              <div className="space-y-3">
+              <div className='mx-2 space-y-3'>
                 {filteredCampaigns.map((campaign: ICampaign, index: number) => (
                   <MobileCampaignCard
                     key={campaign.id}
@@ -257,32 +426,193 @@ const CampaignList = () => {
             {hasRequiredPermission("campaign", "create") && (
               <Button
                 onClick={handleCreateCampaign}
-                className="fixed bottom-20 right-4 h-14 w-14 rounded-full shadow-lg bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white z-50 flex items-center justify-center">
-                <Plus className="h-6 w-6" />
+                className='fixed bottom-20 right-4 h-14 w-14 rounded-full shadow-lg bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white z-50 flex items-center justify-center'>
+                <Plus className='h-6 w-6' />
               </Button>
             )}
           </div>
         ) : (
-          /* Desktop View */
+          /* Desktop View - Modern Layout */
           !loading && (
-            <Card className='w-full'>
-              <CardHeader>
-                <div className='flex justify-between items-start'>
-                  <Input
-                    className='w-1/2'
-                    type='text'
-                    placeholder='Search (id, title)...'
-                    onChange={(e) => setQuery(e.target.value ?? "")}
-                  />
-                  {hasRequiredPermission("campaign", "create") && (
-                    <Button onClick={handleCreateCampaign}>
-                      Create New Campaign
-                    </Button>
-                  )}
+            <div className='min-h-auto bg-slate-50/60'>
+              <div className='max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6'>
+                {/* Page Header */}
+                <div className='flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4'>
+                  <div className='flex items-center gap-3'>
+                    <div className='flex items-center justify-center w-10 h-10 rounded-xl bg-purple-600 shadow-sm shadow-purple-200'>
+                      <Zap className='h-5 w-5 text-white' />
+                    </div>
+                    <div>
+                      <h1 className='text-xl font-semibold text-slate-900 leading-tight'>
+                        Campaigns
+                      </h1>
+                      <p className='text-sm text-slate-500 mt-0.5'>
+                        Manage promotional campaigns and discounts
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className='flex items-center gap-2'>
+                    <button
+                      onClick={handleRefresh}
+                      disabled={isRefreshing}
+                      className='inline-flex items-center gap-1.5 px-3 py-2 text-sm font-medium text-slate-600 bg-white border border-slate-200 rounded-lg hover:bg-slate-50 hover:border-slate-300 transition-all duration-150 disabled:opacity-50 shadow-sm'>
+                      <RefreshCw
+                        className={`h-3.5 w-3.5 ${isRefreshing ? "animate-spin" : ""}`}
+                      />
+                      <span className='hidden sm:inline'>Refresh</span>
+                    </button>
+
+                    {hasRequiredPermission("campaign", "create") && (
+                      <button
+                        onClick={handleCreateCampaign}
+                        className='inline-flex items-center gap-1.5 px-4 py-2 text-sm font-medium text-white bg-purple-600 rounded-lg hover:bg-purple-700 active:bg-purple-800 transition-all duration-150 shadow-sm shadow-purple-200'>
+                        <Plus className='h-4 w-4' />
+                        New Campaign
+                      </button>
+                    )}
+                  </div>
                 </div>
-              </CardHeader>
-              <CardContent>{renderCampaignList()}</CardContent>
-            </Card>
+
+                {/* Summary Stats Strip */}
+                <div className='grid grid-cols-2 sm:grid-cols-4 gap-3'>
+                  {[
+                    {
+                      label: "Total Campaigns",
+                      value: totalCampaigns.toString(),
+                      accent: "text-purple-600",
+                      bg: "bg-purple-50",
+                    },
+                    {
+                      label: "Active",
+                      value: activeCampaigns.toString(),
+                      accent: "text-emerald-600",
+                      bg: "bg-emerald-50",
+                    },
+                    {
+                      label: "Upcoming",
+                      value: upcomingCampaigns.toString(),
+                      accent: "text-blue-600",
+                      bg: "bg-blue-50",
+                    },
+                    {
+                      label: "Expired",
+                      value: expiredCampaigns.toString(),
+                      accent: "text-rose-600",
+                      bg: "bg-rose-50",
+                    },
+                  ].map((stat) => (
+                    <div
+                      key={stat.label}
+                      className='flex items-center gap-3 bg-white rounded-xl border border-slate-100 px-4 py-3 shadow-sm'>
+                      <div
+                        className={`w-2 h-2 rounded-full ${stat.bg.replace("bg-", "bg-").replace("50", "400")}`}
+                      />
+                      <div className='min-w-0'>
+                        <p
+                          className={`text-lg font-semibold ${stat.accent} leading-none`}>
+                          {stat.value}
+                        </p>
+                        <p className='text-xs text-slate-500 mt-0.5 truncate'>
+                          {stat.label}
+                        </p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+
+                {/* Tabs */}
+                <div className='bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden'>
+                  <Tabs
+                    value={activeTab}
+                    onValueChange={setActiveTab}
+                    className='w-full'>
+                    {/* Tab Bar */}
+                    <div className='border-b border-slate-100'>
+                      <TabsList className='h-auto bg-transparent p-0 gap-0 rounded-none flex justify-start'>
+                        <TabsTrigger
+                          value='all'
+                          className='
+                            relative flex items-center gap-2 px-4 py-4 text-sm font-medium rounded-none border-b-2 border-transparent
+                            text-slate-500 hover:text-slate-700
+                            data-[state=active]:text-purple-600 data-[state=active]:border-purple-600
+                            data-[state=active]:bg-transparent
+                            transition-all duration-150
+                            focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-purple-500 focus-visible:ring-offset-2
+                          '>
+                          <Zap className='h-4 w-4' />
+                          All Campaigns
+                        </TabsTrigger>
+                        <TabsTrigger
+                          value='active'
+                          className='
+                            relative flex items-center gap-2 px-4 py-4 text-sm font-medium rounded-none border-b-2 border-transparent
+                            text-slate-500 hover:text-slate-700
+                            data-[state=active]:text-purple-600 data-[state=active]:border-purple-600
+                            data-[state=active]:bg-transparent
+                            transition-all duration-150
+                            focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-purple-500 focus-visible:ring-offset-2
+                          '>
+                          <CheckCircle className='h-4 w-4' />
+                          Active
+                        </TabsTrigger>
+                        <TabsTrigger
+                          value='upcoming'
+                          className='
+                            relative flex items-center gap-2 px-4 py-4 text-sm font-medium rounded-none border-b-2 border-transparent
+                            text-slate-500 hover:text-slate-700
+                            data-[state=active]:text-purple-600 data-[state=active]:border-purple-600
+                            data-[state=active]:bg-transparent
+                            transition-all duration-150
+                            focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-purple-500 focus-visible:ring-offset-2
+                          '>
+                          <Clock className='h-4 w-4' />
+                          Upcoming
+                        </TabsTrigger>
+                        <TabsTrigger
+                          value='expired'
+                          className='
+                            relative flex items-center gap-2 px-4 py-4 text-sm font-medium rounded-none border-b-2 border-transparent
+                            text-slate-500 hover:text-slate-700
+                            data-[state=active]:text-purple-600 data-[state=active]:border-purple-600
+                            data-[state=active]:bg-transparent
+                            transition-all duration-150
+                            focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-purple-500 focus-visible:ring-offset-2
+                          '>
+                          <XCircle className='h-4 w-4' />
+                          Expired
+                        </TabsTrigger>
+                      </TabsList>
+                    </div>
+
+                    {/* Tab Contents */}
+                    <TabsContent
+                      value='all'
+                      className='p-4 sm:p-6 mt-0 focus-visible:outline-none'>
+                      {renderCampaignContent()}
+                    </TabsContent>
+
+                    <TabsContent
+                      value='active'
+                      className='p-4 sm:p-6 mt-0 focus-visible:outline-none'>
+                      {renderCampaignContent()}
+                    </TabsContent>
+
+                    <TabsContent
+                      value='upcoming'
+                      className='p-4 sm:p-6 mt-0 focus-visible:outline-none'>
+                      {renderCampaignContent()}
+                    </TabsContent>
+
+                    <TabsContent
+                      value='expired'
+                      className='p-4 sm:p-6 mt-0 focus-visible:outline-none'>
+                      {renderCampaignContent()}
+                    </TabsContent>
+                  </Tabs>
+                </div>
+              </div>
+            </div>
           )
         )}
 

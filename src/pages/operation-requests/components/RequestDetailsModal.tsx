@@ -4,21 +4,17 @@ import { useProductData, ProductData } from "../hooks/useProductData";
 import {
   Dialog,
   DialogContent,
-  DialogDescription,
-  DialogFooter,
   DialogHeader,
   DialogTitle,
+  DialogDescription,
 } from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
-import { Label } from "@/components/ui/label";
 import {
   Clock,
   Calendar,
   User,
   AlertCircle,
-  CheckCircle,
+  CheckCircle2,
   XCircle,
   Ban,
   Hourglass,
@@ -26,6 +22,9 @@ import {
   DollarSign,
   Box,
   Image as ImageIcon,
+  Check,
+  X,
+  Hash,
 } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import PlaceHolderImage from "@/assets/placeholder.svg";
@@ -42,73 +41,139 @@ interface RequestDetailsModalProps {
   isCurrentUserRequest?: boolean;
 }
 
-const getStatusBadge = (status: OperationRequest["status"]) => {
-  switch (status) {
-    case "pending":
-      return (
-        <Badge
-          variant='outline'
-          className='bg-yellow-50 text-yellow-700 border-yellow-200'>
-          <Clock className='w-3 h-3 mr-1' />
-          Pending
-        </Badge>
-      );
-    case "approved":
-      return (
-        <Badge
-          variant='outline'
-          className='bg-green-50 text-green-700 border-green-200'>
-          <CheckCircle className='w-3 h-3 mr-1' />
-          Approved
-        </Badge>
-      );
-    case "rejected":
-      return (
-        <Badge
-          variant='outline'
-          className='bg-red-50 text-red-700 border-red-200'>
-          <XCircle className='w-3 h-3 mr-1' />
-          Rejected
-        </Badge>
-      );
-    case "cancelled":
-      return (
-        <Badge
-          variant='outline'
-          className='bg-gray-50 text-gray-700 border-gray-200'>
-          <Ban className='w-3 h-3 mr-1' />
-          Cancelled
-        </Badge>
-      );
-    case "timeout_expired":
-      return (
-        <Badge
-          variant='outline'
-          className='bg-orange-50 text-orange-700 border-orange-200'>
-          <Hourglass className='w-3 h-3 mr-1' />
-          Timeout Expired
-        </Badge>
-      );
-    default:
-      return <Badge variant='outline'>{status}</Badge>;
-  }
+// ─── Shared with RequestCard ──────────────────────────────────────────────────
+const STATUS_CONFIG: Record<
+  string,
+  { icon: React.ReactNode; label: string; className: string }
+> = {
+  pending: {
+    icon: <Clock className='w-3 h-3' />,
+    label: "Pending",
+    className: "bg-amber-50 text-amber-700 border-amber-200",
+  },
+  approved: {
+    icon: <CheckCircle2 className='w-3 h-3' />,
+    label: "Approved",
+    className: "bg-emerald-50 text-emerald-700 border-emerald-200",
+  },
+  rejected: {
+    icon: <XCircle className='w-3 h-3' />,
+    label: "Rejected",
+    className: "bg-rose-50 text-rose-700 border-rose-200",
+  },
+  cancelled: {
+    icon: <Ban className='w-3 h-3' />,
+    label: "Cancelled",
+    className: "bg-gray-50 text-gray-600 border-gray-200",
+  },
+  timeout_expired: {
+    icon: <Hourglass className='w-3 h-3' />,
+    label: "Timeout Expired",
+    className: "bg-orange-50 text-orange-700 border-orange-200",
+  },
 };
 
-const getOperationTypeLabel = (operationType: string) => {
-  switch (operationType) {
-    case "product_delete":
-      return "Product Deletion";
-    case "category_delete":
-      return "Category Deletion";
-    case "manufacturer_delete":
-      return "Manufacturer Deletion";
-    default:
-      return operationType
-        .replace(/_/g, " ")
-        .replace(/\b\w/g, (l) => l.toUpperCase());
-  }
+const StatusBadge = ({ status }: { status: OperationRequest["status"] }) => {
+  const cfg = STATUS_CONFIG[status];
+  if (!cfg) return <span className='text-xs text-gray-400'>{status}</span>;
+  return (
+    <span
+      className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full border text-[11px] font-medium ${cfg.className}`}>
+      {cfg.icon}
+      {cfg.label}
+    </span>
+  );
 };
 
+const getOperationTypeLabel = (t: string) => {
+  const map: Record<string, string> = {
+    product_delete: "Product Deletion",
+    category_delete: "Category Deletion",
+    manufacturer_delete: "Manufacturer Deletion",
+  };
+  return (
+    map[t] ?? t.replace(/_/g, " ").replace(/\b\w/g, (l) => l.toUpperCase())
+  );
+};
+
+// ─── Info section wrapper ─────────────────────────────────────────────────────
+const Section: React.FC<{
+  title: string;
+  icon?: React.ReactNode;
+  children: React.ReactNode;
+}> = ({ title, icon, children }) => (
+  <div className='rounded-xl border border-gray-100 bg-gray-50/60 overflow-hidden'>
+    <div className='px-4 py-2.5 border-b border-gray-100 flex items-center gap-2'>
+      {icon && <span className='text-gray-400'>{icon}</span>}
+      <p className='text-xs font-semibold text-gray-700 uppercase tracking-wide'>
+        {title}
+      </p>
+    </div>
+    <div className='px-4 py-3'>{children}</div>
+  </div>
+);
+
+// ─── Meta row ─────────────────────────────────────────────────────────────────
+const MetaRow: React.FC<{
+  label: string;
+  value: React.ReactNode;
+  mono?: boolean;
+  span?: boolean;
+}> = ({ label, value, mono, span }) => (
+  <div className={span ? "col-span-2" : ""}>
+    <p className='text-[10px] font-medium text-gray-400 uppercase tracking-wide mb-0.5'>
+      {label}
+    </p>
+    <p
+      className={`text-xs font-medium text-gray-800 ${mono ? "font-mono" : ""}`}>
+      {value}
+    </p>
+  </div>
+);
+
+// ─── Variation chip ───────────────────────────────────────────────────────────
+const VariationChip = ({ variation }: { variation: any }) => {
+  const src = variation.images?.[0];
+  const label =
+    variation.name ||
+    [variation.color, variation.size].filter(Boolean).join(" · ");
+  const qty = variation.quantity ?? 0;
+  const qtyClass =
+    qty <= 0 ? "text-rose-500" : qty <= 5 ? "text-amber-600" : "text-gray-400";
+  const qtyLabel =
+    qty <= 0 ? "Out of stock" : qty <= 5 ? `${qty} left` : `${qty} in stock`;
+
+  return (
+    <div className='inline-flex items-center gap-1.5 px-2 py-1 rounded-lg bg-white border border-gray-100 text-xs'>
+      {src ? (
+        <img
+          src={src}
+          alt={label}
+          className='w-6 h-6 rounded-md object-cover border border-gray-200 shrink-0'
+          onError={(e) => {
+            (e.target as HTMLImageElement).src = PlaceHolderImage;
+          }}
+        />
+      ) : (
+        <div className='w-6 h-6 rounded-md bg-violet-50 border border-violet-100 flex items-center justify-center shrink-0'>
+          <span className='text-[10px] font-bold text-violet-500'>
+            {variation.size || variation.color?.slice(0, 1) || "?"}
+          </span>
+        </div>
+      )}
+      <div className='flex flex-col leading-tight'>
+        <span className='font-medium text-gray-800 whitespace-nowrap'>
+          {label}
+        </span>
+        <span className={`text-[10px] whitespace-nowrap ${qtyClass}`}>
+          {qtyLabel}
+        </span>
+      </div>
+    </div>
+  );
+};
+
+// ─── Main component ────────────────────────────────────────────────────────────
 export const RequestDetailsModal = ({
   request,
   open,
@@ -120,30 +185,29 @@ export const RequestDetailsModal = ({
   canReject = false,
   isCurrentUserRequest = false,
 }: RequestDetailsModalProps) => {
-  // ALL hooks must be declared before any conditional logic
   const [adminNotes, setAdminNotes] = useState("");
   const [isProcessing, setIsProcessing] = useState(false);
   const [product, setProduct] = useState<ProductData | null>(null);
   const { fetchProduct, getProduct } = useProductData();
 
-  // Fetch product data when modal opens
   useEffect(() => {
-    if (!request || !open) return;
-    if (request.operationType === "product_delete" && request.targetId) {
-      const cachedProduct = getProduct(request.targetId);
-      if (cachedProduct) {
-        setProduct(cachedProduct);
-      } else {
-        fetchProduct(request.targetId).then((fetchedProduct) => {
-          if (fetchedProduct) {
-            setProduct(fetchedProduct);
-          }
-        });
-      }
+    if (
+      !request ||
+      !open ||
+      request.operationType !== "product_delete" ||
+      !request.targetId
+    )
+      return;
+    const cached = getProduct(request.targetId);
+    if (cached) {
+      setProduct(cached);
+      return;
     }
+    fetchProduct(request.targetId).then((p) => {
+      if (p) setProduct(p);
+    });
   }, [open, request, fetchProduct, getProduct]);
 
-  // Early return AFTER all hooks
   if (!request) return null;
 
   const isPending = request.status === "pending";
@@ -155,393 +219,298 @@ export const RequestDetailsModal = ({
   const canApproveReject = canApprove && canReject && isPending;
   const canCancel = isCurrentUserRequest && isPending;
 
-  const handleApprove = async () => {
-    if (!onApprove) return;
+  const withProcessing = async (
+    fn: () => Promise<boolean>,
+    onSuccess?: () => void,
+  ) => {
     setIsProcessing(true);
-    const success = await onApprove(request.id);
+    const ok = await fn();
     setIsProcessing(false);
-    if (success) {
+    if (ok) {
       onOpenChange(false);
+      onSuccess?.();
     }
   };
 
-  const handleReject = async () => {
-    if (!onReject) return;
-    setIsProcessing(true);
-    const success = await onReject(request.id, adminNotes);
-    setIsProcessing(false);
-    if (success) {
-      onOpenChange(false);
-      setAdminNotes("");
-    }
-  };
-
-  const handleCancel = async () => {
-    if (!onCancel) return;
-    setIsProcessing(true);
-    const success = await onCancel(request.id);
-    setIsProcessing(false);
-    if (success) {
-      onOpenChange(false);
-    }
-  };
-
-  const renderVariationChip = (variation: any) => {
-    const src = variation.images?.[0];
-    const label =
-      variation.name ||
-      [variation.color, variation.size].filter(Boolean).join(" · ");
-    const qty = variation.quantity ?? 0;
-    const qtyColor =
-      qty <= 0 ? "text-red-600" : qty <= 5 ? "text-amber-700" : "text-zinc-500";
-    const qtyLabel =
-      qty <= 0 ? "out of stock" : qty <= 5 ? `${qty} left` : `${qty} in stock`;
-
-    return (
-      <div className='flex items-center gap-1.5 rounded-lg border border-zinc-200 bg-white px-2 py-1 text-xs'>
-        {src ? (
-          <img
-            src={src}
-            alt={label}
-            className='h-6 w-6 flex-shrink-0 rounded-md object-cover border border-zinc-100'
-            onError={(e) => {
-              (e.target as HTMLImageElement).src = PlaceHolderImage;
-            }}
-          />
-        ) : (
-          <div className='flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-md border border-zinc-100 bg-zinc-50 text-[10px] font-semibold text-zinc-600'>
-            {variation.size || variation.color?.slice(0, 1) || "?"}
-          </div>
-        )}
-        <div className='flex flex-col'>
-          <span className='font-semibold leading-tight text-zinc-900 whitespace-nowrap'>
-            {label}
-          </span>
-          <span
-            className={`font-medium leading-tight whitespace-nowrap ${qtyColor}`}>
-            {qtyLabel}
-          </span>
-        </div>
-      </div>
+  const handleApprove = () => withProcessing(() => onApprove!(request.id));
+  const handleReject = () =>
+    withProcessing(
+      () => onReject!(request.id, adminNotes),
+      () => setAdminNotes(""),
     );
-  };
+  const handleCancel = () => withProcessing(() => onCancel!(request.id));
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className='max-w-3xl max-h-[90vh] overflow-y-auto'>
-        <DialogHeader>
-          <div className='flex items-center justify-between'>
-            <DialogTitle className='text-xl'>
-              {getOperationTypeLabel(request.operationType)}
-            </DialogTitle>
-            {getStatusBadge(request.status)}
+    <Dialog
+      open={open}
+      onOpenChange={(v) => {
+        if (!isProcessing) {
+          onOpenChange(v);
+          if (!v) setAdminNotes("");
+        }
+      }}>
+      <DialogContent className='max-w-2xl max-h-[92vh] overflow-y-auto p-0 gap-0 rounded-2xl border border-gray-100 shadow-xl'>
+        {/* Dialog header */}
+        <DialogHeader className='px-6 pt-6 pb-4 border-b border-gray-100'>
+          <div className='flex items-start justify-between gap-3'>
+            <div>
+              <DialogTitle className='text-base font-bold text-gray-900 leading-tight'>
+                {getOperationTypeLabel(request.operationType)}
+              </DialogTitle>
+              <DialogDescription className='mt-1 flex items-center gap-1 text-[11px] text-gray-400'>
+                <Hash className='w-3 h-3' />
+                <span className='font-mono'>{request.id}</span>
+              </DialogDescription>
+            </div>
+            <StatusBadge status={request.status} />
           </div>
-          <DialogDescription>
-            Request ID: <span className='font-mono text-xs'>{request.id}</span>
-          </DialogDescription>
         </DialogHeader>
 
-        <div className='space-y-4'>
-          {/* Product Information */}
+        <div className='px-6 py-5 space-y-4'>
+          {/* Product details */}
           {product && request.operationType === "product_delete" && (
-            <div className='bg-muted/30 rounded-lg p-4 border border-muted'>
-              <h3 className='font-semibold mb-3 flex items-center gap-2'>
-                <Package className='w-4 h-4' />
-                Product Details
-              </h3>
-
-              <div className='space-y-3'>
-                {/* Product Header with Image */}
-                <div className='flex gap-4'>
-                  <div className='flex-shrink-0'>
-                    <img
-                      src={
-                        product.thumbnail ||
-                        product.images?.[0] ||
-                        PlaceHolderImage
-                      }
-                      alt={product.title || product.name}
-                      className='w-24 h-24 rounded-lg object-cover border border-zinc-200'
-                      onError={(e) => {
-                        (e.target as HTMLImageElement).src = PlaceHolderImage;
-                      }}
-                    />
-                  </div>
-
-                  <div className='flex-1 space-y-2'>
-                    <div>
-                      <Label className='text-xs text-muted-foreground'>
-                        Product Name
-                      </Label>
-                      <div className='font-medium'>
-                        {product.title || product.name}
-                      </div>
-                    </div>
-
-                    <div className='grid grid-cols-3 gap-3 text-sm'>
-                      <div>
-                        <Label className='text-xs text-muted-foreground'>
-                          SKU
-                        </Label>
-                        <div className='font-mono text-xs'>{product.sku}</div>
-                      </div>
-                      <div>
-                        <Label className='text-xs text-muted-foreground'>
-                          Price
-                        </Label>
-                        <div className='flex items-center gap-1'>
-                          <DollarSign className='w-3 h-3' />
-                          <span>{product.price}</span>
-                        </div>
-                      </div>
-                      <div>
-                        <Label className='text-xs text-muted-foreground'>
-                          Stock
-                        </Label>
-                        <div className='flex items-center gap-1'>
-                          <Box className='w-3 h-3' />
-                          <span>{product.quantity}</span>
-                        </div>
-                      </div>
-                    </div>
-
-                    <div className='grid grid-cols-2 gap-3 text-sm'>
-                      {product.categoryName && (
-                        <div>
-                          <Label className='text-xs text-muted-foreground'>
-                            Category
-                          </Label>
-                          <div>{product.categoryName}</div>
-                        </div>
-                      )}
-                      {product.manufacturerName && (
-                        <div>
-                          <Label className='text-xs text-muted-foreground'>
-                            Manufacturer
-                          </Label>
-                          <div>{product.manufacturerName}</div>
-                        </div>
-                      )}
-                    </div>
+            <Section
+              title='Product Details'
+              icon={<Package className='w-3.5 h-3.5' />}>
+              <div className='flex gap-4'>
+                <img
+                  src={
+                    product.thumbnail || product.images?.[0] || PlaceHolderImage
+                  }
+                  alt={product.title || product.name}
+                  className='w-20 h-20 rounded-xl object-cover border border-gray-200 shrink-0'
+                  onError={(e) => {
+                    (e.target as HTMLImageElement).src = PlaceHolderImage;
+                  }}
+                />
+                <div className='flex-1 min-w-0 space-y-2'>
+                  <p className='text-sm font-semibold text-gray-900 truncate'>
+                    {product.title || product.name}
+                  </p>
+                  <div className='grid grid-cols-3 gap-x-4 gap-y-2'>
+                    <MetaRow label='SKU' value={product.sku} mono />
+                    <MetaRow label='Price' value={`৳${product.price}`} />
+                    <MetaRow label='Stock' value={product.quantity} />
+                    {product.categoryName && (
+                      <MetaRow label='Category' value={product.categoryName} />
+                    )}
+                    {product.manufacturerName && (
+                      <MetaRow
+                        label='Manufacturer'
+                        value={product.manufacturerName}
+                      />
+                    )}
                   </div>
                 </div>
-
-                {/* Product Description */}
-                {/* {product.description && (
-                  <div>
-                    <Label className="text-xs text-muted-foreground">Description</Label>
-                    <div className="text-sm mt-1 line-clamp-3">{product.description}</div>
-                  </div>
-                )} */}
-
-                {/* Product Variations */}
-                {product.variations && product.variations.length > 0 && (
-                  <div>
-                    <Label className='text-xs text-muted-foreground mb-2 block'>
-                      Variations ({product.variations.length})
-                    </Label>
-                    <div className='grid grid-cols-2 md:grid-cols-3 gap-2'>
-                      {product.variations.map((variation) => (
-                        <div key={variation.id}>
-                          {renderVariationChip(variation)}
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
-
-                {/* Product Images Gallery */}
-                {product.images && product.images.length > 1 && (
-                  <div>
-                    <Label className='text-xs text-muted-foreground mb-2 flex items-center gap-1'>
-                      <ImageIcon className='w-3 h-3' />
-                      Product Images ({product.images.length})
-                    </Label>
-                    <div className='flex gap-2 overflow-x-auto pb-2'>
-                      {product.images.map((img, idx) => (
-                        <img
-                          key={idx}
-                          src={img}
-                          alt={`${product.title || product.name} ${idx + 1}`}
-                          className='w-16 h-16 rounded-md object-cover border border-zinc-200 flex-shrink-0'
-                          onError={(e) => {
-                            (e.target as HTMLImageElement).src =
-                              PlaceHolderImage;
-                          }}
-                        />
-                      ))}
-                    </div>
-                  </div>
-                )}
               </div>
-            </div>
+
+              {/* Variations */}
+              {product.variations && product.variations.length > 0 && (
+                <div className='mt-3 pt-3 border-t border-gray-100'>
+                  <p className='text-[10px] font-semibold text-gray-400 uppercase tracking-wide mb-2'>
+                    Variations ({product.variations.length})
+                  </p>
+                  <div className='flex flex-wrap gap-1.5'>
+                    {product.variations.map((v) => (
+                      <VariationChip key={v.id} variation={v} />
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Image gallery */}
+              {product.images && product.images.length > 1 && (
+                <div className='mt-3 pt-3 border-t border-gray-100'>
+                  <p className='text-[10px] font-semibold text-gray-400 uppercase tracking-wide mb-2 flex items-center gap-1'>
+                    <ImageIcon className='w-3 h-3' />
+                    Images ({product.images.length})
+                  </p>
+                  <div className='flex gap-2 overflow-x-auto pb-1'>
+                    {product.images.map((img, i) => (
+                      <img
+                        key={i}
+                        src={img}
+                        alt={`${product.title || product.name} ${i + 1}`}
+                        className='w-14 h-14 rounded-xl object-cover border border-gray-200 shrink-0'
+                        onError={(e) => {
+                          (e.target as HTMLImageElement).src = PlaceHolderImage;
+                        }}
+                      />
+                    ))}
+                  </div>
+                </div>
+              )}
+            </Section>
           )}
 
-          {/* Target Information */}
-          <div className='bg-muted/50 rounded-lg p-4'>
-            <h3 className='font-semibold mb-2'>Target Information</h3>
-            <div className='grid grid-cols-2 gap-2 text-sm'>
-              <div>
-                <span className='text-muted-foreground'>Type:</span>
-                <span className='ml-2 font-medium'>{request.targetType}</span>
-              </div>
-              <div>
-                <span className='text-muted-foreground'>ID:</span>
-                <span className='ml-2 font-mono'>{request.targetId}</span>
-              </div>
-              <div className='col-span-2'>
-                <span className='text-muted-foreground'>Name:</span>
-                <span className='ml-2 font-medium'>{request.targetName}</span>
-              </div>
+          {/* Target info */}
+          <Section title='Target'>
+            <div className='grid grid-cols-2 gap-x-4 gap-y-3'>
+              <MetaRow label='Type' value={request.targetType} />
+              <MetaRow label='ID' value={request.targetId} mono />
+              <MetaRow label='Name' value={request.targetName} span />
             </div>
-          </div>
+          </Section>
 
-          {/* Requester Information */}
-          <div className='bg-muted/50 rounded-lg p-4'>
-            <h3 className='font-semibold mb-2'>Requester Information</h3>
-            <div className='grid grid-cols-2 gap-2 text-sm'>
-              <div className='flex items-center gap-2'>
-                <User className='w-4 h-4 text-muted-foreground' />
-                <span className='font-medium'>{request.requester}</span>
-              </div>
-              <div className='flex items-center gap-2'>
-                <Calendar className='w-4 h-4 text-muted-foreground' />
-                <span>
-                  {formatDistanceToNow(new Date(request.requestedAt), {
-                    addSuffix: true,
-                  })}
-                </span>
-              </div>
-              <div className='col-span-2 text-xs text-muted-foreground'>
-                Full date: {new Date(request.requestedAt).toLocaleString()}
-              </div>
+          {/* Requester info */}
+          <Section title='Requester' icon={<User className='w-3.5 h-3.5' />}>
+            <div className='grid grid-cols-2 gap-x-4 gap-y-3'>
+              <MetaRow
+                label='Requested by'
+                value={
+                  <span className='flex items-center gap-1.5'>
+                    <span className='w-5 h-5 rounded-full bg-violet-100 inline-flex items-center justify-center shrink-0'>
+                      <span className='text-[10px] font-bold text-violet-600'>
+                        {request.requester?.[0]?.toUpperCase() ?? "?"}
+                      </span>
+                    </span>
+                    {request.requester}
+                  </span>
+                }
+              />
+              <MetaRow
+                label='Requested'
+                value={formatDistanceToNow(new Date(request.requestedAt), {
+                  addSuffix: true,
+                })}
+              />
+              <MetaRow
+                label='Exact date'
+                value={new Date(request.requestedAt).toLocaleString()}
+                span
+              />
             </div>
-          </div>
+          </Section>
 
           {/* Reason */}
           {request.reason && (
-            <div>
-              <Label className='text-sm font-medium'>Reason for Request</Label>
-              <div className='mt-1 p-3 bg-muted/50 rounded-lg text-sm'>
+            <Section title='Reason'>
+              <p className='text-xs text-gray-700 leading-relaxed'>
                 {request.reason}
-              </div>
-            </div>
+              </p>
+            </Section>
           )}
 
-          {/* Expiration */}
+          {/* Expiry */}
           {isPending && request.expiresAt && (
-            <div className='flex items-center gap-2 text-sm'>
-              <Clock
-                className={`w-4 h-4 ${isExpiringSoon ? "text-orange-500" : "text-muted-foreground"}`}
-              />
-              <span
-                className={
-                  isExpiringSoon
-                    ? "text-orange-600 font-medium"
-                    : "text-muted-foreground"
-                }>
-                Expires:{" "}
-                {formatDistanceToNow(new Date(request.expiresAt), {
-                  addSuffix: true,
-                })}
-              </span>
+            <div
+              className={`flex items-center gap-2 px-3 py-2.5 rounded-xl border text-xs font-medium ${
+                isExpiringSoon
+                  ? "bg-orange-50 border-orange-100 text-orange-700"
+                  : "bg-gray-50 border-gray-100 text-gray-500"
+              }`}>
+              {isExpiringSoon ? (
+                <AlertCircle className='w-3.5 h-3.5 shrink-0' />
+              ) : (
+                <Clock className='w-3.5 h-3.5 shrink-0' />
+              )}
+              Expires{" "}
+              {formatDistanceToNow(new Date(request.expiresAt), {
+                addSuffix: true,
+              })}
               {isExpiringSoon && (
-                <AlertCircle className='w-4 h-4 text-orange-500' />
+                <span className='ml-1 font-semibold'>— Act soon</span>
               )}
             </div>
           )}
 
-          {/* Admin Notes for Rejected */}
+          {/* Admin notes (rejected) */}
           {request.adminNotes && request.status === "rejected" && (
-            <div>
-              <Label className='text-sm font-medium text-red-700'>
-                Admin Notes (Rejection Reason)
-              </Label>
-              <div className='mt-1 p-3 bg-red-50 border border-red-200 rounded-lg text-sm text-red-700'>
+            <div className='rounded-xl bg-rose-50 border border-rose-100 px-4 py-3'>
+              <p className='text-[10px] font-semibold text-rose-600 uppercase tracking-wide mb-1'>
+                Admin Notes
+              </p>
+              <p className='text-xs text-rose-700 leading-relaxed'>
                 {request.adminNotes}
-              </div>
+              </p>
             </div>
           )}
 
-          {/* Processed By */}
+          {/* Processed by */}
           {request.approver &&
             (request.status === "approved" ||
               request.status === "rejected") && (
-              <div className='text-sm'>
-                <span className='text-muted-foreground'>Processed by: </span>
-                <span className='font-medium'>{request.approver}</span>
+              <p className='text-[11px] text-gray-400'>
+                Processed by{" "}
+                <span className='font-semibold text-gray-600'>
+                  {request.approver}
+                </span>
                 {request.actionAt && (
-                  <span className='text-muted-foreground ml-2'>
-                    (
+                  <span className='ml-1'>
+                    ·{" "}
                     {formatDistanceToNow(new Date(request.actionAt), {
                       addSuffix: true,
                     })}
-                    )
                   </span>
                 )}
-              </div>
+              </p>
             )}
 
-          {/* Admin Notes Input */}
+          {/* Admin notes input (for rejection) */}
           {isPending && canApproveReject && onReject && (
-            <div>
-              <Label htmlFor='adminNotes' className='text-sm font-medium'>
-                Admin Notes (optional for rejection)
-              </Label>
+            <div className='space-y-1.5'>
+              <label className='text-xs font-semibold text-gray-600 uppercase tracking-wide'>
+                Rejection Notes{" "}
+                <span className='text-gray-400 font-normal normal-case tracking-normal'>
+                  (optional)
+                </span>
+              </label>
               <Textarea
-                id='adminNotes'
-                placeholder='Add notes explaining why this request is being rejected...'
+                placeholder='Explain why this request is being rejected…'
                 value={adminNotes}
                 onChange={(e) => setAdminNotes(e.target.value)}
-                className='mt-1'
                 rows={3}
+                className='text-xs rounded-xl border-gray-200 resize-none focus:border-violet-300 focus:ring-violet-100'
               />
             </div>
           )}
         </div>
 
-        <DialogFooter className='flex gap-2'>
-          {isPending && (
-            <>
-              {canApproveReject && onApprove && onReject && (
-                <>
-                  <Button
-                    variant='default'
-                    className='bg-green-600 hover:bg-green-700'
-                    onClick={handleApprove}
-                    disabled={isProcessing}>
-                    {isProcessing ? "Processing..." : "Approve"}
-                  </Button>
-                  <Button
-                    variant='destructive'
-                    onClick={handleReject}
-                    disabled={isProcessing}>
-                    {isProcessing ? "Processing..." : "Reject"}
-                  </Button>
-                </>
-              )}
-
-              {canCancel && onCancel && (
-                <Button
-                  variant='outline'
-                  onClick={handleCancel}
-                  disabled={isProcessing}>
-                  {isProcessing ? "Processing..." : "Cancel Request"}
-                </Button>
-              )}
-            </>
-          )}
-
-          <Button
-            variant='ghost'
+        {/* Footer */}
+        <div className='px-6 py-4 border-t border-gray-100 bg-gray-50/50 flex items-center justify-end gap-2'>
+          <button
             onClick={() => {
               onOpenChange(false);
               setAdminNotes("");
             }}
-            disabled={isProcessing}>
+            disabled={isProcessing}
+            className='h-8 px-4 text-xs font-medium text-gray-600 rounded-xl border border-gray-200 hover:bg-white transition-colors disabled:opacity-50'>
             Close
-          </Button>
-        </DialogFooter>
+          </button>
+
+          {isPending && (
+            <>
+              {canCancel && onCancel && (
+                <button
+                  onClick={handleCancel}
+                  disabled={isProcessing}
+                  className='h-8 px-4 text-xs font-medium text-gray-600 rounded-xl border border-gray-200 hover:bg-white transition-colors disabled:opacity-50 flex items-center gap-1.5'>
+                  <Ban className='w-3.5 h-3.5' />
+                  {isProcessing ? "Processing…" : "Cancel Request"}
+                </button>
+              )}
+
+              {canApproveReject && onApprove && onReject && (
+                <>
+                  <button
+                    onClick={handleReject}
+                    disabled={isProcessing}
+                    className='h-8 px-4 text-xs font-medium text-white rounded-xl bg-rose-600 hover:bg-rose-700 transition-colors disabled:opacity-50 flex items-center gap-1.5 shadow-sm'>
+                    <X className='w-3.5 h-3.5' />
+                    {isProcessing ? "Processing…" : "Reject"}
+                  </button>
+                  <button
+                    onClick={handleApprove}
+                    disabled={isProcessing}
+                    className='h-8 px-4 text-xs font-medium text-white rounded-xl bg-emerald-600 hover:bg-emerald-700 transition-colors disabled:opacity-50 flex items-center gap-1.5 shadow-sm'>
+                    <Check className='w-3.5 h-3.5' />
+                    {isProcessing ? "Processing…" : "Approve"}
+                  </button>
+                </>
+              )}
+            </>
+          )}
+        </div>
       </DialogContent>
     </Dialog>
   );

@@ -1,10 +1,8 @@
 import React, { useState } from "react";
-import { Card, CardContent } from "../../../components/ui/card";
 import { Badge } from "../../../components/ui/badge";
 import { Button } from "../../../components/ui/button";
 import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "sonner";
-
 import {
   Phone,
   MapPin,
@@ -14,7 +12,6 @@ import {
   CheckCircle2,
   XCircle,
   ChevronDown,
-  ChevronUp,
   Info,
   Truck,
   Edit,
@@ -29,9 +26,9 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "../../../components/ui/popover";
-import { Separator } from "../../../components/ui/separator";
 import EditCustomerInformation from "../../order/editOrderCustomer";
 import { ModifyOrderModal } from "../../../components/order/ModifyOrderModal";
+import { cn } from "../../../lib/utils";
 
 interface OrderConfirmationCardProps {
   order: IOrder;
@@ -51,288 +48,266 @@ export const OrderConfirmationCard: React.FC<OrderConfirmationCardProps> = ({
   const [showModifyModal, setShowModifyModal] = useState(false);
   const [showFullDetails, setShowFullDetails] = useState(false);
   const [localOrder, setLocalOrder] = useState(order);
+
   const fraudRisk = order.fraudDetection;
-  // const riskColor =
-  //   fraudRisk?.riskLevel === "red"
-  //     ? "bg-red-100 text-red-800 border-red-200"
-  //     : fraudRisk?.riskLevel === "yellow"
-  //       ? "bg-yellow-100 text-yellow-800 border-yellow-200"
-  //       : "bg-green-100 text-green-800 border-green-200";
+  const hasInventoryIssues = order.products.some((p) => p.quantity <= 0);
+  const hasAlerts = fraudRisk?.isFraud || hasInventoryIssues;
 
   const formatDate = (dateString: string) => {
     try {
-      return format(new Date(dateString), "MMM dd, yyyy 'at' h:mm a");
+      return format(new Date(dateString), "MMM dd, yyyy · h:mm a");
     } catch {
       return dateString;
     }
   };
 
-  const hasInventoryIssues = order.products.some((p) => p.quantity <= 0);
-
-  const formatCurrency = (amount: number): string => {
-    return new Intl.NumberFormat("en-BD", {
-      style: "currency",
-      currency: "BDT",
-      minimumFractionDigits: 0,
-    }).format(amount);
-  };
+  const formatCurrency = (amount: number) =>
+    `৳${new Intl.NumberFormat("en-BD", { minimumFractionDigits: 0 }).format(amount)}`;
 
   const totalAmount =
     order.totalPrice + order.deliveryCharge - (order.discount || 0);
 
   return (
-    <Card className='group hover:shadow-lg transition-all duration-300 border border-gray-200 bg-white overflow-hidden'>
-      {/* Minimalistic Header */}
-      <div className='relative bg-gray-700 p-6 pb-8'>
-        {/* Subtle Pattern */}
-        <div className='absolute inset-0 opacity-5 bg-[radial-gradient(circle_at_1px_1px,_white_1px,_transparent_1px)] bg-[length:24px_24px]'></div>
-
-        {/* Header Content */}
-        <div className='relative flex items-start justify-between'>
-          <div className='flex-1'>
-            <div className='flex items-center gap-3 mb-2'>
-              <div className='bg-white px-4 py-1.5 rounded-md border border-gray-200'>
-                <h3 className='font-bold text-xl text-black tracking-tight'>
-                  #{order.orderNumber}
-                </h3>
-              </div>
-              {fraudRisk && fraudRisk.isFraud && (
-                <motion.div
-                  initial={{ scale: 0 }}
-                  animate={{ scale: 1 }}
-                  transition={{ type: "spring", stiffness: 200 }}>
-                  <Badge className='bg-black text-white border border-white/20'>
-                    <AlertTriangle className='h-3 w-3 mr-1' />
-                    Fraud Risk
-                  </Badge>
-                </motion.div>
+    <>
+      <div
+        className={cn(
+          "group flex flex-col rounded-2xl border bg-white overflow-hidden",
+          "shadow-sm hover:shadow-md transition-shadow duration-200",
+          hasAlerts ? "border-red-200" : "border-gray-100",
+        )}>
+        {/* ─── Alert strip ─── */}
+        {hasAlerts && (
+          <div className='flex items-center gap-2 px-4 py-2 bg-red-50 border-b border-red-100'>
+            <AlertTriangle className='w-3.5 h-3.5 text-red-500 shrink-0' />
+            <div className='flex items-center gap-2 flex-wrap'>
+              {fraudRisk?.isFraud && (
+                <span className='text-[11px] font-semibold text-red-600'>
+                  Fraud risk detected
+                </span>
+              )}
+              {fraudRisk?.isFraud && hasInventoryIssues && (
+                <span className='text-red-300'>·</span>
               )}
               {hasInventoryIssues && (
-                <motion.div
-                  initial={{ scale: 0 }}
-                  animate={{ scale: 1 }}
-                  transition={{ type: "spring", stiffness: 200, delay: 0.1 }}>
-                  <Badge className='bg-black text-white border border-white/20'>
-                    <AlertTriangle className='h-3 w-3 mr-1' />
-                    Stock Issue
-                  </Badge>
-                </motion.div>
+                <span className='text-[11px] font-semibold text-red-600'>
+                  Stock issue
+                </span>
               )}
             </div>
-            <div className='flex flex-col items-start gap-1 text-white/80'>
-              {/* <div className='flex items-center gap-1.5'>
-                <Package className='h-4 w-4' />
-                <span className='text-sm font-medium'>
-                  {order.products.length} item
-                  {order.products.length !== 1 && "s"}
-                </span>
-              </div> */}
-              <div className='flex items-center gap-1.5'>
-                <Calendar className='h-4 w-4' />
-                <span className='text-sm'>
-                  {formatDate(order.timestamps.createdAt)}
-                </span>
-              </div>
+          </div>
+        )}
+
+        {/* ─── Header ─── */}
+        <div className='px-4 pt-4 pb-3 flex items-start justify-between gap-3'>
+          <div className='flex-1 min-w-0'>
+            <div className='flex items-center gap-2'>
+              <span className='text-base font-bold text-gray-900 tabular-nums'>
+                #{order.orderNumber}
+              </span>
+            </div>
+            <div className='flex items-center gap-1.5 mt-1'>
+              <Calendar className='w-3 h-3 text-gray-400 shrink-0' />
+              <span className='text-[11px] text-gray-400'>
+                {formatDate(order.timestamps.createdAt)}
+              </span>
             </div>
           </div>
 
-          {/* Payment Status Badge */}
-          <div className='flex flex-col items-end gap-1'>
-            <div className='bg-white rounded-lg px-4 py-2 border border-gray-200 shadow-sm flex justify-between items-center gap-2'>
-              <div className='text-xs text-red-500 font-medium mb-0.5'>
-                Amount Due
+          {/* Amount due + payment popover */}
+          <div className='flex items-center gap-2 shrink-0'>
+            {order.remaining > 0 && (
+              <div className='text-right'>
+                <p className='text-[10px] text-red-400 font-medium leading-none mb-0.5'>
+                  Due
+                </p>
+                <p className='text-sm font-bold text-gray-900 tabular-nums'>
+                  {formatCurrency(order.remaining)}
+                </p>
               </div>
-              <div className='text-sm font-bold text-black'>
-                ৳{order.remaining.toFixed(2)}
-              </div>
-            </div>
+            )}
 
-            {/* Payment Summary Popover Button */}
             <Popover>
               <PopoverTrigger asChild>
-                <Button
-                  variant='ghost'
-                  size='sm'
-                  className='h-8 bg-white hover:bg-gray-100 text-black border border-gray-200'>
-                  <Info className='h-4 w-4' />
-                  Payment Details
-                </Button>
+                <button className='w-8 h-8 rounded-lg border border-gray-200 bg-gray-50 hover:bg-gray-100 flex items-center justify-center transition-colors'>
+                  <CreditCard className='w-3.5 h-3.5 text-gray-500' />
+                </button>
               </PopoverTrigger>
-              <PopoverContent align='end' className='w-80'>
-                <motion.div
-                  initial={{ opacity: 0, y: -10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  className='space-y-3'>
-                  <h3 className='font-semibold text-base text-black flex items-center gap-2'>
-                    <div className='p-1.5 bg-gray-100 rounded-lg border border-gray-200'>
-                      <CreditCard className='h-4 w-4 text-black' />
-                    </div>
-                    Payment Summary
-                  </h3>
-                  <div className='space-y-2 text-sm'>
-                    <div className='flex items-center justify-between p-2.5 bg-gray-50 rounded-lg border border-gray-100'>
-                      <span className='text-gray-600'>Subtotal</span>
-                      <span className='font-semibold text-black'>
-                        {formatCurrency(order.totalPrice)}
+              <PopoverContent
+                align='end'
+                className='w-72 p-0 overflow-hidden rounded-xl shadow-lg border-gray-100'>
+                <div className='px-4 py-3 border-b border-gray-100 flex items-center gap-2'>
+                  <CreditCard className='w-4 h-4 text-gray-500' />
+                  <span className='text-sm font-semibold text-gray-900'>
+                    Payment summary
+                  </span>
+                </div>
+                <div className='p-3 space-y-1.5'>
+                  {[
+                    {
+                      label: "Subtotal",
+                      value: formatCurrency(order.totalPrice),
+                    },
+                    {
+                      label: "Delivery",
+                      value: formatCurrency(order.deliveryCharge || 0),
+                      icon: <Truck className='w-3 h-3' />,
+                    },
+                    ...(order.discount > 0
+                      ? [
+                          {
+                            label: "Discount",
+                            value: `− ${formatCurrency(order.discount)}`,
+                            highlight: "text-emerald-600",
+                          },
+                        ]
+                      : []),
+                  ].map(({ label, value, icon, highlight }) => (
+                    <div
+                      key={label}
+                      className='flex items-center justify-between px-3 py-2 rounded-lg bg-gray-50 text-sm'>
+                      <span className='text-gray-500 flex items-center gap-1.5'>
+                        {icon}
+                        {label}
+                      </span>
+                      <span
+                        className={cn(
+                          "font-semibold text-gray-800",
+                          highlight,
+                        )}>
+                        {value}
                       </span>
                     </div>
-                    <div className='flex items-center justify-between p-2.5 bg-gray-50 rounded-lg border border-gray-100'>
-                      <span className='text-gray-600 flex items-center gap-1.5'>
-                        <Truck className='h-3.5 w-3.5' />
-                        Delivery
-                      </span>
-                      <span className='font-semibold text-black'>
-                        {formatCurrency(order.deliveryCharge || 0)}
-                      </span>
-                    </div>
-                    {order.discount > 0 && (
-                      <div className='flex items-center justify-between p-2.5 bg-gray-100 border border-gray-300 rounded-lg'>
-                        <span className='text-black font-medium'>Discount</span>
-                        <span className='font-semibold text-black'>
-                          - {formatCurrency(order.discount)}
-                        </span>
-                      </div>
-                    )}
-                    <Separator className='my-2 bg-gray-200' />
-                    <div className='flex items-center justify-between p-3 bg-black rounded-lg text-white'>
-                      <span className='font-bold'>Total</span>
-                      <span className='font-bold text-lg'>
-                        {formatCurrency(totalAmount)}
-                      </span>
-                    </div>
-                    <div className='flex items-center justify-between p-2.5 bg-gray-50 border border-gray-200 rounded-lg'>
-                      <span className='text-black font-medium flex items-center gap-1.5'>
-                        <CheckCircle2 className='h-3.5 w-3.5' />
-                        Paid
-                      </span>
-                      <span className='font-bold text-black'>
-                        {formatCurrency(order.paid)}
-                      </span>
-                    </div>
-                    {order.remaining > 0 && (
-                      <div className='flex items-center justify-between p-2.5 bg-gray-100 border border-gray-300 rounded-lg'>
-                        <span className='text-black font-medium flex items-center gap-1.5'>
-                          <AlertTriangle className='h-3.5 w-3.5' />
-                          Due
-                        </span>
-                        <span className='font-bold text-black'>
-                          {formatCurrency(order.remaining)}
-                        </span>
-                      </div>
-                    )}
+                  ))}
+
+                  <div className='flex items-center justify-between px-3 py-2.5 rounded-lg bg-gray-900 text-sm mt-2'>
+                    <span className='text-gray-300 font-medium'>Total</span>
+                    <span className='font-bold text-white tabular-nums'>
+                      {formatCurrency(totalAmount)}
+                    </span>
                   </div>
-                </motion.div>
+
+                  <div className='flex items-center justify-between px-3 py-2 rounded-lg bg-emerald-50 text-sm'>
+                    <span className='text-emerald-700 flex items-center gap-1.5 font-medium'>
+                      <CheckCircle2 className='w-3 h-3' />
+                      Paid
+                    </span>
+                    <span className='font-semibold text-emerald-700 tabular-nums'>
+                      {formatCurrency(order.paid)}
+                    </span>
+                  </div>
+
+                  {order.remaining > 0 && (
+                    <div className='flex items-center justify-between px-3 py-2 rounded-lg bg-red-50 text-sm'>
+                      <span className='text-red-600 font-medium'>Due</span>
+                      <span className='font-bold text-red-600 tabular-nums'>
+                        {formatCurrency(order.remaining)}
+                      </span>
+                    </div>
+                  )}
+                </div>
               </PopoverContent>
             </Popover>
           </div>
         </div>
-      </div>
 
-      <CardContent className='p-6 space-y-5'>
-        {/* Customer Information Section */}
-        <div className='bg-gray-50 rounded-lg p-4 border border-gray-200'>
-          <div className='flex items-center justify-between mb-3'>
-            <h4 className='text-sm font-semibold text-black flex items-center gap-2'>
-              <div className='w-8 h-8 rounded-full bg-black flex items-center justify-center'>
-                <Phone className='h-4 w-4 text-white' />
-              </div>
-              Customer Details
-            </h4>
-            <Button
-              variant='ghost'
-              size='sm'
-              className='h-7 text-xs text-black hover:text-black hover:bg-gray-200'
-              onClick={() => setShowFullDetails(!showFullDetails)}>
-              {showFullDetails ? (
-                <>
-                  <ChevronUp className='h-3 w-3 mr-1' />
-                  Show Less
-                </>
-              ) : (
-                <>
-                  <ChevronDown className='h-3 w-3 mr-1' />
-                  Show More
-                </>
-              )}
-            </Button>
+        <div className='border-t border-gray-100 mx-4' />
+
+        {/* ─── Customer section ─── */}
+        <div className='px-4 py-3 space-y-2'>
+          <div className='flex items-center justify-between'>
+            <p className='text-[11px] font-semibold text-gray-400 uppercase tracking-wide'>
+              Customer
+            </p>
+            <button
+              onClick={() => setShowFullDetails(!showFullDetails)}
+              className='text-[11px] text-indigo-500 hover:text-indigo-600 font-medium transition-colors'>
+              {showFullDetails ? "Less" : "More"} info
+            </button>
           </div>
 
-          <div className='space-y-2.5'>
-            <div className='flex items-center gap-2.5 text-sm'>
-              <div className='w-7 h-7 rounded-lg bg-white flex items-center justify-center border border-gray-200'>
-                <Phone className='h-3.5 w-3.5 text-black' />
-              </div>
-              <div className='flex items-center gap-2 flex-1 min-w-0'>
-                <span className='font-semibold text-black'>
-                  {order.customer.name}
-                </span>
-                <span className='text-gray-400'>•</span>
-                <span className='text-blue-500 font-medium'>
-                  {order.customer.phoneNumber}
-                </span>
-              </div>
-            </div>
-
-            <div className='flex items-start gap-2.5 text-sm'>
-              <div className='w-7 h-7 rounded-lg bg-white flex items-center justify-center border border-gray-200 flex-shrink-0'>
-                <MapPin className='h-3.5 w-3.5 text-black' />
-              </div>
-              <span className='text-gray-700 flex-1 leading-relaxed'>
-                {order.shipping.address}
-                {showFullDetails &&
-                  order.shipping.district &&
-                  `, ${order.shipping.district}`}
-                {showFullDetails &&
-                  order.shipping.division &&
-                  `, ${order.shipping.division}`}
-                {!showFullDetails && "..."}
+          <div className='flex items-start gap-2.5'>
+            {/* Avatar */}
+            <div className='w-8 h-8 rounded-full bg-indigo-50 border border-indigo-100 flex items-center justify-center shrink-0 mt-0.5'>
+              <span className='text-xs font-bold text-indigo-600'>
+                {order.customer.name?.charAt(0).toUpperCase()}
               </span>
             </div>
-
-            <AnimatePresence>
-              {showFullDetails && order.customer.email && (
-                <motion.div
-                  initial={{ opacity: 0, height: 0 }}
-                  animate={{ opacity: 1, height: "auto" }}
-                  exit={{ opacity: 0, height: 0 }}
-                  className='flex items-center gap-2.5 text-sm'>
-                  <div className='w-7 h-7 rounded-lg bg-white flex items-center justify-center border border-gray-200'>
-                    <Mail className='h-3.5 w-3.5 text-black' />
-                  </div>
-                  <span className='text-gray-700'>{order.customer.email}</span>
-                </motion.div>
-              )}
-            </AnimatePresence>
+            <div className='flex-1 min-w-0'>
+              <p className='text-sm font-semibold text-gray-900 leading-none'>
+                {order.customer.name}
+              </p>
+              <a
+                href={`tel:${order.customer.phoneNumber}`}
+                className='text-xs text-indigo-500 font-medium hover:underline mt-0.5 inline-block'>
+                {order.customer.phoneNumber}
+              </a>
+            </div>
           </div>
+
+          <div className='flex items-start gap-2'>
+            <MapPin className='w-3.5 h-3.5 text-gray-400 mt-0.5 shrink-0' />
+            <p className='text-xs text-gray-600 leading-relaxed'>
+              {order.shipping.address}
+              {showFullDetails &&
+                order.shipping.district &&
+                `, ${order.shipping.district}`}
+              {showFullDetails &&
+                order.shipping.division &&
+                `, ${order.shipping.division}`}
+              {!showFullDetails && <span className='text-gray-400'> …</span>}
+            </p>
+          </div>
+
+          <AnimatePresence>
+            {showFullDetails && order.customer.email && (
+              <motion.div
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: "auto" }}
+                exit={{ opacity: 0, height: 0 }}
+                className='flex items-center gap-2'>
+                <Mail className='w-3.5 h-3.5 text-gray-400 shrink-0' />
+                <span className='text-xs text-gray-600'>
+                  {order.customer.email}
+                </span>
+              </motion.div>
+            )}
+          </AnimatePresence>
         </div>
 
-        {/* Products Section */}
-        <div className='bg-gray-50 rounded-lg p-4 border border-gray-200'>
-          <div className='flex items-center justify-between mb-3'>
-            <button
-              onClick={() => setProductsExpanded(!productsExpanded)}
-              className='flex items-center gap-2 text-sm font-semibold hover:text-black transition-colors group/btn'>
-              <div className='w-8 h-8 rounded-full bg-black flex items-center justify-center group-hover/btn:bg-gray-800 transition-colors'>
-                <Package className='h-4 w-4 text-white' />
-              </div>
-              <span className='text-black'>
-                Products ({localOrder.products.length})
+        <div className='border-t border-gray-100 mx-4' />
+
+        {/* ─── Products section ─── */}
+        <div className='px-4 py-3'>
+          <button
+            onClick={() => setProductsExpanded(!productsExpanded)}
+            className='w-full flex items-center justify-between group/btn'>
+            <div className='flex items-center gap-2'>
+              <Package className='w-3.5 h-3.5 text-gray-400' />
+              <span className='text-[11px] font-semibold text-gray-400 uppercase tracking-wide'>
+                Products
               </span>
+              <span className='text-[11px] font-bold text-gray-600 bg-gray-100 px-1.5 py-0.5 rounded-full'>
+                {localOrder.products.length}
+              </span>
+            </div>
+            <div className='flex items-center gap-2'>
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setShowModifyModal(true);
+                }}
+                className='flex items-center gap-1 text-[11px] font-semibold text-indigo-500
+                           hover:text-indigo-600 bg-indigo-50 hover:bg-indigo-100 px-2 py-1 rounded-md transition-colors'>
+                <ShoppingCart className='w-3 h-3' />
+                Modify
+              </button>
               <motion.div
                 animate={{ rotate: productsExpanded ? 180 : 0 }}
                 transition={{ duration: 0.2 }}>
-                <ChevronDown className='h-4 w-4 text-gray-500' />
+                <ChevronDown className='w-4 h-4 text-gray-400' />
               </motion.div>
-            </button>
-            <Button
-              variant='ghost'
-              size='sm'
-              className='h-7 text-xs text-black hover:text-black hover:bg-gray-200'
-              onClick={() => setShowModifyModal(true)}>
-              <ShoppingCart className='h-3 w-3 mr-1' />
-              Modify Order
-            </Button>
-          </div>
+            </div>
+          </button>
 
           <AnimatePresence>
             {productsExpanded && (
@@ -341,176 +316,140 @@ export const OrderConfirmationCard: React.FC<OrderConfirmationCardProps> = ({
                 animate={{ opacity: 1, height: "auto" }}
                 exit={{ opacity: 0, height: 0 }}
                 transition={{ duration: 0.2 }}
-                className='space-y-3'>
+                className='mt-3 space-y-2'>
                 {localOrder.products.map((product, index) => (
                   <motion.div
                     key={index}
-                    initial={{ opacity: 0, x: -20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ delay: index * 0.05 }}
-                    className='rounded-lg bg-white border border-gray-200 hover:border-gray-300 transition-all overflow-hidden'>
-                    {/* Main Product Row */}
-                    <div className='flex items-center justify-between p-3'>
-                      <div className='flex items-center gap-3 flex-1 min-w-0'>
-                        <div className='w-12 h-12 rounded-xl overflow-hidden border-2 border-gray-100 flex-shrink-0'>
-                          {product.thumbnail ? (
-                            <img
-                              alt={product?.name}
-                              src={product?.thumbnail}
-                              className='w-full h-full object-cover'
-                            />
-                          ) : (
-                            <div className='w-full h-full bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center'>
-                              <Package className='w-6 h-6 text-gray-400' />
-                            </div>
-                          )}
+                    initial={{ opacity: 0, y: 8 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: index * 0.04 }}
+                    className='flex items-center gap-3 rounded-xl border border-gray-100 bg-gray-50 p-2.5'>
+                    {/* Thumbnail */}
+                    <div className='w-10 h-10 rounded-lg overflow-hidden border border-gray-200 shrink-0 bg-white'>
+                      {product.thumbnail ? (
+                        <img
+                          src={product.thumbnail}
+                          alt={product.name}
+                          className='w-full h-full object-cover'
+                        />
+                      ) : (
+                        <div className='w-full h-full flex items-center justify-center'>
+                          <Package className='w-4 h-4 text-gray-300' />
                         </div>
-                        <div className='flex-1 min-w-0'>
-                          <p className='font-medium text-black truncate'>
-                            {product.name}
-                          </p>
-                          <div className='flex items-center gap-2 mt-1'>
-                            {/* Variation Badge */}
-                            {product.variation &&
-                              (product.variation.color ||
-                                product.variation.size) && (
-                                <Badge
-                                  variant='outline'
-                                  className='text-xs px-2 py-0 h-5'>
-                                  {product.variation.color && (
-                                    <span className='capitalize'>
-                                      {product.variation.color}
-                                    </span>
-                                  )}
-                                  {product.variation.color &&
-                                    product.variation.size && <span> • </span>}
-                                  {product.variation.size && (
-                                    <span>{product.variation.size}</span>
-                                  )}
-                                </Badge>
-                              )}
-                            <p className='text-xs text-gray-500'>
-                              Qty: {product.quantity} × ৳
-                              {product.unitPrice.toFixed(2)}
-                            </p>
-                          </div>
-                        </div>
-                      </div>
-                      <Badge className='bg-black text-white border-0 font-semibold flex-shrink-0 ml-2'>
-                        ৳{product.totalPrice.toFixed(2)}
-                      </Badge>
+                      )}
                     </div>
 
-                    {/* Nested Variation Details */}
-                    {(product.variation || product.hasVariation) && (
-                      <div className='bg-gray-50 border-t border-gray-200 px-3 py-2'>
-                        <div className='grid grid-cols-2 gap-2 text-xs'>
-                          {product.variation?.color && (
-                            <div className='flex items-center gap-1.5'>
-                              <span className='text-gray-500'>Color:</span>
-                              <span className='font-medium text-gray-900 capitalize'>
-                                {product.variation.color}
-                              </span>
-                            </div>
-                          )}
-                          {product.variation?.size && (
-                            <div className='flex items-center gap-1.5'>
-                              <span className='text-gray-500'>Size:</span>
-                              <span className='font-medium text-gray-900'>
-                                {product.variation.size}
-                              </span>
-                            </div>
-                          )}
-                          {product.variantId && (
-                            <div className='flex items-center gap-1.5 col-span-2'>
-                              <span className='text-gray-500'>Variant ID:</span>
-                              <span className='font-mono text-gray-900 text-xs'>
-                                {product.variantId}
-                              </span>
-                            </div>
-                          )}
-                          {product.discount && product.discount > 0 && (
-                            <div className='flex items-center gap-1.5 col-span-2'>
-                              <span className='text-gray-500'>Discount:</span>
-                              <span className='font-medium text-green-600'>
-                                -৳{product.discount.toFixed(2)}
-                              </span>
-                            </div>
-                          )}
-                        </div>
+                    {/* Info */}
+                    <div className='flex-1 min-w-0'>
+                      <p className='text-xs font-semibold text-gray-900 truncate leading-snug'>
+                        {product.name}
+                      </p>
+                      <div className='flex items-center gap-1.5 mt-0.5 flex-wrap'>
+                        {product.variation?.color && (
+                          <span className='text-[10px] text-gray-500 bg-white border border-gray-200 px-1.5 py-0.5 rounded capitalize'>
+                            {product.variation.color}
+                          </span>
+                        )}
+                        {product.variation?.size && (
+                          <span className='text-[10px] text-gray-500 bg-white border border-gray-200 px-1.5 py-0.5 rounded'>
+                            {product.variation.size}
+                          </span>
+                        )}
+                        <span className='text-[10px] text-gray-400'>
+                          ×{product.quantity}
+                        </span>
+                        {product.quantity <= 0 && (
+                          <span className='text-[10px] font-semibold text-red-500 bg-red-50 px-1.5 py-0.5 rounded'>
+                            Out of stock
+                          </span>
+                        )}
                       </div>
-                    )}
+                    </div>
+
+                    {/* Price */}
+                    <span className='text-xs font-bold text-gray-900 tabular-nums shrink-0'>
+                      ৳{product.totalPrice.toFixed(0)}
+                    </span>
                   </motion.div>
                 ))}
+
+                {/* Product total */}
+                <div className='flex items-center justify-between px-2.5 py-2 rounded-lg bg-gray-900 mt-1'>
+                  <span className='text-[11px] font-medium text-gray-400'>
+                    Order total
+                  </span>
+                  <span className='text-sm font-bold text-white tabular-nums'>
+                    {formatCurrency(totalAmount)}
+                  </span>
+                </div>
               </motion.div>
             )}
           </AnimatePresence>
         </div>
-      </CardContent>
 
-      {/* Minimalistic Footer with Actions */}
-      <div className='bg-white px-4 py-3 border-t border-gray-200'>
-        <div className='flex gap-2'>
-          <Button
-            variant='outline'
-            size='sm'
-            className='flex-1 h-9 bg-white hover:bg-gray-50 border-gray-300 text-xs sm:text-sm'
-            onClick={() => setShowEditSheet(true)}>
-            <Edit className='h-3.5 w-3.5 sm:mr-1.5' />
+        {/* ─── Action footer ─── */}
+        <div className='px-4 py-3 mt-auto border-t border-gray-100 flex items-center gap-2'>
+          <button
+            onClick={() => setShowEditSheet(true)}
+            className='flex items-center justify-center gap-1.5 flex-1 h-9 rounded-lg
+                       border border-gray-200 bg-white hover:bg-gray-50 text-xs font-semibold
+                       text-gray-600 transition-colors'>
+            <Edit className='w-3.5 h-3.5' />
             <span className='hidden sm:inline'>Edit</span>
-          </Button>
-          <Button
-            variant='outline'
-            size='sm'
-            className='flex-1 h-9 bg-white text-black hover:text-black hover:bg-gray-100 border-gray-300 text-xs sm:text-sm'
-            onClick={() => onCancel(order)}>
-            <XCircle className='h-3.5 w-3.5 sm:mr-1.5' />
+          </button>
+
+          <button
+            onClick={() => onCancel(order)}
+            className='flex items-center justify-center gap-1.5 flex-1 h-9 rounded-lg
+                       border border-red-200 bg-red-50 hover:bg-red-100 text-xs font-semibold
+                       text-red-600 transition-colors'>
+            <XCircle className='w-3.5 h-3.5' />
             <span className='hidden sm:inline'>Cancel</span>
-          </Button>
-          <Button
-            size='sm'
-            className='flex-1 h-9 bg-black hover:bg-gray-800 text-white transition-all text-xs sm:text-sm font-semibold'
-            onClick={() => onConfirm(order)}>
-            <CheckCircle2 className='h-3.5 w-3.5 sm:mr-1.5' />
-            <span className='hidden xs:inline sm:hidden'>OK</span>
-            <span className='hidden sm:inline'>Confirm</span>
-          </Button>
+          </button>
+
+          <button
+            onClick={() => onConfirm(order)}
+            className='flex items-center justify-center gap-1.5 flex-[2] h-9 rounded-lg
+                       bg-indigo-600 hover:bg-indigo-700 text-xs font-bold text-white
+                       transition-colors shadow-sm shadow-indigo-100'>
+            <CheckCircle2 className='w-3.5 h-3.5' />
+            Confirm order
+          </button>
         </div>
       </div>
 
-      {/* Edit Order Sheet - Dialog wrapper */}
+      {/* ─── Edit sheet ─── */}
       <AnimatePresence>
         {showEditSheet && (
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className='fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4'
+            className='fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4'
             onClick={() => setShowEditSheet(false)}>
             <motion.div
-              initial={{ scale: 0.95, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.95, opacity: 0 }}
+              initial={{ scale: 0.96, opacity: 0, y: 8 }}
+              animate={{ scale: 1, opacity: 1, y: 0 }}
+              exit={{ scale: 0.96, opacity: 0, y: 8 }}
+              transition={{ duration: 0.18 }}
               onClick={(e) => e.stopPropagation()}
-              className='bg-white rounded-lg shadow-2xl w-full max-w-2xl max-h-[90vh] flex flex-col overflow-hidden border border-gray-200'>
-              <div className='bg-black p-6 text-white'>
-                <div className='flex items-start justify-between'>
-                  <div>
-                    <h2 className='text-2xl font-bold'>
-                      Edit Order Information
-                    </h2>
-                    <p className='text-gray-300 mt-1'>
-                      Order #{order.orderNumber}
-                    </p>
-                  </div>
-                  <Button
-                    variant='ghost'
-                    size='sm'
-                    onClick={() => setShowEditSheet(false)}
-                    className='h-9 w-9 p-0 hover:bg-white/20 text-white'>
-                    <XCircle className='h-5 w-5' />
-                  </Button>
+              className='bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh]
+                         flex flex-col overflow-hidden border border-gray-100'>
+              {/* Modal header */}
+              <div className='px-6 py-4 border-b border-gray-100 flex items-center justify-between'>
+                <div>
+                  <h2 className='text-base font-bold text-gray-900'>
+                    Edit order
+                  </h2>
+                  <p className='text-xs text-gray-400 mt-0.5'>
+                    #{order.orderNumber}
+                  </p>
                 </div>
+                <button
+                  onClick={() => setShowEditSheet(false)}
+                  className='w-8 h-8 rounded-lg border border-gray-200 hover:bg-gray-50 flex items-center justify-center transition-colors'>
+                  <XCircle className='w-4 h-4 text-gray-500' />
+                </button>
               </div>
               <div className='flex-1 overflow-y-auto p-6'>
                 <EditCustomerInformation
@@ -534,7 +473,7 @@ export const OrderConfirmationCard: React.FC<OrderConfirmationCardProps> = ({
         )}
       </AnimatePresence>
 
-      {/* Modify Order Modal */}
+      {/* ─── Modify order modal ─── */}
       <ModifyOrderModal
         orderId={localOrder.id}
         orderNumber={localOrder.orderNumber}
@@ -550,22 +489,14 @@ export const OrderConfirmationCard: React.FC<OrderConfirmationCardProps> = ({
             totalPrice: newTotal,
             remaining: newTotal - prev.paid,
           }));
-
-          // Show detailed success message with summary
           if (summary) {
             toast.success(
-              `Order #${localOrder.orderNumber} modified!\n` +
-                `Products: ${summary.oldProductCount} → ${summary.newProductCount}\n` +
-                `Price: ৳${summary.oldTotalPrice.toLocaleString()} → ৳${summary.newTotalPrice.toLocaleString()}\n` +
-                `Difference: ${summary.priceDifference >= 0 ? "+" : ""}৳${summary.priceDifference.toLocaleString()}`,
+              `Order #${localOrder.orderNumber} updated · ৳${summary.oldTotalPrice.toLocaleString()} → ৳${summary.newTotalPrice.toLocaleString()}`,
             );
           }
-
-          if (onOrderUpdated) {
-            onOrderUpdated();
-          }
+          onOrderUpdated?.();
         }}
       />
-    </Card>
+    </>
   );
 };

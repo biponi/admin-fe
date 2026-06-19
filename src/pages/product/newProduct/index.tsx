@@ -15,7 +15,7 @@ const CreateNewProduct = () => {
   const [loading, setLoading] = useState(false);
   const isValidVariation = (variation: IVariation): boolean => {
     // Ensure required fields of the variation are valid
-    const { quantity, unitPrice } = variation;
+    const { quantity, unitPrice, size, color } = variation;
     if (
       isNaN(Number(quantity)) ||
       quantity < 0 ||
@@ -23,18 +23,22 @@ const CreateNewProduct = () => {
       unitPrice === 0
     ) {
       return false; // Quantity and unitPrice must be non-zero and defined
-    } else return true;
+    }
+
+    // Either size or color must be present (API requirement)
+    const hasSize = size && size.trim() !== '';
+    const hasColor = color && color.trim() !== '';
+    if (!hasSize && !hasColor) {
+      return false; // At least one of size or color is required
+    }
+
+    return true;
   };
   const validateProductData = (productData: IProductCreateData) => {
     if (!productData?.name) {
       return {
         isValidate: false,
         message: "Enter a valid name for the product",
-      };
-    } else if (!productData?.description) {
-      return {
-        isValidate: false,
-        message: "Enter a valid description for the product",
       };
     } else if (!productData?.sku) {
       return {
@@ -45,6 +49,11 @@ const CreateNewProduct = () => {
       return {
         isValidate: false,
         message: "Select at least one category for the product",
+      };
+    } else if (!productData?.thumbnail || !(productData.thumbnail instanceof File)) {
+      return {
+        isValidate: false,
+        message: "Thumbnail image is required",
       };
     } else if (
       productData?.variation.length < 0 &&
@@ -61,10 +70,15 @@ const CreateNewProduct = () => {
         if (!isValidVariation(v)) {
           return {
             isValidate: false,
-            message: "not all variation has proper quantity or unit price",
+            message: "not all variation has proper quantity, unit price, or size/color attributes",
           };
         }
       }
+    } else if (productData?.commissionType === 'percentage' && productData?.commissionRate > 100) {
+      return {
+        isValidate: false,
+        message: "Commission rate cannot exceed 100% for percentage type",
+      };
     }
     return { isValidate: true, message: "All Data Are Validate" };
   };

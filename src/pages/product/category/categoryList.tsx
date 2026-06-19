@@ -1,20 +1,12 @@
 // Updated CategoryList Component
-import { PlusCircle, FolderTree } from "lucide-react";
-import { Button } from "../../../components/ui/button";
+import { PlusCircle, FolderTree, RefreshCw, Search } from "lucide-react";
 import {
   Tabs,
   TabsContent,
   TabsList,
   TabsTrigger,
 } from "../../../components/ui/tabs";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from "../../../components/ui/card";
+
 import {
   Table,
   TableBody,
@@ -29,7 +21,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "../../../components/ui/select";
-import { Badge } from "../../../components/ui/badge";
+import { Input } from "../../../components/ui/input";
 import SingleItem from "../components/singleCategoryList";
 import EmptyView from "../../../coreComponents/emptyView";
 import { ICategory } from "../interface";
@@ -42,6 +34,7 @@ import MobileCategoryHeader from "./components/MobileCategoryHeader";
 import MobileCategoryCard from "./components/MobileCategoryCard";
 import MobileCategoryFilters from "./components/MobileCategoryFilters";
 import MobileCategoryEmpty from "./components/MobileCategoryEmpty";
+import MainView from "../../../coreComponents/mainView";
 
 const CategoryList = () => {
   const {
@@ -56,16 +49,41 @@ const CategoryList = () => {
   const [openCreateDialog, setOpenCreateDialog] = useState(false);
   const [openUpdateDialog, setOpenUpdateDialog] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState<ICategory | null>(
-    null
+    null,
   );
   const [viewMode, setViewMode] = useState<"flat" | "tree">("flat");
   const [levelFilter, setLevelFilter] = useState<string>("all");
-  const [selectedTab, setSelectedTab] = useState("all");
+  const [searchQuery, setSearchQuery] = useState("");
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  const [activeTab, setActiveTab] = useState("all");
 
   useEffect(() => {
     fetchCategories();
     //eslint-disable-next-line
   }, []);
+
+  const handleRefresh = () => {
+    setIsRefreshing(true);
+    fetchCategories();
+    setTimeout(() => setIsRefreshing(false), 800);
+  };
+
+  // Calculate statistics
+  const totalCategories = categories.length;
+  const activeCategories = categories.filter((cat) => cat.active).length;
+  const inactiveCategories = categories.filter((cat) => !cat.active).length;
+  const totalProducts = categories.reduce(
+    (sum, cat) => sum + (cat.totalProducts || 0),
+    0,
+  );
+
+  // Filter categories by search query
+  const getFilteredBySearch = (categoryList: ICategory[]) => {
+    if (!searchQuery.trim()) return categoryList;
+    return categoryList.filter((cat) =>
+      cat.name.toLowerCase().includes(searchQuery.toLowerCase()),
+    );
+  };
 
   useEffect(() => {
     if (!!selectedCategory) setOpenUpdateDialog(true);
@@ -73,7 +91,7 @@ const CategoryList = () => {
 
   const getCategoryBreadcrumb = (
     parentId: string | null,
-    existingCategory: ICategory
+    existingCategory: ICategory,
   ): string => {
     if (!parentId) return existingCategory?.name || "New Category";
 
@@ -130,7 +148,7 @@ const CategoryList = () => {
   const renderMobileEmptyView = () => {
     return (
       <MobileCategoryEmpty
-        type="no-categories"
+        type='no-categories'
         hasCreatePermission={hasRequiredPermission("category", "create")}
         onCreateCategory={() => setOpenCreateDialog(true)}
         onRetry={fetchCategories}
@@ -180,7 +198,7 @@ const CategoryList = () => {
   // Render tree view recursively
   const renderTreeView = (
     categories: ICategory[],
-    level = 0
+    level = 0,
   ): JSX.Element[] => {
     return categories.map((category) => (
       <div key={category.id}>
@@ -196,24 +214,36 @@ const CategoryList = () => {
 
   const renderCategoryTable = (categoryList: ICategory[]) =>
     viewMode === "tree" ? (
-      renderTreeView(buildCategoryTree(categoryList))
+      <div className='p-4 sm:p-6'>
+        {renderTreeView(buildCategoryTree(categoryList))}
+      </div>
     ) : (
       <Table>
         <TableHeader>
-          <TableRow>
+          <TableRow className='bg-slate-50 hover:bg-slate-50 border-b border-slate-100'>
             <TableHead className='hidden w-[100px] sm:table-cell'>
               <span className='sr-only'>Image</span>
             </TableHead>
-            <TableHead>Name</TableHead>
-            <TableHead>Hierarchy</TableHead>
-            <TableHead>Status</TableHead>
-            <TableHead className='hidden md:table-cell'>Level</TableHead>
-            <TableHead className='hidden md:table-cell'>
+            <TableHead className='text-xs font-semibold text-slate-500 uppercase tracking-wide py-3'>
+              Name
+            </TableHead>
+            <TableHead className='text-xs font-semibold text-slate-500 uppercase tracking-wide py-3'>
+              Hierarchy
+            </TableHead>
+            <TableHead className='text-xs font-semibold text-slate-500 uppercase tracking-wide py-3'>
+              Status
+            </TableHead>
+            <TableHead className='hidden md:table-cell text-xs font-semibold text-slate-500 uppercase tracking-wide py-3'>
+              Level
+            </TableHead>
+            <TableHead className='hidden md:table-cell text-xs font-semibold text-slate-500 uppercase tracking-wide py-3'>
               Total Products
             </TableHead>
-            <TableHead className='hidden md:table-cell'>Discount</TableHead>
+            <TableHead className='hidden md:table-cell text-xs font-semibold text-slate-500 uppercase tracking-wide py-3'>
+              Discount
+            </TableHead>
             {hasSomePermissionsForPage("category", ["edit", "delete"]) && (
-              <TableHead>
+              <TableHead className='text-xs font-semibold text-slate-500 uppercase tracking-wide py-3'>
                 <span className='sr-only'>Actions</span>
               </TableHead>
             )}
@@ -221,57 +251,61 @@ const CategoryList = () => {
         </TableHeader>
         <TableBody>
           {categoryList.map((category: ICategory) =>
-            renderCategoryRow(category)
+            renderCategoryRow(category),
           )}
         </TableBody>
       </Table>
     );
 
   const renderMobileView = () => {
-    const filteredCategories = getFilteredCategories(categories);
-    const activeCategories = categories.filter(cat => cat.active);
-    const inactiveCategories = categories.filter(cat => !cat.active);
-    
+    const filteredCategories = getFilteredBySearch(
+      getFilteredCategories(categories),
+    );
+
     let displayCategories = filteredCategories;
-    if (selectedTab === "all") {
+    if (activeTab === "all") {
       displayCategories = filteredCategories;
-    } else if (selectedTab === "active") {
-      displayCategories = getFilteredCategories(activeCategories);
-    } else if (selectedTab === "inactive") {
-      displayCategories = getFilteredCategories(inactiveCategories);
+    } else if (activeTab === "active") {
+      displayCategories = getFilteredBySearch(
+        getFilteredCategories(categories.filter((cat) => cat.active)),
+      );
+    } else if (activeTab === "inactive") {
+      displayCategories = getFilteredBySearch(
+        getFilteredCategories(categories.filter((cat) => !cat.active)),
+      );
     }
 
     return (
-      <div className="min-h-screen bg-gray-50 sm:hidden">
+      <div className='min-h-screen bg-gray-50 sm:hidden'>
         {/* Mobile Header */}
         <MobileCategoryHeader
-          totalCategories={categories.length}
-          activeCategories={activeCategories.length}
-          inactiveCategories={inactiveCategories.length}
+          totalCategories={totalCategories}
+          activeCategories={activeCategories}
+          inactiveCategories={inactiveCategories}
           hasCreatePermission={hasRequiredPermission("category", "create")}
           onCreateCategory={() => setOpenCreateDialog(true)}
-          selectedTab={selectedTab}
+          selectedTab={activeTab}
         />
 
         {/* Mobile Filters */}
         <MobileCategoryFilters
-          selectedTab={selectedTab}
-          onTabChange={setSelectedTab}
+          selectedTab={activeTab}
+          onTabChange={setActiveTab}
           viewMode={viewMode}
           onViewModeChange={setViewMode}
           levelFilter={levelFilter}
           onLevelFilterChange={setLevelFilter}
           uniqueLevels={getUniqueLevels()}
-          totalCategories={categories.length}
-          activeCount={activeCategories.length}
-          inactiveCount={inactiveCategories.length}
+          totalCategories={totalCategories}
+          activeCount={activeCategories}
+          inactiveCount={inactiveCategories}
         />
 
         {/* Mobile Categories List */}
-        <div className="px-4 py-4">
+        <div className='px-4 py-4'>
           {displayCategories.length === 0 ? (
             <MobileCategoryEmpty
-              type="no-filtered-results"
+              type='no-filtered-results'
               onClearFilters={() => {
                 setViewMode("flat");
                 setLevelFilter("all");
@@ -279,7 +313,7 @@ const CategoryList = () => {
               onRetry={fetchCategories}
             />
           ) : (
-            <div className="space-y-4 pb-20">
+            <div className='space-y-4 pb-20'>
               {displayCategories.map((category: ICategory) => (
                 <MobileCategoryCard
                   key={category.id}
@@ -291,7 +325,10 @@ const CategoryList = () => {
                   totalProducts={category.totalProducts || 0}
                   level={category.level || 0}
                   parentName={category.parentCategoryName}
-                  breadcrumb={getCategoryBreadcrumb(category?.parentId ?? null, category)}
+                  breadcrumb={getCategoryBreadcrumb(
+                    category?.parentId ?? null,
+                    category,
+                  )}
                   onEdit={() => setSelectedCategory(category)}
                   onDelete={deleteExistingCategory}
                 />
@@ -305,39 +342,231 @@ const CategoryList = () => {
 
   const renderDesktopView = () => {
     return (
-      <div className='hidden sm:block w-[80%] mx-auto my-4'>
-        {renderCategoryListView()}
+      <div className='hidden sm:block'>
+        <div className='min-h-screen bg-slate-50/60'>
+          <div className='max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6'>
+            {/* Page Header */}
+            <div className='flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4'>
+              <div className='flex items-center gap-3'>
+                <div className='flex items-center justify-center w-10 h-10 rounded-xl bg-blue-600 shadow-sm shadow-blue-200'>
+                  <FolderTree className='h-5 w-5 text-white' />
+                </div>
+                <div>
+                  <h1 className='text-xl font-semibold text-slate-900 leading-tight'>
+                    Categories
+                  </h1>
+                  <p className='text-sm text-slate-500 mt-0.5'>
+                    Organize and manage product categories
+                  </p>
+                </div>
+              </div>
+
+              <div className='flex items-center gap-2'>
+                <button
+                  onClick={handleRefresh}
+                  disabled={isRefreshing}
+                  className='inline-flex items-center gap-1.5 px-3 py-2 text-sm font-medium text-slate-600 bg-white border border-slate-200 rounded-lg hover:bg-slate-50 hover:border-slate-300 transition-all duration-150 disabled:opacity-50 shadow-sm'>
+                  <RefreshCw
+                    className={`h-3.5 w-3.5 ${isRefreshing ? "animate-spin" : ""}`}
+                  />
+                  <span className='hidden sm:inline'>Refresh</span>
+                </button>
+
+                {hasRequiredPermission("category", "create") && (
+                  <button
+                    onClick={() => setOpenCreateDialog(true)}
+                    className='inline-flex items-center gap-1.5 px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 active:bg-blue-800 transition-all duration-150 shadow-sm shadow-blue-200'>
+                    <PlusCircle className='h-4 w-4' />
+                    Add Category
+                  </button>
+                )}
+              </div>
+            </div>
+
+            {/* Summary Stats Strip */}
+            <div className='grid grid-cols-2 sm:grid-cols-4 gap-3'>
+              {[
+                {
+                  label: "Total Categories",
+                  value: totalCategories.toString(),
+                  accent: "text-blue-600",
+                  bg: "bg-blue-50",
+                },
+                {
+                  label: "Active Categories",
+                  value: activeCategories.toString(),
+                  accent: "text-emerald-600",
+                  bg: "bg-emerald-50",
+                },
+                {
+                  label: "Inactive Categories",
+                  value: inactiveCategories.toString(),
+                  accent: "text-rose-600",
+                  bg: "bg-rose-50",
+                },
+                {
+                  label: "Total Products",
+                  value: totalProducts.toString(),
+                  accent: "text-amber-600",
+                  bg: "bg-amber-50",
+                },
+              ].map((stat) => (
+                <div
+                  key={stat.label}
+                  className='flex items-center gap-3 bg-white rounded-xl border border-slate-100 px-4 py-3 shadow-sm'>
+                  <div
+                    className={`w-2 h-2 rounded-full ${stat.bg.replace("bg-", "bg-").replace("50", "400")}`}
+                  />
+                  <div className='min-w-0'>
+                    <p
+                      className={`text-lg font-semibold ${stat.accent} leading-none`}>
+                      {stat.value}
+                    </p>
+                    <p className='text-xs text-slate-500 mt-0.5 truncate'>
+                      {stat.label}
+                    </p>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* Tabs */}
+            <div className='bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden'>
+              <Tabs
+                value={activeTab}
+                onValueChange={setActiveTab}
+                className='w-full'>
+                {/* Tab Bar */}
+                <div className='border-b border-slate-100'>
+                  <TabsList className='h-auto bg-transparent p-0 gap-0 rounded-none flex justify-start'>
+                    <TabsTrigger
+                      value='all'
+                      className='
+                        relative flex items-center gap-2 px-4 py-4 text-sm font-medium rounded-none border-b-2 border-transparent
+                        text-slate-500 hover:text-slate-700
+                        data-[state=active]:text-blue-600 data-[state=active]:border-blue-600
+                        data-[state=active]:bg-transparent
+                        transition-all duration-150
+                        focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2
+                      '>
+                      <FolderTree className='h-4 w-4' />
+                      All Categories
+                    </TabsTrigger>
+                    <TabsTrigger
+                      value='active'
+                      className='
+                        relative flex items-center gap-2 px-4 py-4 text-sm font-medium rounded-none border-b-2 border-transparent
+                        text-slate-500 hover:text-slate-700
+                        data-[state=active]:text-blue-600 data-[state=active]:border-blue-600
+                        data-[state=active]:bg-transparent
+                        transition-all duration-150
+                        focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2
+                      '>
+                      <FolderTree className='h-4 w-4' />
+                      Active
+                    </TabsTrigger>
+                    <TabsTrigger
+                      value='inactive'
+                      className='
+                        relative flex items-center gap-2 px-4 py-4 text-sm font-medium rounded-none border-b-2 border-transparent
+                        text-slate-500 hover:text-slate-700
+                        data-[state=active]:text-blue-600 data-[state=active]:border-blue-600
+                        data-[state=active]:bg-transparent
+                        transition-all duration-150
+                        focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2
+                      '>
+                      <FolderTree className='h-4 w-4' />
+                      Inactive
+                    </TabsTrigger>
+                  </TabsList>
+                </div>
+
+                {/* Tab Contents */}
+                <TabsContent
+                  value='all'
+                  className='p-4 sm:p-6 mt-0 focus-visible:outline-none'>
+                  {renderCategoryTabContent(
+                    getFilteredBySearch(getFilteredCategories(categories)),
+                  )}
+                </TabsContent>
+
+                <TabsContent
+                  value='active'
+                  className='p-4 sm:p-6 mt-0 focus-visible:outline-none'>
+                  {renderCategoryTabContent(
+                    getFilteredBySearch(
+                      getFilteredCategories(
+                        categories.filter((cat) => cat.active),
+                      ),
+                    ),
+                  )}
+                </TabsContent>
+
+                <TabsContent
+                  value='inactive'
+                  className='p-4 sm:p-6 mt-0 focus-visible:outline-none'>
+                  {renderCategoryTabContent(
+                    getFilteredBySearch(
+                      getFilteredCategories(
+                        categories.filter((cat) => !cat.active),
+                      ),
+                    ),
+                  )}
+                </TabsContent>
+              </Tabs>
+            </div>
+          </div>
+        </div>
       </div>
     );
   };
 
-  const renderCategoryListView = () => {
-    return (
-      <Tabs defaultValue='all'>
-        <div className='flex items-center w-full mb-4'>
-          <TabsList>
-            <TabsTrigger value='all'>All</TabsTrigger>
-            <TabsTrigger value='active'>Active</TabsTrigger>
-            <TabsTrigger value='inactive'>Inactive</TabsTrigger>
-          </TabsList>
+  const renderCategoryTabContent = (categoryList: ICategory[]) => {
+    if (categoryList.length === 0) {
+      return (
+        <div className='text-center py-12'>
+          <FolderTree className='mx-auto h-12 w-12 text-slate-300 mb-4' />
+          <h3 className='text-lg font-semibold text-slate-900 mb-2'>
+            No categories found
+          </h3>
+          <p className='text-sm text-slate-500'>
+            {searchQuery || levelFilter !== "all"
+              ? "Try adjusting your filters or search query"
+              : "Get started by creating your first category"}
+          </p>
+          {hasRequiredPermission("category", "create") &&
+            !searchQuery &&
+            levelFilter === "all" && (
+              <button
+                onClick={() => setOpenCreateDialog(true)}
+                className='mt-4 inline-flex items-center gap-1.5 px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-all duration-150 shadow-sm shadow-blue-200'>
+                <PlusCircle className='h-4 w-4' />
+                Add Category
+              </button>
+            )}
+        </div>
+      );
+    }
 
-          <div className='ml-4 flex items-center gap-2'>
-            {/* View Mode Toggle */}
-            <Select
-              value={viewMode}
-              onValueChange={(value: "flat" | "tree") => setViewMode(value)}>
-              <SelectTrigger className='w-32'>
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value='flat'>Flat View</SelectItem>
-                <SelectItem value='tree'>Tree View</SelectItem>
-              </SelectContent>
-            </Select>
+    return (
+      <div className='space-y-4'>
+        {/* Filter Bar */}
+        <div className='flex flex-col sm:flex-row gap-3 items-start sm:items-center justify-between'>
+          <div className='flex flex-col sm:flex-row gap-3 flex-1'>
+            {/* Search */}
+            <div className='relative flex-1 max-w-xs'>
+              <Search className='absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-slate-400' />
+              <Input
+                placeholder='Search categories...'
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className='pl-9 h-9 text-sm border-slate-200 bg-white focus-visible:ring-blue-500'
+              />
+            </div>
 
             {/* Level Filter */}
             <Select value={levelFilter} onValueChange={setLevelFilter}>
-              <SelectTrigger className='w-32'>
+              <SelectTrigger className='w-full sm:w-44 h-9 text-sm border-slate-200 bg-white focus:ring-blue-500'>
                 <SelectValue placeholder='All Levels' />
               </SelectTrigger>
               <SelectContent>
@@ -349,123 +578,45 @@ const CategoryList = () => {
                 ))}
               </SelectContent>
             </Select>
+
+            {/* View Mode Toggle */}
+            <Select
+              value={viewMode}
+              onValueChange={(value: "flat" | "tree") => setViewMode(value)}>
+              <SelectTrigger className='w-full sm:w-36 h-9 text-sm border-slate-200 bg-white focus:ring-blue-500'>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value='flat'>Flat View</SelectItem>
+                <SelectItem value='tree'>Tree View</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
 
-          {hasRequiredPermission("category", "create") && (
-            <div className='ml-auto flex items-center gap-2'>
-              <Button
-                size='sm'
-                className='h-7 gap-1'
-                onClick={() => {
-                  setOpenCreateDialog(true);
-                }}>
-                <PlusCircle className='h-3.5 w-3.5' />
-                <span className='sr-only sm:not-sr-only sm:whitespace-nowrap'>
-                  Add Category
-                </span>
-              </Button>
-            </div>
+          {/* Clear Filters Button */}
+          {(searchQuery || levelFilter !== "all") && (
+            <button
+              onClick={() => {
+                setSearchQuery("");
+                setLevelFilter("all");
+              }}
+              className='text-sm text-slate-600 hover:text-slate-800 font-medium'>
+              Clear filters
+            </button>
           )}
         </div>
 
-        <TabsContent value='all'>
-          <Card x-chunk='dashboard-06-chunk-0'>
-            <CardHeader>
-              <CardTitle className='flex items-center gap-2'>
-                <FolderTree className='h-5 w-5' />
-                Categories
-                {levelFilter !== "all" && (
-                  <Badge variant='secondary'>Level {levelFilter}</Badge>
-                )}
-              </CardTitle>
-              <CardDescription>
-                Manage your categories and view their sales performance.
-                Categories are organized hierarchically.
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              {renderCategoryTable(getFilteredCategories(categories))}
-            </CardContent>
-            <CardFooter>
-              <div className='w-full flex justify-between items-center'>
-                <div className='text-xs text-muted-foreground'>
-                  Showing{" "}
-                  <strong>{getFilteredCategories(categories).length}</strong> of{" "}
-                  {categories.length} categories
-                </div>
-              </div>
-            </CardFooter>
-          </Card>
-        </TabsContent>
+        {/* Table Container */}
+        <div className='rounded-xl border border-slate-100 bg-white shadow-sm overflow-hidden'>
+          {renderCategoryTable(categoryList)}
+        </div>
 
-        <TabsContent value='active'>
-          <Card x-chunk='dashboard-06-chunk-0'>
-            <CardHeader>
-              <CardTitle className='flex items-center gap-2'>
-                <FolderTree className='h-5 w-5' />
-                Active Categories
-              </CardTitle>
-              <CardDescription>
-                Currently active categories in your system.
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              {renderCategoryTable(
-                getFilteredCategories(categories.filter((cat) => cat.active))
-              )}
-            </CardContent>
-            <CardFooter>
-              <div className='w-full flex justify-between items-center'>
-                <div className='text-xs text-muted-foreground'>
-                  Showing{" "}
-                  <strong>
-                    {
-                      getFilteredCategories(
-                        categories.filter((cat) => cat.active)
-                      ).length
-                    }
-                  </strong>{" "}
-                  active categories
-                </div>
-              </div>
-            </CardFooter>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value='inactive'>
-          <Card x-chunk='dashboard-06-chunk-0'>
-            <CardHeader>
-              <CardTitle className='flex items-center gap-2'>
-                <FolderTree className='h-5 w-5' />
-                Inactive Categories
-              </CardTitle>
-              <CardDescription>
-                Currently inactive categories in your system.
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              {renderCategoryTable(
-                getFilteredCategories(categories.filter((cat) => !cat.active))
-              )}
-            </CardContent>
-            <CardFooter>
-              <div className='w-full flex justify-between items-center'>
-                <div className='text-xs text-muted-foreground'>
-                  Showing{" "}
-                  <strong>
-                    {
-                      getFilteredCategories(
-                        categories.filter((cat) => !cat.active)
-                      ).length
-                    }
-                  </strong>{" "}
-                  inactive categories
-                </div>
-              </div>
-            </CardFooter>
-          </Card>
-        </TabsContent>
-      </Tabs>
+        {/* Footer Count */}
+        <div className='text-xs text-slate-500'>
+          Showing <strong>{categoryList.length}</strong> of{" "}
+          <strong>{categories.length}</strong> categories
+        </div>
+      </div>
     );
   };
 
@@ -504,9 +655,9 @@ const CategoryList = () => {
         <>
           {/* Mobile Loading */}
           <div className='sm:hidden'>
-            <MobileCategoryEmpty type="loading" />
+            <MobileCategoryEmpty type='loading' />
           </div>
-          
+
           {/* Desktop Loading */}
           <div className='hidden sm:block'>
             <SkeletonCard title='Categories are loading...' />
@@ -524,25 +675,20 @@ const CategoryList = () => {
       return (
         <>
           {renderMobileEmptyView()}
-          <div className='hidden sm:block'>
-            {renderDesktopEmptyView()}
-          </div>
+          <div className='hidden sm:block'>{renderDesktopEmptyView()}</div>
         </>
       );
     }
   };
 
   return (
-    <>
-      {mainView()}
-      {renderAddNewCategoryDialog()}
-      {!!categories && categories.length > 0 && renderUpdateCategoryDialog()}
-      
-      {/* Desktop Container */}
-      <div className='hidden sm:block w-[80%] mx-auto my-4'>
-        {/* Desktop content will be shown through renderDesktopView */}
-      </div>
-    </>
+    <MainView title='Categories'>
+      <>
+        {mainView()}
+        {renderAddNewCategoryDialog()}
+        {!!categories && categories.length > 0 && renderUpdateCategoryDialog()}
+      </>
+    </MainView>
   );
 };
 

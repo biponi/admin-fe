@@ -72,6 +72,7 @@ export const ImageGroupManager: React.FC<ImageGroupManagerProps> = ({
 }) => {
   const [selectedAttribute, setSelectedAttribute] = useState<string>("color");
   const [isPanelOpen, setIsPanelOpen] = useState(true);
+  const [newlyAddedGroupId, setNewlyAddedGroupId] = useState<string | null>(null);
 
   const handleAutoGenerateGroups = () => {
     if (!variations || variations.length === 0) {
@@ -82,15 +83,28 @@ export const ImageGroupManager: React.FC<ImageGroupManagerProps> = ({
     const attrMap: Record<string, { variantIds: string[]; value: string }> = {};
 
     variations.forEach((variant) => {
-      const attrValue = variant[selectedAttribute as keyof IVariation]
-        ? String(variant[selectedAttribute as keyof IVariation])
-        : "Default";
+      const attrValue = variant[selectedAttribute as keyof IVariation];
 
-      if (!attrMap[attrValue]) {
-        attrMap[attrValue] = { variantIds: [], value: attrValue };
+      // Skip empty values - don't create "Default" group
+      if (!attrValue || String(attrValue).trim() === '') {
+        return; // Skip this variation
       }
-      attrMap[attrValue].variantIds.push(variant.id);
+
+      const stringValue = String(attrValue);
+
+      if (!attrMap[stringValue]) {
+        attrMap[stringValue] = { variantIds: [], value: stringValue };
+      }
+      attrMap[stringValue].variantIds.push(variant.id);
     });
+
+    // Check if any valid groups were created
+    if (Object.keys(attrMap).length === 0) {
+      toast.error(
+        `No variations found with ${selectedAttribute} values. Please fill in the ${selectedAttribute} field for your variations first.`,
+      );
+      return;
+    }
 
     const newGroups: IImageGroup[] = Object.entries(attrMap).map(
       ([attrValue, data], index) => ({
@@ -118,10 +132,11 @@ export const ImageGroupManager: React.FC<ImageGroupManagerProps> = ({
 
   const handleAddNewGroup = () => {
     // Create a temporary group with default values
+    const groupId = `group-${Date.now()}`;
     const newGroup: IImageGroup = {
-      id: `group-${Date.now()}`,
+      id: groupId,
       attribute: selectedAttribute,
-      value: `New ${selectedAttribute}`, // Provide a default value instead of empty string
+      value: '', // Empty initially - user must set this
       displayLabel: `New ${selectedAttribute} Group`,
       colorHex: selectedAttribute === "color" ? "#6b7280" : undefined,
       images: [],
@@ -129,14 +144,13 @@ export const ImageGroupManager: React.FC<ImageGroupManagerProps> = ({
       sortOrder: imageGroups.length,
     };
 
-    // Validate the group before adding
-    if (!validateImageGroup(newGroup)) {
-      toast.error("Cannot add group: Missing required fields (attribute or value)");
-      return;
-    }
-
+    // Add the group even though it's incomplete - it will be validated before save
     onImageGroupsChange([...imageGroups, newGroup]);
-    toast.success(`New ${selectedAttribute} group added. Edit the value field below.`);
+    // Track the newly added group so it auto-opens in edit mode
+    setNewlyAddedGroupId(groupId);
+    toast.success(`New ${selectedAttribute} group added. Please set the value field before adding images.`, {
+      duration: 5000,
+    });
   };
 
   const handleUpdateGroup = (updatedGroup: IImageGroup) => {
@@ -305,6 +319,8 @@ export const ImageGroupManager: React.FC<ImageGroupManagerProps> = ({
                     canMoveUp={index > 0}
                     canMoveDown={index < imageGroups.length - 1}
                     disabled={disabled}
+                    forceEditMode={group.id === newlyAddedGroupId}
+                    onEditModeEnd={() => setNewlyAddedGroupId(null)}
                   />
                 ))}
               </div>

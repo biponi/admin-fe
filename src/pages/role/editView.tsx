@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
+import { Shield, Save, Loader2, ArrowLeft } from "lucide-react";
 import { useRole } from "./hooks/useRoleHook";
 import { UpdateRoleInput } from "./interface";
 import { Button } from "../../components/ui/button";
@@ -10,12 +11,13 @@ import { Switch } from "../../components/ui/switch";
 import {
   Card,
   CardContent,
+  CardDescription,
   CardHeader,
   CardTitle,
 } from "../../components/ui/card";
 import { Alert, AlertDescription } from "../../components/ui/alert";
 import { Checkbox } from "../../components/ui/checkbox";
-import { ArrowLeft, Save, Loader2 } from "lucide-react";
+import { Badge } from "../../components/ui/badge";
 import { pagePermissions } from "../../utils/permissions";
 
 const EditRolePage: React.FC = () => {
@@ -145,26 +147,42 @@ const EditRolePage: React.FC = () => {
 
   if (loading) {
     return (
-      <div className='container mx-auto p-6 max-w-4xl'>
-        <div className='flex justify-center items-center h-64'>
-          <div className='flex items-center gap-2'>
-            <Loader2 className='h-6 w-6 animate-spin' />
-            <span>Loading role...</span>
+      <div className='min-h-screen bg-slate-50/60'>
+        <div className='max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6'>
+          <div className='flex flex-col items-center justify-center py-20'>
+            <div className='relative'>
+              <div className='absolute inset-0 bg-indigo-500/20 rounded-full animate-ping' />
+              <div className='relative h-16 w-16 rounded-full bg-indigo-600 flex items-center justify-center shadow-lg'>
+                <Loader2 className='h-8 w-8 text-white animate-spin' />
+              </div>
+            </div>
+            <p className='mt-6 text-lg font-semibold text-slate-900'>
+              Loading role...
+            </p>
+            <p className='text-sm text-slate-500 mt-1'>
+              Please wait while we fetch the data
+            </p>
           </div>
         </div>
       </div>
     );
   }
 
-  if (error) {
+  if (error && !role) {
     return (
-      <div className='container mx-auto p-6 max-w-4xl'>
-        <div className='flex flex-col items-center justify-center h-64'>
-          <p className='text-red-500 mb-4'>{error}</p>
-          <Button onClick={() => navigate("/roles")}>
-            <ArrowLeft className='h-4 w-4 mr-2' />
-            Back to Roles
-          </Button>
+      <div className='min-h-screen bg-slate-50/60'>
+        <div className='max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6'>
+          <div className='flex flex-col items-center justify-center py-20'>
+            <div className='bg-rose-50 border border-rose-200 rounded-xl p-6 mb-4'>
+              <p className='text-rose-600 mb-4'>{error}</p>
+              <Button
+                onClick={() => navigate("/roles")}
+                className='border-slate-200'>
+                <ArrowLeft className='h-4 w-4 mr-2' />
+                Back to Roles
+              </Button>
+            </div>
+          </div>
         </div>
       </div>
     );
@@ -172,13 +190,17 @@ const EditRolePage: React.FC = () => {
 
   if (!role) {
     return (
-      <div className='container mx-auto p-6 max-w-4xl'>
-        <div className='flex flex-col items-center justify-center h-64'>
-          <p className='text-red-500 mb-4'>Role not found.</p>
-          <Button onClick={() => navigate("/roles")}>
-            <ArrowLeft className='h-4 w-4 mr-2' />
-            Back to Roles
-          </Button>
+      <div className='min-h-screen bg-slate-50/60'>
+        <div className='max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6'>
+          <div className='flex flex-col items-center justify-center py-20'>
+            <p className='text-rose-600 mb-4'>Role not found.</p>
+            <Button
+              onClick={() => navigate("/roles")}
+              className='border-slate-200'>
+              <ArrowLeft className='h-4 w-4 mr-2' />
+              Back to Roles
+            </Button>
+          </div>
         </div>
       </div>
     );
@@ -187,160 +209,210 @@ const EditRolePage: React.FC = () => {
   const currentPermissions = getPermissionsObject();
 
   return (
-    <div className='mx-auto px-2 py-6  grid-cols-3'>
-      <div className='flex items-center gap-4 mb-6'>
-        <Button variant='outline' onClick={() => navigate("/roles")}>
-          <ArrowLeft className='h-4 w-4 mr-2' />
-          Back to Roles
-        </Button>
-      </div>
-
-      {error && (
-        <Alert variant='destructive' className='mb-6'>
-          <AlertDescription>{error}</AlertDescription>
-        </Alert>
-      )}
-
-      <form onSubmit={handleSubmit} className='space-y-6'>
-        <Card>
-          <CardHeader className='flex flex-row w-full justify-between items-center'>
-            <CardTitle>Basic Information</CardTitle>
-            <div className='flex justify-end gap-4'>
-              <Button
-                type='button'
-                variant='outline'
-                onClick={() => navigate("/roles")}>
-                Cancel
-              </Button>
-              <Button
-                type='submit'
-                disabled={isSubmitting || !formData.name?.trim()}>
-                {isSubmitting ? (
-                  <>
-                    <Loader2 className='h-4 w-4 mr-2 animate-spin' />
-                    Updating...
-                  </>
-                ) : (
-                  <>
-                    <Save className='h-4 w-4 mr-2' />
-                    Update Role
-                  </>
-                )}
-              </Button>
-            </div>
-          </CardHeader>
-          <CardContent className='space-y-4'>
-            <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
-              <div className='space-y-2'>
-                <Label htmlFor='name'>Role Name *</Label>
-                <Input
-                  id='name'
-                  placeholder='Enter role name'
-                  value={formData.name || ""}
-                  onChange={(e) => handleInputChange("name", e.target.value)}
-                  required
-                />
+    <div className='min-h-screen bg-slate-50/60'>
+      <div className='max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6'>
+        {/* Page Header */}
+        <div className='flex items-center justify-between gap-4'>
+          <div className='flex items-center gap-3'>
+            <Button
+              variant='outline'
+              size='sm'
+              onClick={() => navigate("/roles")}
+              className='border-slate-200'>
+              <ArrowLeft className='h-4 w-4 mr-2' />
+              Back
+            </Button>
+            <div className='flex items-center gap-3'>
+              <div className='flex items-center justify-center w-10 h-10 rounded-xl bg-indigo-600 shadow-sm shadow-indigo-200'>
+                <Shield className='h-5 w-5 text-white' />
               </div>
+              <div>
+                <h1 className='text-xl font-semibold text-slate-900 leading-tight'>
+                  Edit Role
+                </h1>
+                <p className='text-sm text-slate-500 mt-0.5'>
+                  Update role permissions and settings
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
 
-              <div className='space-y-2'>
-                <Label htmlFor='active'>Status</Label>
-                <div className='flex items-center space-x-2'>
-                  <Switch
-                    id='active'
-                    checked={formData.active}
-                    onCheckedChange={(checked) =>
-                      handleInputChange("active", checked)
-                    }
-                  />
-                  <Label htmlFor='active'>
-                    {formData.active ? "Active" : "Inactive"}
+        {error && (
+          <Alert variant='destructive' className='border-rose-200 bg-rose-50'>
+            <AlertDescription className='text-rose-600'>{error}</AlertDescription>
+          </Alert>
+        )}
+
+        <form onSubmit={handleSubmit} className='space-y-6'>
+          {/* Basic Information Card */}
+          <Card className='border-slate-100 shadow-sm'>
+            <CardHeader>
+              <CardTitle className='text-lg'>Basic Information</CardTitle>
+              <CardDescription className='text-slate-500'>
+                Update role details
+              </CardDescription>
+            </CardHeader>
+            <CardContent className='space-y-4'>
+              <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
+                <div className='space-y-2'>
+                  <Label htmlFor='name' className='text-sm font-medium text-slate-700'>
+                    Role Name <span className='text-rose-500'>*</span>
                   </Label>
+                  <Input
+                    id='name'
+                    placeholder='e.g., Sales Manager'
+                    value={formData.name || ""}
+                    onChange={(e) => handleInputChange("name", e.target.value)}
+                    required
+                    className='border-slate-200 focus:border-indigo-400'
+                  />
+                </div>
+
+                <div className='space-y-2'>
+                  <Label htmlFor='active' className='text-sm font-medium text-slate-700'>
+                    Status
+                  </Label>
+                  <div className='flex items-center space-x-2 h-10'>
+                    <Switch
+                      id='active'
+                      checked={formData.active}
+                      onCheckedChange={(checked) =>
+                        handleInputChange("active", checked)
+                      }
+                    />
+                    <Label htmlFor='active' className='text-sm text-slate-600 cursor-pointer'>
+                      {formData.active ? "Active" : "Inactive"}
+                    </Label>
+                  </div>
                 </div>
               </div>
-            </div>
 
-            <div className='space-y-2'>
-              <Label htmlFor='description'>Description</Label>
-              <Textarea
-                id='description'
-                placeholder='Enter role description'
-                value={formData.description || ""}
-                onChange={(e) =>
-                  handleInputChange("description", e.target.value)
-                }
-                rows={3}
-              />
-            </div>
-          </CardContent>
-        </Card>
+              <div className='space-y-2'>
+                <Label htmlFor='description' className='text-sm font-medium text-slate-700'>
+                  Description
+                </Label>
+                <Textarea
+                  id='description'
+                  placeholder='Briefly describe this role...'
+                  value={formData.description || ""}
+                  onChange={(e) =>
+                    handleInputChange("description", e.target.value)
+                  }
+                  rows={3}
+                  className='border-slate-200 focus:border-indigo-400 resize-none'
+                />
+              </div>
+            </CardContent>
+          </Card>
 
-        <Card>
-          <CardHeader>
-            <CardTitle>Permissions</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className='w-full grid grid-cols-1 md:grid-cols-2 gap-4'>
-              {Object.entries(pagePermissions).map(
-                ([pageName, permissions]) => (
-                  <div key={pageName} className='border rounded-lg p-4'>
-                    <div className='flex items-center justify-between mb-4'>
-                      <div className='flex items-center space-x-2'>
-                        <Checkbox
-                          id={`page-${pageName}`}
-                          checked={isPageSelected(pageName)}
-                          onCheckedChange={(checked) =>
-                            handlePageToggle(pageName, checked as boolean)
-                          }
-                          className={
-                            isPagePartiallySelected(pageName)
-                              ? "data-[state=checked]:bg-orange-500"
-                              : ""
-                          }
-                        />
-                        <Label
-                          htmlFor={`page-${pageName}`}
-                          className='text-lg font-medium'>
-                          {pageName}
-                        </Label>
-                      </div>
-                      <span className='text-sm text-muted-foreground'>
-                        {(currentPermissions[pageName] || []).length} /{" "}
-                        {permissions.length} selected
-                      </span>
-                    </div>
-                    <div className='grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2 ml-6'>
-                      {permissions.map((permission) => (
-                        <div
-                          key={permission}
-                          className='flex items-center space-x-2'>
-                          <Checkbox
-                            id={`${pageName}-${permission}`}
-                            checked={(
-                              currentPermissions[pageName] || []
-                            ).includes(permission)}
-                            onCheckedChange={(checked) =>
-                              handlePermissionChange(
-                                pageName,
-                                permission,
-                                checked as boolean
-                              )
-                            }
-                          />
-                          <Label
-                            htmlFor={`${pageName}-${permission}`}
-                            className='text-sm capitalize'>
-                            {permission.replace("_", " ")}
-                          </Label>
+          {/* Permissions Card */}
+          <Card className='border-slate-100 shadow-sm'>
+            <CardHeader>
+              <CardTitle className='text-lg'>Permissions</CardTitle>
+              <CardDescription className='text-slate-500'>
+                Manage what actions this role can perform on different pages
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className='space-y-4'>
+                {Object.entries(pagePermissions).map(
+                  ([pageName, permissions]) => {
+                    const selectedCount = (currentPermissions[pageName] || []).length;
+                    const totalCount = permissions.length;
+
+                    return (
+                      <div
+                        key={pageName}
+                        className='border border-slate-200 rounded-xl p-4 hover:border-slate-300 transition-colors'>
+                        <div className='flex items-center justify-between mb-4'>
+                          <div className='flex items-center space-x-3'>
+                            <Checkbox
+                              id={`page-${pageName}`}
+                              checked={isPageSelected(pageName)}
+                              onCheckedChange={(checked) =>
+                                handlePageToggle(pageName, checked as boolean)
+                              }
+                              className={
+                                isPagePartiallySelected(pageName)
+                                  ? "data-[state=checked]:bg-amber-500 data-[state=checked]:border-amber-500"
+                                  : ""
+                              }
+                            />
+                            <Label
+                              htmlFor={`page-${pageName}`}
+                              className='text-base font-semibold text-slate-900 cursor-pointer'>
+                              {pageName}
+                            </Label>
+                          </div>
+                          <Badge
+                            variant='outline'
+                            className='text-xs border-slate-200 text-slate-600'>
+                            {selectedCount} / {totalCount}
+                          </Badge>
                         </div>
-                      ))}
-                    </div>
-                  </div>
-                )
+                        <div className='grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 ml-9'>
+                          {permissions.map((permission) => (
+                            <div
+                              key={permission}
+                              className='flex items-center space-x-2'>
+                              <Checkbox
+                                id={`${pageName}-${permission}`}
+                                checked={(
+                                  currentPermissions[pageName] || []
+                                ).includes(permission)}
+                                onCheckedChange={(checked) =>
+                                  handlePermissionChange(
+                                    pageName,
+                                    permission,
+                                    checked as boolean
+                                  )
+                                }
+                              />
+                              <Label
+                                htmlFor={`${pageName}-${permission}`}
+                                className='text-sm text-slate-600 capitalize cursor-pointer'>
+                                {permission.replace("_", " ")}
+                              </Label>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    );
+                  }
+                )}
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Action Buttons */}
+          <div className='flex items-center justify-end gap-3 pt-4 border-t border-slate-100'>
+            <Button
+              type='button'
+              variant='outline'
+              onClick={() => navigate("/roles")}
+              className='border-slate-200'>
+              Cancel
+            </Button>
+            <Button
+              type='submit'
+              disabled={isSubmitting || !formData.name?.trim()}
+              className='bg-indigo-600 hover:bg-indigo-700 text-white shadow-sm shadow-indigo-200'>
+              {isSubmitting ? (
+                <>
+                  <Loader2 className='h-4 w-4 mr-2 animate-spin' />
+                  Updating...
+                </>
+              ) : (
+                <>
+                  <Save className='h-4 w-4 mr-2' />
+                  Update Role
+                </>
               )}
-            </div>
-          </CardContent>
-        </Card>
-      </form>
+            </Button>
+          </div>
+        </form>
+      </div>
     </div>
   );
 };

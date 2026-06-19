@@ -596,55 +596,56 @@ const UpdatePurchaseOrder: React.FC = () => {
 
   return (
     <MainView title='Update Purchase Order'>
-      <div className='container mx-auto p-6 space-y-6'>
-        {/* Header */}
-        <Card className='border-0 shadow-none p-0'>
-          <CardHeader className='p-0'>
-            <div className='flex justify-between items-start'>
-              <div>
-                <CardTitle className='flex items-center gap-2'>
-                  <Edit className='h-5 w-5' />
-                  Update Purchase Order #{purchaseOrder.purchaseNumber}
-                </CardTitle>
-                <CardDescription className='mt-2'>
-                  Modify product quantities and pricing for this purchase order
-                </CardDescription>
+      <div className='min-h-screen bg-slate-50/60'>
+        <div className='max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6'>
+          {/* Header */}
+          <div className='flex items-center justify-between gap-4'>
+            <div className='flex items-center gap-3'>
+              <div className='flex items-center justify-center w-10 h-10 rounded-xl bg-indigo-600 shadow-sm shadow-indigo-200'>
+                <Edit className='h-5 w-5 text-white' />
               </div>
-              <div className='flex items-center gap-2'>
-                <Button
-                  variant='outline'
-                  size='sm'
-                  onClick={handleUndo}
-                  disabled={historyIndex <= 0 || updating}
-                  title='Undo (Ctrl+Z)'>
-                  ↶ Undo
-                </Button>
-                <Button
-                  variant='outline'
-                  size='sm'
-                  onClick={handleRedo}
-                  disabled={historyIndex >= history.length - 1 || updating}
-                  title='Redo (Ctrl+Y)'>
-                  ↷ Redo
-                </Button>
-                <Button
-                  variant='outline'
-                  onClick={() => navigate("/purchase-order/list")}
-                  disabled={updating}>
-                  <ArrowLeft className='w-4 h-4 mr-2' />
-                  Back
-                </Button>
-                <Button
-                  onClick={fetchData}
-                  variant='outline'
-                  disabled={loading || updating}>
-                  <RefreshCw className='w-4 h-4 mr-2' />
-                  Refresh
-                </Button>
+              <div>
+                <h1 className='text-xl font-semibold text-slate-900 leading-tight'>
+                  Update Purchase Order #{purchaseOrder.purchaseNumber}
+                </h1>
+                <p className='text-sm text-slate-500 mt-0.5'>
+                  Modify product quantities and pricing for this purchase order
+                </p>
               </div>
             </div>
-          </CardHeader>
-        </Card>
+            <div className='flex items-center gap-2'>
+              <Button
+                variant='outline'
+                size='sm'
+                onClick={handleUndo}
+                disabled={historyIndex <= 0 || updating}
+                title='Undo (Ctrl+Z)'>
+                ↶ Undo
+              </Button>
+              <Button
+                variant='outline'
+                size='sm'
+                onClick={handleRedo}
+                disabled={historyIndex >= history.length - 1 || updating}
+                title='Redo (Ctrl+Y)'>
+                ↷ Redo
+              </Button>
+              <Button
+                variant='outline'
+                onClick={() => navigate("/purchase-order/list")}
+                disabled={updating}>
+                <ArrowLeft className='w-4 h-4 mr-2' />
+                Back
+              </Button>
+              <Button
+                onClick={fetchData}
+                variant='outline'
+                disabled={loading || updating}>
+                <RefreshCw className='w-4 h-4 mr-2' />
+                Refresh
+              </Button>
+            </div>
+          </div>
 
         {/* Stats Cards */}
         {/* <div className='grid grid-cols-1 md:grid-cols-4 gap-4'>
@@ -708,22 +709,22 @@ const UpdatePurchaseOrder: React.FC = () => {
         {hasValidationErrors && (
           <Alert
             variant='destructive'
-            className='border-l-4 border-red-600 bg-gradient-to-r from-red-50 to-white shadow-md'>
+            className='border-l-4 border-red-600 bg-white shadow-sm'>
             <div className='flex gap-3'>
               <div className='flex-shrink-0'>
-                <div className='rounded-full bg-red-100 p-2'>
+                <div className='rounded-full bg-slate-50 p-2'>
                   <AlertTriangle className='h-5 w-5 text-red-600' />
                 </div>
               </div>
               <AlertDescription className='flex-1'>
-                <div className='font-semibold text-red-900 mb-3 text-base'>
+                <div className='font-semibold text-slate-900 mb-3 text-base'>
                   Please fix the following errors:
                 </div>
                 <ul className='space-y-2'>
                   {validationErrors.map((error, index) => (
                     <li
                       key={index}
-                      className='flex items-start gap-2 text-sm text-red-800'>
+                      className='flex items-start gap-2 text-sm text-slate-700'>
                       <span className='inline-block w-1.5 h-1.5 rounded-full bg-red-500 mt-1.5 flex-shrink-0'></span>
                       <span>
                         {error.productIndex !== undefined ? (
@@ -747,22 +748,22 @@ const UpdatePurchaseOrder: React.FC = () => {
 
         {/* Inventory Warnings */}
         {inventoryWarnings.length > 0 && (
-          <Alert className='bg-gradient-to-r from-amber-50 to-yellow-50 border-l-4 border-amber-500 shadow-md'>
+          <Alert className='bg-white border border-slate-100 border-l-4 border-amber-500 shadow-sm'>
             <div className='flex gap-3'>
               <div className='flex-shrink-0'>
-                <div className='rounded-full bg-amber-100 p-2'>
+                <div className='rounded-full bg-slate-50 p-2'>
                   <AlertTriangle className='h-5 w-5 text-amber-600' />
                 </div>
               </div>
               <AlertDescription className='flex-1'>
-                <div className='font-semibold text-amber-900 mb-3 text-base'>
+                <div className='font-semibold text-slate-900 mb-3 text-base'>
                   Inventory Changes:
                 </div>
                 <ul className='space-y-2'>
                   {inventoryWarnings.map((warning, index) => (
                     <li
                       key={index}
-                      className='flex items-start gap-2 text-sm text-amber-800'>
+                      className='flex items-start gap-2 text-sm text-slate-700'>
                       <span className='inline-block w-1.5 h-1.5 rounded-full bg-amber-500 mt-1.5 flex-shrink-0'></span>
                       <span>{warning}</span>
                     </li>
@@ -774,10 +775,10 @@ const UpdatePurchaseOrder: React.FC = () => {
         )}
 
         {/* Order Info */}
-        <Card className='border-none shadow-lg bg-gradient-to-br from-white to-slate-50'>
-          <CardHeader className='border-b bg-gradient-to-r from-slate-50 to-white pb-3'>
-            <CardTitle className='text-lg font-bold text-slate-800 flex items-center gap-2'>
-              <div className='w-1 h-5 bg-blue-500 rounded-full'></div>
+        <Card className='border-slate-100 shadow-sm bg-white'>
+          <CardHeader className='border-b border-slate-100 bg-slate-50/60 pb-3'>
+            <CardTitle className='text-lg font-bold text-slate-900 flex items-center gap-2'>
+              <div className='w-1 h-5 bg-indigo-600 rounded-full'></div>
               Order Information
             </CardTitle>
           </CardHeader>
@@ -796,7 +797,7 @@ const UpdatePurchaseOrder: React.FC = () => {
                 <Label className='text-xs font-semibold text-slate-500 uppercase tracking-wide'>
                   Original Total
                 </Label>
-                <div className='text-xl font-bold text-emerald-600'>
+                <div className='text-xl font-bold text-indigo-600'>
                   ৳{purchaseOrder.totalAmount.toLocaleString()}
                 </div>
               </div>
@@ -806,8 +807,8 @@ const UpdatePurchaseOrder: React.FC = () => {
                   Created At
                 </Label>
                 <div className='flex items-center gap-2 text-slate-700 text-sm'>
-                  <div className='rounded-full bg-blue-100 p-1'>
-                    <Calendar className='h-3.5 w-3.5 text-blue-600' />
+                  <div className='rounded-full bg-indigo-100 p-1'>
+                    <Calendar className='h-3.5 w-3.5 text-indigo-600' />
                   </div>
                   <span className='font-medium'>
                     {new Date(purchaseOrder.createdAt).toLocaleDateString(
@@ -829,8 +830,8 @@ const UpdatePurchaseOrder: React.FC = () => {
                   Last Updated
                 </Label>
                 <div className='flex items-center gap-2 text-slate-700 text-sm'>
-                  <div className='rounded-full bg-purple-100 p-1'>
-                    <Calendar className='h-3.5 w-3.5 text-purple-600' />
+                  <div className='rounded-full bg-indigo-100 p-1'>
+                    <Calendar className='h-3.5 w-3.5 text-indigo-600' />
                   </div>
                   <span className='font-medium'>
                     {new Date(purchaseOrder.updatedAt).toLocaleDateString(
@@ -851,10 +852,10 @@ const UpdatePurchaseOrder: React.FC = () => {
         </Card>
 
         {/* Products Table */}
-        <Card>
+        <Card className='border-slate-100 shadow-sm'>
           <CardHeader>
-            <CardTitle>Products</CardTitle>
-            <CardDescription>
+            <CardTitle className='text-slate-900'>Products</CardTitle>
+            <CardDescription className='text-slate-500'>
               Modify quantities and unit prices for each product
             </CardDescription>
           </CardHeader>
@@ -899,7 +900,7 @@ const UpdatePurchaseOrder: React.FC = () => {
                       return (
                         <TableRow
                           key={product.id}
-                          className={hasChanged ? "bg-amber-50" : ""}>
+                          className={hasChanged ? "bg-slate-50" : ""}>
                           <TableCell>
                             <div className='flex items-center gap-3'>
                               {product.image && (
@@ -910,11 +911,11 @@ const UpdatePurchaseOrder: React.FC = () => {
                                 />
                               )}
                               <div>
-                                <span className='font-medium'>
+                                <span className='font-medium text-slate-900'>
                                   {product.name}
                                 </span>
                                 {hasChanged && (
-                                  <div className='text-xs text-amber-600 flex items-center gap-1'>
+                                  <div className='text-xs text-indigo-600 flex items-center gap-1'>
                                     <Edit className='h-3 w-3' />
                                     Modified
                                   </div>
@@ -1177,7 +1178,7 @@ const UpdatePurchaseOrder: React.FC = () => {
             <AlertDialogTrigger asChild>
               <Button
                 disabled={updating || !hasChanges || hasValidationErrors}
-                className='gap-2'>
+                className='bg-indigo-600 hover:bg-indigo-700 text-white shadow-sm shadow-indigo-200 gap-2'>
                 {updating ? (
                   <Loader2 className='h-4 w-4 animate-spin' />
                 ) : (
@@ -1233,6 +1234,9 @@ const UpdatePurchaseOrder: React.FC = () => {
           </AlertDialog>
         </div>
       </div>
+    {/* End of max-w-7xl container */}
+    </div>
+  {/* End of bg-slate-50/60 wrapper */}
     </MainView>
   );
 };

@@ -15,6 +15,7 @@ import {
   FilePieChart,
   X,
   RefreshCw,
+  FolderTree,
 } from "lucide-react";
 import { Button } from "../../components/ui/button";
 import {
@@ -71,6 +72,8 @@ import {
 import useRoleCheck from "../auth/hooks/useRoleCheck";
 import CategoryFilterDropdown from "./components/FilterByCategory";
 import MobileProductCard from "./components/MobileProductCard";
+import { MobileKeyboardSearch } from "../order/components/MobileKeyboardSearch";
+import { cn } from "@/lib/utils";
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
@@ -428,11 +431,11 @@ const ProductList: React.FC<Props> = ({ handleEditProduct }) => {
   const { categories, fetchCategories } = useCategory();
   const debounceHandler = useDebounce(inputValue, 500);
 
-  const [viewType, setViewType] = useState<"list" | "grid">("list");
+  const [viewType, setViewType] = useState<"list" | "grid" | "tree">("list");
   const [summary, setSummary] = useState<StockSummaryResponse | null>(null);
   const [selectedTab, setSelectedTab] = useState<TabKey>("all");
   const [mobileSelectedTab, setMobileSelectedTab] = useState<TabKey>("all");
-  const [isMobileSearchOpen, setIsMobileSearchOpen] = useState(false);
+  const [showKeyboardSearch, setShowKeyboardSearch] = useState(false);
   // ← KEY: separate "table only" loading state so page chrome never re-mounts
   const [isTableLoading, setIsTableLoading] = useState(false);
 
@@ -754,54 +757,30 @@ const ProductList: React.FC<Props> = ({ handleEditProduct }) => {
         {/* Sticky top bar */}
         <div className='sticky top-0 z-30 bg-white border-b border-zinc-200 shadow-sm'>
           {/* Header row */}
-          <div className='flex items-center justify-between px-4 py-3'>
+          <div className='flex items-center justify-between px-4 py-3 bg-gradient-to-r from-red-500 to-orange-500'>
             <div>
-              <h1 className='text-[15px] font-bold text-zinc-900 leading-tight'>
+              <h1 className='text-lg font-bold text-white leading-tight'>
                 Products
               </h1>
-              <p className='text-[11px] text-zinc-400'>
+              <p className='text-[11px] text-white'>
                 {totalProducts.toLocaleString()} total
               </p>
             </div>
             <div className='flex items-center gap-2'>
-              <button
-                onClick={() => setIsMobileSearchOpen((v) => !v)}
-                className={`w-8 h-8 flex items-center justify-center rounded-xl border transition-colors ${isMobileSearchOpen ? "border-indigo-300 bg-indigo-50 text-indigo-600" : "border-zinc-200 bg-white text-zinc-500"}`}>
+              <Button
+                onClick={() => setShowKeyboardSearch(true)}
+                className='w-8 flex items-center justify-center rounded-md border border-zinc-200 bg-white text-zinc-500 transition-colors'>
                 <Search className='w-4 h-4' />
-              </button>
+              </Button>
               {hasRequiredPermission("product", "create") && (
-                <button
+                <Button
                   onClick={() => navigate("/products/create")}
-                  className='flex items-center gap-1.5 bg-indigo-600 text-white text-xs font-semibold px-3 py-2 rounded-xl'>
+                  className='flex items-center gap-1.5 bg-white text-zinc-900 text-xs font-semibold px-3 py-2 rounded-md'>
                   <PlusCircle className='w-3.5 h-3.5' /> New
-                </button>
+                </Button>
               )}
             </div>
           </div>
-
-          {/* Collapsible search */}
-          {isMobileSearchOpen && (
-            <div className='px-4 pb-3'>
-              <div className='relative'>
-                <Search className='absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-zinc-400 pointer-events-none' />
-                <input
-                  autoFocus
-                  type='text'
-                  placeholder='Search products…'
-                  value={inputValue}
-                  onChange={(e) => setInputValue(e.target.value)}
-                  className='w-full pl-9 pr-8 py-2.5 text-sm rounded-xl bg-zinc-100 text-zinc-900 placeholder-zinc-400 border border-transparent focus:border-indigo-300 outline-none transition-all'
-                />
-                {inputValue && (
-                  <button
-                    onClick={() => setInputValue("")}
-                    className='absolute right-3 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-zinc-600'>
-                    <X className='w-3.5 h-3.5' />
-                  </button>
-                )}
-              </div>
-            </div>
-          )}
 
           {/* Tab pills */}
           <div className='py-2'>
@@ -814,9 +793,9 @@ const ProductList: React.FC<Props> = ({ handleEditProduct }) => {
         </div>
 
         {/* Stats strip */}
-        <div className='px-4 pt-3 pb-2'>
+        {/* <div className='px-4 pt-3 pb-2'>
           <MobileStatStrip summary={summary} />
-        </div>
+        </div> */}
 
         {/* Product grid */}
         <div className='flex-1 px-4 pb-4'>
@@ -888,10 +867,22 @@ const ProductList: React.FC<Props> = ({ handleEditProduct }) => {
         )}
       </div>
 
+      {/* Mobile keyboard search */}
+      <MobileKeyboardSearch
+        open={showKeyboardSearch}
+        searchValue={inputValue}
+        onSearchChange={setInputValue}
+        onClose={() => setShowKeyboardSearch(false)}
+      />
+
       {/* ══════════════════════════════════════════════════════════════════════
           DESKTOP VIEW (≥ sm)
       ═══════════════════════════════════════════════════════════════════════ */}
-      <div className='hidden sm:block space-y-3'>
+      <div
+        className={cn(
+          "hidden sm:block space-y-3",
+          viewType === "tree" ? "mx-6" : "container",
+        )}>
         {/* Page header */}
         <div className='flex items-center justify-between'>
           <div className='flex items-center gap-2.5'>
@@ -910,49 +901,7 @@ const ProductList: React.FC<Props> = ({ handleEditProduct }) => {
             </div>
           </div>
           <div className='flex items-center gap-2'>
-            {hasRequiredPermission("product", "summary") && (
-              <Drawer>
-                <DrawerTrigger asChild>
-                  <Button
-                    variant='outline'
-                    size='sm'
-                    className='h-8 text-xs gap-1.5 text-zinc-600'>
-                    <FilePieChart className='h-3.5 w-3.5' /> Summary
-                  </Button>
-                </DrawerTrigger>
-                <DrawerContent>
-                  <div className='mx-auto w-full max-w-3xl'>
-                    <DrawerHeader className='pb-3'>
-                      <DrawerTitle className='flex items-center gap-2 text-base'>
-                        <Package className='h-4 w-4 text-zinc-500' />
-                        Inventory Summary
-                      </DrawerTitle>
-                      <DrawerDescription className='text-sm'>
-                        Overview of stock, value, and variants
-                      </DrawerDescription>
-                    </DrawerHeader>
-                    <div className='px-4 pb-4'>
-                      <div className='grid grid-cols-2 md:grid-cols-4 gap-3 mb-4'>
-                        {statCards.map((card, i) => (
-                          <StatCard key={i} {...card} />
-                        ))}
-                      </div>
-                      {renderCategoryBreakdown()}
-                    </div>
-                    <DrawerFooter className='pt-2'>
-                      <DrawerClose asChild>
-                        <Button
-                          variant='outline'
-                          size='sm'
-                          className='h-8 text-sm'>
-                          Close
-                        </Button>
-                      </DrawerClose>
-                    </DrawerFooter>
-                  </div>
-                </DrawerContent>
-              </Drawer>
-            )}
+            {renderCategoryBreakdown()}
             {hasRequiredPermission("product", "create") && (
               <Button
                 size='sm'
@@ -1010,17 +959,18 @@ const ProductList: React.FC<Props> = ({ handleEditProduct }) => {
               </Button>
             )}
             <div className='ml-auto flex items-center gap-1.5'>
-              {renderCategoryBreakdown()}
               <div className='flex items-center rounded-lg border border-zinc-200 bg-white p-0.5'>
-                {(["list", "grid"] as const).map((type) => (
+                {(["list", "tree", "grid"] as const).map((type) => (
                   <button
                     key={type}
                     onClick={() => setViewType(type)}
                     className={`w-7 h-7 flex items-center justify-center rounded-md transition-colors ${viewType === type ? "bg-zinc-900 text-white" : "text-zinc-400 hover:text-zinc-600"}`}>
                     {type === "list" ? (
                       <List className='h-3.5 w-3.5' />
-                    ) : (
+                    ) : type === "grid" ? (
                       <Grid2X2 className='h-3.5 w-3.5' />
+                    ) : (
+                      <FolderTree className='h-3.5 w-3.5' />
                     )}
                   </button>
                 ))}
@@ -1059,7 +1009,7 @@ const ProductList: React.FC<Props> = ({ handleEditProduct }) => {
             {/* Overlay for table-only loading (pagination / filter) */}
             {isTableLoading && <TableLoadingOverlay />}
 
-            {viewType === "list" ? (
+            {["list", "tree"].includes(viewType) ? (
               filteredProducts.length === 0 ? (
                 <div className='flex flex-col items-center justify-center py-16 text-center px-4'>
                   <div className='w-14 h-14 rounded-2xl bg-zinc-100 flex items-center justify-center mb-4'>
@@ -1134,7 +1084,7 @@ const ProductList: React.FC<Props> = ({ handleEditProduct }) => {
                           updatedAt={product?.timestamps?.updatedAt}
                           refreshProductList={refreshList}
                           handleViewProductDetails={handleViewProductDetails}
-                          variationDisplayMode='list'
+                          variationDisplayMode={viewType}
                         />
                       ))}
                     </TableBody>

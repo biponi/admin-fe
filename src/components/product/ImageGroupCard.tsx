@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader } from "../ui/card";
 import { Button } from "../ui/button";
 import { Input } from "../ui/input";
@@ -37,6 +37,8 @@ interface ImageGroupCardProps {
   canMoveUp?: boolean;
   canMoveDown?: boolean;
   disabled?: boolean;
+  forceEditMode?: boolean;
+  onEditModeEnd?: () => void;
 }
 
 const COLOR_PRESETS: Record<string, string> = {
@@ -141,6 +143,8 @@ export const ImageGroupCard: React.FC<ImageGroupCardProps> = ({
   canMoveUp = false,
   canMoveDown = false,
   disabled = false,
+  forceEditMode = false,
+  onEditModeEnd,
 }) => {
   const [isExpanded, setIsExpanded] = useState(true);
   const [isEditing, setIsEditing] = useState(false);
@@ -148,16 +152,38 @@ export const ImageGroupCard: React.FC<ImageGroupCardProps> = ({
   const [editedColorHex, setEditedColorHex] = useState(
     group.colorHex || getColorHex(group.value),
   );
+  const [editedAttribute, setEditedAttribute] = useState(group.attribute);
+  const [editedValue, setEditedValue] = useState(group.value);
 
-  const isColorAttr = group.attribute === "color";
+  // Sync state when group prop changes (e.g., when a new group is added externally)
+  useEffect(() => {
+    setEditedLabel(group.displayLabel);
+    setEditedColorHex(group.colorHex || getColorHex(group.value));
+    setEditedAttribute(group.attribute);
+    setEditedValue(group.value);
+  }, [group.id, group.displayLabel, group.colorHex, group.attribute, group.value]);
+
+  // Auto-open edit mode when forceEditMode is true (for newly created groups)
+  useEffect(() => {
+    if (forceEditMode) {
+      setIsEditing(true);
+    }
+  }, [forceEditMode]);
+
+  // Use edited attribute when in edit mode, otherwise use group attribute
+  const currentAttribute = isEditing ? editedAttribute : group.attribute;
+  const isColorAttr = currentAttribute === "color";
   const groupVariants = variations.filter((v) =>
     group.variantIds.includes(v.id),
   );
-  const attrStyle = getAttrStyle(group.attribute);
+  const attrStyle = getAttrStyle(currentAttribute);
   const currentColor = isColorAttr
     ? editedColorHex || getColorHex(group.value)
     : "";
   const colorIsDark = isColorAttr && !isLight(currentColor);
+
+  // Check if the group is incomplete (missing required fields or has placeholder values)
+  const isGroupIncomplete = !validateImageGroup(group);
 
   const handleSaveEdit = () => {
     if (!editedLabel.trim()) {
@@ -165,34 +191,72 @@ export const ImageGroupCard: React.FC<ImageGroupCardProps> = ({
       return;
     }
 
-    // Ensure required fields exist before saving
-    if (!validateImageGroup(group)) {
-      toast.error("Cannot save group: Missing required attribute or value");
-      setIsEditing(false);
+    if (!editedAttribute.trim()) {
+      toast.error("Attribute cannot be empty");
       return;
     }
 
+    if (!editedValue.trim()) {
+      toast.error("Value cannot be empty");
+      return;
+    }
+
+    // Validate colorHex format if editing color attribute
+    const newIsColorAttr = editedAttribute === "color";
+    if (newIsColorAttr && editedColorHex && !/^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$/i.test(editedColorHex)) {
+      toast.error("Invalid color hex format. Use #RGB or #RRGGBB");
+      return;
+    }
+
+    // Update the group with all edited fields
     onUpdate({
       ...group,
+      attribute: editedAttribute.trim(),
+      value: editedValue.trim(),
       displayLabel: editedLabel.trim(),
-      colorHex: isColorAttr ? editedColorHex : group.colorHex,
+      colorHex: newIsColorAttr ? editedColorHex : undefined,
     });
     setIsEditing(false);
-    toast.success("Group updated");
+
+    // Call onEditModeEnd if this was a forced edit
+    if (forceEditMode && onEditModeEnd) {
+      onEditModeEnd();
+    }
+
+    toast.success("Group updated successfully. You can now add images.");
   };
 
   const handleCancelEdit = () => {
     setEditedLabel(group.displayLabel);
     setEditedColorHex(group.colorHex || getColorHex(group.value));
+    setEditedAttribute(group.attribute);
+    setEditedValue(group.value);
     setIsEditing(false);
   };
 
   const handleImagesChange = (_groupId: string, images: (File | string)[]) => {
-    // Ensure required fields exist before updating images
+    // Ensure required fields exist and are not placeholder values
     if (!validateImageGroup(group)) {
-      toast.error("Cannot update images: Group is missing required attribute or value");
+      toast.error("Cannot update images: Group is missing required attribute or value. Please edit the group first.");
       return;
     }
+
+    // Check if the value is still a placeholder
+    const isPlaceholderValue = group.value?.startsWith("New ") && group.value === `New ${group.attribute}`;
+    if (isPlaceholderValue) {
+      toast.error(`Please edit the group and set a proper value for "${group.attribute}" before adding images. Current value "${group.value}" is a placeholder.`);
+      // Auto-open edit mode to guide user
+      setIsEditing(true);
+      return;
+    }
+
+    // Additional validation: ensure attribute is not a placeholder
+    if (!group.attribute || group.attribute.trim() === "") {
+      toast.error("Group attribute is empty. Please edit the group and set a valid attribute.");
+      setIsEditing(true);
+      return;
+    }
+
     onUpdate({ ...group, images });
   };
 
@@ -212,6 +276,7 @@ export const ImageGroupCard: React.FC<ImageGroupCardProps> = ({
         "w-full transition-shadow duration-200",
         "hover:shadow-md",
         isEditing && "ring-2 ring-primary/20",
+        isGroupIncomplete && "ring-2 ring-amber-500/50 bg-amber-50/30",
       )}>
       {/* ── Card Header ── */}
       <CardHeader className='p-0'>
@@ -283,6 +348,32 @@ export const ImageGroupCard: React.FC<ImageGroupCardProps> = ({
             {isEditing ? (
               /* ── Edit mode ── */
               <div className='flex-1 space-y-2 min-w-0'>
+                {/* Attribute and Value fields */}
+                <div className='flex items-center gap-2'>
+                  <Input
+                    value={editedAttribute}
+                    onChange={(e) => setEditedAttribute(e.target.value)}
+                    placeholder='Attribute (e.g., color, size, material)'
+                    className='text-sm h-8 flex-1 min-w-0'
+                    disabled={disabled}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") handleSaveEdit();
+                      if (e.key === "Escape") handleCancelEdit();
+                    }}
+                  />
+                  <Input
+                    value={editedValue}
+                    onChange={(e) => setEditedValue(e.target.value)}
+                    placeholder='Value (e.g., Red, Large, Cotton)'
+                    className='text-sm h-8 flex-1 min-w-0'
+                    disabled={disabled}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") handleSaveEdit();
+                      if (e.key === "Escape") handleCancelEdit();
+                    }}
+                  />
+                </div>
+                {/* Display Label field */}
                 <div className='flex items-center gap-2'>
                   <Input
                     value={editedLabel}
@@ -290,14 +381,14 @@ export const ImageGroupCard: React.FC<ImageGroupCardProps> = ({
                     placeholder='Display label'
                     className='text-sm h-8 flex-1 min-w-0'
                     disabled={disabled}
-                    autoFocus
                     onKeyDown={(e) => {
                       if (e.key === "Enter") handleSaveEdit();
                       if (e.key === "Escape") handleCancelEdit();
                     }}
                   />
                 </div>
-                {isColorAttr && (
+                {/* Color hex field (only for color attribute) */}
+                {editedAttribute === "color" && (
                   <div className='flex items-center gap-2'>
                     <input
                       type='color'
@@ -314,14 +405,6 @@ export const ImageGroupCard: React.FC<ImageGroupCardProps> = ({
                       disabled={disabled}
                     />
                   </div>
-                )}
-                {!isColorAttr && (
-                  <p className='text-xs text-muted-foreground'>
-                    Attribute type:{" "}
-                    <span className='font-medium capitalize'>
-                      {group.attribute}
-                    </span>
-                  </p>
                 )}
               </div>
             ) : (
@@ -347,6 +430,13 @@ export const ImageGroupCard: React.FC<ImageGroupCardProps> = ({
                   <Badge variant='secondary' className='text-[11px] capitalize'>
                     {group.value || "—"}
                   </Badge>
+
+                  {/* Incomplete warning badge */}
+                  {isGroupIncomplete && (
+                    <Badge variant="destructive" className="text-[10px] px-1.5">
+                      Incomplete
+                    </Badge>
+                  )}
 
                   {/* Variant count */}
                   <span className='inline-flex items-center gap-1 text-[11px] text-muted-foreground'>
@@ -469,15 +559,42 @@ export const ImageGroupCard: React.FC<ImageGroupCardProps> = ({
               <Label className='text-xs font-medium text-muted-foreground uppercase tracking-wide mb-2 block'>
                 Images
               </Label>
-              <ImageGroupUploader
-                groupId={group.id}
-                groupName={group.displayLabel}
-                images={group.images}
-                maxImages={10}
-                onImagesChange={handleImagesChange}
-                disabled={disabled}
-              />
+              {isGroupIncomplete ? (
+                <div className="p-4 bg-amber-50 border border-amber-200 rounded-md">
+                  <p className="text-sm text-amber-800">
+                    <span className="font-semibold">Configuration required:</span> Please edit this group and set both
+                    the <span className="font-mono bg-amber-100 px-1 rounded">attribute</span> and
+                    <span className="font-mono bg-amber-100 px-1 rounded">value</span> fields before adding images.
+                  </p>
+                </div>
+              ) : (
+                <ImageGroupUploader
+                  groupId={group.id}
+                  groupName={group.displayLabel}
+                  images={group.images}
+                  maxImages={10}
+                  onImagesChange={handleImagesChange}
+                  disabled={disabled}
+                />
+              )}
             </div>
+
+            {/* TODO: Implement variantOverrides UI
+               This section should allow users to specify per-variant image overrides.
+               Example implementation:
+               - Show a list of variants linked to this group
+               - For each variant, allow adding variant-specific images
+               - Store in group.variantOverrides array: { variantId: string, images: (File|string)[] }
+               - This allows certain variants to have custom images different from the group default
+            */}
+            {/* <div>
+              <Label className='text-xs font-medium text-muted-foreground uppercase tracking-wide mb-2 block'>
+                Variant Image Overrides
+              </Label>
+              <p className='text-xs text-muted-foreground italic'>
+                Feature coming soon: Override images for specific variants
+              </p>
+            </div> */}
           </CardContent>
         </>
       )}

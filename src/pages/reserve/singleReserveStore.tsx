@@ -13,6 +13,11 @@ import {
   ChevronRight,
   Ruler,
   Palette,
+  Hash,
+  Clock,
+  User,
+  ShoppingBag,
+  DollarSign,
 } from "lucide-react";
 import { IRecord } from "./interface";
 import { Button } from "../../components/ui/button";
@@ -48,44 +53,79 @@ import {
   AlertDialogTrigger,
 } from "../../components/ui/alert-dialog";
 import useRoleCheck from "../auth/hooks/useRoleCheck";
-import { Card, CardContent } from "../../components/ui/card";
 import { generateInventoryPDF } from "../../utils/reactPdfStorerecord";
 import { useReserveRecords } from "./hooks/useReserveRecords";
 import ErrorAlertDialog from "../../components/common/ErrorAlertDialog";
 
-// Skeleton loader for table rows
-const TableRowSkeleton: React.FC = () => (
-  <tr className='animate-pulse'>
-    <td className='whitespace-nowrap py-4 px-6'>
-      <div className='h-4 w-8 bg-muted rounded'></div>
-    </td>
-    <td className='whitespace-nowrap py-4 px-6'>
-      <div className='h-4 w-32 bg-muted rounded'></div>
-    </td>
-    <td className='whitespace-nowrap py-4 px-6'>
-      <div className='h-4 w-24 bg-muted rounded'></div>
-    </td>
-    <td className='whitespace-nowrap py-4 px-6'>
-      <div className='h-8 w-full bg-muted rounded'></div>
-    </td>
-    <td className='whitespace-nowrap py-4 px-6'>
-      <div className='h-4 w-20 bg-muted rounded'></div>
-    </td>
-    <td className='whitespace-nowrap py-4 px-6 text-center'>
-      <div className='h-8 w-16 bg-muted rounded mx-auto'></div>
-    </td>
-    <td className='whitespace-nowrap py-4 px-6 text-center'>
-      <div className='h-8 w-16 bg-muted rounded mx-auto'></div>
-    </td>
+// ─── Skeleton ─────────────────────────────────────────────────────────────────
+const RowSkeleton: React.FC = () => (
+  <tr className='animate-pulse border-b border-gray-100'>
+    {[28, 120, 96, 200, 80, 40, 40, 40].map((w, i) => (
+      <td key={i} className='py-4 px-4'>
+        <div
+          className={`h-3.5 bg-gray-100 rounded-full`}
+          style={{ width: w }}
+        />
+      </td>
+    ))}
   </tr>
 );
 
+// ─── Product chip ─────────────────────────────────────────────────────────────
+const ProductChip: React.FC<{ val: any }> = ({ val }) => (
+  <div className='inline-flex items-center gap-2 pl-1.5 pr-2.5 py-1 rounded-lg bg-violet-50 border border-violet-100 text-xs'>
+    {(val.variantDetails?.image || val.image) && (
+      <img
+        src={val.variantDetails?.image || val.image}
+        alt=''
+        className='w-7 h-7 object-cover rounded-md border border-violet-200 shrink-0'
+      />
+    )}
+    <span
+      className='font-medium text-gray-800 truncate max-w-[90px]'
+      title={val?.name}>
+      {val?.name}
+    </span>
+    {val.variantDetails?.size && (
+      <span className='inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-md bg-blue-50 text-blue-600 border border-blue-100 text-[10px] font-medium'>
+        <Ruler className='w-2.5 h-2.5' />
+        {val.variantDetails.size}
+      </span>
+    )}
+    {val.variantDetails?.color && (
+      <span className='inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-md bg-purple-50 text-purple-600 border border-purple-100 text-[10px] font-medium'>
+        <Palette className='w-2.5 h-2.5' />
+        {val.variantDetails.color}
+      </span>
+    )}
+    <span className='ml-0.5 px-1.5 py-0.5 rounded-md bg-gray-100 text-gray-600 text-[10px] font-bold'>
+      ×{val?.quantity}
+    </span>
+  </div>
+);
+
+// ─── Column header ─────────────────────────────────────────────────────────────
+const Th: React.FC<{
+  icon?: React.ReactNode;
+  children: React.ReactNode;
+  center?: boolean;
+}> = ({ icon, children, center }) => (
+  <th
+    className={`px-4 py-3.5 text-[11px] font-semibold uppercase tracking-wider text-gray-400 whitespace-nowrap ${center ? "text-center" : "text-left"}`}>
+    <span
+      className={`inline-flex items-center gap-1.5 ${center ? "justify-center" : ""}`}>
+      {icon}
+      {children}
+    </span>
+  </th>
+);
+
+// ─── Main component ────────────────────────────────────────────────────────────
 const SingleReserveStore: React.FC = () => {
   const { hasRequiredPermission } = useRoleCheck();
   const { storeId } = useParams<{ storeId: string }>();
   const navigate = useNavigate();
 
-  // Use the custom hook for pagination
   const {
     records,
     storeInfo,
@@ -103,7 +143,10 @@ const SingleReserveStore: React.FC = () => {
   const [errorDialog, setErrorDialog] = useState<{
     isOpen: boolean;
     message: string;
-  }>({ isOpen: false, message: "" });
+  }>({
+    isOpen: false,
+    message: "",
+  });
 
   const handleDeleteRecord = async (recordId: string) => {
     if (!recordId || !storeId) return;
@@ -116,592 +159,392 @@ const SingleReserveStore: React.FC = () => {
       } else {
         setErrorDialog({
           isOpen: true,
-          message: deleted?.error ?? "Server was unable to delete the record.",
+          message: deleted?.error ?? "Unable to delete the record.",
         });
       }
-    } catch (error) {
+    } catch {
       toast.error("Failed to delete record");
     } finally {
       setDeletingRecordId(null);
     }
   };
 
-  const renderEmptyStoreData = () => {
-    return (
-      <Card className='border-0 shadow-xl bg-gradient-to-br from-card via-card/98 to-card/95'>
-        <CardContent className='p-16'>
-          <div className='flex flex-col items-center justify-center text-center'>
-            <div className='relative mb-6'>
-              <div className='absolute inset-0 bg-purple-500/20 rounded-full blur-2xl'></div>
-              <div className='relative p-6 bg-gradient-to-br from-purple-500/10 to-indigo-500/10 rounded-3xl'>
-                <Package
-                  className='h-20 w-20 text-purple-600'
-                  strokeWidth={1.5}
-                />
-              </div>
-            </div>
-            <h3 className='text-2xl font-bold mb-2 bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text'>
-              No Store Data Found
-            </h3>
-            <p className='text-muted-foreground max-w-md mb-6'>
-              This store doesn't have any records yet. Get started by adding
-              your first record to track inventory.
-            </p>
-            {hasRequiredPermission("ReserveRecord", "create") && (
-              <Button
-                onClick={() => navigate(`/store/${storeId}/add-record`)}
-                className='bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 shadow-lg'>
-                <Plus className='mr-2 h-4 w-4' /> Add First Record
-              </Button>
-            )}
-          </div>
-        </CardContent>
-      </Card>
-    );
-  };
+  // ─── Popover for extra products ──────────────────────────────────────────────
+  const renderOverflowPopover = (record: IRecord) => (
+    <Popover>
+      <PopoverTrigger asChild>
+        <button className='inline-flex items-center gap-1 px-2.5 py-1 rounded-lg border border-dashed border-violet-300 text-violet-600 text-xs font-semibold hover:bg-violet-50 transition-colors'>
+          <Plus className='w-3 h-3' />
+          {record.products.length - 2} more
+        </button>
+      </PopoverTrigger>
+      <PopoverContent className='w-80 p-0 shadow-xl border border-gray-100 rounded-2xl overflow-hidden'>
+        <div className='px-4 py-3 border-b border-gray-100 bg-gray-50'>
+          <p className='text-sm font-semibold text-gray-800'>More products</p>
+          <p className='text-xs text-gray-400 mt-0.5'>
+            {record.products.length - 2} additional items
+          </p>
+        </div>
+        <div className='p-3 flex flex-col gap-2 max-h-64 overflow-y-auto'>
+          {record.products.slice(2).map((val, i) => (
+            <ProductChip key={i} val={val} />
+          ))}
+        </div>
+      </PopoverContent>
+    </Popover>
+  );
 
-  const renderVariationPopover = (record: IRecord) => {
-    return (
-      <Popover>
-        <PopoverTrigger asChild>
+  // ─── Empty state ─────────────────────────────────────────────────────────────
+  const renderEmpty = () => (
+    <div className='flex flex-col items-center justify-center py-20 px-4 text-center'>
+      <div className='w-16 h-16 rounded-2xl bg-violet-50 flex items-center justify-center mb-4'>
+        <Package className='w-8 h-8 text-violet-400' strokeWidth={1.5} />
+      </div>
+      <h3 className='text-base font-semibold text-gray-800 mb-1'>
+        No records yet
+      </h3>
+      <p className='text-sm text-gray-400 max-w-xs mb-6'>
+        Start tracking inventory by adding the first record to this store.
+      </p>
+      {hasRequiredPermission("ReserveRecord", "create") && (
+        <Button
+          onClick={() => navigate(`/store/${storeId}/add-record`)}
+          className='bg-violet-600 hover:bg-violet-700 text-white rounded-xl gap-2 shadow-sm'>
+          <Plus className='w-4 h-4' />
+          Add First Record
+        </Button>
+      )}
+    </div>
+  );
+
+  // ─── No store empty state ────────────────────────────────────────────────────
+  const renderNoStore = () => (
+    <div className='bg-white rounded-2xl border border-gray-100 shadow-sm'>
+      {renderEmpty()}
+    </div>
+  );
+
+  // ─── Table ───────────────────────────────────────────────────────────────────
+  const renderTable = () => (
+    <div className='bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden'>
+      {/* Table toolbar */}
+      <div className='flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 px-5 py-4 border-b border-gray-100'>
+        <div>
+          <h2 className='text-sm font-semibold text-gray-900'>
+            Inventory Records
+          </h2>
+          <p className='text-xs text-gray-400 mt-0.5'>
+            {pagination?.totalItems ?? 0} total record
+            {pagination?.totalItems !== 1 ? "s" : ""}
+          </p>
+        </div>
+        {hasRequiredPermission("ReserveRecord", "create") && (
           <Button
-            variant='outline'
-            size={"sm"}
-            className='border-purple-200 hover:bg-purple-600 hover:text-white hover:border-purple-600 transition-all duration-300'>
-            <Package className='h-3.5 w-3.5 mr-1.5' />+
-            {record?.products?.length - 2} More
+            onClick={() => navigate(`/store/${storeId}/add-record`)}
+            size='sm'
+            className='bg-violet-600 hover:bg-violet-700 text-white rounded-xl gap-1.5 shadow-sm text-xs h-8 px-3'>
+            <Plus className='w-3.5 h-3.5' strokeWidth={2.5} />
+            Add Record
           </Button>
-        </PopoverTrigger>
-        <PopoverContent className='w-96 bg-gradient-to-br from-card via-card/98 to-card/95 border-0 shadow-2xl'>
-          <div className='mb-3'>
-            <h4 className='font-semibold text-sm bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text'>
-              Additional Products
-            </h4>
-            <p className='text-xs text-muted-foreground mt-1'>
-              {record?.products?.length - 2} more items in this record
-            </p>
-          </div>
-          <div className='grid grid-cols-1 gap-2 w-full max-h-[30vh] overflow-y-auto pr-2'>
-            {record?.products
-              ?.slice(2, record?.products?.length)
-              .map((val, index) => {
-                return (
-                  <div
-                    key={index}
-                    className='p-2 rounded-lg border border-purple-100 bg-purple-50/50 hover:bg-purple-100/50 transition-colors duration-200'>
+        )}
+      </div>
+
+      {/* Scrollable table */}
+      <div className='overflow-x-auto'>
+        <table className='w-full min-w-[700px]'>
+          <thead>
+            <tr className='bg-gray-50/80 border-b border-gray-100'>
+              <Th icon={<Hash className='w-3 h-3' />}>#</Th>
+              <Th icon={<Clock className='w-3 h-3' />}>Created</Th>
+              <Th icon={<User className='w-3 h-3' />}>Created by</Th>
+              <Th icon={<ShoppingBag className='w-3 h-3' />}>Products</Th>
+              <Th icon={<DollarSign className='w-3 h-3' />}>Total</Th>
+              {hasRequiredPermission("ReserveRecord", "delete") && (
+                <Th center>Delete</Th>
+              )}
+              {hasRequiredPermission("ReserveRecord", "edit") && (
+                <Th center>Edit</Th>
+              )}
+              {hasRequiredPermission("ReserveRecord", "edit") && (
+                <Th center>PDF</Th>
+              )}
+            </tr>
+          </thead>
+          <tbody className='divide-y divide-gray-50'>
+            {isLoadingStore ? (
+              <>
+                <RowSkeleton />
+                <RowSkeleton />
+                <RowSkeleton />
+              </>
+            ) : records && records.length > 0 ? (
+              records.map((record: IRecord, index: number) => (
+                <tr
+                  key={index}
+                  className='hover:bg-gray-50/60 transition-colors group'>
+                  {/* # */}
+                  <td className='px-4 py-3.5 text-xs font-bold text-violet-500 whitespace-nowrap'>
+                    {(currentPage - 1) * pageLimit + index + 1}
+                  </td>
+
+                  {/* Created At */}
+                  <td className='px-4 py-3.5 whitespace-nowrap'>
+                    <span className='text-xs text-gray-500'>
+                      {dayjs(record?.created_at).format("DD MMM YYYY")}
+                    </span>
+                    <span className='block text-[10px] text-gray-300 mt-0.5'>
+                      {dayjs(record?.created_at).format("HH:mm")}
+                    </span>
+                  </td>
+
+                  {/* Created By */}
+                  <td className='px-4 py-3.5 whitespace-nowrap'>
                     <div className='flex items-center gap-2'>
-                      {/* Variant Image Thumbnail */}
-                      {(val.variantDetails?.image || val.image) && (
-                        <img
-                          src={val.variantDetails?.image || val.image}
-                          alt=''
-                          className='w-10 h-10 object-cover rounded border border-purple-300 flex-shrink-0'
-                        />
-                      )}
-                      <div className='flex-1 min-w-0'>
-                        <div
-                          className='text-xs font-medium text-foreground truncate'
-                          title={val?.name}>
-                          {val?.name}
-                        </div>
-                        {/* Size & Color Badges */}
-                        {val.variantDetails && (
-                          <div className='flex gap-1 flex-wrap mt-1'>
-                            {val.variantDetails.size && (
-                              <Badge
-                                variant='outline'
-                                className='text-[10px] border-blue-300 text-blue-700 px-1 py-0 h-4'>
-                                <Ruler className='h-2 w-2 mr-0.5' />
-                                {val.variantDetails.size}
-                              </Badge>
-                            )}
-                            {val.variantDetails.color && (
-                              <Badge
-                                variant='outline'
-                                className='text-[10px] border-purple-300 text-purple-700 px-1 py-0 h-4'>
-                                <Palette className='h-2 w-2 mr-0.5' />
-                                {val.variantDetails.color}
-                              </Badge>
-                            )}
-                          </div>
-                        )}
+                      <div className='w-6 h-6 rounded-full bg-violet-100 flex items-center justify-center shrink-0'>
+                        <span className='text-[10px] font-bold text-violet-600'>
+                          {record?.created_by?.[0]?.toUpperCase() ?? "?"}
+                        </span>
                       </div>
-                      <Badge
-                        variant='secondary'
-                        className='text-xs flex-shrink-0'>
-                        Qty: {val?.quantity}
-                      </Badge>
+                      <span className='text-xs font-medium text-gray-700 truncate max-w-[100px]'>
+                        {record?.created_by}
+                      </span>
                     </div>
-                  </div>
-                );
-              })}
-          </div>
-        </PopoverContent>
-      </Popover>
-    );
-  };
+                  </td>
 
-  const renderStoreTable = () => {
-    return (
-      <Card className='border-0 shadow-xl bg-gradient-to-br from-card via-card/98 to-card/95'>
-        <CardContent className='p-6'>
-          {/* Table Header */}
-          <div className='flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6'>
-            <div>
-              <h2 className='text-xl sm:text-2xl font-bold bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text'>
-                Store Records
-              </h2>
-              <p className='mt-1.5 text-sm text-muted-foreground'>
-                Manage and track all inventory records for this store location.
-              </p>
-            </div>
-            {hasRequiredPermission("ReserveRecord", "create") && (
-              <Button
-                type='button'
-                onClick={() => navigate(`/store/${storeId}/add-record`)}
-                className='bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-0.5'>
-                <Plus className='mr-2 h-4 w-4' strokeWidth={2.5} />
-                Add Record
-              </Button>
-            )}
-          </div>
+                  {/* Products */}
+                  <td className='px-4 py-3.5'>
+                    <div className='flex flex-wrap gap-1.5'>
+                      {record.products.length > 3 ? (
+                        <>
+                          {record.products.slice(0, 2).map((val, i) => (
+                            <ProductChip key={i} val={val} />
+                          ))}
+                          {renderOverflowPopover(record)}
+                        </>
+                      ) : (
+                        record.products.map((val, i) => (
+                          <ProductChip key={i} val={val} />
+                        ))
+                      )}
+                    </div>
+                  </td>
 
-          {/* Table */}
-          <div className='mt-6 rounded-xl border border-border/50 shadow-sm overflow-hidden max-h-[50vh] overflow-y-auto'>
-            <table className='min-w-full divide-y divide-border/50'>
-              <thead className='sticky top-0 z-10 bg-gradient-to-r from-purple-50 via-indigo-50 to-purple-50 dark:from-purple-950/20 dark:via-indigo-950/20 dark:to-purple-950/50 shadow-sm'>
-                <tr>
-                  <th
-                    scope='col'
-                    className='py-4 pl-6 pr-3 text-left text-xs font-semibold uppercase tracking-wider text-purple-900 dark:text-purple-100'>
-                    #
-                  </th>
-                  <th
-                    scope='col'
-                    className='px-3 py-4 text-left text-xs font-semibold uppercase tracking-wider text-purple-900 dark:text-purple-100'>
-                    Created At
-                  </th>
-                  <th
-                    scope='col'
-                    className='px-3 py-4 text-left text-xs font-semibold uppercase tracking-wider text-purple-900 dark:text-purple-100'>
-                    Created By
-                  </th>
-                  <th
-                    scope='col'
-                    className='px-3 py-4 text-left text-xs font-semibold uppercase tracking-wider text-purple-900 dark:text-purple-100'>
-                    Products
-                  </th>
-                  <th
-                    scope='col'
-                    className='px-3 py-4 text-left text-xs font-semibold uppercase tracking-wider text-purple-900 dark:text-purple-100'>
-                    Total Amount
-                  </th>
+                  {/* Total */}
+                  <td className='px-4 py-3.5 whitespace-nowrap'>
+                    <span className='text-sm font-bold text-gray-900'>
+                      ৳{calculateTotalPrice(record?.products)}
+                    </span>
+                  </td>
+
+                  {/* Delete */}
                   {hasRequiredPermission("ReserveRecord", "delete") && (
-                    <th
-                      scope='col'
-                      className='px-3 py-4 text-center text-xs font-semibold uppercase tracking-wider text-purple-900 dark:text-purple-100'>
-                      Delete
-                    </th>
+                    <td className='px-4 py-3.5 text-center whitespace-nowrap'>
+                      <AlertDialog>
+                        <AlertDialogTrigger asChild>
+                          <button
+                            disabled={deletingRecordId === record?._id}
+                            className='w-7 h-7 inline-flex items-center justify-center rounded-lg border border-gray-200 text-gray-400 hover:border-rose-200 hover:text-rose-500 hover:bg-rose-50 transition-all disabled:opacity-40'>
+                            {deletingRecordId === record?._id ? (
+                              <Loader2 className='w-3.5 h-3.5 animate-spin' />
+                            ) : (
+                              <Trash className='w-3.5 h-3.5' />
+                            )}
+                          </button>
+                        </AlertDialogTrigger>
+                        <AlertDialogContent className='rounded-2xl'>
+                          <AlertDialogHeader>
+                            <div className='flex items-center gap-3 mb-1'>
+                              <div className='w-9 h-9 rounded-xl bg-rose-50 flex items-center justify-center'>
+                                <Trash className='w-4 h-4 text-rose-600' />
+                              </div>
+                              <AlertDialogTitle>Delete Record</AlertDialogTitle>
+                            </div>
+                            <AlertDialogDescription>
+                              This record will be permanently removed. This
+                              action cannot be undone.
+                            </AlertDialogDescription>
+                          </AlertDialogHeader>
+                          <AlertDialogFooter>
+                            <AlertDialogCancel className='rounded-xl'>
+                              Cancel
+                            </AlertDialogCancel>
+                            <AlertDialogAction
+                              onClick={() =>
+                                handleDeleteRecord(record?._id ?? "")
+                              }
+                              className='bg-rose-600 hover:bg-rose-700 rounded-xl text-white'>
+                              Delete
+                            </AlertDialogAction>
+                          </AlertDialogFooter>
+                        </AlertDialogContent>
+                      </AlertDialog>
+                    </td>
                   )}
+
+                  {/* Edit */}
                   {hasRequiredPermission("ReserveRecord", "edit") && (
-                    <th
-                      scope='col'
-                      className='px-3 py-4 pr-6 text-center text-xs font-semibold uppercase tracking-wider text-purple-900 dark:text-purple-100'>
-                      Edit
-                    </th>
+                    <td className='px-4 py-3.5 text-center whitespace-nowrap'>
+                      <button
+                        onClick={() =>
+                          navigate(
+                            `/store/${storeId}/edit-record/${record?.id}`,
+                          )
+                        }
+                        className='w-7 h-7 inline-flex items-center justify-center rounded-lg border border-gray-200 text-gray-400 hover:border-violet-200 hover:text-violet-600 hover:bg-violet-50 transition-all'>
+                        <Edit className='w-3.5 h-3.5' />
+                      </button>
+                    </td>
                   )}
+
+                  {/* PDF */}
                   {hasRequiredPermission("ReserveRecord", "edit") && (
-                    <th
-                      scope='col'
-                      className='px-3 py-4 pr-6 text-center text-xs font-semibold uppercase tracking-wider text-purple-900 dark:text-purple-100'>
-                      Download PDF
-                    </th>
+                    <td className='px-4 py-3.5 text-center whitespace-nowrap'>
+                      <button
+                        onClick={() =>
+                          generateInventoryPDF(
+                            storeInfo?.name || "",
+                            record?.created_by,
+                            record?.created_at,
+                            record?.products,
+                          )
+                        }
+                        className='w-7 h-7 inline-flex items-center justify-center rounded-lg border border-gray-200 text-gray-400 hover:border-sky-200 hover:text-sky-600 hover:bg-sky-50 transition-all'>
+                        <DownloadCloud className='w-3.5 h-3.5' />
+                      </button>
+                    </td>
                   )}
                 </tr>
-              </thead>
-              <tbody className='divide-y divide-border/30 bg-card'>
-                {isLoadingStore ? (
-                  <>
-                    <TableRowSkeleton />
-                    <TableRowSkeleton />
-                    <TableRowSkeleton />
-                  </>
-                ) : records && records.length > 0 ? (
-                  records.map((record: IRecord, index: number) => (
-                    <tr
-                      key={index}
-                      className='hover:bg-purple-50/50 dark:hover:bg-purple-950/10 transition-colors duration-150'>
-                      <td className='whitespace-nowrap py-4 pl-6 pr-3 text-sm font-semibold text-purple-600'>
-                        {(currentPage - 1) * pageLimit + Number(index) + 1}
-                      </td>
-                      <td className='whitespace-nowrap px-3 py-4 text-sm text-muted-foreground'>
-                        {dayjs(record?.created_at).format(
-                          "DD-MM-YYYY HH:mm:ss",
-                        )}
-                      </td>
-                      <td className='whitespace-nowrap px-3 py-4 text-sm font-medium'>
-                        {record?.created_by}
-                      </td>
-                      <td className='px-3 py-4 text-sm'>
-                        <div className='flex flex-wrap gap-2'>
-                          {record?.products?.length > 3 ? (
-                            <>
-                              {record?.products
-                                ?.slice(0, 2)
-                                .map((val, index) => {
-                                  return (
-                                    <div
-                                      key={index}
-                                      className='inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-gradient-to-r from-purple-100 to-indigo-100 dark:from-purple-900/30 dark:to-indigo-900/30 border border-purple-200 dark:border-purple-800'>
-                                      {/* Variant Image Thumbnail */}
-                                      {(val.variantDetails?.image ||
-                                        val.image) && (
-                                        <img
-                                          src={
-                                            val.variantDetails?.image ||
-                                            val.image
-                                          }
-                                          alt=''
-                                          className='w-8 h-8 object-cover rounded border border-purple-300 flex-shrink-0'
-                                        />
-                                      )}
-                                      <div className='flex items-center gap-1.5'>
-                                        <span
-                                          className='text-xs font-medium truncate max-w-[100px]'
-                                          title={val?.name}>
-                                          {val?.name}
-                                        </span>
-                                        {/* Size & Color Badges */}
-                                        {val.variantDetails && (
-                                          <div className='flex gap-1 flex-wrap'>
-                                            {val.variantDetails.size && (
-                                              <Badge
-                                                variant='outline'
-                                                className='text-[10px] border-blue-300 text-blue-700 px-1 py-0 h-4'>
-                                                <Ruler className='h-2 w-2 mr-0.5' />
-                                                {val.variantDetails.size}
-                                              </Badge>
-                                            )}
-                                            {val.variantDetails.color && (
-                                              <Badge
-                                                variant='outline'
-                                                className='text-[10px] border-purple-300 text-purple-700 px-1 py-0 h-4'>
-                                                <Palette className='h-2 w-2 mr-0.5' />
-                                                {val.variantDetails.color}
-                                              </Badge>
-                                            )}
-                                          </div>
-                                        )}
-                                        <Badge
-                                          variant='secondary'
-                                          className='text-xs font-bold'>
-                                          ×{val?.quantity}
-                                        </Badge>
-                                      </div>
-                                    </div>
-                                  );
-                                })}
-                              {renderVariationPopover(record)}
-                            </>
-                          ) : (
-                            record?.products?.map((val, index) => {
-                              const variantName = val.variantDetails
-                                ? [
-                                    val.variantDetails.color,
-                                    val.variantDetails.size,
-                                  ]
-                                    .filter(Boolean)
-                                    .join(" - ") || "Standard"
-                                : val?.name.includes(" ")
-                                  ? val?.name.split(" ").slice(1).join(" ")
-                                  : "Standard";
+              ))
+            ) : (
+              <tr>
+                <td colSpan={8}>{renderEmpty()}</td>
+              </tr>
+            )}
+          </tbody>
+        </table>
+      </div>
 
-                              return (
-                                <div
-                                  key={index}
-                                  className='inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-gradient-to-r from-purple-100 to-indigo-100 dark:from-purple-900/30 dark:to-indigo-900/30 border border-purple-200 dark:border-purple-800'>
-                                  {/* Variant Image Thumbnail */}
-                                  {(val.variantDetails?.image || val.image) && (
-                                    <img
-                                      src={
-                                        val.variantDetails?.image || val.image
-                                      }
-                                      alt=''
-                                      className='w-8 h-8 object-cover rounded border border-purple-300 flex-shrink-0'
-                                    />
-                                  )}
-                                  <div className='flex items-center gap-1.5'>
-                                    <span
-                                      className='text-xs font-medium truncate max-w-[100px]'
-                                      title={val?.name}>
-                                      {variantName}
-                                    </span>
-                                    {/* Size & Color Badges */}
-                                    {val.variantDetails && (
-                                      <div className='flex gap-1 flex-wrap'>
-                                        {val.variantDetails.size && (
-                                          <Badge
-                                            variant='outline'
-                                            className='text-[10px] border-blue-300 text-blue-700 px-1 py-0 h-4'>
-                                            <Ruler className='h-2 w-2 mr-0.5' />
-                                            {val.variantDetails.size}
-                                          </Badge>
-                                        )}
-                                        {val.variantDetails.color && (
-                                          <Badge
-                                            variant='outline'
-                                            className='text-[10px] border-purple-300 text-purple-700 px-1 py-0 h-4'>
-                                            <Palette className='h-2 w-2 mr-0.5' />
-                                            {val.variantDetails.color}
-                                          </Badge>
-                                        )}
-                                      </div>
-                                    )}
-                                    <Badge
-                                      variant='secondary'
-                                      className='text-xs font-bold'>
-                                      ×{val?.quantity}
-                                    </Badge>
-                                  </div>
-                                </div>
-                              );
-                            })
-                          )}
-                        </div>
-                      </td>
-                      <td className='whitespace-nowrap px-3 py-4 text-sm font-bold text-purple-600'>
-                        ৳{calculateTotalPrice(record?.products)}
-                      </td>
-                      {hasRequiredPermission("ReserveRecord", "delete") && (
-                        <td className='whitespace-nowrap px-3 py-4 text-center'>
-                          <AlertDialog>
-                            <AlertDialogTrigger asChild>
-                              <Button
-                                variant='outline'
-                                size='sm'
-                                disabled={deletingRecordId === record?._id}
-                                className='border-rose-200 hover:bg-rose-600 hover:text-white hover:border-rose-600 transition-all duration-300 disabled:opacity-50'>
-                                {deletingRecordId === record?._id ? (
-                                  <Loader2 className='w-4 h-4 animate-spin' />
-                                ) : (
-                                  <Trash className='w-4 h-4' />
-                                )}
-                              </Button>
-                            </AlertDialogTrigger>
-                            <AlertDialogContent>
-                              <AlertDialogHeader>
-                                <div className='flex items-center gap-3 mb-2'>
-                                  <div className='p-2 bg-rose-500/10 rounded-lg'>
-                                    <Trash className='h-5 w-5 text-rose-600' />
-                                  </div>
-                                  <AlertDialogTitle className='text-xl'>
-                                    Delete Record
-                                  </AlertDialogTitle>
-                                </div>
-                                <AlertDialogDescription className='text-base'>
-                                  Are you sure you want to delete this record?
-                                  This action cannot be undone and will
-                                  permanently remove the record and all
-                                  associated data from the system.
-                                </AlertDialogDescription>
-                              </AlertDialogHeader>
-                              <AlertDialogFooter>
-                                <AlertDialogCancel>Cancel</AlertDialogCancel>
-                                <AlertDialogAction
-                                  onClick={() =>
-                                    handleDeleteRecord(record?._id ?? "")
-                                  }
-                                  className='bg-gradient-to-r from-rose-600 to-red-600 hover:from-rose-700 hover:to-red-700 text-white'>
-                                  Delete Record
-                                </AlertDialogAction>
-                              </AlertDialogFooter>
-                            </AlertDialogContent>
-                          </AlertDialog>
-                        </td>
-                      )}
-                      {hasRequiredPermission("ReserveRecord", "edit") && (
-                        <td className='whitespace-nowrap px-3 py-4 pr-6 text-center'>
-                          <Button
-                            variant='outline'
-                            size='sm'
-                            onClick={() =>
-                              navigate(
-                                `/store/${storeId}/edit-record/${record?.id}`,
-                              )
-                            }
-                            className='border-purple-200 hover:bg-purple-600 hover:text-white hover:border-purple-600 transition-all duration-300'>
-                            <Edit className='w-4 h-4' />
-                          </Button>
-                        </td>
-                      )}
-                      {hasRequiredPermission("ReserveRecord", "edit") && (
-                        <td className='whitespace-nowrap px-3 py-4 pr-6 text-center'>
-                          <Button
-                            variant='outline'
-                            size='sm'
-                            onClick={() => {
-                              generateInventoryPDF(
-                                storeInfo?.name || "",
-                                record?.created_by,
-                                record?.created_at,
-                                record?.products,
-                              );
-                            }}
-                            className='border-purple-200 hover:bg-purple-600 hover:text-white hover:border-purple-600 transition-all duration-300'>
-                            <DownloadCloud className='w-4 h-4' />
-                          </Button>
-                        </td>
-                      )}
-                    </tr>
-                  ))
-                ) : (
-                  <tr>
-                    <td colSpan={7} className='py-12 text-center'>
-                      <div className='flex flex-col items-center'>
-                        <Package
-                          className='h-12 w-12 text-purple-400 mb-3'
-                          strokeWidth={1.5}
-                        />
-                        <p className='text-sm text-muted-foreground'>
-                          No records found
-                        </p>
-                      </div>
-                    </td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
+      {/* Pagination */}
+      {pagination && pagination.totalPages > 1 && (
+        <div className='flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 px-5 py-4 border-t border-gray-100 bg-gray-50/50'>
+          <p className='text-xs text-gray-400 order-2 sm:order-1'>
+            Showing{" "}
+            <span className='font-semibold text-gray-700'>
+              {(currentPage - 1) * pageLimit + 1}–
+              {Math.min(currentPage * pageLimit, pagination.totalItems)}
+            </span>{" "}
+            of{" "}
+            <span className='font-semibold text-gray-700'>
+              {pagination.totalItems}
+            </span>
+          </p>
+
+          <div className='flex items-center gap-2 order-1 sm:order-2'>
+            <Select
+              value={`${pageLimit}`}
+              onValueChange={(v) => setPageLimit(parseInt(v, 10))}>
+              <SelectTrigger className='h-7 w-16 text-xs rounded-lg border-gray-200'>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectGroup>
+                  <SelectLabel className='text-xs'>Per page</SelectLabel>
+                  {[10, 20, 50, 100].map((n) => (
+                    <SelectItem key={n} value={`${n}`} className='text-xs'>
+                      {n}
+                    </SelectItem>
+                  ))}
+                </SelectGroup>
+              </SelectContent>
+            </Select>
+
+            <div className='flex items-center gap-1'>
+              <Button
+                variant='outline'
+                size='sm'
+                disabled={!pagination.hasPreviousPage}
+                onClick={prevPage}
+                className='h-7 px-2.5 text-xs rounded-lg border-gray-200 gap-1'>
+                <ChevronLeft className='w-3 h-3' />
+                Prev
+              </Button>
+              <span className='px-2 text-xs font-medium text-gray-500'>
+                {currentPage} / {pagination.totalPages}
+              </span>
+              <Button
+                variant='outline'
+                size='sm'
+                disabled={!pagination.hasNextPage}
+                onClick={nextPage}
+                className='h-7 px-2.5 text-xs rounded-lg border-gray-200 gap-1'>
+                Next
+                <ChevronRight className='w-3 h-3' />
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+
+  // ─── Store header ─────────────────────────────────────────────────────────────
+  const renderHeader = () => (
+    <div className='bg-white rounded-2xl border border-gray-100 shadow-sm px-5 py-4'>
+      {isLoadingStore ? (
+        <div className='animate-pulse flex items-center gap-4'>
+          <div className='w-12 h-12 rounded-xl bg-gray-100' />
+          <div className='flex-1 space-y-2'>
+            <div className='h-4 w-40 bg-gray-100 rounded-full' />
+            <div className='h-3 w-24 bg-gray-100 rounded-full' />
+          </div>
+        </div>
+      ) : (
+        <div className='flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3'>
+          <div className='flex items-center gap-3'>
+            <div className='w-11 h-11 rounded-xl bg-violet-600 flex items-center justify-center shrink-0 shadow-sm shadow-violet-200'>
+              <Warehouse className='w-5 h-5 text-white' strokeWidth={2} />
+            </div>
+            <div>
+              <h1 className='text-base font-bold text-gray-900 leading-tight'>
+                {storeInfo?.name || "Store"}
+              </h1>
+              {storeInfo?.location && (
+                <p className='flex items-center gap-1 text-xs text-gray-400 mt-0.5'>
+                  <MapPin className='w-3 h-3' />
+                  {storeInfo.location}
+                </p>
+              )}
+            </div>
           </div>
 
-          {/* Pagination Controls */}
-          {pagination && pagination.totalPages > 1 && (
-            <div className='mt-6 bg-card rounded-xl border border-border/50 p-4 shadow-sm'>
-              {/* Pagination Controls */}
-              <div className='flex items-center justify-between gap-4'>
-                {/* Items count */}
-                <div className='text-center text-sm text-muted-foreground'>
-                  Showing{" "}
-                  <span className='font-semibold text-foreground'>
-                    {(currentPage - 1) * pageLimit + 1}-
-                    {Math.min(currentPage * pageLimit, pagination.totalItems)}
-                  </span>{" "}
-                  of{" "}
-                  <span className='font-semibold text-foreground'>
-                    {pagination.totalItems}
-                  </span>{" "}
-                  records
-                </div>
-                <span className='text-sm font-medium text-foreground'>
-                  Page {currentPage} of {pagination.totalPages}
+          {storeInfo && (
+            <div className='flex items-center gap-2'>
+              <div className='inline-flex items-center gap-2 px-3 py-1.5 rounded-xl bg-violet-50 border border-violet-100'>
+                <Package className='w-3.5 h-3.5 text-violet-500' />
+                <span className='text-xs font-semibold text-violet-700'>
+                  {pagination?.totalItems ?? 0} Records
                 </span>
-                <div className='flex justify-between items-center float-right gap-2'>
-                  {/* Page indicator and limit selector */}
-                  <div className='flex items-center gap-2'>
-                    <Select
-                      value={`${pageLimit}`}
-                      onValueChange={(value: string) =>
-                        setPageLimit(parseInt(value, 10))
-                      }>
-                      <SelectTrigger className='w-16 h-8'>
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectGroup>
-                          <SelectLabel>Per page</SelectLabel>
-                          <SelectItem value='10'>10</SelectItem>
-                          <SelectItem value='20'>20</SelectItem>
-                          <SelectItem value='50'>50</SelectItem>
-                          <SelectItem value='100'>100</SelectItem>
-                        </SelectGroup>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <Button
-                    disabled={!pagination.hasPreviousPage}
-                    variant='outline'
-                    size='sm'
-                    onClick={prevPage}
-                    className='flex items-center gap-2'>
-                    <ChevronLeft className='h-4 w-4' />
-                    Previous
-                  </Button>
-
-                  <Button
-                    disabled={!pagination.hasNextPage}
-                    variant='outline'
-                    size='sm'
-                    onClick={nextPage}
-                    className='flex items-center gap-2'>
-                    Next
-                    <ChevronRight className='h-4 w-4' />
-                  </Button>
-                </div>
               </div>
             </div>
           )}
-        </CardContent>
-      </Card>
-    );
-  };
-  const renderMainView = () => {
-    return (
-      <div className='w-full mx-auto p-4 space-y-4 overflow-x-auto'>
-        {/* Store Header Card */}
-        <Card className='border-0 shadow-xl bg-gradient-to-br from-purple-600 via-indigo-600 to-purple-700 text-white overflow-hidden'>
-          <div className='absolute top-0 right-0 w-64 h-64 bg-gradient-to-br from-white/10 to-transparent rounded-full blur-3xl -translate-y-32 translate-x-32'></div>
-          <CardContent className='p-4 sm:p-4 relative z-10'>
-            {isLoadingStore ? (
-              <div className='animate-pulse space-y-3'>
-                <div className='h-8 w-48 bg-white/20 rounded'></div>
-                <div className='h-4 w-64 bg-white/20 rounded'></div>
-              </div>
-            ) : (
-              <div className='flex items-start gap-4'>
-                <div className='p-3 bg-white/10 backdrop-blur-sm rounded-2xl shadow-lg'>
-                  <Warehouse className='h-5 w-5 text-white' strokeWidth={2.5} />
-                </div>
-                <div className='flex-1 flex justify-between items-center'>
-                  <h1 className='text-base sm:text-xl font-bold mb-2'>
-                    {storeInfo?.name || "Store Information"}
-                  </h1>
-                  {storeInfo?.location && (
-                    <div className='flex items-center gap-2 text-white/90'>
-                      <MapPin className='h-4 w-4' />
-                      <p className='text-sm sm:text-base'>
-                        {storeInfo.location}
-                      </p>
-                    </div>
-                  )}
-                  {storeInfo && (
-                    <div className='mt-3 inline-flex items-center gap-2 px-3 py-1.5 bg-white/10 backdrop-blur-sm rounded-lg'>
-                      <Package className='h-4 w-4' />
-                      <span className='text-sm font-medium'>
-                        {pagination?.totalItems || 0} Records
-                      </span>
-                    </div>
-                  )}
-                </div>
-              </div>
-            )}
-          </CardContent>
-        </Card>
+        </div>
+      )}
+    </div>
+  );
 
-        {/* Table or Empty State */}
-        {!!storeInfo || isLoadingStore
-          ? renderStoreTable()
-          : renderEmptyStoreData()}
-
-        {/* Error Alert Dialog */}
+  return (
+    <MainView title='Store Information'>
+      <div className='px-4 py-5 sm:px-6 space-y-4 md:container mx-auto'>
+        {renderHeader()}
+        {!!storeInfo || isLoadingStore ? renderTable() : renderNoStore()}
         <ErrorAlertDialog
           isOpen={errorDialog.isOpen}
           onClose={() => setErrorDialog({ isOpen: false, message: "" })}
           message={errorDialog.message}
         />
       </div>
-    );
-  };
-
-  return <MainView title='Store Information'>{renderMainView()}</MainView>;
+    </MainView>
+  );
 };
 
 export default SingleReserveStore;

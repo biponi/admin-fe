@@ -47,7 +47,7 @@ export function NavUser({
             <SidebarMenuButton
               size='lg'
               className='data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground'>
-              <Avatar className='h-8 w-8 rounded-lg'>
+              <Avatar className='h-10 w-10 rounded-full p-2 bg-white shadow-md'>
                 <AvatarImage src={user.avatar} alt={user.name} />
                 <AvatarFallback className='rounded-lg'>CN</AvatarFallback>
               </Avatar>
@@ -90,7 +90,7 @@ export function NavUser({
               </DropdownMenuItem>
               {useRoleCheck().hasRequiredPermission(
                 "settings",
-                "jobs_management"
+                "jobs_management",
               ) && (
                 <DropdownMenuItem
                   onClick={() => navigateToRoute("/settings/jobs")}>

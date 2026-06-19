@@ -2,18 +2,8 @@
 import { ReactElement, useEffect, useState } from "react";
 import { ICategory, IChangeEvent, ICreateCategory } from "../interface";
 import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from "../../../components/ui/card";
-import {
   Sheet,
   SheetContent,
-  SheetDescription,
-  SheetFooter,
-  SheetHeader,
-  SheetTitle,
   SheetTrigger,
 } from "../../../components/ui/sheet";
 import {
@@ -34,13 +24,10 @@ import {
   Drawer,
   DrawerClose,
   DrawerContent,
-  DrawerDescription,
-  DrawerFooter,
-  DrawerHeader,
-  DrawerTitle,
 } from "../../../components/ui/drawer";
 import { ScrollArea } from "../../../components/ui/scroll-area";
 import { useIsMobile } from "../../../hooks/use-mobile";
+import { FolderPlus, FolderEdit, Save, X, Tag, DollarSign, Settings, Image as ImageIcon } from "lucide-react";
 
 interface Props {
   open?: boolean;
@@ -190,204 +177,259 @@ const UpdateCategory: React.FC<Props> = ({
 
   const renderFormView = () => {
     return (
-      <Card>
-        <CardContent>
-          <div className='grid gap-4 grid-cols-1 lg:grid-cols-3'>
-            <div className='col-span-1 lg:col-span-2'>
-              {/* Category Name */}
-              <div className='grid w-full items-center gap-1.5 my-5'>
-                <Label htmlFor='name'>Category Name *</Label>
-                <Input
-                  type='text'
-                  name='name'
-                  onChange={handleChange}
-                  placeholder='Enter category name'
-                  value={existingCategory?.name ?? ""}
-                />
-              </div>
-
-              {/* Parent Category Selection */}
-              <div className='grid w-full items-center gap-1.5 my-5'>
-                <Label htmlFor='parentId'>Parent Category</Label>
-                <Select
-                  value={existingCategory?.parentId || "root"}
-                  onValueChange={handleParentChange}>
-                  <SelectTrigger>
-                    <SelectValue placeholder='Select parent category' />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value='root'>
-                      Root Category (No Parent)
-                    </SelectItem>
-                    {getAvailableParentCategories()
-                      .sort((a, b) => (a.level || 0) - (b.level || 0))
-                      .map((cat) => (
-                        <SelectItem key={cat.id} value={cat.id}>
-                          {buildCategoryDisplayName(cat)}
-                        </SelectItem>
-                      ))}
-                  </SelectContent>
-                </Select>
-                {existingCategory?.parentId && (
-                  <div className='text-sm text-muted-foreground mt-1'>
-                    <strong>Category Path:</strong>{" "}
-                    {getCategoryBreadcrumb(existingCategory.parentId)}
-                  </div>
-                )}
-              </div>
-
-              {/* Description */}
-              <div className='grid w-full items-center gap-1.5 my-5'>
-                <Label htmlFor='description'>Description</Label>
-                <Textarea
-                  name='description'
-                  placeholder='Enter category description'
-                  onChange={handleChange}
-                  value={existingCategory?.description ?? ""}
-                  rows={3}
-                />
-              </div>
-
-              {/* Google Category Type */}
-              <div className='grid w-full items-center gap-1.5 my-5'>
-                <Label htmlFor='google_category_type'>
-                  Google Category Type
-                </Label>
-                <Input
-                  type='text'
-                  name='google_category_type'
-                  placeholder='e.g., Electronics > Computers > Laptops'
-                  onChange={handleChange}
-                  value={existingCategory?.google_category_type ?? ""}
-                />
-                <div className='text-xs text-muted-foreground'>
-                  Optional: Used for Google Shopping integration
+      <div className='bg-white rounded-2xl border border-slate-100 shadow-sm p-6'>
+        <div className='grid gap-6 grid-cols-1 lg:grid-cols-3'>
+          <div className='col-span-1 lg:col-span-2 space-y-6'>
+            {/* Section 1: Basic Information */}
+            <div>
+              <h3 className='text-sm font-semibold text-slate-700 mb-4 flex items-center gap-2'>
+                <Tag className='h-4 w-4 text-blue-600' />
+                Basic Information
+              </h3>
+              <div className='space-y-4'>
+                {/* Category Name */}
+                <div className='grid w-full items-center gap-1.5'>
+                  <Label htmlFor='name'>Category Name *</Label>
+                  <Input
+                    type='text'
+                    name='name'
+                    onChange={handleChange}
+                    placeholder='Enter category name'
+                    value={existingCategory?.name ?? ""}
+                    className='border-slate-200 focus-visible:ring-blue-500'
+                  />
                 </div>
-              </div>
 
-              {/* Discount Type */}
-              <div className='grid w-full items-center gap-1.5 my-5'>
-                <Label htmlFor='discountType'>Discount Type</Label>
-                <Select
-                  value={existingCategory?.discountType || "percentage"}
-                  onValueChange={(value) => {
-                    if (!!existingCategory) {
-                      setExistingCategory({
-                        ...existingCategory,
-                        discountType: value,
-                      });
-                    }
-                  }}>
-                  <SelectTrigger>
-                    <SelectValue placeholder='Select discount type' />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value='percentage'>Percentage (%)</SelectItem>
-                    <SelectItem value='fixed'>Fixed Amount</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-
-              {/* Discount */}
-              <div className='grid w-full items-center gap-1.5 my-5'>
-                <Label htmlFor='discount'>
-                  Discount {existingCategory?.discountType === "percentage" ? "(%)" : "(Amount)"}
-                </Label>
-                <Input
-                  type='number'
-                  name='discount'
-                  placeholder='0.00'
-                  min='0'
-                  max={existingCategory?.discountType === "percentage" ? '100' : undefined}
-                  step='0.01'
-                  onChange={handleChange}
-                  value={existingCategory?.discount ?? ""}
-                />
-              </div>
-
-              {/* Active Status */}
-              <div className='flex items-center space-x-2 my-5'>
-                <Switch
-                  id='active-status'
-                  checked={existingCategory?.active ?? true}
-                  onCheckedChange={(value) => {
-                    if (!!existingCategory) {
-                      setExistingCategory({
-                        ...existingCategory,
-                        active: value,
-                      });
-                    }
-                  }}
-                />
-                <Label htmlFor='active-status'>Active</Label>
-                <div className='text-sm text-muted-foreground ml-2'>
-                  {existingCategory?.active
-                    ? "Category is visible"
-                    : "Category is hidden"}
+                {/* Parent Category Selection */}
+                <div className='grid w-full items-center gap-1.5'>
+                  <Label htmlFor='parentId'>Parent Category</Label>
+                  <Select
+                    value={existingCategory?.parentId || "root"}
+                    onValueChange={handleParentChange}>
+                    <SelectTrigger className='border-slate-200 focus:ring-blue-500'>
+                      <SelectValue placeholder='Select parent category' />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value='root'>
+                        Root Category (No Parent)
+                      </SelectItem>
+                      {getAvailableParentCategories()
+                        .sort((a, b) => (a.level || 0) - (b.level || 0))
+                        .map((cat) => (
+                          <SelectItem key={cat.id} value={cat.id}>
+                            {buildCategoryDisplayName(cat)}
+                          </SelectItem>
+                        ))}
+                    </SelectContent>
+                  </Select>
+                  {existingCategory?.parentId && (
+                    <div className='text-xs text-slate-500 mt-1.5'>
+                      <strong>Category Path:</strong>{" "}
+                      {getCategoryBreadcrumb(existingCategory.parentId)}
+                    </div>
+                  )}
                 </div>
-              </div>
 
-              {/* Image Upload */}
-              <div className='grid w-full items-center gap-1.5 my-5'>
-                <Label htmlFor='picture'>Category Image</Label>
-                <Input
-                  id='picture'
-                  type='file'
-                  accept='image/*'
-                  onChange={(e) => {
-                    //@ts-ignore
-                    const file = e.target.files[0];
-                    if (!!existingCategory && !!file) setImage(file);
-                  }}
-                />
+                {/* Description */}
+                <div className='grid w-full items-center gap-1.5'>
+                  <Label htmlFor='description'>Description</Label>
+                  <Textarea
+                    name='description'
+                    placeholder='Enter category description'
+                    onChange={handleChange}
+                    value={existingCategory?.description ?? ""}
+                    rows={3}
+                    className='border-slate-200 focus-visible:ring-blue-500'
+                  />
+                </div>
               </div>
             </div>
 
-            {/* Image Preview */}
-            <div className='w-full mt-5'>
-              <Card>
-                <CardHeader>
-                  <CardTitle>Category Preview</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className='grid gap-2'>
-                    <img
-                      alt='Category_image'
-                      className='aspect-square w-full rounded-md object-cover'
-                      height='200'
-                      src={
-                        !!existingCategory &&
-                        !!existingCategory?.img &&
-                        typeof existingCategory?.img === "string"
-                          ? existingCategory?.img
-                          : !!image
-                          ? URL.createObjectURL(image)
-                          : PlaceHolderImage
+            {/* Divider */}
+            <div className='border-t border-slate-100' />
+
+            {/* Section 2: Pricing & Discounts */}
+            <div>
+              <h3 className='text-sm font-semibold text-slate-700 mb-4 flex items-center gap-2'>
+                <DollarSign className='h-4 w-4 text-blue-600' />
+                Pricing & Discounts
+              </h3>
+              <div className='space-y-4'>
+                {/* Discount Type */}
+                <div className='grid w-full items-center gap-1.5'>
+                  <Label htmlFor='discountType'>Discount Type</Label>
+                  <Select
+                    value={existingCategory?.discountType || "percentage"}
+                    onValueChange={(value) => {
+                      if (!!existingCategory) {
+                        setExistingCategory({
+                          ...existingCategory,
+                          discountType: value,
+                        });
                       }
-                      width='200'
-                    />
-                    <div className='text-sm text-center'>
-                      <div className='font-medium'>
-                        {existingCategory?.name || "Category Name"}
-                      </div>
-                      {existingCategory?.parentId && (
-                        <div className='text-muted-foreground text-xs mt-1'>
-                          {getCategoryBreadcrumb(existingCategory.parentId)}
-                        </div>
-                      )}
-                      {!existingCategory?.parentId && (
-                        <Badge variant='outline' className='mt-1'>
-                          Root Category
-                        </Badge>
-                      )}
+                    }}>
+                    <SelectTrigger className='border-slate-200 focus:ring-blue-500'>
+                      <SelectValue placeholder='Select discount type' />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value='percentage'>Percentage (%)</SelectItem>
+                      <SelectItem value='fixed'>Fixed Amount</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                {/* Discount */}
+                <div className='grid w-full items-center gap-1.5'>
+                  <Label htmlFor='discount'>
+                    Discount {existingCategory?.discountType === "percentage" ? "(%)" : "(Amount)"}
+                  </Label>
+                  <Input
+                    type='number'
+                    name='discount'
+                    placeholder='0.00'
+                    min='0'
+                    max={existingCategory?.discountType === "percentage" ? '100' : undefined}
+                    step='0.01'
+                    onChange={handleChange}
+                    value={existingCategory?.discount ?? ""}
+                    className='border-slate-200 focus-visible:ring-blue-500'
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* Divider */}
+            <div className='border-t border-slate-100' />
+
+            {/* Section 3: Settings & Media */}
+            <div>
+              <h3 className='text-sm font-semibold text-slate-700 mb-4 flex items-center gap-2'>
+                <Settings className='h-4 w-4 text-blue-600' />
+                Settings & Media
+              </h3>
+              <div className='space-y-4'>
+                {/* Google Category Type */}
+                <div className='grid w-full items-center gap-1.5'>
+                  <Label htmlFor='google_category_type'>
+                    Google Category Type
+                  </Label>
+                  <Input
+                    type='text'
+                    name='google_category_type'
+                    placeholder='e.g., Electronics > Computers > Laptops'
+                    onChange={handleChange}
+                    value={existingCategory?.google_category_type ?? ""}
+                    className='border-slate-200 focus-visible:ring-blue-500'
+                  />
+                  <div className='text-xs text-slate-500'>
+                    Optional: Used for Google Shopping integration
+                  </div>
+                </div>
+
+                {/* Active Status */}
+                <div className='flex items-center space-x-3'>
+                  <Switch
+                    id='active-status'
+                    checked={existingCategory?.active ?? true}
+                    onCheckedChange={(value) => {
+                      if (!!existingCategory) {
+                        setExistingCategory({
+                          ...existingCategory,
+                          active: value,
+                        });
+                      }
+                    }}
+                  />
+                  <div className='flex-1'>
+                    <Label htmlFor='active-status' className='cursor-pointer'>
+                      Active Status
+                    </Label>
+                    <div className='text-xs text-slate-500'>
+                      {existingCategory?.active
+                        ? "Category is visible to customers"
+                        : "Category is hidden from customers"}
                     </div>
                   </div>
-                </CardContent>
-              </Card>
+                </div>
+
+                {/* Image Upload */}
+                <div className='grid w-full items-center gap-1.5'>
+                  <Label htmlFor='picture' className='flex items-center gap-2'>
+                    <ImageIcon className='h-4 w-4' />
+                    Category Image
+                  </Label>
+                  <Input
+                    id='picture'
+                    type='file'
+                    accept='image/*'
+                    onChange={(e) => {
+                      //@ts-ignore
+                      const file = e.target.files[0];
+                      if (!!existingCategory && !!file) setImage(file);
+                    }}
+                    className='border-slate-200 focus-visible:ring-blue-500'
+                  />
+                </div>
+              </div>
             </div>
           </div>
-        </CardContent>
-      </Card>
+
+          {/* Preview Card */}
+          <div className='w-full'>
+            <div className='bg-white rounded-xl border border-slate-100 shadow-sm overflow-hidden'>
+              <div className='bg-slate-50 px-4 py-3 border-b border-slate-100'>
+                <h4 className='text-sm font-semibold text-slate-700 flex items-center gap-2'>
+                  <ImageIcon className='h-4 w-4 text-blue-600' />
+                  Category Preview
+                </h4>
+              </div>
+              <div className='p-4'>
+                <div className='space-y-3'>
+                  <img
+                    alt='Category_image'
+                    className='aspect-square w-full rounded-lg object-cover border border-slate-200'
+                    height='200'
+                    src={
+                      !!existingCategory &&
+                      !!existingCategory?.img &&
+                      typeof existingCategory?.img === "string"
+                        ? existingCategory?.img
+                        : !!image
+                        ? URL.createObjectURL(image)
+                        : PlaceHolderImage
+                    }
+                    width='200'
+                  />
+                  <div className='text-center'>
+                    <div className='font-semibold text-slate-900'>
+                      {existingCategory?.name || "Category Name"}
+                    </div>
+                    {existingCategory?.parentId && (
+                      <div className='text-xs text-slate-500 mt-1'>
+                        {getCategoryBreadcrumb(existingCategory.parentId)}
+                      </div>
+                    )}
+                    {!existingCategory?.parentId && (
+                      <Badge className='mt-2 bg-blue-50 text-blue-700 border-blue-200'>
+                        Root Category
+                      </Badge>
+                    )}
+                    {existingCategory?.active ? (
+                      <Badge className='ml-2 bg-emerald-50 text-emerald-700 border-emerald-200'>
+                        Active
+                      </Badge>
+                    ) : (
+                      <Badge className='ml-2 bg-slate-100 text-slate-600 border-slate-200'>
+                        Inactive
+                      </Badge>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
     );
   };
 
@@ -395,36 +437,49 @@ const UpdateCategory: React.FC<Props> = ({
     return (
       <Drawer open={open} onOpenChange={(open) => handleOpenChange(open)}>
         <DrawerContent>
-          <ScrollArea className='h-[calc(100vh-200px)] p-2'>
-            <DrawerHeader>
-              <DrawerTitle>
-                {" "}
-                {isNewCategory ? "Create Category" : "Update Category"}
-              </DrawerTitle>
-              <DrawerDescription>{`Configure your category settings. Categories can be nested to create hierarchical organization. Click ${
-                isNewCategory ? "create" : "update"
-              } when you're done.`}</DrawerDescription>
-            </DrawerHeader>
+          <ScrollArea className='h-[calc(100vh-200px)] p-4'>
+            {/* Mobile Header */}
+            <div className='flex items-center gap-3 mb-6'>
+              <div className='flex items-center justify-center w-10 h-10 rounded-xl bg-blue-600 shadow-sm shadow-blue-200'>
+                {isNewCategory ? (
+                  <FolderPlus className='h-5 w-5 text-white' />
+                ) : (
+                  <FolderEdit className='h-5 w-5 text-white' />
+                )}
+              </div>
+              <div>
+                <h2 className='text-xl font-semibold text-slate-900 leading-tight'>
+                  {isNewCategory ? "Create Category" : "Update Category"}
+                </h2>
+                <p className='text-sm text-slate-500 mt-0.5'>
+                  Configure category settings and hierarchy
+                </p>
+              </div>
+            </div>
 
             {renderFormView()}
           </ScrollArea>
-          <DrawerFooter className='flex flex-col w-full bg-primary/10 rounded-t-xl space-y-3 p-8'>
-            <DrawerClose>
-              <Button
-                className='w-full mb-4'
-                disabled={!!!existingCategory?.name || loading}
-                onClick={() => handleSubmit()}>
-                {loading
-                  ? "Processing..."
-                  : isNewCategory
-                  ? "Create Category"
-                  : "Update Category"}
-              </Button>
-              <Button className='w-full' variant='destructive'>
+
+          {/* Modern Mobile Footer */}
+          <div className='flex flex-col gap-3 p-6 bg-slate-50 border-t border-slate-100'>
+            <Button
+              disabled={!!!existingCategory?.name || loading}
+              onClick={() => handleSubmit()}
+              className='bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white rounded-lg shadow-sm shadow-blue-200 transition-all duration-150'>
+              <Save className='h-4 w-4' />
+              {loading
+                ? "Processing..."
+                : isNewCategory
+                ? "Create Category"
+                : "Save Changes"}
+            </Button>
+            <DrawerClose className='w-full'>
+              <Button className='w-full bg-white border border-slate-200 text-slate-700 hover:bg-slate-50 hover:border-slate-300 rounded-lg shadow-sm transition-all duration-150'>
+                <X className='h-4 w-4' />
                 Cancel
               </Button>
             </DrawerClose>
-          </DrawerFooter>
+          </div>
         </DrawerContent>
       </Drawer>
     );
@@ -433,33 +488,47 @@ const UpdateCategory: React.FC<Props> = ({
     <Sheet open={open} onOpenChange={(open) => handleOpenChange(open)}>
       {!!children && <SheetTrigger asChild>{children}</SheetTrigger>}
       <SheetContent className='overflow-y-auto w-full sm:max-w-2xl'>
-        <SheetHeader>
-          <SheetTitle>
-            {isNewCategory ? "Create Category" : "Update Category"}
-          </SheetTitle>
-          <SheetDescription>
-            {`Configure your category settings. Categories can be nested to create hierarchical organization. Click ${
-              isNewCategory ? "create" : "update"
-            } when you're done.`}
-          </SheetDescription>
-        </SheetHeader>
-        <div className='mt-4'>
-          {renderFormView()}
+        {/* Enhanced Header */}
+        <div className='flex items-center gap-3 mb-6'>
+          <div className='flex items-center justify-center w-10 h-10 rounded-xl bg-blue-600 shadow-sm shadow-blue-200'>
+            {isNewCategory ? (
+              <FolderPlus className='h-5 w-5 text-white' />
+            ) : (
+              <FolderEdit className='h-5 w-5 text-white' />
+            )}
+          </div>
+          <div>
+            <h2 className='text-xl font-semibold text-slate-900 leading-tight'>
+              {isNewCategory ? "Create Category" : "Update Category"}
+            </h2>
+            <p className='text-sm text-slate-500 mt-0.5'>
+              Configure category settings and hierarchy
+            </p>
+          </div>
         </div>
-        <SheetFooter className='mt-6'>
-          <Button variant='outline' onClick={() => handleOpenChange(false)}>
+
+        {renderFormView()}
+
+        {/* Modern Footer */}
+        <div className='flex items-center gap-2 mt-6 pt-6 border-t border-slate-100'>
+          <Button
+            onClick={() => handleOpenChange(false)}
+            className='bg-white border border-slate-200 text-slate-700 hover:bg-slate-50 hover:border-slate-300 rounded-lg shadow-sm transition-all duration-150'>
+            <X className='h-4 w-4' />
             Cancel
           </Button>
           <Button
             disabled={!!!existingCategory?.name || loading}
-            onClick={() => handleSubmit()}>
+            onClick={() => handleSubmit()}
+            className='bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white rounded-lg shadow-sm shadow-blue-200 transition-all duration-150 ml-auto'>
+            <Save className='h-4 w-4' />
             {loading
               ? "Processing..."
               : isNewCategory
               ? "Create Category"
-              : "Update Category"}
+              : "Save Changes"}
           </Button>
-        </SheetFooter>
+        </div>
       </SheetContent>
     </Sheet>
   );

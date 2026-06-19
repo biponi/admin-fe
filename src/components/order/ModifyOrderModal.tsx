@@ -1,12 +1,6 @@
 import { useEffect, useState, useRef } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "../ui/dialog";
-import { Button } from "../ui/button";
-import { Input } from "../ui/input";
-import { Badge } from "../ui/badge";
-import { Card, CardContent } from "../ui/card";
 import { ScrollArea } from "../ui/scroll-area";
-import { Separator } from "../ui/separator";
-import { Alert, AlertDescription } from "../ui/alert";
 import {
   Package,
   Plus,
@@ -17,7 +11,8 @@ import {
   CheckCircle2,
   AlertTriangle,
   XCircle,
-  Info,
+  ChevronRight,
+  ArrowRight,
 } from "lucide-react";
 import { toast } from "sonner";
 import axios from "../../api/axios";
@@ -29,6 +24,7 @@ import type {
 } from "../../pages/order/interface.d";
 import { validateModification, modifyOrder } from "../../api/order";
 import type { ValidationResponse } from "../../api/order";
+import { cn } from "../../lib/utils";
 
 interface ModifyOrderModalProps {
   orderId: string | number;
@@ -56,8 +52,8 @@ export function ModifyOrderModal({
   orderNumber,
   initialProducts,
   open,
-  deliveryCharge,
-  paid,
+  deliveryCharge = 0,
+  paid = 0,
   onOpenChange,
   onSuccess,
 }: ModifyOrderModalProps) {
@@ -78,35 +74,32 @@ export function ModifyOrderModal({
   const searchInputRef = useRef<HTMLInputElement>(null);
   const searchResultsRef = useRef<HTMLDivElement>(null);
 
-  // Close dropdown when clicking outside
   useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
+    const handleClickOutside = (e: MouseEvent) => {
       if (
         searchResultsRef.current &&
-        !searchResultsRef.current.contains(event.target as Node) &&
-        !searchInputRef.current?.contains(event.target as Node)
+        !searchResultsRef.current.contains(e.target as Node) &&
+        !searchInputRef.current?.contains(e.target as Node)
       ) {
         setShowSearchResults(false);
       }
     };
-
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  // Initialize with order products
   useEffect(() => {
     if (open && initialProducts.length > 0) {
       setSelectedProducts(
         initialProducts.map((p) => ({
           id: p.productId || p.id,
           name: p.name,
-          sku: "", // Would come from product API
+          sku: "",
           unitPrice: p.unitPrice,
           updatePrice: p.unitPrice,
           discount: p.discount || 0,
           quantity: p.quantity,
-          maxQuantity: p.quantity + 10, // Would come from stock API
+          maxQuantity: p.quantity + 10,
           updatedPrice: p.unitPrice,
           image: p.thumbnail,
           thumbnail: p.thumbnail,
@@ -122,7 +115,6 @@ export function ModifyOrderModal({
     }
   }, [open, initialProducts]);
 
-  // Search products
   const searchProducts = async (query: string) => {
     if (!query) {
       setSearchResults([]);
@@ -135,23 +127,14 @@ export function ModifyOrderModal({
       const response = await axios.get(
         `${config.product.searchProductV2()}?query=${query}&limit=10`,
       );
-      // API returns array directly
       let results: any[] = [];
-      if (Array.isArray(response.data)) {
-        results = response.data;
-      } else if (response.data?.data && Array.isArray(response.data.data)) {
-        results = response.data.data;
-      } else if (
-        response.data?.data?.products &&
-        Array.isArray(response.data.data.products)
-      ) {
+      if (Array.isArray(response.data)) results = response.data;
+      else if (Array.isArray(response.data?.data)) results = response.data.data;
+      else if (Array.isArray(response.data?.data?.products))
         results = response.data.data.products;
-      }
-
       setSearchResults(results);
       setShowSearchResults(results.length > 0);
-    } catch (error) {
-      console.error("Search error:", error);
+    } catch {
       toast.error("Failed to search products");
       setShowSearchResults(false);
     } finally {
@@ -160,34 +143,27 @@ export function ModifyOrderModal({
   };
 
   const debounce = useDebounce(searchQuery, 500);
-
   useEffect(() => {
-    if (debounce) {
-      searchProducts(debounce);
-    } else {
+    if (debounce) searchProducts(debounce);
+    else {
       setSearchResults([]);
       setShowSearchResults(false);
     }
-    //eslint-disable-next-line
+    // eslint-disable-next-line
   }, [debounce]);
 
-  // Add product from search
   const handleAddProduct = (product: ProductSearchResponse) => {
     if (product.quantity <= 0) {
       toast.error("Product out of stock");
       return;
     }
-
-    const existingProduct = selectedProducts.find((p) =>
+    const existing = selectedProducts.find((p) =>
       product.variant?.id
         ? p.id === product.id && p.variant?.id === product.variant.id
         : p.id === product.id,
     );
-
-    if (existingProduct) {
-      if (
-        existingProduct.quantity >= (product.maxQuantity || product.quantity)
-      ) {
+    if (existing) {
+      if (existing.quantity >= (product.maxQuantity || product.quantity)) {
         toast.error("Maximum quantity reached");
         return;
       }
@@ -201,11 +177,7 @@ export function ModifyOrderModal({
     } else {
       setSelectedProducts((prev) => [
         ...prev,
-        {
-          ...product,
-          quantity: 1,
-          maxQuantity: product.quantity,
-        },
+        { ...product, quantity: 1, maxQuantity: product.quantity },
       ]);
     }
     setSearchQuery("");
@@ -214,60 +186,51 @@ export function ModifyOrderModal({
     searchInputRef.current?.focus();
   };
 
-  // Update quantity
   const handleUpdateQuantity = (index: number, delta: number) => {
     setSelectedProducts((prev) =>
       prev.map((p, i) => {
-        if (i === index) {
-          const newQty = Math.max(0, p.quantity + delta);
-          const maxQty = p.maxQuantity || p.quantity;
-          if (newQty > maxQty) {
-            toast.error("Maximum quantity reached");
-            return p;
-          }
-          return { ...p, quantity: newQty };
+        if (i !== index) return p;
+        const newQty = Math.max(0, p.quantity + delta);
+        if (newQty > (p.maxQuantity || p.quantity)) {
+          toast.error("Maximum quantity reached");
+          return p;
         }
-        return p;
+        return { ...p, quantity: newQty };
       }),
     );
   };
 
-  // Remove product
   const handleRemoveProduct = (index: number) => {
     setSelectedProducts((prev) => prev.filter((_, i) => i !== index));
   };
 
-  // Calculate totals
   const totals = selectedProducts.reduce(
-    (acc, product) => ({
+    (acc, p) => ({
       totalPrice:
-        acc.totalPrice +
-        Number(product.updatedPrice || product.unitPrice) * product.quantity,
-      totalItems: acc.totalItems + product.quantity,
+        acc.totalPrice + Number(p.updatedPrice || p.unitPrice) * p.quantity,
+      totalItems: acc.totalItems + p.quantity,
     }),
     { totalPrice: 0, totalItems: 0 },
   );
 
-  // Preview changes - Step 1: Validate
+  const grandTotal = totals.totalPrice + deliveryCharge;
+  const due = grandTotal - paid;
+
   const handlePreviewChanges = async () => {
     if (selectedProducts.length === 0) {
       toast.error("Order must have at least one product");
       return;
     }
-
     setValidating(true);
     try {
-      const productsPayload = selectedProducts.map((p) => ({
+      const payload = selectedProducts.map((p) => ({
         productId: p.id,
         quantity: p.quantity,
         ...(p.variant?.id && { variationId: p.variant.id }),
       }));
-
-      const response = await validateModification(
-        typeof orderId === "string" ? orderId : String(orderId),
-        { products: productsPayload },
-      );
-
+      const response = await validateModification(String(orderId), {
+        products: payload,
+      });
       if (response.success && response.data) {
         setValidationData(response.data);
         setShowValidationDialog(true);
@@ -275,37 +238,30 @@ export function ModifyOrderModal({
         toast.error(response.error || "Failed to validate changes");
       }
     } catch (error: any) {
-      console.error("Validation error:", error);
       toast.error(
         error.response?.data?.error ||
           error.response?.data?.message ||
-          "Failed to validate changes",
+          "Validation failed",
       );
     } finally {
       setValidating(false);
     }
   };
 
-  // Confirm and apply changes - Step 2: Save
   const handleConfirmSave = async () => {
     setLoading(true);
     setShowValidationDialog(false);
-
     try {
-      const productsPayload = selectedProducts.map((p) => ({
+      const payload = selectedProducts.map((p) => ({
         productId: p.id,
         quantity: p.quantity,
         ...(p.variant?.id && { variationId: p.variant.id }),
       }));
-
-      const response = await modifyOrder(
-        typeof orderId === "string" ? orderId : String(orderId),
-        { products: productsPayload },
-      );
-
+      const response = await modifyOrder(String(orderId), {
+        products: payload,
+      });
       if (response.success && response.data) {
-        const summary = response.data.summary;
-        // Use selected products as updated products since API doesn't return them
+        const { summary } = response.data;
         const updatedProducts = selectedProducts.map((p) => ({
           id: p.id,
           productId: p.id,
@@ -317,11 +273,7 @@ export function ModifyOrderModal({
           discount: Number(p.discount),
           variant: p.variant,
         }));
-
-        toast.success(
-          `Order modified!\nProducts: ${summary?.oldProductCount} → ${summary?.newProductCount}\nPrice: ৳${summary?.oldTotalPrice} → ৳${summary?.newTotalPrice}`,
-        );
-
+        toast.success(`Order #${orderNumber} updated`);
         onSuccess(
           updatedProducts as IOrderProduct[],
           summary?.newTotalPrice || totals.totalPrice,
@@ -330,438 +282,517 @@ export function ModifyOrderModal({
         onOpenChange(false);
       } else {
         toast.error(response.error || "Failed to modify order");
-        setShowValidationDialog(true); // Show validation dialog again on error
+        setShowValidationDialog(true);
       }
     } catch (error: any) {
-      console.error("Modify error:", error);
-      toast.error(
-        error.response?.data?.error ||
-          error.response?.data?.message ||
-          "Failed to modify order",
-      );
+      toast.error(error.response?.data?.error || "Failed to modify order");
       setShowValidationDialog(true);
     } finally {
       setLoading(false);
     }
   };
 
+  const formatCurrency = (n: number) => `৳${n.toLocaleString("en-BD")}`;
+
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className='max-w-3xl max-h-[90vh] overflow-hidden flex flex-col'>
-        <DialogHeader>
-          <DialogTitle>Modify Order Products</DialogTitle>
-          <p className='text-sm text-gray-500'>Order #{orderNumber}</p>
-        </DialogHeader>
-
-        <div className='flex-1 overflow-hidden flex flex-col gap-4'>
-          {/* Search with Command-Style Popover */}
-          <div className='relative'>
-            <Search className='absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 z-10' />
-            <Input
-              ref={searchInputRef}
-              placeholder='Search products to add... (min. 2 characters)'
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              onFocus={() =>
-                searchResults.length > 0 && setShowSearchResults(true)
-              }
-              className='pl-10'
-            />
-            {searching && (
-              <Loader2 className='absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 animate-spin text-gray-400 z-10' />
-            )}
-
-            {/* Command-Style Dropdown */}
-            {showSearchResults && searchResults.length > 0 && (
-              <div
-                ref={searchResultsRef}
-                className='absolute z-50 w-full mt-2 bg-white border border-gray-200 rounded-lg shadow-xl max-h-64 overflow-hidden'>
-                <ScrollArea className='h-64'>
-                  <div className='p-1 '>
-                    {searchResults.map((product, index) => (
-                      <button
-                        key={`${product.id}-${product.variant?.id || "default"}-${index}`}
-                        onClick={() => handleAddProduct(product)}
-                        className='w-full flex items-center gap-3 p-3 mb-2 rounded-md hover:bg-gray-50 transition-colors text-left group bg-gray-100'>
-                        {product.image ? (
-                          <img
-                            src={product.image}
-                            alt={product.name}
-                            className='w-10 h-14 rounded object-cover border border-gray-200 flex-shrink-0'
-                          />
-                        ) : (
-                          <div className='w-10 h-10 rounded bg-gray-100 flex items-center justify-center flex-shrink-0'>
-                            <Package className='h-5 w-5 text-gray-400' />
-                          </div>
-                        )}
-                        <div className='flex-1 min-w-0'>
-                          <p className='text-sm font-medium text-gray-900 truncate group-hover:text-blue-600 transition-colors'>
-                            {product.name.toUpperCase()}
-                          </p>
-                          {product.variant &&
-                            (product.variant.color || product.variant.size) && (
-                              <p className='text-xs text-gray-500'>
-                                {product.variant.color && (
-                                  <span className='capitalize'>
-                                    {product.variant.color}
-                                  </span>
-                                )}
-                                {product.variant.color &&
-                                  product.variant.size && <span> • </span>}
-                                {product.variant.size && (
-                                  <span>{product.variant.size}</span>
-                                )}
-                              </p>
-                            )}
-                          <div className='flex items-center gap-2 mt-1'>
-                            <Badge
-                              variant='outline'
-                              className='text-xs bg-white'>
-                              {product?.unitPrice &&
-                              product?.updatedPrice &&
-                              product?.updatedPrice !== product?.unitPrice ? (
-                                <div className='flex items-center gap-2'>
-                                  <span className='text-sm font-bold text-gray-900 ml-2'>
-                                    ৳{product?.updatedPrice}
-                                  </span>
-                                  <span className='text-sm font-medium text-red-600 line-through'>
-                                    ৳{product?.unitPrice}
-                                  </span>
-                                </div>
-                              ) : (
-                                <span className='text-sm font-bold text-gray-900 ml-2'>
-                                  ৳{product?.unitPrice}
-                                </span>
-                              )}
-                            </Badge>
-                            {typeof product?.discount === "number" &&
-                              product?.discount > 0 && (
-                                <Badge
-                                  variant='default'
-                                  className='text-xs bg-green-100 text-green-500'>
-                                  {product.discount} TK Off
-                                </Badge>
-                              )}
-                            <Badge
-                              variant={
-                                product.quantity > 0 ? "default" : "destructive"
-                              }
-                              className='text-xs '>
-                              Stock: {product.quantity}
-                            </Badge>
-                          </div>
-                        </div>
-                        <Plus className='h-5 w-5 text-green-600 flex-shrink-0' />
-                      </button>
-                    ))}
-                  </div>
-                </ScrollArea>
-              </div>
-            )}
+    <>
+      {/* ─── Main modal ─── */}
+      <Dialog open={open && !showValidationDialog} onOpenChange={onOpenChange}>
+        <DialogContent className='max-w-2xl max-h-[92vh] overflow-hidden flex flex-col p-0 gap-0 rounded-2xl border-gray-100'>
+          {/* Header */}
+          <div className='px-5 py-4 border-b border-gray-100 flex items-center justify-between shrink-0'>
+            <div>
+              <h2 className='text-base font-bold text-gray-900'>
+                Modify order
+              </h2>
+              <p className='text-xs text-gray-400 mt-0.5'>#{orderNumber}</p>
+            </div>
+            <button
+              onClick={() => onOpenChange(false)}
+              className='w-8 h-8 rounded-lg border border-gray-200 hover:bg-gray-50 flex items-center justify-center transition-colors'>
+              <XCircle className='w-4 h-4 text-gray-400' />
+            </button>
           </div>
 
-          <Separator />
+          <div className='flex-1 overflow-hidden flex flex-col'>
+            {/* Search */}
+            <div className='px-5 pt-4 pb-3 shrink-0'>
+              <div className='relative'>
+                <Search className='absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-400 z-10' />
+                <input
+                  ref={searchInputRef}
+                  placeholder='Search products to add…'
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  onFocus={() =>
+                    searchResults.length > 0 && setShowSearchResults(true)
+                  }
+                  className='w-full pl-9 pr-9 py-2 text-sm rounded-xl border border-gray-200 bg-gray-50
+                             focus:bg-white focus:border-indigo-300 focus:ring-2 focus:ring-indigo-50
+                             placeholder:text-gray-400 outline-none transition-all'
+                />
+                {searching && (
+                  <Loader2 className='absolute right-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 animate-spin text-gray-400' />
+                )}
 
-          {/* Selected Products */}
-          <div className='flex-1 overflow-hidden'>
-            <div className='flex items-center justify-between mb-2'>
-              <h3 className='font-semibold'>Selected Products</h3>
-              <Badge variant='secondary'>
-                {selectedProducts.length} items • ৳
-                {totals.totalPrice.toLocaleString()}
-              </Badge>
+                {/* Search dropdown */}
+                {showSearchResults && searchResults.length > 0 && (
+                  <div
+                    ref={searchResultsRef}
+                    className='absolute z-50 top-full left-0 right-0 mt-1.5 bg-white border border-gray-100
+                               rounded-xl shadow-xl overflow-hidden'>
+                    <ScrollArea className='max-h-64'>
+                      <div className='p-1.5 space-y-0.5'>
+                        {searchResults.map((product, i) => {
+                          const price =
+                            product.updatedPrice || product.unitPrice;
+                          const hasDiscount =
+                            product.updatedPrice &&
+                            product.updatedPrice !== product.unitPrice;
+                          const outOfStock = product.quantity <= 0;
+                          return (
+                            <button
+                              key={`${product.id}-${product.variant?.id || "default"}-${i}`}
+                              onClick={() => handleAddProduct(product)}
+                              disabled={outOfStock}
+                              className={cn(
+                                "w-full flex items-center gap-3 p-2.5 rounded-lg text-left transition-colors",
+                                outOfStock
+                                  ? "opacity-50 cursor-not-allowed bg-gray-50"
+                                  : "hover:bg-indigo-50 group",
+                              )}>
+                              <div className='w-10 h-10 rounded-lg overflow-hidden border border-gray-100 shrink-0 bg-gray-50'>
+                                {product.image ? (
+                                  <img
+                                    src={product.image}
+                                    alt={product.name}
+                                    className='w-full h-full object-cover'
+                                  />
+                                ) : (
+                                  <div className='w-full h-full flex items-center justify-center'>
+                                    <Package className='w-4 h-4 text-gray-300' />
+                                  </div>
+                                )}
+                              </div>
+                              <div className='flex-1 min-w-0'>
+                                <p className='text-sm font-semibold text-gray-900 truncate group-hover:text-indigo-700 transition-colors'>
+                                  {product.name}
+                                </p>
+                                <div className='flex items-center gap-2 mt-0.5 flex-wrap'>
+                                  {product.variant?.color && (
+                                    <span className='text-[10px] text-gray-500 bg-gray-100 px-1.5 py-0.5 rounded capitalize'>
+                                      {product.variant.color}
+                                    </span>
+                                  )}
+                                  {product.variant?.size && (
+                                    <span className='text-[10px] text-gray-500 bg-gray-100 px-1.5 py-0.5 rounded'>
+                                      {product.variant.size}
+                                    </span>
+                                  )}
+                                  <span className='text-[10px] font-bold text-gray-800 tabular-nums'>
+                                    {formatCurrency(Number(price))}
+                                  </span>
+                                  {hasDiscount && (
+                                    <span className='text-[10px] text-gray-400 line-through tabular-nums'>
+                                      {formatCurrency(
+                                        Number(product.unitPrice),
+                                      )}
+                                    </span>
+                                  )}
+                                  <span
+                                    className={cn(
+                                      "text-[10px] font-medium px-1.5 py-0.5 rounded",
+                                      outOfStock
+                                        ? "text-red-600 bg-red-50"
+                                        : "text-emerald-600 bg-emerald-50",
+                                    )}>
+                                    {outOfStock
+                                      ? "Out of stock"
+                                      : `${product.quantity} left`}
+                                  </span>
+                                </div>
+                              </div>
+                              {!outOfStock && (
+                                <div className='w-6 h-6 rounded-full bg-indigo-100 group-hover:bg-indigo-600 flex items-center justify-center transition-colors shrink-0'>
+                                  <Plus className='w-3 h-3 text-indigo-600 group-hover:text-white transition-colors' />
+                                </div>
+                              )}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </ScrollArea>
+                  </div>
+                )}
+              </div>
             </div>
 
-            <ScrollArea className='h-[300px]'>
+            {/* Product list header */}
+            <div className='px-5 pb-2 flex items-center justify-between shrink-0'>
+              <p className='text-[11px] font-semibold text-gray-400 uppercase tracking-wide'>
+                Order products
+              </p>
+              <span className='text-[11px] font-bold text-gray-600 bg-gray-100 px-2 py-0.5 rounded-full tabular-nums'>
+                {selectedProducts.length} item
+                {selectedProducts.length !== 1 ? "s" : ""}
+              </span>
+            </div>
+
+            {/* Product list */}
+            <ScrollArea className='flex-1 px-5'>
               {selectedProducts.length === 0 ? (
-                <div className='flex flex-col items-center justify-center py-12 text-gray-500'>
-                  <Package className='h-12 w-12 mb-2' />
-                  <p>No products in order</p>
+                <div className='flex flex-col items-center justify-center py-14 gap-2'>
+                  <div className='w-12 h-12 rounded-2xl border-2 border-dashed border-gray-200 flex items-center justify-center'>
+                    <Package className='w-5 h-5 text-gray-300' />
+                  </div>
+                  <p className='text-sm font-medium text-gray-400'>
+                    No products added
+                  </p>
+                  <p className='text-xs text-gray-300'>
+                    Search above to add products
+                  </p>
                 </div>
               ) : (
-                <div className='space-y-2 pr-4'>
-                  {selectedProducts.map((product, index) => (
-                    <Card key={index}>
-                      <CardContent className='p-3'>
-                        <div className='flex items-center gap-3'>
-                          {product.image && (
+                <div className='space-y-2 pb-4'>
+                  {selectedProducts.map((product, index) => {
+                    const price = Number(
+                      product.updatedPrice || product.unitPrice,
+                    );
+                    const lineTotal = price * product.quantity;
+                    return (
+                      <div
+                        key={index}
+                        className='flex items-center gap-3 p-2.5 rounded-xl border border-gray-100 bg-white hover:border-gray-200 transition-colors group'>
+                        {/* Thumbnail */}
+                        <div className='w-10 h-10 rounded-lg overflow-hidden border border-gray-100 shrink-0 bg-gray-50'>
+                          {product.image ? (
                             <img
                               src={product.image}
                               alt={product.name}
-                              className='w-12 h-12 rounded object-cover'
+                              className='w-full h-full object-cover'
                             />
+                          ) : (
+                            <div className='w-full h-full flex items-center justify-center'>
+                              <Package className='w-4 h-4 text-gray-300' />
+                            </div>
                           )}
-                          <div className='flex-1 min-w-0'>
-                            <p className='text-sm font-medium truncate'>
-                              {product.name}
-                            </p>
-                            {product.variant && (
-                              <p className='text-xs text-gray-500'>
-                                {product.variant.color} {product.variant.size}
-                              </p>
-                            )}
-                            <p className='text-sm font-semibold text-blue-600'>
-                              ৳{product.updatedPrice || product.unitPrice} ×{" "}
-                              {product.quantity} = ৳
-                              {(
-                                Number(
-                                  product.updatedPrice || product.unitPrice,
-                                ) * product.quantity
-                              ).toLocaleString()}
-                            </p>
-                          </div>
+                        </div>
 
-                          <div className='flex items-center gap-1'>
-                            <Button
-                              variant='outline'
-                              size='icon'
-                              className='h-7 w-7'
-                              onClick={() => handleUpdateQuantity(index, -1)}>
-                              <Minus className='h-3 w-3' />
-                            </Button>
-                            <span className='w-8 text-center text-sm font-medium'>
-                              {product.quantity}
+                        {/* Info */}
+                        <div className='flex-1 min-w-0'>
+                          <p className='text-sm font-semibold text-gray-900 truncate leading-snug'>
+                            {product.name}
+                          </p>
+                          <div className='flex items-center gap-1.5 mt-0.5 flex-wrap'>
+                            {product.variant?.color && (
+                              <span className='text-[10px] text-gray-500 bg-gray-100 px-1.5 py-0.5 rounded capitalize'>
+                                {product.variant.color}
+                              </span>
+                            )}
+                            {product.variant?.size && (
+                              <span className='text-[10px] text-gray-500 bg-gray-100 px-1.5 py-0.5 rounded'>
+                                {product.variant.size}
+                              </span>
+                            )}
+                            <span className='text-[10px] font-bold text-indigo-600 tabular-nums'>
+                              {formatCurrency(lineTotal)}
                             </span>
-                            <Button
-                              variant='outline'
-                              size='icon'
-                              className='h-7 w-7'
-                              onClick={() => handleUpdateQuantity(index, 1)}>
-                              <Plus className='h-3 w-3' />
-                            </Button>
-                            <Button
-                              variant='ghost'
-                              size='icon'
-                              className='h-7 w-7 text-red-600'
-                              onClick={() => handleRemoveProduct(index)}>
-                              <Trash2 className='h-3 w-3' />
-                            </Button>
                           </div>
                         </div>
-                      </CardContent>
-                    </Card>
-                  ))}
+
+                        {/* Qty controls */}
+                        <div className='flex items-center gap-1 shrink-0'>
+                          <button
+                            onClick={() => handleUpdateQuantity(index, -1)}
+                            className='w-6 h-6 rounded-md border border-gray-200 bg-white hover:bg-gray-50 flex items-center justify-center transition-colors'>
+                            <Minus className='w-3 h-3 text-gray-500' />
+                          </button>
+                          <span className='w-7 text-center text-sm font-bold text-gray-900 tabular-nums'>
+                            {product.quantity}
+                          </span>
+                          <button
+                            onClick={() => handleUpdateQuantity(index, 1)}
+                            className='w-6 h-6 rounded-md border border-gray-200 bg-white hover:bg-gray-50 flex items-center justify-center transition-colors'>
+                            <Plus className='w-3 h-3 text-gray-500' />
+                          </button>
+                          <button
+                            onClick={() => handleRemoveProduct(index)}
+                            className='w-6 h-6 rounded-md hover:bg-red-50 flex items-center justify-center transition-colors ml-0.5 opacity-0 group-hover:opacity-100'>
+                            <Trash2 className='w-3 h-3 text-red-400' />
+                          </button>
+                        </div>
+                      </div>
+                    );
+                  })}
                 </div>
               )}
             </ScrollArea>
           </div>
-        </div>
 
-        {/* Footer */}
-        <div className='border-t pt-4'>
-          <div className='flex items-center justify-between mb-3 p-3 bg-gray-50 rounded-lg'>
-            <div>
-              <p className='text-sm text-gray-600'>
-                Total ({totals.totalItems} items)
-              </p>
+          {/* Footer */}
+          <div className='px-5 py-4 border-t border-gray-100 space-y-3 shrink-0 bg-gray-50/50'>
+            {/* Price breakdown */}
+            <div className='space-y-1.5'>
+              <div className='flex items-center justify-between text-xs'>
+                <span className='text-gray-500'>
+                  Subtotal ({totals.totalItems} item
+                  {totals.totalItems !== 1 ? "s" : ""})
+                </span>
+                <span className='font-semibold text-gray-700 tabular-nums'>
+                  {formatCurrency(totals.totalPrice)}
+                </span>
+              </div>
+              <div className='flex items-center justify-between text-xs'>
+                <span className='text-gray-500'>Delivery</span>
+                <span className='font-semibold text-gray-700 tabular-nums'>
+                  {formatCurrency(deliveryCharge)}
+                </span>
+              </div>
+              <div className='h-px bg-gray-200 my-1' />
+              <div className='flex items-center justify-between'>
+                <span className='text-sm font-semibold text-gray-900'>
+                  Total
+                </span>
+                <span className='text-sm font-bold text-gray-900 tabular-nums'>
+                  {formatCurrency(grandTotal)}
+                </span>
+              </div>
+              <div className='flex items-center justify-between'>
+                <span className='text-xs text-gray-500'>Paid</span>
+                <span className='text-xs font-semibold text-emerald-600 tabular-nums'>
+                  {formatCurrency(paid)}
+                </span>
+              </div>
+              <div className='flex items-center justify-between'>
+                <span className='text-xs font-medium text-gray-700'>
+                  Due after change
+                </span>
+                <span
+                  className={cn(
+                    "text-sm font-bold tabular-nums",
+                    due > 0 ? "text-red-600" : "text-emerald-600",
+                  )}>
+                  {formatCurrency(Math.abs(due))}
+                  {due < 0 && (
+                    <span className='text-[10px] ml-1 font-normal'>
+                      (overpaid)
+                    </span>
+                  )}
+                </span>
+              </div>
             </div>
-            <p className='text-lg font-bold text-blue-600'>
-              ৳{totals.totalPrice.toLocaleString()}
+
+            {/* Actions */}
+            <div className='flex gap-2'>
+              <button
+                onClick={() => onOpenChange(false)}
+                disabled={loading || validating}
+                className='flex-1 h-9 rounded-xl border border-gray-200 bg-white hover:bg-gray-50
+                           text-sm font-medium text-gray-600 transition-colors disabled:opacity-50'>
+                Cancel
+              </button>
+              <button
+                onClick={handlePreviewChanges}
+                disabled={
+                  loading || validating || selectedProducts.length === 0
+                }
+                className='flex-[2] h-9 rounded-xl bg-indigo-600 hover:bg-indigo-700
+                           text-sm font-bold text-white flex items-center justify-center gap-2
+                           transition-colors disabled:opacity-50 disabled:cursor-not-allowed
+                           shadow-sm shadow-indigo-100'>
+                {validating ? (
+                  <>
+                    <Loader2 className='w-3.5 h-3.5 animate-spin' />
+                    Validating…
+                  </>
+                ) : (
+                  <>
+                    Preview changes
+                    <ArrowRight className='w-3.5 h-3.5' />
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* ─── Validation / confirm dialog ─── */}
+      <Dialog
+        open={showValidationDialog}
+        onOpenChange={setShowValidationDialog}>
+        <DialogContent className='max-w-lg p-0 gap-0 rounded-2xl border-gray-100 overflow-hidden'>
+          {/* Header */}
+          <div className='px-5 py-4 border-b border-gray-100'>
+            <h2 className='text-base font-bold text-gray-900'>
+              Confirm changes
+            </h2>
+            <p className='text-xs text-gray-400 mt-0.5'>
+              Review before applying to order #{orderNumber}
             </p>
           </div>
-          <div className='flex items-center justify-between mb-3 p-3 bg-orange-50 rounded-lg'>
-            <div>
-              <p className='text-sm font-bold text-orange-600'>
-                Total Amount: ৳ {totals?.totalPrice + (deliveryCharge ?? 0)}{" "}
-                (delivery charge = ৳ {deliveryCharge ?? 0})
-              </p>
+
+          <div className='px-5 py-4 space-y-4'>
+            {/* Estimated changes summary */}
+            {validationData?.estimatedChanges && (
+              <div className='rounded-xl border border-indigo-100 bg-indigo-50 p-4 space-y-3'>
+                <p className='text-xs font-semibold text-indigo-700 uppercase tracking-wide'>
+                  Price change
+                </p>
+                <div className='flex items-center justify-between gap-4'>
+                  <div className='text-center'>
+                    <p className='text-[11px] text-indigo-500 mb-0.5'>Before</p>
+                    <p className='text-lg font-bold text-indigo-900 tabular-nums'>
+                      {formatCurrency(
+                        validationData.estimatedChanges.oldTotalPrice,
+                      )}
+                    </p>
+                    <p className='text-[10px] text-indigo-400'>
+                      {validationData.estimatedChanges.oldProductCount} product
+                      {validationData.estimatedChanges.oldProductCount !== 1
+                        ? "s"
+                        : ""}
+                    </p>
+                  </div>
+                  <ArrowRight className='w-5 h-5 text-indigo-400 shrink-0' />
+                  <div className='text-center'>
+                    <p className='text-[11px] text-indigo-500 mb-0.5'>After</p>
+                    <p className='text-lg font-bold text-indigo-900 tabular-nums'>
+                      {formatCurrency(
+                        validationData.estimatedChanges.newTotalPrice,
+                      )}
+                    </p>
+                    <p className='text-[10px] text-indigo-400'>
+                      {validationData.estimatedChanges.newProductCount} product
+                      {validationData.estimatedChanges.newProductCount !== 1
+                        ? "s"
+                        : ""}
+                    </p>
+                  </div>
+                  <div className={cn("ml-auto text-right shrink-0")}>
+                    <p className='text-[11px] text-gray-400 mb-0.5'>
+                      Difference
+                    </p>
+                    <p
+                      className={cn(
+                        "text-base font-bold tabular-nums",
+                        validationData.estimatedChanges.priceDifference >= 0
+                          ? "text-emerald-600"
+                          : "text-red-600",
+                      )}>
+                      {validationData.estimatedChanges.priceDifference >= 0
+                        ? "+"
+                        : ""}
+                      {formatCurrency(
+                        validationData.estimatedChanges.priceDifference,
+                      )}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Validation results */}
+            {validationData?.validationResults &&
+              validationData.validationResults.length > 0 && (
+                <div className='space-y-1.5'>
+                  <p className='text-[11px] font-semibold text-gray-400 uppercase tracking-wide'>
+                    Stock validation
+                  </p>
+                  <ScrollArea className='max-h-44'>
+                    <div className='space-y-1.5 pr-2'>
+                      {validationData.validationResults.map((result, idx) => (
+                        <div
+                          key={idx}
+                          className={cn(
+                            "flex items-start gap-2.5 p-2.5 rounded-xl border text-sm",
+                            result.valid
+                              ? "bg-emerald-50 border-emerald-100"
+                              : "bg-red-50 border-red-100",
+                          )}>
+                          {result.valid ? (
+                            <CheckCircle2 className='w-4 h-4 text-emerald-600 shrink-0 mt-0.5' />
+                          ) : (
+                            <AlertTriangle className='w-4 h-4 text-red-500 shrink-0 mt-0.5' />
+                          )}
+                          <div className='flex-1 min-w-0'>
+                            <p className='text-xs font-semibold text-gray-900 truncate'>
+                              {result.productName}
+                            </p>
+                            <p className='text-[11px] text-gray-500 mt-0.5'>
+                              Requested {result.requestedQuantity} · Available{" "}
+                              {result.availableStock}
+                              {result.variationDetails &&
+                                ` · ${result.variationDetails}`}
+                            </p>
+                            {!result.valid && result.error && (
+                              <p className='text-[11px] text-red-600 font-medium mt-1'>
+                                {result.error}
+                              </p>
+                            )}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </ScrollArea>
+                </div>
+              )}
+
+            {/* Overall status */}
+            <div
+              className={cn(
+                "flex items-center gap-2.5 px-3.5 py-3 rounded-xl border text-sm font-medium",
+                validationData?.valid
+                  ? "bg-emerald-50 border-emerald-100 text-emerald-800"
+                  : "bg-red-50 border-red-100 text-red-700",
+              )}>
+              {validationData?.valid ? (
+                <CheckCircle2 className='w-4 h-4 text-emerald-600 shrink-0' />
+              ) : (
+                <AlertTriangle className='w-4 h-4 text-red-500 shrink-0' />
+              )}
+              <span>
+                {validationData?.valid
+                  ? "All products validated — ready to apply changes."
+                  : "Some products have stock issues. Review before continuing."}
+              </span>
             </div>
-            <p className='text-sm font-bold text-orange-600'>
-              Due: ৳ {totals?.totalPrice + (deliveryCharge ?? 0) - (paid ?? 0)}
-            </p>
           </div>
-          <div className='flex gap-2'>
-            <Button
-              variant='outline'
-              onClick={() => onOpenChange(false)}
-              disabled={loading || validating}
-              className='flex-1'>
-              Cancel
-            </Button>
-            <Button
-              onClick={handlePreviewChanges}
-              disabled={loading || validating || selectedProducts.length === 0}
-              className='flex-1'>
-              {validating ? (
+
+          {/* Footer */}
+          <div className='px-5 py-4 border-t border-gray-100 flex gap-2 bg-gray-50/50'>
+            <button
+              onClick={() => setShowValidationDialog(false)}
+              disabled={loading}
+              className='flex-1 h-9 rounded-xl border border-gray-200 bg-white hover:bg-gray-50
+                         text-sm font-medium text-gray-600 transition-colors flex items-center justify-center gap-1.5'>
+              <XCircle className='w-3.5 h-3.5' />
+              Back
+            </button>
+            <button
+              onClick={handleConfirmSave}
+              disabled={loading || !validationData?.valid}
+              className={cn(
+                "flex-[2] h-9 rounded-xl text-sm font-bold text-white flex items-center justify-center gap-2 transition-colors shadow-sm",
+                validationData?.valid
+                  ? "bg-emerald-600 hover:bg-emerald-700 shadow-emerald-100"
+                  : "bg-gray-300 cursor-not-allowed",
+              )}>
+              {loading ? (
                 <>
-                  <Loader2 className='h-4 w-4 mr-2 animate-spin' />
-                  Validating...
+                  <Loader2 className='w-3.5 h-3.5 animate-spin' />
+                  Saving…
                 </>
               ) : (
                 <>
-                  <CheckCircle2 className='h-4 w-4 mr-2' />
-                  Preview Changes
+                  <CheckCircle2 className='w-3.5 h-3.5' />
+                  Apply changes
                 </>
               )}
-            </Button>
+            </button>
           </div>
-        </div>
-
-        {/* Validation Dialog */}
-        {showValidationDialog && validationData && (
-          <Dialog
-            open={showValidationDialog}
-            onOpenChange={setShowValidationDialog}>
-            <DialogContent className='max-w-2xl'>
-              <DialogHeader>
-                <DialogTitle>Confirm Order Modifications</DialogTitle>
-                <p className='text-sm text-gray-500'>
-                  Review the estimated changes before applying
-                </p>
-              </DialogHeader>
-
-              <div className='space-y-4 py-4'>
-                {/* Estimated Changes */}
-                {validationData.estimatedChanges && (
-                  <div className='bg-blue-50 border border-blue-200 rounded-lg p-4'>
-                    <h4 className='font-semibold text-sm text-blue-900 mb-3 flex items-center gap-2'>
-                      <Info className='h-4 w-4' />
-                      Estimated Changes
-                    </h4>
-                    <div className='grid grid-cols-2 gap-3 text-sm'>
-                      <div className='flex justify-between'>
-                        <span className='text-blue-700'>Products:</span>
-                        <span className='font-semibold text-blue-900'>
-                          {validationData.estimatedChanges.oldProductCount} →{" "}
-                          {validationData.estimatedChanges.newProductCount}
-                        </span>
-                      </div>
-                      <div className='flex justify-between'>
-                        <span className='text-blue-700'>Total Price:</span>
-                        <span className='font-semibold text-blue-900'>
-                          ৳
-                          {validationData.estimatedChanges.oldTotalPrice.toLocaleString()}{" "}
-                          → ৳
-                          {validationData.estimatedChanges.newTotalPrice.toLocaleString()}
-                        </span>
-                      </div>
-                      <div className='col-span-2 flex justify-between pt-2 border-t border-blue-200'>
-                        <span className='text-blue-700 font-medium'>
-                          Difference:
-                        </span>
-                        <span
-                          className={`font-bold ${validationData.estimatedChanges.priceDifference >= 0 ? "text-green-600" : "text-red-600"}`}>
-                          {validationData.estimatedChanges.priceDifference >= 0
-                            ? "+"
-                            : ""}
-                          ৳
-                          {validationData.estimatedChanges.priceDifference.toLocaleString()}
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-                )}
-
-                {/* Validation Results */}
-                {validationData.validationResults &&
-                  validationData.validationResults.length > 0 && (
-                    <div className='space-y-2'>
-                      <h4 className='font-semibold text-sm flex items-center gap-2'>
-                        <Package className='h-4 w-4' />
-                        Product Validation Results
-                      </h4>
-                      <ScrollArea className='h-48'>
-                        <div className='space-y-2 pr-4'>
-                          {validationData.validationResults.map(
-                            (result, idx) => (
-                              <div
-                                key={idx}
-                                className={`p-3 rounded-lg border ${
-                                  result.valid
-                                    ? "bg-green-50 border-green-200"
-                                    : "bg-red-50 border-red-200"
-                                }`}>
-                                <div className='flex items-start gap-2'>
-                                  {result.valid ? (
-                                    <CheckCircle2 className='h-4 w-4 text-green-600 mt-0.5 flex-shrink-0' />
-                                  ) : (
-                                    <AlertTriangle className='h-4 w-4 text-red-600 mt-0.5 flex-shrink-0' />
-                                  )}
-                                  <div className='flex-1 min-w-0'>
-                                    <p className='text-sm font-medium text-gray-900'>
-                                      {result.productName}
-                                    </p>
-                                    <p className='text-xs text-gray-500'>
-                                      Requested: {result.requestedQuantity} |
-                                      Available: {result.availableStock}
-                                    </p>
-                                    {result.variationDetails && (
-                                      <p className='text-xs text-gray-500'>
-                                        Variant: {result.variationDetails}
-                                      </p>
-                                    )}
-                                    {!result.valid && result.error && (
-                                      <p className='text-xs text-red-600 mt-1'>
-                                        {result.error}
-                                      </p>
-                                    )}
-                                  </div>
-                                </div>
-                              </div>
-                            ),
-                          )}
-                        </div>
-                      </ScrollArea>
-                    </div>
-                  )}
-
-                {/* Overall Validation Status */}
-                <Alert
-                  className={
-                    validationData.valid
-                      ? "border-green-200 bg-green-50"
-                      : "border-red-200 bg-red-50"
-                  }>
-                  {validationData.valid ? (
-                    <>
-                      <CheckCircle2 className='h-4 w-4 text-green-600' />
-                      <AlertDescription className='text-green-800'>
-                        All changes are valid. Click "Confirm" to apply these
-                        modifications.
-                      </AlertDescription>
-                    </>
-                  ) : (
-                    <>
-                      <AlertTriangle className='h-4 w-4 text-red-600' />
-                      <AlertDescription className='text-red-800'>
-                        Some changes have validation issues. Please review
-                        before continuing.
-                      </AlertDescription>
-                    </>
-                  )}
-                </Alert>
-              </div>
-
-              <div className='flex gap-2'>
-                <Button
-                  variant='outline'
-                  onClick={() => setShowValidationDialog(false)}
-                  disabled={loading}
-                  className='flex-1'>
-                  <XCircle className='h-4 w-4 mr-2' />
-                  Back to Edit
-                </Button>
-                <Button
-                  onClick={handleConfirmSave}
-                  disabled={loading || !validationData.valid}
-                  className='flex-1 bg-green-600 hover:bg-green-700'>
-                  {loading ? (
-                    <>
-                      <Loader2 className='h-4 w-4 mr-2 animate-spin' />
-                      Saving...
-                    </>
-                  ) : (
-                    <>
-                      <CheckCircle2 className='h-4 w-4 mr-2' />
-                      Confirm Changes
-                    </>
-                  )}
-                </Button>
-              </div>
-            </DialogContent>
-          </Dialog>
-        )}
-      </DialogContent>
-    </Dialog>
+        </DialogContent>
+      </Dialog>
+    </>
   );
 }

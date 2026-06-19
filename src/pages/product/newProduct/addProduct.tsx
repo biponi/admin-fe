@@ -306,6 +306,45 @@ const AddProduct: React.FC<Props> = ({ createProduct, categories }) => {
       return;
     }
 
+    // Auto-populate categoryId from categoryIds if empty and categories exist
+    if ((!formData.categoryId || formData.categoryId === "") && formData.categoryIds?.length > 0) {
+      console.log("Auto-populating categoryId from categoryIds[0]:", formData.categoryIds[0]);
+      updateFormData({
+        ...formData,
+        categoryId: formData.categoryIds[0],
+      });
+      formData.categoryId = formData.categoryIds[0];
+    }
+
+    // Ensure categoryId matches categoryIds[0] for consistency
+    if (formData.categoryId && formData.categoryIds?.length > 0 && formData.categoryId !== formData.categoryIds[0]) {
+      console.error("Category inconsistency detected:", {
+        categoryId: formData.categoryId,
+        categoryIds: formData.categoryIds,
+        categoryIds0: formData.categoryIds[0]
+      });
+      alert("Primary category must match the first selected category. Please reselect your categories.");
+      return;
+    }
+
+    // Validate imageGroups before submission - check for incomplete groups
+    if (imageGroups.length > 0) {
+      const { validGroups, invalidCount } = filterImageGroups(imageGroups);
+      if (invalidCount > 0) {
+        const incompleteGroups = imageGroups.filter(g => !validateImageGroup(g));
+        const groupList = incompleteGroups.map(g =>
+          `• ${g.displayLabel || g.id} (${g.attribute || 'no attribute'} - ${g.value || 'no value'})`
+        ).join('\n');
+
+        alert(
+          `You have ${invalidCount} incomplete image group(s) that will not be saved:\n\n${groupList}\n\n` +
+          `Please edit each group and set both the "attribute" and "value" fields before saving.\n\n` +
+          `Incomplete groups are marked with an amber border and "Incomplete" badge.`
+        );
+        return;
+      }
+    }
+
     // Prepare variant images for upload
     const allVariantImages = Object.values(variantImages).flat();
     const variantImageFileList = allVariantImages.filter(
@@ -378,6 +417,14 @@ const AddProduct: React.FC<Props> = ({ createProduct, categories }) => {
           ? imageGroupImageMappings
           : undefined,
     };
+
+    // Log final data being sent to API for debugging
+    console.log("addProduct - Sending data to API:", {
+      imageGroupsCount: productData.imageGroups?.length || 0,
+      imageGroupImagesCount: productData.imageGroupImages?.length || 0,
+      imageGroupImageMappingsCount: productData.imageGroupImageMappings?.length || 0,
+      imageGroups: productData.imageGroups,
+    });
 
     const response = await createProduct(productData);
     if (!!response) {
@@ -392,6 +439,45 @@ const AddProduct: React.FC<Props> = ({ createProduct, categories }) => {
       return;
     }
 
+    // Auto-populate categoryId from categoryIds if empty and categories exist
+    if ((!formData.categoryId || formData.categoryId === "") && formData.categoryIds?.length > 0) {
+      console.log("Auto-populating categoryId from categoryIds[0]:", formData.categoryIds[0]);
+      updateFormData({
+        ...formData,
+        categoryId: formData.categoryIds[0],
+      });
+      formData.categoryId = formData.categoryIds[0];
+    }
+
+    // Ensure categoryId matches categoryIds[0] for consistency
+    if (formData.categoryId && formData.categoryIds?.length > 0 && formData.categoryId !== formData.categoryIds[0]) {
+      console.error("Category inconsistency detected:", {
+        categoryId: formData.categoryId,
+        categoryIds: formData.categoryIds,
+        categoryIds0: formData.categoryIds[0]
+      });
+      alert("Primary category must match the first selected category. Please reselect your categories.");
+      return;
+    }
+
+    // Validate imageGroups before submission - check for incomplete groups
+    if (imageGroups.length > 0) {
+      const { validGroups, invalidCount } = filterImageGroups(imageGroups);
+      if (invalidCount > 0) {
+        const incompleteGroups = imageGroups.filter(g => !validateImageGroup(g));
+        const groupList = incompleteGroups.map(g =>
+          `• ${g.displayLabel || g.id} (${g.attribute || 'no attribute'} - ${g.value || 'no value'})`
+        ).join('\n');
+
+        alert(
+          `You have ${invalidCount} incomplete image group(s) that will not be saved:\n\n${groupList}\n\n` +
+          `Please edit each group and set both the "attribute" and "value" fields before saving.\n\n` +
+          `Incomplete groups are marked with an amber border and "Incomplete" badge.`
+        );
+        return;
+      }
+    }
+
     // Prepare variant images for upload
     const allVariantImages = Object.values(variantImages).flat();
     const variantImageFileList = allVariantImages.filter(
@@ -464,6 +550,14 @@ const AddProduct: React.FC<Props> = ({ createProduct, categories }) => {
           ? imageGroupImageMappings
           : undefined,
     };
+
+    // Log final data being sent to API for debugging
+    console.log("addProductAndContinue - Sending data to API:", {
+      imageGroupsCount: productData.imageGroups?.length || 0,
+      imageGroupImagesCount: productData.imageGroupImages?.length || 0,
+      imageGroupImageMappingsCount: productData.imageGroupImageMappings?.length || 0,
+      imageGroups: productData.imageGroups,
+    });
 
     const response = await createProduct(productData);
     if (!!response) {

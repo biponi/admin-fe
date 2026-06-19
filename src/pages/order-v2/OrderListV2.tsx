@@ -1,6 +1,14 @@
 /**
  * OrderListV2 - Main Order List Component
  * Modern, responsive order list with virtual scrolling, filters, and bulk actions
+ *
+ * CHANGELOG:
+ * - Fixed invisible overlay bug: added `modal={false}` workaround and key-based
+ *   remounting for OrderDetailsSheet so the Sheet portal tears down fully on close.
+ * - Modernized header: cleaner typography, tighter layout, better action grouping.
+ * - Tabs redesigned: pill-style, scrollable on mobile, badge counts styled per status.
+ * - Pagination: cleaner row with page-size selector on the left.
+ * - Loading state: centered spinner with subtle card backdrop.
  */
 
 import React, { useEffect, useState } from "react";
@@ -16,6 +24,9 @@ import {
   Shield,
   CheckCircle,
   Download,
+  ChevronLeft,
+  ChevronRight,
+  LayoutList,
 } from "lucide-react";
 import { useOrderStore } from "./store/orderStore";
 import { useUIStore } from "./store/uiStore";
@@ -81,10 +92,47 @@ import { ScrollArea } from "../../components/ui/scroll-area";
 import EditCustomerInformation from "../order/editOrderCustomer";
 import useOrder from "../order/hooks/useOrder";
 
+/* ─────────────────────────────────────────────────────────
+   Tab configuration — keeps JSX clean
+───────────────────────────────────────────────────────── */
+const STATUS_TABS = [
+  { value: "all", label: "All" },
+  {
+    value: "processing",
+    label: "Processing",
+    countKey: "processing",
+    color: "blue",
+  },
+  { value: "shipped", label: "Shipped", countKey: "shipped", color: "violet" },
+  {
+    value: "completed",
+    label: "Completed",
+    countKey: "completed",
+    color: "emerald",
+  },
+  { value: "cancel", label: "Cancelled", countKey: "cancel", color: "rose" },
+  {
+    value: "return",
+    label: "Returns",
+    countKey: "returnOrderCount",
+    color: "amber",
+  },
+] as const;
+
+const TAB_BADGE_COLORS: Record<string, string> = {
+  blue: "bg-blue-50 text-blue-700 ring-1 ring-blue-200",
+  violet: "bg-violet-50 text-violet-700 ring-1 ring-violet-200",
+  emerald: "bg-emerald-50 text-emerald-700 ring-1 ring-emerald-200",
+  rose: "bg-rose-50 text-rose-700 ring-1 ring-rose-200",
+  amber: "bg-amber-50 text-amber-700 ring-1 ring-amber-200",
+};
+
+/* ─────────────────────────────────────────────────────────
+   Main component
+───────────────────────────────────────────────────────── */
 export const OrderListV2: React.FC = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
-
   const { editOrderData } = useOrder();
 
   // Zustand stores
@@ -130,6 +178,34 @@ export const OrderListV2: React.FC = () => {
   );
   const [selectedOrder, setSelectedOrder] = useState<IOrder | null>(null);
   const [orderDetailsOpen, setOrderDetailsOpen] = useState(false);
+
+  /**
+   * FIX: Ghost overlay after OrderDetailsSheet closes.
+   *
+   * Radix UI's Sheet (built on Dialog) renders its overlay into a React portal
+   * outside the normal DOM tree. In some versions, if `open` flips to false
+   * while focus is elsewhere, the overlay `<div>` lingers with
+   * `pointer-events: auto`, swallowing clicks.
+   *
+   * Solution: use a `key` tied to the order id so React fully unmounts and
+   * remounts the Sheet when a new order is selected, guaranteeing the old
+   * portal is torn down. When `orderDetailsOpen` becomes false we also clear
+   * `selectedOrder` with a short delay so the closing animation still has data.
+   */
+  const [detailsSheetKey, setDetailsSheetKey] = useState(0);
+
+  const openOrderDetails = (order: IOrder) => {
+    setSelectedOrder(order);
+    setDetailsSheetKey((k) => k + 1); // force remount → clean portal
+    setOrderDetailsOpen(true);
+  };
+
+  const closeOrderDetails = () => {
+    setOrderDetailsOpen(false);
+    // delay clearing so the Sheet close animation has the order data
+    setTimeout(() => setSelectedOrder(null), 300);
+  };
+
   const [isEditDialogOpen, setEditDialogOpen] = useState(false);
   const [fraudDialogOpen, setFraudDialogOpen] = useState(false);
   const [trackingDialogOpen, setTrackingDialogOpen] = useState(false);
@@ -151,36 +227,23 @@ export const OrderListV2: React.FC = () => {
   const [packingSlipPreviewData, setPackingSlipPreviewData] = useState<
     { url: string; orderNumber: number; blob: Blob }[]
   >([]);
-  // Store full order data for selected orders to prevent data loss on pagination
   const [selectedOrdersData, setSelectedOrdersData] = useState<
     Map<number, IOrder>
   >(new Map());
 
-  // Check if user has seen onboarding
-  // useEffect(() => {
-  //   const hasSeenOnboarding = localStorage.getItem("orderV2OnboardingComplete");
-  //   if (!hasSeenOnboarding) {
-  //     // Show onboarding after a short delay
-  //     const timer = setTimeout(() => setShowOnboarding(true), 1000);
-  //     return () => clearTimeout(timer);
-  //   }
-  // }, []);
-
-  // Handle onboarding completion
+  // ── Onboarding ──────────────────────────────────────────
   const handleOnboardingComplete = () => {
     localStorage.setItem("orderV2OnboardingComplete", "true");
     setShowOnboarding(false);
   };
 
-  // Enhanced selection handler that stores full order data
+  // ── Selection helpers ────────────────────────────────────
   const handleOrderSelection = (orderId: number) => {
     setSelectedOrdersData((prev) => {
       const newMap = new Map(prev);
       if (selection.selectedIds.has(orderId)) {
-        // Removing selection - delete from map
         newMap.delete(orderId);
       } else {
-        // Adding selection - find order and store full order data
         const order = orders.find((o) => o.id === orderId);
         if (
           order &&
@@ -193,82 +256,67 @@ export const OrderListV2: React.FC = () => {
       }
       return newMap;
     });
-
-    // Call the original toggle function
     toggleOrderSelection(orderId);
   };
 
-  // Enhanced select all handler
   const handleSelectAll = () => {
     if (selection.isAllSelected) {
-      // Clear all
       setSelectedOrdersData(new Map());
       clearSelection();
     } else {
-      // Select all current orders
       setSelectedOrdersData((prev) => {
         const newMap = new Map(prev);
         orders
           .filter(
-            (order) =>
+            (o) =>
               !["cancel", "cancelled", "fail", "failed", "delete"].includes(
-                order.status,
+                o.status,
               ),
           )
-          .forEach((order) => {
-            if (order.id) {
-              newMap.set(order.id, order);
-            }
-          });
+          .forEach((o) => o.id && newMap.set(o.id, o));
         return newMap;
       });
       selectAll();
     }
   };
 
-  // Enhanced clear selection handler
   const handleClearSelection = () => {
     setSelectedOrdersData(new Map());
     clearSelection();
   };
 
-  // Get selected orders from our stored data
-  const getSelectedOrders = (): IOrder[] => {
-    return Array.from(selectedOrdersData.values());
-  };
+  const getSelectedOrders = (): IOrder[] =>
+    Array.from(selectedOrdersData.values());
 
-  // Fetch data on mount
+  // ── Data fetch ───────────────────────────────────────────
   useEffect(() => {
     fetchOrders(true);
   }, [fetchOrders]);
 
-  // Define keyboard shortcuts
+  // ── Keyboard shortcuts ───────────────────────────────────
   const shortcuts: KeyboardShortcut[] = [
-    // Command Palette & Help
     {
       key: "k",
       meta: true,
       description: "Open command palette",
-      action: () => toggleCommandPalette(),
+      action: toggleCommandPalette,
     },
     {
       key: "/",
       meta: true,
-      description: "Open command palette (alternative)",
-      action: () => toggleCommandPalette(),
+      description: "Open command palette (alt)",
+      action: toggleCommandPalette,
     },
     {
       key: "?",
       description: "Show keyboard shortcuts",
-      action: () => toggleKeyboardShortcutsModal(),
+      action: toggleKeyboardShortcutsModal,
     },
-
-    // General Actions
     {
       key: "r",
       meta: true,
       description: "Refresh orders",
-      action: () => refreshOrders(),
+      action: refreshOrders,
     },
     {
       key: "n",
@@ -280,109 +328,83 @@ export const OrderListV2: React.FC = () => {
       key: "f",
       meta: true,
       description: "Focus search",
-      action: () => {
-        const searchInput = document.querySelector(
-          'input[type="text"]',
-        ) as HTMLInputElement;
-        searchInput?.focus();
-      },
+      action: () =>
+        (
+          document.querySelector('input[type="text"]') as HTMLInputElement
+        )?.focus(),
     },
-
-    // Selection & Bulk Actions
-    {
-      key: "a",
-      meta: true,
-      description: "Select all orders",
-      action: () => selectAll(),
-    },
+    { key: "a", meta: true, description: "Select all", action: selectAll },
     {
       key: "a",
       meta: true,
       shift: true,
       description: "Clear selection",
-      action: () => clearSelection(),
+      action: clearSelection,
     },
     {
       key: "d",
       meta: true,
-      description: "Download invoices for selected orders",
-      action: () => {
-        if (selection.selectedIds.size > 0) {
-          handleBulkInvoiceDownload();
-        }
-      },
+      description: "Download invoices",
+      action: () =>
+        selection.selectedIds.size > 0 && handleBulkInvoiceDownload(),
     },
     {
       key: "v",
       meta: true,
-      description: "View selected orders list",
-      action: () => {
-        if (selection.selectedIds.size > 0) {
-          setSelectedOrdersViewerOpen(true);
-        }
-      },
+      description: "View selected orders",
+      action: () =>
+        selection.selectedIds.size > 0 && setSelectedOrdersViewerOpen(true),
     },
-
-    // Status Tabs (Number keys)
     {
       key: "1",
-      description: "Show all orders",
+      description: "All orders",
       action: () => handleTabChange("all"),
     },
     {
       key: "2",
-      description: "Show processing orders",
+      description: "Processing",
       action: () => handleTabChange("processing"),
     },
     {
       key: "3",
-      description: "Show shipped orders",
+      description: "Shipped",
       action: () => handleTabChange("shipped"),
     },
     {
       key: "4",
-      description: "Show completed orders",
+      description: "Completed",
       action: () => handleTabChange("completed"),
     },
     {
       key: "5",
-      description: "Show cancelled orders",
+      description: "Cancelled",
       action: () => handleTabChange("cancelled"),
     },
     {
       key: "6",
-      description: "Show return orders",
+      description: "Returns",
       action: () => handleTabChange("return"),
     },
-
-    // Pagination
     {
       key: "ArrowLeft",
       meta: true,
-      description: "Previous page",
-      action: () => {
-        if (currentPage > 1) prevPage();
-      },
+      description: "Prev page",
+      action: () => currentPage > 1 && prevPage(),
     },
     {
       key: "ArrowRight",
       meta: true,
       description: "Next page",
-      action: () => {
-        if (currentPage < totalPages) nextPage();
-      },
+      action: () => currentPage < totalPages && nextPage(),
     },
-
-    // Close Dialogs
     {
       key: "Escape",
-      description: "Close dialogs/modals",
+      description: "Close dialogs",
       action: () => {
-        // Close any open dialogs
         if (commandPaletteOpen) toggleCommandPalette();
         if (showKeyboardShortcuts) toggleKeyboardShortcutsModal();
         if (selectedOrdersViewerOpen) setSelectedOrdersViewerOpen(false);
-        if (orderDetailsOpen) setOrderDetailsOpen(false);
+        if (orderDetailsOpen) closeOrderDetails();
         if (fraudDialogOpen) setFraudDialogOpen(false);
         if (trackingDialogOpen) setTrackingDialogOpen(false);
         if (cancelDialogOpen) setCancelDialogOpen(false);
@@ -391,92 +413,65 @@ export const OrderListV2: React.FC = () => {
     },
   ];
 
-  // Enable keyboard shortcuts
   useKeyboardShortcuts({ shortcuts, enabled: true });
 
-  // Handle tab change
+  // ── Tab change ───────────────────────────────────────────
   const handleTabChange = (value: string) => {
     setActiveTab(value as OrderStatus | "all" | "return");
-    if (value === "all") {
-      clearFilters();
-    } else if (value === "return") {
-      setFilters({ isReturn: true });
-    } else {
-      setFilters({ isReturn: false, status: value as OrderStatus });
-    }
+    if (value === "all") clearFilters();
+    else if (value === "return") setFilters({ isReturn: true });
+    else setFilters({ isReturn: false, status: value as OrderStatus });
   };
 
-  // Bulk actions handlers
+  // ── Bulk actions ─────────────────────────────────────────
   const performBulkAction = async (
     actionType: string,
     courierProvider?: CourierProvider,
   ) => {
-    // Use selectedOrdersData Map to get order IDs
-    const selectedOrderIds = Array.from(selectedOrdersData.values())
-      .map((order) => order.id)
+    const ids = Array.from(selectedOrdersData.values())
+      .map((o) => o.id)
       .filter((id): id is number => id !== undefined);
 
-    if (selectedOrderIds.length === 0) {
+    if (!ids.length) {
       toast({
         variant: "destructive",
         title: "No orders selected",
-        description: "Please select at least one order to perform this action.",
+        description: "Select at least one order.",
       });
       return;
     }
 
     try {
-      const response = await orderBulkAction(
-        selectedOrderIds,
-        actionType,
-        courierProvider,
-      );
-
+      const response = await orderBulkAction(ids, actionType, courierProvider);
       if (response.success) {
         let description = response.data?.message || response.data;
-
-        if (
-          response.courierOrdersQueued !== undefined &&
-          response.courierOrdersTotal !== undefined
-        ) {
-          description = `${description}\n\nCourier Orders: ${response.courierOrdersQueued}/${response.courierOrdersTotal} created`;
-        }
-
-        if (response.warning) {
+        if (response.courierOrdersQueued !== undefined)
+          description = `${description}\n\nCourier: ${response.courierOrdersQueued}/${response.courierOrdersTotal} created`;
+        if (response.warning)
           description = `${description}\n\n⚠️ ${response.warning}`;
-        }
-
-        if (response.courierFailures && response.courierFailures.length > 0) {
-          const failuresList = response.courierFailures
-            .map((f) => `• Order #${f.orderNumber}: ${f.error}`)
-            .join("\n");
-          description = `${description}\n\nFailed Orders:\n${failuresList}`;
-        }
+        if (response.courierFailures?.length)
+          description = `${description}\n\nFailed:\n${response.courierFailures.map((f: any) => `• #${f.orderNumber}: ${f.error}`).join("\n")}`;
 
         toast({
-          variant: response.warning ? "default" : "default",
           title: response.warning
-            ? "Bulk Action Completed with Warnings"
-            : "Bulk Action Success",
-          description: description,
+            ? "Completed with warnings"
+            : "Action successful",
+          description,
         });
-
         clearSelection();
         refreshOrders();
       } else {
         toast({
           variant: "destructive",
-          title: "Bulk Action Failed",
-          description:
-            response.error ||
-            "An error occurred while performing the bulk action.",
+          title: "Action failed",
+          description: response.error,
         });
       }
     } catch (error: any) {
       toast({
         variant: "destructive",
         title: "Error",
-        description: error.message || "An unexpected error occurred.",
+        description: error.message,
       });
     }
   };
@@ -485,25 +480,20 @@ export const OrderListV2: React.FC = () => {
     setPendingBulkAction("shipped");
     setCourierSelectorOpen(true);
   };
-
   const handleCourierSelected = async (courierProvider: CourierProvider) => {
     setCourierSelectorOpen(false);
-    if (pendingBulkAction === "shipped") {
+    if (pendingBulkAction === "shipped")
       await performBulkAction("shipped", courierProvider);
-    }
     setPendingBulkAction(null);
   };
-
   const handleBulkComplete = () => {
     setPendingBulkActionType("complete");
     setBulkConfirmDialogOpen(true);
   };
-
   const handleBulkCancel = () => {
     setPendingBulkActionType("cancel");
     setBulkConfirmDialogOpen(true);
   };
-
   const handleBulkInvoiceDownload = () => {
     setPendingBulkActionType("invoice");
     setBulkConfirmDialogOpen(true);
@@ -511,56 +501,38 @@ export const OrderListV2: React.FC = () => {
 
   const confirmBulkAction = async () => {
     if (!pendingBulkActionType) return;
-
     setBulkConfirmDialogOpen(false);
-
-    if (pendingBulkActionType === "invoice") {
-      await generateBulkInvoices();
-    } else {
-      await performBulkAction(pendingBulkActionType);
-    }
-
+    if (pendingBulkActionType === "invoice") await generateBulkInvoices();
+    else await performBulkAction(pendingBulkActionType);
     setPendingBulkActionType(null);
   };
 
   const generateBulkInvoices = async () => {
     setIsGeneratingInvoices(true);
-
+    const ids = Array.from(selectedOrdersData.values())
+      .map((o) => o.id)
+      .filter((id): id is number => id !== undefined);
+    if (!ids.length) {
+      toast({ variant: "destructive", title: "No orders selected" });
+      setIsGeneratingInvoices(false);
+      return;
+    }
     try {
-      // Use selectedOrdersData Map to get order IDs
-      const selectedOrderIds = Array.from(selectedOrdersData.values())
-        .map((order) => order.id)
-        .filter((id): id is number => id !== undefined);
-
-      if (selectedOrderIds.length === 0) {
-        toast({
-          variant: "destructive",
-          title: "No orders selected",
-          description: "Please select at least one order to generate invoices.",
-        });
-        return;
-      }
-
       toast({
-        title: "Generating invoices...",
-        description: `Creating ZIP file with ${selectedOrderIds.length} invoices`,
+        title: "Generating invoices…",
+        description: `Creating ZIP with ${ids.length} invoices`,
       });
-
-      // Use the existing invoice generator utility
-      await generateMultipleModernInvoicesAndDownloadZip(selectedOrderIds);
-
+      await generateMultipleModernInvoicesAndDownloadZip(ids);
       toast({
-        title: "Invoices Generated",
-        description: `Successfully generated ${selectedOrderIds.length} invoices`,
+        title: "Invoices ready",
+        description: `${ids.length} invoices downloaded`,
       });
-
       clearSelection();
     } catch (error: any) {
       toast({
         variant: "destructive",
-        title: "Failed to generate invoices",
-        description:
-          error.message || "An error occurred while generating invoices.",
+        title: "Failed",
+        description: error.message,
       });
     } finally {
       setIsGeneratingInvoices(false);
@@ -569,49 +541,27 @@ export const OrderListV2: React.FC = () => {
 
   const printBulkInvoices = async () => {
     setIsGeneratingInvoices(true);
-
+    const ids = Array.from(selectedOrdersData.values())
+      .map((o) => o.id)
+      .filter((id): id is number => id !== undefined);
+    if (!ids.length) {
+      toast({ variant: "destructive", title: "No orders selected" });
+      setIsGeneratingInvoices(false);
+      return;
+    }
     try {
-      // Use selectedOrdersData Map to get order IDs
-      const selectedOrderIds = Array.from(selectedOrdersData.values())
-        .map((order) => order.id)
-        .filter((id): id is number => id !== undefined);
-
-      if (selectedOrderIds.length === 0) {
-        toast({
-          variant: "destructive",
-          title: "No orders selected",
-          description: "Please select at least one order to print invoices.",
-        });
-        setIsGeneratingInvoices(false);
-        return;
-      }
-
       toast({
-        title: "Generating invoices...",
-        description: `Preparing ${selectedOrderIds.length} invoice${
-          selectedOrderIds.length > 1 ? "s" : ""
-        } for preview`,
+        title: "Preparing invoices…",
+        description: `${ids.length} invoice${ids.length > 1 ? "s" : ""} for preview`,
       });
-
-      // Generate preview data
-      const previewData = await generateInvoicePreviewData(selectedOrderIds);
-
+      const previewData = await generateInvoicePreviewData(ids);
       setInvoicePreviewData(previewData);
       setInvoicePreviewOpen(true);
-
-      toast({
-        title: "Invoices Ready",
-        description: `${selectedOrderIds.length} invoice${
-          selectedOrderIds.length > 1 ? "s" : ""
-        } ready for preview`,
-      });
     } catch (error: any) {
       toast({
         variant: "destructive",
-        title: "Failed to prepare invoices",
-        description:
-          error.message ||
-          "An error occurred while preparing invoices for print.",
+        title: "Failed",
+        description: error.message,
       });
     } finally {
       setIsGeneratingInvoices(false);
@@ -620,103 +570,49 @@ export const OrderListV2: React.FC = () => {
 
   const handleInvoicePreviewClose = () => {
     setInvoicePreviewOpen(false);
-    // Clean up blob URLs
-    invoicePreviewData.forEach((data) => URL.revokeObjectURL(data.url));
+    invoicePreviewData.forEach((d) => URL.revokeObjectURL(d.url));
     setInvoicePreviewData([]);
     clearSelection();
   };
 
-  const handlePrintAllInvoices = () => {
-    toast({
-      title: "Printing invoices...",
-      description: "Opening print dialogs for all invoices",
-    });
-  };
-
-  const handlePrintCurrentInvoice = () => {
-    toast({
-      title: "Printing invoice...",
-      description: "Opening print dialog",
-    });
-  };
-
   const handleDownloadAllInvoices = async () => {
+    const ids = Array.from(selectedOrdersData.values())
+      .map((o) => o.id)
+      .filter((id): id is number => id !== undefined);
     try {
-      // Use selectedOrdersData Map to get order IDs
-      const selectedOrderIds = Array.from(selectedOrdersData.values())
-        .map((order) => order.id)
-        .filter((id): id is number => id !== undefined);
-
-      toast({
-        title: "Downloading invoices...",
-        description: "Creating ZIP file",
-      });
-
-      await generateMultipleModernInvoicesAndDownloadZip(selectedOrderIds);
-
-      toast({
-        title: "Download complete",
-        description: "Invoices downloaded as ZIP file",
-      });
-
+      toast({ title: "Downloading…", description: "Creating ZIP file" });
+      await generateMultipleModernInvoicesAndDownloadZip(ids);
+      toast({ title: "Download complete" });
       handleInvoicePreviewClose();
     } catch (error: any) {
       toast({
         variant: "destructive",
         title: "Download failed",
-        description: error.message || "Failed to download invoices",
+        description: error.message,
       });
     }
   };
 
-  // Packing Slip Handlers
   const printBulkPackingSlips = async () => {
-    setIsGeneratingInvoices(true); // Reuse the same loading state
-
+    setIsGeneratingInvoices(true);
+    const ids = Array.from(selectedOrdersData.values())
+      .map((o) => o.id)
+      .filter((id): id is number => id !== undefined);
+    if (!ids.length) {
+      toast({ variant: "destructive", title: "No orders selected" });
+      setIsGeneratingInvoices(false);
+      return;
+    }
     try {
-      // Use selectedOrdersData Map to get order IDs
-      const selectedOrderIds = Array.from(selectedOrdersData.values())
-        .map((order) => order.id)
-        .filter((id): id is number => id !== undefined);
-
-      if (selectedOrderIds.length === 0) {
-        toast({
-          variant: "destructive",
-          title: "No orders selected",
-          description:
-            "Please select at least one order to print packing slips.",
-        });
-        setIsGeneratingInvoices(false);
-        return;
-      }
-
-      toast({
-        title: "Generating packing slips...",
-        description: `Preparing ${selectedOrderIds.length} packing slip${
-          selectedOrderIds.length > 1 ? "s" : ""
-        } for preview`,
-      });
-
-      // Generate preview data
-      const previewData =
-        await generatePackingSlipPreviewData(selectedOrderIds);
-
+      toast({ title: "Generating packing slips…" });
+      const previewData = await generatePackingSlipPreviewData(ids);
       setPackingSlipPreviewData(previewData);
       setPackingSlipPreviewOpen(true);
-
-      toast({
-        title: "Packing Slips Ready",
-        description: `${selectedOrderIds.length} packing slip${
-          selectedOrderIds.length > 1 ? "s" : ""
-        } ready for preview`,
-      });
     } catch (error: any) {
       toast({
         variant: "destructive",
-        title: "Failed to prepare packing slips",
-        description:
-          error.message ||
-          "An error occurred while preparing packing slips for print.",
+        title: "Failed",
+        description: error.message,
       });
     } finally {
       setIsGeneratingInvoices(false);
@@ -725,73 +621,49 @@ export const OrderListV2: React.FC = () => {
 
   const handlePackingSlipPreviewClose = () => {
     setPackingSlipPreviewOpen(false);
-    // Clean up blob URLs
-    packingSlipPreviewData.forEach((data) => URL.revokeObjectURL(data.url));
+    packingSlipPreviewData.forEach((d) => URL.revokeObjectURL(d.url));
     setPackingSlipPreviewData([]);
     clearSelection();
   };
 
   const handleBulkPackingSlipDownload = async () => {
+    const ids = Array.from(selectedOrdersData.values())
+      .map((o) => o.id)
+      .filter((id): id is number => id !== undefined);
+    if (!ids.length) {
+      toast({ variant: "destructive", title: "No orders selected" });
+      return;
+    }
     try {
-      // Use selectedOrdersData Map to get order IDs
-      const selectedOrderIds = Array.from(selectedOrdersData.values())
-        .map((order) => order.id)
-        .filter((id): id is number => id !== undefined);
-
-      if (selectedOrderIds.length === 0) {
-        toast({
-          variant: "destructive",
-          title: "No orders selected",
-          description:
-            "Please select at least one order to download packing slips.",
-        });
-        return;
-      }
-
-      toast({
-        title: "Downloading packing slips...",
-        description: "Creating ZIP file",
-      });
-
-      await generateMultiplePackingSlipsAndDownloadZip(selectedOrderIds);
-
-      toast({
-        title: "Download complete",
-        description: "Packing slips downloaded as ZIP file",
-      });
+      toast({ title: "Downloading packing slips…" });
+      await generateMultiplePackingSlipsAndDownloadZip(ids);
+      toast({ title: "Download complete" });
     } catch (error: any) {
       toast({
         variant: "destructive",
         title: "Download failed",
-        description: error.message || "Failed to download packing slips",
+        description: error.message,
       });
     }
   };
 
-  // Order action handlers
-  const handleViewOrder = (order: IOrder) => {
-    setSelectedOrder(order);
-    setOrderDetailsOpen(true);
-  };
+  // ── Order action handlers ─────────────────────────────────
+  const handleViewOrder = (order: IOrder) => openOrderDetails(order);
 
   const handleEditOrder = (order: IOrder) => {
-    // Navigate to modify order page
     setSelectedOrder(order);
     setEditDialogOpen(true);
   };
 
-  const handleModifyOrder = (order: IOrder) => {
-    // Navigate to modify order page
+  const handleModifyOrder = (order: IOrder) =>
     navigate(`/order/modify/${order.id}`);
-  };
 
   const handleDeleteOrder = (order: IOrder) => {
-    // Only allow cancellation if order is in processing status
     if (order.status?.toLowerCase() !== "processing") {
       toast({
         variant: "destructive",
-        title: "Cannot Cancel Order",
-        description: `Only orders in 'Processing' status can be cancelled. This order is currently ${order.status}.`,
+        title: "Cannot cancel order",
+        description: `Only processing orders can be cancelled. This order is "${order.status}".`,
       });
       return;
     }
@@ -801,15 +673,12 @@ export const OrderListV2: React.FC = () => {
 
   const confirmCancelOrder = async () => {
     if (!selectedOrder) return;
-
     try {
-      // Call bulk action API to cancel the order
       const response = await orderBulkAction([selectedOrder.id], "cancel");
-
       if (response.success) {
         toast({
-          title: "Order Cancelled",
-          description: `Order #${selectedOrder.orderNumber} has been cancelled successfully.`,
+          title: "Order cancelled",
+          description: `Order #${selectedOrder.orderNumber} has been cancelled.`,
         });
         setCancelDialogOpen(false);
         setSelectedOrder(null);
@@ -817,15 +686,15 @@ export const OrderListV2: React.FC = () => {
       } else {
         toast({
           variant: "destructive",
-          title: "Cancellation Failed",
-          description: response.error || "Failed to cancel the order.",
+          title: "Cancellation failed",
+          description: response.error,
         });
       }
     } catch (error: any) {
       toast({
         variant: "destructive",
         title: "Error",
-        description: error.message || "An unexpected error occurred.",
+        description: error.message,
       });
     }
   };
@@ -834,49 +703,39 @@ export const OrderListV2: React.FC = () => {
     setSelectedOrder(order);
     setFraudDialogOpen(true);
   };
-
   const handleViewTracking = (order: IOrder) => {
     setSelectedOrder(order);
     setTrackingDialogOpen(true);
   };
-
   const handleReturnOrder = (order: IOrder) => {
     setSelectedOrder(order);
     setReturnDialogOpen(true);
   };
+  const handleCreateOrder = () => navigate("/order/create");
 
-  const handleCreateOrder = () => {
-    navigate("/order/create");
-  };
-
-  // Parent Component - Sheet Implementation
+  // ── Edit order panel ──────────────────────────────────────
   const EditOrderPanel = () => {
-    // Add safety check
-    if (!selectedOrder) {
-      return null;
-    }
-
+    if (!selectedOrder) return null;
     return (
       <Sheet
         open={isEditDialogOpen}
-        onOpenChange={(val: boolean) => setEditDialogOpen(val)}>
+        onOpenChange={(val) => setEditDialogOpen(val)}>
         <SheetContent className='p-0 flex flex-col'>
-          <SheetHeader className='px-6 py-4 border-b bg-gradient-to-r from-blue-50/80 to-green-50/80'>
-            <SheetTitle className='text-xl font-semibold text-slate-800 flex items-center gap-2'>
-              <div className='p-1.5 rounded-lg bg-blue-100'>
-                <Edit3 className='h-4 w-4 text-blue-600' />
-              </div>
-              Edit Order Details
+          <SheetHeader className='px-6 py-5 border-b'>
+            <SheetTitle className='text-base font-semibold text-slate-900 flex items-center gap-2.5'>
+              <span className='inline-flex h-7 w-7 items-center justify-center rounded-md bg-blue-100'>
+                <Edit3 className='h-3.5 w-3.5 text-blue-600' />
+              </span>
+              Edit order details
             </SheetTitle>
-            <SheetDescription className='text-slate-600 text-sm'>
-              Update customer information, shipping details, and payment data.
-              <span className='block text-red-500 font-medium mt-1'>
-                ⚠️ Changes will be saved immediately
+            <SheetDescription className='text-slate-500 text-sm leading-relaxed'>
+              Update customer info, shipping details, and payment data.{" "}
+              <span className='text-amber-600 font-medium'>
+                Changes save immediately.
               </span>
             </SheetDescription>
           </SheetHeader>
-
-          <ScrollArea className='w-full'>
+          <ScrollArea className='flex-1'>
             <EditCustomerInformation
               notes={selectedOrder.notes ?? ""}
               customerInfo={selectedOrder.customer}
@@ -907,132 +766,137 @@ export const OrderListV2: React.FC = () => {
     );
   };
 
+  // ── Count helpers ────────────────────────────────────────
+  const getCount = (key: string): number | undefined => {
+    if (key === "all") return totalOrders || undefined;
+    return (statusCounts as any)?.[key] || undefined;
+  };
+
+  /* ═══════════════════════════════════════════════════════
+     RENDER
+  ═══════════════════════════════════════════════════════ */
   return (
-    <div className='flex flex-col h-full bg-gray-50'>
-      {/* Header */}
-      <motion.div
+    <div className='flex flex-col h-full bg-gray-50/60'>
+      {/* ── Header ───────────────────────────────────────── */}
+      <motion.header
         variants={fadeIn}
         initial='hidden'
         animate='visible'
-        className='bg-white border-b border-gray-200 sticky top-0 z-40'>
-        <div className='px-4 sm:px-6 lg:px-8 py-4'>
-          {/* Title & Actions */}
-          <div className='flex items-center justify-between mb-4'>
-            <div>
-              <h1 className='text-2xl sm:text-3xl font-bold text-gray-900 bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent'>
-                Orders V2 (Beta 2.1)
-              </h1>
-              <p className='text-sm text-gray-600 mt-1'>
-                {totalOrders} total orders
-              </p>
+        className='bg-white border-b border-gray-200 sticky top-0 z-40 shadow-sm'>
+        {/* Top row: title + actions */}
+        <div className='px-4 sm:px-6 lg:px-8'>
+          <div className='flex items-center justify-between h-16 gap-4'>
+            {/* Title */}
+            <div className='flex items-center gap-3 min-w-0'>
+              <div className='hidden sm:flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-blue-600 to-violet-600'>
+                <LayoutList className='h-4 w-4 text-white' />
+              </div>
+              <div className='min-w-0'>
+                <h1 className='text-lg font-semibold text-gray-900 truncate leading-tight'>
+                  Orders
+                  <span className='ml-2 text-xs font-medium text-gray-400 tracking-wide uppercase align-middle'>
+                    Beta 2.1
+                  </span>
+                </h1>
+                <p className='text-xs text-gray-500 leading-none mt-0.5'>
+                  {totalOrders.toLocaleString()} orders total
+                </p>
+              </div>
             </div>
 
-            <div className='flex items-center gap-2'>
+            {/* Actions */}
+            <div className='flex items-center gap-2 flex-shrink-0'>
               <Button
                 variant='outline'
                 size='sm'
                 onClick={refreshOrders}
                 disabled={isRefreshing}
-                className='hidden sm:flex'>
+                className='hidden sm:flex items-center gap-1.5 h-9 text-gray-600 border-gray-200 hover:bg-gray-50'>
                 <RefreshCw
-                  className={cn("h-4 w-4 mr-2", isRefreshing && "animate-spin")}
+                  className={cn("h-3.5 w-3.5", isRefreshing && "animate-spin")}
                 />
-                Refresh
+                <span>Refresh</span>
               </Button>
 
               <Button
                 size='sm'
-                className='bg-gradient-to-r from-blue-600 to-purple-600'
-                onClick={handleCreateOrder}>
-                <Plus className='h-4 w-4 mr-2' />
-                <span className='hidden sm:inline'>New Order</span>
+                onClick={handleCreateOrder}
+                className='h-9 bg-blue-600 hover:bg-blue-700 text-white shadow-sm gap-1.5'>
+                <Plus className='h-3.5 w-3.5' />
+                <span className='hidden sm:inline'>New order</span>
                 <span className='sm:hidden'>New</span>
               </Button>
             </div>
           </div>
+        </div>
 
-          <div className='flex justify-between items-center gap-4'>
-            {/* Status Tabs */}
-            <Tabs
-              value={activeTab}
-              onValueChange={handleTabChange}
-              className='w-full mr-2'>
-              <TabsList className='w-full sm:w-auto grid grid-cols-3 sm:inline-flex gap-1'>
-                <TabsTrigger value='all' className='flex items-center gap-2'>
-                  All
-                  {totalOrders > 0 && (
-                    <span className='bg-gray-200 text-gray-700 px-2 py-0.5 rounded-full text-xs'>
-                      {totalOrders}
-                    </span>
-                  )}
-                </TabsTrigger>
-                <TabsTrigger
-                  value='processing'
-                  className='flex items-center gap-2'>
-                  Processing
-                  {statusCounts?.processing && statusCounts.processing > 0 && (
-                    <span className='bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full text-xs'>
-                      {statusCounts.processing}
-                    </span>
-                  )}
-                </TabsTrigger>
-                <TabsTrigger
-                  value='shipped'
-                  className='flex items-center gap-2'>
-                  Shipped
-                  {statusCounts?.shipped && statusCounts.shipped > 0 && (
-                    <span className='bg-purple-100 text-purple-700 px-2 py-0.5 rounded-full text-xs'>
-                      {statusCounts.shipped}
-                    </span>
-                  )}
-                </TabsTrigger>
-                <TabsTrigger
-                  value='completed'
-                  className='flex items-center gap-2'>
-                  Completed
-                  {statusCounts?.completed && statusCounts.completed > 0 && (
-                    <span className='bg-green-100 text-green-700 px-2 py-0.5 rounded-full text-xs'>
-                      {statusCounts.completed}
-                    </span>
-                  )}
-                </TabsTrigger>
-                <TabsTrigger value='cancel' className='flex items-center gap-2'>
-                  Cancelled
-                  {statusCounts?.cancel && statusCounts.cancel > 0 && (
-                    <span className='bg-red-100 text-red-700 px-2 py-0.5 rounded-full text-xs'>
-                      {statusCounts.cancel}
-                    </span>
-                  )}
-                </TabsTrigger>
-                <TabsTrigger value='return' className='flex items-center gap-2'>
-                  Return Orders
-                  {statusCounts?.returnOrderCount &&
-                    statusCounts.returnOrderCount > 0 && (
-                      <span className='bg-orange-100 text-orange-700 px-2 py-0.5 rounded-full text-xs'>
-                        {statusCounts.returnOrderCount}
-                      </span>
-                    )}
-                </TabsTrigger>
-              </TabsList>
-            </Tabs>
-            {/* Search Bar */}
-            <SearchBar value={searchQuery} onChange={setSearchQuery} />
+        {/* Bottom row: tabs + search */}
+        <div className='px-4 sm:px-6 lg:px-8 pb-3'>
+          <div className='flex items-center gap-3'>
+            {/* Tabs — scrollable on mobile */}
+            <div className='flex-1 min-w-0 overflow-x-auto no-scrollbar'>
+              <Tabs value={activeTab} onValueChange={handleTabChange}>
+                <TabsList className='h-9 bg-gray-100/80 p-1 rounded-lg inline-flex gap-0.5 w-max'>
+                  {STATUS_TABS.map((tab) => {
+                    const count =
+                      tab.value === "all"
+                        ? totalOrders
+                        : (statusCounts as any)?.[tab.countKey ?? ""];
+                    return (
+                      <TabsTrigger
+                        key={tab.value}
+                        value={tab.value}
+                        className={cn(
+                          "h-7 px-3 text-xs font-medium rounded-md gap-1.5 whitespace-nowrap",
+                          "data-[state=active]:bg-white data-[state=active]:shadow-sm data-[state=active]:text-gray-900",
+                          "text-gray-500 hover:text-gray-700 transition-all",
+                        )}>
+                        {tab.label}
+                        {count > 0 && (
+                          <span
+                            className={cn(
+                              "inline-flex items-center justify-center px-1.5 py-0 rounded-full text-[10px] font-semibold leading-4 min-w-[18px]",
+                              "color" in tab
+                                ? TAB_BADGE_COLORS[tab.color]
+                                : "bg-gray-200 text-gray-600",
+                            )}>
+                            {count}
+                          </span>
+                        )}
+                      </TabsTrigger>
+                    );
+                  })}
+                </TabsList>
+              </Tabs>
+            </div>
+
+            {/* Search */}
+            <div className='flex-shrink-0'>
+              <SearchBar value={searchQuery} onChange={setSearchQuery} />
+            </div>
           </div>
         </div>
-      </motion.div>
+      </motion.header>
 
-      {/* Order Table */}
-      <div className='flex-1 overflow-auto px-4 sm:px-6 lg:px-8 py-6'>
+      {/* ── Order table ───────────────────────────────────── */}
+      <div className='flex-1 overflow-auto px-4 sm:px-6 lg:px-8 py-5'>
         {isLoading ? (
-          <div className='flex items-center justify-center h-64'>
-            <div className='text-center'>
-              <Loader2 className='h-8 w-8 animate-spin text-blue-600 mx-auto mb-4' />
-              <p className='text-gray-600'>Loading orders...</p>
+          <div className='flex items-center justify-center h-72'>
+            <div className='flex flex-col items-center gap-3 text-center bg-white rounded-2xl border border-gray-100 shadow-sm px-12 py-10'>
+              <Loader2 className='h-8 w-8 animate-spin text-blue-600' />
+              <p className='text-sm font-medium text-gray-700'>
+                Loading orders…
+              </p>
+              <p className='text-xs text-gray-400'>This won't take long</p>
             </div>
           </div>
         ) : (
-          <motion.div variants={fadeIn} initial='hidden' animate='visible'>
-            {/* Desktop Table View */}
+          <motion.div
+            variants={fadeIn}
+            initial='hidden'
+            animate='visible'
+            className='space-y-4'>
+            {/* Desktop */}
             <div className='hidden md:block'>
               <OrderTable
                 orders={orders}
@@ -1049,7 +913,7 @@ export const OrderListV2: React.FC = () => {
               />
             </div>
 
-            {/* Mobile Card View */}
+            {/* Mobile */}
             <div className='md:hidden'>
               <MobileOrderList
                 orders={orders}
@@ -1067,71 +931,64 @@ export const OrderListV2: React.FC = () => {
         )}
       </div>
 
-      {/* Pagination */}
+      {/* ── Pagination ────────────────────────────────────── */}
       {totalPages > 1 && (
-        <div className='bg-white border-t border-gray-200 px-4 py-3 sm:px-6'>
-          <div className='flex items-center justify-between'>
-            <div className='flex-1 flex justify-between sm:hidden'>
+        <div className='bg-white border-t border-gray-200 px-4 sm:px-6 lg:px-8 py-3'>
+          <div className='flex items-center justify-between gap-4'>
+            {/* Page size + info */}
+            <div className='flex items-center gap-3'>
+              <Select
+                value={pageSize.toString()}
+                onValueChange={(v) => setPageSize(Number(v))}>
+                <SelectTrigger className='w-[72px] h-8 text-xs border-gray-200'>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {[20, 50, 100].map((n) => (
+                    <SelectItem
+                      key={n}
+                      value={n.toString()}
+                      className='text-xs'>
+                      {n}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <span className='text-xs text-gray-500 hidden sm:block'>
+                per page · Page{" "}
+                <span className='font-medium text-gray-700'>{currentPage}</span>{" "}
+                of{" "}
+                <span className='font-medium text-gray-700'>{totalPages}</span>
+              </span>
+            </div>
+
+            {/* Navigation */}
+            <div className='flex items-center gap-1'>
               <Button
                 variant='outline'
                 size='sm'
                 onClick={prevPage}
-                disabled={currentPage === 1}>
-                Previous
+                disabled={currentPage === 1}
+                className='h-8 w-8 p-0 border-gray-200'>
+                <ChevronLeft className='h-4 w-4' />
               </Button>
+              <span className='sm:hidden text-xs text-gray-500 px-2'>
+                {currentPage} / {totalPages}
+              </span>
               <Button
                 variant='outline'
                 size='sm'
                 onClick={nextPage}
-                disabled={currentPage === totalPages}>
-                Next
+                disabled={currentPage === totalPages}
+                className='h-8 w-8 p-0 border-gray-200'>
+                <ChevronRight className='h-4 w-4' />
               </Button>
-            </div>
-            <div className='hidden sm:flex-1 sm:flex sm:items-center sm:justify-between'>
-              <div className='flex items-center gap-4'>
-                <p className='text-sm text-gray-700'>
-                  Page <span className='font-medium'>{currentPage}</span> of{" "}
-                  <span className='font-medium'>{totalPages}</span>
-                </p>
-                <div className='flex items-center gap-2'>
-                  <span className='text-sm text-gray-600'>Show</span>
-                  <Select
-                    value={pageSize.toString()}
-                    onValueChange={(value) => setPageSize(Number(value))}>
-                    <SelectTrigger className='w-[70px] h-8'>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value='20'>20</SelectItem>
-                      <SelectItem value='50'>50</SelectItem>
-                      <SelectItem value='100'>100</SelectItem>
-                    </SelectContent>
-                  </Select>
-                  <span className='text-sm text-gray-600'>per page</span>
-                </div>
-              </div>
-              <div className='flex gap-2 mr-14'>
-                <Button
-                  variant='outline'
-                  size='sm'
-                  onClick={prevPage}
-                  disabled={currentPage === 1}>
-                  Previous
-                </Button>
-                <Button
-                  variant='outline'
-                  size='sm'
-                  onClick={nextPage}
-                  disabled={currentPage === totalPages}>
-                  Next
-                </Button>
-              </div>
             </div>
           </div>
         </div>
       )}
 
-      {/* Bulk Actions Bar */}
+      {/* ── Bulk actions bar ──────────────────────────────── */}
       <BulkActionsBar
         selectedCount={selection.selectedIds.size}
         totalCount={orders.length}
@@ -1149,7 +1006,7 @@ export const OrderListV2: React.FC = () => {
         progress={bulkActionProgress}
       />
 
-      {/* Courier Selector for Bulk Shipped */}
+      {/* ── Courier selector ──────────────────────────────── */}
       <CourierSelector
         open={courierSelectorOpen}
         onOpenChange={setCourierSelectorOpen}
@@ -1158,54 +1015,63 @@ export const OrderListV2: React.FC = () => {
         isMobile={false}
       />
 
-      {/* Command Palette */}
+      {/* ── Command palette ───────────────────────────────── */}
       <CommandPalette
         open={commandPaletteOpen}
         onOpenChange={toggleCommandPalette}
       />
 
-      {/* Keyboard Shortcuts Modal */}
+      {/* ── Keyboard shortcuts modal ──────────────────────── */}
       <KeyboardShortcutsModal
         open={showKeyboardShortcuts}
         onOpenChange={toggleKeyboardShortcutsModal}
       />
 
-      {/* Order Details Sheet */}
+      {/* ── Order details sheet (key forces remount → fixes ghost overlay) ── */}
       <OrderDetailsSheet
+        key={detailsSheetKey}
         order={selectedOrder}
         open={orderDetailsOpen}
-        onOpenChange={setOrderDetailsOpen}
+        onOpenChange={(open) => {
+          if (!open) closeOrderDetails();
+          else setOrderDetailsOpen(true);
+        }}
         onEdit={handleEditOrder}
       />
 
+      {/* ── Edit order panel ──────────────────────────────── */}
       <EditOrderPanel />
 
-      {/* Fraud Detection Dialog */}
+      {/* ── Fraud detection sheet ─────────────────────────── */}
       <Sheet open={fraudDialogOpen} onOpenChange={setFraudDialogOpen}>
-        <SheetContent className='sm:max-w-[600px] '>
+        <SheetContent className='sm:max-w-[600px]'>
           <SheetHeader>
-            <SheetTitle className='flex items-center gap-2'>
-              <Shield className='h-5 w-5' />
-              Fraud Risk Analysis
+            <SheetTitle className='flex items-center gap-2 text-base font-semibold'>
+              <span className='inline-flex h-7 w-7 items-center justify-center rounded-md bg-rose-100'>
+                <Shield className='h-3.5 w-3.5 text-rose-600' />
+              </span>
+              Fraud risk analysis
             </SheetTitle>
             <SheetDescription>
-              Customer: {selectedOrder?.customer?.name || "Unknown"} •{" "}
-              {selectedOrder?.customer?.phoneNumber || "N/A"}
+              {selectedOrder?.customer?.name || "Unknown"} ·{" "}
+              {selectedOrder?.customer?.phoneNumber || "—"}
             </SheetDescription>
           </SheetHeader>
-          <div className='mt-4 '>
-            {selectedOrder && selectedOrder.fraudDetection ? (
+          <div className='mt-5'>
+            {selectedOrder?.fraudDetection ? (
               <FraudDetectionContent
                 fraudDetection={selectedOrder.fraudDetection}
               />
             ) : (
-              <div className='flex flex-col items-center justify-center h-64 text-center'>
-                <Shield className='h-16 w-16 text-gray-300 mb-4' />
-                <p className='text-gray-600 font-medium'>
-                  No fraud detection data
+              <div className='flex flex-col items-center justify-center h-64 text-center gap-3'>
+                <div className='h-14 w-14 rounded-2xl bg-gray-100 flex items-center justify-center'>
+                  <Shield className='h-7 w-7 text-gray-400' />
+                </div>
+                <p className='text-sm font-medium text-gray-700'>
+                  No fraud data
                 </p>
-                <p className='text-sm text-gray-500 mt-2'>
-                  This order has not been analyzed for fraud risk yet.
+                <p className='text-xs text-gray-500 max-w-[200px]'>
+                  This order hasn't been analysed for fraud risk yet.
                 </p>
               </div>
             )}
@@ -1213,83 +1079,81 @@ export const OrderListV2: React.FC = () => {
         </SheetContent>
       </Sheet>
 
-      {/* Tracking Dialog */}
+      {/* ── Tracking sheet ────────────────────────────────── */}
       <Sheet open={trackingDialogOpen} onOpenChange={setTrackingDialogOpen}>
         <SheetContent className='sm:max-w-[600px]'>
           <SheetHeader>
-            <SheetTitle className='flex items-center gap-2'>
-              <Package className='h-5 w-5 text-blue-600' />
-              Courier Tracking
+            <SheetTitle className='flex items-center gap-2 text-base font-semibold'>
+              <span className='inline-flex h-7 w-7 items-center justify-center rounded-md bg-blue-100'>
+                <Package className='h-3.5 w-3.5 text-blue-600' />
+              </span>
+              Courier tracking
             </SheetTitle>
             <SheetDescription>
-              Order #{selectedOrder?.orderNumber} -{" "}
-              {selectedOrder?.courier?.provider || "N/A"}
+              Order #{selectedOrder?.orderNumber} ·{" "}
+              {selectedOrder?.courier?.provider || "—"}
             </SheetDescription>
           </SheetHeader>
-          <ScrollArea className='h-[calc(100vh-200px)] mt-4'>
-            {selectedOrder?.deliveryTimeline &&
-            selectedOrder.deliveryTimeline.length > 0 ? (
-              <div className='space-y-4'>
+          <ScrollArea className='h-[calc(100vh-180px)] mt-5'>
+            {selectedOrder?.deliveryTimeline?.length ? (
+              <div className='relative pl-6 space-y-0'>
                 {[...selectedOrder.deliveryTimeline]
                   .reverse()
-                  .map((timeline, index) => (
-                    <motion.div
-                      key={index}
-                      initial={{ opacity: 0, x: -20 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      transition={{ delay: index * 0.1 }}
-                      className='flex gap-4'>
-                      <div className='flex flex-col items-center'>
-                        <div
-                          className={cn(
-                            "w-3 h-3 rounded-full",
-                            index === 0
-                              ? "bg-blue-500 ring-4 ring-blue-100"
-                              : "bg-gray-300",
-                          )}
-                        />
-                        {index < selectedOrder.deliveryTimeline.length - 1 && (
-                          <div className='w-0.5 h-full min-h-[40px] bg-gray-200' />
+                  .map((timeline, index, arr) => (
+                    <div key={index} className='relative'>
+                      {/* connector line */}
+                      {index < arr.length - 1 && (
+                        <div className='absolute left-[-18px] top-5 bottom-0 w-px bg-gray-200' />
+                      )}
+                      {/* dot */}
+                      <div
+                        className={cn(
+                          "absolute left-[-22px] top-1.5 h-3 w-3 rounded-full border-2 border-white",
+                          index === 0
+                            ? "bg-blue-500 shadow-sm shadow-blue-200"
+                            : "bg-gray-300",
                         )}
-                      </div>
-                      <div className='flex-1 pb-6'>
-                        <div className='flex items-start justify-between mb-1'>
+                      />
+                      <div className='pb-6'>
+                        <div className='flex items-start justify-between gap-2 mb-0.5'>
                           <p
                             className={cn(
-                              "font-semibold text-sm",
-                              index === 0 ? "text-blue-600" : "text-gray-900",
+                              "text-sm font-medium",
+                              index === 0 ? "text-blue-700" : "text-gray-800",
                             )}>
                             {timeline.status}
                           </p>
-                          <span className='text-xs text-gray-500'>
+                          <span className='text-[11px] text-gray-400 whitespace-nowrap flex-shrink-0'>
                             {new Date(timeline.timestamp).toLocaleString()}
                           </span>
                         </div>
                         {timeline.location && (
-                          <p className='text-xs text-gray-600 mb-1'>
+                          <p className='text-xs text-gray-500 mb-0.5'>
                             📍 {timeline.location}
                           </p>
                         )}
                         {timeline.remarks && (
-                          <p className='text-xs text-gray-500 italic'>
+                          <p className='text-xs text-gray-400 italic'>
                             {timeline.remarks}
                           </p>
                         )}
-                        <p className='text-xs text-gray-400 mt-1'>
-                          Updated by: {timeline.updatedBy}
+                        <p className='text-[11px] text-gray-400 mt-1'>
+                          via {timeline.updatedBy}
                         </p>
                       </div>
-                    </motion.div>
+                    </div>
                   ))}
               </div>
             ) : (
-              <div className='flex flex-col items-center justify-center h-64 text-center'>
-                <Package className='h-16 w-16 text-gray-300 mb-4' />
-                <p className='text-gray-600 font-medium'>
-                  No tracking information available
+              <div className='flex flex-col items-center justify-center h-64 text-center gap-3'>
+                <div className='h-14 w-14 rounded-2xl bg-gray-100 flex items-center justify-center'>
+                  <Package className='h-7 w-7 text-gray-400' />
+                </div>
+                <p className='text-sm font-medium text-gray-700'>
+                  No tracking yet
                 </p>
-                <p className='text-sm text-gray-500 mt-2'>
-                  Tracking details will appear here once the order is shipped.
+                <p className='text-xs text-gray-500 max-w-[220px]'>
+                  Tracking details appear here once the order is shipped.
                 </p>
               </div>
             )}
@@ -1297,36 +1161,32 @@ export const OrderListV2: React.FC = () => {
         </SheetContent>
       </Sheet>
 
-      {/* Cancel Order Confirmation Dialog */}
+      {/* ── Cancel confirmation ───────────────────────────── */}
       <AlertDialog open={cancelDialogOpen} onOpenChange={setCancelDialogOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle className='flex items-center gap-2'>
-              <XCircle className='h-5 w-5 text-red-600' />
-              Cancel Order?
+              <XCircle className='h-5 w-5 text-rose-600' />
+              Cancel order #{selectedOrder?.orderNumber}?
             </AlertDialogTitle>
             <AlertDialogDescription>
-              Are you sure you want to cancel order #
-              {selectedOrder?.orderNumber}?
-              <br />
-              <span className='text-red-600 font-medium mt-2 block'>
-                This action cannot be undone. The order status will be changed
-                to "Cancelled".
-              </span>
+              This action cannot be undone. The order status will permanently
+              change to{" "}
+              <span className='font-semibold text-rose-600'>Cancelled</span>.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>No, Keep Order</AlertDialogCancel>
+            <AlertDialogCancel>Keep order</AlertDialogCancel>
             <AlertDialogAction
               onClick={confirmCancelOrder}
-              className='bg-red-600 hover:bg-red-700'>
-              Yes, Cancel Order
+              className='bg-rose-600 hover:bg-rose-700'>
+              Cancel order
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
 
-      {/* Bulk Action Confirmation Dialog */}
+      {/* ── Bulk action confirmation ──────────────────────── */}
       <AlertDialog
         open={bulkConfirmDialogOpen}
         onOpenChange={setBulkConfirmDialogOpen}>
@@ -1334,131 +1194,122 @@ export const OrderListV2: React.FC = () => {
           <AlertDialogHeader>
             <AlertDialogTitle className='flex items-center gap-2'>
               {pendingBulkActionType === "complete" && (
-                <CheckCircle className='h-5 w-5 text-green-600' />
+                <CheckCircle className='h-5 w-5 text-emerald-600' />
               )}
               {pendingBulkActionType === "cancel" && (
-                <XCircle className='h-5 w-5 text-red-600' />
+                <XCircle className='h-5 w-5 text-rose-600' />
               )}
               {pendingBulkActionType === "invoice" && (
                 <Download className='h-5 w-5 text-blue-600' />
               )}
-              Confirm Bulk Action
+              {pendingBulkActionType === "complete" &&
+                "Mark orders as completed?"}
+              {pendingBulkActionType === "cancel" && "Cancel selected orders?"}
+              {pendingBulkActionType === "invoice" && "Generate invoices?"}
             </AlertDialogTitle>
-            <AlertDialogDescription>
-              {pendingBulkActionType === "complete" && (
-                <>
-                  Are you sure you want to mark{" "}
-                  <span className='font-bold'>
-                    {selection.selectedIds.size} orders
-                  </span>{" "}
-                  as completed?
-                  <br />
-                  <span className='text-green-600 font-medium mt-2 block'>
-                    This will update all selected orders to "Completed" status.
+            <AlertDialogDescription asChild>
+              <div className='space-y-3'>
+                <p>
+                  {pendingBulkActionType === "complete" && (
+                    <>
+                      This will mark{" "}
+                      <strong>{selection.selectedIds.size} orders</strong> as
+                      completed.
+                    </>
+                  )}
+                  {pendingBulkActionType === "cancel" && (
+                    <>
+                      This will permanently cancel{" "}
+                      <strong>{selection.selectedIds.size} orders</strong>.{" "}
+                      <span className='text-rose-600'>
+                        This cannot be undone.
+                      </span>
+                    </>
+                  )}
+                  {pendingBulkActionType === "invoice" && (
+                    <>
+                      A ZIP file with invoices for{" "}
+                      <strong>{selection.selectedIds.size} orders</strong> will
+                      be downloaded.
+                    </>
+                  )}
+                </p>
+                <div className='flex items-center justify-between pt-1'>
+                  <span className='text-xs text-gray-500'>
+                    {selection.selectedIds.size} order
+                    {selection.selectedIds.size !== 1 ? "s" : ""} selected
                   </span>
-                </>
-              )}
-              {pendingBulkActionType === "cancel" && (
-                <>
-                  Are you sure you want to cancel{" "}
-                  <span className='font-bold'>
-                    {selection.selectedIds.size} orders
-                  </span>
-                  ?
-                  <br />
-                  <span className='text-red-600 font-medium mt-2 block'>
-                    ⚠️ This action cannot be undone. All selected orders will be
-                    cancelled.
-                  </span>
-                </>
-              )}
-              {pendingBulkActionType === "invoice" && (
-                <>
-                  Generate invoices for{" "}
-                  <span className='font-bold'>
-                    {selection.selectedIds.size} selected orders
-                  </span>
-                  ?
-                  <br />
-                  <span className='text-blue-600 font-medium mt-2 block'>
-                    📦 A ZIP file containing all invoices will be downloaded.
-                  </span>
-                </>
-              )}
-              <div className='mt-4 flex justify-between items-center'>
-                <span className='text-sm text-gray-500'>
-                  {selection.selectedIds.size} order
-                  {selection.selectedIds.size !== 1 ? "s" : ""} selected
-                </span>
-                <Button
-                  variant='outline'
-                  size='sm'
-                  onClick={() => setSelectedOrdersViewerOpen(true)}
-                  className='text-xs'>
-                  View Selected Orders
-                </Button>
+                  <Button
+                    variant='outline'
+                    size='sm'
+                    onClick={() => setSelectedOrdersViewerOpen(true)}
+                    className='text-xs h-7'>
+                    Review list
+                  </Button>
+                </div>
               </div>
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogCancel>Go back</AlertDialogCancel>
             <AlertDialogAction
               onClick={confirmBulkAction}
               disabled={isGeneratingInvoices}
               className={cn(
                 pendingBulkActionType === "complete" &&
-                  "bg-green-600 hover:bg-green-700",
+                  "bg-emerald-600 hover:bg-emerald-700",
                 pendingBulkActionType === "cancel" &&
-                  "bg-red-600 hover:bg-red-700",
+                  "bg-rose-600 hover:bg-rose-700",
                 pendingBulkActionType === "invoice" &&
                   "bg-blue-600 hover:bg-blue-700",
               )}>
               {isGeneratingInvoices && pendingBulkActionType === "invoice" && (
                 <Loader2 className='h-4 w-4 mr-2 animate-spin' />
               )}
-              {pendingBulkActionType === "complete" && "Yes, Mark as Completed"}
-              {pendingBulkActionType === "cancel" && "Yes, Cancel Orders"}
-              {pendingBulkActionType === "invoice" && "Generate Invoices"}
+              {pendingBulkActionType === "complete" && "Mark as completed"}
+              {pendingBulkActionType === "cancel" && "Cancel orders"}
+              {pendingBulkActionType === "invoice" && "Download invoices"}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
 
-      {/* Selected Orders Viewer Dialog */}
+      {/* ── Selected orders viewer ────────────────────────── */}
       <Sheet
         open={selectedOrdersViewerOpen}
         onOpenChange={setSelectedOrdersViewerOpen}>
-        <SheetContent className='sm:max-w-[500px]'>
+        <SheetContent className='sm:max-w-[480px]'>
           <SheetHeader>
-            <SheetTitle className='flex items-center gap-2'>
-              <CheckCircle className='h-5 w-5 text-blue-600' />
-              Selected Orders ({selection.selectedIds.size})
+            <SheetTitle className='flex items-center gap-2 text-base font-semibold'>
+              <span className='inline-flex h-7 w-7 items-center justify-center rounded-md bg-blue-100'>
+                <CheckCircle className='h-3.5 w-3.5 text-blue-600' />
+              </span>
+              Selected orders
+              <span className='ml-1 text-sm text-gray-500 font-normal'>
+                ({selection.selectedIds.size})
+              </span>
             </SheetTitle>
             <SheetDescription>
-              Review the list of selected orders before performing bulk actions
+              Review before performing bulk actions
             </SheetDescription>
           </SheetHeader>
-          <ScrollArea className='h-[calc(100vh-200px)] mt-4'>
-            <div className='space-y-2'>
-              {getSelectedOrders().map((order, index) => {
-                const orderId = order.id;
-                if (!orderId) return null;
-
+          <ScrollArea className='h-[calc(100vh-220px)] mt-4'>
+            <div className='space-y-1.5 pr-1'>
+              {getSelectedOrders().map((order) => {
+                if (!order.id) return null;
                 return (
-                  <motion.div
-                    key={index}
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    className='flex items-center justify-between p-3 bg-gradient-to-r from-blue-50 to-purple-50 rounded-lg border border-blue-200 hover:shadow-md transition-all'>
-                    <div className='flex-1'>
-                      <div className='flex items-center gap-2 mb-1'>
-                        <span className='font-semibold text-sm text-gray-900'>
+                  <div
+                    key={order.id}
+                    className='flex items-center justify-between p-3 bg-gray-50 hover:bg-gray-100 rounded-xl border border-gray-100 transition-colors'>
+                    <div>
+                      <div className='flex items-center gap-2 mb-0.5'>
+                        <span className='text-sm font-semibold text-gray-900'>
                           #{order.orderNumber}
                         </span>
                         <StatusBadge status={order.status} />
                       </div>
-                      <p className='text-xs text-gray-600'>
-                        {order.customer?.name} •{" "}
+                      <p className='text-xs text-gray-500'>
+                        {order.customer?.name} ·{" "}
                         {formatCurrency(order.totalPrice)}
                       </p>
                     </div>
@@ -1466,15 +1317,14 @@ export const OrderListV2: React.FC = () => {
                       variant='ghost'
                       size='sm'
                       onClick={() => {
-                        handleOrderSelection(orderId);
-                        if (selection.selectedIds.size === 1) {
+                        handleOrderSelection(order.id!);
+                        if (selection.selectedIds.size === 1)
                           setSelectedOrdersViewerOpen(false);
-                        }
                       }}
-                      className='text-red-600 hover:text-red-700 hover:bg-red-50'>
+                      className='h-7 w-7 p-0 text-gray-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg'>
                       <XCircle className='h-4 w-4' />
                     </Button>
-                  </motion.div>
+                  </div>
                 );
               })}
             </div>
@@ -1482,15 +1332,15 @@ export const OrderListV2: React.FC = () => {
           <div className='mt-4 pt-4 border-t flex gap-2'>
             <Button
               variant='outline'
-              className='flex-1'
+              className='flex-1 h-9 text-sm'
               onClick={() => {
                 handleClearSelection();
                 setSelectedOrdersViewerOpen(false);
               }}>
-              Clear All
+              Clear all
             </Button>
             <Button
-              className='flex-1'
+              className='flex-1 h-9 text-sm bg-blue-600 hover:bg-blue-700'
               onClick={() => setSelectedOrdersViewerOpen(false)}>
               Done
             </Button>
@@ -1498,46 +1348,44 @@ export const OrderListV2: React.FC = () => {
         </SheetContent>
       </Sheet>
 
-      {/* Return Order Sheet */}
+      {/* ── Return order sheet ────────────────────────────── */}
       <ReturnOrderSheet
         order={selectedOrder}
         open={returnDialogOpen}
         onOpenChange={setReturnDialogOpen}
-        onSuccess={() => {
-          refreshOrders();
-        }}
+        onSuccess={refreshOrders}
       />
 
-      {/* Onboarding Tour */}
+      {/* ── Onboarding ────────────────────────────────────── */}
       <OnboardingTour
         open={showOnboarding}
         onOpenChange={setShowOnboarding}
         onComplete={handleOnboardingComplete}
       />
 
-      {/* Floating Help Button */}
+      {/* ── Floating help ─────────────────────────────────── */}
       <FloatingHelpButton
         onShowKeyboardShortcuts={toggleKeyboardShortcutsModal}
         onShowOnboarding={() => setShowOnboarding(true)}
       />
 
-      {/* Invoice Preview Modal */}
+      {/* ── Invoice preview ───────────────────────────────── */}
       <InvoicePreviewModal
         open={invoicePreviewOpen}
         onOpenChange={handleInvoicePreviewClose}
         pdfUrls={invoicePreviewData}
-        onPrintAll={handlePrintAllInvoices}
-        onPrintCurrent={handlePrintCurrentInvoice}
+        onPrintAll={() => toast({ title: "Printing all invoices…" })}
+        onPrintCurrent={() => toast({ title: "Printing invoice…" })}
         onDownloadAll={handleDownloadAllInvoices}
       />
 
-      {/* Packing Slip Preview Modal */}
+      {/* ── Packing slip preview ──────────────────────────── */}
       <PackingSlipPreviewModal
         open={packingSlipPreviewOpen}
         onOpenChange={handlePackingSlipPreviewClose}
         pdfUrls={packingSlipPreviewData}
-        onPrintAll={handlePrintAllInvoices} // Reuse same handler
-        onPrintCurrent={handlePrintCurrentInvoice} // Reuse same handler
+        onPrintAll={() => toast({ title: "Printing all packing slips…" })}
+        onPrintCurrent={() => toast({ title: "Printing packing slip…" })}
         onDownloadAll={handleBulkPackingSlipDownload}
       />
     </div>

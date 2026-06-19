@@ -38,14 +38,6 @@ import { cn } from "../lib/utils";
 
 const themeOptions = [
   {
-    value: "light",
-    label: "Light",
-    icon: Sun,
-    color: "bg-amber-50 border-amber-200",
-    accent: "text-amber-600",
-    gradient: "from-amber-50 to-orange-50",
-  },
-  {
     value: "dark",
     label: "Dark",
     icon: Moon,
@@ -57,9 +49,9 @@ const themeOptions = [
     value: "blue",
     label: "Ocean",
     icon: Palette,
-    color: "bg-blue-500 border-blue-400",
-    accent: "text-blue-100",
-    gradient: "from-blue-500 to-cyan-500",
+    color: "bg-cyan-500 border-cyan-400",
+    accent: "text-cyan-100",
+    gradient: "from-cyan-500 to-cyan-500",
   },
   {
     value: "green",
@@ -117,9 +109,7 @@ export function SettingsPanel() {
   return (
     <Sheet>
       <SheetTrigger className='p-0' asChild>
-        <Button
-          variant='ghost'
-          className='h-8 p-0 md:pl-[2%] bg-sidebar w-full text-left flex justify-start items-center gap-2'>
+        <Button className='h-8 p-0 md:pl-[2%] bg-sidebar w-full text-left flex justify-start items-center gap-2'>
           <Settings className='h-6 w-6' />
           <span className='hidden md:inline'>Settings</span>
         </Button>

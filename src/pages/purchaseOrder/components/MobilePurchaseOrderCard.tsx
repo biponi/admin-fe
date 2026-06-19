@@ -83,20 +83,20 @@ const MobilePurchaseOrderCard: React.FC<Props> = ({
   const hasMoreProducts = remainingProducts.length > 0;
 
   return (
-    <div className='bg-white rounded-2xl border border-gray-100 shadow-sm hover:shadow-md transition-all duration-300 overflow-hidden'>
+    <div className='bg-white rounded-xl border border-slate-100 shadow-sm hover:shadow-md transition-all duration-300 overflow-hidden'>
       {/* Header */}
       <div className='flex items-center justify-between p-4 pb-3'>
         <div className='flex items-center gap-3'>
-          <div className='h-10 w-10 rounded-xl bg-gradient-to-br from-blue-500 to-cyan-600 flex items-center justify-center text-white font-bold shadow-sm'>
+          <div className='h-10 w-10 rounded-xl bg-indigo-600 flex items-center justify-center text-white font-bold shadow-sm shadow-indigo-200'>
             <Hash className='h-5 w-5' />
           </div>
           <div className='flex-1 min-w-0'>
-            <h3 className='font-bold text-gray-900 text-lg'>
+            <h3 className='font-bold text-slate-900 text-lg'>
               #{purchaseNumber}
             </h3>
             <div className='flex items-center gap-1 mt-1'>
-              <Calendar className='h-3 w-3 text-gray-500' />
-              <span className='text-xs text-gray-600'>
+              <Calendar className='h-3 w-3 text-slate-500' />
+              <span className='text-xs text-slate-600'>
                 {formatDate(createdAt)}
               </span>
             </div>
@@ -109,7 +109,7 @@ const MobilePurchaseOrderCard: React.FC<Props> = ({
               <Button
                 variant='ghost'
                 size='sm'
-                className='h-9 w-9 p-0 hover:bg-gray-100 rounded-full'>
+                className='h-9 w-9 p-0 hover:bg-slate-100 rounded-full'>
                 <MoreVertical className='h-4 w-4' />
               </Button>
             </DropdownMenuTrigger>
@@ -150,8 +150,8 @@ const MobilePurchaseOrderCard: React.FC<Props> = ({
       <div className='px-4 pb-3'>
         <div className='mb-3'>
           <div className='flex items-center gap-2 mb-2'>
-            <Package className='h-4 w-4 text-blue-600' />
-            <span className='font-semibold text-sm text-gray-900'>
+            <Package className='h-4 w-4 text-indigo-600' />
+            <span className='font-semibold text-sm text-slate-900'>
               Products
             </span>
             <Badge variant='secondary' className='text-xs font-medium'>
@@ -164,20 +164,20 @@ const MobilePurchaseOrderCard: React.FC<Props> = ({
             {displayProducts.map((product, index) => (
               <div
                 key={`${product.productId}-${index}`}
-                className='flex items-center justify-between p-2.5 bg-gray-50 rounded-lg border border-gray-100'>
+                className='flex items-center justify-between p-2.5 bg-slate-50 rounded-lg border border-slate-100'>
                 <div className='flex items-center gap-2 flex-1 min-w-0'>
                   {product.image || product.thumbnail ? (
                     <img
                       src={product.image || product.thumbnail}
                       alt={product.title}
-                      className='h-10 w-10 rounded-lg object-cover border border-gray-200 flex-shrink-0'
+                      className='h-10 w-10 rounded-lg object-cover border border-slate-200 flex-shrink-0'
                     />
                   ) : (
-                    <div className='h-10 w-10 rounded-lg bg-blue-100 flex items-center justify-center flex-shrink-0'>
-                      <Package className='h-5 w-5 text-blue-600' />
+                    <div className='h-10 w-10 rounded-lg bg-indigo-100 flex items-center justify-center flex-shrink-0'>
+                      <Package className='h-5 w-5 text-indigo-600' />
                     </div>
                   )}
-                  <span className='text-sm font-medium text-gray-900 truncate'>
+                  <span className='text-sm font-medium text-slate-900 truncate'>
                     {product.title}
                   </span>
                 </div>
@@ -195,7 +195,7 @@ const MobilePurchaseOrderCard: React.FC<Props> = ({
                 <DrawerTrigger asChild>
                   <Button
                     variant='outline'
-                    className='w-full h-11 text-sm font-medium border-blue-200 text-blue-700 hover:bg-blue-50 hover:text-blue-800'>
+                    className='w-full h-11 text-sm font-medium border-indigo-200 text-indigo-700 hover:bg-indigo-50 hover:text-indigo-800'>
                     <Eye className='h-4 w-4 mr-2' />
                     View All {products.length} Products
                   </Button>
@@ -229,31 +229,31 @@ const MobilePurchaseOrderCard: React.FC<Props> = ({
                         {products.map((product, index) => (
                           <div
                             key={`${product.productId}-${index}`}
-                            className='flex items-center justify-between p-3 bg-white rounded-xl border border-gray-200 hover:border-blue-300 hover:bg-blue-50/30 transition-all'>
+                            className='flex items-center justify-between p-3 bg-white rounded-xl border border-slate-200 hover:border-indigo-300 hover:bg-indigo-50/30 transition-all'>
                             <div className='flex items-center gap-3 flex-1 min-w-0'>
                               {product.image || product.thumbnail ? (
                                 <img
                                   src={product.image || product.thumbnail}
                                   alt={product.title}
-                                  className='h-12 w-12 rounded-lg object-cover border border-gray-200 flex-shrink-0'
+                                  className='h-12 w-12 rounded-lg object-cover border border-slate-200 flex-shrink-0'
                                 />
                               ) : (
-                                <div className='h-12 w-12 rounded-lg bg-gradient-to-br from-blue-100 to-cyan-100 flex items-center justify-center flex-shrink-0'>
-                                  <Package className='h-6 w-6 text-blue-600' />
+                                <div className='h-12 w-12 rounded-lg bg-indigo-100 flex items-center justify-center flex-shrink-0'>
+                                  <Package className='h-6 w-6 text-indigo-600' />
                                 </div>
                               )}
                               <div className='flex-1 min-w-0'>
-                                <p className='text-sm font-semibold text-gray-900 truncate'>
+                                <p className='text-sm font-semibold text-slate-900 truncate'>
                                   {product.title}
                                 </p>
-                                <p className='text-xs text-gray-500'>
+                                <p className='text-xs text-slate-500'>
                                   Product ID: {product.productId}
                                 </p>
                               </div>
                             </div>
                             <div className='flex items-center gap-2 flex-shrink-0'>
                               <div className='text-right'>
-                                <p className='text-xs text-gray-500'>
+                                <p className='text-xs text-slate-500'>
                                   Quantity
                                 </p>
                                 <Badge
@@ -268,18 +268,18 @@ const MobilePurchaseOrderCard: React.FC<Props> = ({
                       </div>
 
                       {/* Summary Footer in Drawer */}
-                      <div className='mt-4 p-4 bg-gradient-to-br from-green-50 to-emerald-50 rounded-xl border border-green-200'>
+                      <div className='mt-4 p-4 bg-indigo-50 rounded-xl border border-indigo-200'>
                         <div className='flex items-center justify-between'>
                           <div>
-                            <p className='text-xs font-medium text-green-700'>
+                            <p className='text-xs font-medium text-indigo-700'>
                               Total Amount
                             </p>
-                            <p className='text-2xl font-bold text-green-800'>
+                            <p className='text-2xl font-bold text-indigo-900'>
                               ৳{formatAmount(totalAmount)}
                             </p>
                           </div>
-                          <div className='h-12 w-12 rounded-full bg-green-100 flex items-center justify-center'>
-                            <DollarSign className='h-6 w-6 text-green-600' />
+                          <div className='h-12 w-12 rounded-full bg-indigo-100 flex items-center justify-center'>
+                            <DollarSign className='h-6 w-6 text-indigo-600' />
                           </div>
                         </div>
                       </div>
@@ -294,26 +294,26 @@ const MobilePurchaseOrderCard: React.FC<Props> = ({
         {/* Info Grid */}
         <div className='grid grid-cols-2 gap-3'>
           {/* Total Amount */}
-          <div className='flex items-center gap-2 p-3 bg-gradient-to-br from-green-50 to-emerald-50 rounded-xl border border-green-100'>
-            <div className='h-8 w-8 rounded-lg bg-green-100 flex items-center justify-center'>
-              <DollarSign className='h-4 w-4 text-green-600' />
+          <div className='flex items-center gap-2 p-3 bg-indigo-50 rounded-xl border border-indigo-100'>
+            <div className='h-8 w-8 rounded-lg bg-indigo-100 flex items-center justify-center'>
+              <DollarSign className='h-4 w-4 text-indigo-600' />
             </div>
             <div className='flex-1'>
-              <p className='text-xs font-medium text-green-700'>Total</p>
-              <p className='font-bold text-sm text-green-800'>
+              <p className='text-xs font-medium text-indigo-700'>Total</p>
+              <p className='font-bold text-sm text-indigo-900'>
                 ৳{formatAmount(totalAmount)}
               </p>
             </div>
           </div>
 
           {/* Product Count */}
-          <div className='flex items-center gap-2 p-3 bg-gradient-to-br from-blue-50 to-cyan-50 rounded-xl border border-blue-100'>
-            <div className='h-8 w-8 rounded-lg bg-blue-100 flex items-center justify-center'>
-              <Package className='h-4 w-4 text-blue-600' />
+          <div className='flex items-center gap-2 p-3 bg-slate-50 rounded-xl border border-slate-100'>
+            <div className='h-8 w-8 rounded-lg bg-slate-100 flex items-center justify-center'>
+              <Package className='h-4 w-4 text-slate-600' />
             </div>
             <div className='flex-1'>
-              <p className='text-xs font-medium text-blue-700'>Items</p>
-              <p className='font-bold text-sm text-blue-800'>
+              <p className='text-xs font-medium text-slate-700'>Items</p>
+              <p className='font-bold text-sm text-slate-900'>
                 {products.length}
               </p>
             </div>
@@ -323,8 +323,8 @@ const MobilePurchaseOrderCard: React.FC<Props> = ({
 
       {/* Footer */}
       <div className='px-4 pb-4'>
-        <div className='flex items-center justify-between pt-2 border-t border-gray-100'>
-          <div className='flex items-center gap-1 text-xs text-gray-500'>
+        <div className='flex items-center justify-between pt-2 border-t border-slate-100'>
+          <div className='flex items-center gap-1 text-xs text-slate-500'>
             <Calendar className='h-3 w-3' />
             <span>Created {dayjs(createdAt).fromNow()}</span>
           </div>

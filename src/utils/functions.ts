@@ -223,7 +223,12 @@ export const validateImageGroup = (group: any): boolean => {
   const hasAttribute = !!group.attribute && group.attribute.trim() !== '';
   const hasValue = !!group.value && group.value.trim() !== '';
 
-  return hasAttribute && hasValue;
+  // Check if value is a placeholder (e.g., "New color", "New material")
+  const isPlaceholderValue = group.value?.startsWith('New ') &&
+                            group.value === `New ${group.attribute}`;
+
+  // Valid only if both fields exist, are non-empty, and value is not a placeholder
+  return hasAttribute && hasValue && !isPlaceholderValue;
 };
 
 /**
