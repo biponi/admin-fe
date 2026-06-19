@@ -37,7 +37,8 @@ interface OTPVerificationDialogProps {
   title?: string;
   readonly?: boolean;
   description?: string;
-  onVerificationSuccess: () => void;
+  onVerificationSuccess?: () => void;
+  onVerificationSuccessWithOTP?: (otp: string) => void;
   onVerificationFailure?: (error: string) => void;
   autoSendOnMount?: boolean;
 }
@@ -51,8 +52,9 @@ export const OTPVerificationDialog: React.FC<OTPVerificationDialogProps> = ({
   purpose = "verification",
   title = "Phone Number Verification",
   description = "Please enter the 6-digit code sent to your phone number",
-  onVerificationSuccess,
-  onVerificationFailure,
+  onVerificationSuccess = () => {},
+  onVerificationSuccessWithOTP = () => {},
+  onVerificationFailure = () => {},
   autoSendOnMount = false,
 }) => {
   const isMobile = useIsMobile();
@@ -182,7 +184,8 @@ export const OTPVerificationDialog: React.FC<OTPVerificationDialogProps> = ({
 
     if (result.success) {
       setIsVerified(true);
-      onVerificationSuccess();
+      onVerificationSuccess?.();
+      onVerificationSuccessWithOTP?.(otpValue);
       handleClose();
     } else {
       setError(result.error || "Verification failed");

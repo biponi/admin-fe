@@ -99,60 +99,60 @@ export const UserPerformancePanel: React.FC<UserPerformancePanelProps> = ({
         <CardContent>
           <div className='grid gap-4 md:grid-cols-3'>
             {/* Total Activities */}
-            <div className='relative p-6 bg-gradient-to-br from-blue-50 to-blue-100 rounded-xl border-2 border-blue-200 overflow-hidden group hover:shadow-lg transition-all'>
-              <div className='absolute top-0 right-0 w-24 h-24 bg-blue-200/30 rounded-full -mr-12 -mt-12 group-hover:scale-110 transition-transform' />
+            <div className='bg-white border border-slate-100 rounded-xl shadow-[0_1px_3px_rgba(0,0,0,0.04)] p-6 relative overflow-hidden hover:shadow-md transition-all'>
+              <div className='absolute left-0 top-0 bottom-0 w-1 bg-indigo-500' />
               <div className='relative'>
-                <div className='flex items-center justify-between mb-2'>
-                  <p className='text-sm font-medium text-blue-700'>
+                <div className='flex items-center justify-between mb-3'>
+                  <p className='text-[12px] font-medium text-slate-700'>
                     Total Activities
                   </p>
-                  <Activity className='w-5 h-5 text-blue-600' />
+                  <Activity className='w-5 h-5 text-indigo-600' />
                 </div>
-                <p className='text-3xl font-bold text-blue-900'>
+                <p className='text-[22px] font-bold text-indigo-600 leading-none'>
                   {(
                     userDetail.summary.totalOrderActions +
                     userDetail.summary.totalProductAdjustments
                   ).toLocaleString()}
                 </p>
-                <p className='text-xs text-blue-600 mt-1'>
+                <p className='text-[11px] text-slate-500 mt-2'>
                   All time operations
                 </p>
               </div>
             </div>
 
             {/* Order Actions */}
-            <div className='relative p-6 bg-gradient-to-br from-purple-50 to-purple-100 rounded-xl border-2 border-purple-200 overflow-hidden group hover:shadow-lg transition-all'>
-              <div className='absolute top-0 right-0 w-24 h-24 bg-purple-200/30 rounded-full -mr-12 -mt-12 group-hover:scale-110 transition-transform' />
+            <div className='bg-white border border-slate-100 rounded-xl shadow-[0_1px_3px_rgba(0,0,0,0.04)] p-6 relative overflow-hidden hover:shadow-md transition-all'>
+              <div className='absolute left-0 top-0 bottom-0 w-1 bg-violet-500' />
               <div className='relative'>
-                <div className='flex items-center justify-between mb-2'>
-                  <p className='text-sm font-medium text-purple-700'>
+                <div className='flex items-center justify-between mb-3'>
+                  <p className='text-[12px] font-medium text-slate-700'>
                     Order Actions
                   </p>
-                  <ShoppingCart className='w-5 h-5 text-purple-600' />
+                  <ShoppingCart className='w-5 h-5 text-violet-600' />
                 </div>
-                <p className='text-3xl font-bold text-purple-900'>
+                <p className='text-[22px] font-bold text-violet-600 leading-none'>
                   {userDetail.summary.totalOrderActions.toLocaleString()}
                 </p>
-                <p className='text-xs text-purple-600 mt-1'>
+                <p className='text-[11px] text-slate-500 mt-2'>
                   {userDetail.orderOperations.breakdown.length} operation types
                 </p>
               </div>
             </div>
 
             {/* Product Adjustments */}
-            <div className='relative p-6 bg-gradient-to-br from-green-50 to-green-100 rounded-xl border-2 border-green-200 overflow-hidden group hover:shadow-lg transition-all'>
-              <div className='absolute top-0 right-0 w-24 h-24 bg-green-200/30 rounded-full -mr-12 -mt-12 group-hover:scale-110 transition-transform' />
+            <div className='bg-white border border-slate-100 rounded-xl shadow-[0_1px_3px_rgba(0,0,0,0.04)] p-6 relative overflow-hidden hover:shadow-md transition-all'>
+              <div className='absolute left-0 top-0 bottom-0 w-1 bg-emerald-500' />
               <div className='relative'>
-                <div className='flex items-center justify-between mb-2'>
-                  <p className='text-sm font-medium text-green-700'>
+                <div className='flex items-center justify-between mb-3'>
+                  <p className='text-[12px] font-medium text-slate-700'>
                     Stock Adjustments
                   </p>
-                  <Package className='w-5 h-5 text-green-600' />
+                  <Package className='w-5 h-5 text-emerald-600' />
                 </div>
-                <p className='text-3xl font-bold text-green-900'>
+                <p className='text-[22px] font-bold text-emerald-600 leading-none'>
                   {userDetail.summary.totalProductAdjustments.toLocaleString()}
                 </p>
-                <p className='text-xs text-green-600 mt-1'>
+                <p className='text-[11px] text-slate-500 mt-2'>
                   {userDetail.productAdjustments.typeBreakdown.length}{" "}
                   adjustment types
                 </p>
@@ -163,10 +163,10 @@ export const UserPerformancePanel: React.FC<UserPerformancePanelProps> = ({
       </Card>
 
       {/* Operations Breakdown */}
-      <Card>
+      <Card className='border-slate-100 shadow-[0_1px_3px_rgba(0,0,0,0.04)]'>
         <CardHeader>
-          <CardTitle className='flex items-center gap-2'>
-            <ShoppingCart className='w-5 h-5 text-purple-600' />
+          <CardTitle className='flex items-center gap-2 text-slate-900'>
+            <ShoppingCart className='w-5 h-5 text-violet-600' />
             Order Operations Breakdown
           </CardTitle>
         </CardHeader>
@@ -175,16 +175,16 @@ export const UserPerformancePanel: React.FC<UserPerformancePanelProps> = ({
             {userDetail.orderOperations.breakdown.map((op) => (
               <div
                 key={op.operation}
-                className='p-4 bg-gradient-to-br from-gray-50 to-gray-100 rounded-lg border border-gray-200 hover:border-purple-300 hover:shadow-md transition-all'>
+                className='bg-white border border-slate-100 rounded-lg hover:border-violet-300 hover:shadow-md transition-all p-4'>
                 <div className='flex items-center justify-between mb-2'>
                   <Badge variant='secondary' className='text-xs capitalize'>
                     {op.operation.replace(/_/g, " ")}
                   </Badge>
-                  <span className='text-2xl font-bold text-purple-600'>
+                  <span className='text-[15px] font-bold text-violet-600'>
                     {op.count}
                   </span>
                 </div>
-                <div className='flex items-center text-xs text-gray-500 mt-2'>
+                <div className='flex items-center text-[11px] text-slate-500 mt-2'>
                   <Clock className='w-3 h-3 mr-1' />
                   {dayjs(op.lastPerformed).fromNow()}
                 </div>
@@ -195,10 +195,10 @@ export const UserPerformancePanel: React.FC<UserPerformancePanelProps> = ({
       </Card>
 
       {/* Product Adjustments Breakdown */}
-      <Card>
+      <Card className='border-slate-100 shadow-[0_1px_3px_rgba(0,0,0,0.04)]'>
         <CardHeader>
-          <CardTitle className='flex items-center gap-2'>
-            <Package className='w-5 h-5 text-green-600' />
+          <CardTitle className='flex items-center gap-2 text-slate-900'>
+            <Package className='w-5 h-5 text-emerald-600' />
             Product Adjustments Breakdown
           </CardTitle>
         </CardHeader>
@@ -207,7 +207,7 @@ export const UserPerformancePanel: React.FC<UserPerformancePanelProps> = ({
             {userDetail.productAdjustments.typeBreakdown.map((type) => (
               <div
                 key={type.type}
-                className='p-5 bg-gradient-to-br from-white to-gray-50 rounded-lg border-2 border-gray-200 hover:border-green-300 hover:shadow-md transition-all'>
+                className='bg-white border border-slate-100 rounded-lg hover:border-emerald-300 hover:shadow-md transition-all p-5'>
                 <div className='flex items-center justify-between mb-3'>
                   <Badge
                     variant={
@@ -220,17 +220,17 @@ export const UserPerformancePanel: React.FC<UserPerformancePanelProps> = ({
                     className='text-sm capitalize'>
                     {type.type}
                   </Badge>
-                  <span className='text-2xl font-bold'>{type.count}</span>
+                  <span className='text-[15px] font-bold'>{type.count}</span>
                 </div>
                 <div className='text-sm'>
-                  <span className='text-gray-600'>Quantity Change: </span>
+                  <span className='text-slate-600'>Quantity Change: </span>
                   <span
-                    className={`font-bold ${
+                    className={`font-semibold ${
                       type.totalQuantityChange > 0
-                        ? "text-green-600"
+                        ? "text-emerald-600"
                         : type.totalQuantityChange < 0
-                        ? "text-red-600"
-                        : "text-gray-600"
+                        ? "text-rose-600"
+                        : "text-slate-600"
                     }`}>
                     {type.totalQuantityChange > 0 ? "+" : ""}
                     {type.totalQuantityChange.toLocaleString()}
@@ -244,10 +244,10 @@ export const UserPerformancePanel: React.FC<UserPerformancePanelProps> = ({
 
       {/* Activity Trend Chart */}
       {userDetail.activityTrend.length > 0 && (
-        <Card>
+        <Card className='border-slate-100 shadow-[0_1px_3px_rgba(0,0,0,0.04)]'>
           <CardHeader>
-            <CardTitle className='flex items-center gap-2'>
-              <BarChart3 className='w-5 h-5 text-blue-600' />
+            <CardTitle className='flex items-center gap-2 text-slate-900'>
+              <BarChart3 className='w-5 h-5 text-indigo-600' />
               Activity Trend
             </CardTitle>
             <CardDescription>Last 14 days performance</CardDescription>
@@ -271,13 +271,13 @@ export const UserPerformancePanel: React.FC<UserPerformancePanelProps> = ({
                   <div key={trend.date} className='space-y-2'>
                     <div className='flex items-center justify-between text-sm'>
                       <div className='flex items-center gap-2'>
-                        <Calendar className='w-4 h-4 text-gray-400' />
-                        <span className='font-medium text-gray-700'>
+                        <Calendar className='w-4 h-4 text-slate-400' />
+                        <span className='font-medium text-slate-700'>
                           {dayjs(trend.date).format("ddd, MMM DD")}
                         </span>
                       </div>
                       <div className='flex items-center gap-4'>
-                        <span className='text-xs text-gray-500'>
+                        <span className='text-xs text-slate-500'>
                           {totalActivity}{" "}
                           {totalActivity === 1 ? "activity" : "activities"}
                         </span>
@@ -289,24 +289,24 @@ export const UserPerformancePanel: React.FC<UserPerformancePanelProps> = ({
                       </div>
                     </div>
                     <div className='flex items-center gap-2'>
-                      <div className='flex-1 h-8 bg-gray-100 rounded-lg overflow-hidden'>
+                      <div className='flex-1 h-8 bg-slate-100 rounded-lg overflow-hidden'>
                         <div className='flex h-full'>
                           <div
-                            className='bg-gradient-to-r from-purple-400 to-purple-600 flex items-center justify-center transition-all'
+                            className='bg-violet-600 flex items-center justify-center transition-all'
                             style={{ width: `${orderPercent}%` }}
                             title={`${trend.orderActions} order actions`}>
                             {trend.orderActions > 0 && (
-                              <span className='text-xs font-bold text-white px-2'>
+                              <span className='text-xs font-semibold text-white px-2'>
                                 {trend.orderActions}
                               </span>
                             )}
                           </div>
                           <div
-                            className='bg-gradient-to-r from-green-400 to-green-600 flex items-center justify-center transition-all'
+                            className='bg-emerald-600 flex items-center justify-center transition-all'
                             style={{ width: `${adjustmentPercent}%` }}
                             title={`${trend.productAdjustments} adjustments`}>
                             {trend.productAdjustments > 0 && (
-                              <span className='text-xs font-bold text-white px-2'>
+                              <span className='text-xs font-semibold text-white px-2'>
                                 {trend.productAdjustments}
                               </span>
                             )}
@@ -319,14 +319,14 @@ export const UserPerformancePanel: React.FC<UserPerformancePanelProps> = ({
               })}
             </div>
 
-            <div className='flex items-center justify-center gap-6 pt-4 mt-4 border-t'>
+            <div className='flex items-center justify-center gap-6 pt-4 mt-4 border-t border-slate-200'>
               <div className='flex items-center gap-2'>
-                <div className='w-4 h-4 bg-gradient-to-r from-purple-400 to-purple-600 rounded' />
-                <span className='text-sm text-gray-600'>Order Actions</span>
+                <div className='w-4 h-4 bg-violet-600 rounded' />
+                <span className='text-sm text-slate-600'>Order Actions</span>
               </div>
               <div className='flex items-center gap-2'>
-                <div className='w-4 h-4 bg-gradient-to-r from-green-400 to-green-600 rounded' />
-                <span className='text-sm text-gray-600'>Stock Adjustments</span>
+                <div className='w-4 h-4 bg-emerald-600 rounded' />
+                <span className='text-sm text-slate-600'>Stock Adjustments</span>
               </div>
             </div>
           </CardContent>

@@ -95,21 +95,16 @@ const ProfilePage = () => {
 
   if (isLoadingProfile) {
     return (
-      <div className='min-h-screen bg-gradient-to-br from-gray-50 via-blue-50 to-purple-50 py-8 px-4'>
+      <div className='min-h-screen bg-slate-50/60 py-8 px-4'>
         <div className='max-w-7xl mx-auto'>
-          <Card className='h-64 animate-pulse bg-gray-200' />
+          <Card className='h-64 animate-pulse bg-slate-100' />
         </div>
       </div>
     );
   }
 
   return (
-    <div className='relative min-h-screen md:rounded-2xl bg-gradient-to-br from-orange-50 via-rose-50 to-cyan-50 py-4 sm:py-8 px-4 w-full'>
-      <div className='absolute md:rounded-t-2xl top-0 left-0 w-full h-40 md:h-[30%] bg-gradient-to-br from-cyan-400 via-orange-300 to-rose-400' />
-      {/* Decorative background circles */}
-      <div className='absolute top-10 left-10 w-32 h-32 sm:w-48 sm:h-48 bg-cyan-300 rounded-full mix-blend-overlay opacity-50' />
-      <div className='absolute top-20 right-20 w-48 h-48 sm:w-64 sm:h-64 bg-rose-300 rounded-full mix-blend-overlay opacity-40' />
-      <div className='absolute bottom-10 left-1/3 w-40 h-40 sm:w-56 sm:h-56 bg-cyan-200 rounded-full mix-blend-overlay opacity-30' />
+    <div className='min-h-screen bg-slate-50/60 py-4 sm:py-8 px-4 w-full'>
       <div className='max-w-7xl mx-auto space-y-6'>
         {/* Profile Header */}
         <Card className='shadow-none bg-transparent border-0 mt-6 md:mt-0'>
@@ -126,22 +121,22 @@ const ProfilePage = () => {
 
         {/* Main Content - Tabs */}
         <Tabs defaultValue='information' className='w-full'>
-          <TabsList className='h-11 grid w-full grid-cols-3 lg:w-auto lg:inline-grid gap-2 bg-white px-2 pt-2 pb-4 rounded-lg shadow-md'>
+          <TabsList className='h-11 grid w-full grid-cols-3 lg:w-auto lg:inline-grid gap-2 bg-slate-100/80 p-1 rounded-xl'>
             <TabsTrigger
               value='information'
-              className='flex items-center gap-2 data-[state=active]:bg-gradient-to-r data-[state=active]:from-blue-500 data-[state=active]:to-purple-600 data-[state=active]:text-white'>
+              className='flex items-center gap-2 data-[state=active]:bg-white data-[state=active]:shadow-sm data-[state=active]:text-indigo-600 transition-all duration-150 rounded-lg'>
               <User className='w-4 h-4' />
               <span className='hidden sm:inline'>Information</span>
             </TabsTrigger>
             <TabsTrigger
               value='performance'
-              className='flex items-center gap-2 data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-500 data-[state=active]:to-cyan-600 data-[state=active]:text-white'>
+              className='flex items-center gap-2 data-[state=active]:bg-white data-[state=active]:shadow-sm data-[state=active]:text-indigo-600 transition-all duration-150 rounded-lg'>
               <Activity className='w-4 h-4' />
               <span className='hidden sm:inline'>Performance</span>
             </TabsTrigger>
             <TabsTrigger
               value='activity'
-              className='flex items-center gap-2 data-[state=active]:bg-gradient-to-r data-[state=active]:from-green-500 data-[state=active]:to-teal-600 data-[state=active]:text-white'>
+              className='flex items-center gap-2 data-[state=active]:bg-white data-[state=active]:shadow-sm data-[state=active]:text-indigo-600 transition-all duration-150 rounded-lg'>
               <History className='w-4 h-4' />
               <span className='hidden sm:inline'>Activity</span>
             </TabsTrigger>
@@ -161,14 +156,14 @@ const ProfilePage = () => {
               {/* Quick Stats Sidebar */}
               <div className='space-y-6'>
                 {/* Date Range Selector */}
-                <Card className='p-4 shadow-md bg-gradient-to-br from-white to-blue-50'>
-                  <h3 className='font-semibold text-gray-900 mb-3 flex items-center gap-2'>
-                    <Calendar className='w-4 h-4 text-blue-600' />
+                <Card className='p-4 border-slate-100 shadow-[0_1px_3px_rgba(0,0,0,0.04)]'>
+                  <h3 className='font-semibold text-slate-900 mb-3 flex items-center gap-2'>
+                    <Calendar className='w-4 h-4 text-indigo-600' />
                     Date Range
                   </h3>
                   <div className='space-y-2'>
                     <div>
-                      <label className='text-xs text-gray-600 block mb-1'>
+                      <label className='text-xs text-slate-600 block mb-1'>
                         From
                       </label>
                       <input
@@ -180,11 +175,11 @@ const ProfilePage = () => {
                             startDate: new Date(e.target.value).toISOString(),
                           })
                         }
-                        className='w-full px-3 py-2 border rounded-md text-sm'
+                        className='w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:border-indigo-300 focus:ring-indigo-100'
                       />
                     </div>
                     <div>
-                      <label className='text-xs text-gray-600 block mb-1'>
+                      <label className='text-xs text-slate-600 block mb-1'>
                         To
                       </label>
                       <input
@@ -198,30 +193,30 @@ const ProfilePage = () => {
                               .toISOString(),
                           })
                         }
-                        className='w-full px-3 py-2 border rounded-md text-sm'
+                        className='w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:border-indigo-300 focus:ring-indigo-100'
                       />
                     </div>
                   </div>
                 </Card>
 
                 {/* Account Info */}
-                <Card className='p-4 shadow-md bg-gradient-to-br from-white to-purple-50'>
-                  <h3 className='font-semibold text-gray-900 mb-3'>
+                <Card className='p-4 border-slate-100 shadow-[0_1px_3px_rgba(0,0,0,0.04)]'>
+                  <h3 className='font-semibold text-slate-900 mb-3'>
                     Account Info
                   </h3>
                   <div className='space-y-2 text-sm'>
                     <div className='flex justify-between'>
-                      <span className='text-gray-600'>Status:</span>
-                      <span className='font-medium text-green-600'>Active</span>
+                      <span className='text-slate-600'>Status:</span>
+                      <span className='font-medium text-emerald-600'>Active</span>
                     </div>
                     <div className='flex justify-between'>
-                      <span className='text-gray-600'>Role:</span>
-                      <span className='font-medium'>{profile.role}</span>
+                      <span className='text-slate-600'>Role:</span>
+                      <span className='font-medium text-slate-900'>{profile.role}</span>
                     </div>
                     {profile.createdAt && (
                       <div className='flex justify-between'>
-                        <span className='text-gray-600'>Joined:</span>
-                        <span className='font-medium'>
+                        <span className='text-slate-600'>Joined:</span>
+                        <span className='font-medium text-slate-900'>
                           {dayjs(profile.createdAt).format("MMM DD, YYYY")}
                         </span>
                       </div>
@@ -231,14 +226,14 @@ const ProfilePage = () => {
 
                 {/* Commission Button */}
                 {hasRequiredPermission("commission", "personal_access") && (
-                  <Card className='p-4 shadow-md bg-gradient-to-br from-white to-green-50'>
-                    <h3 className='font-semibold text-gray-900 mb-3 flex items-center gap-2'>
-                      <DollarSign className='w-4 h-4 text-green-600' />
+                  <Card className='p-4 border-slate-100 shadow-[0_1px_3px_rgba(0,0,0,0.04)]'>
+                    <h3 className='font-semibold text-slate-900 mb-3 flex items-center gap-2'>
+                      <DollarSign className='w-4 h-4 text-emerald-600' />
                       Commissions
                     </h3>
                     <Button
                       onClick={() => navigate(`/my-commissions`)}
-                      className='w-full bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white'>
+                      className='w-full bg-indigo-600 hover:bg-indigo-700 text-white shadow-sm shadow-indigo-200 transition-all duration-150'>
                       View My Commissions
                     </Button>
                   </Card>
@@ -282,14 +277,14 @@ const ProfilePage = () => {
 
               {/* Date Range Selector - Repeated for convenience */}
               <div>
-                <Card className='p-4 shadow-md bg-gradient-to-br from-white to-green-50 sticky top-4'>
-                  <h3 className='font-semibold text-gray-900 mb-3 flex items-center gap-2'>
-                    <Calendar className='w-4 h-4 text-green-600' />
+                <Card className='p-4 border-slate-100 shadow-[0_1px_3px_rgba(0,0,0,0.04)] sticky top-4'>
+                  <h3 className='font-semibold text-slate-900 mb-3 flex items-center gap-2'>
+                    <Calendar className='w-4 h-4 text-emerald-600' />
                     Filter Activities
                   </h3>
                   <div className='space-y-2'>
                     <div>
-                      <label className='text-xs text-gray-600 block mb-1'>
+                      <label className='text-xs text-slate-600 block mb-1'>
                         From
                       </label>
                       <input
@@ -301,11 +296,11 @@ const ProfilePage = () => {
                             startDate: new Date(e.target.value).toISOString(),
                           })
                         }
-                        className='w-full px-3 py-2 border rounded-md text-sm'
+                        className='w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:border-indigo-300 focus:ring-indigo-100'
                       />
                     </div>
                     <div>
-                      <label className='text-xs text-gray-600 block mb-1'>
+                      <label className='text-xs text-slate-600 block mb-1'>
                         To
                       </label>
                       <input
@@ -319,7 +314,7 @@ const ProfilePage = () => {
                               .toISOString(),
                           })
                         }
-                        className='w-full px-3 py-2 border rounded-md text-sm'
+                        className='w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:border-indigo-300 focus:ring-indigo-100'
                       />
                     </div>
                   </div>

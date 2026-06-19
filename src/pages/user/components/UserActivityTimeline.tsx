@@ -126,16 +126,16 @@ export const UserActivityTimeline: React.FC<UserActivityTimelineProps> = ({
           <ScrollArea className="h-[600px] pr-4">
             <div className="relative space-y-6">
               {/* Timeline line */}
-              <div className="absolute left-5 top-0 bottom-0 w-0.5 bg-gradient-to-b from-blue-200 via-purple-200 to-transparent" />
+              <div className="absolute left-5 top-0 bottom-0 w-0.5 bg-slate-200" />
 
               {allActivities.slice(0, 20).map((activity, index) => (
                 <div key={activity.id} className="relative pl-12">
                   {/* Timeline dot */}
                   <div
-                    className={`absolute left-3 w-4 h-4 rounded-full border-4 border-white shadow-md ${
+                    className={`absolute left-3 w-4 h-4 rounded-full border-4 border-white shadow-md transition-all ${
                       activity.type === "order"
-                        ? "bg-purple-500"
-                        : "bg-green-500"
+                        ? "bg-indigo-500"
+                        : "bg-emerald-500"
                     }`}
                   />
 
@@ -143,19 +143,19 @@ export const UserActivityTimeline: React.FC<UserActivityTimelineProps> = ({
                   <div
                     className={`p-4 rounded-lg border-2 transition-all hover:shadow-md ${
                       activity.type === "order"
-                        ? "bg-purple-50 border-purple-200 hover:border-purple-300"
-                        : "bg-green-50 border-green-200 hover:border-green-300"
+                        ? "bg-slate-50 border-slate-200 hover:border-indigo-300"
+                        : "bg-slate-50 border-slate-200 hover:border-emerald-300"
                     }`}>
                     {activity.type === "order" ? (
                       // Order Action
                       <div className="space-y-2">
                         <div className="flex items-start justify-between gap-2">
                           <div className="flex items-center gap-2">
-                            <div className="p-2 bg-purple-100 rounded-lg">
-                              <ShoppingCart className="w-4 h-4 text-purple-600" />
+                            <div className="p-2 bg-indigo-100 rounded-lg">
+                              <ShoppingCart className="w-4 h-4 text-indigo-600" />
                             </div>
                             <div>
-                              <p className="font-semibold text-purple-900">
+                              <p className="font-semibold text-slate-900">
                                 Order #{activity.data.orderNumber}
                               </p>
                               <Badge
@@ -166,17 +166,17 @@ export const UserActivityTimeline: React.FC<UserActivityTimelineProps> = ({
                             </div>
                           </div>
                         </div>
-                        <p className="text-sm text-gray-700 pl-12">
+                        <p className="text-sm text-slate-700 pl-12">
                           {activity.data.operationDescription}
                         </p>
-                        <div className="flex items-center gap-2 text-xs text-gray-500 pl-12">
+                        <div className="flex items-center gap-2 text-xs text-slate-500 pl-12">
                           <Clock className="w-3 h-3" />
                           <span>
                             {dayjs(activity.timestamp).format(
                               "MMM DD, YYYY · HH:mm"
                             )}
                           </span>
-                          <span className="text-gray-400">•</span>
+                          <span className="text-slate-400">•</span>
                           <span>{dayjs(activity.timestamp).fromNow()}</span>
                         </div>
                       </div>
@@ -185,14 +185,14 @@ export const UserActivityTimeline: React.FC<UserActivityTimelineProps> = ({
                       <div className="space-y-2">
                         <div className="flex items-start justify-between gap-2">
                           <div className="flex items-center gap-2">
-                            <div className="p-2 bg-green-100 rounded-lg">
-                              <Package className="w-4 h-4 text-green-600" />
+                            <div className="p-2 bg-emerald-100 rounded-lg">
+                              <Package className="w-4 h-4 text-emerald-600" />
                             </div>
                             <div>
-                              <p className="font-semibold text-green-900">
+                              <p className="font-semibold text-slate-900">
                                 {activity.data.productName}
                               </p>
-                              <p className="text-xs text-gray-500 mt-0.5">
+                              <p className="text-xs text-slate-500 mt-0.5">
                                 SKU: {activity.data.productSku}
                               </p>
                             </div>
@@ -209,26 +209,26 @@ export const UserActivityTimeline: React.FC<UserActivityTimelineProps> = ({
                           </Badge>
                         </div>
                         <div className="pl-12 space-y-1">
-                          <div className="flex items-center gap-2 text-sm text-gray-700">
+                          <div className="flex items-center gap-2 text-sm text-slate-700">
                             <span className="font-medium">Quantity:</span>
                             <span>
                               {activity.data.oldQuantity} →{" "}
-                              <span className="font-semibold text-green-700">
+                              <span className="font-semibold text-emerald-700">
                                 {activity.data.newQuantity}
                               </span>
                             </span>
                           </div>
-                          <p className="text-sm text-gray-600 italic">
+                          <p className="text-sm text-slate-600 italic">
                             "{activity.data.reason}"
                           </p>
-                          <div className="flex items-center gap-2 text-xs text-gray-500">
+                          <div className="flex items-center gap-2 text-xs text-slate-500">
                             <Clock className="w-3 h-3" />
                             <span>
                               {dayjs(activity.timestamp).format(
                                 "MMM DD, YYYY · HH:mm"
                               )}
                             </span>
-                            <span className="text-gray-400">•</span>
+                            <span className="text-slate-400">•</span>
                             <span>{dayjs(activity.timestamp).fromNow()}</span>
                           </div>
                         </div>

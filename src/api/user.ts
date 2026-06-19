@@ -120,8 +120,9 @@ export const updateUserInfo = async (
 };
 
 export const changeUserPassword = async (passwordData: {
-  oldPassword: string;
+  otp: string;
   newPassword: string;
+  oldPassword?: string;
 }): Promise<ApiResponse<any>> => {
   try {
     const response = await axios.put<any>(

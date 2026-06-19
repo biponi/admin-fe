@@ -1,20 +1,5 @@
 import React, { useState } from "react";
 import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "../../../components/ui/card";
-import { Input } from "../../../components/ui/input";
-import { Button } from "../../../components/ui/button";
-import {
-  Avatar,
-  AvatarImage,
-  AvatarFallback,
-} from "../../../components/ui/avatar";
-import { Badge } from "../../../components/ui/badge";
-import {
   Pencil,
   Save,
   X,
@@ -25,6 +10,9 @@ import {
   Key,
   Upload,
   Loader2,
+  CheckCircle2,
+  ChevronDown,
+  Camera,
 } from "lucide-react";
 import { toast } from "sonner";
 import { updateUserInfo, changeUserPassword } from "../../../api/user";
@@ -72,24 +60,21 @@ export const UserInformationPanel: React.FC<UserInformationPanelProps> = ({
   const handleAvatarUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
       const file = e.target.files[0];
-      //@ts-ignore
+      // @ts-ignore
       setFormData((prev) => ({ ...prev, avatar: file }));
       const reader = new FileReader();
-      reader.onloadend = () => {
-        setAvatarPreview(reader.result as string);
-      };
+      reader.onloadend = () => setAvatarPreview(reader.result as string);
       reader.readAsDataURL(file);
     }
   };
 
-  const performPasswordChange = async () => {
+  const performPasswordChange = async (otp: string) => {
     try {
       setIsLoading(true);
       const response = await changeUserPassword({
-        oldPassword: "",
+        otp,
         newPassword: formData.newPassword,
       });
-
       if (response.success) {
         toast.success("Password updated successfully");
         setEditMode((prev) => ({ ...prev, password: false }));
@@ -101,7 +86,7 @@ export const UserInformationPanel: React.FC<UserInformationPanelProps> = ({
       } else {
         toast.error(response.error || "Failed to update password");
       }
-    } catch (error) {
+    } catch {
       toast.error("An unexpected error occurred");
     } finally {
       setIsLoading(false);
@@ -118,24 +103,20 @@ export const UserInformationPanel: React.FC<UserInformationPanelProps> = ({
           toast.error("Passwords don't match");
           return;
         }
-
         if (formData.newPassword.length < 8) {
-          toast.error("Password must be at least 8 characters long");
+          toast.error("Password must be at least 8 characters");
           return;
         }
-
         setShowOTPDialog(true);
         return;
       } else {
-        const isAvatarFileUpload =
-          //@ts-ignore
-          field === "avatar" && formData.avatar instanceof File;
-
-        if (isAvatarFileUpload) {
-          const formDataObj = new FormData();
-          formDataObj.append("name", formData.name);
-          formDataObj.append("avatar", formData.avatar);
-          response = await updateUserInfo(formDataObj);
+        // @ts-ignore
+        const isFile = field === "avatar" && formData.avatar instanceof File;
+        if (isFile) {
+          const fd = new FormData();
+          fd.append("name", formData.name);
+          fd.append("avatar", formData.avatar);
+          response = await updateUserInfo(fd);
         } else {
           response = await updateUserInfo({
             name: formData.name,
@@ -146,9 +127,7 @@ export const UserInformationPanel: React.FC<UserInformationPanelProps> = ({
 
       if (response.success) {
         toast.success(
-          `${
-            field.charAt(0).toUpperCase() + field.slice(1)
-          } updated successfully`
+          `${field.charAt(0).toUpperCase() + field.slice(1)} updated`,
         );
         setEditMode((prev) => ({ ...prev, [field]: false }));
         setAvatarPreview("");
@@ -156,7 +135,7 @@ export const UserInformationPanel: React.FC<UserInformationPanelProps> = ({
       } else {
         toast.error(response.error || `Failed to update ${field}`);
       }
-    } catch (error) {
+    } catch {
       toast.error("An unexpected error occurred");
     } finally {
       setIsLoading(false);
@@ -165,256 +144,634 @@ export const UserInformationPanel: React.FC<UserInformationPanelProps> = ({
 
   return (
     <>
-      <Card className='h-full'>
-        <CardHeader>
-          <CardTitle className='flex items-center gap-2'>
-            <User className='w-5 h-5' />
-            Personal Information
-          </CardTitle>
-          <CardDescription>
-            Manage your account details and preferences
-          </CardDescription>
-        </CardHeader>
+      {/* ── Ambient background – wrap this panel inside a positioned container in your layout ── */}
+      <div className='w-full' style={styles.root}>
+        {/* Decorative blobs */}
+        <div style={{ ...styles.blob, ...styles.blob1 }} />
+        <div style={{ ...styles.blob, ...styles.blob2 }} />
 
-        <CardContent className='space-y-6'>
-          {/* Avatar Section */}
-          <div className='flex items-center gap-4 p-4 bg-gradient-to-r from-blue-50 to-purple-50 rounded-lg'>
-            <div className='relative group'>
-              <Avatar className='w-20 h-20 border-4 border-white shadow-lg'>
-                <AvatarImage src={avatarPreview || profile.avatar} />
-                <AvatarFallback className='text-2xl bg-gradient-to-br from-blue-400 to-purple-600 text-white'>
-                  {profile.name.charAt(0)}
-                </AvatarFallback>
-              </Avatar>
-              {editMode.avatar && (
-                <label className='absolute inset-0 flex items-center justify-center bg-black/60 rounded-full cursor-pointer opacity-0 group-hover:opacity-100 transition-opacity'>
-                  <Upload className='w-6 h-6 text-white' />
-                  <input
-                    type='file'
-                    accept='image/*'
-                    className='hidden'
-                    onChange={handleAvatarUpload}
+        <div style={styles.card}>
+          {/* Header */}
+          <div style={styles.header}>
+            <div style={styles.headerInner}>
+              <div style={styles.headerIcon}>
+                <User size={18} color='#6366f1' />
+              </div>
+              <div>
+                <h2 style={styles.headerTitle}>Personal information</h2>
+                <p style={styles.headerSub}>
+                  Manage your account details and preferences
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <div style={styles.body}>
+            {/* ── Avatar ── */}
+            <div style={styles.avatarRow}>
+              <div style={styles.avatarWrap}>
+                {avatarPreview || profile.avatar ? (
+                  <img
+                    src={avatarPreview || profile.avatar}
+                    alt={profile.name}
+                    style={styles.avatarImg}
                   />
-                </label>
-              )}
-            </div>
-            <div className='flex-1'>
-              <h4 className='font-semibold text-gray-900'>Profile Picture</h4>
-              <p className='text-sm text-gray-500 mb-2'>
-                JPG, PNG or GIF. Max size 2MB
-              </p>
-              {editMode.avatar ? (
-                <div className='flex gap-2'>
-                  <Button
-                    size='sm'
-                    onClick={() => handleSave("avatar")}
-                    disabled={isLoading}>
-                    {isLoading ? (
-                      <Loader2 className='w-4 h-4 mr-2 animate-spin' />
-                    ) : (
-                      <Save className='w-4 h-4 mr-2' />
-                    )}
-                    Save
-                  </Button>
-                  <Button
-                    variant='outline'
-                    size='sm'
-                    onClick={() => {
-                      setEditMode((prev) => ({ ...prev, avatar: false }));
-                      setAvatarPreview("");
-                    }}>
-                    <X className='w-4 h-4 mr-2' />
-                    Cancel
-                  </Button>
-                </div>
-              ) : (
-                <Button
-                  size='sm'
-                  variant='outline'
-                  onClick={() =>
-                    setEditMode((prev) => ({ ...prev, avatar: true }))
-                  }>
-                  <Pencil className='w-4 h-4 mr-2' />
-                  Change Avatar
-                </Button>
-              )}
-            </div>
-          </div>
-
-          {/* Name Field */}
-          <div className='space-y-2'>
-            <label className='flex items-center text-sm font-medium text-gray-700'>
-              <User className='w-4 h-4 mr-2 text-gray-500' />
-              Full Name
-            </label>
-            {editMode.name ? (
-              <div className='flex gap-2'>
-                <Input
-                  name='name'
-                  value={formData.name}
-                  onChange={handleChange}
-                  className='flex-1'
-                  placeholder='Enter your name'
-                />
-                <Button
-                  size='sm'
-                  onClick={() => handleSave("name")}
-                  disabled={isLoading}>
-                  {isLoading ? (
-                    <Loader2 className='w-4 h-4 animate-spin' />
-                  ) : (
-                    <Save className='w-4 h-4' />
-                  )}
-                </Button>
-                <Button
-                  variant='outline'
-                  size='sm'
-                  onClick={() =>
-                    setEditMode((prev) => ({ ...prev, name: false }))
-                  }>
-                  <X className='w-4 h-4' />
-                </Button>
-              </div>
-            ) : (
-              <div className='flex items-center justify-between p-3 bg-gray-50 rounded-lg border border-gray-200 hover:border-gray-300 transition-colors'>
-                <span className='font-medium text-gray-900'>
-                  {profile.name}
-                </span>
-                <button
-                  className='text-blue-600 hover:text-blue-700 p-2 hover:bg-blue-50 rounded-lg transition-all'
-                  onClick={() =>
-                    setEditMode((prev) => ({ ...prev, name: true }))
-                  }>
-                  <Pencil className='w-4 h-4' />
-                </button>
-              </div>
-            )}
-          </div>
-
-          {/* Email Field */}
-          <div className='space-y-2'>
-            <label className='flex items-center text-sm font-medium text-gray-700'>
-              <Mail className='w-4 h-4 mr-2 text-gray-500' />
-              Email Address
-            </label>
-            <div className='flex items-center justify-between p-3 bg-gray-50 rounded-lg border border-gray-200'>
-              <span className='text-gray-900'>{profile.email}</span>
-              <Badge variant='secondary' className='text-xs'>
-                Verified
-              </Badge>
-            </div>
-          </div>
-
-          {/* Role Field */}
-          <div className='space-y-2'>
-            <label className='flex items-center text-sm font-medium text-gray-700'>
-              <Shield className='w-4 h-4 mr-2 text-gray-500' />
-              Role
-            </label>
-            <div className='p-3 bg-gradient-to-r from-purple-50 to-pink-50 rounded-lg border border-purple-200'>
-              <Badge variant='default' className='text-sm'>
-                {profile.role}
-              </Badge>
-            </div>
-          </div>
-
-          {/* WhatsApp Number */}
-          {profile.whatsapp_number && (
-            <div className='space-y-2'>
-              <label className='flex items-center text-sm font-medium text-gray-700'>
-                <Phone className='w-4 h-4 mr-2 text-gray-500' />
-                WhatsApp Number
-              </label>
-              <div className='p-3 bg-gray-50 rounded-lg border border-gray-200'>
-                <span className='text-gray-900'>{profile.whatsapp_number}</span>
-              </div>
-            </div>
-          )}
-
-          {/* Password Section */}
-          <div className='pt-4 border-t'>
-            <Button
-              variant='outline'
-              className='w-full justify-start'
-              onClick={() =>
-                setEditMode((prev) => ({
-                  ...prev,
-                  password: !prev.password,
-                }))
-              }>
-              <Key className='w-4 h-4 mr-2' />
-              Change Password
-            </Button>
-
-            {editMode.password && (
-              <div className='mt-4 p-4 space-y-4 bg-gradient-to-br from-orange-50 to-red-50 rounded-lg border border-orange-200'>
-                <div>
-                  <label className='block text-sm font-medium text-gray-700 mb-2'>
-                    New Password
+                ) : (
+                  <span style={styles.avatarFallback}>
+                    {profile.name.charAt(0).toUpperCase()}
+                  </span>
+                )}
+                {editMode.avatar && (
+                  <label style={styles.avatarOverlay}>
+                    <Camera size={22} color='#fff' />
+                    <input
+                      type='file'
+                      accept='image/*'
+                      style={{ display: "none" }}
+                      onChange={handleAvatarUpload}
+                    />
                   </label>
-                  <Input
-                    type='password'
-                    name='newPassword'
-                    value={formData.newPassword}
-                    onChange={handleChange}
-                    placeholder='Enter new password (min 8 characters)'
-                  />
-                </div>
-                <div>
-                  <label className='block text-sm font-medium text-gray-700 mb-2'>
-                    Confirm Password
-                  </label>
-                  <Input
-                    type='password'
-                    name='confirmPassword'
-                    value={formData.confirmPassword}
-                    onChange={handleChange}
-                    placeholder='Re-enter new password'
-                  />
-                </div>
-                <div className='flex gap-2 pt-2'>
-                  <Button
-                    className='flex-1'
-                    onClick={() => handleSave("password")}
-                    disabled={isLoading}>
-                    {isLoading ? (
-                      <Loader2 className='w-4 h-4 mr-2 animate-spin' />
-                    ) : (
-                      <Key className='w-4 h-4 mr-2' />
-                    )}
-                    Update Password
-                  </Button>
-                  <Button
-                    variant='outline'
+                )}
+              </div>
+
+              <div style={styles.avatarInfo}>
+                <p style={styles.avatarTitle}>Profile picture</p>
+                <p style={styles.avatarSub}>JPG, PNG or GIF · Max 2 MB</p>
+                {editMode.avatar ? (
+                  <div style={styles.btnRow}>
+                    <GlassButton
+                      accent
+                      onClick={() => handleSave("avatar")}
+                      disabled={isLoading}>
+                      {isLoading ? (
+                        <Loader2 size={14} className='animate-spin' />
+                      ) : (
+                        <Save size={14} />
+                      )}
+                      Save
+                    </GlassButton>
+                    <GlassButton
+                      onClick={() => {
+                        setEditMode((p) => ({ ...p, avatar: false }));
+                        setAvatarPreview("");
+                      }}>
+                      <X size={14} />
+                      Cancel
+                    </GlassButton>
+                  </div>
+                ) : (
+                  <GlassButton
                     onClick={() =>
-                      setEditMode((prev) => ({ ...prev, password: false }))
+                      setEditMode((p) => ({ ...p, avatar: true }))
                     }>
-                    <X className='w-4 h-4' />
-                  </Button>
-                </div>
+                    <Upload size={14} />
+                    Change avatar
+                  </GlassButton>
+                )}
               </div>
-            )}
-          </div>
-        </CardContent>
-      </Card>
+            </div>
 
-      {/* OTP Verification Dialog */}
+            {/* ── Name ── */}
+            <FieldWrapper>
+              <FieldLabel icon={<User size={14} color='#818cf8' />}>
+                Full name
+              </FieldLabel>
+              <div
+                style={{
+                  ...styles.fieldValue,
+                  ...(editMode.name ? styles.fieldValueEditing : {}),
+                }}>
+                {editMode.name ? (
+                  <>
+                    <input
+                      name='name'
+                      value={formData.name}
+                      onChange={handleChange}
+                      style={styles.inlineInput}
+                      autoFocus
+                    />
+                    <div style={styles.btnRow}>
+                      <IconBtn
+                        accent
+                        onClick={() => handleSave("name")}
+                        disabled={isLoading}>
+                        {isLoading ? <Loader2 size={14} /> : <Save size={14} />}
+                      </IconBtn>
+                      <IconBtn
+                        onClick={() =>
+                          setEditMode((p) => ({ ...p, name: false }))
+                        }>
+                        <X size={14} />
+                      </IconBtn>
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <span style={styles.fieldText}>{profile.name}</span>
+                    <IconBtn
+                      onClick={() =>
+                        setEditMode((p) => ({ ...p, name: true }))
+                      }>
+                      <Pencil size={14} />
+                    </IconBtn>
+                  </>
+                )}
+              </div>
+            </FieldWrapper>
+
+            {/* ── Email ── */}
+            <FieldWrapper>
+              <FieldLabel icon={<Mail size={14} color='#818cf8' />}>
+                Email address
+              </FieldLabel>
+              <div style={styles.fieldValue}>
+                <span style={styles.fieldText}>{profile.email}</span>
+                <span style={styles.badgeVerified}>
+                  <CheckCircle2 size={11} />
+                  Verified
+                </span>
+              </div>
+            </FieldWrapper>
+
+            {/* ── Role ── */}
+            <FieldWrapper>
+              <FieldLabel icon={<Shield size={14} color='#818cf8' />}>
+                Role
+              </FieldLabel>
+              <div style={styles.fieldValue}>
+                <span style={styles.badgeRole}>{profile.role}</span>
+              </div>
+            </FieldWrapper>
+
+            {/* ── WhatsApp ── */}
+            {profile.whatsapp_number && (
+              <FieldWrapper>
+                <FieldLabel icon={<Phone size={14} color='#818cf8' />}>
+                  WhatsApp number
+                </FieldLabel>
+                <div style={styles.fieldValue}>
+                  <span style={styles.fieldText}>
+                    {profile.whatsapp_number}
+                  </span>
+                </div>
+              </FieldWrapper>
+            )}
+
+            {/* ── Divider ── */}
+            <div style={styles.divider} />
+
+            {/* ── Password ── */}
+            <div>
+              <button
+                style={styles.passwordToggle}
+                onClick={() =>
+                  setEditMode((p) => ({ ...p, password: !p.password }))
+                }>
+                <span
+                  style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                  <Key size={16} color='#818cf8' />
+                  <span
+                    style={{ fontSize: 14, fontWeight: 500, color: "#374151" }}>
+                    Change password
+                  </span>
+                </span>
+                <ChevronDown
+                  size={16}
+                  color='#9ca3af'
+                  style={{
+                    transform: editMode.password
+                      ? "rotate(180deg)"
+                      : "rotate(0deg)",
+                    transition: "transform 0.2s",
+                  }}
+                />
+              </button>
+
+              {editMode.password && (
+                <div style={styles.passwordForm}>
+                  <div>
+                    <label style={styles.pwLabel}>New password</label>
+                    <input
+                      type='password'
+                      name='newPassword'
+                      value={formData.newPassword}
+                      onChange={handleChange}
+                      placeholder='At least 8 characters'
+                      style={styles.pwInput}
+                    />
+                  </div>
+                  <div>
+                    <label style={styles.pwLabel}>Confirm password</label>
+                    <input
+                      type='password'
+                      name='confirmPassword'
+                      value={formData.confirmPassword}
+                      onChange={handleChange}
+                      placeholder='Re-enter new password'
+                      style={styles.pwInput}
+                    />
+                  </div>
+                  <div style={{ ...styles.btnRow, paddingTop: 4 }}>
+                    <GlassButton
+                      accent
+                      style={{ flex: 1, justifyContent: "center" }}
+                      onClick={() => handleSave("password")}
+                      disabled={isLoading}>
+                      {isLoading ? <Loader2 size={14} /> : <Key size={14} />}
+                      Update password
+                    </GlassButton>
+                    <GlassButton
+                      onClick={() =>
+                        setEditMode((p) => ({ ...p, password: false }))
+                      }>
+                      <X size={14} />
+                    </GlassButton>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* OTP Dialog */}
       {profile.email && (
         <OTPVerificationDialog
           open={showOTPDialog}
           onOpenChange={setShowOTPDialog}
           mobile_number={profile.mobile_number || ""}
-          email={profile.email || ""}
+          email={profile.email}
           purpose='password_reset'
-          title='Verify Password Change'
-          description='For security, please verify your phone number before changing your password'
-          onVerificationSuccess={performPasswordChange}
-          onVerificationFailure={(error) => {
-            console.error("OTP verification failed:", error);
-          }}
-          autoSendOnMount={true}
+          title='Verify password change'
+          description='For security, please verify your identity before changing your password'
+          onVerificationSuccessWithOTP={performPasswordChange}
+          onVerificationFailure={(error) => console.error("OTP failed:", error)}
+          autoSendOnMount
         />
       )}
     </>
   );
+};
+
+/* ─────────────────────────────────────────
+   Sub-components
+───────────────────────────────────────── */
+
+const FieldWrapper: React.FC<{ children: React.ReactNode }> = ({
+  children,
+}) => (
+  <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+    {children}
+  </div>
+);
+
+const FieldLabel: React.FC<{
+  icon: React.ReactNode;
+  children: React.ReactNode;
+}> = ({ icon, children }) => (
+  <div style={styles.fieldLabel}>
+    {icon}
+    {children}
+  </div>
+);
+
+const GlassButton: React.FC<
+  React.ButtonHTMLAttributes<HTMLButtonElement> & { accent?: boolean }
+> = ({ accent, children, style, ...props }) => (
+  <button
+    style={{
+      ...styles.glassBtn,
+      ...(accent ? styles.glassBtnAccent : {}),
+      ...style,
+    }}
+    {...props}>
+    {children}
+  </button>
+);
+
+const IconBtn: React.FC<
+  React.ButtonHTMLAttributes<HTMLButtonElement> & { accent?: boolean }
+> = ({ accent, children, ...props }) => (
+  <button
+    style={{
+      ...styles.iconBtn,
+      ...(accent ? styles.iconBtnAccent : {}),
+    }}
+    {...props}>
+    {children}
+  </button>
+);
+
+/* ─────────────────────────────────────────
+   Style objects
+   All glass values use rgba so they work
+   regardless of the page background.
+───────────────────────────────────────── */
+
+const styles: Record<string, React.CSSProperties> = {
+  root: {
+    position: "relative",
+    width: "100%",
+    padding: "2rem",
+    background:
+      "linear-gradient(135deg, #eef2ff 0%, #f0fdf4 50%, #faf5ff 100%)",
+    borderRadius: 28,
+    overflow: "hidden",
+  },
+
+  /* ambient blobs */
+  blob: {
+    position: "absolute",
+    borderRadius: "50%",
+    filter: "blur(60px)",
+    pointerEvents: "none",
+    zIndex: 0,
+  },
+  blob1: {
+    width: 280,
+    height: 280,
+    background: "rgba(99,102,241,0.18)",
+    top: -80,
+    right: -60,
+  },
+  blob2: {
+    width: 220,
+    height: 220,
+    background: "rgba(16,185,129,0.12)",
+    bottom: -60,
+    left: -40,
+  },
+
+  /* main card */
+  card: {
+    position: "relative",
+    zIndex: 1,
+    background: "rgba(255,255,255,0.55)",
+    border: "1px solid rgba(255,255,255,0.8)",
+    borderRadius: 24,
+    backdropFilter: "blur(20px) saturate(1.7)",
+    WebkitBackdropFilter: "blur(20px) saturate(1.7)",
+    boxShadow:
+      "0 8px 32px rgba(99,102,241,0.10), 0 2px 8px rgba(99,102,241,0.06), inset 0 1px 0 rgba(255,255,255,0.9)",
+    overflow: "hidden",
+  },
+
+  header: {
+    padding: "1.25rem 1.5rem 1rem",
+    borderBottom: "1px solid rgba(255,255,255,0.65)",
+    background:
+      "linear-gradient(135deg, rgba(255,255,255,0.72), rgba(255,255,255,0.38))",
+  },
+  headerInner: { display: "flex", alignItems: "center", gap: 12 },
+  headerIcon: {
+    width: 36,
+    height: 36,
+    borderRadius: 10,
+    background: "rgba(99,102,241,0.10)",
+    border: "1px solid rgba(99,102,241,0.18)",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    flexShrink: 0,
+  },
+  headerTitle: {
+    fontSize: 16,
+    fontWeight: 600,
+    color: "#1e1b4b",
+    margin: 0,
+    lineHeight: 1.3,
+  },
+  headerSub: {
+    fontSize: 12,
+    color: "#6b7280",
+    margin: 0,
+    marginTop: 1,
+  },
+
+  body: {
+    padding: "1.25rem 1.5rem",
+    display: "flex",
+    flexDirection: "column",
+    gap: "1rem",
+  },
+
+  /* avatar */
+  avatarRow: {
+    display: "flex",
+    alignItems: "center",
+    gap: "1rem",
+    padding: "1rem 1.1rem",
+    background: "rgba(255,255,255,0.60)",
+    border: "1px solid rgba(255,255,255,0.85)",
+    borderRadius: 18,
+    boxShadow: "0 2px 10px rgba(99,102,241,0.07)",
+  },
+  avatarWrap: {
+    position: "relative",
+    width: 72,
+    height: 72,
+    borderRadius: "50%",
+    flexShrink: 0,
+  },
+  avatarImg: {
+    width: 72,
+    height: 72,
+    borderRadius: "50%",
+    objectFit: "cover",
+    border: "3px solid rgba(255,255,255,0.95)",
+    boxShadow: "0 4px 16px rgba(99,102,241,0.25)",
+    display: "block",
+  },
+  avatarFallback: {
+    width: 72,
+    height: 72,
+    borderRadius: "50%",
+    background: "linear-gradient(135deg, #818cf8, #6366f1)",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    fontSize: 26,
+    fontWeight: 600,
+    color: "#fff",
+    border: "3px solid rgba(255,255,255,0.95)",
+    boxShadow: "0 4px 16px rgba(99,102,241,0.28)",
+  } as React.CSSProperties,
+  avatarOverlay: {
+    position: "absolute",
+    inset: 0,
+    borderRadius: "50%",
+    background: "rgba(99,102,241,0.72)",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    cursor: "pointer",
+  },
+  avatarInfo: { flex: 1, minWidth: 0 },
+  avatarTitle: { fontSize: 13, fontWeight: 600, color: "#1e1b4b", margin: 0 },
+  avatarSub: { fontSize: 11, color: "#9ca3af", margin: "2px 0 10px" },
+
+  /* field */
+  fieldLabel: {
+    display: "flex",
+    alignItems: "center",
+    gap: 6,
+    fontSize: 11,
+    fontWeight: 600,
+    color: "#6b7280",
+    textTransform: "uppercase",
+    letterSpacing: "0.5px",
+  } as React.CSSProperties,
+  fieldValue: {
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "space-between",
+    gap: 8,
+    padding: "11px 14px",
+    background: "rgba(255,255,255,0.60)",
+    border: "1px solid rgba(255,255,255,0.88)",
+    borderRadius: 12,
+    boxShadow: "0 1px 4px rgba(99,102,241,0.05)",
+    minHeight: 44,
+  },
+  fieldValueEditing: {
+    background: "rgba(255,255,255,0.92)",
+    borderColor: "rgba(99,102,241,0.35)",
+    boxShadow:
+      "0 0 0 3px rgba(99,102,241,0.10), 0 1px 4px rgba(99,102,241,0.08)",
+  },
+  fieldText: { fontSize: 14, fontWeight: 500, color: "#1e1b4b" },
+  inlineInput: {
+    flex: 1,
+    border: "none",
+    outline: "none",
+    background: "transparent",
+    fontSize: 14,
+    fontWeight: 500,
+    color: "#1e1b4b",
+    fontFamily: "inherit",
+    minWidth: 0,
+  },
+
+  /* badges */
+  badgeVerified: {
+    display: "inline-flex",
+    alignItems: "center",
+    gap: 4,
+    padding: "3px 10px",
+    borderRadius: 99,
+    fontSize: 11,
+    fontWeight: 600,
+    background: "rgba(16,185,129,0.10)",
+    color: "#059669",
+    border: "1px solid rgba(16,185,129,0.22)",
+    flexShrink: 0,
+  } as React.CSSProperties,
+  badgeRole: {
+    display: "inline-flex",
+    alignItems: "center",
+    padding: "4px 12px",
+    borderRadius: 99,
+    fontSize: 12,
+    fontWeight: 600,
+    background: "rgba(99,102,241,0.10)",
+    color: "#4338ca",
+    border: "1px solid rgba(99,102,241,0.22)",
+  } as React.CSSProperties,
+
+  /* divider */
+  divider: {
+    borderTop: "1px solid rgba(255,255,255,0.7)",
+    margin: "0.25rem 0",
+  },
+
+  /* password */
+  passwordToggle: {
+    width: "100%",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "space-between",
+    padding: "11px 14px",
+    background: "rgba(255,255,255,0.55)",
+    border: "1px solid rgba(255,255,255,0.82)",
+    borderRadius: 12,
+    cursor: "pointer",
+    boxShadow: "0 1px 4px rgba(99,102,241,0.05)",
+  },
+  passwordForm: {
+    marginTop: 10,
+    padding: "1rem 1.1rem",
+    background: "rgba(255,255,255,0.60)",
+    border: "1px solid rgba(255,255,255,0.85)",
+    borderRadius: 14,
+    display: "flex",
+    flexDirection: "column",
+    gap: 12,
+    boxShadow: "0 2px 10px rgba(251,191,36,0.07)",
+  } as React.CSSProperties,
+  pwLabel: {
+    display: "block",
+    fontSize: 12,
+    fontWeight: 600,
+    color: "#6b7280",
+    marginBottom: 5,
+  },
+  pwInput: {
+    width: "100%",
+    padding: "10px 12px",
+    background: "rgba(255,255,255,0.82)",
+    border: "1px solid rgba(255,255,255,0.9)",
+    borderRadius: 10,
+    fontSize: 14,
+    color: "#1e1b4b",
+    fontFamily: "inherit",
+    outline: "none",
+    boxShadow: "0 1px 3px rgba(0,0,0,0.04)",
+  },
+
+  /* buttons */
+  btnRow: { display: "flex", alignItems: "center", gap: 8 },
+  glassBtn: {
+    display: "inline-flex",
+    alignItems: "center",
+    gap: 6,
+    padding: "6px 14px",
+    fontSize: 13,
+    fontWeight: 500,
+    borderRadius: 10,
+    cursor: "pointer",
+    border: "1px solid rgba(255,255,255,0.82)",
+    background: "rgba(255,255,255,0.72)",
+    color: "#6366f1",
+    boxShadow: "0 2px 8px rgba(99,102,241,0.08)",
+    backdropFilter: "blur(8px)",
+    WebkitBackdropFilter: "blur(8px)",
+    transition: "all 0.15s",
+    whiteSpace: "nowrap",
+  } as React.CSSProperties,
+  glassBtnAccent: {
+    background: "linear-gradient(135deg, #818cf8, #6366f1)",
+    color: "#fff",
+    borderColor: "transparent",
+    boxShadow: "0 4px 14px rgba(99,102,241,0.35)",
+  },
+  iconBtn: {
+    width: 30,
+    height: 30,
+    borderRadius: 8,
+    border: "1px solid rgba(255,255,255,0.8)",
+    background: "rgba(99,102,241,0.07)",
+    color: "#6366f1",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    cursor: "pointer",
+    flexShrink: 0,
+    transition: "all 0.15s",
+  } as React.CSSProperties,
+  iconBtnAccent: {
+    background: "linear-gradient(135deg, #818cf8, #6366f1)",
+    color: "#fff",
+    borderColor: "transparent",
+    boxShadow: "0 2px 8px rgba(99,102,241,0.3)",
+  },
 };
