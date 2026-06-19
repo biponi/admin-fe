@@ -47,8 +47,12 @@ export function NavUser({
             <SidebarMenuButton
               size='lg'
               className='data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground'>
-              <Avatar className='h-10 w-10 rounded-full p-2 bg-white shadow-md'>
-                <AvatarImage src={user.avatar} alt={user.name} />
+              <Avatar className='h-10 w-10 rounded-full bg-white shadow-md'>
+                <AvatarImage
+                  className='rounded-full'
+                  src={user.avatar}
+                  alt={user.name}
+                />
                 <AvatarFallback className='rounded-lg'>CN</AvatarFallback>
               </Avatar>
               <div className='grid flex-1 text-left text-sm leading-tight'>

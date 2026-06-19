@@ -77,7 +77,7 @@ export function MobileTopbar({ onMenuClick }: MobileTopbarProps) {
       <div className='flex items-center gap-2'>
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Avatar className='h-10 w-10 border border-border cursor-pointer p-1'>
+            <Avatar className='h-10 w-10 border border-border cursor-pointer '>
               {user?.avatar ? (
                 <AvatarImage src={user?.avatar} alt={user.name} />
               ) : null}

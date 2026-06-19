@@ -43,22 +43,25 @@ const AgentView: React.FC = () => {
 
   return (
     <MainView title='Dashboard'>
-      <div style={styles.root}>
+      <div className='rounded-none md:rounded-2xl' style={styles.root}>
         {/* Ambient blobs */}
         <div style={{ ...styles.blob, ...styles.blob1 }} />
         <div style={{ ...styles.blob, ...styles.blob2 }} />
         <div style={{ ...styles.blob, ...styles.blob3 }} />
 
-        <div style={styles.inner}>
+        <div className='px-4 py-2 md:px-6 md:py-4' style={styles.inner}>
           {/* ── Header ── */}
           <div style={styles.headerRow}>
             <div style={styles.headerLeft}>
-              <div style={styles.headerIconWrap}>
+              {/* <div className='hidden md:block' style={styles.headerIconWrap}>
                 <Activity size={20} color='#6366f1' />
-              </div>
+              </div> */}
               <div>
                 <h1 style={styles.headerTitle}>
-                  Welcome back, {user?.name || "Agent"}
+                  Welcome back,{" "}
+                  <span className='font-bold text-2xl text-blue-600'>
+                    {user?.name || "Agent"}
+                  </span>
                 </h1>
                 <p style={styles.headerSub}>
                   Access your available modules and manage your tasks
@@ -68,7 +71,7 @@ const AgentView: React.FC = () => {
           </div>
 
           {/* ── Summary strip ── */}
-          <div style={styles.stripGrid}>
+          <div className='grid grid-cols-2 gap-2 md:gap-4 md:grid-cols-3'>
             <StatPill
               color='#6366f1'
               dotColor='rgba(99,102,241,0.7)'
@@ -87,6 +90,7 @@ const AgentView: React.FC = () => {
               value={user?.role || "Agent"}
               label='Your access level'
               truncate
+              classNames=' col-span-2 md:col-span-1'
             />
           </div>
 
@@ -103,7 +107,7 @@ const AgentView: React.FC = () => {
               </p>
             </div>
           ) : (
-            <div style={styles.cardGrid}>
+            <div className='grid grid-cols-2 md:grid-cols-4 gap-4 '>
               {filteredNavItems.map((item) => (
                 <ModuleCard
                   key={item.id}
@@ -129,8 +133,9 @@ const StatPill: React.FC<{
   value: string | number;
   label: string;
   truncate?: boolean;
-}> = ({ color, dotColor, value, label, truncate }) => (
-  <div style={styles.statPill}>
+  classNames?: string;
+}> = ({ color, dotColor, value, label, truncate, classNames = "" }) => (
+  <div className={classNames} style={styles.statPill}>
     <div style={{ ...styles.statDot, background: dotColor }} />
     <div style={{ minWidth: 0 }}>
       <p
@@ -252,7 +257,6 @@ const styles: Record<string, React.CSSProperties> = {
     zIndex: 1,
     maxWidth: 1200,
     margin: "0 auto",
-    padding: "2rem 1.5rem",
     display: "flex",
     flexDirection: "column",
     gap: "1.5rem",
@@ -295,11 +299,7 @@ const styles: Record<string, React.CSSProperties> = {
   },
 
   /* Stat pills */
-  stripGrid: {
-    display: "grid",
-    gridTemplateColumns: "repeat(3, 1fr)",
-    gap: 12,
-  },
+
   statPill: {
     display: "flex",
     alignItems: "center",

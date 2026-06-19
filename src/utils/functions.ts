@@ -258,9 +258,14 @@ export const filterImageGroups = (groups: any[]): { validGroups: any[]; invalidC
  * @returns Image URL as string, or null if no image found
  */
 export const getVariationImageUrl = (
-  variation: { images?: (File | string)[]; imageGroupId?: string },
+  variation: { images?: (File | string)[]; imageGroupId?: string } | undefined,
   imageGroups?: Array<{ id: string; images: (File | string)[] }>
 ): string | null => {
+  // Early return if variation is undefined
+  if (!variation) {
+    return null;
+  }
+
   // Priority 1: Check variant's own images array
   if (variation.images && variation.images.length > 0) {
     const img = variation.images[0];

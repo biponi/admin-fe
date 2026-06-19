@@ -121,7 +121,7 @@ export function MobileSheetNav({
         {/* ── User Card ── */}
         <div className='px-4 py-3 border-b border-white/10'>
           <div className='flex items-center gap-3 px-3 py-3 rounded-2xl bg-white/15 ring-1 ring-white/20 backdrop-blur-sm'>
-            <Avatar className='size-10 p-2 shadow bg-white'>
+            <Avatar className='size-10  shadow bg-white'>
               {user?.avatar ? (
                 <AvatarImage src={user.avatar} alt={user.name} />
               ) : null}

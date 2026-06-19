@@ -16,8 +16,10 @@ export function CartTable({
 }: CartTableProps) {
   const getImageUrl = (item: CartItem): string => {
     // Try variation images → image groups
-    const url = getVariationImageUrl(item.selectedVariant, item.imageGroups);
-    if (url) return url;
+    if (item.selectedVariant) {
+      const url = getVariationImageUrl(item.selectedVariant, item.imageGroups);
+      if (url) return url;
+    }
 
     return item.thumbnail || PlaceHolderImage;
   };

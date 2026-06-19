@@ -1,13 +1,5 @@
 import React from "react";
-import {
-  Mail,
-  Calendar,
-  UserPlus,
-  MessageCircle,
-  Briefcase,
-  Phone,
-  MapPin,
-} from "lucide-react";
+import { Mail, Calendar, Briefcase, MapPin } from "lucide-react";
 import { UserPerformanceDetailResponse } from "../../../api/adminAudit";
 
 interface UserProfileHeaderProps {
@@ -25,7 +17,6 @@ export const UserProfileHeader: React.FC<UserProfileHeaderProps> = ({
   email,
   avatar,
   role,
-  phoneNumber,
   joinedDate,
   userDetail,
 }) => {
@@ -34,154 +25,316 @@ export const UserProfileHeader: React.FC<UserProfileHeaderProps> = ({
       userDetail.summary.totalProductAdjustments
     : null;
 
+  const stats = userDetail
+    ? [
+        { value: totalOps?.toLocaleString() ?? "—", label: "All time ops" },
+        {
+          value: userDetail.summary.totalOrderActions.toLocaleString(),
+          label: "Order actions",
+        },
+        {
+          value: userDetail.summary.totalProductAdjustments.toLocaleString(),
+          label: "Stock adjustments",
+        },
+      ]
+    : [];
+
   return (
-    <div className='relative overflow-hidden rounded-3xl min-h-[380px] pb-8'>
-      {/* Deep gradient background */}
-      <div className='absolute inset-0 bg-gradient-to-tr from-[#0891b2] via-[#1d4ed8] to-[#3730a3]' />
+    <div style={styles.root}>
+      {/* Ambient blobs — same palette as the panel system */}
+      <div style={{ ...styles.blob, ...styles.blob1 }} />
+      <div style={{ ...styles.blob, ...styles.blob2 }} />
+      <div style={{ ...styles.blob, ...styles.blob3 }} />
 
-      {/* Ambient orbs */}
-      <div
-        className='absolute -top-24 -left-16 w-80 h-80 rounded-full pointer-events-none'
-        style={{
-          background:
-            "radial-gradient(circle, rgba(83,52,131,0.55) 0%, transparent 70%)",
-        }}
-      />
-      <div
-        className='absolute -bottom-16 -right-10 w-64 h-64 rounded-full pointer-events-none'
-        style={{
-          background:
-            "radial-gradient(circle, rgba(233,69,96,0.45) 0%, transparent 70%)",
-        }}
-      />
-      <div
-        className='absolute top-16 right-20 w-48 h-48 rounded-full pointer-events-none'
-        style={{
-          background:
-            "radial-gradient(circle, rgba(15,52,96,0.6) 0%, transparent 70%)",
-        }}
-      />
+      {/* Glass card */}
+      <div className='max-w-4xl mx-auto' style={styles.card}>
+        {/* Top shimmer edge */}
+        <div style={styles.shimmer} />
 
-      {/* Content */}
-      <div className='relative z-10 flex flex-col items-center pt-9 px-6'>
-        {/* Avatar */}
-        <div className='relative mb-4'>
-          <div
-            className='w-28 h-28 rounded-full p-[3px]'
-            style={{
-              background:
-                "linear-gradient(135deg, rgba(255,255,255,0.55) 0%, rgba(255,255,255,0.08) 100%)",
-              boxShadow:
-                "0 8px 32px rgba(0,0,0,0.35), inset 0 1px 0 rgba(255,255,255,0.3)",
-            }}>
-            <div className='w-full h-full rounded-full overflow-hidden bg-[#2a2a4a]'>
-              <img
-                src={
-                  avatar ||
-                  "https://img.freepik.com/premium-photo/picture-monkey-s-head-with-yellow-eyes_1053683-2247.jpg?semt=ais_hybrid&w=740&q=80"
-                }
-                alt={name}
-                className='w-full h-full object-cover rounded-full'
-              />
-            </div>
+        <div style={styles.content}>
+          {/* ── Avatar ── */}
+          <div style={styles.avatarWrap}>
+            {avatar ? (
+              <img src={avatar} alt={name} style={styles.avatarImg} />
+            ) : (
+              <span style={styles.avatarFallback}>
+                {name.charAt(0).toUpperCase()}
+              </span>
+            )}
+            {/* Online dot */}
+            <div style={styles.onlineDot} />
           </div>
-          {/* Online dot */}
-          <div
-            className='absolute bottom-1.5 right-1.5 w-[18px] h-[18px] rounded-full bg-emerald-400 border-[3px] border-white/90'
-            style={{ boxShadow: "0 0 8px rgba(48,209,88,0.5)" }}
-          />
-        </div>
 
-        {/* Name */}
-        <h1
-          className='text-2xl sm:text-3xl font-bold text-white tracking-tight mb-1'
-          style={{ textShadow: "0 1px 12px rgba(0,0,0,0.4)" }}>
-          {name}
-        </h1>
+          {/* ── Name ── */}
+          <h1 style={styles.name}>{name}</h1>
 
-        {/* Role chip */}
-        <div
-          className='inline-flex items-center gap-1.5 px-4 py-1 rounded-full text-white/90 text-xs font-medium uppercase tracking-wide mb-2.5'
-          style={{
-            background: "rgba(255,255,255,0.14)",
-            border: "0.5px solid rgba(255,255,255,0.28)",
-            backdropFilter: "blur(8px)",
-          }}>
-          <Briefcase className='w-3 h-3' />
-          {role}
-        </div>
+          {/* ── Role chip ── */}
+          <div style={styles.roleChip}>
+            <Briefcase size={12} color='#6366f1' />
+            <span>{role}</span>
+          </div>
 
-        {/* Email + Joined */}
-        <div className='flex items-center gap-2 text-white/60 text-sm mb-5'>
-          <Mail className='w-3.5 h-3.5' />
-          <span>{email}</span>
-          <span className='w-1 h-1 rounded-full bg-white/30' />
-          {joinedDate && (
-            <>
-              <Calendar className='w-3.5 h-3.5' />
-              <span>{joinedDate}</span>
-            </>
-          )}
-        </div>
+          {/* ── Email + joined ── */}
+          <div style={styles.metaRow}>
+            <Mail size={13} color='#818cf8' />
+            <span style={styles.metaText}>{email}</span>
+            {joinedDate && (
+              <>
+                <span style={styles.metaDot} />
+                <Calendar size={13} color='#818cf8' />
+                <span style={styles.metaText}>{joinedDate}</span>
+              </>
+            )}
+          </div>
 
-        {/* Frosted glass stats — the Apple panel */}
-        {!!userDetail && (
-          <div
-            className='w-full max-w-sm rounded-2xl overflow-hidden'
-            style={{
-              background: "rgba(255,255,255,0.10)",
-              border: "0.5px solid rgba(255,255,255,0.22)",
-              backdropFilter: "blur(20px)",
-              WebkitBackdropFilter: "blur(20px)",
-              boxShadow:
-                "0 8px 32px rgba(0,0,0,0.25), inset 0 1px 0 rgba(255,255,255,0.18), inset 0 -1px 0 rgba(0,0,0,0.10)",
-            }}>
-            <div className='flex'>
-              {[
-                {
-                  value: totalOps?.toLocaleString() ?? "—",
-                  label: "All time ops",
-                },
-                {
-                  value: userDetail.summary.totalOrderActions.toLocaleString(),
-                  label: "Order actions",
-                },
-                {
-                  value:
-                    userDetail.summary.totalProductAdjustments.toLocaleString(),
-                  label: "Stock adjustments",
-                },
-              ].map((stat, i) => (
-                <div
-                  key={i}
-                  className='flex-1 text-center py-4 px-2 relative'
-                  style={
-                    i < 2
-                      ? {
-                          borderRight: "0.5px solid rgba(255,255,255,0.18)",
-                        }
-                      : {}
-                  }>
-                  <div
-                    className='text-xl sm:text-2xl font-bold text-white leading-none mb-1'
-                    style={{ textShadow: "0 1px 8px rgba(0,0,0,0.3)" }}>
-                    {stat.value}
+          {/* ── Stats panel ── */}
+          {stats.length > 0 && (
+            <div style={styles.statsPanel}>
+              {stats.map((stat, i) => (
+                <React.Fragment key={i}>
+                  <div style={styles.statCell}>
+                    <span style={styles.statValue}>{stat.value}</span>
+                    <span style={styles.statLabel}>{stat.label}</span>
                   </div>
-                  <div className='text-[11px] text-white/55 font-medium'>
-                    {stat.label}
-                  </div>
-                </div>
+                  {i < stats.length - 1 && <div style={styles.statDivider} />}
+                </React.Fragment>
               ))}
             </div>
-          </div>
-        )}
+          )}
 
-        {/* Location */}
-        <div className='flex items-center gap-1.5 text-white/40 text-xs mt-3.5'>
-          <MapPin className='w-3 h-3' />
-          Dhaka, Bangladesh
+          {/* ── Location ── */}
+          <div style={styles.location}>
+            <MapPin size={12} color='#a5b4fc' />
+            <span>Dhaka, Bangladesh</span>
+          </div>
         </div>
       </div>
     </div>
   );
+};
+
+/* ─────────────────────────────────────────
+   Styles
+───────────────────────────────────────── */
+
+const styles: Record<string, React.CSSProperties> = {
+  root: {
+    position: "relative",
+    borderRadius: 28,
+    overflow: "hidden",
+    background:
+      "linear-gradient(135deg, #eef2ff 0%, #f0fdf4 50%, #faf5ff 100%)",
+    padding: "2rem 1.5rem",
+  },
+
+  /* Blobs */
+  blob: {
+    position: "absolute",
+    borderRadius: "50%",
+    filter: "blur(65px)",
+    pointerEvents: "none",
+    zIndex: 0,
+  },
+  blob1: {
+    width: 340,
+    height: 340,
+    background: "rgba(99,102,241,0.20)",
+    top: -100,
+    right: -80,
+  },
+  blob2: {
+    width: 260,
+    height: 260,
+    background: "rgba(16,185,129,0.12)",
+    bottom: -80,
+    left: -60,
+  },
+  blob3: {
+    width: 200,
+    height: 200,
+    background: "rgba(124,58,237,0.10)",
+    top: "35%",
+    right: "20%",
+  },
+
+  /* Glass card */
+  card: {
+    position: "relative",
+    zIndex: 1,
+    background: "rgba(255,255,255,0.55)",
+    border: "1px solid rgba(255,255,255,0.82)",
+    borderRadius: 24,
+    backdropFilter: "blur(20px) saturate(1.7)",
+    WebkitBackdropFilter: "blur(20px) saturate(1.7)",
+    boxShadow:
+      "0 8px 32px rgba(99,102,241,0.10), 0 2px 8px rgba(99,102,241,0.06), inset 0 1px 0 rgba(255,255,255,0.90)",
+    overflow: "hidden",
+  },
+
+  shimmer: {
+    position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
+    height: 1,
+    background:
+      "linear-gradient(90deg, transparent, rgba(255,255,255,0.95), transparent)",
+    zIndex: 2,
+  },
+
+  content: {
+    display: "flex",
+    flexDirection: "column",
+    alignItems: "center",
+    padding: "2rem 1.5rem 1.75rem",
+    gap: 0,
+  },
+
+  /* Avatar */
+  avatarWrap: {
+    position: "relative",
+    width: 96,
+    height: 96,
+    marginBottom: 16,
+    flexShrink: 0,
+  },
+  avatarImg: {
+    width: 96,
+    height: 96,
+    borderRadius: "50%",
+    objectFit: "cover",
+    display: "block",
+    border: "3px solid rgba(255,255,255,0.95)",
+    boxShadow: "0 6px 24px rgba(99,102,241,0.22), 0 2px 8px rgba(0,0,0,0.08)",
+  },
+  avatarFallback: {
+    width: 96,
+    height: 96,
+    borderRadius: "50%",
+    background: "linear-gradient(135deg, #818cf8, #6366f1)",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    fontSize: 34,
+    fontWeight: 600,
+    color: "#fff",
+    border: "3px solid rgba(255,255,255,0.95)",
+    boxShadow: "0 6px 24px rgba(99,102,241,0.28)",
+  } as React.CSSProperties,
+  onlineDot: {
+    position: "absolute",
+    bottom: 5,
+    right: 5,
+    width: 16,
+    height: 16,
+    borderRadius: "50%",
+    background: "#34d399",
+    border: "2.5px solid rgba(255,255,255,0.95)",
+    boxShadow: "0 0 8px rgba(52,211,153,0.55)",
+  },
+
+  /* Name */
+  name: {
+    fontSize: 24,
+    fontWeight: 700,
+    color: "#1e1b4b",
+    margin: "0 0 10px",
+    textAlign: "center",
+    lineHeight: 1.2,
+    letterSpacing: "-0.3px",
+  },
+
+  /* Role chip */
+  roleChip: {
+    display: "inline-flex",
+    alignItems: "center",
+    gap: 6,
+    padding: "5px 14px",
+    borderRadius: 99,
+    background: "rgba(99,102,241,0.09)",
+    border: "1px solid rgba(99,102,241,0.20)",
+    fontSize: 11,
+    fontWeight: 600,
+    color: "#4338ca",
+    textTransform: "uppercase",
+    letterSpacing: "0.6px",
+    marginBottom: 14,
+  } as React.CSSProperties,
+
+  /* Meta row */
+  metaRow: {
+    display: "flex",
+    alignItems: "center",
+    gap: 6,
+    flexWrap: "wrap",
+    justifyContent: "center",
+    marginBottom: 20,
+  },
+  metaText: {
+    fontSize: 13,
+    color: "#6b7280",
+    fontWeight: 400,
+  },
+  metaDot: {
+    width: 3,
+    height: 3,
+    borderRadius: "50%",
+    background: "#d1d5db",
+    flexShrink: 0,
+  },
+
+  /* Stats panel */
+  statsPanel: {
+    width: "100%",
+    maxWidth: 360,
+    display: "flex",
+    alignItems: "stretch",
+    background: "rgba(255,255,255,0.60)",
+    border: "1px solid rgba(255,255,255,0.88)",
+    borderRadius: 16,
+    boxShadow:
+      "0 2px 12px rgba(99,102,241,0.07), inset 0 1px 0 rgba(255,255,255,0.85)",
+    overflow: "hidden",
+    marginBottom: 16,
+  },
+  statCell: {
+    flex: 1,
+    display: "flex",
+    flexDirection: "column",
+    alignItems: "center",
+    justifyContent: "center",
+    padding: "14px 8px",
+    gap: 4,
+  },
+  statValue: {
+    fontSize: 20,
+    fontWeight: 700,
+    color: "#1e1b4b",
+    lineHeight: 1,
+    letterSpacing: "-0.3px",
+  },
+  statLabel: {
+    fontSize: 10,
+    fontWeight: 600,
+    color: "#9ca3af",
+    textTransform: "uppercase",
+    letterSpacing: "0.4px",
+    textAlign: "center",
+  } as React.CSSProperties,
+  statDivider: {
+    width: 1,
+    background: "rgba(99,102,241,0.10)",
+    alignSelf: "stretch",
+    margin: "10px 0",
+  },
+
+  /* Location */
+  location: {
+    display: "flex",
+    alignItems: "center",
+    gap: 5,
+    fontSize: 12,
+    color: "#9ca3af",
+    fontWeight: 500,
+  },
 };

@@ -18,11 +18,11 @@ const DashboardV2 = () => {
         <TabsTrigger value='home'>Home</TabsTrigger>
         <TabsTrigger value='dashboard'>Dashboard</TabsTrigger>
       </TabsList>
-      <TabsList className='hidden md:block ml-12'>
+      <TabsList className='hidden md:block mx-4  '>
         <TabsTrigger value='home'>Home</TabsTrigger>
         <TabsTrigger value='dashboard'>Dashboard</TabsTrigger>
       </TabsList>
-      <TabsContent value='home'>
+      <TabsContent className='mt-0 md:mt-2' value='home'>
         <AgentView />
       </TabsContent>
       <TabsContent value='dashboard' className='md:container'>
