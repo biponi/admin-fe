@@ -253,7 +253,7 @@ export const OrderDetailsSheet: React.FC<OrderDetailsSheetProps> = ({
   /* ---------- Render ---------- */
 
   return (
-    <Sheet open={open} onOpenChange={onOpenChange}>
+    <Sheet open={open} onOpenChange={onOpenChange} modal={false}>
       <SheetContent
         className={cn(
           "flex flex-col gap-0 p-0",

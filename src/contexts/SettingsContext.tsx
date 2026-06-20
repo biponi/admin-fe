@@ -7,15 +7,23 @@ import {
 } from "react";
 
 type LayoutType = "modern" | "legacy";
-type ThemeType = "light" | "dark" | "blue" | "green" | "purple" | "orange";
 type CreateOrderLayoutType = "wizard" | "product-first";
+
+// Valid theme options - must match the options available in settings-panel
+const VALID_THEMES = ["dark", "blue", "green", "purple", "orange"] as const;
+type ThemeType = (typeof VALID_THEMES)[number];
+
+// Validation function to check if a theme value is valid
+const isValidTheme = (theme: string): theme is ThemeType => {
+  return VALID_THEMES.includes(theme as ThemeType);
+};
 
 interface SettingsContextType {
   layoutType: LayoutType;
   setLayoutType: (type: LayoutType) => void;
   toggleLayout: () => void;
   theme: ThemeType;
-  setTheme: (theme: ThemeType) => void;
+  setTheme: (theme: ThemeType | string) => void;
   createOrderLayoutType: CreateOrderLayoutType;
   setCreateOrderLayoutType: (type: CreateOrderLayoutType) => void;
 }
@@ -34,7 +42,7 @@ interface Settings {
 
 const defaultSettings: Settings = {
   layoutType: "modern", // Default to new sidebar layout
-  theme: "light", // Default to light theme
+  theme: "blue", // Default to ocean (blue) theme
   createOrderLayoutType: "product-first", // Default to product-first layout for create order
 };
 
@@ -63,11 +71,10 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
 
     // Only apply theme classes for modern layout, always use light for legacy
     if (layoutType === "modern") {
-      if (theme === "light") {
-        root.classList.add("light");
-      } else if (theme === "dark") {
+      if (theme === "dark") {
         root.classList.add("light", "theme-dark"); // Use custom theme-dark instead of global dark
       } else {
+        // For colored themes (blue, green, purple, orange)
         root.classList.add("light", `theme-${theme}`);
       }
     } else {
@@ -84,7 +91,12 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
         const settings: Settings = JSON.parse(stored);
 
         setLayoutTypeState(settings.layoutType || defaultSettings.layoutType);
-        setThemeState(settings.theme || defaultSettings.theme);
+
+        // Validate theme - use blue (ocean) as fallback if invalid
+        const loadedTheme = settings.theme;
+        const validatedTheme = isValidTheme(loadedTheme) ? loadedTheme : defaultSettings.theme;
+        setThemeState(validatedTheme);
+
         setCreateOrderLayoutTypeState(
           settings.createOrderLayoutType ||
             defaultSettings.createOrderLayoutType,
@@ -118,9 +130,11 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
     saveSettings(type, theme, createOrderLayoutType);
   };
 
-  const setTheme = (newTheme: ThemeType) => {
-    setThemeState(newTheme);
-    saveSettings(layoutType, newTheme, createOrderLayoutType);
+  const setTheme = (newTheme: ThemeType | string) => {
+    // Validate theme - use blue (ocean) as fallback if invalid
+    const validatedTheme = isValidTheme(newTheme) ? newTheme : defaultSettings.theme;
+    setThemeState(validatedTheme);
+    saveSettings(layoutType, validatedTheme, createOrderLayoutType);
   };
 
   const setCreateOrderLayoutType = (type: CreateOrderLayoutType) => {
