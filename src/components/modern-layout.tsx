@@ -19,7 +19,7 @@ export function ModernLayout({ children }: ModernLayoutProps) {
         <MobileTopbar onMenuClick={() => setMobileNavOpen(true)} />
         <MobileSheetNav open={mobileNavOpen} onOpenChange={setMobileNavOpen} />
         <SiteHeader />
-        <div className='flex md:flex-1 flex-col gap-4 pt-0  overflow-auto z-20 max-h-[90vh] scrollbar-thin scrollbar-thumb-rounded scrollbar-thumb-gray-400/20 scrollbar-track-gray-100/0 rounded-lg'>
+        <div className='flex md:flex-1 flex-col gap-4 pt-0  overflow-auto z-20 max-h-[90vh] scrollbar-thin scrollbar-thumb-rounded scrollbar-thumb-gray-400/20 scrollbar-track-gray-100/0 '>
           {children}
         </div>
       </SidebarInset>
