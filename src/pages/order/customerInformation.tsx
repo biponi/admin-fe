@@ -291,6 +291,56 @@ const CustomerInformation: React.FC<Props> = ({
     }
   };
 
+  // Handle phone input change - only allow numbers and + symbol
+  const handlePhoneInputChange = (
+    e: React.ChangeEvent<HTMLInputElement>,
+  ) => {
+    const cleanedValue = e.target.value.replace(/[^0-9+]/g, '');
+    setPersonalInformation({
+      ...personalInfomation,
+      phoneNumber: cleanedValue,
+    });
+
+    // Clear error when user starts typing
+    if (errors.phoneNumber) {
+      setErrors({ ...errors, phoneNumber: "" });
+    }
+  };
+
+  // Handle paste event - clean non-numeric characters
+  const handlePhonePaste = (
+    e: React.ClipboardEvent<HTMLInputElement>,
+  ) => {
+    e.preventDefault();
+    const pastedData = e.clipboardData.getData('text');
+    const cleanedNumber = pastedData.replace(/\D/g, ''); // Remove all non-numeric chars
+
+    if (cleanedNumber) {
+      setPersonalInformation({
+        ...personalInfomation,
+        phoneNumber: cleanedNumber,
+      });
+    }
+  };
+
+  // Handle blur event - auto-add +880 country code if missing
+  const handlePhoneBlur = (
+    e: React.FocusEvent<HTMLInputElement>,
+  ) => {
+    const currentPhone = e.target.value;
+
+    // Check if it's a valid 11-digit number starting with 01 (no country code)
+    const elevenDigitPattern = /^01[1-9]\d{8}$/;
+
+    if (elevenDigitPattern.test(currentPhone)) {
+      // Add +880 country code
+      setPersonalInformation({
+        ...personalInfomation,
+        phoneNumber: `+880${currentPhone}`,
+      });
+    }
+  };
+
   const handleShippingDivChange = (id: string, name: string) => {
     if (name === "division") {
       const filteredDivision = BDDivisions.filter(
@@ -441,12 +491,16 @@ const CustomerInformation: React.FC<Props> = ({
             <div className='relative'>
               <Phone className='absolute left-2.5 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400' />
               <Input
-                type='tel'
+                type='text'
+                inputMode='numeric'
+                pattern='[0-9+]*'
                 id='phone-number'
                 name='phoneNumber'
                 placeholder='01712345678'
                 value={personalInfomation.phoneNumber}
-                onChange={handlePersonalInfomationChange}
+                onChange={handlePhoneInputChange}
+                onPaste={handlePhonePaste}
+                onBlur={handlePhoneBlur}
                 className={`pl-9 h-9 text-sm ${
                   errors.phoneNumber
                     ? "border-red-500 focus:border-red-500"

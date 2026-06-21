@@ -18,7 +18,6 @@ import {
   Plus,
   RefreshCw,
   Loader2,
-  Edit3,
   Package,
   XCircle,
   Shield,
@@ -89,8 +88,8 @@ import {
   SheetTitle,
 } from "../../components/ui/sheet";
 import { ScrollArea } from "../../components/ui/scroll-area";
-import EditCustomerInformation from "../order/editOrderCustomer";
 import useOrder from "../order/hooks/useOrder";
+import EditOrderPanelContent from "./components/EditCustomerInformationSheet";
 
 /* ─────────────────────────────────────────────────────────
    Tab configuration — keeps JSX clean
@@ -214,6 +213,7 @@ export const OrderListV2: React.FC = () => {
   const [pendingBulkActionType, setPendingBulkActionType] = useState<
     "complete" | "cancel" | "invoice" | null
   >(null);
+  const [editSheetKey, setEditSheetKey] = useState(0);
   const [selectedOrdersViewerOpen, setSelectedOrdersViewerOpen] =
     useState(false);
   const [isGeneratingInvoices, setIsGeneratingInvoices] = useState(false);
@@ -650,8 +650,10 @@ export const OrderListV2: React.FC = () => {
   // ── Order action handlers ─────────────────────────────────
   const handleViewOrder = (order: IOrder) => openOrderDetails(order);
 
+  // Update handleEditOrder to bump the key
   const handleEditOrder = (order: IOrder) => {
     setSelectedOrder(order);
+    setEditSheetKey((k) => k + 1); // force remount → clean portal
     setEditDialogOpen(true);
   };
 
@@ -712,59 +714,6 @@ export const OrderListV2: React.FC = () => {
     setReturnDialogOpen(true);
   };
   const handleCreateOrder = () => navigate("/order/create");
-
-  // ── Edit order panel ──────────────────────────────────────
-  const EditOrderPanel = () => {
-    if (!selectedOrder) return null;
-    return (
-      <Sheet
-        open={isEditDialogOpen}
-        onOpenChange={(val) => setEditDialogOpen(val)}>
-        <SheetContent className='p-0 flex flex-col'>
-          <SheetHeader className='px-6 py-5 border-b'>
-            <SheetTitle className='text-base font-semibold text-slate-900 flex items-center gap-2.5'>
-              <span className='inline-flex h-7 w-7 items-center justify-center rounded-md bg-blue-100'>
-                <Edit3 className='h-3.5 w-3.5 text-blue-600' />
-              </span>
-              Edit order details
-            </SheetTitle>
-            <SheetDescription className='text-slate-500 text-sm leading-relaxed'>
-              Update customer info, shipping details, and payment data.{" "}
-              <span className='text-amber-600 font-medium'>
-                Changes save immediately.
-              </span>
-            </SheetDescription>
-          </SheetHeader>
-          <ScrollArea className='flex-1'>
-            <EditCustomerInformation
-              notes={selectedOrder.notes ?? ""}
-              customerInfo={selectedOrder.customer}
-              shipping={selectedOrder.shipping}
-              deliveryCharge={selectedOrder.deliveryCharge ?? 0}
-              totalPrice={selectedOrder.totalPrice ?? 0}
-              paid={selectedOrder.paid ?? 0}
-              remaining={selectedOrder.remaining ?? 0}
-              discount={selectedOrder.discount ?? 0}
-              handleClose={() => setEditDialogOpen(false)}
-              handleCustomerDataChange={(data) => {
-                if (selectedOrder?.id) {
-                  editOrderData(
-                    { ...data, id: selectedOrder.id },
-                    (success: boolean) => {
-                      if (success) {
-                        refreshOrders();
-                        setEditDialogOpen(false);
-                      }
-                    },
-                  );
-                }
-              }}
-            />
-          </ScrollArea>
-        </SheetContent>
-      </Sheet>
-    );
-  };
 
   // ── Count helpers ────────────────────────────────────────
   const getCount = (key: string): number | undefined => {
@@ -1021,12 +970,6 @@ export const OrderListV2: React.FC = () => {
         onOpenChange={toggleCommandPalette}
       />
 
-      {/* ── Keyboard shortcuts modal ──────────────────────── */}
-      <KeyboardShortcutsModal
-        open={showKeyboardShortcuts}
-        onOpenChange={toggleKeyboardShortcutsModal}
-      />
-
       {/* ── Order details sheet (key forces remount → fixes ghost overlay) ── */}
       <OrderDetailsSheet
         key={detailsSheetKey}
@@ -1040,7 +983,14 @@ export const OrderListV2: React.FC = () => {
       />
 
       {/* ── Edit order panel ──────────────────────────────── */}
-      <EditOrderPanel />
+      <EditOrderPanelContent
+        key={editSheetKey}
+        selectedOrder={selectedOrder}
+        isEditDialogOpen={isEditDialogOpen}
+        setEditDialogOpen={setEditDialogOpen}
+        editOrderData={editOrderData}
+        refreshOrders={refreshOrders}
+      />
 
       {/* ── Fraud detection sheet ─────────────────────────── */}
       <Sheet open={fraudDialogOpen} onOpenChange={setFraudDialogOpen}>
@@ -1361,12 +1311,6 @@ export const OrderListV2: React.FC = () => {
         open={showOnboarding}
         onOpenChange={setShowOnboarding}
         onComplete={handleOnboardingComplete}
-      />
-
-      {/* ── Floating help ─────────────────────────────────── */}
-      <FloatingHelpButton
-        onShowKeyboardShortcuts={toggleKeyboardShortcutsModal}
-        onShowOnboarding={() => setShowOnboarding(true)}
       />
 
       {/* ── Invoice preview ───────────────────────────────── */}

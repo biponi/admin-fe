@@ -183,7 +183,7 @@ export const getInitialsWord = (sentence: string) => {
 export const getLocationByFormattedString = (
   array: any[],
   formattedString: string
-): Location | undefined => {
+): any => {
   // Extract name and bn_name from the formatted string
   const regex = /^(.*)\((.*)\)$/;
   const match = formattedString.match(regex);

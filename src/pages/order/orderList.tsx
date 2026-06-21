@@ -136,6 +136,7 @@ import { useIsMobile } from "../../hooks/use-mobile";
 import { BRAND_CONFIG } from "../../config/brand";
 import PlaceHolderImage from "../../assets/placeholder.svg";
 import { cn } from "@/lib/utils";
+import EditOrderPanelContent from "../order-v2/components/EditCustomerInformationSheet";
 
 const OrderList = () => {
   const isMobile = useIsMobile();
@@ -174,6 +175,7 @@ const OrderList = () => {
   const [isEditDialogOpen, setEditDialogOpen] = useState<boolean>(false);
   const [selectedOrder, setSelectedOrder] = useState<IOrder | null>(null);
   const [modifyDialogOpen, setModifyDialogOpen] = useState<boolean>(false);
+  const [editSheetKey, setEditSheetKey] = useState(0);
   const [courierSelectorOpen, setCourierSelectorOpen] =
     useState<boolean>(false);
   const [courierSelectorMobile, setCourierSelectorMobile] =
@@ -1627,7 +1629,7 @@ const OrderList = () => {
               </Button>
               <Button
                 size='sm'
-                className='text-xs bg-gray-900 hover:bg-gray-800 text-white gap-1.5'
+                className='hidden text-xs bg-gray-900 hover:bg-gray-800 text-white gap-1.5'
                 onClick={() => setShowDetails(false)}>
                 <PencilLine className='h-3.5 w-3.5' />
                 Edit order
@@ -1870,61 +1872,6 @@ const OrderList = () => {
     );
   };
 
-  // Parent Component - Sheet Implementation
-  const drawerDialog = () => {
-    // Add safety check
-    if (!selectedOrder) {
-      return null;
-    }
-
-    return (
-      <Sheet
-        open={isEditDialogOpen}
-        onOpenChange={(val: boolean) => setEditDialogOpen(val)}>
-        <SheetContent className='p-0 flex flex-col'>
-          <SheetHeader className='px-6 py-4 border-b bg-gradient-to-r from-blue-50/80 to-green-50/80'>
-            <SheetTitle className='text-xl font-semibold text-slate-800 flex items-center gap-2'>
-              <div className='p-1.5 rounded-lg bg-blue-100'>
-                <Edit3 className='h-4 w-4 text-blue-600' />
-              </div>
-              Edit Order Details
-            </SheetTitle>
-            <SheetDescription className='text-slate-600 text-sm'>
-              Update customer information, shipping details, and payment data.
-              <span className='block text-red-500 font-medium mt-1'>
-                ⚠️ Changes will be saved immediately
-              </span>
-            </SheetDescription>
-          </SheetHeader>
-
-          <ScrollArea className='w-full'>
-            <EditCustomerInformation
-              notes={selectedOrder.notes ?? ""}
-              customerInfo={selectedOrder.customer}
-              shipping={selectedOrder.shipping}
-              deliveryCharge={selectedOrder.deliveryCharge ?? 0}
-              totalPrice={selectedOrder.totalPrice ?? 0}
-              paid={selectedOrder.paid ?? 0}
-              remaining={selectedOrder.remaining ?? 0}
-              discount={selectedOrder.discount ?? 0}
-              handleClose={() => setEditDialogOpen(false)}
-              handleCustomerDataChange={(data) => {
-                if (selectedOrder?.id) {
-                  editOrderData(
-                    { ...data, id: selectedOrder.id },
-                    (success: boolean) => {
-                      if (success) refresh();
-                    },
-                  );
-                }
-              }}
-            />
-          </ScrollArea>
-        </SheetContent>
-      </Sheet>
-    );
-  };
-
   const renderBulkActionDrawer = () => {
     return (
       <Drawer
@@ -2107,8 +2054,18 @@ const OrderList = () => {
       {mainView()}
       {renderBulkActionDrawer()}
       {returnModal()}
-      {drawerDialog()}
+
       {renderOrderDetailsPanel()}
+
+      {/* ── Edit order panel ──────────────────────────────── */}
+      <EditOrderPanelContent
+        key={editSheetKey}
+        selectedOrder={selectedOrder}
+        isEditDialogOpen={isEditDialogOpen}
+        setEditDialogOpen={setEditDialogOpen}
+        editOrderData={editOrderData}
+        refreshOrders={() => console.log("refreshed")}
+      />
 
       {/* Courier Selector Dialog for Desktop */}
       <CourierSelector

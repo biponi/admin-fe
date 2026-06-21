@@ -12,6 +12,7 @@ import type {
   ITransection,
 } from "../order/interface.d";
 import type { IProduct, IVariation, IImageGroup } from "../product/interface.d";
+import { isValidBangladeshiMobileNumber } from "../../utils/helperFunction";
 
 const generateCartItemId = (): string =>
   `cart_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
@@ -476,6 +477,10 @@ export const useCreateOrderLayoutStore = create<CreateOrderLayoutState>()(
             errors.customerName = ["Customer name is required"];
           if (!state.customerInfo.phoneNumber)
             errors.customerPhone = ["Phone number is required"];
+          else if (!isValidBangladeshiMobileNumber(state.customerInfo.phoneNumber))
+            errors.customerPhone = [
+              "Invalid Bangladeshi phone number. Must be 11 digits starting with 01 (e.g., 01712345678)",
+            ];
           if (!state.shippingInfo.division)
             errors.division = ["District is required"];
           if (!state.shippingInfo.district)

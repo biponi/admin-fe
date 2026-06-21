@@ -253,7 +253,22 @@ export const OrderDetailsSheet: React.FC<OrderDetailsSheetProps> = ({
   /* ---------- Render ---------- */
 
   return (
-    <Sheet open={open} onOpenChange={onOpenChange} modal={false}>
+    <Sheet
+      open={open}
+      onOpenChange={(val) => {
+        if (!val) {
+          // Force remove any stuck overlay after close animation
+          setTimeout(() => {
+            document.body.style.pointerEvents = "";
+            document.body.style.overflow = "";
+            // Remove any lingering radix overlay portals
+            document
+              .querySelectorAll("[data-radix-popper-content-wrapper]")
+              .forEach((el) => el.remove());
+          }, 300);
+        }
+        onOpenChange(val);
+      }}>
       <SheetContent
         className={cn(
           "flex flex-col gap-0 p-0",
@@ -675,7 +690,7 @@ export const OrderDetailsSheet: React.FC<OrderDetailsSheetProps> = ({
             {onEdit && (
               <Button
                 size='sm'
-                className='flex-1 min-w-[100px] text-xs bg-blue-600 hover:bg-blue-700 text-white gap-1.5'
+                className='hidden flex-1 min-w-[100px] text-xs bg-blue-600 hover:bg-blue-700 text-white gap-1.5'
                 onClick={() => {
                   onEdit(order);
                   onOpenChange(false);

@@ -67,3 +67,30 @@ export const setTopicsForNotifications = (
 
   return topics;
 };
+
+// Bangladesh phone validation
+// Valid formats: 01XXXXXXXXX (11 digits), starting with 013-019
+const BD_PHONE_REGEX = /^(?:\+88)?01[3-9]\d{8}$/;
+
+export const normalizeBDPhone = (raw: string): string => {
+  // Remove all non-numeric chars first
+  let digits = raw.replace(/\D/g, "");
+
+  // Handle country code prefix: 8801XXXXXXXXX → 01XXXXXXXXX
+  if (digits.startsWith("880") && digits.length === 13) {
+    digits = "0" + digits.slice(3);
+  }
+
+  // Handle +88 prefix already stripped to 8801... above
+  // Ensure starts with 0 if 10 digits (missing leading 0)
+  if (digits.length === 10 && digits.startsWith("1")) {
+    digits = "0" + digits;
+  }
+
+  return digits;
+};
+
+export const isValidBDPhone = (phone: string): boolean => {
+  const normalized = normalizeBDPhone(phone);
+  return BD_PHONE_REGEX.test(normalized);
+};

@@ -1,17 +1,10 @@
-import { useEffect, useState, useMemo, useCallback } from "react";
+import { useEffect, useState, useMemo, useCallback, useRef } from "react";
 import {
   Card,
   CardContent,
   CardHeader,
   CardTitle,
 } from "../../components/ui/card";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "../../components/ui/select";
 import { Label } from "../../components/ui/label";
 import { Input } from "../../components/ui/input";
 import { Textarea } from "../../components/ui/textarea";
@@ -19,23 +12,38 @@ import { Button } from "../../components/ui/button";
 import { Badge } from "../../components/ui/badge";
 import { Separator } from "../../components/ui/separator";
 import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+} from "../../components/ui/command";
+import {
   User,
   MapPin,
   CreditCard,
   Phone,
   Mail,
   FileText,
-  Search,
   Calculator,
   Truck,
   Tag,
   Wallet,
   Save,
   X,
+  CheckCircle2,
+  XCircle,
+  AlertCircle,
+  ChevronsUpDown,
+  Check,
+  Package,
 } from "lucide-react";
+import { cn } from "../../lib/utils";
 import { BDDistrictList, BDDivisions } from "../../utils/contents";
 import { getLocationByFormattedString } from "../../utils/functions";
 import { ICustomer } from "./interface";
+import { isValidBDPhone, normalizeBDPhone } from "@/utils/helperFunction";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Types
@@ -49,8 +57,8 @@ interface Location {
 }
 
 interface ShippingAddress {
-  division: any;
-  district: any;
+  division: Location | null;
+  district: Location | null;
   address: string;
 }
 
@@ -75,108 +83,157 @@ interface Props {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Reusable Components
+// Avatar initials helper
 // ─────────────────────────────────────────────────────────────────────────────
 
-const SectionCard = ({
+const getInitials = (name: string) =>
+  name
+    .split(" ")
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((w) => w[0].toUpperCase())
+    .join("");
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Section wrapper
+// ─────────────────────────────────────────────────────────────────────────────
+
+const Section = ({
   icon: Icon,
-  iconBg,
-  iconColor,
-  title,
+  label,
   children,
 }: {
   icon: React.ElementType;
-  iconBg: string;
-  iconColor: string;
-  title: string;
+  label: string;
   children: React.ReactNode;
 }) => (
-  <Card className='border-slate-200/60 shadow-none border-x-0 border-t-0 rounded-none'>
-    <CardHeader className='px-0 pb-3'>
-      <CardTitle className='flex items-center gap-2 text-slate-700 text-base'>
-        <div className={`p-1 rounded ${iconBg}`}>
-          <Icon className={`h-3.5 w-3.5 ${iconColor}`} />
-        </div>
-        {title}
-      </CardTitle>
-    </CardHeader>
-    <CardContent className='px-0 space-y-3'>{children}</CardContent>
-  </Card>
+  <div className='space-y-3'>
+    <p className='flex items-center gap-1.5 text-[11px] font-medium uppercase tracking-wider text-muted-foreground'>
+      <Icon className='h-3 w-3' />
+      {label}
+    </p>
+    {children}
+  </div>
 );
 
-const FormField = ({
+// ─────────────────────────────────────────────────────────────────────────────
+// Labelled field wrapper
+// ─────────────────────────────────────────────────────────────────────────────
+
+const Field = ({
   label,
-  icon: Icon,
+  required,
   children,
 }: {
   label: string;
-  icon?: React.ElementType;
+  required?: boolean;
   children: React.ReactNode;
 }) => (
-  <div className='space-y-2'>
-    <Label className='text-xs font-medium text-slate-700 flex items-center gap-1'>
-      {Icon && <Icon className='h-3 w-3' />}
+  <div className='space-y-1.5'>
+    <Label className='text-xs font-medium text-muted-foreground'>
       {label}
+      {required && <span className='ml-0.5 text-destructive'>*</span>}
     </Label>
     {children}
   </div>
 );
 
-const SearchableSelect = ({
+// ─────────────────────────────────────────────────────────────────────────────
+// Command-based location dropdown (inline, no popover)
+// ─────────────────────────────────────────────────────────────────────────────
+
+const LocationCombobox = ({
   value,
   onValueChange,
   options,
   placeholder,
-  query,
-  onQueryChange,
-  colorClass = "green",
+  disabled = false,
 }: {
   value: string;
-  onValueChange: (value: string) => void;
+  onValueChange: (id: string) => void;
   options: Location[];
   placeholder: string;
-  query: string;
-  onQueryChange: (query: string) => void;
-  colorClass?: string;
+  disabled?: boolean;
 }) => {
-  const filtered = options.filter(
-    (opt) =>
-      opt.name.toLowerCase().includes(query.toLowerCase()) ||
-      opt.bn_name.includes(query),
-  );
+  const [open, setOpen] = useState(false);
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  const selected = options.find((o) => o.id === value);
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (containerRef.current && !containerRef.current.contains(event.target as Node)) {
+        setOpen(false);
+      }
+    };
+
+    if (open) {
+      document.addEventListener("mousedown", handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [open]);
 
   return (
-    <Select value={value} onValueChange={onValueChange}>
-      <SelectTrigger
-        className={`h-9 text-sm focus:ring-1 focus:ring-${colorClass}-500/30`}>
-        <SelectValue placeholder={placeholder} />
-      </SelectTrigger>
-      <SelectContent>
-        <div className='relative'>
-          <Search className='absolute left-2 top-2 h-3 w-3 text-gray-400' />
-          <Input
-            type='text'
-            className={`h-7 pl-7 text-xs border-0 border-b rounded-none focus:border-${colorClass}-500 focus:ring-0`}
-            placeholder='Search...'
-            value={query}
-            onChange={(e) => onQueryChange(e.target.value)}
-          />
+    <div className='relative' ref={containerRef}>
+      <Button
+        variant='outline'
+        role='combobox'
+        aria-expanded={open}
+        disabled={disabled}
+        onClick={() => setOpen(!open)}
+        className={cn(
+          "h-9 w-full justify-between border-border/50 text-sm font-normal",
+          "hover:bg-accent/50 disabled:opacity-50",
+          !selected && "text-muted-foreground",
+        )}>
+        <span className='truncate'>{selected?.name ?? placeholder}</span>
+        <ChevronsUpDown className='ml-2 h-3.5 w-3.5 shrink-0 text-muted-foreground' />
+      </Button>
+
+      {open && (
+        <div className='absolute z-50 w-full mt-1 bg-popover border rounded-md shadow-lg'>
+          <Command>
+            <CommandInput
+              placeholder={`Search ${placeholder.toLowerCase()}...`}
+              className='h-8 text-xs'
+            />
+            <CommandList className='max-h-48'>
+              <CommandEmpty className='py-6 text-center text-xs text-muted-foreground'>
+                No results found.
+              </CommandEmpty>
+              <CommandGroup>
+                {options.map((opt) => (
+                  <CommandItem
+                    key={opt.id}
+                    value={`${opt.name} ${opt.bn_name}`}
+                    onSelect={() => {
+                      onValueChange(opt.id);
+                      setOpen(false);
+                    }}
+                    className='cursor-pointer text-xs'>
+                    <Check
+                      className={cn(
+                        "mr-2 h-3 w-3",
+                        value === opt.id ? "opacity-100" : "opacity-0",
+                      )}
+                    />
+                    <span>{opt.name}</span>
+                  </CommandItem>
+                ))}
+              </CommandGroup>
+            </CommandList>
+          </Command>
         </div>
-        {filtered.map((opt) => (
-          <SelectItem
-            key={opt.id}
-            value={opt.id}
-            className={`text-xs cursor-pointer hover:bg-${colorClass}-50`}>
-            {`${opt.name}`}
-          </SelectItem>
-        ))}
-      </SelectContent>
-    </Select>
+      )}
+    </div>
   );
 };
-
 // ─────────────────────────────────────────────────────────────────────────────
-// Custom Hooks
+// Payment hook
 // ─────────────────────────────────────────────────────────────────────────────
 
 const usePaymentCalculations = (initial: PaymentInfo) => {
@@ -202,7 +259,7 @@ const usePaymentCalculations = (initial: PaymentInfo) => {
 
   useEffect(() => {
     setPayment(initial);
-    //eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [
     initial.totalPrice,
     initial.deliveryCharge,
@@ -214,7 +271,7 @@ const usePaymentCalculations = (initial: PaymentInfo) => {
 };
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Main Component
+// Main component
 // ─────────────────────────────────────────────────────────────────────────────
 
 const EditCustomerInformation: React.FC<Props> = ({
@@ -239,19 +296,13 @@ const EditCustomerInformation: React.FC<Props> = ({
     address: "",
   });
   const [updatedNotes, setUpdatedNotes] = useState(notes);
-  const [divisionQuery, setDivisionQuery] = useState("");
-  const [districtQuery, setDistrictQuery] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [phoneTouched, setPhoneTouched] = useState(false);
 
   const { payment, remaining, finalAmount, updateField } =
-    usePaymentCalculations({
-      totalPrice,
-      deliveryCharge,
-      discount,
-      paid,
-    });
+    usePaymentCalculations({ totalPrice, deliveryCharge, discount, paid });
 
-  // Sync props to state
+  // ── Sync props → state ──────────────────────────────────────────────────
   useEffect(() => setPersonalInfo(customerInfo), [customerInfo]);
   useEffect(() => setUpdatedNotes(notes), [notes]);
   useEffect(() => {
@@ -268,27 +319,66 @@ const EditCustomerInformation: React.FC<Props> = ({
     });
   }, [shipping]);
 
-  const handlePersonalChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setPersonalInfo((prev) => ({ ...prev, [e.target.name]: e.target.value }));
-  };
+  // ── Phone handlers ──────────────────────────────────────────────────────
+  const handlePhoneChange = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      const digits = e.target.value.replace(/\D/g, "");
+      setPersonalInfo((prev) => ({ ...prev, phoneNumber: digits }));
+    },
+    [],
+  );
 
-  const handleDivisionChange = (id: string) => {
+  const handlePhonePaste = useCallback(
+    (e: React.ClipboardEvent<HTMLInputElement>) => {
+      e.preventDefault();
+      const normalized = normalizeBDPhone(e.clipboardData.getData("text"));
+      if (normalized) {
+        setPersonalInfo((prev) => ({ ...prev, phoneNumber: normalized }));
+      }
+    },
+    [],
+  );
+
+  const handlePhoneBlur = useCallback(() => {
+    setPhoneTouched(true);
+    setPersonalInfo((prev) => ({
+      ...prev,
+      phoneNumber: normalizeBDPhone(prev.phoneNumber ?? ""),
+    }));
+  }, []);
+
+  // null = untouched, true = valid, false = invalid
+  const phoneValidity: boolean | null = useMemo(() => {
+    if (!phoneTouched || !personalInfo.phoneNumber) return null;
+    return isValidBDPhone(personalInfo.phoneNumber);
+  }, [phoneTouched, personalInfo.phoneNumber]);
+
+  // ── Location handlers ───────────────────────────────────────────────────
+  const handleDivisionChange = useCallback((id: string) => {
     const division = BDDivisions.find((d) => d.id === id) ?? null;
     setShippingAddress((prev) => ({ ...prev, division, district: null }));
-    setDistrictQuery("");
-  };
+  }, []);
 
-  const handleDistrictChange = (id: string) => {
+  const handleDistrictChange = useCallback((id: string) => {
     const district = BDDistrictList.find((d) => d.id === id) ?? null;
     setShippingAddress((prev) => ({ ...prev, district }));
-  };
+  }, []);
 
-  const formatLocation = (loc: Location | null) => (loc ? `${loc.name}` : "");
+  const filteredDistricts = useMemo(
+    () =>
+      BDDistrictList.filter(
+        (d) => d.division_id === shippingAddress.division?.id,
+      ),
+    [shippingAddress.division?.id],
+  );
 
-  const handleSubmit = () => {
+  const formatLocation = (loc: Location | null) => loc?.name ?? "";
+
+  // ── Submit ───────────────────────────────────────────────────────────────
+  const handleSubmit = async () => {
     setIsSubmitting(true);
     try {
-      handleCustomerDataChange({
+      await handleCustomerDataChange({
         notes: updatedNotes,
         customer: personalInfo,
         shipping: {
@@ -306,209 +396,288 @@ const EditCustomerInformation: React.FC<Props> = ({
     }
   };
 
-  const filteredDistricts = useMemo(
-    () =>
-      BDDistrictList.filter(
-        (d) => d.division_id === shippingAddress.division?.id,
-      ),
-    [shippingAddress.division?.id],
-  );
+  const initials = getInitials(personalInfo.name || "?");
 
+  // ── Render ───────────────────────────────────────────────────────────────
   return (
-    <div className='flex flex-col h-full'>
-      <div className='flex-1 overflow-y-auto px-6 py-4 space-y-4'>
-        {/* Customer Information */}
-        <SectionCard
-          icon={User}
-          iconBg='bg-blue-100'
-          iconColor='text-blue-600'
-          title='Customer Information'>
-          <FormField label='Customer Name' icon={User}>
-            <Input
-              name='name'
-              value={personalInfo.name}
-              onChange={handlePersonalChange}
-              placeholder='Enter customer name'
-              className='h-9 text-sm'
-            />
-          </FormField>
+    <div className='flex flex-col min-h-full bg-background'>
+      {/* ── Customer identity strip ── */}
+      <div className='flex items-center gap-3 px-6 py-4 border-b border-border/50 bg-muted/30'>
+        <div className='h-9 w-9 rounded-full bg-blue-100 flex items-center justify-center shrink-0'>
+          <span className='text-xs font-semibold text-blue-700'>
+            {initials}
+          </span>
+        </div>
+        <div className='min-w-0'>
+          <p className='text-sm font-medium text-foreground truncate'>
+            {personalInfo.name || "New customer"}
+          </p>
+          <p className='text-[11px] text-muted-foreground truncate'>
+            {personalInfo.phoneNumber || "No phone set"}
+          </p>
+        </div>
+        <Badge
+          variant='secondary'
+          className='ml-auto shrink-0 text-[10px] h-5 px-2'>
+          <Package className='h-2.5 w-2.5 mr-1' />
+          Edit order
+        </Badge>
+      </div>
 
-          <div className='grid grid-cols-1 sm:grid-cols-2 gap-3'>
-            <FormField label='Email' icon={Mail}>
-              <Input
-                name='email'
-                type='email'
-                value={personalInfo.email}
-                onChange={handlePersonalChange}
-                placeholder='email@example.com'
-                className='h-9 text-sm'
+      {/* ── Scrollable body ── */}
+      <div className='flex-1 overflow-y-auto'>
+        <div className='px-6 py-5 space-y-6'>
+          {/* Personal info */}
+          <Section icon={User} label='Customer information'>
+            <Field label='Full name'>
+              <div className='relative'>
+                <User className='absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground pointer-events-none' />
+                <Input
+                  name='name'
+                  value={personalInfo.name}
+                  onChange={(e) =>
+                    setPersonalInfo((prev) => ({
+                      ...prev,
+                      name: e.target.value,
+                    }))
+                  }
+                  placeholder='Enter customer name'
+                  className='pl-8 h-9 text-sm border-border/50 focus-visible:ring-blue-500/20'
+                />
+              </div>
+            </Field>
+
+            <div className='grid grid-cols-2 gap-3'>
+              <Field label='Email'>
+                <div className='relative'>
+                  <Mail className='absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground pointer-events-none' />
+                  <Input
+                    name='email'
+                    type='email'
+                    value={personalInfo.email}
+                    onChange={(e) =>
+                      setPersonalInfo((prev) => ({
+                        ...prev,
+                        email: e.target.value,
+                      }))
+                    }
+                    placeholder='email@example.com'
+                    className='pl-8 h-9 text-sm border-border/50 focus-visible:ring-blue-500/20'
+                  />
+                </div>
+              </Field>
+
+              <Field label='Phone' required>
+                <div className='relative'>
+                  <Phone className='absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground pointer-events-none' />
+                  <Input
+                    name='phoneNumber'
+                    type='text'
+                    inputMode='numeric'
+                    pattern='[0-9]*'
+                    maxLength={11}
+                    value={personalInfo.phoneNumber ?? ""}
+                    onChange={handlePhoneChange}
+                    onPaste={handlePhonePaste}
+                    onBlur={handlePhoneBlur}
+                    placeholder='01XXXXXXXXX'
+                    className={cn(
+                      "pl-8 pr-8 h-9 text-sm transition-colors border-border/50",
+                      phoneValidity === true &&
+                        "border-emerald-500 bg-emerald-50/50 focus-visible:ring-emerald-500/20",
+                      phoneValidity === false &&
+                        "border-red-400 bg-red-50/50 focus-visible:ring-red-400/20",
+                    )}
+                  />
+                  {phoneValidity === true && (
+                    <CheckCircle2 className='absolute right-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-emerald-500 pointer-events-none' />
+                  )}
+                  {phoneValidity === false && (
+                    <XCircle className='absolute right-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-red-400 pointer-events-none' />
+                  )}
+                </div>
+                {phoneValidity === false && (
+                  <p className='flex items-center gap-1 text-[11px] text-red-500'>
+                    <AlertCircle className='h-3 w-3 shrink-0' />
+                    Valid BD number required (e.g. 01712345678)
+                  </p>
+                )}
+              </Field>
+            </div>
+
+            <Field label='Order notes'>
+              <Textarea
+                rows={2}
+                value={updatedNotes}
+                onChange={(e) => setUpdatedNotes(e.target.value)}
+                placeholder='Special instructions, fragile items, delivery preferences...'
+                className='text-sm resize-none border-border/50 focus-visible:ring-blue-500/20'
               />
-            </FormField>
-            <FormField label='Phone' icon={Phone}>
-              <Input
-                name='phoneNumber'
-                value={personalInfo.phoneNumber}
-                onChange={handlePersonalChange}
-                placeholder='017XXXXXXXXX'
-                className='h-9 text-sm'
-              />
-            </FormField>
-          </div>
+            </Field>
+          </Section>
 
-          <FormField label='Notes' icon={FileText}>
-            <Textarea
-              rows={2}
-              value={updatedNotes}
-              onChange={(e) => setUpdatedNotes(e.target.value)}
-              placeholder='Special instructions...'
-              className='text-sm resize-none'
-            />
-          </FormField>
-        </SectionCard>
+          <Separator className='bg-border/50' />
 
-        {/* Shipping Address */}
-        <SectionCard
-          icon={MapPin}
-          iconBg='bg-green-100'
-          iconColor='text-green-600'
-          title='Shipping Address'>
-          <div className='grid grid-cols-1 sm:grid-cols-2 gap-3'>
-            <FormField label='District'>
-              <SearchableSelect
-                value={shippingAddress.division?.id ?? ""}
-                onValueChange={handleDivisionChange}
-                options={BDDivisions}
-                placeholder='Select division'
-                query={divisionQuery}
-                onQueryChange={setDivisionQuery}
-              />
-            </FormField>
-
-            {shippingAddress.division && (
-              <FormField label='Area'>
-                <SearchableSelect
+          {/* Shipping */}
+          <Section icon={MapPin} label='Shipping address'>
+            <div className='grid grid-cols-2 gap-3'>
+              <Field label='Division'>
+                <LocationCombobox
+                  value={shippingAddress.division?.id ?? ""}
+                  onValueChange={handleDivisionChange}
+                  options={BDDivisions}
+                  placeholder='Select division'
+                />
+              </Field>
+              <Field label='District'>
+                <LocationCombobox
                   value={shippingAddress.district?.id ?? ""}
                   onValueChange={handleDistrictChange}
                   options={filteredDistricts}
                   placeholder='Select district'
-                  query={districtQuery}
-                  onQueryChange={setDistrictQuery}
+                  disabled={!shippingAddress.division}
                 />
-              </FormField>
-            )}
-          </div>
+              </Field>
+            </div>
 
-          <FormField label='Complete Address'>
-            <Textarea
-              rows={2}
-              value={shippingAddress.address}
-              onChange={(e) =>
-                setShippingAddress((prev) => ({
-                  ...prev,
-                  address: e.target.value,
-                }))
-              }
-              placeholder='House/Flat no., Street, Area...'
-              className='text-sm resize-none'
-            />
-          </FormField>
-        </SectionCard>
-
-        {/* Payment Details */}
-        <SectionCard
-          icon={CreditCard}
-          iconBg='bg-amber-100'
-          iconColor='text-amber-600'
-          title='Payment Details'>
-          <div className='grid grid-cols-2 gap-3'>
-            <FormField label='Total Price' icon={Calculator}>
-              <Input
-                type='number'
-                value={payment.totalPrice}
-                disabled
-                className='h-9 text-sm bg-slate-50'
-              />
-            </FormField>
-            <FormField label='Delivery' icon={Truck}>
-              <Input
-                type='number'
-                min={0}
-                value={payment.deliveryCharge}
+            <Field label='Complete address'>
+              <Textarea
+                rows={2}
+                value={shippingAddress.address}
                 onChange={(e) =>
-                  updateField("deliveryCharge", Number(e.target.value))
+                  setShippingAddress((prev) => ({
+                    ...prev,
+                    address: e.target.value,
+                  }))
                 }
-                className='h-9 text-sm'
+                placeholder='House/Flat no., Road, Area...'
+                className='text-sm resize-none border-border/50 focus-visible:ring-blue-500/20'
               />
-            </FormField>
-            <FormField label='Discount' icon={Tag}>
-              <Input
-                type='number'
-                min={0}
-                value={payment.discount}
-                onChange={(e) =>
-                  updateField("discount", Number(e.target.value))
-                }
-                className='h-9 text-sm'
-              />
-            </FormField>
-            <FormField label='Paid' icon={Wallet}>
-              <Input
-                type='number'
-                min={0}
-                value={payment.paid}
-                onChange={(e) => updateField("paid", Number(e.target.value))}
-                className='h-9 text-sm'
-              />
-            </FormField>
-          </div>
+            </Field>
+          </Section>
 
-          <Separator className='my-3' />
+          <Separator className='bg-border/50' />
 
-          <div className='bg-slate-50 p-3 rounded-md'>
-            <h4 className='text-xs font-medium text-slate-700 flex items-center gap-1 mb-2'>
-              <Calculator className='h-3 w-3' /> Summary
-            </h4>
-            <div className='grid grid-cols-2 gap-2 text-xs'>
-              <div className='flex justify-between'>
-                <span className='text-slate-600'>Final:</span>
-                <span className='font-medium'>
+          {/* Payment */}
+          <Section icon={CreditCard} label='Payment details'>
+            <div className='grid grid-cols-2 gap-3'>
+              <Field label='Total price'>
+                <div className='relative'>
+                  <span className='absolute left-2.5 top-1/2 -translate-y-1/2 text-xs text-muted-foreground font-medium'>
+                    ৳
+                  </span>
+                  <Input
+                    type='number'
+                    value={payment.totalPrice}
+                    disabled
+                    className='pl-7 h-9 text-sm bg-muted/50 border-border/50 text-muted-foreground cursor-not-allowed'
+                  />
+                </div>
+              </Field>
+
+              <Field label='Delivery charge'>
+                <div className='relative'>
+                  <Truck className='absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground pointer-events-none' />
+                  <Input
+                    type='number'
+                    min={0}
+                    value={payment.deliveryCharge}
+                    onChange={(e) =>
+                      updateField("deliveryCharge", Number(e.target.value))
+                    }
+                    className='pl-8 h-9 text-sm border-border/50 focus-visible:ring-blue-500/20'
+                  />
+                </div>
+              </Field>
+
+              <Field label='Discount'>
+                <div className='relative'>
+                  <Tag className='absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground pointer-events-none' />
+                  <Input
+                    type='number'
+                    min={0}
+                    value={payment.discount}
+                    onChange={(e) =>
+                      updateField("discount", Number(e.target.value))
+                    }
+                    className='pl-8 h-9 text-sm border-border/50 focus-visible:ring-blue-500/20'
+                  />
+                </div>
+              </Field>
+
+              <Field label='Amount paid'>
+                <div className='relative'>
+                  <Wallet className='absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground pointer-events-none' />
+                  <Input
+                    type='number'
+                    min={0}
+                    value={payment.paid}
+                    onChange={(e) =>
+                      updateField("paid", Number(e.target.value))
+                    }
+                    className='pl-8 h-9 text-sm border-border/50 focus-visible:ring-blue-500/20'
+                  />
+                </div>
+              </Field>
+            </div>
+
+            {/* Summary card */}
+            <div className='rounded-lg bg-muted/40 border border-border/40 p-3.5 space-y-2.5 mt-1'>
+              <div className='flex items-center justify-between text-xs'>
+                <span className='text-muted-foreground flex items-center gap-1.5'>
+                  <Calculator className='h-3 w-3' />
+                  Final amount
+                </span>
+                <span className='font-semibold text-foreground'>
                   ৳{finalAmount.toLocaleString()}
                 </span>
               </div>
-              <div className='flex justify-between items-center'>
-                <span className='text-slate-600'>Due:</span>
+              <Separator className='bg-border/50' />
+              <div className='flex items-center justify-between text-xs'>
+                <span className='text-muted-foreground'>Amount due</span>
                 <Badge
                   variant={remaining > 0 ? "destructive" : "secondary"}
-                  className='text-xs h-5 px-2'>
-                  ৳{remaining.toLocaleString()}
+                  className={cn(
+                    "text-[11px] h-5 px-2.5 font-medium",
+                    remaining === 0 &&
+                      "bg-emerald-100 text-emerald-700 hover:bg-emerald-100",
+                  )}>
+                  {remaining > 0
+                    ? `৳${remaining.toLocaleString()} due`
+                    : "Paid in full"}
                 </Badge>
               </div>
             </div>
-          </div>
-        </SectionCard>
+          </Section>
+
+          {/* Bottom breathing room */}
+          <div className='h-2' />
+        </div>
       </div>
 
-      {/* Footer */}
-      <div className='border-t bg-slate-50/80 backdrop-blur-sm p-4 flex gap-3'>
+      {/* ── Footer ── */}
+      <div className='shrink-0 border-t border-border/50 bg-background/95 backdrop-blur-sm px-6 py-4 flex gap-3'>
         <Button
           variant='outline'
           onClick={handleClose}
           disabled={isSubmitting}
-          className='flex-1 h-9 text-sm'>
-          <X className='h-3.5 w-3.5 mr-1' /> Cancel
+          className='flex-1 h-9 text-sm border-border/50 hover:bg-muted/60'>
+          <X className='h-3.5 w-3.5 mr-1.5' />
+          Cancel
         </Button>
         <Button
           onClick={handleSubmit}
           disabled={isSubmitting}
-          className='flex-1 h-9 text-sm bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800'>
+          className='flex-[2] h-9 text-sm bg-blue-600 hover:bg-blue-700 text-white'>
           {isSubmitting ? (
             <>
-              <div className='w-3.5 h-3.5 border border-white border-t-transparent rounded-full animate-spin mr-1' />{" "}
+              <div className='h-3.5 w-3.5 rounded-full border border-white border-t-transparent animate-spin mr-1.5' />
               Saving...
             </>
           ) : (
             <>
-              <Save className='h-3.5 w-3.5 mr-1' /> Save Changes
+              <Save className='h-3.5 w-3.5 mr-1.5' />
+              Save changes
             </>
           )}
         </Button>
