@@ -9,7 +9,7 @@ import { MapPin, Calendar, User } from "lucide-react";
 import dayjs from "dayjs";
 
 interface DeliveryTimelineProps {
-  provider: "pathao" | "steadfast";
+  provider: "pathao" | "steadfast" | "carrybee";
   timeline: DeliveryTimelineEntry[];
 }
 
@@ -59,6 +59,10 @@ export const DeliveryTimeline: React.FC<DeliveryTimelineProps> = ({
                       src='https://logosandtypes.com/wp-content/uploads/2025/04/Pathao.png'
                       alt='pathao'
                     />
+                  ) : provider.includes("carrybee") ? (
+                    <div className='w-8 h-8 rounded-full bg-amber-500 flex items-center justify-center text-white font-bold shadow'>
+                      CB
+                    </div>
                   ) : (
                     <img
                       className='rounded-full shadow w-8'

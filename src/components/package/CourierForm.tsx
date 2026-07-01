@@ -25,6 +25,7 @@ const courierSchema = z.object({
     "steadfast",
     "pathao",
     "redx",
+    "carrybee",
     "manual",
     "custom",
     "self",
@@ -78,6 +79,7 @@ export function CourierForm({
                   <SelectItem value="steadfast">Steadfast</SelectItem>
                   <SelectItem value="pathao">Pathao</SelectItem>
                   <SelectItem value="redx">RedX</SelectItem>
+                  <SelectItem value="carrybee">Carrybee</SelectItem>
                   <SelectItem value="manual">Manual Delivery</SelectItem>
                   <SelectItem value="custom">Custom Courier</SelectItem>
                   <SelectItem value="self">Self Pickup</SelectItem>

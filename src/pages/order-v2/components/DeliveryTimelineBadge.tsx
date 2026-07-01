@@ -193,11 +193,17 @@ const StatusCard = ({
             <div className='flex items-center justify-between mb-3'>
               <div className='flex items-center gap-2 flex-wrap'>
                 <div className='relative'>
-                  <img
-                    className='w-7 h-7 rounded-lg object-cover ring-1 ring-slate-100'
-                    src={providerLogo}
-                    alt={provider}
-                  />
+                  {providerLogo ? (
+                    <img
+                      className='w-7 h-7 rounded-lg object-cover ring-1 ring-slate-100'
+                      src={providerLogo}
+                      alt={provider}
+                    />
+                  ) : (
+                    <div className='w-7 h-7 rounded-lg bg-amber-500 flex items-center justify-center text-white text-xs font-bold ring-1 ring-amber-200'>
+                      CB
+                    </div>
+                  )}
                 </div>
                 <span
                   className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-sm font-semibold ${config.bg} ${config.text} ${config.border} border`}>
@@ -287,6 +293,8 @@ const DeliveryTimelineBadge: React.FC<{
   const providerLogo =
     !!provider && provider.toLowerCase().includes("pathao")
       ? "https://logosandtypes.com/wp-content/uploads/2025/04/Pathao.png"
+      : !!provider && provider.toLowerCase().includes("carrybee")
+      ? ""
       : "https://play-lh.googleusercontent.com/9OYsIvc-iKHte4jqVe-c4sA0vNL-tljBDVPguou6B-qdxQgSKpj8pZ7ZYh6MYEbawbo=w240-h480-rw";
 
   return (
@@ -294,11 +302,17 @@ const DeliveryTimelineBadge: React.FC<{
       <button
         onClick={() => setOpen(true)}
         className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-full ${config.bg} ${config.border} border hover:shadow-md transition-all duration-200 cursor-pointer group`}>
-        <img
-          className='w-5 h-5 rounded-full object-cover ring-1 ring-white shadow-sm'
-          src={providerLogo}
-          alt={provider}
-        />
+        {providerLogo ? (
+          <img
+            className='w-5 h-5 rounded-full object-cover ring-1 ring-white shadow-sm'
+            src={providerLogo}
+            alt={provider}
+          />
+        ) : (
+          <div className='w-5 h-5 rounded-full bg-amber-500 flex items-center justify-center text-white text-xs font-bold ring-1 ring-white shadow-sm'>
+            CB
+          </div>
+        )}
         <span
           className={`text-sm font-semibold ${config.text} flex items-center gap-1.5`}>
           {config.label}

@@ -81,7 +81,7 @@ export interface DashboardStats {
 
 export interface CourierOrder {
   orderId: string;
-  provider: "pathao" | "steadfast";
+  provider: "pathao" | "steadfast" | "carrybee";
   orderNumber: number;
   consignmentId: string;
   trackingCode: string;
@@ -176,7 +176,7 @@ export const courierAPI = {
    */
   checkStatus: async (
     identifier: string,
-    provider: "pathao" | "steadfast",
+    provider: "pathao" | "steadfast" | "carrybee",
     type: "consignment" | "invoice" | "tracking" = "consignment"
   ): Promise<DeliveryStatusResponse> => {
     const response = await axios.get(

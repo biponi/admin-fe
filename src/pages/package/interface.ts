@@ -14,6 +14,7 @@ export type CourierProvider =
   | "steadfast"
   | "pathao"
   | "redx"
+  | "carrybee"
   | "manual"
   | "custom"
   | "self"

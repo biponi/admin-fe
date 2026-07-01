@@ -186,6 +186,7 @@ export const CourierOrdersList: React.FC = () => {
               <SelectItem value='all'>All Couriers</SelectItem>
               <SelectItem value='pathao'>Pathao</SelectItem>
               <SelectItem value='steadfast'>Steadfast</SelectItem>
+              <SelectItem value='carrybee'>Carrybee</SelectItem>
             </SelectGroup>
           </SelectContent>
         </Select>

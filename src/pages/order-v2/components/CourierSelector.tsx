@@ -19,7 +19,14 @@ import {
 import { Button } from "../../../components/ui/button";
 import { Label } from "../../../components/ui/label";
 import { RadioGroup, RadioGroupItem } from "../../../components/ui/radio-group";
-import { Truck, Package, AlertCircle, Panda, TreePalm } from "lucide-react";
+import {
+  Truck,
+  Package,
+  AlertCircle,
+  Panda,
+  TreePalm,
+  Hop,
+} from "lucide-react";
 import { Alert, AlertDescription } from "../../../components/ui/alert";
 import { CourierProvider } from "../types";
 
@@ -54,6 +61,8 @@ export const CourierSelector: React.FC<CourierSelectorProps> = ({
       icon: Package,
       color: "text-blue-600",
       bgColor: "bg-blue-50",
+      image:
+        "https://play-lh.googleusercontent.com/OQgYiwAh2d4VqZgjf0GxZM83ylNIzxOQ-Wctx_MXmrxuaSA67UeYYwVhQ2PEMBxd0hs0nxnsRvnsviPRDgWgoGU",
     },
     {
       value: CourierProvider.PATHAO,
@@ -62,6 +71,17 @@ export const CourierSelector: React.FC<CourierSelectorProps> = ({
       icon: Truck,
       color: "text-green-600",
       bgColor: "bg-green-50",
+      image: "https://logosandtypes.com/wp-content/uploads/2025/04/pathao.svg",
+    },
+    {
+      value: CourierProvider.CARRYBEE,
+      label: "Carrybee",
+      description: "Modern logistics solution for e-commerce",
+      icon: Hop,
+      color: "text-amber-600",
+      bgColor: "bg-amber-50",
+      image:
+        "https://play-lh.googleusercontent.com/TAPaAULv7Wk2icMdCCGKU6Zsd6tN6zQ1a9VDA4ylKdhl_tASScGVvvCXjLU0Wl8qPlEM49a6s5IbR1l-yCCc",
     },
     {
       value: CourierProvider.MANUAL,
@@ -70,6 +90,7 @@ export const CourierSelector: React.FC<CourierSelectorProps> = ({
       icon: TreePalm,
       color: "text-cyan-600",
       bgColor: "bg-cyan-50",
+      image: "",
     },
     {
       value: CourierProvider.SELF,
@@ -78,6 +99,7 @@ export const CourierSelector: React.FC<CourierSelectorProps> = ({
       icon: Panda,
       color: "text-orange-600",
       bgColor: "bg-orange-50",
+      image: "",
     },
   ];
 
@@ -110,8 +132,17 @@ export const CourierSelector: React.FC<CourierSelectorProps> = ({
                 <Label
                   htmlFor={option.value}
                   className={`flex items-center gap-4 rounded-lg border-2 border-gray-200 p-4 cursor-pointer hover:bg-gray-50 peer-data-[state=checked]:border-primary peer-data-[state=checked]:bg-primary/5 transition-all`}>
-                  <div className={`p-3 rounded-full ${option.bgColor}`}>
-                    <Icon className={`w-6 h-6 ${option.color}`} />
+                  <div
+                    className={`${!!option?.image ? "" : "p-3"} rounded-full ${option.bgColor}`}>
+                    {!!option?.image ? (
+                      <img
+                        src={option.image}
+                        alt={option.label}
+                        className='w-8 h-8 rounded-full'
+                      />
+                    ) : (
+                      <Icon className={`w-6 h-6 ${option.color}`} />
+                    )}
                   </div>
                   <div className='flex-1'>
                     <div className='font-semibold text-gray-900'>
