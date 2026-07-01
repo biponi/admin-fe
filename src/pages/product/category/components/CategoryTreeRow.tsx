@@ -1,11 +1,14 @@
-// Updated SingleItem component for hierarchical categories (flat view)
-import { MoreHorizontal, Edit, Trash2, CornerDownRight } from "lucide-react";
+// CategoryTreeRow.tsx
+// Replaces SingleItem — renders one row of a category tree with
+// file-explorer-style connector lines instead of flat per-level colors.
+import { useState } from "react";
+import { MoreHorizontal, Edit, Trash2, ChevronRight } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from "../../../components/ui/dropdown-menu";
+} from "@/components/ui/dropdown-menu";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -16,45 +19,55 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
   AlertDialogTrigger,
-} from "../../../components/ui/alert-dialog";
-import { Button } from "../../../components/ui/button";
-import { TableCell, TableRow } from "../../../components/ui/table";
-import PlaceHolderImage from "../../../assets/placeholder.svg";
-import useRoleCheck from "../../auth/hooks/useRoleCheck";
-import { useState } from "react";
+} from "@/components/ui/alert-dialog";
+import { Button } from "@/components/ui/button";
+import { TableCell, TableRow } from "@/components/ui/table";
+import PlaceHolderImage from "@/assets/placeholder.svg";
+import type { ICategory } from "../../interface";
+import useRoleCheck from "@/pages/auth/hooks/useRoleCheck";
 
-interface Props {
-  id: string;
-  image?: string;
-  name: string;
-  active: boolean;
-  discount: number;
-  totalProduct?: number;
-  level?: number;
-  parentName?: string;
+interface CategoryTreeRowProps {
+  category: ICategory;
+  level: number;
+  /** true if this node is the last child among its siblings */
+  isLast: boolean;
+  /** for each ancestor level, whether that ancestor still has more siblings below it (draws a continuing vertical line) */
+  ancestorHasMore: boolean[];
+  hasChildren: boolean;
+  isExpanded: boolean;
+  onToggleExpand: () => void;
   breadcrumb?: string;
-  isChild?: boolean;
   handleEditBtnClick: () => void;
   deleteExistingCategory: (id: string, force?: boolean) => Promise<boolean>;
 }
 
-const SingleItem: React.FC<Props> = ({
-  id,
-  image,
-  name,
-  active,
-  discount,
-  totalProduct = 0,
-  level = 0,
-  parentName,
+const GUIDE_WIDTH = 20; // px per indent level
+
+const CategoryTreeRow: React.FC<CategoryTreeRowProps> = ({
+  category,
+  level,
+  isLast,
+  ancestorHasMore,
+  hasChildren,
+  isExpanded,
+  onToggleExpand,
   breadcrumb,
-  isChild = false,
   handleEditBtnClick,
   deleteExistingCategory,
 }) => {
   const { hasRequiredPermission } = useRoleCheck();
   const [deleteLoading, setDeleteLoading] = useState(false);
   const [forceDelete, setForceDelete] = useState(false);
+
+  const {
+    id,
+    img,
+    name,
+    active,
+    discount,
+    totalProducts = 0,
+    parentCategoryName,
+  } = category;
 
   const handleDelete = async (force: boolean = false) => {
     setDeleteLoading(true);
@@ -69,49 +82,90 @@ const SingleItem: React.FC<Props> = ({
 
   return (
     <TableRow className='group border-slate-100 hover:bg-slate-50/80 transition-colors'>
-      {/* Image */}
-      <TableCell className='hidden sm:table-cell py-2.5'>
-        <div className='flex items-center'>
-          {isChild && (
-            <CornerDownRight className='h-3.5 w-3.5 text-slate-300 mr-2 shrink-0' />
-          )}
-          <img
-            alt={name}
-            className='h-9 w-9 shrink-0 rounded-lg object-cover ring-1 ring-slate-100'
-            src={image || PlaceHolderImage}
-          />
-        </div>
-      </TableCell>
+      {/* Tree guide + expand toggle + name */}
+      <TableCell className='py-2.5'>
+        <div className='flex items-stretch'>
+          {/* Ancestor connector lines */}
+          <div className='flex shrink-0'>
+            {ancestorHasMore.map((hasMore, i) => (
+              <div
+                key={i}
+                className='relative shrink-0'
+                style={{ width: GUIDE_WIDTH }}>
+                {hasMore && (
+                  <span className='absolute left-1/2 top-0 bottom-0 w-px -translate-x-1/2 bg-slate-200' />
+                )}
+              </div>
+            ))}
 
-      {/* Name with hierarchy indication */}
-      <TableCell className='font-medium py-2.5'>
-        <div className='flex items-center gap-1.5'>
-          <span className='text-sm text-slate-800 truncate'>{name}</span>
-          {level === 0 && (
-            <span className='shrink-0 rounded-full bg-indigo-50 px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-widest text-indigo-600'>
-              Root
-            </span>
-          )}
-        </div>
-        {parentName && (
-          <div className='text-[11px] text-slate-400 mt-0.5'>
-            under {parentName}
+            {/* Current level elbow connector */}
+            {level > 0 && (
+              <div className='relative shrink-0' style={{ width: GUIDE_WIDTH }}>
+                <span className='absolute left-1/2 top-0 h-1/2 w-px -translate-x-1/2 bg-slate-200' />
+                {!isLast && (
+                  <span className='absolute left-1/2 top-1/2 bottom-0 w-px -translate-x-1/2 bg-slate-200' />
+                )}
+                <span className='absolute left-1/2 top-1/2 h-px w-2.5 -translate-y-1/2 bg-slate-200' />
+              </div>
+            )}
           </div>
-        )}
+
+          {/* Expand / collapse toggle */}
+          <div className='flex items-center justify-center shrink-0 w-5'>
+            {hasChildren ? (
+              <button
+                type='button'
+                onClick={onToggleExpand}
+                aria-label={isExpanded ? "Collapse" : "Expand"}
+                className='flex h-5 w-5 items-center justify-center rounded-md text-slate-400 hover:bg-indigo-50 hover:text-indigo-600 transition-colors'>
+                <ChevronRight
+                  className={`h-3.5 w-3.5 transition-transform duration-150 ${
+                    isExpanded ? "rotate-90" : ""
+                  }`}
+                />
+              </button>
+            ) : (
+              <span className='block h-1 w-1 rounded-full bg-slate-300' />
+            )}
+          </div>
+
+          {/* Image + name */}
+          <div className='flex items-center gap-2.5 min-w-0 py-0.5'>
+            <img
+              alt={name}
+              src={img || PlaceHolderImage}
+              className='h-8 w-8 shrink-0 rounded-lg object-cover ring-1 ring-slate-100'
+            />
+            <div className='min-w-0'>
+              <div className='flex items-center gap-1.5'>
+                <span className='font-medium text-sm text-slate-800 truncate'>
+                  {name}
+                </span>
+                {level === 0 && (
+                  <span className='shrink-0 rounded-full bg-indigo-50 px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-widest text-indigo-600'>
+                    Root
+                  </span>
+                )}
+              </div>
+              {parentCategoryName && (
+                <div className='text-[11px] text-slate-400 truncate'>
+                  under {parentCategoryName}
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
       </TableCell>
 
-      {/* Hierarchy/Breadcrumb */}
-      <TableCell>
-        <div className='flex flex-col gap-1'>
-          {breadcrumb && (
-            <span className='text-[11px] text-slate-400 max-w-xs truncate'>
-              {breadcrumb}
-            </span>
-          )}
-          <span className='inline-flex w-fit items-center rounded-md border border-slate-200 px-1.5 py-0.5 font-mono text-[11px] text-slate-500'>
-            L{level}
+      {/* Breadcrumb */}
+      <TableCell className='hidden lg:table-cell'>
+        {breadcrumb ? (
+          <span className='text-[11px] text-slate-400 truncate max-w-[220px] block'>
+            {breadcrumb}
           </span>
-        </div>
+        ) : (
+          <span className='text-slate-300'>—</span>
+        )}
       </TableCell>
 
       {/* Status */}
@@ -131,18 +185,18 @@ const SingleItem: React.FC<Props> = ({
         </span>
       </TableCell>
 
-      {/* Level (hidden on mobile) */}
+      {/* Depth */}
       <TableCell className='hidden md:table-cell'>
         <span className='inline-flex h-5 min-w-5 items-center justify-center rounded-md border border-slate-200 px-1.5 font-mono text-[11px] text-slate-500'>
-          {level}
+          L{level}
         </span>
       </TableCell>
 
-      {/* Total Products */}
+      {/* Total products */}
       <TableCell className='hidden md:table-cell'>
         <div className='flex items-center gap-1.5'>
-          <span className='text-sm text-slate-600'>{totalProduct || 0}</span>
-          {totalProduct === 0 && (
+          <span className='text-sm text-slate-600'>{totalProducts}</span>
+          {totalProducts === 0 && (
             <span className='text-[10px] uppercase tracking-widest text-slate-300'>
               Empty
             </span>
@@ -185,7 +239,7 @@ const SingleItem: React.FC<Props> = ({
               <AlertDialog>
                 <AlertDialogTrigger asChild>
                   <DropdownMenuItem
-                    onSelect={(e) => e.preventDefault()}
+                    onSelect={(e: Event) => e.preventDefault()}
                     className='text-red-600 focus:text-red-600'>
                     <Trash2 className='h-4 w-4 mr-2' />
                     Delete
@@ -203,10 +257,16 @@ const SingleItem: React.FC<Props> = ({
                           </span>
                           ?
                         </p>
-                        {totalProduct > 0 && (
+                        {totalProducts > 0 && (
                           <div className='rounded-lg border border-amber-200 bg-amber-50 p-2.5 text-sm text-amber-800'>
                             <strong>Warning:</strong> This category has{" "}
-                            {totalProduct} products.
+                            {totalProducts} products.
+                          </div>
+                        )}
+                        {hasChildren && (
+                          <div className='rounded-lg border border-red-200 bg-red-50 p-2.5 text-sm text-red-800'>
+                            <strong>Warning:</strong> This category has child
+                            categories.
                           </div>
                         )}
                         <label className='flex items-center gap-2 pt-1'>
@@ -242,4 +302,4 @@ const SingleItem: React.FC<Props> = ({
   );
 };
 
-export default SingleItem;
+export default CategoryTreeRow;

@@ -1208,7 +1208,19 @@ const OrderList = () => {
     return (
       <Sheet
         open={showDetails}
-        onOpenChange={(value: boolean) => setShowDetails(value)}>
+        onOpenChange={(value: boolean) => {
+          setShowDetails(value);
+          if (!value) {
+            // Force remove stuck Radix overlay/portal after close animation
+            setTimeout(() => {
+              document.body.style.pointerEvents = "";
+              document.body.style.overflow = "";
+              document
+                .querySelectorAll("[data-radix-popper-content-wrapper]")
+                .forEach((el) => el.remove());
+            }, 350);
+          }
+        }}>
         <SheetContent
           className={cn(
             "flex flex-col gap-0 p-0",

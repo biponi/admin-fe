@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { getProducts } from "../../../api/product";
 import { useToast } from "../../../components/ui/use-toast";
 import { deleteProduct, searchProducts } from "../../../api";
@@ -9,14 +9,14 @@ export const useProductList = () => {
   const [products, setProducts] = useState([]);
   const [totalProducts, setTotalProducts] = useState(0);
   const [totalPages, setTotalPages] = useState(0);
+  const totalPagesRef = useRef(0);
   const [currentPageNum, setCurrentPage] = useState(1);
   const [selectedCategory, setSelectedCategory] = useState("all");
   const [searchQuery, setSearchQuery] = useState("");
   const [limit, setLimit] = useState(20);
 
   const refreshList = () => {
-    if (currentPageNum === 1) return;
-    if (selectedCategory === "all") getProductList();
+    if (!selectedCategory || selectedCategory === "all") getProductList();
     else getProductListByCategoryId();
   };
 
@@ -26,12 +26,13 @@ export const useProductList = () => {
   }, [currentPageNum]);
 
   useEffect(() => {
-    setCurrentPage(0);
+    if (currentPageNum !== 1) setCurrentPage(1);
+    else refreshList();
+    //eslint-disable-next-line
   }, [selectedCategory, limit]);
 
   useEffect(() => {
-    if (searchQuery === "") setCurrentPage(0);
-    else searchProductByQuery();
+    searchProductByQuery();
     //eslint-disable-next-line
   }, [searchQuery]);
 
@@ -39,9 +40,21 @@ export const useProductList = () => {
     setProductFetching(true);
     const response = await getProducts(limit, currentPageNum);
     if (response?.success && !!response?.data) {
-      const { totalProducts, totalPages, currentPage, products } =
-        response?.data;
-      setTotalPages(totalPages);
+      const {
+        totalProducts,
+        totalPages: tp,
+        currentPage,
+        products,
+      } = response?.data;
+      console.log(
+        "getProductList",
+        totalProducts,
+        tp,
+        currentPage,
+        products,
+      );
+      setTotalPages(tp);
+      totalPagesRef.current = tp;
       if (currentPageNum !== currentPage) setCurrentPage(Number(currentPage));
       setTotalProducts(totalProducts);
       //@ts-ignore
@@ -58,15 +71,16 @@ export const useProductList = () => {
 
   const getProductListByCategoryId = async () => {
     setProductFetching(true);
-    const response = await getProducts(
-      limit,
-      currentPageNum,
-      selectedCategory
-    );
+    const response = await getProducts(limit, currentPageNum, selectedCategory);
     if (response?.success && !!response?.data) {
-      const { totalProducts, totalPages, currentPage, products } =
-        response?.data;
-      setTotalPages(totalPages);
+      const {
+        totalProducts,
+        totalPages: tp,
+        currentPage,
+        products,
+      } = response?.data;
+      setTotalPages(tp);
+      totalPagesRef.current = tp;
       if (currentPageNum !== currentPage) setCurrentPage(Number(currentPage));
       setTotalProducts(totalProducts);
       //@ts-ignore
@@ -82,7 +96,8 @@ export const useProductList = () => {
   };
 
   const searchProductByQuery = async () => {
-    const categoryId = selectedCategory !== "all" ? selectedCategory : undefined;
+    const categoryId =
+      selectedCategory !== "all" ? selectedCategory : undefined;
     const response = await searchProducts(searchQuery, categoryId);
     if (response?.success) {
       //@ts-ignore
@@ -109,7 +124,13 @@ export const useProductList = () => {
   };
 
   const updateCurrentPage = (increaseBy: number) => {
-    setCurrentPage(currentPageNum + increaseBy);
+    setCurrentPage((prevPage) => {
+      const newPage = prevPage + increaseBy;
+      const maxPages = totalPagesRef.current;
+      if (newPage < 1) return 1;
+      if (newPage > maxPages) return maxPages;
+      return newPage;
+    });
   };
 
   return {

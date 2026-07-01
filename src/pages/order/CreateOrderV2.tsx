@@ -147,12 +147,6 @@ const CreateOrderV2 = () => {
     fetchProducts();
   }, [fetchProducts]);
 
-  // Reset to page 1 on category change
-  useEffect(() => {
-    if (currentPage !== 1) setCurrentPage(1);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedCategory]);
-
   // ── Cart handlers (stable refs) ──────────────────────────────────────────
   const handleAddToCart = useCallback(
     (product: IProduct) => {

@@ -160,7 +160,7 @@ export const useCreateOrderLayoutStore = create<CreateOrderLayoutState>()(
 
         setSelectedCategory: (categoryId) => {
           if (get().selectedCategory === categoryId) return;
-          set({ selectedCategory: categoryId });
+          set({ selectedCategory: categoryId, currentPage: 1 });
         },
 
         setSelectedBrand: (brandId) => {

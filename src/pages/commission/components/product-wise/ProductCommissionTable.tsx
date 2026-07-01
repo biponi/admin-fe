@@ -56,8 +56,7 @@ export const ProductCommissionTable: React.FC<CommissionTableProps> = ({
         {commissions.map((commission) => (
           <Card
             key={commission.id}
-            className='relative overflow-hidden rounded-2xl border-[var(--cm-border,#e4e6f0)] bg-[var(--cm-surface,#fff)] shadow-[0_8px_24px_rgba(26,29,46,0.06)]'
-          >
+            className='relative overflow-hidden rounded-2xl border-[var(--cm-border,#e4e6f0)] bg-[var(--cm-surface,#fff)] shadow-[0_8px_24px_rgba(26,29,46,0.06)]'>
             <div className='absolute inset-x-0 top-0 h-1 bg-[var(--cm-accent,#5b52f0)]' />
             <CardContent className='p-4 pt-5 space-y-4'>
               {/* Header: Order + Status + User */}
@@ -79,8 +78,7 @@ export const ProductCommissionTable: React.FC<CommissionTableProps> = ({
                       onClick={() => showOrderModal(commission.orderNumber)}>
                       <Badge
                         variant='outline'
-                        className='pointer-events-none rounded-full border-[rgba(91,82,240,0.22)] bg-[var(--cm-accent-lt,rgba(91,82,240,.08))] px-2.5 text-[var(--cm-accent,#5b52f0)]'
-                      >
+                        className='pointer-events-none rounded-full border-[rgba(91,82,240,0.22)] bg-[var(--cm-accent-lt,rgba(91,82,240,.08))] px-2.5 text-[var(--cm-accent,#5b52f0)]'>
                         #{commission.orderNumber}
                       </Badge>
                       <ExternalLink className='h-3 w-3 ml-1' />
@@ -116,7 +114,9 @@ export const ProductCommissionTable: React.FC<CommissionTableProps> = ({
                     <Package className='h-4 w-4' />
                   </div>
                   <div className='min-w-0 flex-1'>
-                    <span className='line-clamp-1'>{commission.productName}</span>
+                    <span className='line-clamp-1'>
+                      {commission.productName}
+                    </span>
                     <p className='mt-1 text-xs font-normal text-[var(--cm-muted,#8b90a7)]'>
                       Qty: {commission.quantity} x{" "}
                       {formatCurrency(commission.productPrice)} ={" "}
@@ -213,9 +213,6 @@ export const ProductCommissionTable: React.FC<CommissionTableProps> = ({
                     </Avatar>
                     <div className='text-sm'>
                       <div className='font-medium'>{commission.userName}</div>
-                      <div className='text-xs text-muted-foreground'>
-                        {commission.userId}
-                      </div>
                     </div>
                   </div>
                 </TableCell>

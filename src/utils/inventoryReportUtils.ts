@@ -12,7 +12,7 @@
 export const formatNumber = (num: number | undefined): string => {
   if (num === undefined || num === null) return "0";
   return Number(num) % 1 < 1
-    ? Math.floor(num).toLocaleString()
+    ? Number(num).toFixed(2).toLocaleString()
     : num.toLocaleString(undefined, {
         minimumFractionDigits: 0,
         maximumFractionDigits: 2,
@@ -30,7 +30,10 @@ export const formatCurrency = (amount: number | undefined): string => {
 /**
  * Format percentage
  */
-export const formatPercentage = (value: number, decimals: number = 1): string => {
+export const formatPercentage = (
+  value: number,
+  decimals: number = 1,
+): string => {
   return `${value.toFixed(decimals)}%`;
 };
 
@@ -66,12 +69,14 @@ export const formatRelativeTime = (dateString: string): string => {
   const diffYears = Math.floor(diffDays / 365);
 
   if (diffSeconds < 60) return "Just now";
-  if (diffMinutes < 60) return `${diffMinutes} minute${diffMinutes > 1 ? "s" : ""} ago`;
+  if (diffMinutes < 60)
+    return `${diffMinutes} minute${diffMinutes > 1 ? "s" : ""} ago`;
   if (diffHours < 24) return `${diffHours} hour${diffHours > 1 ? "s" : ""} ago`;
   if (diffDays === 1) return "Yesterday";
   if (diffDays < 7) return `${diffDays} days ago`;
   if (diffWeeks < 4) return `${diffWeeks} week${diffWeeks > 1 ? "s" : ""} ago`;
-  if (diffMonths < 12) return `${diffMonths} month${diffMonths > 1 ? "s" : ""} ago`;
+  if (diffMonths < 12)
+    return `${diffMonths} month${diffMonths > 1 ? "s" : ""} ago`;
   return `${diffYears} year${diffYears > 1 ? "s" : ""} ago`;
 };
 
@@ -142,9 +147,7 @@ export const generateStarRating = (rating: number): string => {
   const emptyStars = 5 - fullStars - (hasHalfStar ? 1 : 0);
 
   return (
-    "★".repeat(fullStars) +
-    (hasHalfStar ? "½" : "") +
-    "☆".repeat(emptyStars)
+    "★".repeat(fullStars) + (hasHalfStar ? "½" : "") + "☆".repeat(emptyStars)
   );
 };
 
@@ -152,7 +155,7 @@ export const generateStarRating = (rating: number): string => {
  * Calculate average rating from distribution
  */
 export const calculateAverageRating = (
-  distribution: Array<{ rating: string; totalVotes: number }>
+  distribution: Array<{ rating: string; totalVotes: number }>,
 ): number => {
   let totalVotes = 0;
   let weightedSum = 0;
@@ -175,7 +178,7 @@ export const calculateAverageRating = (
  * Transform inventory distribution data for chart
  */
 export const transformDistributionData = (
-  data: Array<{ range: string; count: number }>
+  data: Array<{ range: string; count: number }>,
 ) => {
   return {
     labels: data.map((d) => d.range),
@@ -187,7 +190,7 @@ export const transformDistributionData = (
  * Transform rating distribution data for chart
  */
 export const transformRatingData = (
-  data: Array<{ rating: string; totalVotes: number }>
+  data: Array<{ rating: string; totalVotes: number }>,
 ) => {
   return {
     labels: data.map((d) => d.rating),
@@ -198,10 +201,7 @@ export const transformRatingData = (
 /**
  * Calculate percentage of total
  */
-export const calculatePercentage = (
-  value: number,
-  total: number
-): number => {
+export const calculatePercentage = (value: number, total: number): number => {
   if (total === 0) return 0;
   return (value / total) * 100;
 };

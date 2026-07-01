@@ -462,18 +462,15 @@ const ProductList: React.FC<Props> = ({ handleEditProduct }) => {
   }, [debounceHandler]);
 
   // Wrap page-change to use table-only loading state
-  const handlePageChange = useCallback(
-    async (delta: number) => {
-      setIsTableLoading(true);
-      try {
-        await updateCurrentPage(delta);
-      } finally {
-        // give the products state time to settle
-        setTimeout(() => setIsTableLoading(false), 400);
-      }
-    },
-    [updateCurrentPage],
-  );
+  const handlePageChange = useCallback(async (delta: number) => {
+    setIsTableLoading(true);
+    try {
+      await updateCurrentPage(Number(delta));
+    } finally {
+      // give the products state time to settle
+      setTimeout(() => setIsTableLoading(false), 400);
+    }
+  }, [updateCurrentPage]);
 
   // Also track when productFetching transitions (for search/filter changes — those are fine to show overlay too)
   const prevFetching = useRef(productFetching);

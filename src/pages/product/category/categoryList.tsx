@@ -23,6 +23,7 @@ import {
 } from "../../../components/ui/select";
 import { Input } from "../../../components/ui/input";
 import SingleItem from "../components/singleCategoryList";
+import CategoryTree from "./components/CategoryTree";
 import EmptyView from "../../../coreComponents/emptyView";
 import { ICategory } from "../interface";
 import useCategory from "../hooks/useCategory";
@@ -111,7 +112,8 @@ const CategoryList = () => {
   const getUniqueLevels = () => {
     const levels =
       //@ts-ignore
-      !!categories && [...new Set(categories.map((cat) => cat.level))].sort();
+      !!categories &&
+      [...new Set(categories.map((cat) => cat.level ?? 0))].sort();
     return levels;
   };
 
@@ -174,7 +176,7 @@ const CategoryList = () => {
     );
   };
 
-  // Render single category row with hierarchy indication
+  // Render single category row for the flat table view
   const renderCategoryRow = (category: ICategory, isChild = false) => (
     <SingleItem
       key={category.id}
@@ -195,28 +197,16 @@ const CategoryList = () => {
     />
   );
 
-  // Render tree view recursively
-  const renderTreeView = (
-    categories: ICategory[],
-    level = 0,
-  ): JSX.Element[] => {
-    return categories.map((category) => (
-      <div key={category.id}>
-        {renderCategoryRow(category, level > 0)}
-        {category.children && category.children.length > 0 && (
-          <div className='ml-4'>
-            {renderTreeView(category.children, level + 1)}
-          </div>
-        )}
-      </div>
-    ));
-  };
-
   const renderCategoryTable = (categoryList: ICategory[]) =>
     viewMode === "tree" ? (
-      <div className='p-4 sm:p-6'>
-        {renderTreeView(buildCategoryTree(categoryList))}
-      </div>
+      <CategoryTree
+        categories={buildCategoryTree(categoryList)}
+        onEdit={(category: any) => setSelectedCategory(category)}
+        deleteExistingCategory={deleteExistingCategory}
+        getBreadcrumb={(category: any) =>
+          getCategoryBreadcrumb(category?.parentId ?? null, category)
+        }
+      />
     ) : (
       <Table>
         <TableHeader>
@@ -572,7 +562,7 @@ const CategoryList = () => {
               <SelectContent>
                 <SelectItem value='all'>All Levels</SelectItem>
                 {getUniqueLevels().map((level) => (
-                  <SelectItem key={level} value={level.toString()}>
+                  <SelectItem key={level} value={(level ?? 0).toString()}>
                     Level {level}
                   </SelectItem>
                 ))}

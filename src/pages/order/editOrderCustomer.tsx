@@ -42,6 +42,7 @@ import {
 import { cn } from "../../lib/utils";
 import { BDDistrictList, BDDivisions } from "../../utils/contents";
 import { getLocationByFormattedString } from "../../utils/functions";
+import { calculateDeliveryCharge } from "../../utils/deliveryCharge";
 import { ICustomer } from "./interface";
 import { isValidBDPhone, normalizeBDPhone } from "@/utils/helperFunction";
 
@@ -163,7 +164,10 @@ const LocationCombobox = ({
   // Close dropdown when clicking outside
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      if (containerRef.current && !containerRef.current.contains(event.target as Node)) {
+      if (
+        containerRef.current &&
+        !containerRef.current.contains(event.target as Node)
+      ) {
         setOpen(false);
       }
     };
@@ -372,6 +376,17 @@ const EditCustomerInformation: React.FC<Props> = ({
     [shippingAddress.division?.id],
   );
 
+  // Auto-calculate delivery charge when district/area changes
+  useEffect(() => {
+    if (shippingAddress.division && shippingAddress.district) {
+      const chargeInfo = calculateDeliveryCharge(
+        shippingAddress.district.name,
+        shippingAddress.division.name,
+      );
+      updateField("deliveryCharge", chargeInfo.charge);
+    }
+  }, [shippingAddress.division, shippingAddress.district, updateField]);
+
   const formatLocation = (loc: Location | null) => loc?.name ?? "";
 
   // ── Submit ───────────────────────────────────────────────────────────────
@@ -521,17 +536,21 @@ const EditCustomerInformation: React.FC<Props> = ({
           {/* Shipping */}
           <Section icon={MapPin} label='Shipping address'>
             <div className='grid grid-cols-2 gap-3'>
-              <Field label='Division'>
+              <Field label={`District / City (${shipping?.division})`}>
                 <LocationCombobox
-                  value={shippingAddress.division?.id ?? ""}
+                  value={
+                    shippingAddress.division?.id ?? shipping?.division ?? ""
+                  }
                   onValueChange={handleDivisionChange}
                   options={BDDivisions}
                   placeholder='Select division'
                 />
               </Field>
-              <Field label='District'>
+              <Field label={`Area (${shipping?.district})`}>
                 <LocationCombobox
-                  value={shippingAddress.district?.id ?? ""}
+                  value={
+                    shippingAddress.district?.id ?? shipping?.district ?? ""
+                  }
                   onValueChange={handleDistrictChange}
                   options={filteredDistricts}
                   placeholder='Select district'
