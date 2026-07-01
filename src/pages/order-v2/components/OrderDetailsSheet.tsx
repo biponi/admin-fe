@@ -50,11 +50,11 @@ import { StatusBadge, PaymentStatusBadge } from "./StatusBadge";
 import DeliveryTimelineBadge from "./DeliveryTimelineBadge";
 import { cn } from "../lib/utils";
 import type { IOrder } from "../types";
-import InvoiceDocument, {
+import {
   generateReactPdfInvoice,
+  generateReactPdfInvoiceBlob,
 } from "../../../utils/reactPdfInvoice";
 import { generateReactPdfPackingSlip } from "../../../utils/reactPdfPackingSlip";
-import { pdf } from "@react-pdf/renderer";
 import { toast } from "sonner";
 import { BRAND_CONFIG } from "../../../config/brand";
 
@@ -210,7 +210,7 @@ export const OrderDetailsSheet: React.FC<OrderDetailsSheetProps> = ({
   };
 
   const handlePrint = async () => {
-    const blob = await pdf(<InvoiceDocument order={order} />).toBlob();
+    const blob = await generateReactPdfInvoiceBlob(order);
     const url = URL.createObjectURL(blob);
     const printWindow = window.open(url, "_blank");
     setTimeout(() => URL.revokeObjectURL(url), 10000);

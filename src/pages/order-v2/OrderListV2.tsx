@@ -572,7 +572,7 @@ export const OrderListV2: React.FC = () => {
     setInvoicePreviewOpen(false);
     invoicePreviewData.forEach((d) => URL.revokeObjectURL(d.url));
     setInvoicePreviewData([]);
-    clearSelection();
+    // Keep selection intact - only clear after successful action
   };
 
   const handleDownloadAllInvoices = async () => {
@@ -584,6 +584,7 @@ export const OrderListV2: React.FC = () => {
       await generateMultipleModernInvoicesAndDownloadZip(ids);
       toast({ title: "Download complete" });
       handleInvoicePreviewClose();
+      clearSelection(); // Clear selection after successful download
     } catch (error: any) {
       toast({
         variant: "destructive",
@@ -623,7 +624,7 @@ export const OrderListV2: React.FC = () => {
     setPackingSlipPreviewOpen(false);
     packingSlipPreviewData.forEach((d) => URL.revokeObjectURL(d.url));
     setPackingSlipPreviewData([]);
-    clearSelection();
+    // Keep selection intact - only clear after successful action
   };
 
   const handleBulkPackingSlipDownload = async () => {
@@ -638,6 +639,8 @@ export const OrderListV2: React.FC = () => {
       toast({ title: "Downloading packing slips…" });
       await generateMultiplePackingSlipsAndDownloadZip(ids);
       toast({ title: "Download complete" });
+      handlePackingSlipPreviewClose();
+      clearSelection(); // Clear selection after successful download
     } catch (error: any) {
       toast({
         variant: "destructive",
@@ -848,6 +851,7 @@ export const OrderListV2: React.FC = () => {
             {/* Desktop */}
             <div className='hidden md:block'>
               <OrderTable
+                key='order-table-desktop'
                 orders={orders}
                 onSelectAll={handleSelectAll}
                 selectedIds={selection.selectedIds}
@@ -865,6 +869,7 @@ export const OrderListV2: React.FC = () => {
             {/* Mobile */}
             <div className='md:hidden'>
               <MobileOrderList
+                key='mobile-order-list'
                 orders={orders}
                 selectedIds={selection.selectedIds}
                 onSelect={handleOrderSelection}
