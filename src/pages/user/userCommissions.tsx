@@ -13,10 +13,11 @@ import {
   SelectTrigger,
   SelectValue,
 } from "../../components/ui/select";
+import MainView from "../../coreComponents/mainView";
 import { useCommission } from "../../hooks/useCommission";
-import { CommissionHeader } from "./commission-components/CommissionHeader";
 import { UserCommissionTable } from "./commission-components/UserCommissionTable";
-import { Loader2 } from "lucide-react";
+import { Loader2, DollarSign, Clock, TrendingUp, BarChart3, Wallet } from "lucide-react";
+import { formatCurrency } from "../../utils/inventoryReportUtils";
 
 export const UserCommissionPage = () => {
   const { userId } = useParams<{ userId: string }>();
@@ -58,101 +59,228 @@ export const UserCommissionPage = () => {
     );
   }
 
+  // Prepare statistics data
+  const stats = [
+    {
+      label: "Total Earned",
+      value: formatCurrency(userTotals.totalPaidAmount),
+      accentColor: "text-emerald-600",
+      bgColor: "bg-emerald-400",
+    },
+    {
+      label: "Pending",
+      value: formatCurrency(userTotals.totalPendingAmount),
+      accentColor: "text-amber-600",
+      bgColor: "bg-amber-400",
+    },
+    {
+      label: "Unpaid",
+      value: formatCurrency(userTotals.totalUnpaidAmount),
+      accentColor: "text-rose-600",
+      bgColor: "bg-rose-400",
+    },
+    {
+      label: "Total Balance",
+      value: formatCurrency(userTotals.totalPaidAmount + userTotals.totalPendingAmount + userTotals.totalUnpaidAmount),
+      accentColor: "text-indigo-600",
+      bgColor: "bg-indigo-400",
+    },
+  ];
+
   return (
-    <div className='relative min-h-screen md:rounded-2xl bg-gradient-to-br from-orange-50 via-rose-50 to-cyan-50 py-4 sm:py-8 px-4 w-full'>
-      <div className='max-w-7xl mx-auto space-y-6'>
-        {/* Header */}
-        <div className='shadow-none bg-transparent border-0 mt-6 md:mt-0'>
-          <CommissionHeader
-            userName={userName}
-            totalEarned={userTotals.totalPaidAmount}
-            pending={userTotals.totalPendingAmount}
-            unpaid={userTotals.totalUnpaidAmount}
-          />
-        </div>
-
-        {/* Main Content */}
-        <Tabs
-          defaultValue='my-commissions'
-          value={activeTab}
-          onValueChange={setActiveTab}
-          className='space-y-4'>
-          {/* Mobile: Dropdown for tabs */}
-          <div className='md:hidden'>
-            <Select value={activeTab} onValueChange={setActiveTab}>
-              <SelectTrigger className='w-full h-12'>
-                <SelectValue placeholder='Select tab' />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value='overview'>Overview</SelectItem>
-                <SelectItem value='my-commissions'>My Commissions</SelectItem>
-                <SelectItem value='earnings'>Earnings</SelectItem>
-                <SelectItem value='history'>History</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-
-          {/* Desktop: Horizontal tabs */}
-          <TabsList className='hidden md:flex h-11  w-full grid-cols-4 lg:w-auto lg:inline-grid gap-2 bg-white px-2 pt-2 pb-4 rounded-lg shadow-md'>
-            <TabsTrigger value='overview'>Overview</TabsTrigger>
-            <TabsTrigger value='my-commissions'>My Commissions</TabsTrigger>
-            <TabsTrigger value='earnings'>Earnings</TabsTrigger>
-            <TabsTrigger value='history'>History</TabsTrigger>
-          </TabsList>
-
-          <TabsContent value='my-commissions'>
-            <UserCommissionTable userId={userId || ""} />
-          </TabsContent>
-
-          <TabsContent value='overview'>
-            <div className='bg-white rounded-lg p-6 shadow-md'>
-              <h3 className='text-lg font-semibold mb-4'>
-                Commission Overview
-              </h3>
-              <p className='text-muted-foreground'>
-                Welcome to your commission dashboard. Here you can track all
-                your earnings, view pending payments, and analyze your
-                commission history.
-              </p>
-            </div>
-          </TabsContent>
-
-          <TabsContent value='earnings'>
-            <div className='bg-white rounded-lg p-6 shadow-md'>
-              <h3 className='text-lg font-semibold mb-4'>Earnings Breakdown</h3>
-              <div className='space-y-4'>
-                <div className='flex justify-between items-center p-4 bg-green-50 rounded-lg'>
-                  <span className='font-medium'>Total Paid</span>
-                  <span className='text-2xl font-bold text-green-600'>
-                    ${userTotals.totalPaidAmount}
-                  </span>
-                </div>
-                <div className='flex justify-between items-center p-4 bg-yellow-50 rounded-lg'>
-                  <span className='font-medium'>Pending</span>
-                  <span className='text-2xl font-bold text-yellow-600'>
-                    ${userTotals.totalPendingAmount}
-                  </span>
-                </div>
-                <div className='flex justify-between items-center p-4 bg-blue-50 rounded-lg'>
-                  <span className='font-medium'>Unpaid</span>
-                  <span className='text-2xl font-bold text-blue-600'>
-                    ${userTotals.totalUnpaidAmount}
-                  </span>
-                </div>
+    <MainView title='User Commissions'>
+      <div className='min-h-screen bg-slate-50/60'>
+        <div className='max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6'>
+          {/* Page Header */}
+          <div className='flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4'>
+            <div className='flex items-center gap-3'>
+              <div className='flex items-center justify-center w-10 h-10 rounded-xl bg-indigo-600 shadow-sm shadow-indigo-200'>
+                <Wallet className='h-5 w-5 text-white' />
+              </div>
+              <div>
+                <h1 className='text-xl font-semibold text-slate-900 leading-tight'>
+                  {userName}'s Commissions
+                </h1>
+                <p className='text-sm text-slate-500 mt-0.5'>
+                  Track earnings and commission history
+                </p>
               </div>
             </div>
-          </TabsContent>
+          </div>
 
-          <TabsContent value='history'>
-            <div className='bg-white rounded-lg p-6 shadow-md'>
-              <h3 className='text-lg font-semibold mb-4'>Commission History</h3>
-              <p className='text-muted-foreground'>
-                Your complete commission history will be displayed here.
-              </p>
-            </div>
-          </TabsContent>
-        </Tabs>
+          {/* Summary Statistics Strip */}
+          <div className='grid grid-cols-2 sm:grid-cols-4 gap-3'>
+            {stats.map((stat) => (
+              <div
+                key={stat.label}
+                className='flex items-center gap-3 bg-white rounded-xl border border-slate-100 px-4 py-3 shadow-sm'>
+                <div className={`w-2 h-2 rounded-full ${stat.bgColor} flex-shrink-0`} />
+                <div className='min-w-0 flex-1'>
+                  <p className={`text-lg font-semibold ${stat.accentColor} leading-none`}>
+                    {stat.value}
+                  </p>
+                  <p className='text-xs text-slate-500 mt-0.5 truncate'>
+                    {stat.label}
+                  </p>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* Tabs Container */}
+          <div className='bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden'>
+            <Tabs
+              defaultValue='my-commissions'
+              value={activeTab}
+              onValueChange={setActiveTab}
+              className='w-full'>
+              {/* Mobile: Dropdown for tabs */}
+              <div className='md:hidden border-b border-slate-100'>
+                <Select value={activeTab} onValueChange={setActiveTab}>
+                  <SelectTrigger className='w-full h-12 border-0 rounded-none px-4'>
+                    <SelectValue placeholder='Select tab' />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value='overview'>
+                      <div className='flex items-center gap-2'>
+                        <BarChart3 className='h-4 w-4' />
+                        Overview
+                      </div>
+                    </SelectItem>
+                    <SelectItem value='my-commissions'>
+                      <div className='flex items-center gap-2'>
+                        <DollarSign className='h-4 w-4' />
+                        My Commissions
+                      </div>
+                    </SelectItem>
+                    <SelectItem value='earnings'>
+                      <div className='flex items-center gap-2'>
+                        <TrendingUp className='h-4 w-4' />
+                        Earnings
+                      </div>
+                    </SelectItem>
+                    <SelectItem value='history'>
+                      <div className='flex items-center gap-2'>
+                        <Clock className='h-4 w-4' />
+                        History
+                      </div>
+                    </SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {/* Desktop: Horizontal tabs */}
+              <div className='hidden md:block border-b border-slate-100'>
+                <TabsList className='h-auto bg-transparent p-0 gap-0 rounded-none flex justify-start'>
+                  <TabsTrigger
+                    value='overview'
+                    className='relative flex items-center gap-2 px-4 py-4 text-sm font-medium rounded-none border-b-2 border-transparent text-slate-500 hover:text-slate-700 data-[state=active]:text-indigo-600 data-[state=active]:border-indigo-600 data-[state=active]:bg-transparent transition-all duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2'>
+                    <BarChart3 className='h-4 w-4' />
+                    Overview
+                  </TabsTrigger>
+                  <TabsTrigger
+                    value='my-commissions'
+                    className='relative flex items-center gap-2 px-4 py-4 text-sm font-medium rounded-none border-b-2 border-transparent text-slate-500 hover:text-slate-700 data-[state=active]:text-indigo-600 data-[state=active]:border-indigo-600 data-[state=active]:bg-transparent transition-all duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2'>
+                    <DollarSign className='h-4 w-4' />
+                    My Commissions
+                  </TabsTrigger>
+                  <TabsTrigger
+                    value='earnings'
+                    className='relative flex items-center gap-2 px-4 py-4 text-sm font-medium rounded-none border-b-2 border-transparent text-slate-500 hover:text-slate-700 data-[state=active]:text-indigo-600 data-[state=active]:border-indigo-600 data-[state=active]:bg-transparent transition-all duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2'>
+                    <TrendingUp className='h-4 w-4' />
+                    Earnings
+                  </TabsTrigger>
+                  <TabsTrigger
+                    value='history'
+                    className='relative flex items-center gap-2 px-4 py-4 text-sm font-medium rounded-none border-b-2 border-transparent text-slate-500 hover:text-slate-700 data-[state=active]:text-indigo-600 data-[state=active]:border-indigo-600 data-[state=active]:bg-transparent transition-all duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2'>
+                    <Clock className='h-4 w-4' />
+                    History
+                  </TabsTrigger>
+                </TabsList>
+              </div>
+
+              <TabsContent
+                value='my-commissions'
+                className='p-4 sm:p-6 mt-0 focus-visible:outline-none'>
+                <UserCommissionTable userId={userId || ""} />
+              </TabsContent>
+
+              <TabsContent
+                value='overview'
+                className='p-4 sm:p-6 mt-0 focus-visible:outline-none'>
+                <div className='rounded-xl border border-slate-100 bg-white p-6 shadow-sm'>
+                  <h3 className='text-lg font-semibold text-slate-900 mb-4'>
+                    Commission Overview
+                  </h3>
+                  <p className='text-sm text-slate-600'>
+                    Welcome to your commission dashboard. Here you can track all
+                    your earnings, view pending payments, and analyze your
+                    commission history.
+                  </p>
+                </div>
+              </TabsContent>
+
+              <TabsContent
+                value='earnings'
+                className='p-4 sm:p-6 mt-0 focus-visible:outline-none'>
+                <div className='rounded-xl border border-slate-100 bg-white p-6 shadow-sm'>
+                  <h3 className='text-lg font-semibold text-slate-900 mb-4'>
+                    Earnings Breakdown
+                  </h3>
+                  <div className='space-y-3'>
+                    <div className='flex items-center justify-between p-4 bg-white border border-slate-100 rounded-lg hover:border-slate-200 transition-colors'>
+                      <div className='flex items-center gap-3'>
+                        <div className='flex items-center justify-center w-10 h-10 rounded-lg bg-emerald-100'>
+                          <DollarSign className='h-5 w-5 text-emerald-600' />
+                        </div>
+                        <span className='font-medium text-slate-900'>Total Paid</span>
+                      </div>
+                      <span className='text-lg font-semibold text-slate-900'>
+                        {formatCurrency(userTotals.totalPaidAmount)}
+                      </span>
+                    </div>
+                    <div className='flex items-center justify-between p-4 bg-white border border-slate-100 rounded-lg hover:border-slate-200 transition-colors'>
+                      <div className='flex items-center gap-3'>
+                        <div className='flex items-center justify-center w-10 h-10 rounded-lg bg-amber-100'>
+                          <Clock className='h-5 w-5 text-amber-600' />
+                        </div>
+                        <span className='font-medium text-slate-900'>Pending</span>
+                      </div>
+                      <span className='text-lg font-semibold text-slate-900'>
+                        {formatCurrency(userTotals.totalPendingAmount)}
+                      </span>
+                    </div>
+                    <div className='flex items-center justify-between p-4 bg-white border border-slate-100 rounded-lg hover:border-slate-200 transition-colors'>
+                      <div className='flex items-center gap-3'>
+                        <div className='flex items-center justify-center w-10 h-10 rounded-lg bg-rose-100'>
+                          <TrendingUp className='h-5 w-5 text-rose-600' />
+                        </div>
+                        <span className='font-medium text-slate-900'>Unpaid</span>
+                      </div>
+                      <span className='text-lg font-semibold text-slate-900'>
+                        {formatCurrency(userTotals.totalUnpaidAmount)}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              </TabsContent>
+
+              <TabsContent
+                value='history'
+                className='p-4 sm:p-6 mt-0 focus-visible:outline-none'>
+                <div className='rounded-xl border border-slate-100 bg-white p-6 shadow-sm'>
+                  <h3 className='text-lg font-semibold text-slate-900 mb-4'>
+                    Commission History
+                  </h3>
+                  <p className='text-sm text-slate-600'>
+                    Your complete commission history will be displayed here.
+                  </p>
+                </div>
+              </TabsContent>
+            </Tabs>
+          </div>
+        </div>
       </div>
-    </div>
+    </MainView>
   );
 };
