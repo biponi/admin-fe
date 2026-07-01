@@ -1386,7 +1386,7 @@ const OrderList = () => {
             </div>
 
             {/* Inline quick-status buttons (permission-gated) */}
-            {canEdit && (
+            {/* {canEdit && (
               <div className='mt-3 flex items-center gap-2 flex-wrap'>
                 <span className='text-[12px] font-bold uppercase tracking-widest text-gray-400'>
                   Quick status
@@ -1440,7 +1440,7 @@ const OrderList = () => {
                   </button>
                 )}
               </div>
-            )}
+            )} */}
           </div>
 
           {/* ── Scrollable body ── */}
