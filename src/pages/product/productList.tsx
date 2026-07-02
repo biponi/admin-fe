@@ -436,6 +436,7 @@ const ProductList: React.FC<Props> = ({ handleEditProduct }) => {
   const [selectedTab, setSelectedTab] = useState<TabKey>("all");
   const [mobileSelectedTab, setMobileSelectedTab] = useState<TabKey>("all");
   const [showKeyboardSearch, setShowKeyboardSearch] = useState(false);
+  const [showCategoryDrawer, setShowCategoryDrawer] = useState(false);
   // ← KEY: separate "table only" loading state so page chrome never re-mounts
   const [isTableLoading, setIsTableLoading] = useState(false);
 
@@ -769,6 +770,51 @@ const ProductList: React.FC<Props> = ({ handleEditProduct }) => {
                 className='w-8 flex items-center justify-center rounded-md border border-zinc-200 bg-white text-zinc-500 transition-colors'>
                 <Search className='w-4 h-4' />
               </Button>
+              <Drawer open={showCategoryDrawer} onOpenChange={setShowCategoryDrawer}>
+                <DrawerTrigger asChild>
+                  <Button
+                    className={`w-8 flex items-center justify-center rounded-md border bg-white transition-colors ${selectedCategory ? "border-indigo-300 text-indigo-600 bg-indigo-50" : "border-zinc-200 text-zinc-500"}`}>
+                    <FolderTree className='w-4 h-4' />
+                  </Button>
+                </DrawerTrigger>
+                <DrawerContent className='rounded-t-2xl max-h-[70vh]'>
+                  <DrawerHeader className='pb-2'>
+                    <DrawerTitle className='text-base font-semibold'>Filter by Category</DrawerTitle>
+                    <DrawerDescription className='text-xs'>Select a category to filter products</DrawerDescription>
+                  </DrawerHeader>
+                  <div className='px-4 pb-4 overflow-y-auto max-h-[55vh]'>
+                    <div className='space-y-1'>
+                      <button
+                        onClick={() => { setSelectedCategory(""); setShowCategoryDrawer(false); }}
+                        className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-colors ${!selectedCategory ? "bg-indigo-50 text-indigo-700 border border-indigo-200" : "text-zinc-600 hover:bg-zinc-50"}`}>
+                        <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${!selectedCategory ? "border-indigo-500 bg-indigo-500" : "border-zinc-300"}`}>
+                          {!selectedCategory && <div className='w-2 h-2 rounded-full bg-white' />}
+                        </div>
+                        All Categories
+                      </button>
+                      {categories.map((cat) => (
+                        <button
+                          key={cat.id}
+                          onClick={() => { setSelectedCategory(cat.id); setShowCategoryDrawer(false); }}
+                          className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-colors ${selectedCategory === cat.id ? "bg-indigo-50 text-indigo-700 border border-indigo-200" : "text-zinc-600 hover:bg-zinc-50"}`}>
+                          <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center shrink-0 ${selectedCategory === cat.id ? "border-indigo-500 bg-indigo-500" : "border-zinc-300"}`}>
+                            {selectedCategory === cat.id && <div className='w-2 h-2 rounded-full bg-white' />}
+                          </div>
+                          <span className='truncate'>{cat.name}</span>
+                          {cat.totalProducts > 0 && (
+                            <span className='ml-auto text-xs text-zinc-400 shrink-0'>{cat.totalProducts}</span>
+                          )}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                  <DrawerFooter className='pt-0 pb-6'>
+                    <DrawerClose asChild>
+                      <Button variant='outline' className='w-full'>Close</Button>
+                    </DrawerClose>
+                  </DrawerFooter>
+                </DrawerContent>
+              </Drawer>
               {hasRequiredPermission("product", "create") && (
                 <Button
                   onClick={() => navigate("/products/create")}

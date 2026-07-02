@@ -90,8 +90,7 @@ export const OrderCommissionTable: React.FC<OrderCommissionTableProps> = ({
               </p>
               <button
                 className='mt-1 inline-flex items-center gap-1 rounded-full border border-[rgba(91,82,240,0.22)] bg-[var(--cm-accent-lt,rgba(91,82,240,.08))] px-2.5 py-1 font-mono text-xs font-semibold text-[var(--cm-accent,#5b52f0)]'
-                onClick={() => showOrderModal(commission.orderNumber)}
-              >
+                onClick={() => showOrderModal(commission.orderNumber)}>
                 #{commission.orderNumber}
                 <ExternalLink className='h-3 w-3' />
               </button>
@@ -192,10 +191,10 @@ export const OrderCommissionTable: React.FC<OrderCommissionTableProps> = ({
                   align='end'
                   className='w-44'
                   style={{
-                    background: '#ffffff',
-                    border: '1px solid #e4e6f0',
+                    background: "#ffffff",
+                    border: "1px solid #e4e6f0",
                     borderRadius: 12,
-                    boxShadow: '0 8px 24px rgba(26,29,46,.1)',
+                    boxShadow: "0 8px 24px rgba(26,29,46,.1)",
                   }}>
                   {onMarkPaid && (
                     <DropdownMenuItem
@@ -367,10 +366,10 @@ export const OrderCommissionTable: React.FC<OrderCommissionTableProps> = ({
                         align='end'
                         className='w-44'
                         style={{
-                          background: '#ffffff',
-                          border: '1px solid #e4e6f0',
+                          background: "#ffffff",
+                          border: "1px solid #e4e6f0",
                           borderRadius: 12,
-                          boxShadow: '0 8px 24px rgba(26,29,46,.1)',
+                          boxShadow: "0 8px 24px rgba(26,29,46,.1)",
                         }}>
                         {onMarkPaid && (
                           <DropdownMenuItem

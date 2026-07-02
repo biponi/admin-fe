@@ -82,6 +82,7 @@ import { CommissionFilters } from "./components/shared/CommissionFilters";
 import { UpdateCommissionDialog } from "./components/shared/UpdateCommissionDialog";
 import { CommissionSummaryCards } from "./components/shared/CommissionSummaryCards";
 import { CommissionSummaryBadges } from "./components/shared/CommissionSummaryBadges";
+import { cn } from "../order-v2/lib/utils";
 
 // ─── Inline styles ──────────────────────────────────────────────────────────
 const css = `
@@ -761,7 +762,9 @@ export const CommissionManagementPage = () => {
   };
 
   const handleUserRowAction = async (userCommission, status) => {
-    const userData = await fetchUserCommissions(userCommission.userId, { limit: 1000 });
+    const userData = await fetchUserCommissions(userCommission.userId, {
+      limit: 1000,
+    });
     if (!userData || !userData.commissions?.length) {
       toast({
         variant: "destructive",
@@ -1251,27 +1254,44 @@ export const CommissionManagementPage = () => {
                             setIsUpdateDialogOpen(true);
                           }}
                           onMarkPaid={(c) => handleProductRowAction(c, "paid")}
-                          onMarkUnpaid={(c) => handleProductRowAction(c, "unpaid")}
+                          onMarkUnpaid={(c) =>
+                            handleProductRowAction(c, "unpaid")
+                          }
                           onHold={(c) => handleProductRowAction(c, "hold")}
-                          onCancel={(c) => handleProductRowAction(c, "cancelled")}
+                          onCancel={(c) =>
+                            handleProductRowAction(c, "cancelled")
+                          }
                         />
                       )}
                     </div>
                     {productPagination.totalPages > 1 && (
-                      <div className='cm-pagination'>
+                      <div
+                        className={cn(
+                          "cm-pagination",
+                          selectedOrderIds.length > 0 ? "mb-6" : "",
+                        )}>
                         <button
                           className='cm-page-btn'
                           disabled={!productPagination.hasPreviousPage}
-                          onClick={() => handleProductPageChange(productPagination.currentPage - 1)}>
+                          onClick={() =>
+                            handleProductPageChange(
+                              productPagination.currentPage - 1,
+                            )
+                          }>
                           <ChevronLeft size={14} /> Prev
                         </button>
                         <span className='cm-page-info'>
-                          Page {productPagination.currentPage} of {productPagination.totalPages}
+                          Page {productPagination.currentPage} of{" "}
+                          {productPagination.totalPages}
                         </span>
                         <button
                           className='cm-page-btn'
                           disabled={!productPagination.hasNextPage}
-                          onClick={() => handleProductPageChange(productPagination.currentPage + 1)}>
+                          onClick={() =>
+                            handleProductPageChange(
+                              productPagination.currentPage + 1,
+                            )
+                          }>
                           Next <ChevronRight size={14} />
                         </button>
                       </div>
@@ -1371,56 +1391,34 @@ export const CommissionManagementPage = () => {
                     />
                   </div>
                   {orderPagination.totalPages > 1 && (
-                    <div className='cm-pagination'>
+                    <div
+                      className={cn(
+                        "cm-pagination",
+                        selectedOrderIds.length > 0 ? "mb-6" : "",
+                      )}>
                       <button
                         className='cm-page-btn'
                         disabled={!orderPagination.hasPreviousPage}
-                        onClick={() => handleOrderPageChange(orderPagination.currentPage - 1)}>
+                        onClick={() =>
+                          handleOrderPageChange(orderPagination.currentPage - 1)
+                        }>
                         <ChevronLeft size={14} /> Prev
                       </button>
                       <span className='cm-page-info'>
-                        Page {orderPagination.currentPage} of {orderPagination.totalPages}
+                        Page {orderPagination.currentPage} of{" "}
+                        {orderPagination.totalPages}
                       </span>
                       <button
                         className='cm-page-btn'
                         disabled={!orderPagination.hasNextPage}
-                        onClick={() => handleOrderPageChange(orderPagination.currentPage + 1)}>
+                        onClick={() =>
+                          handleOrderPageChange(orderPagination.currentPage + 1)
+                        }>
                         Next <ChevronRight size={14} />
                       </button>
                     </div>
                   )}
                 </div>
-
-                {selectedOrderIds.length > 0 && (
-                  <>
-                    <BulkCommissionActionsBar
-                      selectedCount={selectedOrderIds.length}
-                      processing={bulkProcessing}
-                      progress={bulkProgress}
-                      errors={bulkErrors}
-                      onApprove={() => handleBulkAction("paid")}
-                      onMarkPaid={() => handleBulkAction("paid")}
-                      onMarkUnpaid={() => handleBulkAction("unpaid")}
-                      onHold={() => handleBulkAction("hold")}
-                      onExport={() => handleExport("order-wise")}
-                      onCancel={() => handleBulkAction("cancelled")}
-                      onClearSelection={() => setSelectedOrderIds([])}
-                    />
-                    <MobileBulkCommissionActions
-                      selectedCount={selectedOrderIds.length}
-                      processing={bulkProcessing}
-                      progress={bulkProgress}
-                      errors={bulkErrors}
-                      onApprove={() => handleBulkAction("paid")}
-                      onMarkPaid={() => handleBulkAction("paid")}
-                      onMarkUnpaid={() => handleBulkAction("unpaid")}
-                      onHold={() => handleBulkAction("hold")}
-                      onExport={() => handleExport("order-wise")}
-                      onCancel={() => handleBulkAction("cancelled")}
-                      onClearSelection={() => setSelectedOrderIds([])}
-                    />
-                  </>
-                )}
               </div>
             )}
 
@@ -1467,20 +1465,29 @@ export const CommissionManagementPage = () => {
                     )}
                   </div>
                   {userPagination.totalPages > 1 && (
-                    <div className='cm-pagination'>
+                    <div
+                      className={cn(
+                        "cm-pagination",
+                        selectedOrderIds.length > 0 ? "mb-6" : "",
+                      )}>
                       <button
                         className='cm-page-btn'
                         disabled={!userPagination.hasPreviousPage}
-                        onClick={() => handleUserPageChange(userPagination.currentPage - 1)}>
+                        onClick={() =>
+                          handleUserPageChange(userPagination.currentPage - 1)
+                        }>
                         <ChevronLeft size={14} /> Prev
                       </button>
                       <span className='cm-page-info'>
-                        Page {userPagination.currentPage} of {userPagination.totalPages}
+                        Page {userPagination.currentPage} of{" "}
+                        {userPagination.totalPages}
                       </span>
                       <button
                         className='cm-page-btn'
                         disabled={!userPagination.hasNextPage}
-                        onClick={() => handleUserPageChange(userPagination.currentPage + 1)}>
+                        onClick={() =>
+                          handleUserPageChange(userPagination.currentPage + 1)
+                        }>
                         Next <ChevronRight size={14} />
                       </button>
                     </div>
@@ -1491,6 +1498,38 @@ export const CommissionManagementPage = () => {
           </div>
         </div>
       </div>
+
+      {/* ── Bulk Actions (fixed position, outside shell) ── */}
+      {selectedOrderIds.length > 0 && (
+        <>
+          <BulkCommissionActionsBar
+            selectedCount={selectedOrderIds.length}
+            processing={bulkProcessing}
+            progress={bulkProgress}
+            errors={bulkErrors}
+            onApprove={() => handleBulkAction("paid")}
+            onMarkPaid={() => handleBulkAction("paid")}
+            onMarkUnpaid={() => handleBulkAction("unpaid")}
+            onHold={() => handleBulkAction("hold")}
+            onExport={() => handleExport("order-wise")}
+            onCancel={() => handleBulkAction("cancelled")}
+            onClearSelection={() => setSelectedOrderIds([])}
+          />
+          <MobileBulkCommissionActions
+            selectedCount={selectedOrderIds.length}
+            processing={bulkProcessing}
+            progress={bulkProgress}
+            errors={bulkErrors}
+            onApprove={() => handleBulkAction("paid")}
+            onMarkPaid={() => handleBulkAction("paid")}
+            onMarkUnpaid={() => handleBulkAction("unpaid")}
+            onHold={() => handleBulkAction("hold")}
+            onExport={() => handleExport("order-wise")}
+            onCancel={() => handleBulkAction("cancelled")}
+            onClearSelection={() => setSelectedOrderIds([])}
+          />
+        </>
+      )}
 
       {/* ── Modals / Sheets (unchanged logic) ── */}
       <ProductCommissionDetailsModal
