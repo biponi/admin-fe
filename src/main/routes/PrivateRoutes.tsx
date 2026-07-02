@@ -22,6 +22,7 @@ import ChatPage from "../../pages/chat";
 import { JobsManagement } from "../../pages/settings";
 import ReportPage from "../../pages/report";
 import DailyReportPage from "../../pages/report/DailyReport";
+import ReportsV2 from "../../pages/reports-v2";
 import DeliveryPage from "../../pages/delivery";
 import { NotificationPage } from "../../pages/notifications";
 import { AuditDashboard } from "../../pages/admin/components/AuditDashboard";
@@ -260,6 +261,16 @@ export const ProtectedRoutes = () => {
           <ProtectedRoute page='Report' requiredAction='view'>
             <MainViewComponent title='Reports & Analytics'>
               <ReportPage />
+            </MainViewComponent>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path='/reports-v2'
+        element={
+          <ProtectedRoute page='Report' requiredAction='view'>
+            <MainViewComponent title='Reports & Analytics V2'>
+              <ReportsV2 />
             </MainViewComponent>
           </ProtectedRoute>
         }

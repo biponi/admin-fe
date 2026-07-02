@@ -41,7 +41,7 @@ import {
 } from "lucide-react";
 import { cn } from "../../lib/utils";
 import { BDDistrictList, BDDivisions } from "../../utils/contents";
-import { getLocationByFormattedString } from "../../utils/functions";
+import { getLocationByFormattedString, getLocationByName } from "../../utils/functions";
 import { calculateDeliveryCharge } from "../../utils/deliveryCharge";
 import { ICustomer } from "./interface";
 import { isValidBDPhone, normalizeBDPhone } from "@/utils/helperFunction";
@@ -294,11 +294,11 @@ const EditCustomerInformation: React.FC<Props> = ({
     email: "",
     phoneNumber: "",
   });
-  const [shippingAddress, setShippingAddress] = useState<ShippingAddress>({
-    division: null,
-    district: null,
-    address: "",
-  });
+  const [shippingAddress, setShippingAddress] = useState<ShippingAddress>(() => ({
+    address: shipping?.address ?? "",
+    district: getLocationByName(BDDistrictList, shipping?.district ?? "") ?? null,
+    division: getLocationByName(BDDivisions, shipping?.division ?? "") ?? null,
+  }));
   const [updatedNotes, setUpdatedNotes] = useState(notes);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [phoneTouched, setPhoneTouched] = useState(false);
@@ -309,18 +309,16 @@ const EditCustomerInformation: React.FC<Props> = ({
   // ── Sync props → state ──────────────────────────────────────────────────
   useEffect(() => setPersonalInfo(customerInfo), [customerInfo]);
   useEffect(() => setUpdatedNotes(notes), [notes]);
+
+  // Sync shipping prop to state, but only if shipping data exists
   useEffect(() => {
-    setShippingAddress({
-      address: shipping?.address ?? "",
-      district:
-        getLocationByFormattedString(
-          BDDistrictList,
-          shipping?.district ?? "",
-        ) ?? null,
-      division:
-        getLocationByFormattedString(BDDivisions, shipping?.division ?? "") ??
-        null,
-    });
+    if (shipping?.division || shipping?.district || shipping?.address) {
+      setShippingAddress({
+        address: shipping.address ?? "",
+        district: getLocationByName(BDDistrictList, shipping.district ?? "") ?? null,
+        division: getLocationByName(BDDivisions, shipping.division ?? "") ?? null,
+      });
+    }
   }, [shipping]);
 
   // ── Phone handlers ──────────────────────────────────────────────────────
@@ -538,9 +536,7 @@ const EditCustomerInformation: React.FC<Props> = ({
             <div className='grid grid-cols-2 gap-3'>
               <Field label={`District / City (${shipping?.division})`}>
                 <LocationCombobox
-                  value={
-                    shippingAddress.division?.id ?? shipping?.division ?? ""
-                  }
+                  value={shippingAddress.division?.id ?? ""}
                   onValueChange={handleDivisionChange}
                   options={BDDivisions}
                   placeholder='Select division'
@@ -548,9 +544,7 @@ const EditCustomerInformation: React.FC<Props> = ({
               </Field>
               <Field label={`Area (${shipping?.district})`}>
                 <LocationCombobox
-                  value={
-                    shippingAddress.district?.id ?? shipping?.district ?? ""
-                  }
+                  value={shippingAddress.district?.id ?? ""}
                   onValueChange={handleDistrictChange}
                   options={filteredDistricts}
                   placeholder='Select district'

@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import {
   Sheet,
   SheetContent,
@@ -17,7 +18,6 @@ import { Edit3 } from "lucide-react";
 import EditCustomerInformation from "@/pages/order/editOrderCustomer";
 import { useIsMobile } from "@/hooks/use-mobile";
 
-// Move this OUTSIDE OrderListV2, above the main component
 const EditOrderPanelContent = ({
   selectedOrder,
   isEditDialogOpen,
@@ -31,24 +31,33 @@ const EditOrderPanelContent = ({
   editOrderData: any;
   refreshOrders?: () => void;
 }) => {
+  const isMobolie = useIsMobile();
+
+  useEffect(() => {
+    if (!isEditDialogOpen) {
+      const timer = setTimeout(() => {
+        document.body.style.pointerEvents = "";
+        document.body.style.overflow = "";
+        document
+          .querySelectorAll("[data-radix-portal] > div")
+          .forEach((el) => {
+            if (
+              el.getAttribute("data-state") === "closed" ||
+              el.querySelector("[data-state='closed']")
+            ) {
+              el.remove();
+            }
+          });
+      }, 400);
+      return () => clearTimeout(timer);
+    }
+  }, [isEditDialogOpen]);
+
   if (!selectedOrder) return null;
 
   const handleOpenChange = (val: boolean) => {
-    if (!val) {
-      // Force remove any stuck overlay after close animation
-      setTimeout(() => {
-        document.body.style.pointerEvents = "";
-        document.body.style.overflow = "";
-        // Remove any lingering radix overlay portals
-        document
-          .querySelectorAll("[data-radix-popper-content-wrapper]")
-          .forEach((el) => el.remove());
-      }, 300);
-    }
     setEditDialogOpen(val);
   };
-
-  const isMobolie = useIsMobile();
 
   return (
     <>
@@ -86,8 +95,10 @@ const EditOrderPanelContent = ({
                       { ...data, id: selectedOrder.id },
                       (success: boolean) => {
                         if (success) {
-                          if (!!refreshOrders) refreshOrders();
                           setEditDialogOpen(false);
+                          setTimeout(() => {
+                            if (!!refreshOrders) refreshOrders();
+                          }, 400);
                         }
                       },
                     );
@@ -134,8 +145,10 @@ const EditOrderPanelContent = ({
                       { ...data, id: selectedOrder.id },
                       (success: boolean) => {
                         if (success) {
-                          refreshOrders();
                           setEditDialogOpen(false);
+                          setTimeout(() => {
+                            if (!!refreshOrders) refreshOrders();
+                          }, 400);
                         }
                       },
                     );

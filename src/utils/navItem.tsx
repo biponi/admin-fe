@@ -130,6 +130,12 @@ export const navItems = [
     active: true,
     id: "report",
     roles: ["admin"],
+    items: [
+      {
+        title: "Report Analytics",
+        url: "/reports-v2",
+      },
+    ],
   },
   {
     icon: <BarChart3 className='w-5 h-5' />,

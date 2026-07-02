@@ -21,6 +21,7 @@ import dayjs from "dayjs";
 import relativeTime from "dayjs/plugin/relativeTime";
 import { useToast } from "../../../components/ui/use-toast";
 import { UserPerformanceCard } from "./UserPerformanceCard";
+import { AuditContributorsGraph } from "./AuditContributorsGraph";
 
 dayjs.extend(relativeTime);
 
@@ -447,52 +448,11 @@ export const AuditDashboard: React.FC = () => {
         </div>
       </div>
 
-      {/* Today's Activity Chart */}
-      {dashboardData.todayActivity &&
-        dashboardData.todayActivity.length > 0 && (
-          <div className='bg-white rounded-xl border border-slate-100 shadow-sm overflow-hidden'>
-            <div className='p-5 border-b border-slate-100'>
-              <h3 className='text-lg font-semibold text-slate-900'>
-                Today's Activity
-              </h3>
-              <p className='text-sm text-slate-500 mt-1'>Hourly distribution</p>
-            </div>
-            <div className='p-5'>
-              <div className='flex items-end justify-between gap-2 h-64'>
-                {dashboardData.todayActivity.map((item) => {
-                  const maxCount = Math.max(
-                    ...dashboardData.todayActivity.map((d) => d.count),
-                    1,
-                  );
-                  const height = (item.count / maxCount) * 100;
-
-                  return (
-                    <div
-                      key={item.hour}
-                      className='flex-1 flex flex-col items-center gap-2'>
-                      <div className='relative w-full flex items-end justify-center h-full'>
-                        <div
-                          className='w-full bg-indigo-500 rounded-t-md hover:bg-indigo-600 transition-colors relative group'
-                          style={{ height: `${height}%` }}>
-                          <div className='absolute -top-6 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-opacity'>
-                            <Badge
-                              variant='secondary'
-                              className='bg-white border border-slate-200'>
-                              {item.count}
-                            </Badge>
-                          </div>
-                        </div>
-                      </div>
-                      <span className='text-xs text-slate-500'>
-                        {item.hour}:00
-                      </span>
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-          </div>
-        )}
+      {/* Contributors Graph */}
+      <AuditContributorsGraph
+        startDate={dateRange.startDate}
+        endDate={dateRange.endDate}
+      />
 
       {/* User Performance Overview */}
       <UserPerformanceCard

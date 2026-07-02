@@ -201,6 +201,22 @@ export const getLocationByFormattedString = (
   );
 };
 
+/**
+ * Searches for a location object by its name field only.
+ * This is useful when the API returns plain location names (e.g., "Dhaka")
+ * and we need to map them to location objects with IDs.
+ *
+ * @param array - Array of location objects to search
+ * @param name - The name string to search for
+ * @returns The matching location object, or undefined if not found
+ */
+export const getLocationByName = (
+  array: any[],
+  name: string
+): any => {
+  if (!name) return undefined;
+  return array.find((location) => location.name === name);
+};
 
 export const ArraysMatch = (array1:any[], array2:any[]) => {
   if (array1.length !== array2.length) return false;
