@@ -11,6 +11,13 @@ import { Button } from "../../../../components/ui/button";
 import { Card, CardContent } from "../../../../components/ui/card";
 import { Badge } from "../../../../components/ui/badge";
 import { Checkbox } from "../../../../components/ui/checkbox";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "../../../../components/ui/dropdown-menu";
 import { OrderCommission } from "../../../../api/commission";
 import { RecipientCell } from "../shared/RecipientCell";
 import { StatusBreakdownBadge } from "../shared/StatusBreakdownBadge";
@@ -26,6 +33,11 @@ import {
   ExternalLink,
   Users,
   BookText,
+  MoreHorizontal,
+  Check,
+  Clock,
+  Pause,
+  XCircle,
 } from "lucide-react";
 
 interface OrderCommissionTableProps {
@@ -34,6 +46,10 @@ interface OrderCommissionTableProps {
   onSelect: (orderId: string, selected: boolean) => void;
   onSelectAll: (selected: boolean) => void;
   onViewDetails?: (orderCommission: OrderCommission) => void;
+  onMarkPaid?: (orderCommission: OrderCommission) => void;
+  onMarkUnpaid?: (orderCommission: OrderCommission) => void;
+  onHold?: (orderCommission: OrderCommission) => void;
+  onCancel?: (orderCommission: OrderCommission) => void;
   loading?: boolean;
 }
 
@@ -43,6 +59,10 @@ export const OrderCommissionTable: React.FC<OrderCommissionTableProps> = ({
   onSelect,
   onSelectAll,
   onViewDetails,
+  onMarkPaid,
+  onMarkUnpaid,
+  onHold,
+  onCancel,
   loading = false,
 }) => {
   const allSelected =
@@ -157,6 +177,64 @@ export const OrderCommissionTable: React.FC<OrderCommissionTableProps> = ({
               title='View details'>
               <Eye className='h-4 w-4' />
             </Button>
+            {(onMarkPaid || onMarkUnpaid || onHold || onCancel) && (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button
+                    variant='outline'
+                    size='sm'
+                    className='h-9 w-9 rounded-xl border-[var(--cm-border,#e4e6f0)] bg-white p-0 text-[var(--cm-muted,#8b90a7)] hover:border-[rgba(91,82,240,0.35)] hover:bg-[var(--cm-accent-lt,rgba(91,82,240,.08))] hover:text-[var(--cm-accent,#5b52f0)]'
+                    title='More actions'>
+                    <MoreHorizontal className='h-4 w-4' />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent
+                  align='end'
+                  className='w-44'
+                  style={{
+                    background: '#ffffff',
+                    border: '1px solid #e4e6f0',
+                    borderRadius: 12,
+                    boxShadow: '0 8px 24px rgba(26,29,46,.1)',
+                  }}>
+                  {onMarkPaid && (
+                    <DropdownMenuItem
+                      onClick={() => onMarkPaid(commission)}
+                      className='text-green-600 focus:text-green-700 focus:bg-green-50'>
+                      <Check className='h-4 w-4 mr-2' />
+                      Mark Paid
+                    </DropdownMenuItem>
+                  )}
+                  {onMarkUnpaid && (
+                    <DropdownMenuItem
+                      onClick={() => onMarkUnpaid(commission)}
+                      className='text-blue-600 focus:text-blue-700 focus:bg-blue-50'>
+                      <Clock className='h-4 w-4 mr-2' />
+                      Mark Unpaid
+                    </DropdownMenuItem>
+                  )}
+                  {onHold && (
+                    <DropdownMenuItem
+                      onClick={() => onHold(commission)}
+                      className='text-orange-600 focus:text-orange-700 focus:bg-orange-50'>
+                      <Pause className='h-4 w-4 mr-2' />
+                      On Hold
+                    </DropdownMenuItem>
+                  )}
+                  {onCancel && (
+                    <>
+                      <DropdownMenuSeparator />
+                      <DropdownMenuItem
+                        onClick={() => onCancel(commission)}
+                        className='text-red-600 focus:text-red-700 focus:bg-red-50'>
+                        <XCircle className='h-4 w-4 mr-2' />
+                        Cancel
+                      </DropdownMenuItem>
+                    </>
+                  )}
+                </DropdownMenuContent>
+              </DropdownMenu>
+            )}
           </div>
         </div>
       </CardContent>
@@ -275,6 +353,63 @@ export const OrderCommissionTable: React.FC<OrderCommissionTableProps> = ({
                     title='View details'>
                     <BookText className='h-4 w-4' />
                   </Button>
+                  {(onMarkPaid || onMarkUnpaid || onHold || onCancel) && (
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button
+                          variant='ghost'
+                          size='sm'
+                          className='h-8 w-8 p-0'>
+                          <MoreHorizontal className='h-4 w-4' />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent
+                        align='end'
+                        className='w-44'
+                        style={{
+                          background: '#ffffff',
+                          border: '1px solid #e4e6f0',
+                          borderRadius: 12,
+                          boxShadow: '0 8px 24px rgba(26,29,46,.1)',
+                        }}>
+                        {onMarkPaid && (
+                          <DropdownMenuItem
+                            onClick={() => onMarkPaid(commission)}
+                            className='text-green-600 focus:text-green-700 focus:bg-green-50'>
+                            <Check className='h-4 w-4 mr-2' />
+                            Mark Paid
+                          </DropdownMenuItem>
+                        )}
+                        {onMarkUnpaid && (
+                          <DropdownMenuItem
+                            onClick={() => onMarkUnpaid(commission)}
+                            className='text-blue-600 focus:text-blue-700 focus:bg-blue-50'>
+                            <Clock className='h-4 w-4 mr-2' />
+                            Mark Unpaid
+                          </DropdownMenuItem>
+                        )}
+                        {onHold && (
+                          <DropdownMenuItem
+                            onClick={() => onHold(commission)}
+                            className='text-orange-600 focus:text-orange-700 focus:bg-orange-50'>
+                            <Pause className='h-4 w-4 mr-2' />
+                            On Hold
+                          </DropdownMenuItem>
+                        )}
+                        {onCancel && (
+                          <>
+                            <DropdownMenuSeparator />
+                            <DropdownMenuItem
+                              onClick={() => onCancel(commission)}
+                              className='text-red-600 focus:text-red-700 focus:bg-red-50'>
+                              <XCircle className='h-4 w-4 mr-2' />
+                              Cancel
+                            </DropdownMenuItem>
+                          </>
+                        )}
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  )}
                 </div>
               </TableCell>
             </TableRow>

@@ -14,6 +14,13 @@ import {
 import { Button } from "../../../../components/ui/button";
 import { Card, CardContent } from "../../../../components/ui/card";
 import { Checkbox } from "../../../../components/ui/checkbox";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "../../../../components/ui/dropdown-menu";
 import { UserCommissionSummary } from "../../../../api/commission";
 import { StatusBreakdownBadge } from "../shared/StatusBreakdownBadge";
 import {
@@ -26,6 +33,11 @@ import {
   Calendar,
   ShoppingCart,
   ChevronRight,
+  MoreHorizontal,
+  Check,
+  Clock,
+  Pause,
+  XCircle,
 } from "lucide-react";
 
 interface UserCommissionTableProps {
@@ -34,6 +46,10 @@ interface UserCommissionTableProps {
   onSelect: (userId: string, selected: boolean) => void;
   onSelectAll: (selected: boolean) => void;
   onViewDetails?: (userCommission: UserCommissionSummary) => void;
+  onMarkPaid?: (userCommission: UserCommissionSummary) => void;
+  onMarkUnpaid?: (userCommission: UserCommissionSummary) => void;
+  onHold?: (userCommission: UserCommissionSummary) => void;
+  onCancel?: (userCommission: UserCommissionSummary) => void;
   loading?: boolean;
 }
 
@@ -43,6 +59,10 @@ export const UserCommissionTable: React.FC<UserCommissionTableProps> = ({
   onSelect,
   onSelectAll,
   onViewDetails,
+  onMarkPaid,
+  onMarkUnpaid,
+  onHold,
+  onCancel,
   loading = false,
 }) => {
   const allSelected =
@@ -148,15 +168,73 @@ export const UserCommissionTable: React.FC<UserCommissionTableProps> = ({
 
         {/* Actions */}
         <div className='border-t border-[var(--cm-border,#e4e6f0)] pt-3'>
-          <Button
-            variant='outline'
-            size='default'
-            className='h-11 w-full rounded-xl border-[var(--cm-border,#e4e6f0)] bg-white text-[var(--cm-text,#1a1d2e)] hover:border-[rgba(91,82,240,0.35)] hover:bg-[var(--cm-accent-lt,rgba(91,82,240,.08))] hover:text-[var(--cm-accent,#5b52f0)]'
-            onClick={() => onViewDetails?.(commission)}>
-            <Eye className='h-4 w-4 mr-2' />
-            View Details
-            <ChevronRight className='h-4 w-4 ml-1' />
-          </Button>
+          <div className='flex gap-2'>
+            <Button
+              variant='outline'
+              size='default'
+              className='flex-1 h-11 rounded-xl border-[var(--cm-border,#e4e6f0)] bg-white text-[var(--cm-text,#1a1d2e)] hover:border-[rgba(91,82,240,0.35)] hover:bg-[var(--cm-accent-lt,rgba(91,82,240,.08))] hover:text-[var(--cm-accent,#5b52f0)]'
+              onClick={() => onViewDetails?.(commission)}>
+              <Eye className='h-4 w-4 mr-2' />
+              View Details
+            </Button>
+            {(onMarkPaid || onMarkUnpaid || onHold || onCancel) && (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button
+                    variant='outline'
+                    size='sm'
+                    className='h-11 w-11 rounded-xl border-[var(--cm-border,#e4e6f0)] bg-white p-0 text-[var(--cm-muted,#8b90a7)] hover:border-[rgba(91,82,240,0.35)] hover:bg-[var(--cm-accent-lt,rgba(91,82,240,.08))] hover:text-[var(--cm-accent,#5b52f0)]'>
+                    <MoreHorizontal className='h-4 w-4' />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent
+                  align='end'
+                  className='w-48'
+                  style={{
+                    background: '#ffffff',
+                    border: '1px solid #e4e6f0',
+                    borderRadius: 12,
+                    boxShadow: '0 8px 24px rgba(26,29,46,.1)',
+                  }}>
+                  {onMarkPaid && (
+                    <DropdownMenuItem
+                      onClick={() => onMarkPaid(commission)}
+                      className='text-green-600 focus:text-green-700 focus:bg-green-50'>
+                      <Check className='h-4 w-4 mr-2' />
+                      Mark All Paid
+                    </DropdownMenuItem>
+                  )}
+                  {onMarkUnpaid && (
+                    <DropdownMenuItem
+                      onClick={() => onMarkUnpaid(commission)}
+                      className='text-blue-600 focus:text-blue-700 focus:bg-blue-50'>
+                      <Clock className='h-4 w-4 mr-2' />
+                      Mark All Unpaid
+                    </DropdownMenuItem>
+                  )}
+                  {onHold && (
+                    <DropdownMenuItem
+                      onClick={() => onHold(commission)}
+                      className='text-orange-600 focus:text-orange-700 focus:bg-orange-50'>
+                      <Pause className='h-4 w-4 mr-2' />
+                      Put All On Hold
+                    </DropdownMenuItem>
+                  )}
+                  {onCancel && (
+                    <>
+                      <DropdownMenuSeparator />
+                      <DropdownMenuItem
+                        onClick={() => onCancel(commission)}
+                        className='text-red-600 focus:text-red-700 focus:bg-red-50'>
+                        <XCircle className='h-4 w-4 mr-2' />
+                        Cancel All
+                      </DropdownMenuItem>
+                    </>
+                  )}
+                </DropdownMenuContent>
+              </DropdownMenu>
+            )}
+          </div>
         </div>
       </CardContent>
     </Card>
@@ -241,14 +319,73 @@ export const UserCommissionTable: React.FC<UserCommissionTableProps> = ({
                 {formatDate(commission.lastCommissionDate)}
               </TableCell>
               <TableCell className='text-right'>
-                <Button
-                  variant='ghost'
-                  size='sm'
-                  className='h-8 w-8 p-0'
-                  onClick={() => onViewDetails?.(commission)}
-                  title='View details'>
-                  <Eye className='h-4 w-4' />
-                </Button>
+                <div className='flex justify-end gap-1'>
+                  <Button
+                    variant='ghost'
+                    size='sm'
+                    className='h-8 w-8 p-0'
+                    onClick={() => onViewDetails?.(commission)}
+                    title='View details'>
+                    <Eye className='h-4 w-4' />
+                  </Button>
+                  {(onMarkPaid || onMarkUnpaid || onHold || onCancel) && (
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button
+                          variant='ghost'
+                          size='sm'
+                          className='h-8 w-8 p-0'>
+                          <MoreHorizontal className='h-4 w-4' />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent
+                        align='end'
+                        className='w-48'
+                        style={{
+                          background: '#ffffff',
+                          border: '1px solid #e4e6f0',
+                          borderRadius: 12,
+                          boxShadow: '0 8px 24px rgba(26,29,46,.1)',
+                        }}>
+                        {onMarkPaid && (
+                          <DropdownMenuItem
+                            onClick={() => onMarkPaid(commission)}
+                            className='text-green-600 focus:text-green-700 focus:bg-green-50'>
+                            <Check className='h-4 w-4 mr-2' />
+                            Mark All Paid
+                          </DropdownMenuItem>
+                        )}
+                        {onMarkUnpaid && (
+                          <DropdownMenuItem
+                            onClick={() => onMarkUnpaid(commission)}
+                            className='text-blue-600 focus:text-blue-700 focus:bg-blue-50'>
+                            <Clock className='h-4 w-4 mr-2' />
+                            Mark All Unpaid
+                          </DropdownMenuItem>
+                        )}
+                        {onHold && (
+                          <DropdownMenuItem
+                            onClick={() => onHold(commission)}
+                            className='text-orange-600 focus:text-orange-700 focus:bg-orange-50'>
+                            <Pause className='h-4 w-4 mr-2' />
+                            Put All On Hold
+                          </DropdownMenuItem>
+                        )}
+                        {onCancel && (
+                          <>
+                            <DropdownMenuSeparator />
+                            <DropdownMenuItem
+                              onClick={() => onCancel(commission)}
+                              className='text-red-600 focus:text-red-700 focus:bg-red-50'>
+                              <XCircle className='h-4 w-4 mr-2' />
+                              Cancel All
+                            </DropdownMenuItem>
+                          </>
+                        )}
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  )}
+                </div>
               </TableCell>
             </TableRow>
           ))}

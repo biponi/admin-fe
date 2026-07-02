@@ -55,6 +55,7 @@ import {
   ChevronRight,
   ArrowUpRight,
   Sparkles,
+  ChevronLeft,
 } from "lucide-react";
 import { useToast } from "../../components/ui/use-toast";
 import {
@@ -486,6 +487,47 @@ const css = `
     to   { opacity:1; transform:translateY(0); }
   }
   .cm-fade-up { animation: fadeUp .25s ease both; }
+
+  /* ── Pagination ── */
+  .cm-pagination {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    padding: 14px 18px;
+    border-top: 1px solid var(--cm-border);
+    background: var(--cm-surface);
+  }
+  .cm-page-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 7px 14px;
+    border-radius: 10px;
+    font-family: 'Sora', sans-serif;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all .18s;
+    border: 1.5px solid var(--cm-border);
+    background: var(--cm-surface);
+    color: var(--cm-text);
+  }
+  .cm-page-btn:hover:not(:disabled) {
+    border-color: var(--cm-accent);
+    background: var(--cm-accent-lt);
+    color: var(--cm-accent);
+  }
+  .cm-page-btn:disabled {
+    opacity: .4;
+    cursor: not-allowed;
+  }
+  .cm-page-info {
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--cm-muted);
+    font-family: 'JetBrains Mono', monospace;
+  }
 `;
 
 // Status chips config
@@ -526,7 +568,7 @@ export const CommissionManagementPage = () => {
   const [selectedCommission, setSelectedCommission] = useState(null);
   const [viewDetailsCommission, setViewDetailsCommission] = useState(null);
   const [isUpdateDialogOpen, setIsUpdateDialogOpen] = useState(false);
-  const [, setProductPagination] = useState({
+  const [productPagination, setProductPagination] = useState({
     currentPage: 1,
     totalPages: 1,
     totalItems: 0,
@@ -538,7 +580,7 @@ export const CommissionManagementPage = () => {
   const [orderSummary, setOrderSummary] = useState(null);
   const [selectedOrderIds, setSelectedOrderIds] = useState([]);
   const [viewOrderDetails, setViewOrderDetails] = useState(null);
-  const [, setOrderPagination] = useState({
+  const [orderPagination, setOrderPagination] = useState({
     currentPage: 1,
     totalPages: 1,
     totalItems: 0,
@@ -557,7 +599,7 @@ export const CommissionManagementPage = () => {
   const [userSummary, setUserSummary] = useState(null);
   const [selectedUserIds, setSelectedUserIds] = useState([]);
   const [viewUserDetails, setViewUserDetails] = useState(null);
-  const [, setUserPagination] = useState({
+  const [userPagination, setUserPagination] = useState({
     currentPage: 1,
     totalPages: 1,
     totalItems: 0,
@@ -569,9 +611,11 @@ export const CommissionManagementPage = () => {
   const {
     fetchCommissions,
     fetchCommissionSummary,
+    fetchUserCommissions,
     fetchOrderCommissions,
     fetchOrderCommissionDetails,
     updateStatus,
+    submitBulkCommissionUpdate,
     submitBulkOrderCommissionUpdate,
     fetchUserCommissionsList,
     fetchUserCommissionHistory,
@@ -595,6 +639,18 @@ export const CommissionManagementPage = () => {
     (v) => setUserFilters((p) => (typeof v === "function" ? v(p) : v)),
     [],
   );
+
+  const handleProductPageChange = useCallback((page: number) => {
+    setProductFilters((p) => ({ ...p, page }));
+  }, []);
+
+  const handleOrderPageChange = useCallback((page: number) => {
+    setOrderFilters((p) => ({ ...p, page }));
+  }, []);
+
+  const handleUserPageChange = useCallback((page: number) => {
+    setUserFilters((p) => ({ ...p, page }));
+  }, []);
 
   useEffect(() => {
     if (viewMode !== "product-wise") return;
@@ -657,6 +713,83 @@ export const CommissionManagementPage = () => {
         variant: "destructive",
         title: "Error",
         description: "Failed to update commission status",
+      });
+    }
+  };
+
+  const handleProductRowAction = async (commission, status) => {
+    const result = await updateStatus(commission.id, status);
+    if (result) {
+      toast({
+        title: "Status Updated",
+        description: `Commission marked as ${status}`,
+      });
+      const cd = await fetchCommissions(productFilters);
+      if (cd) setCommissions(cd.commissions);
+    } else {
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Failed to update commission status",
+      });
+    }
+  };
+
+  const handleOrderRowAction = async (orderCommission, status) => {
+    const orderNumbers = [orderCommission.orderNumber];
+    const result = await submitBulkOrderCommissionUpdate({
+      orderNumbers,
+      status,
+    });
+    if (result.success) {
+      toast({
+        title: "Status Updated",
+        description: `Order #${orderCommission.orderNumber} marked as ${status}`,
+      });
+      const d = await fetchOrderCommissions(orderFilters);
+      if (d) {
+        setOrderCommissions(d.commissions);
+        setOrderSummary(d.summary);
+      }
+    } else {
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: result.error || "Failed to update order status",
+      });
+    }
+  };
+
+  const handleUserRowAction = async (userCommission, status) => {
+    const userData = await fetchUserCommissions(userCommission.userId, { limit: 1000 });
+    if (!userData || !userData.commissions?.length) {
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "No commissions found for this user",
+      });
+      return;
+    }
+    const commissionIds = userData.commissions.map((c) => c.id);
+    const result = await submitBulkCommissionUpdate({
+      commissionIds,
+      status,
+    });
+    if (result.success) {
+      toast({
+        title: "Status Updated",
+        description: `All commissions for ${userCommission.userName} marked as ${status}`,
+      });
+      const ud = await fetchUserCommissionsList(userFilters);
+      if (ud) {
+        setUserCommissions(ud.data);
+        setUserPagination(ud.pagination);
+      }
+    } else {
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: result.error || "Failed to update user commissions",
       });
     }
   };
@@ -1117,9 +1250,32 @@ export const CommissionManagementPage = () => {
                             setSelectedCommission(c);
                             setIsUpdateDialogOpen(true);
                           }}
+                          onMarkPaid={(c) => handleProductRowAction(c, "paid")}
+                          onMarkUnpaid={(c) => handleProductRowAction(c, "unpaid")}
+                          onHold={(c) => handleProductRowAction(c, "hold")}
+                          onCancel={(c) => handleProductRowAction(c, "cancelled")}
                         />
                       )}
                     </div>
+                    {productPagination.totalPages > 1 && (
+                      <div className='cm-pagination'>
+                        <button
+                          className='cm-page-btn'
+                          disabled={!productPagination.hasPreviousPage}
+                          onClick={() => handleProductPageChange(productPagination.currentPage - 1)}>
+                          <ChevronLeft size={14} /> Prev
+                        </button>
+                        <span className='cm-page-info'>
+                          Page {productPagination.currentPage} of {productPagination.totalPages}
+                        </span>
+                        <button
+                          className='cm-page-btn'
+                          disabled={!productPagination.hasNextPage}
+                          onClick={() => handleProductPageChange(productPagination.currentPage + 1)}>
+                          Next <ChevronRight size={14} />
+                        </button>
+                      </div>
+                    )}
                   </div>
                 ) : (
                   /* Top Performers */
@@ -1207,9 +1363,32 @@ export const CommissionManagementPage = () => {
                       onSelect={handleSelectOrder}
                       onSelectAll={handleSelectAllOrders}
                       onViewDetails={handleViewOrderDetails}
+                      onMarkPaid={(oc) => handleOrderRowAction(oc, "paid")}
+                      onMarkUnpaid={(oc) => handleOrderRowAction(oc, "unpaid")}
+                      onHold={(oc) => handleOrderRowAction(oc, "hold")}
+                      onCancel={(oc) => handleOrderRowAction(oc, "cancelled")}
                       loading={isLoading}
                     />
                   </div>
+                  {orderPagination.totalPages > 1 && (
+                    <div className='cm-pagination'>
+                      <button
+                        className='cm-page-btn'
+                        disabled={!orderPagination.hasPreviousPage}
+                        onClick={() => handleOrderPageChange(orderPagination.currentPage - 1)}>
+                        <ChevronLeft size={14} /> Prev
+                      </button>
+                      <span className='cm-page-info'>
+                        Page {orderPagination.currentPage} of {orderPagination.totalPages}
+                      </span>
+                      <button
+                        className='cm-page-btn'
+                        disabled={!orderPagination.hasNextPage}
+                        onClick={() => handleOrderPageChange(orderPagination.currentPage + 1)}>
+                        Next <ChevronRight size={14} />
+                      </button>
+                    </div>
+                  )}
                 </div>
 
                 {selectedOrderIds.length > 0 && (
@@ -1279,10 +1458,33 @@ export const CommissionManagementPage = () => {
                         onSelect={handleSelectUser}
                         onSelectAll={handleSelectAllUsers}
                         onViewDetails={handleViewUserDetails}
+                        onMarkPaid={(uc) => handleUserRowAction(uc, "paid")}
+                        onMarkUnpaid={(uc) => handleUserRowAction(uc, "unpaid")}
+                        onHold={(uc) => handleUserRowAction(uc, "hold")}
+                        onCancel={(uc) => handleUserRowAction(uc, "cancelled")}
                         loading={isLoading}
                       />
                     )}
                   </div>
+                  {userPagination.totalPages > 1 && (
+                    <div className='cm-pagination'>
+                      <button
+                        className='cm-page-btn'
+                        disabled={!userPagination.hasPreviousPage}
+                        onClick={() => handleUserPageChange(userPagination.currentPage - 1)}>
+                        <ChevronLeft size={14} /> Prev
+                      </button>
+                      <span className='cm-page-info'>
+                        Page {userPagination.currentPage} of {userPagination.totalPages}
+                      </span>
+                      <button
+                        className='cm-page-btn'
+                        disabled={!userPagination.hasNextPage}
+                        onClick={() => handleUserPageChange(userPagination.currentPage + 1)}>
+                        Next <ChevronRight size={14} />
+                      </button>
+                    </div>
+                  )}
                 </div>
               </div>
             )}

@@ -14,6 +14,13 @@ import {
 import { Button } from "../../../../components/ui/button";
 import { Card, CardContent } from "../../../../components/ui/card";
 import { Badge } from "../../../../components/ui/badge";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "../../../../components/ui/dropdown-menu";
 import { Commission } from "../../../../api/commission";
 import { CommissionStatusBadge } from "../shared/CommissionStatusBadge";
 import {
@@ -28,18 +35,31 @@ import {
   Calendar,
   CheckCircle2,
   ExternalLink,
+  MoreHorizontal,
+  Check,
+  Clock,
+  Pause,
+  XCircle,
 } from "lucide-react";
 
 interface CommissionTableProps {
   commissions: Commission[];
   onViewDetails?: (commission: Commission) => void;
   onUpdateStatus?: (commission: Commission) => void;
+  onMarkPaid?: (commission: Commission) => void;
+  onMarkUnpaid?: (commission: Commission) => void;
+  onHold?: (commission: Commission) => void;
+  onCancel?: (commission: Commission) => void;
 }
 
 export const ProductCommissionTable: React.FC<CommissionTableProps> = ({
   commissions,
   onViewDetails,
   onUpdateStatus,
+  onMarkPaid,
+  onMarkUnpaid,
+  onHold,
+  onCancel,
 }) => {
   if (commissions.length === 0) {
     return (
@@ -171,6 +191,51 @@ export const ProductCommissionTable: React.FC<CommissionTableProps> = ({
                   </Button>
                 )}
               </div>
+              {/* Quick Actions Dropdown */}
+              {(onMarkPaid || onMarkUnpaid || onHold || onCancel) && (
+                <div className='flex gap-2'>
+                  {onMarkPaid && commission.status !== "paid" && (
+                    <Button
+                      variant='outline'
+                      size='sm'
+                      className='flex-1 h-9 rounded-xl border-green-200 bg-green-50 text-green-700 hover:bg-green-100 hover:text-green-800'
+                      onClick={() => onMarkPaid(commission)}>
+                      <Check className='h-3.5 w-3.5 mr-1.5' />
+                      Mark Paid
+                    </Button>
+                  )}
+                  {onMarkUnpaid && commission.status !== "unpaid" && (
+                    <Button
+                      variant='outline'
+                      size='sm'
+                      className='flex-1 h-9 rounded-xl border-blue-200 bg-blue-50 text-blue-700 hover:bg-blue-100 hover:text-blue-800'
+                      onClick={() => onMarkUnpaid(commission)}>
+                      <Clock className='h-3.5 w-3.5 mr-1.5' />
+                      Unpaid
+                    </Button>
+                  )}
+                  {onHold && commission.status !== "hold" && (
+                    <Button
+                      variant='outline'
+                      size='sm'
+                      className='flex-1 h-9 rounded-xl border-orange-200 bg-orange-50 text-orange-700 hover:bg-orange-100 hover:text-orange-800'
+                      onClick={() => onHold(commission)}>
+                      <Pause className='h-3.5 w-3.5 mr-1.5' />
+                      Hold
+                    </Button>
+                  )}
+                  {onCancel && commission.status !== "cancelled" && (
+                    <Button
+                      variant='outline'
+                      size='sm'
+                      className='flex-1 h-9 rounded-xl border-red-200 bg-red-50 text-red-700 hover:bg-red-100 hover:text-red-800'
+                      onClick={() => onCancel(commission)}>
+                      <XCircle className='h-3.5 w-3.5 mr-1.5' />
+                      Cancel
+                    </Button>
+                  )}
+                </div>
+              )}
             </CardContent>
           </Card>
         ))}
@@ -256,11 +321,12 @@ export const ProductCommissionTable: React.FC<CommissionTableProps> = ({
                   )}
                 </TableCell>
                 <TableCell className='text-right'>
-                  <div className='flex justify-end gap-2'>
+                  <div className='flex justify-end gap-1'>
                     {onViewDetails && (
                       <Button
                         variant='ghost'
                         size='sm'
+                        className='h-8 w-8 p-0'
                         onClick={() => onViewDetails(commission)}>
                         <Eye className='h-4 w-4' />
                       </Button>
@@ -269,9 +335,67 @@ export const ProductCommissionTable: React.FC<CommissionTableProps> = ({
                       <Button
                         variant='ghost'
                         size='sm'
+                        className='h-8 w-8 p-0'
                         onClick={() => onUpdateStatus(commission)}>
                         <Edit className='h-4 w-4' />
                       </Button>
+                    )}
+                    {(onMarkPaid || onMarkUnpaid || onHold || onCancel) && (
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button
+                            variant='ghost'
+                            size='sm'
+                            className='h-8 w-8 p-0'>
+                            <MoreHorizontal className='h-4 w-4' />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent
+                          align='end'
+                          className='w-44'
+                          style={{
+                            background: '#ffffff',
+                            border: '1px solid #e4e6f0',
+                            borderRadius: 12,
+                            boxShadow: '0 8px 24px rgba(26,29,46,.1)',
+                          }}>
+                          {onMarkPaid && commission.status !== "paid" && (
+                            <DropdownMenuItem
+                              onClick={() => onMarkPaid(commission)}
+                              className='text-green-600 focus:text-green-700 focus:bg-green-50'>
+                              <Check className='h-4 w-4 mr-2' />
+                              Mark Paid
+                            </DropdownMenuItem>
+                          )}
+                          {onMarkUnpaid && commission.status !== "unpaid" && (
+                            <DropdownMenuItem
+                              onClick={() => onMarkUnpaid(commission)}
+                              className='text-blue-600 focus:text-blue-700 focus:bg-blue-50'>
+                              <Clock className='h-4 w-4 mr-2' />
+                              Mark Unpaid
+                            </DropdownMenuItem>
+                          )}
+                          {onHold && commission.status !== "hold" && (
+                            <DropdownMenuItem
+                              onClick={() => onHold(commission)}
+                              className='text-orange-600 focus:text-orange-700 focus:bg-orange-50'>
+                              <Pause className='h-4 w-4 mr-2' />
+                              On Hold
+                            </DropdownMenuItem>
+                          )}
+                          {onCancel && commission.status !== "cancelled" && (
+                            <>
+                              <DropdownMenuSeparator />
+                              <DropdownMenuItem
+                                onClick={() => onCancel(commission)}
+                                className='text-red-600 focus:text-red-700 focus:bg-red-50'>
+                                <XCircle className='h-4 w-4 mr-2' />
+                                Cancel
+                              </DropdownMenuItem>
+                            </>
+                          )}
+                        </DropdownMenuContent>
+                      </DropdownMenu>
                     )}
                   </div>
                 </TableCell>
