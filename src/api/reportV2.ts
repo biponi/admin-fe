@@ -74,19 +74,56 @@ export interface SalesData {
     aov: number;
   }>;
   comparison: {
-    currentPeriod: { period: DateRange; totalOrders: number; totalRevenue: number; totalDiscounts: number; aov: number };
-    previousPeriod: { period: DateRange; totalOrders: number; totalRevenue: number; totalDiscounts: number; aov: number };
+    currentPeriod: {
+      period: DateRange;
+      totalOrders: number;
+      totalRevenue: number;
+      totalDiscounts: number;
+      aov: number;
+    };
+    previousPeriod: {
+      period: DateRange;
+      totalOrders: number;
+      totalRevenue: number;
+      totalDiscounts: number;
+      aov: number;
+    };
     growth: { orders: number; revenue: number; aov: number };
   };
-  byCategory: Array<{ categoryId: string; orders: number; revenue: number; quantitySold: number }>;
-  byBrand: Array<{ brand: string; revenue: number; quantitySold: number; orders: number }>;
-  byPaymentMethod: Array<{ paymentMethod: string; orders: number; revenue: number }>;
-  byChannel: Array<{ channel: string; orders: number; revenue: number; discounts: number }>;
+  byCategory: Array<{
+    categoryId: string;
+    orders: number;
+    revenue: number;
+    quantitySold: number;
+    categoryName: string;
+  }>;
+  byBrand: Array<{
+    brand: string;
+    revenue: number;
+    quantitySold: number;
+    orders: number;
+  }>;
+  byPaymentMethod: Array<{
+    paymentMethod: string;
+    orders: number;
+    revenue: number;
+  }>;
+  byChannel: Array<{
+    channel: string;
+    orders: number;
+    revenue: number;
+    discounts: number;
+  }>;
 }
 
 export interface OrdersData {
   period: DateRange;
-  summary: Array<{ status: string; count: number; revenue: number; subtotal: number }>;
+  summary: Array<{
+    status: string;
+    count: number;
+    revenue: number;
+    subtotal: number;
+  }>;
   dailyReport: Array<{
     date: string;
     totalOrders: number;
@@ -145,7 +182,12 @@ export interface ProductsData {
     stock: number;
     createdAt: string;
   }>;
-  categoryPerformance: Array<{ categoryId: string; revenue: number; orders: number; productsSold: number }>;
+  categoryPerformance: Array<{
+    categoryId: string;
+    revenue: number;
+    orders: number;
+    productsSold: number;
+  }>;
   brandPerformance: Array<{ brand: string; revenue: number; orders: number }>;
 }
 
@@ -283,7 +325,12 @@ export interface InventoryData {
   };
   currentInventory: {
     products: Array<any>;
-    pagination: { page: number; limit: number; total: number; totalPages: number };
+    pagination: {
+      page: number;
+      limit: number;
+      total: number;
+      totalPages: number;
+    };
   };
   inventoryValue: Array<any>;
   deadStock: Array<{
@@ -374,82 +421,158 @@ export interface CouponsData {
     discount: number;
   }>;
   discountImpact: {
-    withDiscount: { orders: number; totalDiscount: number; avgBasketSize: number; revenueGenerated: number };
-    withoutDiscount: { orders: number; avgBasketSize: number; revenueGenerated: number };
+    withDiscount: {
+      orders: number;
+      totalDiscount: number;
+      avgBasketSize: number;
+      revenueGenerated: number;
+    };
+    withoutDiscount: {
+      orders: number;
+      avgBasketSize: number;
+      revenueGenerated: number;
+    };
   };
 }
 
-const buildParams = (startDate: string, endDate: string, extra?: Record<string, string>) => ({
+const buildParams = (
+  startDate: string,
+  endDate: string,
+  extra?: Record<string, string>,
+) => ({
   startDate,
   endDate,
   ...extra,
 });
 
-export const fetchDashboard = async (startDate: string, endDate: string): Promise<ApiResponse<DashboardData>> => {
+export const fetchDashboard = async (
+  startDate: string,
+  endDate: string,
+): Promise<ApiResponse<DashboardData>> => {
   try {
-    const response = await axios.get(`${baseURL}/dashboard`, { params: buildParams(startDate, endDate) });
-    if (response.status === 200) return { success: true, data: response.data.data };
-    return { success: false, error: response.data.error || "Failed to fetch dashboard" };
+    const response = await axios.get(`${baseURL}/dashboard`, {
+      params: buildParams(startDate, endDate),
+    });
+    if (response.status === 200)
+      return { success: true, data: response.data.data };
+    return {
+      success: false,
+      error: response.data.error || "Failed to fetch dashboard",
+    };
   } catch (error: any) {
     return handleApiError(error);
   }
 };
 
-export const fetchSales = async (startDate: string, endDate: string): Promise<ApiResponse<SalesData>> => {
+export const fetchSales = async (
+  startDate: string,
+  endDate: string,
+): Promise<ApiResponse<SalesData>> => {
   try {
-    const response = await axios.get(`${baseURL}/sales`, { params: buildParams(startDate, endDate) });
-    if (response.status === 200) return { success: true, data: response.data.data };
-    return { success: false, error: response.data.error || "Failed to fetch sales" };
+    const response = await axios.get(`${baseURL}/sales`, {
+      params: buildParams(startDate, endDate),
+    });
+    if (response.status === 200)
+      return { success: true, data: response.data.data };
+    return {
+      success: false,
+      error: response.data.error || "Failed to fetch sales",
+    };
   } catch (error: any) {
     return handleApiError(error);
   }
 };
 
-export const fetchOrders = async (startDate: string, endDate: string): Promise<ApiResponse<OrdersData>> => {
+export const fetchOrders = async (
+  startDate: string,
+  endDate: string,
+): Promise<ApiResponse<OrdersData>> => {
   try {
-    const response = await axios.get(`${baseURL}/orders`, { params: buildParams(startDate, endDate) });
-    if (response.status === 200) return { success: true, data: response.data.data };
-    return { success: false, error: response.data.error || "Failed to fetch orders" };
+    const response = await axios.get(`${baseURL}/orders`, {
+      params: buildParams(startDate, endDate),
+    });
+    if (response.status === 200)
+      return { success: true, data: response.data.data };
+    return {
+      success: false,
+      error: response.data.error || "Failed to fetch orders",
+    };
   } catch (error: any) {
     return handleApiError(error);
   }
 };
 
-export const fetchProducts = async (startDate: string, endDate: string): Promise<ApiResponse<ProductsData>> => {
+export const fetchProducts = async (
+  startDate: string,
+  endDate: string,
+): Promise<ApiResponse<ProductsData>> => {
   try {
-    const response = await axios.get(`${baseURL}/products`, { params: buildParams(startDate, endDate) });
-    if (response.status === 200) return { success: true, data: response.data.data };
-    return { success: false, error: response.data.error || "Failed to fetch products" };
+    const response = await axios.get(`${baseURL}/products`, {
+      params: buildParams(startDate, endDate),
+    });
+    if (response.status === 200)
+      return { success: true, data: response.data.data };
+    return {
+      success: false,
+      error: response.data.error || "Failed to fetch products",
+    };
   } catch (error: any) {
     return handleApiError(error);
   }
 };
 
-export const fetchCustomers = async (startDate: string, endDate: string): Promise<ApiResponse<CustomersData>> => {
+export const fetchCustomers = async (
+  startDate: string,
+  endDate: string,
+): Promise<ApiResponse<CustomersData>> => {
   try {
-    const response = await axios.get(`${baseURL}/customers`, { params: buildParams(startDate, endDate) });
-    if (response.status === 200) return { success: true, data: response.data.data };
-    return { success: false, error: response.data.error || "Failed to fetch customers" };
+    const response = await axios.get(`${baseURL}/customers`, {
+      params: buildParams(startDate, endDate),
+    });
+    if (response.status === 200)
+      return { success: true, data: response.data.data };
+    return {
+      success: false,
+      error: response.data.error || "Failed to fetch customers",
+    };
   } catch (error: any) {
     return handleApiError(error);
   }
 };
 
-export const fetchPayments = async (startDate: string, endDate: string): Promise<ApiResponse<PaymentsData>> => {
+export const fetchPayments = async (
+  startDate: string,
+  endDate: string,
+): Promise<ApiResponse<PaymentsData>> => {
   try {
-    const response = await axios.get(`${baseURL}/payments`, { params: buildParams(startDate, endDate) });
-    if (response.status === 200) return { success: true, data: response.data.data };
-    return { success: false, error: response.data.error || "Failed to fetch payments" };
+    const response = await axios.get(`${baseURL}/payments`, {
+      params: buildParams(startDate, endDate),
+    });
+    if (response.status === 200)
+      return { success: true, data: response.data.data };
+    return {
+      success: false,
+      error: response.data.error || "Failed to fetch payments",
+    };
   } catch (error: any) {
     return handleApiError(error);
   }
 };
 
-export const fetchFinance = async (startDate: string, endDate: string): Promise<ApiResponse<FinanceData>> => {
+export const fetchFinance = async (
+  startDate: string,
+  endDate: string,
+): Promise<ApiResponse<FinanceData>> => {
   try {
-    const response = await axios.get(`${baseURL}/finance`, { params: buildParams(startDate, endDate) });
-    if (response.status === 200) return { success: true, data: response.data.data };
-    return { success: false, error: response.data.error || "Failed to fetch finance" };
+    const response = await axios.get(`${baseURL}/finance`, {
+      params: buildParams(startDate, endDate),
+    });
+    if (response.status === 200)
+      return { success: true, data: response.data.data };
+    return {
+      success: false,
+      error: response.data.error || "Failed to fetch finance",
+    };
   } catch (error: any) {
     return handleApiError(error);
   }
@@ -458,38 +581,69 @@ export const fetchFinance = async (startDate: string, endDate: string): Promise<
 export const fetchInventory = async (): Promise<ApiResponse<InventoryData>> => {
   try {
     const response = await axios.get(`${baseURL}/inventory`);
-    if (response.status === 200) return { success: true, data: response.data.data };
-    return { success: false, error: response.data.error || "Failed to fetch inventory" };
+    if (response.status === 200)
+      return { success: true, data: response.data.data };
+    return {
+      success: false,
+      error: response.data.error || "Failed to fetch inventory",
+    };
   } catch (error: any) {
     return handleApiError(error);
   }
 };
 
-export const fetchShipping = async (startDate: string, endDate: string): Promise<ApiResponse<ShippingData>> => {
+export const fetchShipping = async (
+  startDate: string,
+  endDate: string,
+): Promise<ApiResponse<ShippingData>> => {
   try {
-    const response = await axios.get(`${baseURL}/shipping`, { params: buildParams(startDate, endDate) });
-    if (response.status === 200) return { success: true, data: response.data.data };
-    return { success: false, error: response.data.error || "Failed to fetch shipping" };
+    const response = await axios.get(`${baseURL}/shipping`, {
+      params: buildParams(startDate, endDate),
+    });
+    if (response.status === 200)
+      return { success: true, data: response.data.data };
+    return {
+      success: false,
+      error: response.data.error || "Failed to fetch shipping",
+    };
   } catch (error: any) {
     return handleApiError(error);
   }
 };
 
-export const fetchRefunds = async (startDate: string, endDate: string): Promise<ApiResponse<RefundsData>> => {
+export const fetchRefunds = async (
+  startDate: string,
+  endDate: string,
+): Promise<ApiResponse<RefundsData>> => {
   try {
-    const response = await axios.get(`${baseURL}/refunds`, { params: buildParams(startDate, endDate) });
-    if (response.status === 200) return { success: true, data: response.data.data };
-    return { success: false, error: response.data.error || "Failed to fetch refunds" };
+    const response = await axios.get(`${baseURL}/refunds`, {
+      params: buildParams(startDate, endDate),
+    });
+    if (response.status === 200)
+      return { success: true, data: response.data.data };
+    return {
+      success: false,
+      error: response.data.error || "Failed to fetch refunds",
+    };
   } catch (error: any) {
     return handleApiError(error);
   }
 };
 
-export const fetchCoupons = async (startDate: string, endDate: string): Promise<ApiResponse<CouponsData>> => {
+export const fetchCoupons = async (
+  startDate: string,
+  endDate: string,
+): Promise<ApiResponse<CouponsData>> => {
   try {
-    const response = await axios.get(`${baseURL}/coupons`, { params: buildParams(startDate, endDate) });
-    if (response.status === 200) return { success: true, data: response.data.data };
-    return { success: false, error: response.data.error || "Failed to fetch coupons" };
+    const response = await axios.get(`${baseURL}/coupons`, {
+      params: buildParams(startDate, endDate),
+    });
+    if (response.status === 200)
+      return { success: true, data: response.data.data };
+    return {
+      success: false,
+      error: response.data.error || "Failed to fetch coupons",
+    };
   } catch (error: any) {
     return handleApiError(error);
   }

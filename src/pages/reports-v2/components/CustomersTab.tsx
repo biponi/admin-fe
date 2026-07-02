@@ -341,10 +341,10 @@ const CustomersTab: React.FC<Props> = ({
                 {clvData.length} customers
               </span>
             </div>
-            <div className='overflow-x-auto'>
-              <table className='w-full text-sm'>
-                <thead>
-                  <tr className='bg-slate-50/80'>
+            <div className='overflow-x-auto max-h-96 overflow-y-auto'>
+              <table className='w-full text-sm '>
+                <thead className='sticky top-0  z-10'>
+                  <tr className='bg-slate-100/80'>
                     <th className='text-left px-4 py-2.5 text-xs font-semibold text-slate-500 uppercase tracking-wider'>
                       #
                     </th>
@@ -368,7 +368,7 @@ const CustomersTab: React.FC<Props> = ({
                     </th>
                   </tr>
                 </thead>
-                <tbody className='divide-y divide-slate-50'>
+                <tbody className='divide-y divide-slate-50 '>
                   {clvData.map((c, i) => {
                     const maxSpend = clvData[0]?.spend || 1;
                     const pct = (c.spend / maxSpend) * 100;

@@ -298,16 +298,16 @@ const GeoMapChart: React.FC<Props> = ({
       <div className='bg-white rounded-lg border border-slate-100 overflow-hidden'>
         <div className='px-4 py-2.5 border-b border-slate-100 flex items-center justify-between'>
           <h4 className='text-sm font-semibold text-slate-900'>
-            {view === "district" ? "District" : "Division"} Details
+            {view === "district" ? "Area" : "District"} Details
           </h4>
           <span className='text-[10px] text-slate-400 bg-slate-50 px-2 py-0.5 rounded-full'>
             {chartData.length} entries
           </span>
         </div>
-        <div className='overflow-x-auto'>
+        <div className='overflow-x-auto max-h-96 overflow-y-auto'>
           <table className='w-full text-sm'>
-            <thead>
-              <tr className='bg-slate-50/80'>
+            <thead className='sticky top-0  z-10'>
+              <tr className='bg-slate-100/80'>
                 <th className='text-left px-4 py-2.5 text-xs font-semibold text-slate-500 uppercase tracking-wider'>
                   #
                 </th>
