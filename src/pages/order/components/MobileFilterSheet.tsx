@@ -1,10 +1,12 @@
 import { useState } from "react"
+import { X } from "lucide-react"
 import {
   Sheet,
   SheetContent,
   SheetHeader,
   SheetTitle,
   SheetFooter,
+  SheetClose,
 } from "@/components/ui/sheet"
 import { Button } from "@/components/ui/button"
 import { Checkbox } from "@/components/ui/checkbox"
@@ -93,7 +95,19 @@ export function MobileFilterSheet({
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent className="w-full sm:max-w-md pb-safe-bottom flex flex-col h-full">
         <SheetHeader>
-          <SheetTitle>Filters</SheetTitle>
+          <div className="flex items-center justify-between">
+            <SheetTitle>Filters</SheetTitle>
+            <SheetClose asChild>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-8 w-8 rounded-lg"
+              >
+                <X className="h-4 w-4" />
+                <span className="sr-only">Close filters</span>
+              </Button>
+            </SheetClose>
+          </div>
           {activeFilterCount > 0 && (
             <p className="text-sm text-gray-500">
               {activeFilterCount} filter{activeFilterCount > 1 ? "s" : ""} active

@@ -23,6 +23,7 @@ import { Label } from "./ui/label";
 import { RadioGroup, RadioGroupItem } from "./ui/radio-group";
 import {
   Sheet,
+  SheetClose,
   SheetContent,
   SheetDescription,
   SheetHeader,
@@ -35,6 +36,7 @@ import { useSettings } from "../contexts/SettingsContext";
 import { useState, useEffect } from "react";
 import { useLocation } from "react-router-dom";
 import { cn } from "../lib/utils";
+import { Badge } from "./ui/badge";
 
 const themeOptions = [
   {
@@ -460,6 +462,9 @@ export function SettingsPanel() {
         <div className='px-6 py-4 border-t bg-gray-50/80 backdrop-blur-sm'>
           <p className='text-xs text-center text-muted-foreground'>
             Changes are saved automatically
+            <SheetClose className='ml-2'>
+              <Badge variant={"destructive"}> Close </Badge>
+            </SheetClose>
           </p>
         </div>
       </SheetContent>

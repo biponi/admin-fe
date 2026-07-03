@@ -33,26 +33,50 @@ ChartJS.register(
   RadialLinearScale,
   Filler,
   ChartTooltip,
-  ChartLegend
+  ChartLegend,
 );
 
 const CHART_COLORS = [
-  "#6366f1", "#10b981", "#f59e0b", "#ef4444", "#8b5cf6",
-  "#06b6d4", "#ec4899", "#14b8a6", "#f97316", "#3b82f6",
-  "#a855f7", "#22c55e", "#eab308", "#dc2626", "#7c3aed",
+  "#2563EB", // Blue
+  "#10B981", // Emerald
+  "#F59E0B", // Amber
+  "#8B5CF6", // Violet
+  "#EC4899", // Pink
+  "#06B6D4", // Cyan
+  "#F97316", // Orange
+  "#84CC16", // Lime
+  "#6366F1", // Indigo
+  "#14B8A6", // Teal
+  "#EF4444", // Red
+  "#A855F7", // Purple
+  "#0EA5E9", // Sky
+  "#EAB308", // Yellow
+  "#64748B", // Slate
 ];
 
 const CHART_COLORS_ALPHA = [
-  "rgba(99,102,241,0.15)", "rgba(16,185,129,0.15)", "rgba(245,158,11,0.15)",
-  "rgba(239,68,68,0.15)", "rgba(139,92,246,0.15)", "rgba(6,182,212,0.15)",
-  "rgba(236,72,153,0.15)", "rgba(20,184,166,0.15)", "rgba(249,115,22,0.15)",
+  "rgba(99,102,241,0.15)",
+  "rgba(16,185,129,0.15)",
+  "rgba(245,158,11,0.15)",
+  "rgba(239,68,68,0.15)",
+  "rgba(139,92,246,0.15)",
+  "rgba(6,182,212,0.15)",
+  "rgba(236,72,153,0.15)",
+  "rgba(20,184,166,0.15)",
+  "rgba(249,115,22,0.15)",
   "rgba(59,130,246,0.15)",
 ];
 
 const CHART_COLORS_BRIGHT = [
-  "rgba(99,102,241,0.85)", "rgba(16,185,129,0.85)", "rgba(245,158,11,0.85)",
-  "rgba(239,68,68,0.85)", "rgba(139,92,246,0.85)", "rgba(6,182,212,0.85)",
-  "rgba(236,72,153,0.85)", "rgba(20,184,166,0.85)", "rgba(249,115,22,0.85)",
+  "rgba(99,102,241,0.85)",
+  "rgba(16,185,129,0.85)",
+  "rgba(245,158,11,0.85)",
+  "rgba(239,68,68,0.85)",
+  "rgba(139,92,246,0.85)",
+  "rgba(6,182,212,0.85)",
+  "rgba(236,72,153,0.85)",
+  "rgba(20,184,166,0.85)",
+  "rgba(249,115,22,0.85)",
   "rgba(59,130,246,0.85)",
 ];
 
@@ -92,7 +116,16 @@ const defaultScaleOptions = {
   },
 };
 
-export const ChartComponents = { Bar, Line, Pie, Doughnut, Radar, PolarArea, Scatter, Bubble };
+export const ChartComponents = {
+  Bar,
+  Line,
+  Pie,
+  Doughnut,
+  Radar,
+  PolarArea,
+  Scatter,
+  Bubble,
+};
 export {
   CHART_COLORS,
   CHART_COLORS_ALPHA,

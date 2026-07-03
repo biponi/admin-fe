@@ -64,7 +64,6 @@ const config = {
   },
   order: {
     createOrder: () => `${baseURL}/order/prior/create`,
-    updateOrderProduct: () => `${baseURL}/order/prior/update/product`,
     getOrderAnalytics: () => `${baseURL}/order/prior/analytics`,
     getOrders: () => `${baseURL}/order/prior/all`,
     getOrderDetails: (id: string) => `${baseURL}/order/prior/details/${id}`,
@@ -76,8 +75,6 @@ const config = {
     searchOrder: () => `${baseURL}/order/prior/search`,
     returnProducts: () => `${baseURL}/order/prior/return-product`,
     getMultiOrderByIds: () => `${baseURL}/order/prior/by/ids`,
-    modifyOrderProducts: (id: string) =>
-      `${baseURL}/order/prior/${id}/products`,
 
     // New modify order API endpoint (Production-ready)
     modifyOrder: (orderId: string) =>

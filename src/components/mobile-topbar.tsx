@@ -15,6 +15,7 @@ import useLoginAuth from "../pages/auth/hooks/useLoginAuth";
 import useRoleCheck from "../pages/auth/hooks/useRoleCheck";
 import {
   Sheet,
+  SheetClose,
   SheetContent,
   SheetDescription,
   SheetHeader,
@@ -30,6 +31,7 @@ import { CardContent, CardDescription, CardHeader, CardTitle } from "./ui/card";
 import { Label } from "./ui/label";
 import { RadioGroup, RadioGroupItem } from "./ui/radio-group";
 import { Sparkles, ShoppingCart, Layers } from "lucide-react";
+import { Badge } from "./ui/badge";
 
 interface MobileTopbarProps {
   onMenuClick: () => void;
@@ -216,7 +218,10 @@ export function MobileTopbar({ onMenuClick }: MobileTopbarProps) {
                 {/* Fixed Footer */}
                 <div className='px-6 py-4 border-t bg-gray-50/80 backdrop-blur-sm'>
                   <p className='text-xs text-center text-muted-foreground'>
-                    Changes are saved automatically
+                    Changes are saved automatically{" "}
+                    <SheetClose className='ml-2'>
+                      <Badge variant={"destructive"}> Close </Badge>
+                    </SheetClose>
                   </p>
                 </div>
               </SheetContent>

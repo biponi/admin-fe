@@ -88,7 +88,6 @@ import {
   DrawerTitle,
   DrawerTrigger,
 } from "../../components/ui/drawer";
-import UpdateProductData from "./updateProductData";
 import { Badge } from "../../components/ui/badge";
 import AdjustReturnProduct from "./orderReturn";
 import {
@@ -174,7 +173,6 @@ const OrderList = () => {
   const [isReturnProduct, setIsReturnProduct] = useState<boolean>(false);
   const [isEditDialogOpen, setEditDialogOpen] = useState<boolean>(false);
   const [selectedOrder, setSelectedOrder] = useState<IOrder | null>(null);
-  const [modifyDialogOpen, setModifyDialogOpen] = useState<boolean>(false);
   const [editSheetKey, setEditSheetKey] = useState(0);
   const [courierSelectorOpen, setCourierSelectorOpen] =
     useState<boolean>(false);
@@ -2013,17 +2011,6 @@ const OrderList = () => {
             </Card>
           </div>
         </>
-      );
-    } else if (modifyDialogOpen && !!selectedOrder) {
-      return (
-        <UpdateProductData
-          order={selectedOrder}
-          handleBack={() => {
-            setModifyDialogOpen(false);
-            setSelectedOrder(null);
-            getOrderList();
-          }}
-        />
       );
     } else {
       return (
