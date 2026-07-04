@@ -1,6 +1,17 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { Plus, Search, Edit, Trash2, Eye, Shield, Crown, UserCheck, Loader2 } from "lucide-react";
+import {
+  Plus,
+  Search,
+  Edit,
+  Trash2,
+  Eye,
+  Shield,
+  Crown,
+  UserCheck,
+  Loader2,
+  Calendar,
+} from "lucide-react";
 import { Button } from "../../components/ui/button";
 import { Input } from "../../components/ui/input";
 import { Badge } from "../../components/ui/badge";
@@ -49,7 +60,9 @@ const RolesListPage: React.FC = () => {
   } = useRoles();
 
   const [searchTerm, setSearchTerm] = useState("");
-  const [activeTab, setActiveTab] = useState<"all" | "active" | "inactive">("all");
+  const [activeTab, setActiveTab] = useState<"all" | "active" | "inactive">(
+    "all",
+  );
   const [selectedRoles, setSelectedRoles] = useState<string[]>([]);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [roleToDelete, setRoleToDelete] = useState<string | null>(null);
@@ -101,7 +114,7 @@ const RolesListPage: React.FC = () => {
     setSelectedRoles((prev) =>
       prev.includes(roleId)
         ? prev.filter((id) => id !== roleId)
-        : [...prev, roleId]
+        : [...prev, roleId],
     );
   };
 
@@ -153,7 +166,7 @@ const RolesListPage: React.FC = () => {
     const activeCount = roles.filter((r) => r.active).length;
     const inactiveCount = roles.length - activeCount;
     const adminCount = roles.filter((r) =>
-      r.name.toLowerCase().includes("admin")
+      r.name.toLowerCase().includes("admin"),
     ).length;
 
     return {
@@ -308,29 +321,30 @@ const RolesListPage: React.FC = () => {
             </div>
 
             {/* Bulk Actions */}
-            {hasRequiredPermission("role", "delete") && selectedRoles?.length > 0 && (
-              <div className='bg-slate-50 border-b border-slate-100 px-4 py-3'>
-                <div className='flex items-center justify-between'>
-                  <div className='flex items-center gap-3'>
-                    <Checkbox
-                      checked={selectedRoles.length === filteredRoles.length}
-                      onCheckedChange={handleSelectAll}
-                    />
-                    <span className='text-sm text-slate-600'>
-                      {selectedRoles?.length} role(s) selected
-                    </span>
+            {hasRequiredPermission("role", "delete") &&
+              selectedRoles?.length > 0 && (
+                <div className='bg-slate-50 border-b border-slate-100 px-4 py-3'>
+                  <div className='flex items-center justify-between'>
+                    <div className='flex items-center gap-3'>
+                      <Checkbox
+                        checked={selectedRoles.length === filteredRoles.length}
+                        onCheckedChange={handleSelectAll}
+                      />
+                      <span className='text-sm text-slate-600'>
+                        {selectedRoles?.length} role(s) selected
+                      </span>
+                    </div>
+                    <Button
+                      variant='destructive'
+                      size='sm'
+                      onClick={() => setBulkDeleteDialogOpen(true)}
+                      className='h-8 text-xs'>
+                      <Trash2 className='w-3 h-3 mr-1.5' />
+                      Delete Selected
+                    </Button>
                   </div>
-                  <Button
-                    variant='destructive'
-                    size='sm'
-                    onClick={() => setBulkDeleteDialogOpen(true)}
-                    className='h-8 text-xs'>
-                    <Trash2 className='w-3 h-3 mr-1.5' />
-                    Delete Selected
-                  </Button>
                 </div>
-              </div>
-            )}
+              )}
 
             {/* Tab Content */}
             <TabsContent
@@ -355,10 +369,16 @@ const RolesListPage: React.FC = () => {
                 <div className='bg-rose-50 border border-rose-200 rounded-xl p-4 mb-4'>
                   <div className='flex items-center justify-between gap-4'>
                     <div className='flex items-center gap-2'>
-                      <span className='text-rose-600 font-medium text-sm'>Error:</span>
+                      <span className='text-rose-600 font-medium text-sm'>
+                        Error:
+                      </span>
                       <span className='text-rose-600 text-sm'>{error}</span>
                     </div>
-                    <Button variant='ghost' size='sm' onClick={clearError} className='h-8 text-xs'>
+                    <Button
+                      variant='ghost'
+                      size='sm'
+                      onClick={clearError}
+                      className='h-8 text-xs'>
                       Dismiss
                     </Button>
                   </div>
@@ -396,66 +416,72 @@ const RolesListPage: React.FC = () => {
                         <Card
                           key={role.id}
                           className={cn(
-                            "group relative overflow-hidden transition-all duration-200 hover:shadow-md border border-slate-100",
+                            "group relative p-0 overflow-hidden rounded-xl border border-slate-200 bg-white transition-all duration-300 hover:border-indigo-200 hover:shadow-lg hover:shadow-indigo-500/5",
                             isDeleting && "opacity-50 pointer-events-none",
                           )}>
-                          <div className='p-5'>
+                          <div className='bg-slate-50/70'>
                             {/* Header with checkbox */}
-                            <div className='flex items-start justify-between mb-4'>
-                              <div className='flex items-center gap-3 flex-1'>
-                                {hasRequiredPermission("role", "delete") && (
+                            <div className='flex items-start justify-between gap-2 border-b border-slate-100 p-4 bg-white'>
+                              <div className='flex flex-1 items-start gap-3 min-w-0'>
+                                {/* {hasRequiredPermission("role", "delete") && (
                                   <Checkbox
                                     checked={isSelected}
-                                    onCheckedChange={() => handleRoleSelect(role.id)}
-                                    className='mt-1'
+                                    onCheckedChange={() =>
+                                      handleRoleSelect(role.id)
+                                    }
+                                    className='mt-1 shrink-0'
                                   />
-                                )}
-                                <div className='flex-1 min-w-0'>
-                                  <div className='flex items-center gap-2 mb-1'>
-                                    <h3 className='text-base font-semibold text-slate-900 truncate'>
+                                )} */}
+
+                                <div className='min-w-0 flex-1 pt-0.5'>
+                                  <div className='mb-1 flex items-center gap-1.5'>
+                                    <h3 className='truncate text-[15px] font-semibold leading-tight text-slate-900 uppercase'>
                                       {role.name}
                                     </h3>
-                                    {role.name.toLowerCase().includes("admin") && (
-                                      <Crown className='h-3.5 w-3.5 text-rose-500 flex-shrink-0' />
+                                    {role.name
+                                      .toLowerCase()
+                                      .includes("admin") && (
+                                      <Crown className='h-3.5 w-3.5 shrink-0 text-amber-500' />
                                     )}
                                   </div>
-                                  <p className='text-xs text-slate-500 line-clamp-2'>
+                                  <p className='truncate text-xs leading-relaxed text-slate-500'>
                                     {role.description || "No description"}
                                   </p>
                                 </div>
                               </div>
-                            </div>
 
-                            {/* Status Badge */}
-                            <div className='mb-3'>
                               <Badge
                                 variant={role.active ? "default" : "secondary"}
                                 className={cn(
-                                  "text-xs",
+                                  "shrink-0 rounded-full border px-2.5 py-0.5 text-[10px] font-medium uppercase tracking-wide",
                                   role.active
-                                    ? "bg-emerald-100 text-emerald-700 border-emerald-200"
-                                    : "bg-slate-100 text-slate-600 border-slate-200",
+                                    ? "border-emerald-200 bg-emerald-50 text-emerald-700"
+                                    : "border-slate-200 bg-slate-50 text-slate-500",
                                 )}>
                                 {role.active ? "Active" : "Inactive"}
                               </Badge>
                             </div>
 
                             {/* Permissions Preview */}
-                            <div className='mb-4'>
-                              <p className='text-xs font-medium text-slate-600 mb-2'>
-                                Permissions ({role.permissions.length})
+                            <div className='rounded-xl bg-slate-50/70 p-3'>
+                              <p className='mb-2 text-[11px] font-medium uppercase tracking-widest text-slate-400'>
+                                Permissions · {role.permissions.length}
                               </p>
                               <div className='flex flex-wrap gap-1.5'>
-                                {role.permissions.slice(0, 3).map((permission, index) => (
-                                  <Badge
-                                    key={index}
-                                    variant='outline'
-                                    className='text-xs border-slate-200 text-slate-600'>
-                                    {permission.page}
-                                  </Badge>
-                                ))}
+                                {role.permissions
+                                  .slice(0, 3)
+                                  .map((permission, index) => (
+                                    <Badge
+                                      key={index}
+                                      variant='outline'
+                                      className='rounded-md border-slate-200 bg-white px-2 py-0.5 text-[11px] font-normal text-slate-600'>
+                                      {permission.page}
+                                    </Badge>
+                                  ))}
                                 {role.permissions.length > 3 && (
-                                  <Badge variant='outline' className='text-xs border-slate-200 text-slate-600'>
+                                  <Badge
+                                    variant='outline'
+                                    className='rounded-md border-indigo-100 bg-indigo-50 px-2 py-0.5 text-[11px] font-medium text-indigo-600'>
                                     +{role.permissions.length - 3}
                                   </Badge>
                                 )}
@@ -463,41 +489,50 @@ const RolesListPage: React.FC = () => {
                             </div>
 
                             {/* Footer */}
-                            <div className='flex items-center justify-between pt-3 border-t border-slate-100'>
-                              <p className='text-xs text-slate-500'>
-                                Created {formatDate(role.createdAt)}
-                              </p>
-                              {hasSomePermissionsForPage("role", ["edit", "delete"]) && (
-                                <div className='flex items-center gap-1'>
+                            <div className=' flex items-center justify-between gap-3 rounded-xl m-1.5 bg-white shadow-sm  border border-gray-100 px-3 py-2'>
+                              <div className='flex items-center gap-1.5 text-[11px] text-slate-400'>
+                                <Calendar className='h-3 w-3' />
+                                <span className='truncate'>
+                                  {formatDate(role.createdAt)}
+                                </span>
+                              </div>
+
+                              {hasSomePermissionsForPage("role", [
+                                "edit",
+                                "delete",
+                              ]) && (
+                                <div className='flex items-center gap-1 shrink-0'>
                                   <Button
                                     variant='ghost'
-                                    size='sm'
+                                    size='icon'
                                     onClick={() => navigate(`/role/${role.id}`)}
-                                    className='h-7 px-2 text-xs text-slate-600 hover:text-slate-900'>
-                                    <Eye className='h-3 w-3 mr-1' />
-                                    View
+                                    title='View'
+                                    className='h-7 w-7 rounded-lg text-slate-500 hover:bg-white hover:text-slate-900 hover:shadow-sm'>
+                                    <Eye className='h-3.5 w-3.5' />
                                   </Button>
                                   {hasRequiredPermission("role", "edit") && (
                                     <Button
                                       variant='ghost'
-                                      size='sm'
-                                      onClick={() => navigate(`/roles/${role.id}/edit`)}
-                                      className='h-7 px-2 text-xs text-slate-600 hover:text-slate-900'>
-                                      <Edit className='h-3 w-3 mr-1' />
-                                      Edit
+                                      size='icon'
+                                      onClick={() =>
+                                        navigate(`/roles/${role.id}/edit`)
+                                      }
+                                      title='Edit'
+                                      className='h-7 w-7 rounded-lg text-indigo-600 hover:bg-white hover:text-indigo-700 hover:shadow-sm'>
+                                      <Edit className='h-3.5 w-3.5' />
                                     </Button>
                                   )}
                                   {hasRequiredPermission("role", "delete") && (
                                     <Button
                                       variant='ghost'
-                                      size='sm'
+                                      size='icon'
                                       onClick={() => {
                                         setRoleToDelete(role.id);
                                         setDeleteDialogOpen(true);
                                       }}
-                                      className='h-7 px-2 text-xs text-rose-600 hover:text-rose-700 hover:bg-rose-50'>
-                                      <Trash2 className='h-3 w-3 mr-1' />
-                                      Delete
+                                      title='Delete'
+                                      className='h-7 w-7 rounded-lg text-rose-500 hover:bg-white hover:text-rose-700 hover:shadow-sm'>
+                                      <Trash2 className='h-3.5 w-3.5' />
                                     </Button>
                                   )}
                                 </div>
@@ -514,8 +549,11 @@ const RolesListPage: React.FC = () => {
                     <div className='mt-6 flex items-center justify-between'>
                       <div className='text-sm text-slate-500'>
                         Showing {(currentPage - 1) * pageSize + 1} to{" "}
-                        {Math.min(currentPage * pageSize, pagination.totalRoles)} of{" "}
-                        {pagination.totalRoles} entries
+                        {Math.min(
+                          currentPage * pageSize,
+                          pagination.totalRoles,
+                        )}{" "}
+                        of {pagination.totalRoles} entries
                       </div>
                       <div className='flex items-center gap-2'>
                         <Button
@@ -535,18 +573,21 @@ const RolesListPage: React.FC = () => {
                                 <Button
                                   key={pageNum}
                                   variant={
-                                    currentPage === pageNum ? "default" : "outline"
+                                    currentPage === pageNum
+                                      ? "default"
+                                      : "outline"
                                   }
                                   size='sm'
                                   onClick={() => handlePageChange(pageNum)}
                                   className={cn(
-                                    'h-8 w-8 text-xs',
-                                    currentPage === pageNum && 'bg-indigo-600 hover:bg-indigo-700 text-white'
+                                    "h-8 w-8 text-xs",
+                                    currentPage === pageNum &&
+                                      "bg-indigo-600 hover:bg-indigo-700 text-white",
                                   )}>
                                   {pageNum}
                                 </Button>
                               );
-                            }
+                            },
                           )}
                         </div>
                         <Button
@@ -603,8 +644,9 @@ const RolesListPage: React.FC = () => {
               </div>
             </div>
             <AlertDialogDescription className='text-sm text-slate-600 pl-1'>
-              Are you sure you want to delete this role? This action will deactivate the role.
-              The role will not be permanently deleted and can be reactivated later.
+              Are you sure you want to delete this role? This action will
+              deactivate the role. The role will not be permanently deleted and
+              can be reactivated later.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter className='gap-2 sm:gap-0'>
