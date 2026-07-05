@@ -6,12 +6,7 @@ import { PackageSearchBar } from "../../components/package/PackageSearchBar";
 import { PackageBulkActionsBar } from "../../components/package/PackageBulkActionsBar";
 import { PackagePagination } from "../../components/package/PackagePagination";
 import { SelectedPackagesSheet } from "../../components/package/SelectedPackagesSheet";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from "../../components/ui/card";
+import { Card, CardContent } from "../../components/ui/card";
 import { Button } from "../../components/ui/button";
 import { Checkbox } from "../../components/ui/checkbox";
 import {
@@ -59,6 +54,8 @@ import {
   Box,
   FileText,
   RefreshCw,
+  Barcode,
+  Search,
 } from "lucide-react";
 import type { PackageStatus, Package as PackageType } from "./interface";
 import type { IOrderProduct } from "../order/interface.d";
@@ -69,21 +66,33 @@ import PlaceHolderImage from "../../assets/placeholder.svg";
 import { AnimatePresence } from "framer-motion";
 import { generatePackingSlipPdfByOrderIdentifier } from "../../utils/reactPdfPackingSlip";
 import { downloadPackagingSlip } from "../../api/package";
+import { cn } from "../../lib/utils";
 
 const statusTabs: { value: PackageStatus; label: string; color: string }[] = [
-  { value: "requested", label: "Requested", color: "bg-yellow-500" },
+  { value: "requested", label: "Requested", color: "bg-amber-500" },
   { value: "packing", label: "Packing", color: "bg-blue-500" },
-  { value: "packed", label: "Packed", color: "bg-purple-500" },
+  { value: "packed", label: "Packed", color: "bg-violet-500" },
   {
     value: "shipping_requested",
     label: "Shipping Requested",
     color: "bg-indigo-500",
   },
   { value: "shipped", label: "Shipped", color: "bg-cyan-500" },
-  { value: "completed", label: "Completed", color: "bg-green-500" },
-  { value: "cancelled", label: "Cancelled", color: "bg-red-500" },
+  { value: "completed", label: "Completed", color: "bg-emerald-500" },
+  { value: "cancelled", label: "Cancelled", color: "bg-rose-500" },
   { value: "returned", label: "Returned", color: "bg-orange-500" },
 ];
+
+const STATUS_BADGE_COLORS: Record<string, string> = {
+  amber: "bg-amber-50 text-amber-700 ring-1 ring-amber-200",
+  blue: "bg-blue-50 text-blue-700 ring-1 ring-blue-200",
+  violet: "bg-violet-50 text-violet-700 ring-1 ring-violet-200",
+  indigo: "bg-indigo-50 text-indigo-700 ring-1 ring-indigo-200",
+  cyan: "bg-cyan-50 text-cyan-700 ring-1 ring-cyan-200",
+  emerald: "bg-emerald-50 text-emerald-700 ring-1 ring-emerald-200",
+  rose: "bg-rose-50 text-rose-700 ring-1 ring-rose-200",
+  orange: "bg-orange-50 text-orange-700 ring-1 ring-orange-200",
+};
 
 export function PackageManagementPage() {
   const navigate = useNavigate();
@@ -137,39 +146,41 @@ export function PackageManagementPage() {
   const [orderProducts, setOrderProducts] = useState<IOrderProduct[]>([]);
   const [loadingProducts, setLoadingProducts] = useState(false);
 
-  // Load packages when tab or page changes
+  // Track whether the initial load has completed so we can
+  // differentiate "first load" (full-page spinner) from "tab switch" (inline spinner).
+  const [initialLoaded, setInitialLoaded] = useState(false);
+
+  // This effect handles tab, page, and page size changes only.
   useEffect(() => {
     if (searchQuery) {
       searchPackages(searchQuery, currentPage);
     } else {
       loadPackagesByStatus(activeTab, currentPage, pageSize);
     }
-    // Clear selection when tab changes
     clearSelection();
     //eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeTab, currentPage, pageSize]);
 
-  // Handle search
+  // Mark initial load as complete once packages arrive
   useEffect(() => {
+    if (packages.length > 0 && !initialLoaded) {
+      setInitialLoaded(true);
+    }
+  }, [packages, initialLoaded]);
+
+  // FIX: Search effect only watches searchQuery (debounced).
+  // Removed activeTab, currentPage, pageSize to prevent double API calls.
+  useEffect(() => {
+    if (!searchQuery) return;
+
     const timeoutId = setTimeout(() => {
-      if (searchQuery) {
-        searchPackages(searchQuery, 1);
-        setCurrentPage(1);
-      } else {
-        loadPackagesByStatus(activeTab, currentPage, pageSize);
-      }
+      searchPackages(searchQuery, 1);
+      setCurrentPage(1);
     }, 500);
 
     return () => clearTimeout(timeoutId);
-  }, [
-    searchQuery,
-    activeTab,
-    currentPage,
-    pageSize,
-    loadPackagesByStatus,
-    searchPackages,
-    setCurrentPage,
-  ]);
+    //eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchQuery]);
 
   // Refresh handler
   const handleRefresh = async () => {
@@ -204,10 +215,8 @@ export function PackageManagementPage() {
       errors: [],
     });
 
-    // TODO: Implement bulk mark as packed API call
     toast.success(`Marking ${selectedPkgs.length} packages as packed...`);
 
-    // Simulate progress
     for (let i = 0; i < selectedPkgs.length; i++) {
       await new Promise((resolve) => setTimeout(resolve, 500));
       setBulkProgress((prev) =>
@@ -231,7 +240,6 @@ export function PackageManagementPage() {
     toast.success(
       `Preparing ${selectedPkgs.length} packing slips for printing...`,
     );
-    // TODO: Implement bulk print
   };
 
   const handleViewSelected = () => {
@@ -247,12 +255,10 @@ export function PackageManagementPage() {
     try {
       await generatePackingSlipPdfByOrderIdentifier(`${orderNumber}`);
 
-      // Update package status to "packing" after successful download
       const response = await downloadPackagingSlip(orderNumber);
       if (response.success) {
         toast.success("Package status updated to packing");
 
-        // Refresh the packages list to reflect the status change
         if (searchQuery) {
           await searchPackages(searchQuery, currentPage);
         } else {
@@ -271,7 +277,6 @@ export function PackageManagementPage() {
     navigate(`/packages/${pkg.orderNumber}`);
   };
 
-  // Fetch products for a package
   const handleViewProducts = async (pkg: PackageType) => {
     if (!pkg.order?.id) {
       toast.error("Order information not available");
@@ -297,10 +302,21 @@ export function PackageManagementPage() {
     }
   };
 
-  if (loading && packages.length === 0) {
+  if (loading && !initialLoaded) {
     return (
-      <div className='flex items-center justify-center h-64'>
-        <Loader2 className='h-8 w-8 animate-spin' />
+      <div className="flex flex-col items-center justify-center py-20 px-4">
+        <div className="relative">
+          <div className="absolute inset-0 bg-indigo-500/20 rounded-full animate-ping" />
+          <div className="relative h-16 w-16 rounded-full bg-indigo-600 flex items-center justify-center shadow-lg">
+            <Loader2 className="h-8 w-8 text-white animate-spin" />
+          </div>
+        </div>
+        <p className="mt-6 text-lg font-semibold text-slate-900">
+          Loading packages...
+        </p>
+        <p className="text-sm text-slate-500 mt-1">
+          Please wait while we fetch the data
+        </p>
       </div>
     );
   }
@@ -308,260 +324,327 @@ export function PackageManagementPage() {
   const selectedCount = selection.selectedIds.size;
 
   return (
-    <div className='space-y-6 pb-24 px-4 md:px-6 lg:px-8'>
-      {/* Header */}
-      <div className='flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 px-4 py-2 bg-gray-100 rounded-lg shadow-md mt-2 md:mt-0'>
-        <div>
-          <h1 className='text-base md:text-3xl font-bold'>
-            Package Management
-          </h1>
-          <p className='text-gray-500 mt-1 hidden md:block'>
-            Manage and track all packages across different statuses
-          </p>
+    <div className="min-h-screen bg-slate-50/60">
+      <div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
+        {/* Page Header */}
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+          <div className="flex items-center gap-3">
+            <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-indigo-600 shadow-sm shadow-indigo-200">
+              <Package className="h-5 w-5 text-white" />
+            </div>
+            <div>
+              <h1 className="text-xl font-semibold text-slate-900 leading-tight">
+                Package Management
+              </h1>
+              <p className="text-sm text-slate-500 mt-0.5">
+                Manage and track all packages across different statuses
+              </p>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-2">
+            <Button
+              variant="outline"
+              onClick={handleRefresh}
+              disabled={refreshing}
+              className="h-9 text-slate-600 border-slate-200 hover:bg-slate-50">
+              <RefreshCw
+                className={cn(
+                  "h-3.5 w-3.5 mr-1.5",
+                  refreshing && "animate-spin",
+                )}
+              />
+              Refresh
+            </Button>
+            <Button
+              onClick={() => navigate("/packages/scan")}
+              className="h-9 bg-indigo-600 hover:bg-indigo-700 text-white shadow-sm shadow-indigo-200 gap-1.5">
+              <Barcode className="h-3.5 w-3.5" />
+              Scan Barcode
+            </Button>
+          </div>
         </div>
-        <div className='flex items-center gap-2'>
-          <Button
-            variant='outline'
-            onClick={handleRefresh}
-            disabled={refreshing}>
-            <RefreshCw
-              className={`mr-2 h-4 w-4 ${refreshing ? "animate-spin" : ""}`}
+
+        {/* Bulk Action Bar */}
+        <AnimatePresence>
+          {selectedCount > 0 && (
+            <PackageBulkActionsBar
+              selectedCount={selectedCount}
+              totalCount={totalPackages}
+              isAllSelected={selection.isAllSelected}
+              onClearSelection={handleClearSelection}
+              onSelectAll={handleSelectAll}
+              onMarkPacked={handleBulkMarkPacked}
+              onRequestShipping={handleBulkRequestShipping}
+              onPrintSlips={handlePrintSlips}
+              onViewSelected={handleViewSelected}
+              progress={bulkProgress}
             />
-            Refresh
-          </Button>
-          <Button onClick={() => navigate("/packages/scan")}>
-            <Package className='mr-2 h-4 w-4' />
-            Scan Barcode
-          </Button>
-        </div>
-      </div>
+          )}
+        </AnimatePresence>
 
-      {/* Bulk Action Bar */}
-      <AnimatePresence>
-        {selectedCount > 0 && (
-          <PackageBulkActionsBar
-            selectedCount={selectedCount}
-            totalCount={totalPackages}
-            isAllSelected={selection.isAllSelected}
-            onClearSelection={handleClearSelection}
-            onSelectAll={handleSelectAll}
-            onMarkPacked={handleBulkMarkPacked}
-            onRequestShipping={handleBulkRequestShipping}
-            onPrintSlips={handlePrintSlips}
-            onViewSelected={handleViewSelected}
-            progress={bulkProgress}
-          />
-        )}
-      </AnimatePresence>
-
-      {/* Tabs for Status */}
-      <Tabs
-        value={activeTab}
-        onValueChange={(v) => setActiveTab(v as PackageStatus)}>
-        <ScrollArea className='w-full '>
-          <div className='flex justify-between items-center gap-4'>
-            <TabsList>
-              {statusTabs.map((tab) => (
-                <TabsTrigger key={tab.value} value={tab.value}>
-                  <span className='flex items-center gap-2'>
-                    <span className={`h-2 w-2 rounded-full ${tab.color}`} />
-                    {tab.label}
-                  </span>
-                </TabsTrigger>
-              ))}
-            </TabsList>
+        {/* Tabs for Status */}
+        <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
+          <Tabs
+            value={activeTab}
+            onValueChange={(v) => setActiveTab(v as PackageStatus)}
+            className="w-full">
+            {/* Tab Bar */}
+            <div className="border-b border-slate-100">
+              <ScrollArea className="w-full">
+                <TabsList className="h-auto bg-transparent p-0 gap-0 rounded-none flex justify-start">
+                  {statusTabs.map((tab) => (
+                    <TabsTrigger
+                      key={tab.value}
+                      value={tab.value}
+                      className="relative flex items-center gap-2 px-4 py-4 text-sm font-medium rounded-none border-b-2 border-transparent text-slate-500 hover:text-slate-700 data-[state=active]:text-indigo-600 data-[state=active]:border-indigo-600 data-[state=active]:bg-transparent transition-all duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2 whitespace-nowrap">
+                      <span
+                        className={cn("h-2 w-2 rounded-full", tab.color)}
+                      />
+                      {tab.label}
+                    </TabsTrigger>
+                  ))}
+                </TabsList>
+              </ScrollArea>
+            </div>
 
             {/* Search Bar */}
-            <PackageSearchBar
-              value={searchQuery}
-              onChange={setSearchQuery}
-              onClear={clearSearch}
-            />
-          </div>
-        </ScrollArea>
+            <div className="px-4 py-3 border-b border-slate-50 bg-slate-50/50">
+              <PackageSearchBar
+                value={searchQuery}
+                onChange={setSearchQuery}
+                onClear={clearSearch}
+              />
+            </div>
 
-        {statusTabs.map((tab) => (
-          <TabsContent key={tab.value} value={tab.value} className='mt-6'>
-            {packages.length === 0 ? (
-              <Card>
-                <CardContent className='flex flex-col items-center justify-center py-12'>
-                  <Box className='h-12 w-12 text-gray-400 mb-4' />
-                  <p className='text-gray-500'>
-                    No packages in {tab.label.toLowerCase()}
-                  </p>
-                </CardContent>
-              </Card>
-            ) : (
-              <>
-                {/* Desktop Table View */}
-                <div className='hidden md:block'>
-                  <div className='flex items-center gap-3 mb-4'>
-                    <Checkbox
-                      checked={selection.isAllSelected}
-                      onCheckedChange={handleSelectAll}
-                    />
-                    <span className='text-sm text-gray-600'>
-                      {selection.isAllSelected ? "Deselect All" : "Select All"}
-                    </span>
+            {statusTabs.map((tab) => (
+              <TabsContent
+                key={tab.value}
+                value={tab.value}
+                className="p-4 sm:p-6 mt-0 focus-visible:outline-none relative">
+                {/* Tab-level loading overlay for tab switches */}
+                {loading && initialLoaded && (
+                  <div className="absolute inset-0 z-10 flex items-center justify-center bg-white/70 backdrop-blur-[1px]">
+                    <div className="flex flex-col items-center gap-3">
+                      <Loader2 className="h-6 w-6 animate-spin text-indigo-600" />
+                      <p className="text-sm font-medium text-slate-600">
+                        Loading {tab.label.toLowerCase()}...
+                      </p>
+                    </div>
                   </div>
-
-                  <Card>
-                    <Table>
-                      <TableHeader>
-                        <TableRow>
-                          <TableHead className='w-12'></TableHead>
-                          <TableHead>Package Code</TableHead>
-                          <TableHead>Order #</TableHead>
-                          <TableHead>Customer</TableHead>
-                          <TableHead>Address</TableHead>
-                          <TableHead className='text-right'>
-                            COD Amount
-                          </TableHead>
-                          <TableHead>Status</TableHead>
-                          <TableHead>Product(s)</TableHead>
-                          <TableHead className='text-right'>Actions</TableHead>
-                        </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                        {packages.map((pkg) => (
-                          <TableRow
-                            key={pkg._id}
-                            className={`cursor-pointer hover:bg-gray-50 ${
-                              selection.selectedIds.has(pkg._id)
-                                ? "bg-blue-50"
-                                : ""
-                            }`}>
-                            <TableCell>
-                              <Checkbox
-                                checked={selection.selectedIds.has(pkg._id)}
-                                onCheckedChange={() =>
-                                  handleSelectPackage(pkg._id)
-                                }
-                              />
-                            </TableCell>
-                            <TableCell className='font-mono text-sm'>
-                              {pkg.packageCode}
-                            </TableCell>
-                            <TableCell className='font-medium'>
-                              <Button
-                                variant='secondary'
-                                className='bg-purple-100 text-purple-700 font-bold'
-                                onClick={() => setSelectedPackage(pkg)}>
-                                #{pkg.orderNumber}
-                              </Button>
-                            </TableCell>
-                            <TableCell>
-                              <div className='flex flex-col'>
-                                <span className='font-medium text-gray-900'>
-                                  {pkg.order?.customer.name || "N/A"}
-                                </span>
-                                <span className='text-xs text-gray-500'>
-                                  {pkg.order?.customer.phoneNumber || "N/A"}
-                                </span>
-                              </div>
-                            </TableCell>
-                            <TableCell className='max-w-[200px]'>
-                              <div className='flex flex-col'>
-                                <div className='flex items-start gap-1'>
-                                  <MapPin className='h-4 w-4 text-gray-500 mt-0.5 flex-shrink-0' />
-                                  <span>
-                                    {pkg.order?.shipping.district || "N/A"}
-                                    {", "}
-                                    {pkg.order?.shipping.division || "N/A"}
-                                  </span>
-                                </div>
-                                <span className='truncate text-xs text-gray-500'>
-                                  {pkg.order?.shipping.address || "N/A"}
-                                </span>
-                              </div>
-                            </TableCell>
-                            <TableCell className='text-right'>
-                              <div className='flex items-center justify-end gap-1'>
-                                <DollarSign className='h-4 w-4 text-green-600' />
-                                <span className='font-bold text-green-700'>
-                                  {pkg.order?.remaining || 0}
-                                </span>
-                              </div>
-                            </TableCell>
-                            <TableCell>
-                              <PackageStatusBadge status={pkg.status} />
-                            </TableCell>
-                            <TableCell>
-                              <Button
-                                variant='outline'
-                                size='sm'
-                                onClick={() => handleViewProducts(pkg)}>
-                                <PackageIcon className='h-4 w-4' /> Show
-                                Products
-                              </Button>
-                            </TableCell>
-                            <TableCell>
-                              <div className='flex items-center justify-end gap-2'>
-                                <Button
-                                  variant='outline'
-                                  size='sm'
-                                  onClick={() =>
-                                    handlePrintSlip(pkg.orderNumber)
-                                  }>
-                                  <Printer className='h-4 w-4' /> Slip
-                                </Button>
-
-                                <Button
-                                  variant='default'
-                                  size='sm'
-                                  onClick={() => handleViewDetails(pkg)}>
-                                  <FileText className='h-4 w-4' /> Details
-                                </Button>
-                              </div>
-                            </TableCell>
-                          </TableRow>
-                        ))}
-                      </TableBody>
-                    </Table>
-                  </Card>
-                </div>
-
-                {/* Mobile Card View */}
-                <div className='md:hidden space-y-4'>
-                  <div className='flex items-center gap-3 mb-4 px-1'>
-                    <Checkbox
-                      checked={selection.isAllSelected}
-                      onCheckedChange={handleSelectAll}
-                    />
-                    <span className='text-sm text-gray-600'>
-                      {selection.isAllSelected ? "Deselect All" : "Select All"}
-                    </span>
+                )}
+                {packages.length === 0 && !loading ? (
+                  <div className="py-20 px-4 text-center">
+                    <div className="mx-auto h-20 w-20 rounded-2xl bg-slate-100 flex items-center justify-center mb-6">
+                      <Box className="h-10 w-10 text-slate-400" />
+                    </div>
+                    <p className="text-xl font-bold text-slate-900 mb-2">
+                      No packages found
+                    </p>
+                    <p className="text-sm text-slate-500 mb-6 max-w-sm mx-auto">
+                      {searchQuery
+                        ? "Try adjusting your search criteria"
+                        : `No packages in ${tab.label.toLowerCase()} status`}
+                    </p>
                   </div>
+                ) : (
+                  <>
+                    {/* Desktop Table View */}
+                    <div className="hidden md:block">
+                      <div className="flex items-center gap-3 mb-4">
+                        <Checkbox
+                          checked={selection.isAllSelected}
+                          onCheckedChange={handleSelectAll}
+                        />
+                        <span className="text-sm text-slate-500">
+                          {selection.isAllSelected
+                            ? "Deselect All"
+                            : "Select All"}
+                        </span>
+                      </div>
 
-                  {packages.map((pkg) => (
-                    <PackageCard
-                      key={pkg._id}
-                      package={pkg}
-                      isSelected={selection.selectedIds.has(pkg._id)}
-                      onSelect={handleSelectPackage}
-                      onPrint={handlePrintSlip}
-                      onViewDetails={handleViewDetails}
-                      onViewProducts={handleViewProducts}
-                      onOpenSheet={setSelectedPackage}
+                      <Card className="border border-slate-200 overflow-hidden">
+                        <Table>
+                          <TableHeader>
+                            <TableRow className="bg-slate-50/80 hover:bg-slate-50">
+                              <TableHead className="w-12"></TableHead>
+                              <TableHead className="font-semibold text-slate-700">
+                                Package Code
+                              </TableHead>
+                              <TableHead className="font-semibold text-slate-700">
+                                Order #
+                              </TableHead>
+                              <TableHead className="font-semibold text-slate-700">
+                                Customer
+                              </TableHead>
+                              <TableHead className="font-semibold text-slate-700">
+                                Address
+                              </TableHead>
+                              <TableHead className="text-right font-semibold text-slate-700">
+                                COD Amount
+                              </TableHead>
+                              <TableHead className="font-semibold text-slate-700">
+                                Status
+                              </TableHead>
+                              <TableHead className="font-semibold text-slate-700">
+                                Product(s)
+                              </TableHead>
+                              <TableHead className="text-right font-semibold text-slate-700">
+                                Actions
+                              </TableHead>
+                            </TableRow>
+                          </TableHeader>
+                          <TableBody>
+                            {packages.map((pkg) => (
+                              <TableRow
+                                key={pkg._id}
+                                className={cn(
+                                  "cursor-pointer transition-colors",
+                                  selection.selectedIds.has(pkg._id)
+                                    ? "bg-indigo-50/50 hover:bg-indigo-50"
+                                    : "hover:bg-slate-50",
+                                )}>
+                                <TableCell>
+                                  <Checkbox
+                                    checked={selection.selectedIds.has(pkg._id)}
+                                    onCheckedChange={() =>
+                                      handleSelectPackage(pkg._id)
+                                    }
+                                  />
+                                </TableCell>
+                                <TableCell className="font-mono text-sm text-slate-600">
+                                  {pkg.packageCode}
+                                </TableCell>
+                                <TableCell>
+                                  <Button
+                                    variant="secondary"
+                                    className="bg-indigo-50 text-indigo-700 hover:bg-indigo-100 font-semibold h-7 text-xs px-2.5 rounded-lg"
+                                    onClick={() => setSelectedPackage(pkg)}>
+                                    #{pkg.orderNumber}
+                                  </Button>
+                                </TableCell>
+                                <TableCell>
+                                  <div className="flex flex-col">
+                                    <span className="font-medium text-slate-900 text-sm">
+                                      {pkg.order?.customer.name || "N/A"}
+                                    </span>
+                                    <span className="text-xs text-slate-500">
+                                      {pkg.order?.customer.phoneNumber || "N/A"}
+                                    </span>
+                                  </div>
+                                </TableCell>
+                                <TableCell className="max-w-[200px]">
+                                  <div className="flex flex-col">
+                                    <div className="flex items-start gap-1">
+                                      <MapPin className="h-3.5 w-3.5 text-slate-400 mt-0.5 flex-shrink-0" />
+                                      <span className="text-sm text-slate-700">
+                                        {pkg.order?.shipping.district || "N/A"}
+                                        {", "}
+                                        {pkg.order?.shipping.division || "N/A"}
+                                      </span>
+                                    </div>
+                                    <span className="truncate text-xs text-slate-500 ml-4.5">
+                                      {pkg.order?.shipping.address || "N/A"}
+                                    </span>
+                                  </div>
+                                </TableCell>
+                                <TableCell className="text-right">
+                                  <div className="flex items-center justify-end gap-1">
+                                    <span className="text-sm font-semibold text-emerald-600">
+                                      {pkg.order?.remaining || 0}
+                                      <span className="text-xs font-normal text-slate-400 ml-0.5">
+                                        BDT
+                                      </span>
+                                    </span>
+                                  </div>
+                                </TableCell>
+                                <TableCell>
+                                  <PackageStatusBadge status={pkg.status} />
+                                </TableCell>
+                                <TableCell>
+                                  <Button
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={() => handleViewProducts(pkg)}
+                                    className="h-7 text-xs border-slate-200 text-slate-600 hover:bg-slate-50 gap-1">
+                                    <PackageIcon className="h-3.5 w-3.5" />
+                                    Products
+                                  </Button>
+                                </TableCell>
+                                <TableCell>
+                                  <div className="flex items-center justify-end gap-1.5">
+                                    <Button
+                                      variant="ghost"
+                                      size="sm"
+                                      onClick={() =>
+                                        handlePrintSlip(pkg.orderNumber)
+                                      }
+                                      className="h-7 w-7 p-0 text-slate-500 hover:bg-slate-100 hover:text-slate-900 rounded-lg"
+                                      title="Print Slip">
+                                      <Printer className="h-3.5 w-3.5" />
+                                    </Button>
+                                    <Button
+                                      variant="default"
+                                      size="sm"
+                                      onClick={() => handleViewDetails(pkg)}
+                                      className="h-7 text-xs bg-indigo-600 hover:bg-indigo-700 text-white shadow-sm gap-1 rounded-lg">
+                                      <FileText className="h-3.5 w-3.5" />
+                                      Details
+                                    </Button>
+                                  </div>
+                                </TableCell>
+                              </TableRow>
+                            ))}
+                          </TableBody>
+                        </Table>
+                      </Card>
+                    </div>
+
+                    {/* Mobile Card View */}
+                    <div className="md:hidden space-y-3">
+                      <div className="flex items-center gap-3 mb-4 px-1">
+                        <Checkbox
+                          checked={selection.isAllSelected}
+                          onCheckedChange={handleSelectAll}
+                        />
+                        <span className="text-sm text-slate-500">
+                          {selection.isAllSelected
+                            ? "Deselect All"
+                            : "Select All"}
+                        </span>
+                      </div>
+
+                      {packages.map((pkg) => (
+                        <PackageCard
+                          key={pkg._id}
+                          package={pkg}
+                          isSelected={selection.selectedIds.has(pkg._id)}
+                          onSelect={handleSelectPackage}
+                          onPrint={handlePrintSlip}
+                          onViewDetails={handleViewDetails}
+                          onViewProducts={handleViewProducts}
+                          onOpenSheet={setSelectedPackage}
+                        />
+                      ))}
+                    </div>
+
+                    {/* Pagination */}
+                    <PackagePagination
+                      currentPage={currentPage}
+                      totalPages={totalPages}
+                      totalItems={totalPackages}
+                      pageSize={pageSize}
+                      onPageChange={setCurrentPage}
+                      onPageSizeChange={setPageSize}
+                      className="mt-6"
                     />
-                  ))}
-                </div>
-
-                {/* Pagination */}
-                <PackagePagination
-                  currentPage={currentPage}
-                  totalPages={totalPages}
-                  totalItems={totalPackages}
-                  pageSize={pageSize}
-                  onPageChange={setCurrentPage}
-                  onPageSizeChange={setPageSize}
-                  className='mt-6'
-                />
-              </>
-            )}
-          </TabsContent>
-        ))}
-      </Tabs>
+                  </>
+                )}
+              </TabsContent>
+            ))}
+          </Tabs>
+        </div>
+      </div>
 
       {/* Product Details Sheet */}
       <ProductDetailsSheet
@@ -588,22 +671,34 @@ export function PackageManagementPage() {
 
       {/* Delete Confirmation Dialog */}
       <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
-        <AlertDialogContent>
+        <AlertDialogContent className="sm:max-w-[440px]">
           <AlertDialogHeader>
-            <AlertDialogTitle>Delete Selected Packages</AlertDialogTitle>
-            <AlertDialogDescription>
+            <div className="flex items-center gap-3 mb-3">
+              <div className="h-12 w-12 rounded-xl bg-rose-600 flex items-center justify-center shadow-sm">
+                <PackageIcon className="h-6 w-6 text-white" />
+              </div>
+              <div>
+                <AlertDialogTitle className="text-xl font-semibold text-slate-900">
+                  Delete Selected Packages
+                </AlertDialogTitle>
+              </div>
+            </div>
+            <AlertDialogDescription className="text-sm text-slate-600 pl-1">
               Are you sure you want to delete {selectedCount} package(s)? This
               action cannot be undone.
             </AlertDialogDescription>
           </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
+          <AlertDialogFooter className="gap-2 sm:gap-0">
+            <AlertDialogCancel className="h-10 border border-slate-200">
+              Cancel
+            </AlertDialogCancel>
             <AlertDialogAction
               onClick={() => {
                 toast.success("Delete functionality not implemented yet");
                 setShowDeleteDialog(false);
                 clearSelection();
-              }}>
+              }}
+              className="h-10 bg-rose-600 hover:bg-rose-700 text-white shadow-sm shadow-rose-200">
               Delete
             </AlertDialogAction>
           </AlertDialogFooter>
@@ -635,100 +730,108 @@ function PackageCard({
 }: PackageCardProps) {
   return (
     <Card
-      className={`hover:shadow-lg transition-shadow duration-200 relative ${
-        isSelected ? "ring-2 ring-blue-500" : ""
-      }`}>
+      className={cn(
+        "overflow-hidden rounded-xl border transition-all duration-200",
+        isSelected
+          ? "border-indigo-200 bg-indigo-50/30 shadow-md shadow-indigo-500/5"
+          : "border-slate-200 bg-white hover:border-slate-300 hover:shadow-md",
+      )}>
       {/* Selection Checkbox */}
-      <div className='absolute top-3 left-3 z-10'>
+      <div className="absolute top-3 left-3 z-10">
         <Checkbox
           checked={isSelected}
           onCheckedChange={() => onSelect(pkg._id)}
-          className='bg-white'
+          className="bg-white"
         />
       </div>
 
-      <CardHeader className='pb-3 pl-12'>
-        <div className='flex items-start justify-between'>
-          <div className='flex-1'>
-            <div className='flex items-center gap-2 mb-2'>
-              <h3 className='text-lg font-bold'>#{pkg.orderNumber}</h3>
-              <Badge variant='outline' className='font-mono text-xs'>
+      <div className="p-4 pl-12">
+        <div className="flex items-start justify-between mb-3">
+          <div className="flex-1">
+            <div className="flex items-center gap-2 mb-1.5">
+              <h3 className="text-base font-bold text-slate-900">
+                #{pkg.orderNumber}
+              </h3>
+              <Badge
+                variant="outline"
+                className="font-mono text-[10px] bg-slate-50 text-slate-600 border-slate-200 rounded-md">
                 {pkg.packageCode}
               </Badge>
             </div>
             <PackageStatusBadge status={pkg.status} />
           </div>
         </div>
-      </CardHeader>
 
-      <CardContent className='space-y-4'>
         {/* Customer Info */}
-        <div className='space-y-2'>
-          <div className='flex items-center gap-2 text-sm'>
-            <User className='h-4 w-4 text-gray-500' />
-            <span className='font-medium'>
+        <div className="space-y-1.5 mb-3">
+          <div className="flex items-center gap-2 text-sm">
+            <User className="h-3.5 w-3.5 text-slate-400" />
+            <span className="font-medium text-slate-800">
               {pkg.order?.customer.name || "N/A"}
             </span>
           </div>
-          <div className='flex items-center gap-2 text-sm text-gray-600'>
-            <Phone className='h-4 w-4' />
+          <div className="flex items-center gap-2 text-sm text-slate-500">
+            <Phone className="h-3.5 w-3.5" />
             <span>{pkg.order?.customer.phoneNumber || "N/A"}</span>
           </div>
-          <div className='flex items-start gap-2 text-sm text-gray-600'>
-            <MapPin className='h-4 w-4 mt-0.5 flex-shrink-0' />
-            <span className='line-clamp-2'>
+          <div className="flex items-start gap-2 text-sm text-slate-500">
+            <MapPin className="h-3.5 w-3.5 mt-0.5 flex-shrink-0" />
+            <span className="line-clamp-2">
               {pkg.order?.shipping.address || "N/A"}
             </span>
           </div>
         </div>
 
         {/* COD Amount */}
-        <div className='flex items-center justify-between bg-green-50 p-3 rounded-lg border border-green-200'>
-          <div className='flex items-center gap-2'>
-            <DollarSign className='h-4 w-4 text-green-600' />
-            <span className='text-sm font-medium text-green-900'>
+        <div className="flex items-center justify-between bg-emerald-50 p-3 rounded-xl border border-emerald-100 mb-3">
+          <div className="flex items-center gap-2">
+            <DollarSign className="h-4 w-4 text-emerald-600" />
+            <span className="text-sm font-medium text-emerald-800">
               COD Amount
             </span>
           </div>
-          <span className='text-lg font-bold text-green-700'>
-            {pkg.order?.remaining || 0}৳
+          <span className="text-base font-bold text-emerald-700">
+            {pkg.order?.remaining || 0}
+            <span className="text-xs font-normal text-emerald-500 ml-0.5">
+              BDT
+            </span>
           </span>
         </div>
 
         {/* Actions */}
-        <div className='flex gap-2 pt-2'>
+        <div className="flex gap-2">
           <Button
-            variant='outline'
-            size='sm'
-            className='flex-1'
+            variant="outline"
+            size="sm"
+            className="flex-1 h-8 text-xs border-slate-200 text-slate-600 hover:bg-slate-50 gap-1"
             onClick={() => onOpenSheet(pkg)}>
-            <Eye className='h-4 w-4 mr-1' />
+            <Eye className="h-3.5 w-3.5" />
             Items
           </Button>
           <Button
-            variant='outline'
-            size='sm'
-            className='flex-1'
+            variant="outline"
+            size="sm"
+            className="flex-1 h-8 text-xs border-slate-200 text-slate-600 hover:bg-slate-50 gap-1"
             onClick={() => onViewProducts(pkg)}>
-            <PackageIcon className='h-4 w-4 mr-1' />
+            <PackageIcon className="h-3.5 w-3.5" />
             Products
           </Button>
           <Button
-            variant='outline'
-            size='sm'
-            className='flex-1'
+            variant="outline"
+            size="sm"
+            className="flex-1 h-8 text-xs border-slate-200 text-slate-600 hover:bg-slate-50 gap-1"
             onClick={() => onPrint(pkg.orderNumber)}>
-            <Printer className='h-4 w-4 mr-1' />
+            <Printer className="h-3.5 w-3.5" />
             Print
           </Button>
           <Button
-            size='sm'
-            className='flex-1'
+            size="sm"
+            className="flex-1 h-8 text-xs bg-indigo-600 hover:bg-indigo-700 text-white shadow-sm gap-1 rounded-lg"
             onClick={() => onViewDetails(pkg)}>
             Details
           </Button>
         </div>
-      </CardContent>
+      </div>
     </Card>
   );
 }
@@ -747,75 +850,100 @@ function ProductDetailsSheet({
 }: ProductDetailsSheetProps) {
   if (!pkg) return null;
 
-  // Show order notes and basic info
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent className='w-full sm:max-w-md'>
+      <SheetContent className="w-full sm:max-w-md">
         <SheetHeader>
-          <SheetTitle>Package Details</SheetTitle>
-          <p className='text-sm text-gray-500'>
-            Order #{pkg.orderNumber} • {pkg.packageCode}
+          <SheetTitle className="flex items-center gap-2 text-base font-semibold">
+            <span className="inline-flex h-7 w-7 items-center justify-center rounded-md bg-indigo-100">
+              <PackageIcon className="h-3.5 w-3.5 text-indigo-600" />
+            </span>
+            Package Details
+          </SheetTitle>
+          <p className="text-sm text-slate-500">
+            Order #{pkg.orderNumber} &bull; {pkg.packageCode}
           </p>
         </SheetHeader>
 
-        <div className='mt-6 space-y-4'>
+        <div className="mt-6 space-y-4">
           {/* Order Info */}
-          <Card>
-            <CardHeader>
-              <CardTitle className='text-base'>Order Information</CardTitle>
-            </CardHeader>
-            <CardContent className='space-y-3'>
+          <Card className="border border-slate-200">
+            <CardContent className="p-4 space-y-3">
               <div>
-                <p className='text-sm text-gray-500'>Order Number</p>
-                <p className='font-semibold'>
+                <p className="text-xs text-slate-500 uppercase tracking-wider font-medium">
+                  Order Number
+                </p>
+                <p className="font-semibold text-slate-900">
                   #{pkg.order?.orderNumber || pkg.orderNumber}
                 </p>
               </div>
               <div>
-                <p className='text-sm text-gray-500'>Customer Name</p>
-                <p className='font-semibold'>
+                <p className="text-xs text-slate-500 uppercase tracking-wider font-medium">
+                  Customer Name
+                </p>
+                <p className="font-semibold text-slate-900">
                   {pkg.order?.customer.name || "N/A"}
                 </p>
               </div>
               <div>
-                <p className='text-sm text-gray-500'>Phone</p>
-                <p className='font-semibold'>
+                <p className="text-xs text-slate-500 uppercase tracking-wider font-medium">
+                  Phone
+                </p>
+                <p className="font-semibold text-slate-900">
                   {pkg.order?.customer.phoneNumber || "N/A"}
                 </p>
               </div>
               <div>
-                <p className='text-sm text-gray-500'>Shipping Address</p>
-                <p className='text-sm'>
+                <p className="text-xs text-slate-500 uppercase tracking-wider font-medium">
+                  Shipping Address
+                </p>
+                <p className="text-sm text-slate-700">
                   {pkg.order?.shipping.address || "N/A"}
                 </p>
               </div>
-              <div className='grid grid-cols-2 gap-4'>
+              <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <p className='text-sm text-gray-500'>Total Amount</p>
-                  <p className='font-semibold'>{pkg.order?.totalPrice || 0}৳</p>
+                  <p className="text-xs text-slate-500 uppercase tracking-wider font-medium">
+                    Total Amount
+                  </p>
+                  <p className="font-semibold text-slate-900">
+                    {pkg.order?.totalPrice || 0}
+                    <span className="text-xs font-normal text-slate-400 ml-0.5">
+                      BDT
+                    </span>
+                  </p>
                 </div>
                 <div>
-                  <p className='text-sm text-gray-500'>COD Amount</p>
-                  <p className='font-semibold text-green-600'>
-                    {pkg.order?.remaining || 0}৳
+                  <p className="text-xs text-slate-500 uppercase tracking-wider font-medium">
+                    COD Amount
+                  </p>
+                  <p className="font-semibold text-emerald-600">
+                    {pkg.order?.remaining || 0}
+                    <span className="text-xs font-normal text-slate-400 ml-0.5">
+                      BDT
+                    </span>
                   </p>
                 </div>
               </div>
               {pkg.order?.notes && (
                 <div>
-                  <p className='text-sm text-gray-500'>Special Instructions</p>
-                  <p className='text-sm italic'>{pkg.order.notes}</p>
+                  <p className="text-xs text-slate-500 uppercase tracking-wider font-medium">
+                    Special Instructions
+                  </p>
+                  <p className="text-sm italic text-slate-700">
+                    {pkg.order.notes}
+                  </p>
                 </div>
               )}
             </CardContent>
           </Card>
 
           {/* Package Info */}
-          <Card>
-            <CardHeader>
-              <CardTitle className='text-base'>Package Status</CardTitle>
-            </CardHeader>
-            <CardContent>
+          <Card className="border border-slate-200">
+            <CardContent className="p-4">
+              <p className="text-xs text-slate-500 uppercase tracking-wider font-medium mb-2">
+                Package Status
+              </p>
               <PackageStatusBadge status={pkg.status} />
             </CardContent>
           </Card>
@@ -845,40 +973,57 @@ function OrderProductsSheet({
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent className='w-full sm:max-w-md'>
+      <SheetContent className="w-full sm:max-w-md">
         <SheetHeader>
-          <SheetTitle>Order Products #{pkg.orderNumber}</SheetTitle>
-          <p className='text-sm text-gray-500'>
-            {pkg.packageCode} • {products.length} items
+          <SheetTitle className="flex items-center gap-2 text-base font-semibold">
+            <span className="inline-flex h-7 w-7 items-center justify-center rounded-md bg-indigo-100">
+              <PackageIcon className="h-3.5 w-3.5 text-indigo-600" />
+            </span>
+            Order Products #{pkg.orderNumber}
+          </SheetTitle>
+          <p className="text-sm text-slate-500">
+            {pkg.packageCode} &bull; {products.length} items
           </p>
         </SheetHeader>
 
-        <div className='mt-6'>
+        <div className="mt-6">
           {loading ? (
-            <div className='flex items-center justify-center py-8'>
-              <Loader2 className='h-8 w-8 animate-spin' />
+            <div className="flex items-center justify-center py-12">
+              <div className="flex flex-col items-center gap-3 text-center">
+                <Loader2 className="h-8 w-8 animate-spin text-indigo-600" />
+                <p className="text-sm font-medium text-slate-700">
+                  Loading products...
+                </p>
+              </div>
             </div>
           ) : products.length === 0 ? (
-            <Card>
-              <CardContent className='flex flex-col items-center justify-center py-12'>
-                <PackageIcon className='h-12 w-12 text-gray-400 mb-4' />
-                <p className='text-gray-500'>No products found</p>
-              </CardContent>
-            </Card>
+            <div className="py-16 px-4 text-center">
+              <div className="mx-auto h-16 w-16 rounded-2xl bg-slate-100 flex items-center justify-center mb-4">
+                <PackageIcon className="h-8 w-8 text-slate-400" />
+              </div>
+              <p className="text-lg font-bold text-slate-900 mb-1">
+                No products found
+              </p>
+              <p className="text-sm text-slate-500">
+                No products associated with this order
+              </p>
+            </div>
           ) : (
-            <ScrollArea className='h-[calc(100vh-200px)]'>
-              <div className='space-y-4 pr-4'>
+            <ScrollArea className="h-[calc(100vh-200px)]">
+              <div className="space-y-3 pr-4">
                 {products.map((product) => (
-                  <Card key={product.id}>
-                    <CardContent className='p-4'>
-                      <div className='flex gap-4'>
+                  <Card
+                    key={product.id}
+                    className="border border-slate-200 overflow-hidden">
+                    <CardContent className="p-3">
+                      <div className="flex gap-3">
                         {/* Product Image */}
-                        <div className='flex-shrink-0'>
+                        <div className="flex-shrink-0">
                           <img
                             //@ts-ignore
                             src={product.image || PlaceHolderImage}
                             alt={product.name}
-                            className='w-20 h-20 object-cover rounded-md border'
+                            className="w-16 h-16 object-cover rounded-lg border border-slate-200"
                             onError={(e) => {
                               e.currentTarget.src = PlaceHolderImage;
                             }}
@@ -886,38 +1031,36 @@ function OrderProductsSheet({
                         </div>
 
                         {/* Product Details */}
-                        <div className='flex-1 min-w-0'>
-                          <div className='flex justify-start items-start flex-col'>
-                            <p className='font-medium text-lg line-clamp-2 mb-1'>
-                              {product.name.toUpperCase()}
-                            </p>
+                        <div className="flex-1 min-w-0">
+                          <p className="font-medium text-sm text-slate-900 line-clamp-2 mb-1">
+                            {product.name.toUpperCase()}
+                          </p>
 
-                            {/* Variant */}
-                            {product.variant &&
-                              (product.variant.color ||
-                                product.variant.size) && (
-                                <Badge
-                                  variant='outline'
-                                  className='text-xs bg-rose-100 text-rose-600'>
-                                  (
-                                  {product.variant.color && (
-                                    <span className='capitalize'>
-                                      {product.variant.color}
-                                    </span>
-                                  )}
-                                  {product.variant.color &&
-                                    product.variant.size && <span> . </span>}
-                                  {product.variant.size && (
-                                    <span>{product.variant.size}</span>
-                                  )}
-                                  )
-                                </Badge>
-                              )}
-                          </div>
+                          {product.variant &&
+                            (product.variant.color ||
+                              product.variant.size) && (
+                              <Badge
+                                variant="outline"
+                                className="text-[10px] bg-rose-50 text-rose-600 border-rose-200 rounded-md mb-1.5">
+                                (
+                                {product.variant.color && (
+                                  <span className="capitalize">
+                                    {product.variant.color}
+                                  </span>
+                                )}
+                                {product.variant.color &&
+                                  product.variant.size && <span> . </span>}
+                                {product.variant.size && (
+                                  <span>{product.variant.size}</span>
+                                )}
+                                )
+                              </Badge>
+                            )}
 
-                          {/* Price and Quantity */}
-                          <div className='flex items-center justify-end'>
-                            <Badge variant='secondary' className='text-xs'>
+                          <div className="flex items-center justify-end">
+                            <Badge
+                              variant="secondary"
+                              className="text-[10px] bg-slate-100 text-slate-600 rounded-md">
                               Qty: {product.quantity}
                             </Badge>
                           </div>

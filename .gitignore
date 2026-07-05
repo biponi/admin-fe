@@ -158,3 +158,6 @@ yarn-error.log*
 mobile-version
 admin-mobile-app
 new-ui
+.mimocode
+.claude
+.vscode

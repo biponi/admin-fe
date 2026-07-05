@@ -217,6 +217,8 @@ const config = {
     userPerformanceDetail: (userId: string) =>
       `${baseURL}/admin/audit/users/${userId}`,
     topPerformers: () => `${baseURL}/admin/audit/top-performers`,
+    stockAdjustments: () => `${baseURL}/admin/audit/stock-adjustments`,
+    orderModifications: () => `${baseURL}/admin/audit/order-modifications`,
   },
   package: {
     // Package & Shipping Workflow Endpoints

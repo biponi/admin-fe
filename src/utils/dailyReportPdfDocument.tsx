@@ -16,10 +16,19 @@ import {
 import { DailyReportData } from "../api/dailyReport";
 import { format } from "date-fns";
 
-// Register Bengali font
+// Register Bengali fonts (local, not CDN - critical for reliability)
 Font.register({
   family: "BengaliFont",
   src: "/fonts/NotoSansBengali-Regular.ttf",
+  fontStyle: "normal",
+  fontWeight: 400,
+});
+
+Font.register({
+  family: "BengaliFont",
+  src: "/fonts/NotoSansBengali-Bold.ttf",
+  fontStyle: "normal",
+  fontWeight: 700,
 });
 
 interface DailyReportPdfProps {

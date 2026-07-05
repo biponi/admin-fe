@@ -557,10 +557,8 @@ const generateInvoiceBlob = (order: IOrder) => {
   return doc;
 };
 
-export const generateInvoice = (order: IOrder) => {
-  const doc = generateInvoiceBlob(order);
-  // Save the PDF
-  doc.save(`invoice-${order.orderNumber}.pdf`);
+export const generateInvoice = async (order: IOrder) => {
+  await generateReactPdfInvoice(order);
 };
 
 // New React PDF invoice with Bengali support
@@ -602,14 +600,11 @@ export const generateMultipleInvoicesAndDownloadZip = async (
   const zip = new JSZip();
   const orders = (await getOrdersById(orderIds)) ?? [];
   for (const order of orders) {
-    const pdfBlob = await generateInvoiceBlobPromise(order);
-    zip.file(`invoice-${order.orderNumber}.pdf`, pdfBlob); // Add each PDF to the ZIP
+    const pdfBlob = await generateReactPdfInvoiceBlob(order);
+    zip.file(`invoice-${order.orderNumber}.pdf`, pdfBlob);
   }
 
-  // Generate the ZIP file
   const zipBlob = await zip.generateAsync({ type: "blob" });
-
-  // Trigger download
   saveAs(zipBlob, "invoices.zip");
 };
 

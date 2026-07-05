@@ -11,10 +11,12 @@ import {
   Users,
   TrendingUp,
   DollarSign,
+  Wallet,
   ChevronDown,
   ChevronUp,
   Megaphone,
   X,
+  Trophy,
 } from "lucide-react";
 import { useCustomerAnalytics } from "../hooks/useCustomerAnalytics";
 import { CustomerStatsTopCustomer } from "../interface";
@@ -28,7 +30,9 @@ interface CustomerStatsProps {
 const CustomerStats = ({ onBulkCommunicate }: CustomerStatsProps) => {
   const { stats, loading, fetchStats } = useCustomerAnalytics();
   const [isTopCustomersExpanded, setIsTopCustomersExpanded] = useState(false);
-  const [selectedTopCustomers, setSelectedTopCustomers] = useState<Set<string>>(new Set());
+  const [selectedTopCustomers, setSelectedTopCustomers] = useState<Set<string>>(
+    new Set(),
+  );
   const isMobile = useIsMobile();
   const { hasRequiredPermission } = useRoleCheck();
 
@@ -58,7 +62,9 @@ const CustomerStats = ({ onBulkCommunicate }: CustomerStatsProps) => {
     if (selectedTopCustomers.size === stats.topCustomers.length) {
       setSelectedTopCustomers(new Set());
     } else {
-      setSelectedTopCustomers(new Set(stats.topCustomers.map((c) => c.customerPhone)));
+      setSelectedTopCustomers(
+        new Set(stats.topCustomers.map((c) => c.customerPhone)),
+      );
     }
   };
 
@@ -67,7 +73,11 @@ const CustomerStats = ({ onBulkCommunicate }: CustomerStatsProps) => {
   };
 
   const getSelectedTopCustomersData = () => {
-    return stats?.topCustomers?.filter((c) => selectedTopCustomers.has(c.customerPhone)) || [];
+    return (
+      stats?.topCustomers?.filter((c) =>
+        selectedTopCustomers.has(c.customerPhone),
+      ) || []
+    );
   };
 
   const handleBulkCommunicateClick = () => {
@@ -79,13 +89,13 @@ const CustomerStats = ({ onBulkCommunicate }: CustomerStatsProps) => {
 
   if (loading || !stats) {
     return (
-      <div className='grid grid-cols-1 md:grid-cols-4 gap-4'>
+      <div className='grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4'>
         {[1, 2, 3, 4].map((i) => (
-          <Card key={i}>
-            <CardContent className='p-6'>
+          <Card key={i} className='border-slate-200/80 shadow-sm'>
+            <CardContent className='p-4 md:p-6'>
               <div className='animate-pulse'>
-                <div className='h-4 bg-gray-200 rounded w-1/2 mb-2'></div>
-                <div className='h-8 bg-gray-200 rounded w-3/4'></div>
+                <div className='h-3 bg-slate-200 rounded w-2/3 mb-3'></div>
+                <div className='h-6 bg-slate-200 rounded w-3/4'></div>
               </div>
             </CardContent>
           </Card>
@@ -98,49 +108,60 @@ const CustomerStats = ({ onBulkCommunicate }: CustomerStatsProps) => {
     {
       title: "Total Customers",
       value: safeNumber(stats.summary?.totalCustomers).toLocaleString(),
-      icon: <Users className='h-5 w-5 text-blue-600' />,
-      color: "bg-blue-50",
+      icon: <Users className='h-4 w-4 md:h-5 md:w-5' />,
+      iconColor: "text-indigo-600",
+      iconBg: "bg-indigo-50",
       change: `${safeNumber(stats.summary?.totalOrders).toLocaleString()} total orders`,
     },
     {
       title: "Total Revenue",
       value: `৳${safeNumber(stats.summary?.totalRevenue).toLocaleString()}`,
-      icon: <DollarSign className='h-5 w-5 text-purple-600' />,
-      color: "bg-purple-50",
+      icon: <DollarSign className='h-4 w-4 md:h-5 md:w-5' />,
+      iconColor: "text-violet-600",
+      iconBg: "bg-violet-50",
       change: "All time",
     },
     {
       title: "Total Paid",
       value: `৳${safeNumber(stats.summary?.totalPaid).toLocaleString()}`,
-      icon: <DollarSign className='h-5 w-5 text-green-600' />,
-      color: "bg-green-50",
+      icon: <Wallet className='h-4 w-4 md:h-5 md:w-5' />,
+      iconColor: "text-emerald-600",
+      iconBg: "bg-emerald-50",
       change: `৳${safeNumber(stats.summary?.totalPending).toLocaleString()} pending`,
     },
     {
       title: "Avg. Spent/Customer",
       value: `৳${safeNumber(stats.summary?.avgSpentPerCustomer).toLocaleString()}`,
-      icon: <TrendingUp className='h-5 w-5 text-orange-600' />,
-      color: "bg-orange-50",
+      icon: <TrendingUp className='h-4 w-4 md:h-5 md:w-5' />,
+      iconColor: "text-amber-600",
+      iconBg: "bg-amber-50",
       change: `${safeNumber(stats.summary?.avgOrdersPerCustomer)} avg orders/customer`,
     },
   ];
 
   return (
-    <div className='space-y-6'>
+    <div className='space-y-5'>
       {/* Stats Cards */}
-      <div className='grid grid-cols-1 md:grid-cols-4 gap-4'>
+      <div className='grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4'>
         {statCards.map((stat, index) => (
-          <Card key={index} className='hover:shadow-lg transition-shadow'>
-            <CardContent className='p-6'>
-              <div className='flex items-center justify-between'>
-                <div>
-                  <p className='text-sm font-medium text-gray-600'>
+          <Card
+            key={index}
+            className='border-slate-200/80 shadow-sm hover:shadow-md hover:border-slate-300 transition-all'>
+            <CardContent className='p-4 md:p-6'>
+              <div className='flex items-start justify-between gap-2'>
+                <div className='min-w-0'>
+                  <p className='text-xs md:text-sm font-medium text-slate-500 truncate'>
                     {stat.title}
                   </p>
-                  <p className='text-2xl font-bold mt-1'>{stat.value}</p>
-                  <p className='text-xs text-gray-500 mt-1'>{stat.change}</p>
+                  <p className='text-lg md:text-2xl font-semibold text-slate-900 mt-1 truncate'>
+                    {stat.value}
+                  </p>
+                  <p className='text-[11px] md:text-xs text-slate-400 mt-1 truncate'>
+                    {stat.change}
+                  </p>
                 </div>
-                <div className={`p-3 rounded-lg ${stat.color}`}>
+                <div
+                  className={`p-2 md:p-3 rounded-xl shrink-0 ${stat.iconBg} ${stat.iconColor}`}>
                   {stat.icon}
                 </div>
               </div>
@@ -151,102 +172,125 @@ const CustomerStats = ({ onBulkCommunicate }: CustomerStatsProps) => {
 
       {/* Top Customers */}
       {stats.topCustomers && stats.topCustomers.length > 0 && (
-        <Card>
+        <Card className='border-slate-200/80 shadow-sm overflow-hidden'>
           <CardHeader
-            className='cursor-pointer hover:bg-gray-50 transition-colors'
+            className='cursor-pointer hover:bg-slate-50 transition-colors py-4'
             onClick={() => setIsTopCustomersExpanded(!isTopCustomersExpanded)}>
             <div className='flex items-center justify-between'>
-              <CardTitle>Top Customers by Revenue</CardTitle>
+              <CardTitle className='flex items-center gap-2 text-base font-medium text-slate-800'>
+                <Trophy className='h-4 w-4 text-amber-500' />
+                Top Customers by Revenue
+              </CardTitle>
               {isTopCustomersExpanded ? (
-                <ChevronUp className='h-5 w-5 text-gray-500' />
+                <ChevronUp className='h-4 w-4 text-slate-400' />
               ) : (
-                <ChevronDown className='h-5 w-5 text-gray-500' />
+                <ChevronDown className='h-4 w-4 text-slate-400' />
               )}
             </div>
           </CardHeader>
           {isTopCustomersExpanded && (
-            <CardContent>
+            <CardContent className='pt-0'>
               {/* Bulk Actions Panel */}
               {selectedTopCustomers.size > 0 && (
-                <div className="mb-4 p-3 bg-gradient-to-r from-blue-50 via-purple-50 to-pink-50 border-2 border-blue-200 rounded-lg">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center space-x-3 flex-1">
-                      <div className="bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 text-white px-3 py-1 rounded-lg">
-                        <span className="font-semibold text-sm">{selectedTopCustomers.size}</span>
-                        <span className="ml-1 text-sm">
-                          Customer{selectedTopCustomers.size !== 1 ? 's' : ''} Selected
-                        </span>
+                <div className='mb-4 p-3 bg-indigo-50/70 border border-indigo-100 rounded-xl'>
+                  <div className='flex items-center justify-between gap-2 flex-wrap'>
+                    <div className='flex items-center gap-2 flex-1 min-w-0 flex-wrap'>
+                      <div className='bg-indigo-600 text-white px-3 py-1 rounded-full text-xs font-medium shrink-0'>
+                        {selectedTopCustomers.size} selected
                       </div>
-                      {hasRequiredPermission('BulkCommunication', 'create') && (
+                      {hasRequiredPermission("BulkCommunication", "create") && (
                         <Button
                           onClick={handleBulkCommunicateClick}
-                          className="bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 hover:from-blue-600 hover:via-purple-600 hover:to-pink-600 text-sm"
-                          size="sm"
-                        >
-                          <Megaphone className="h-4 w-4 mr-1" />
-                          {isMobile ? 'Send Campaign' : 'Send Bulk SMS/Email'}
+                          className='bg-slate-900 hover:bg-slate-800 text-sm'
+                          size='sm'>
+                          <Megaphone className='h-3.5 w-3.5 mr-1.5' />
+                          {isMobile ? "Send campaign" : "Send bulk SMS/Email"}
                         </Button>
                       )}
                     </div>
                     <Button
-                      variant="ghost"
-                      size="sm"
+                      variant='ghost'
+                      size='sm'
                       onClick={handleClearTopCustomerSelection}
-                      className="text-gray-600 hover:text-gray-900"
-                    >
-                      <X className="h-4 w-4" />
+                      className='text-slate-500 hover:text-slate-900 shrink-0'>
+                      <X className='h-4 w-4' />
                     </Button>
                   </div>
                 </div>
               )}
 
               {/* Select All Checkbox */}
-              <div className="mb-3 flex items-center space-x-2">
+              <div className='mb-3 flex items-center gap-2 px-0.5'>
                 <Checkbox
                   checked={
-                    stats.topCustomers && stats.topCustomers.length > 0 && selectedTopCustomers.size === stats.topCustomers.length
-                      ? true
-                      : false
+                    !!stats.topCustomers &&
+                    stats.topCustomers.length > 0 &&
+                    selectedTopCustomers.size === stats.topCustomers.length
                   }
                   onCheckedChange={handleSelectAllTopCustomers}
-                  aria-label="Select all top customers"
+                  aria-label='Select all top customers'
                 />
-                <span className="text-sm text-gray-600">Select All</span>
+                <span className='text-sm text-slate-500'>Select all</span>
               </div>
 
-              <div className='space-y-3'>
-                {stats.topCustomers.map((customer, index) => (
-                  <div
-                    key={customer.customerPhone}
-                    className={`flex items-center justify-between p-4 border rounded-lg transition-colors ${
-                      selectedTopCustomers.has(customer.customerPhone) ? 'bg-blue-50 border-blue-300' : 'hover:bg-gray-50'
-                    }`}>
-                    <div className='flex items-center space-x-4'>
-                      <Checkbox
-                        checked={selectedTopCustomers.has(customer.customerPhone)}
-                        onCheckedChange={() => handleSelectTopCustomer(customer.customerPhone)}
-                        aria-label={`Select ${customer.customerName}`}
-                      />
-                      <div className='w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center font-semibold text-blue-600'>
-                        {index + 1}
+              <div className='space-y-2 grid grid-cols-1 md:grid-cols-3 gap-2 md:gap-3'>
+                {stats.topCustomers.map((customer, index) => {
+                  const isSelected = selectedTopCustomers.has(
+                    customer.customerPhone,
+                  );
+                  return (
+                    <div
+                      key={customer.customerPhone}
+                      onClick={() =>
+                        handleSelectTopCustomer(customer.customerPhone)
+                      }
+                      className={`flex items-center justify-between gap-3 p-3 md:p-4 border rounded-xl transition-colors cursor-pointer ${
+                        isSelected
+                          ? "bg-indigo-50/60 border-indigo-200"
+                          : "border-slate-200 hover:bg-slate-50"
+                      }`}>
+                      <div className='flex items-center gap-3 min-w-0'>
+                        <Checkbox
+                          checked={isSelected}
+                          onCheckedChange={() =>
+                            handleSelectTopCustomer(customer.customerPhone)
+                          }
+                          onClick={(e) => e.stopPropagation()}
+                          aria-label={`Select ${customer.customerName}`}
+                          className='shrink-0'
+                        />
+                        <div
+                          className={`w-9 h-9 md:w-10 md:h-10 shrink-0 rounded-full flex items-center justify-center font-semibold text-sm ${
+                            index === 0
+                              ? "bg-amber-100 text-amber-700"
+                              : index === 1
+                                ? "bg-slate-200 text-slate-600"
+                                : index === 2
+                                  ? "bg-orange-100 text-orange-700"
+                                  : "bg-indigo-50 text-indigo-600"
+                          }`}>
+                          {index + 1}
+                        </div>
+                        <div className='min-w-0'>
+                          <p className='font-medium text-slate-800 truncate'>
+                            {customer.customerName}
+                          </p>
+                          <p className='text-xs md:text-sm text-slate-400 truncate'>
+                            {customer.customerPhone}
+                          </p>
+                        </div>
                       </div>
-                      <div>
-                        <p className='font-medium'>{customer.customerName}</p>
-                        <p className='text-sm text-gray-500'>
-                          {customer.customerPhone}
+                      <div className='text-right shrink-0'>
+                        <p className='font-semibold text-sm md:text-lg text-slate-900'>
+                          ৳{safeNumber(customer.totalSpent).toLocaleString()}
+                        </p>
+                        <p className='text-[11px] md:text-xs text-slate-400'>
+                          {safeNumber(customer.orderCount)} orders
                         </p>
                       </div>
                     </div>
-                    <div className='text-right'>
-                      <p className='font-semibold text-lg'>
-                        ৳{safeNumber(customer.totalSpent).toLocaleString()}
-                      </p>
-                      <p className='text-xs text-gray-500'>
-                        {safeNumber(customer.orderCount)} orders
-                      </p>
-                    </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             </CardContent>
           )}

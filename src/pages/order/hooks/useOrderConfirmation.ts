@@ -1,13 +1,15 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import Swal from "sweetalert2";
 import { useToast } from "../../../components/ui/use-toast";
 import {
   getProcessingOrders,
+  searchOrders,
   confirmOrder,
   cancelOrderFromConfirmation,
   getProcessingOrderCount,
 } from "../../../api/order";
 import { IOrder } from "../interface";
+import useDebounce from "../../../customHook/useDebounce";
 
 export interface CancellationReason {
   value: string;
@@ -38,12 +40,14 @@ export const useOrderConfirmation = () => {
   const [verificationDialogOpen, setVerificationDialogOpen] = useState(false);
   const [cancelDialogOpen, setCancelDialogOpen] = useState(false);
   const [processingCount, setProcessingCount] = useState<number>(0);
+  const [searchQuery, setSearchQuery] = useState("");
+  const debouncedSearchQuery = useDebounce(searchQuery, 500);
 
-  // Fetch processing orders on page change
+  // Fetch processing orders on page change or search
   useEffect(() => {
     fetchProcessingOrders();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [currentPage, limit]);
+  }, [currentPage, limit, debouncedSearchQuery]);
 
   // Fetch processing order count
   useEffect(() => {
@@ -53,12 +57,23 @@ export const useOrderConfirmation = () => {
   const fetchProcessingOrders = async () => {
     setLoading(true);
     try {
-      const response = await getProcessingOrders(
-        limit,
-        currentPage,
-        "orderNumber",
-        "asc",
-      );
+      let response;
+
+      if (debouncedSearchQuery) {
+        response = await searchOrders(
+          debouncedSearchQuery,
+          "processing",
+          limit,
+          currentPage + 1,
+        );
+      } else {
+        response = await getProcessingOrders(
+          limit,
+          currentPage,
+          "orderNumber",
+          "asc",
+        );
+      }
 
       if (response?.success && response?.data) {
         const {
@@ -267,6 +282,7 @@ export const useOrderConfirmation = () => {
     verificationDialogOpen,
     cancelDialogOpen,
     processingCount,
+    searchQuery,
 
     // Actions
     fetchProcessingOrders,
@@ -282,5 +298,6 @@ export const useOrderConfirmation = () => {
     setSelectedOrder,
     setVerificationDialogOpen,
     setCancelDialogOpen,
+    setSearchQuery,
   };
 };

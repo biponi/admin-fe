@@ -127,15 +127,54 @@ export const getPackageActivities = async (
 
 /**
  * Generate barcode for package
+ * Handles both binary PNG (raw backend) and JSON with base64 (fixed backend)
  */
 export const getPackageBarcode = async (
   orderNumber: number,
 ): Promise<ApiResponse<BarcodeResponse>> => {
   try {
-    const response = await axios.get<any>(
-      config.package.getBarcode(orderNumber),
-    );
-    return handleResponse<BarcodeResponse>(response);
+    const response = await axios.get(config.package.getBarcode(orderNumber), {
+      responseType: "blob",
+    });
+
+    const contentType = response.headers["content-type"] || "";
+
+    if (contentType.includes("application/json")) {
+      const text = await (response.data as Blob).text();
+      const json = JSON.parse(text);
+      if (json.success && json.data) {
+        return { success: true, data: json.data };
+      }
+      return { success: false, error: json.error || "Operation failed" };
+    }
+
+    if (contentType.includes("image/png") || response.data instanceof Blob) {
+      const blob: Blob = response.data;
+      const dataUrl = await new Promise<string>((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result as string);
+        reader.onerror = () => reject(new Error("Failed to read barcode blob"));
+        reader.readAsDataURL(blob);
+      });
+
+      if (dataUrl === "data:application/octet-stream;base64,") {
+        return { success: false, error: "Empty barcode response from server" };
+      }
+
+      return {
+        success: true,
+        data: {
+          packageCode: "",
+          barcode: dataUrl,
+          format: "png",
+          width: 0,
+          height: 0,
+          orderNumber,
+        },
+      };
+    }
+
+    return { success: false, error: "Unexpected response format" };
   } catch (error: any) {
     console.error("Error generating barcode:", error.message);
     return handleApiError(error);

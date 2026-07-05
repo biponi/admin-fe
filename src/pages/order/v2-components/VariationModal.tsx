@@ -101,9 +101,10 @@ function VariationCard({
             (e.target as HTMLImageElement).src = PlaceHolderImage;
           }}
         />
-        {variation.quantity > 0 && variation.quantity <= 5 && (
-          <span className='absolute left-2 top-2 rounded-sm bg-zinc-800 px-2 py-0.5 text-[9px] uppercase tracking-wider text-zinc-300'>
-            {variation.quantity} left
+        {variation.quantity !== undefined && (
+          <span className='absolute left-2 top-2 rounded-sm bg-zinc-800 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-zinc-300'>
+            {variation.quantity}{" "}
+            {variation.quantity >= 1 ? "left" : "out of stock"}
           </span>
         )}
       </div>
@@ -137,7 +138,7 @@ function VariationCard({
         </p>
 
         {/* Price + Add */}
-        <div className='flex items-center justify-between border-t border-zinc-100 pt-2.5'>
+        <div className='flex  items-center justify-between border-t border-zinc-100 pt-2.5'>
           <span
             className='text-lg font-medium leading-none text-zinc-900'
             style={{ fontFamily: "'Cormorant Garamond', 'Georgia', serif" }}>

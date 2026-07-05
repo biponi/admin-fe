@@ -38,16 +38,14 @@ const EditOrderPanelContent = ({
       const timer = setTimeout(() => {
         document.body.style.pointerEvents = "";
         document.body.style.overflow = "";
-        document
-          .querySelectorAll("[data-radix-portal] > div")
-          .forEach((el) => {
-            if (
-              el.getAttribute("data-state") === "closed" ||
-              el.querySelector("[data-state='closed']")
-            ) {
-              el.remove();
-            }
-          });
+        document.querySelectorAll("[data-radix-portal] > div").forEach((el) => {
+          if (
+            el.getAttribute("data-state") === "closed" ||
+            el.querySelector("[data-state='closed']")
+          ) {
+            el.remove();
+          }
+        });
       }, 400);
       return () => clearTimeout(timer);
     }
@@ -64,14 +62,14 @@ const EditOrderPanelContent = ({
       {!!isMobolie ? (
         <Drawer open={isEditDialogOpen} onOpenChange={handleOpenChange}>
           <DrawerContent className='flex flex-col max-h-[90vh] sm:hidden'>
-            <DrawerHeader className='px-6 py-5 border-b'>
+            <DrawerHeader className='px-6 py-4 border-b bg-muted/30'>
               <DrawerTitle className='text-base font-semibold text-slate-900 flex items-center gap-2.5'>
-                <span className='inline-flex h-7 w-7 items-center justify-center rounded-md bg-blue-100'>
-                  <Edit3 className='h-3.5 w-3.5 text-blue-600' />
+                <span className='inline-flex h-8 w-8 items-center justify-center rounded-lg bg-blue-100 shadow-sm ring-1 ring-blue-200/60'>
+                  <Edit3 className='h-4 w-4 text-blue-600' />
                 </span>
                 Edit order details
               </DrawerTitle>
-              <DrawerDescription className='text-slate-500 text-sm leading-relaxed'>
+              <DrawerDescription className='text-slate-500 text-sm leading-snug'>
                 Update customer info, shipping details, and payment data.{" "}
                 <span className='text-amber-600 font-medium'>
                   Changes save immediately.
@@ -114,14 +112,14 @@ const EditOrderPanelContent = ({
             className='p-0 flex-col hidden sm:flex'
             onOpenAutoFocus={(e) => e.preventDefault()}
             onCloseAutoFocus={(e) => e.preventDefault()}>
-            <SheetHeader className='px-6 py-5 border-b'>
+            <SheetHeader className='px-6 py-4 border-b bg-muted/30'>
               <SheetTitle className='text-base font-semibold text-slate-900 flex items-center gap-2.5'>
-                <span className='inline-flex h-7 w-7 items-center justify-center rounded-md bg-blue-100'>
-                  <Edit3 className='h-3.5 w-3.5 text-blue-600' />
+                <span className='inline-flex h-8 w-8 items-center justify-center rounded-lg bg-blue-100 shadow-sm ring-1 ring-blue-200/60'>
+                  <Edit3 className='h-4 w-4 text-blue-600' />
                 </span>
                 Edit order details
               </SheetTitle>
-              <SheetDescription className='text-slate-500 text-sm leading-relaxed'>
+              <SheetDescription className='text-slate-500 text-sm leading-snug'>
                 Update customer info, shipping details, and payment data.{" "}
                 <span className='text-amber-600 font-medium'>
                   Changes save immediately.

@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { useProductAdjustment } from "../../../hooks/useProductAdjustment";
 import { AdjustmentType } from "../../../api/productAdjustment";
+import useRoleCheck from "../../auth/hooks/useRoleCheck";
 
 interface ProductAdjustmentFormProps {
   productId: string;
@@ -22,6 +23,10 @@ export const ProductAdjustmentForm: React.FC<ProductAdjustmentFormProps> = ({
   onCancel,
 }) => {
   const { adjustStock, isLoading, error } = useProductAdjustment();
+  const { hasRequiredPermission } = useRoleCheck();
+
+  const canIncreaseStock = hasRequiredPermission("product", "store_increase");
+  const canDecreaseStock = hasRequiredPermission("product", "store_decrease");
 
   const [formData, setFormData] = useState({
     adjustmentType: "add" as AdjustmentType,
@@ -37,6 +42,24 @@ export const ProductAdjustmentForm: React.FC<ProductAdjustmentFormProps> = ({
     // Validate reason field
     if (formData.reason.length < 5) {
       alert("Reason must be at least 5 characters long");
+      return;
+    }
+
+    // Validate permission for adjustment type
+    if (formData.adjustmentType === "add" && !canIncreaseStock) {
+      alert("You don't have permission to increase stock");
+      return;
+    }
+    if (formData.adjustmentType === "remove" && !canDecreaseStock) {
+      alert("You don't have permission to decrease stock");
+      return;
+    }
+
+    if (
+      formData.adjustmentType === "set" &&
+      (!canIncreaseStock || !canDecreaseStock)
+    ) {
+      alert("You don't have permission to modify the stock count");
       return;
     }
 
@@ -57,19 +80,19 @@ export const ProductAdjustmentForm: React.FC<ProductAdjustmentFormProps> = ({
 
     if (result) {
       alert(
-        `Stock adjusted successfully!\nOld quantity: ${result.product.oldQuantity}\nNew quantity: ${result.product.newQuantity}`
+        `Stock adjusted successfully!\nOld quantity: ${result.product.oldQuantity}\nNew quantity: ${result.product.newQuantity}`,
       );
       onSuccess?.();
     }
   };
 
   return (
-    <div className="product-adjustment-form">
+    <div className='product-adjustment-form'>
       <h3>Adjust Stock: {productName}</h3>
       <p>Current Stock: {currentStock}</p>
 
       <form onSubmit={handleSubmit}>
-        <div className="form-group">
+        <div className='form-group'>
           <label>Adjustment Type:</label>
           <select
             value={formData.adjustmentType}
@@ -79,27 +102,29 @@ export const ProductAdjustmentForm: React.FC<ProductAdjustmentFormProps> = ({
                 adjustmentType: e.target.value as AdjustmentType,
               })
             }
-            disabled={isLoading}
-          >
-            <option value="add">Add Stock</option>
-            <option value="remove">Remove Stock</option>
-            <option value="set">Set Exact Stock</option>
+            disabled={isLoading}>
+            <option value='add' disabled={!canIncreaseStock}>
+              Add Stock
+            </option>
+            <option value='remove' disabled={!canDecreaseStock}>
+              Remove Stock
+            </option>
+            <option value='set'>Set Exact Stock</option>
           </select>
           <small>
             {formData.adjustmentType === "add" &&
               "Increase stock by specified quantity"}
             {formData.adjustmentType === "remove" &&
               "Decrease stock by specified quantity"}
-            {formData.adjustmentType === "set" &&
-              "Set stock to exact quantity"}
+            {formData.adjustmentType === "set" && "Set stock to exact quantity"}
           </small>
         </div>
 
-        <div className="form-group">
+        <div className='form-group'>
           <label>Quantity: *</label>
           <input
-            type="number"
-            min="1"
+            type='number'
+            min='1'
             value={formData.quantity}
             onChange={(e) =>
               setFormData({ ...formData, quantity: parseInt(e.target.value) })
@@ -109,15 +134,15 @@ export const ProductAdjustmentForm: React.FC<ProductAdjustmentFormProps> = ({
           />
         </div>
 
-        <div className="form-group">
+        <div className='form-group'>
           <label>Reason: * (min 5 characters)</label>
           <input
-            type="text"
+            type='text'
             value={formData.reason}
             onChange={(e) =>
               setFormData({ ...formData, reason: e.target.value })
             }
-            placeholder="e.g., Received new stock from supplier XYZ"
+            placeholder='e.g., Received new stock from supplier XYZ'
             minLength={5}
             required
             disabled={isLoading}
@@ -128,25 +153,27 @@ export const ProductAdjustmentForm: React.FC<ProductAdjustmentFormProps> = ({
           </small>
         </div>
 
-        <div className="form-group">
+        <div className='form-group'>
           <label>Notes:</label>
           <textarea
             value={formData.notes}
-            onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
-            placeholder="Additional notes (optional)"
+            onChange={(e) =>
+              setFormData({ ...formData, notes: e.target.value })
+            }
+            placeholder='Additional notes (optional)'
             disabled={isLoading}
           />
         </div>
 
-        <div className="form-group">
+        <div className='form-group'>
           <label>Reference Number:</label>
           <input
-            type="text"
+            type='text'
             value={formData.referenceNumber}
             onChange={(e) =>
               setFormData({ ...formData, referenceNumber: e.target.value })
             }
-            placeholder="e.g., PO-2024-001, INV-12345"
+            placeholder='e.g., PO-2024-001, INV-12345'
             disabled={isLoading}
           />
           <small>
@@ -154,14 +181,14 @@ export const ProductAdjustmentForm: React.FC<ProductAdjustmentFormProps> = ({
           </small>
         </div>
 
-        {error && <div className="error-message">{error}</div>}
+        {error && <div className='error-message'>{error}</div>}
 
-        <div className="form-actions">
-          <button type="submit" disabled={isLoading}>
+        <div className='form-actions'>
+          <button type='submit' disabled={isLoading}>
             {isLoading ? "Adjusting..." : "Adjust Stock"}
           </button>
           {onCancel && (
-            <button type="button" onClick={onCancel} disabled={isLoading}>
+            <button type='button' onClick={onCancel} disabled={isLoading}>
               Cancel
             </button>
           )}

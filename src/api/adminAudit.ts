@@ -308,3 +308,151 @@ export const getTopPerformers = async (params?: {
     return handleApiError(error);
   }
 };
+
+// ===== Stock Adjustment Pagination Types =====
+
+export interface StockAdjustmentItem {
+  id: string;
+  productId: string;
+  productName: string;
+  productSku: string;
+  variationId?: string;
+  variationDetails?: {
+    size?: string;
+    color?: string;
+    sku?: string;
+  };
+  adjustmentType: "add" | "remove" | "set";
+  oldQuantity: number;
+  newQuantity: number;
+  quantityChange: number;
+  reason: string;
+  notes?: string;
+  referenceNumber?: string;
+  adjustedBy: {
+    userId: string;
+    userName: string;
+    userEmail: string;
+    userType: string;
+  };
+  status: string;
+  timestamps: {
+    createdAt: string;
+  };
+}
+
+export interface PaginationMeta {
+  currentPage: number;
+  totalPages: number;
+  totalItems: number;
+  itemsPerPage: number;
+  hasNextPage: boolean;
+  hasPreviousPage: boolean;
+  nextPage: number | null;
+  prevPage: number | null;
+}
+
+export interface StockAdjustmentsResponse {
+  adjustments: StockAdjustmentItem[];
+  pagination: PaginationMeta;
+  summary: {
+    totalIncreases: number;
+    totalDecreases: number;
+  };
+}
+
+// ===== Order Modification Pagination Types =====
+
+export interface OrderModificationItem {
+  id: string;
+  orderId: string;
+  orderNumber: number;
+  operation: string;
+  operationDescription: string;
+  changesummary?: Array<{
+    field: string;
+    oldValue: any;
+    newValue: any;
+  }>;
+  performedBy: {
+    userId: string;
+    userName: string;
+    userEmail: string;
+    userType: string;
+  };
+  reason?: string;
+  notes?: string;
+  timestamps: {
+    createdAt: string;
+  };
+}
+
+export interface OrderModificationsResponse {
+  modifications: OrderModificationItem[];
+  pagination: PaginationMeta;
+  summary: {
+    totalModifications: number;
+  };
+}
+
+// ===== Paginated API Functions =====
+
+export const getStockAdjustments = async (params?: {
+  page?: number;
+  limit?: number;
+  sortBy?: string;
+  sortOrder?: string;
+  startDate?: string;
+  endDate?: string;
+  direction?: "increase" | "decrease";
+  adjustmentType?: "add" | "remove" | "set";
+  search?: string;
+  userId?: string;
+}): Promise<ApiResponse<StockAdjustmentsResponse>> => {
+  try {
+    const response = await axios.get<any>(config.admin.stockAdjustments(), {
+      params,
+    });
+
+    if (response.status === 200) {
+      return { success: true, data: response.data?.data };
+    } else {
+      return {
+        success: false,
+        error: response.data.error || "Failed to fetch stock adjustments",
+      };
+    }
+  } catch (error: any) {
+    console.error("Error fetching stock adjustments:", error.message);
+    return handleApiError(error);
+  }
+};
+
+export const getOrderModifications = async (params?: {
+  page?: number;
+  limit?: number;
+  sortBy?: string;
+  sortOrder?: string;
+  startDate?: string;
+  endDate?: string;
+  search?: string;
+  userId?: string;
+}): Promise<ApiResponse<OrderModificationsResponse>> => {
+  try {
+    const response = await axios.get<any>(config.admin.orderModifications(), {
+      params,
+    });
+
+    if (response.status === 200) {
+      return { success: true, data: response.data?.data };
+    } else {
+      return {
+        success: false,
+        error: response.data.error || "Failed to fetch order modifications",
+      };
+    }
+  } catch (error: any) {
+    console.error("Error fetching order modifications:", error.message);
+    return handleApiError(error);
+  }
+};

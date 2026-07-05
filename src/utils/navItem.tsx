@@ -20,6 +20,7 @@ import {
   DollarSign,
   BarChart3,
   ClipboardCheck,
+  FileEdit,
 } from "lucide-react";
 
 export const navItems = [
@@ -39,7 +40,11 @@ export const navItems = [
     id: "order",
     items: [
       {
-        title: "Order Confirmation",
+        title: "Order List",
+        url: "/order",
+      },
+      {
+        title: "Confirmation",
         url: "/order/confirmation",
       },
       {
@@ -53,7 +58,7 @@ export const navItems = [
     icon: <CheckCircle2 className='w-5 h-5' />,
     title: "Order Confirmation",
     link: "/order/confirmation",
-    active: true,
+    active: false,
     id: "order-confirmation",
     roles: ["admin", "manager", "moderator"],
   },
@@ -80,6 +85,10 @@ export const navItems = [
     active: true,
     id: "product",
     items: [
+      {
+        title: "Product List",
+        url: "/products",
+      },
       {
         title: "Add Product",
         url: "/products/create",
@@ -131,6 +140,10 @@ export const navItems = [
     id: "report",
     roles: ["admin"],
     items: [
+      {
+        title: "Dashboard",
+        url: "/reports",
+      },
       {
         title: "Report Analytics",
         url: "/reports-v2",
@@ -184,12 +197,6 @@ export const navItems = [
     link: "/customers/analytics",
     active: true,
     id: "customer",
-    items: [
-      {
-        title: "Customer Analytics",
-        url: "/customers/analytics",
-      },
-    ],
     roles: ["admin", "manager"],
   },
   {
@@ -198,6 +205,20 @@ export const navItems = [
     link: "/audit",
     active: true,
     id: "audit",
+    items: [
+      {
+        title: "Dashboard",
+        url: "/audit",
+      },
+      {
+        title: "Stock Adjustments",
+        url: "/audit/stock-adjustments",
+      },
+      {
+        title: "Order Modifications",
+        url: "/audit/order-modifications",
+      },
+    ],
     roles: ["admin"],
   },
   {
@@ -225,6 +246,10 @@ export const navItems = [
     active: true,
     id: "coupon",
     items: [
+      {
+        title: "Dashboard",
+        url: "/coupons",
+      },
       {
         title: "Global Coupons",
         url: "/coupons/global",

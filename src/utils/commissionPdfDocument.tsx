@@ -17,10 +17,19 @@ import { CommissionPdfProps, UserWiseBreakdown } from "./commissionPdfTypes";
 import { OrderCommissionDetails } from "../api/commission";
 import { BRAND_CONFIG } from "../config/brand";
 
-// Register Bengali font
+// Register Bengali fonts (local, not CDN - critical for reliability)
 Font.register({
   family: "BengaliFont",
   src: "/fonts/NotoSansBengali-Regular.ttf",
+  fontStyle: "normal",
+  fontWeight: 400,
+});
+
+Font.register({
+  family: "BengaliFont",
+  src: "/fonts/NotoSansBengali-Bold.ttf",
+  fontStyle: "normal",
+  fontWeight: 700,
 });
 
 const styles = StyleSheet.create({

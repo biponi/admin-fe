@@ -11,306 +11,356 @@ import {
 } from "@react-pdf/renderer";
 import { IOrder } from "../pages/order/interface";
 import { getOrderDetails } from "../api/order";
+import { getPackageBarcode } from "../api/package";
 import { BRAND_CONFIG } from "../config/brand";
+import QRCode from "qrcode";
 
-// Register Bengali font
+// Register Bengali fonts (local, not CDN - critical for reliability)
 Font.register({
   family: "BengaliFont",
-  src: "https://cdn.jsdelivr.net/gh/googlefonts/noto-fonts@main/hinted/ttf/NotoSansBengali/NotoSansBengali-Regular.ttf",
+  src: "/fonts/NotoSansBengali-Regular.ttf",
   fontStyle: "normal",
   fontWeight: 400,
 });
 
-// Page size: 75mm x 100mm thermal printer
-// In points: 213pt x 283pt (1 inch = 72 points, 1mm = 2.83 points)
-const PAGE_WIDTH = 213;
-const PAGE_HEIGHT = 283;
+Font.register({
+  family: "BengaliFont",
+  src: "/fonts/NotoSansBengali-Bold.ttf",
+  fontStyle: "normal",
+  fontWeight: 700,
+});
+
+// Page size: 100mm x 150mm (larger thermal / A6-ish for better readability)
+const PAGE_WIDTH = 283;
+const PAGE_HEIGHT = 425;
+
+const COLORS = {
+  black: "#000000",
+  darkGray: "#1a1a1a",
+  mediumGray: "#555555",
+  lightGray: "#e8e8e8",
+  white: "#FFFFFF",
+  accent: "#2563eb",
+  accentLight: "#eff6ff",
+};
 
 const styles = StyleSheet.create({
   page: {
     flexDirection: "column",
-    backgroundColor: "#FFFFFF",
+    backgroundColor: COLORS.white,
     fontFamily: "BengaliFont",
     fontSize: 8,
     width: PAGE_WIDTH,
     height: PAGE_HEIGHT,
-    padding: 6,
+    padding: 10,
+    color: COLORS.darkGray,
   },
-  // Header
+
+  // ── Header ──
   header: {
     flexDirection: "row",
     justifyContent: "space-between",
-    alignItems: "center",
-    borderBottom: "1pt solid #000000",
-    paddingBottom: 3,
-    marginBottom: 3,
+    alignItems: "flex-start",
+    paddingBottom: 6,
+    marginBottom: 6,
+    borderBottomWidth: 1.5,
+    borderBottomColor: COLORS.black,
+    borderBottomStyle: "solid",
   },
   headerLeft: {
     flex: 1,
   },
   headerRight: {
+    alignItems: "flex-end",
+  },
+  brandName: {
+    fontSize: 14,
+    fontWeight: "bold",
+    marginBottom: 1,
+    color: COLORS.black,
+  },
+  brandTagline: {
+    fontSize: 7,
+    color: COLORS.mediumGray,
+    letterSpacing: 0.5,
+  },
+  orderNumber: {
+    fontSize: 16,
+    fontWeight: "bold",
+    color: COLORS.black,
+    marginBottom: 2,
+  },
+  orderDate: {
+    fontSize: 7,
+    color: COLORS.mediumGray,
+    marginTop: 4,
+    border: "1px solid #e8e8e8",
+    padding: 2,
+    borderRadius: 2,
+  },
+
+  // ── Info Strip ──
+  infoStrip: {
+    flexDirection: "row",
+    backgroundColor: COLORS.accentLight,
+    padding: 5,
+    marginBottom: 6,
+    borderRadius: 2,
+    gap: 4,
+  },
+  infoItem: {
     flex: 1,
-    textAlign: "right",
+    alignItems: "center",
   },
-  title: {
-    fontSize: 11,
-    fontWeight: "bold",
+  infoLabel: {
+    fontSize: 6,
+    color: COLORS.mediumGray,
+    letterSpacing: 0.5,
+    marginBottom: 1,
+    textTransform: "uppercase",
   },
-  subtitle: {
+  infoValue: {
     fontSize: 8,
     fontWeight: "bold",
+    color: COLORS.darkGray,
   },
-  // Order Info
-  orderInfo: {
-    fontSize: 8,
+  infoDivider: {
+    width: 0.5,
+    backgroundColor: COLORS.lightGray,
+    marginHorizontal: 2,
+  },
+
+  // ── Customer ──
+  customerSection: {
+    marginBottom: 6,
+  },
+  sectionLabel: {
+    fontSize: 6,
+    letterSpacing: 1,
+    color: COLORS.mediumGray,
+    textTransform: "uppercase",
     marginBottom: 3,
+  },
+  customerName: {
+    fontSize: 12,
+    fontWeight: "bold",
+    marginBottom: 2,
+    color: COLORS.black,
+  },
+  customerPhone: {
+    fontSize: 9,
+    fontWeight: "bold",
+    marginBottom: 1,
+    color: COLORS.darkGray,
+  },
+  customerAddress: {
+    fontSize: 8,
+    lineHeight: 1.3,
+    color: COLORS.mediumGray,
+  },
+
+  // ── Products ──
+  productsSection: {
+    marginBottom: 6,
+  },
+  productRow: {
     flexDirection: "row",
     justifyContent: "space-between",
+    alignItems: "center",
+    paddingVertical: 4,
+    paddingHorizontal: 5,
+    borderBottomWidth: 0.5,
+    borderBottomColor: COLORS.lightGray,
+    borderBottomStyle: "solid",
   },
-  orderInfoLabel: {
-    fontWeight: "bold",
-    marginRight: 2,
+  productRowEven: {
+    backgroundColor: "#fafafa",
   },
-  // Address
-  addressSection: {
-    marginBottom: 3,
-  },
-  addressText: {
-    fontSize: 9,
-    marginBottom: 2,
-    lineHeight: 1.2,
-  },
-  addressName: {
-    fontSize: 11,
-    fontWeight: "bold",
-    marginBottom: 2,
-  },
-  addressPhone: {
-    fontSize: 10,
-    fontWeight: "bold",
-  },
-  // Product Badge Grid
-  productsSection: {
-    marginBottom: 3,
-    width: "100%",
-  },
-  productsGrid: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    width: "100%",
-    justifyContent: "flex-start",
-  },
-  productBadge: {
-    width: 60,
-    border: "1pt solid #000000",
-    borderRadius: 2,
-    padding: 3,
-    marginRight: 4,
-    marginBottom: 4,
+  productInfo: {
+    flex: 1,
+    marginRight: 6,
   },
   productName: {
-    fontSize: 9,
+    fontSize: 8,
     fontWeight: "bold",
-    marginBottom: 2,
-    lineHeight: 1.1,
+    marginBottom: 1,
+    color: COLORS.darkGray,
   },
-  badgeFooter: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-  },
-  variant: {
+  productVariant: {
     fontSize: 7,
-    flex: 1,
+    color: COLORS.mediumGray,
   },
   qtyBadge: {
-    backgroundColor: "#000000",
+    backgroundColor: COLORS.black,
     borderRadius: 3,
-    paddingHorizontal: 4,
-    paddingVertical: 1,
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    minWidth: 28,
+    alignItems: "center",
   },
   qtyText: {
-    fontSize: 10,
+    fontSize: 9,
     fontWeight: "bold",
-    color: "#FFFFFF",
+    color: COLORS.white,
   },
-  // Single column layout for 1-2 products
-  singleProductBadge: {
-    width: "100%",
-    border: "1pt solid #000000",
-    borderRadius: 2,
-    padding: 4,
-    marginBottom: 3,
+
+  // Single column for 1-2 products (larger)
+  singleProductRow: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
+    paddingVertical: 5,
+    paddingHorizontal: 6,
+    borderWidth: 1,
+    borderColor: COLORS.black,
+    borderRadius: 3,
+    marginBottom: 4,
   },
   singleProductName: {
     fontSize: 10,
     fontWeight: "bold",
-    flex: 1,
-    marginRight: 4,
+    marginRight: 6,
+    color: COLORS.darkGray,
   },
   singleProductQty: {
     fontSize: 12,
     fontWeight: "bold",
-    backgroundColor: "#000000",
-    color: "#FFFFFF",
-    paddingHorizontal: 6,
-    paddingVertical: 2,
+    backgroundColor: COLORS.black,
+    color: COLORS.white,
+    paddingHorizontal: 8,
+    paddingVertical: 3,
     borderRadius: 3,
   },
-  // COD Amount
+
+  // ── COD Amount ──
   codSection: {
-    padding: 3,
-    border: "2pt dashed #000000",
-    alignItems: "center",
-    display: "flex",
+    borderWidth: 1.5,
+    borderStyle: "dashed",
+    borderColor: COLORS.black,
+    padding: 6,
     flexDirection: "row",
     justifyContent: "center",
-    marginBottom: 3,
+    alignItems: "center",
+    marginBottom: 6,
+    backgroundColor: "#fafafa",
   },
   codLabel: {
     fontSize: 9,
     fontWeight: "bold",
-    marginRight: 4,
+    marginRight: 6,
+    color: COLORS.mediumGray,
+    textTransform: "uppercase",
+    letterSpacing: 0.5,
   },
   codAmount: {
-    fontSize: 14,
+    fontSize: 16,
     fontWeight: "bold",
+    color: COLORS.black,
   },
-  // Bottom Section (QR + Notes)
+
+  // ── Bottom: Barcode + QR ──
   bottomSection: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "flex-start",
     marginTop: "auto",
   },
-  qrCodePlaceholder: {
-    width: 55,
-    height: 55,
+  barcodeSection: {
+    marginRight: 6,
+    alignItems: "flex-start",
+    position: "relative",
+    height: "120%",
   },
-  // Notes
+  barcodeImage: {
+    width: 120,
+    height: 50,
+    objectFit: "contain",
+    marginTop: "auto",
+    position: "absolute",
+    bottom: 0,
+  },
+  barcodeLabel: {
+    fontSize: 6,
+    color: COLORS.mediumGray,
+    letterSpacing: 0.5,
+  },
+  qrSection: {
+    alignItems: "center",
+  },
+  qrImage: {
+    width: 60,
+    height: 60,
+  },
+  qrLabel: {
+    fontSize: 6,
+    color: COLORS.mediumGray,
+    letterSpacing: 0.5,
+    marginTop: 1,
+  },
+
+  // ── Notes ──
   notesBox: {
-    flex: 1,
-    marginRight: 4,
-    border: "1pt dotted #000000",
+    borderWidth: 0.5,
+    borderStyle: "dotted",
+    borderColor: COLORS.darkGray,
     padding: 4,
-    maxHeight: 50,
+    marginBottom: 6,
   },
   notesTitle: {
-    fontSize: 8,
+    fontSize: 7,
     fontWeight: "bold",
     marginBottom: 2,
-    borderBottom: "0.5pt solid #000000",
-    paddingBottom: 1,
+    color: COLORS.mediumGray,
+    textTransform: "uppercase",
+    letterSpacing: 0.5,
   },
   notesText: {
     fontSize: 7,
-    lineHeight: 1.2,
+    lineHeight: 1.3,
+    color: COLORS.darkGray,
+  },
+
+  // ── Footer ──
+  footer: {
+    borderTopWidth: 0.5,
+    borderTopColor: COLORS.lightGray,
+    borderTopStyle: "solid",
+    paddingTop: 4,
+    marginTop: 4,
+    flexDirection: "row",
+    justifyContent: "space-between",
+  },
+  footerText: {
+    fontSize: 6,
+    color: COLORS.mediumGray,
   },
 });
-
-// // Helper function to detect Bengali text
-// const isBengaliText = (text: string): boolean => {
-//   const bengaliRegex = /[\u0980-\u09FF]/;
-//   return bengaliRegex.test(text);
-// };
-
-// // Helper function to fetch and convert image to base64
-// const fetchImageAsBase64 = async (url: string): Promise<string> => {
-//   try {
-//     const response = await fetch(url, {
-//       mode: "cors",
-//       credentials: "omit",
-//     });
-
-//     if (!response.ok) {
-//       return url;
-//     }
-
-//     const blob = await response.blob();
-
-//     return new Promise((resolve) => {
-//       const reader = new FileReader();
-
-//       reader.onload = () => {
-//         const result = reader.result as string;
-
-//         if (blob.type === "image/webp") {
-//           const img = new Image();
-
-//           img.onload = () => {
-//             try {
-//               const canvas = document.createElement("canvas");
-//               canvas.width = img.width;
-//               canvas.height = img.height;
-//               const ctx = canvas.getContext("2d");
-
-//               if (!ctx) {
-//                 resolve(result);
-//                 return;
-//               }
-
-//               ctx.drawImage(img, 0, 0);
-//               const pngDataUrl = canvas.toDataURL("image/png");
-//               resolve(pngDataUrl);
-//             } catch {
-//               resolve(result);
-//             }
-//           };
-
-//           img.onerror = () => {
-//             resolve(result);
-//           };
-
-//           img.src = result;
-//         } else {
-//           resolve(result);
-//         }
-//       };
-
-//       reader.onerror = () => {
-//         resolve(url);
-//       };
-
-//       reader.readAsDataURL(blob);
-//     });
-//   } catch {
-//     return url;
-//   }
-// };
 
 interface PackingSlipDocumentProps {
   order: IOrder;
   qrCodeImage?: string;
+  barcodeImage?: string;
 }
 
 const PackingSlipDocument: React.FC<PackingSlipDocumentProps> = ({
   order,
   qrCodeImage,
+  barcodeImage,
 }) => {
   const orderDate = new Date(order.timestamps.createdAt).toLocaleDateString(
     "en-US",
-    {
-      year: "numeric",
-      month: "short",
-      day: "numeric",
-    },
+    { year: "numeric", month: "short", day: "numeric" },
   );
-
   const due = order.remaining;
 
-  // Helper function to truncate text
   const truncate = (text: string, maxLength: number): string => {
     if (text.length <= maxLength) return text;
     return text.substring(0, maxLength - 2) + "..";
   };
 
-  // Format variant info
   const formatVariant = (product: any): string => {
     if (!product.variation) return "";
-    const parts = [];
+    const parts: string[] = [];
     if (product.variation.color) parts.push(product.variation.color);
     if (product.variation.size) parts.push(product.variation.size);
     return parts.length > 0 ? `(${parts.join(" / ")})` : "";
@@ -324,115 +374,133 @@ const PackingSlipDocument: React.FC<PackingSlipDocumentProps> = ({
         {/* Header */}
         <View style={styles.header}>
           <View style={styles.headerLeft}>
-            <Text style={styles.title}>Order #{order.orderNumber}</Text>
+            <Text style={styles.brandName}>{BRAND_CONFIG.companyName}</Text>
+            <Text style={styles.brandTagline}>{BRAND_CONFIG.address}</Text>
           </View>
           <View style={styles.headerRight}>
-            <Text style={styles.subtitle}>{BRAND_CONFIG.companyName}</Text>
+            <Text style={styles.orderNumber}>#{order.orderNumber}</Text>
+            <Text style={styles.orderDate}>{orderDate}</Text>
           </View>
         </View>
 
-        {/* Order Info */}
-        <View style={styles.orderInfo}>
-          <View
-            style={{
-              display: "flex",
-              alignItems: "center",
-              flexDirection: "row",
-              gap: 2,
-            }}>
-            <Text style={styles.orderInfoLabel}>Invoice:</Text>
-            <Text>INV-{order.orderNumber}</Text>
+        {/* Info Strip */}
+        <View style={styles.infoStrip}>
+          <View style={styles.infoItem}>
+            <Text style={styles.infoLabel}>Invoice</Text>
+            <Text style={styles.infoValue}>INV-{order.orderNumber}</Text>
           </View>
-          <View
-            style={{
-              display: "flex",
-              alignItems: "center",
-              flexDirection: "row",
-              gap: 2,
-            }}>
-            <Text style={styles.orderInfoLabel}>Date:</Text>
-            <Text>{orderDate}</Text>
+          <View style={styles.infoDivider} />
+          <View style={styles.infoItem}>
+            <Text style={styles.infoLabel}>Items</Text>
+            <Text style={styles.infoValue}>
+              {order.products.reduce((sum, p) => sum + (p.quantity || 0), 0)}
+            </Text>
+          </View>
+          <View style={styles.infoDivider} />
+          <View style={styles.infoItem}>
+            <Text style={styles.infoLabel}>Payment</Text>
+            <Text style={styles.infoValue}>
+              {order.payment?.[0]?.paymentType || "COD"}
+            </Text>
           </View>
         </View>
 
-        {/* Shipping Address */}
-        <View style={styles.addressSection}>
-          <Text style={styles.addressName}>{order.customer?.name}</Text>
-          <Text style={styles.addressText}>
-            {order.shipping?.address}, {order.shipping?.district},{" "}
-            {order.shipping?.division}
+        {/* Customer */}
+        <View style={styles.customerSection}>
+          <Text style={styles.sectionLabel}>Ship To</Text>
+          <Text style={styles.customerName}>{order.customer?.name}</Text>
+          <Text style={styles.customerPhone}>
+            {order.customer?.phoneNumber}
           </Text>
-          <Text style={styles.addressPhone}>{order.customer?.phoneNumber}</Text>
+          <Text style={styles.customerAddress}>
+            {order.shipping?.address}
+            {order.shipping?.district ? `, ${order.shipping.district}` : ""}
+            {order.shipping?.division ? `, ${order.shipping.division}` : ""}
+          </Text>
         </View>
 
-        {/* Products Section */}
+        {/* Products */}
         <View style={styles.productsSection}>
-          {order.products.length <= 2 ? (
-            // Single column layout for 1-2 products
-            order.products.map((product, index) => (
-              <View key={index} style={styles.singleProductBadge}>
-                <Text style={styles.singleProductName}>
-                  {product.name.toUpperCase()}
-                  {formatVariant(product) && (
-                    <Text style={{ fontSize: 8, fontWeight: "normal" }}>
-                      {" "}
-                      {formatVariant(product)}
+          <Text style={styles.sectionLabel}>Items</Text>
+          {order.products.length <= 2
+            ? order.products.map((product, index) => (
+                <View key={index} style={styles.singleProductRow}>
+                  <View style={{ marginRight: 6 }}>
+                    <Text style={styles.singleProductName}>
+                      {`${truncate(product.name.toUpperCase(), 25)} ${formatVariant(product) ? ` ${formatVariant(product)}` : ""}`}
                     </Text>
-                  )}
-                </Text>
-                <Text style={styles.singleProductQty}>x{product.quantity}</Text>
-              </View>
-            ))
-          ) : (
-            // Badge grid layout for 3+ products
-            <View style={styles.productsGrid}>
-              {order.products.map((product, index) => (
-                <View key={index} style={styles.productBadge}>
-                  <Text style={styles.productName}>
-                    {truncate(product.name.toUpperCase(), 18)}
+                  </View>
+                  <Text style={styles.singleProductQty}>
+                    x{product.quantity}
                   </Text>
-                  <View style={styles.badgeFooter}>
-                    <Text style={styles.variant}>{formatVariant(product)}</Text>
-                    <View style={styles.qtyBadge}>
-                      <Text style={styles.qtyText}>x{product.quantity}</Text>
-                    </View>
+                </View>
+              ))
+            : order.products.map((product, index) => (
+                <View
+                  key={index}
+                  style={[
+                    styles.productRow,
+                    index % 2 === 0 ? styles.productRowEven : {},
+                  ]}>
+                  <View style={styles.productInfo}>
+                    <Text style={styles.productName}>
+                      {`${truncate(product.name.toUpperCase(), 20)} ${formatVariant(product) ? ` ${formatVariant(product)}` : ""}`}
+                    </Text>
+                  </View>
+                  <View style={styles.qtyBadge}>
+                    <Text style={styles.qtyText}>x{product.quantity}</Text>
                   </View>
                 </View>
               ))}
-            </View>
-          )}
         </View>
 
         {/* COD Amount */}
         <View style={styles.codSection}>
-          <Text style={styles.codLabel}>AMOUNT TO PAY:</Text>
+          <Text style={styles.codLabel}>Amount to Pay</Text>
           <Text style={styles.codAmount}>
-            {due > 0 ? due.toFixed(0) : "0"} ৳
+            {due > 0 ? due.toFixed(0) : "0"} {BRAND_CONFIG.currency}
           </Text>
         </View>
 
-        {/* Bottom Section (QR + Notes) */}
+        {/* Notes */}
+        {order.notes ? (
+          <View style={styles.notesBox}>
+            <Text style={styles.notesTitle}>Special Instructions</Text>
+            <Text style={styles.notesText}>{order.notes.trim()}</Text>
+          </View>
+        ) : null}
+
+        {/* Bottom: Barcode + QR */}
         <View style={styles.bottomSection}>
-          {/* Special Notes */}
-          {order.notes && (
-            <View style={styles.notesBox}>
-              <Text style={styles.notesTitle}>SPECIAL INSTRUCTIONS</Text>
-              <Text style={styles.notesText}>{order.notes.trim()}</Text>
+          {barcodeImage ? (
+            <View style={styles.barcodeSection}>
+              <PDFImage style={styles.barcodeImage} src={barcodeImage} />
             </View>
+          ) : (
+            <View style={styles.barcodeSection} />
           )}
-          {/* QR Code */}
-          {qrCodeImage && (
-            <PDFImage style={styles.qrCodePlaceholder} src={qrCodeImage} />
-          )}
+          {qrCodeImage ? (
+            <View style={styles.qrSection}>
+              <PDFImage style={styles.qrImage} src={qrCodeImage} />
+            </View>
+          ) : null}
+        </View>
+
+        {/* Footer */}
+        <View style={styles.footer}>
+          <Text style={styles.footerText}>
+            {BRAND_CONFIG.email} | {BRAND_CONFIG.phone}
+          </Text>
+          <Text style={styles.footerText}>{BRAND_CONFIG.website}</Text>
         </View>
       </Page>
     </Document>
   );
 };
 
-// Preload images and generate QR code
-const preloadPackingSlipImages = async (order: IOrder) => {
-  // Generate QR code
+// Preload QR code + barcode
+const preloadPackingSlipAssets = async (order: IOrder) => {
+  // QR code
   const qrData = JSON.stringify({
     orderId: order.id,
     orderNumber: order.orderNumber,
@@ -445,30 +513,45 @@ const preloadPackingSlipImages = async (order: IOrder) => {
     trackingUrl: `${BRAND_CONFIG.website}/order/${order.orderNumber}`,
   });
 
-  const QRCode = require("qrcode");
   const qrCodeBase64 = await QRCode.toDataURL(qrData, {
     width: 200,
     margin: 1,
     errorCorrectionLevel: "M",
   });
 
-  return { qrCodeBase64 };
+  // Barcode from server (best-effort — don't fail the slip if barcode is unavailable)
+  let barcodeBase64 = "";
+  try {
+    const barcodeResult = await getPackageBarcode(order.orderNumber);
+    if (barcodeResult.success && barcodeResult.data?.barcode) {
+      const raw = barcodeResult.data.barcode;
+      barcodeBase64 = raw.startsWith("data:")
+        ? raw
+        : `data:image/png;base64,${raw}`;
+    }
+  } catch {
+    // Barcode generation failed — continue without it
+  }
+
+  return { qrCodeBase64, barcodeBase64 };
 };
 
-// Export functions
+// ── Exported generators ──
+
 export const generateReactPdfPackingSlip = async (order: IOrder) => {
-  // Preload images and generate QR code
-  const { qrCodeBase64 } = await preloadPackingSlipImages(order);
+  const { qrCodeBase64, barcodeBase64 } = await preloadPackingSlipAssets(order);
 
   const blob = await pdf(
-    <PackingSlipDocument order={order} qrCodeImage={qrCodeBase64} />,
+    <PackingSlipDocument
+      order={order}
+      qrCodeImage={qrCodeBase64}
+      barcodeImage={barcodeBase64}
+    />,
   ).toBlob();
 
-  // Cleanup
   setTimeout(() => {
-    if (qrCodeBase64.startsWith("blob:")) {
-      URL.revokeObjectURL(qrCodeBase64);
-    }
+    if (qrCodeBase64.startsWith("blob:")) URL.revokeObjectURL(qrCodeBase64);
+    if (barcodeBase64.startsWith("blob:")) URL.revokeObjectURL(barcodeBase64);
   }, 5000);
 
   const url = URL.createObjectURL(blob);
@@ -482,18 +565,19 @@ export const generateReactPdfPackingSlip = async (order: IOrder) => {
 export const generateReactPdfPackingSlipBlob = async (
   order: IOrder,
 ): Promise<Blob> => {
-  // Preload images and generate QR code
-  const { qrCodeBase64 } = await preloadPackingSlipImages(order);
+  const { qrCodeBase64, barcodeBase64 } = await preloadPackingSlipAssets(order);
 
   const blob = await pdf(
-    <PackingSlipDocument order={order} qrCodeImage={qrCodeBase64} />,
+    <PackingSlipDocument
+      order={order}
+      qrCodeImage={qrCodeBase64}
+      barcodeImage={barcodeBase64}
+    />,
   ).toBlob();
 
-  // Cleanup after delay
   setTimeout(() => {
-    if (qrCodeBase64.startsWith("blob:")) {
-      URL.revokeObjectURL(qrCodeBase64);
-    }
+    if (qrCodeBase64.startsWith("blob:")) URL.revokeObjectURL(qrCodeBase64);
+    if (barcodeBase64.startsWith("blob:")) URL.revokeObjectURL(barcodeBase64);
   }, 5000);
 
   return blob;
@@ -502,9 +586,7 @@ export const generateReactPdfPackingSlipBlob = async (
 export const generatePackingSlipPdfByOrderIdentifier = async (
   orderIdentifier: string,
 ) => {
-  // Fetch order details from API
   const response = await getOrderDetails(orderIdentifier);
-
   if (!response.success || !response.data) {
     throw new Error("Failed to fetch order details");
   }

@@ -41,7 +41,10 @@ import {
 } from "lucide-react";
 import { cn } from "../../lib/utils";
 import { BDDistrictList, BDDivisions } from "../../utils/contents";
-import { getLocationByFormattedString, getLocationByName } from "../../utils/functions";
+import {
+  getLocationByFormattedString,
+  getLocationByName,
+} from "../../utils/functions";
 import { calculateDeliveryCharge } from "../../utils/deliveryCharge";
 import { ICustomer } from "./interface";
 import { isValidBDPhone, normalizeBDPhone } from "@/utils/helperFunction";
@@ -96,7 +99,8 @@ const getInitials = (name: string) =>
     .join("");
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Section wrapper
+// Section wrapper — grouped card with a labeled header strip, matching the
+// "Additional Details" pattern used across the other edit/verify panels.
 // ─────────────────────────────────────────────────────────────────────────────
 
 const Section = ({
@@ -108,12 +112,14 @@ const Section = ({
   label: string;
   children: React.ReactNode;
 }) => (
-  <div className='space-y-3'>
-    <p className='flex items-center gap-1.5 text-[11px] font-medium uppercase tracking-wider text-muted-foreground'>
-      <Icon className='h-3 w-3' />
-      {label}
-    </p>
-    {children}
+  <div className='rounded-xl border border-border/50 bg-card overflow-hidden'>
+    <div className='flex items-center gap-2 px-4 py-2.5 border-b border-border/50 bg-muted/40'>
+      <Icon className='h-3.5 w-3.5 text-muted-foreground' />
+      <p className='text-[11px] font-medium uppercase tracking-wider text-muted-foreground'>
+        {label}
+      </p>
+    </div>
+    <div className='p-4 space-y-3.5'>{children}</div>
   </div>
 );
 
@@ -294,11 +300,15 @@ const EditCustomerInformation: React.FC<Props> = ({
     email: "",
     phoneNumber: "",
   });
-  const [shippingAddress, setShippingAddress] = useState<ShippingAddress>(() => ({
-    address: shipping?.address ?? "",
-    district: getLocationByName(BDDistrictList, shipping?.district ?? "") ?? null,
-    division: getLocationByName(BDDivisions, shipping?.division ?? "") ?? null,
-  }));
+  const [shippingAddress, setShippingAddress] = useState<ShippingAddress>(
+    () => ({
+      address: shipping?.address ?? "",
+      district:
+        getLocationByName(BDDistrictList, shipping?.district ?? "") ?? null,
+      division:
+        getLocationByName(BDDivisions, shipping?.division ?? "") ?? null,
+    }),
+  );
   const [updatedNotes, setUpdatedNotes] = useState(notes);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [phoneTouched, setPhoneTouched] = useState(false);
@@ -315,8 +325,10 @@ const EditCustomerInformation: React.FC<Props> = ({
     if (shipping?.division || shipping?.district || shipping?.address) {
       setShippingAddress({
         address: shipping.address ?? "",
-        district: getLocationByName(BDDistrictList, shipping.district ?? "") ?? null,
-        division: getLocationByName(BDDivisions, shipping.division ?? "") ?? null,
+        district:
+          getLocationByName(BDDistrictList, shipping.district ?? "") ?? null,
+        division:
+          getLocationByName(BDDivisions, shipping.division ?? "") ?? null,
       });
     }
   }, [shipping]);
@@ -415,8 +427,8 @@ const EditCustomerInformation: React.FC<Props> = ({
   return (
     <div className='flex flex-col min-h-full bg-background'>
       {/* ── Customer identity strip ── */}
-      <div className='flex items-center gap-3 px-6 py-4 border-b border-border/50 bg-muted/30'>
-        <div className='h-9 w-9 rounded-full bg-blue-100 flex items-center justify-center shrink-0'>
+      <div className='flex items-center gap-3 px-6 py-3.5 border-b border-border/50 bg-muted/30'>
+        <div className='h-9 w-9 rounded-full bg-blue-100 flex items-center justify-center shrink-0 ring-1 ring-blue-200/60'>
           <span className='text-xs font-semibold text-blue-700'>
             {initials}
           </span>
@@ -439,7 +451,7 @@ const EditCustomerInformation: React.FC<Props> = ({
 
       {/* ── Scrollable body ── */}
       <div className='flex-1 overflow-y-auto'>
-        <div className='px-6 py-5 space-y-6'>
+        <div className='px-6 py-4 space-y-4'>
           {/* Personal info */}
           <Section icon={User} label='Customer information'>
             <Field label='Full name'>
@@ -519,17 +531,18 @@ const EditCustomerInformation: React.FC<Props> = ({
             </div>
 
             <Field label='Order notes'>
-              <Textarea
-                rows={2}
-                value={updatedNotes}
-                onChange={(e) => setUpdatedNotes(e.target.value)}
-                placeholder='Special instructions, fragile items, delivery preferences...'
-                className='text-sm resize-none border-border/50 focus-visible:ring-blue-500/20'
-              />
+              <div className='relative'>
+                <FileText className='absolute left-2.5 top-2.5 h-3.5 w-3.5 text-muted-foreground pointer-events-none' />
+                <Textarea
+                  rows={2}
+                  value={updatedNotes}
+                  onChange={(e) => setUpdatedNotes(e.target.value)}
+                  placeholder='Special instructions, fragile items, delivery preferences...'
+                  className='pl-8 text-sm resize-none border-border/50 focus-visible:ring-blue-500/20'
+                />
+              </div>
             </Field>
           </Section>
-
-          <Separator className='bg-border/50' />
 
           {/* Shipping */}
           <Section icon={MapPin} label='Shipping address'>
@@ -568,8 +581,6 @@ const EditCustomerInformation: React.FC<Props> = ({
               />
             </Field>
           </Section>
-
-          <Separator className='bg-border/50' />
 
           {/* Payment */}
           <Section icon={CreditCard} label='Payment details'>
@@ -635,7 +646,7 @@ const EditCustomerInformation: React.FC<Props> = ({
             </div>
 
             {/* Summary card */}
-            <div className='rounded-lg bg-muted/40 border border-border/40 p-3.5 space-y-2.5 mt-1'>
+            <div className='rounded-lg bg-muted/40 border border-border/40 p-3.5 space-y-2.5'>
               <div className='flex items-center justify-between text-xs'>
                 <span className='text-muted-foreground flex items-center gap-1.5'>
                   <Calculator className='h-3 w-3' />
@@ -662,14 +673,11 @@ const EditCustomerInformation: React.FC<Props> = ({
               </div>
             </div>
           </Section>
-
-          {/* Bottom breathing room */}
-          <div className='h-2' />
         </div>
       </div>
 
       {/* ── Footer ── */}
-      <div className='shrink-0 border-t border-border/50 bg-background/95 backdrop-blur-sm px-6 py-4 flex gap-3'>
+      <div className='shrink-0 border-t border-border/50 bg-background/95 backdrop-blur-sm px-6 py-3.5 flex gap-3'>
         <Button
           variant='outline'
           onClick={handleClose}

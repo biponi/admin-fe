@@ -72,7 +72,7 @@ export const OrderConfirmationCard: React.FC<OrderConfirmationCardProps> = ({
       <div
         className={cn(
           "group flex flex-col rounded-2xl border bg-white overflow-hidden",
-          "shadow-sm hover:shadow-md transition-shadow duration-200",
+          "shadow hover:shadow-md transition-shadow duration-200",
           hasAlerts ? "border-red-200" : "border-gray-100",
         )}>
         {/* ─── Alert strip ─── */}
@@ -244,19 +244,21 @@ export const OrderConfirmationCard: React.FC<OrderConfirmationCardProps> = ({
             </div>
           </div>
 
-          <div className='flex items-start gap-2'>
-            <MapPin className='w-3.5 h-3.5 text-gray-400 mt-0.5 shrink-0' />
-            <p className='text-xs text-gray-600 leading-relaxed'>
-              {order.shipping.address}
-              {showFullDetails &&
-                order.shipping.district &&
-                `, ${order.shipping.district}`}
-              {showFullDetails &&
-                order.shipping.division &&
-                `, ${order.shipping.division}`}
-              {!showFullDetails && <span className='text-gray-400'> …</span>}
-            </p>
-          </div>
+          {showFullDetails && (
+            <div className='flex items-start gap-2'>
+              <MapPin className='w-3.5 h-3.5 text-gray-400 mt-0.5 shrink-0' />
+              <p className='text-xs text-gray-600 leading-relaxed'>
+                {order.shipping.address}
+                {showFullDetails &&
+                  order.shipping.district &&
+                  `, ${order.shipping.district}`}
+                {showFullDetails &&
+                  order.shipping.division &&
+                  `, ${order.shipping.division}`}
+                {!showFullDetails && <span className='text-gray-400'> …</span>}
+              </p>
+            </div>
+          )}
 
           <AnimatePresence>
             {showFullDetails && order.customer.email && (

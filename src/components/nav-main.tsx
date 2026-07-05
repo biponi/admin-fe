@@ -120,7 +120,7 @@ export function NavMain({
                     <CollapsibleContent>
                       <SidebarMenuSub className='ml-4 mt-0.5 border-l border-white/15 pl-3 space-y-0.5'>
                         {/* All parent link */}
-                        <SidebarMenuSubItem>
+                        {/* <SidebarMenuSubItem>
                           <SidebarMenuSubButton
                             onClick={() => navigate(item.url)}
                             className={cn(
@@ -131,7 +131,7 @@ export function NavMain({
                             )}>
                             All {item.title}
                           </SidebarMenuSubButton>
-                        </SidebarMenuSubItem>
+                        </SidebarMenuSubItem> */}
 
                         {item.items?.map((subItem) => {
                           const isSubActive = pathname === subItem.url;
