@@ -26,7 +26,16 @@ export const STATUS_COLOR_MAP_HEX = {
   unknown: "#34495e", // Wet Asphalt (Dark Navy/Grey)
 };
 
-export const pathaoIcon =
-  "https://logosandtypes.com/wp-content/uploads/2025/04/Pathao.png";
-export const steadfastIcon =
-  "https://play-lh.googleusercontent.com/9OYsIvc-iKHte4jqVe-c4sA0vNL-tljBDVPguou6B-qdxQgSKpj8pZ7ZYh6MYEbawbo=w240-h480-rw";
+export {
+  getProviderLogo,
+  getTrackingUrl,
+  getProviderConfig,
+  COURIER_LIST,
+  COURIER_PROVIDERS,
+} from "../config/courierProviders";
+import { getProviderLogo } from "../config/courierProviders";
+
+/** @deprecated Use getProviderLogo("pathao") from config/courierProviders instead */
+export const pathaoIcon = getProviderLogo("pathao");
+/** @deprecated Use getProviderLogo("steadfast") from config/courierProviders instead */
+export const steadfastIcon = getProviderLogo("steadfast");

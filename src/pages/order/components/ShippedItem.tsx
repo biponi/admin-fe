@@ -24,6 +24,7 @@ import {
 } from "../../../components/ui/sheet";
 import { formatDeliveryStatus } from "../../delivery/types";
 import { Button } from "../../../components/ui/button";
+import { getProviderLogo } from "../../../config/courierProviders";
 
 interface IDeliveryTimeline {
   status: string;
@@ -176,9 +177,7 @@ export const DeliveryTimelineBadge: React.FC<{
   const latestStatus = deliveryTimeline[deliveryTimeline.length - 1];
   const statusConfig = getStatusConfig(latestStatus.status);
 
-  const providerLogo = provider.includes("pathao")
-    ? "https://logosandtypes.com/wp-content/uploads/2025/04/Pathao.png"
-    : "https://play-lh.googleusercontent.com/9OYsIvc-iKHte4jqVe-c4sA0vNL-tljBDVPguou6B-qdxQgSKpj8pZ7ZYh6MYEbawbo=w240-h480-rw";
+  const providerLogo = getProviderLogo(provider);
 
   return (
     <Sheet open={open} onOpenChange={setOpen}>

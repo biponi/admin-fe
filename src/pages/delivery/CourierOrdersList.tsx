@@ -37,6 +37,7 @@ import {
 } from "../../components/ui/dialog";
 import { CourierOrder } from "../../services/courierApi";
 import { DeliveryStatus } from "./types";
+import { COURIER_LIST } from "../../config/courierProviders";
 import DeliveryTimeline from "./components/DeliveryTimeline";
 import { ScrollArea } from "../../components/ui/scroll-area";
 
@@ -184,9 +185,13 @@ export const CourierOrdersList: React.FC = () => {
             <SelectGroup>
               <SelectLabel>Couriers</SelectLabel>
               <SelectItem value='all'>All Couriers</SelectItem>
-              <SelectItem value='pathao'>Pathao</SelectItem>
-              <SelectItem value='steadfast'>Steadfast</SelectItem>
-              <SelectItem value='carrybee'>Carrybee</SelectItem>
+              {COURIER_LIST.filter(
+                (c) => c.slug !== "manual" && c.slug !== "self",
+              ).map((c) => (
+                <SelectItem key={c.slug} value={c.slug}>
+                  {c.label}
+                </SelectItem>
+              ))}
             </SelectGroup>
           </SelectContent>
         </Select>

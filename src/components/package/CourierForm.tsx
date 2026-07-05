@@ -19,6 +19,7 @@ import {
 import { Input } from "../ui/input";
 import { Button } from "../ui/button";
 import type { PackageCourier } from "../../pages/package/interface";
+import { COURIER_LIST } from "../../config/courierProviders";
 
 const courierSchema = z.object({
   provider: z.enum([
@@ -76,13 +77,11 @@ export function CourierForm({
                   </SelectTrigger>
                 </FormControl>
                 <SelectContent>
-                  <SelectItem value="steadfast">Steadfast</SelectItem>
-                  <SelectItem value="pathao">Pathao</SelectItem>
-                  <SelectItem value="redx">RedX</SelectItem>
-                  <SelectItem value="carrybee">Carrybee</SelectItem>
-                  <SelectItem value="manual">Manual Delivery</SelectItem>
-                  <SelectItem value="custom">Custom Courier</SelectItem>
-                  <SelectItem value="self">Self Pickup</SelectItem>
+                  {COURIER_LIST.map((c) => (
+                    <SelectItem key={c.slug} value={c.slug}>
+                      {c.label}
+                    </SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
               <FormMessage />

@@ -29,6 +29,10 @@ import {
 } from "lucide-react";
 import { Alert, AlertDescription } from "../../../components/ui/alert";
 import { CourierProvider } from "../types";
+import {
+  getProviderConfig,
+  COURIER_LIST,
+} from "../../../config/courierProviders";
 
 interface CourierSelectorProps {
   open: boolean;
@@ -53,55 +57,20 @@ export const CourierSelector: React.FC<CourierSelectorProps> = ({
     onConfirm(selectedCourier);
   };
 
-  const courierOptions = [
-    {
-      value: CourierProvider.STEADFAST,
-      label: "Steadfast",
-      description: "Reliable delivery service with extensive coverage",
-      icon: Package,
-      color: "text-blue-600",
-      bgColor: "bg-blue-50",
-      image:
-        "https://play-lh.googleusercontent.com/OQgYiwAh2d4VqZgjf0GxZM83ylNIzxOQ-Wctx_MXmrxuaSA67UeYYwVhQ2PEMBxd0hs0nxnsRvnsviPRDgWgoGU",
-    },
-    {
-      value: CourierProvider.PATHAO,
-      label: "Pathao",
-      description: "Fast delivery service for major cities",
-      icon: Truck,
-      color: "text-green-600",
-      bgColor: "bg-green-50",
-      image: "https://logosandtypes.com/wp-content/uploads/2025/04/pathao.svg",
-    },
-    {
-      value: CourierProvider.CARRYBEE,
-      label: "Carrybee",
-      description: "Modern logistics solution for e-commerce",
-      icon: Hop,
-      color: "text-amber-600",
-      bgColor: "bg-amber-50",
-      image:
-        "https://play-lh.googleusercontent.com/TAPaAULv7Wk2icMdCCGKU6Zsd6tN6zQ1a9VDA4ylKdhl_tASScGVvvCXjLU0Wl8qPlEM49a6s5IbR1l-yCCc",
-    },
-    {
-      value: CourierProvider.MANUAL,
-      label: "Custom",
-      description: "using Other Delivery Service",
-      icon: TreePalm,
-      color: "text-cyan-600",
-      bgColor: "bg-cyan-50",
-      image: "",
-    },
-    {
-      value: CourierProvider.SELF,
-      label: "By Hand",
-      description: "Self delivery like a panda 🥲",
-      icon: Panda,
-      color: "text-orange-600",
-      bgColor: "bg-orange-50",
-      image: "",
-    },
-  ];
+  const fallbackIcons: Record<string, any> = {
+    manual: TreePalm,
+    self: Panda,
+  };
+
+  const courierOptions = COURIER_LIST.map((cfg) => ({
+    value: cfg.slug as CourierProvider,
+    label: cfg.label,
+    description: cfg.description || "",
+    icon: fallbackIcons[cfg.slug] || Package,
+    color: cfg.iconColor,
+    bgColor: cfg.iconBgColor,
+    image: cfg.image,
+  }));
 
   const content = (
     <>

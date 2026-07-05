@@ -7,9 +7,29 @@ import {
 import { Badge } from "../../../components/ui/badge";
 import { MapPin, Calendar, User } from "lucide-react";
 import dayjs from "dayjs";
+import { getProviderConfig } from "../../../config/courierProviders";
+
+const ProviderLogoCell: React.FC<{ provider: string }> = ({ provider }) => {
+  const cfg = getProviderConfig(provider);
+  if (cfg.image) {
+    return (
+      <img
+        className='rounded-full shadow w-8'
+        src={cfg.image}
+        alt={cfg.label}
+      />
+    );
+  }
+  return (
+    <div
+      className={`w-8 h-8 rounded-full ${cfg.iconBgColor} flex items-center justify-center text-white font-bold shadow`}>
+      {cfg.fallbackInitials || cfg.label.charAt(0)}
+    </div>
+  );
+};
 
 interface DeliveryTimelineProps {
-  provider: "pathao" | "steadfast" | "carrybee";
+  provider: string;
   timeline: DeliveryTimelineEntry[];
 }
 
@@ -53,23 +73,7 @@ export const DeliveryTimeline: React.FC<DeliveryTimelineProps> = ({
               {/* Status badge */}
               <div className='flex items-center justify-between mb-2'>
                 <div className='flex justify-start items-center gap-2'>
-                  {provider.includes("pathao") ? (
-                    <img
-                      className='rounded-full shadow w-8'
-                      src='https://logosandtypes.com/wp-content/uploads/2025/04/Pathao.png'
-                      alt='pathao'
-                    />
-                  ) : provider.includes("carrybee") ? (
-                    <div className='w-8 h-8 rounded-full bg-amber-500 flex items-center justify-center text-white font-bold shadow'>
-                      CB
-                    </div>
-                  ) : (
-                    <img
-                      className='rounded-full shadow w-8'
-                      src='https://play-lh.googleusercontent.com/9OYsIvc-iKHte4jqVe-c4sA0vNL-tljBDVPguou6B-qdxQgSKpj8pZ7ZYh6MYEbawbo=w240-h480-rw'
-                      alt='steadfast'
-                    />
-                  )}
+                  <ProviderLogoCell provider={provider} />
                   <Badge
                     className={`${statusClasses.bg} ${statusClasses.text} border-0`}>
                     {formatDeliveryStatus(entry.status)}

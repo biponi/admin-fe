@@ -20,6 +20,25 @@ import {
 import dayjs from "dayjs";
 import { toast } from "react-hot-toast";
 import { Input } from "../../../components/ui/input";
+import {
+  getProviderConfig,
+  getTrackingUrl,
+} from "../../../config/courierProviders";
+
+const ProviderLogo: React.FC<{ provider: string }> = ({ provider }) => {
+  const cfg = getProviderConfig(provider);
+  if (cfg.image) {
+    return (
+      <img className='rounded-lg shadow w-10' src={cfg.image} alt={cfg.label} />
+    );
+  }
+  return (
+    <div
+      className={`w-10 h-10 rounded-lg ${cfg.iconBgColor} flex items-center justify-center text-white font-bold shadow`}>
+      {cfg.fallbackInitials || cfg.label.charAt(0)}
+    </div>
+  );
+};
 
 interface CourierOrderCardProps {
   order: CourierOrder;
@@ -31,7 +50,7 @@ export const CourierOrderCard: React.FC<CourierOrderCardProps> = ({
   onViewDetails,
 }) => {
   const statusClasses = getStatusBadgeClasses(
-    order.deliveryStatus as DeliveryStatus
+    order.deliveryStatus as DeliveryStatus,
   );
 
   const handleCopyTracking = (text: string, label: string) => {
@@ -45,19 +64,7 @@ export const CourierOrderCard: React.FC<CourierOrderCardProps> = ({
         {/* Header */}
         <div className='flex items-start justify-between'>
           <div className='flex items-center gap-2'>
-            {order?.provider.includes("pathao") ? (
-              <img
-                className='rounded-lg shadow w-10'
-                src='https://logosandtypes.com/wp-content/uploads/2025/04/Pathao.png'
-                alt='pathao'
-              />
-            ) : (
-              <img
-                className='rounded-lg shadow w-10'
-                src='https://play-lh.googleusercontent.com/9OYsIvc-iKHte4jqVe-c4sA0vNL-tljBDVPguou6B-qdxQgSKpj8pZ7ZYh6MYEbawbo=w240-h480-rw'
-                alt='steadfast'
-              />
-            )}
+            <ProviderLogo provider={order?.provider} />
             <div>
               <h3 className='font-semibold text-slate-900'>
                 Order #{order.orderId}
@@ -114,11 +121,11 @@ export const CourierOrderCard: React.FC<CourierOrderCardProps> = ({
                 disabled
                 type='text'
                 className='w-full overflow-hidden border-slate-200 text-slate-950 bg-white'
-                value={
-                  order?.provider.includes("pathao")
-                    ? `https://merchant.pathao.com/tracking?consignment_id=${order?.consignmentId}&phone=${order?.recipientPhone}`
-                    : `https://steadfast.com.bd/t/${order?.consignmentId}`
-                }
+                value={getTrackingUrl(
+                  order?.provider,
+                  order?.consignmentId,
+                  order?.recipientPhone,
+                )}
                 placeholder='courier'
               />
               <Button
@@ -127,10 +134,12 @@ export const CourierOrderCard: React.FC<CourierOrderCardProps> = ({
                 className='h-6 w-6 p-0'
                 onClick={() =>
                   handleCopyTracking(
-                    order?.provider.includes("pathao")
-                      ? `https://merchant.pathao.com/tracking?consignment_id=${order?.consignmentId}&phone=${order?.recipientPhone}`
-                      : `https://steadfast.com.bd/t/${order?.consignmentId}`,
-                    "Tracking Link"
+                    getTrackingUrl(
+                      order?.provider,
+                      order?.consignmentId,
+                      order?.recipientPhone,
+                    ),
+                    "Tracking Link",
                   )
                 }>
                 <Copy className='w-3 h-3' />

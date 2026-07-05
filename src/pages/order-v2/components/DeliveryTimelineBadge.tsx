@@ -15,6 +15,10 @@ import {
   X,
 } from "lucide-react";
 import { IDeliveryTimeline } from "../types";
+import {
+  getProviderConfig,
+  getProviderLogo,
+} from "../../../config/courierProviders";
 
 // Status configuration map
 const STATUS_CONFIGS = {
@@ -290,12 +294,7 @@ const DeliveryTimelineBadge: React.FC<{
 
   const latestStatus = deliveryTimeline[deliveryTimeline.length - 1];
   const config = getStatusConfig(latestStatus.status);
-  const providerLogo =
-    !!provider && provider.toLowerCase().includes("pathao")
-      ? "https://logosandtypes.com/wp-content/uploads/2025/04/Pathao.png"
-      : !!provider && provider.toLowerCase().includes("carrybee")
-      ? ""
-      : "https://play-lh.googleusercontent.com/9OYsIvc-iKHte4jqVe-c4sA0vNL-tljBDVPguou6B-qdxQgSKpj8pZ7ZYh6MYEbawbo=w240-h480-rw";
+  const providerLogo = provider ? getProviderLogo(provider) : "";
 
   return (
     <>

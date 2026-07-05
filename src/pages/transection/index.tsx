@@ -84,7 +84,7 @@ import useDebounce from "../../customHook/useDebounce";
 import MainView from "../../coreComponents/mainView";
 import useRoleCheck from "../auth/hooks/useRoleCheck";
 import dayjs from "dayjs";
-import { pathaoIcon, steadfastIcon } from "../../utils/utility";
+import { getProviderLogo } from "../../utils/utility";
 import {
   exportTransactionsToCSV,
   generateTransactionsPDF,
@@ -628,7 +628,7 @@ const TransactionsPage: React.FC = () => {
             </TabsTrigger>
             <TabsTrigger value='pathao' className='flex items-center space-x-2'>
               <img
-                src={pathaoIcon}
+                src={getProviderLogo("pathao")}
                 className='h-4 w-4 rounded-full'
                 alt='Pathao'
               />
@@ -638,7 +638,7 @@ const TransactionsPage: React.FC = () => {
               value='steadfast'
               className='flex items-center space-x-2'>
               <img
-                src={steadfastIcon}
+                src={getProviderLogo("steadfast")}
                 className='h-4 w-4 rounded-full'
                 alt='Steadfast'
               />
@@ -791,13 +791,9 @@ const TransactionsPage: React.FC = () => {
                                 <div className='cursor-pointer flex items-center justify-start'>
                                   <img
                                     src={
-                                      transaction?.payment_from.toLowerCase() ===
-                                      "pathao"
-                                        ? pathaoIcon
-                                        : transaction?.payment_from.toLowerCase() ===
-                                            "steadfast"
-                                          ? steadfastIcon
-                                          : bkashIcon
+                                      getProviderLogo(
+                                        transaction?.payment_from.toLowerCase(),
+                                      ) || bkashIcon
                                     }
                                     className='h-8 w-auto hover:scale-110 transition-transform duration-200'
                                     alt='bKash'
@@ -809,13 +805,9 @@ const TransactionsPage: React.FC = () => {
                                   <div className='flex items-center space-x-2'>
                                     <img
                                       src={
-                                        transaction?.payment_from.toLowerCase() ===
-                                        "pathao"
-                                          ? pathaoIcon
-                                          : transaction?.payment_from.toLowerCase() ===
-                                              "steadfast"
-                                            ? steadfastIcon
-                                            : bkashIcon
+                                        getProviderLogo(
+                                          transaction?.payment_from.toLowerCase(),
+                                        ) || bkashIcon
                                       }
                                       className='h-6 w-6'
                                       alt='bKash'
