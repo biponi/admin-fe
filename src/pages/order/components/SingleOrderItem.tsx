@@ -26,7 +26,7 @@ import CustomAlertDialog from "../../../coreComponents/OptionModal";
 import useRoleCheck from "../../auth/hooks/useRoleCheck";
 import { FraudDetection, IOrder } from "../interface";
 import FraudDetectionDrawer from "./FraudDetectionDrawer";
-import { DeliveryTimelineBadge } from "./ShippedItem";
+import { DeliveryTimelineBadge } from "../../../components/order/ShippedItem";
 
 interface Props {
   id: string;
@@ -131,6 +131,7 @@ const SingleItem: React.FC<Props> = ({
                   : []
               }
               provider={order?.courier?.provider ?? ""}
+              orderNumber={order?.orderNumber}
             />
           </div>
         ) : (
@@ -142,10 +143,10 @@ const SingleItem: React.FC<Props> = ({
               status === "processing"
                 ? ""
                 : status === "shipped"
-                ? "bg-blue-400 text-gray-200"
-                : ["cancel", "delete"].includes(status)
-                ? ""
-                : "bg-green-500 text-gray-200"
+                  ? "bg-blue-400 text-gray-200"
+                  : ["cancel", "delete"].includes(status)
+                    ? ""
+                    : "bg-green-500 text-gray-200"
             }`}>
             {status === "processing" ? (
               <TimerIcon className='w-4 h-4 mr-2  ' />

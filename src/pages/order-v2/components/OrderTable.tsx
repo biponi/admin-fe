@@ -28,7 +28,7 @@ import {
 } from "../lib/utils";
 import { StatusBadge, PaymentStatusBadge } from "./StatusBadge";
 import { Checkbox } from "../../../components/ui/checkbox";
-import DeliveryTimelineBadge from "./DeliveryTimelineBadge";
+import DeliveryTimelineBadge from "@/components/order/ShippedItem";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -253,8 +253,13 @@ export const OrderTable: React.FC<OrderTableProps> = ({
                     !!order?.deliveryTimeline &&
                     order?.deliveryTimeline.length > 0 ? (
                       <DeliveryTimelineBadge
-                        deliveryTimeline={order.deliveryTimeline}
+                        deliveryTimeline={
+                          !!order?.deliveryTimeline
+                            ? order?.deliveryTimeline.reverse()
+                            : []
+                        }
                         provider={order?.courier?.provider ?? ""}
+                        orderNumber={order?.orderNumber}
                       />
                     ) : (
                       <StatusBadge

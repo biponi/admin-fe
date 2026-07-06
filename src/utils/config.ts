@@ -209,6 +209,8 @@ const config = {
     invoice: (consignmentId: string) =>
       `${baseURL}/courier/invoice/${consignmentId}`,
     report: () => `${baseURL}/courier/report`,
+    deliveryHistory: (orderNumber: string | number) =>
+      `${baseURL}/courier/delivery-history/${orderNumber}`,
   },
   admin: {
     // Admin Audit Dashboard Endpoints

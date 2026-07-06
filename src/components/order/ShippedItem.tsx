@@ -20,23 +20,24 @@ import {
   Check,
 } from "lucide-react";
 
-import { Badge } from "../../../components/ui/badge";
+import { Badge } from "@/components/ui/badge";
 import {
   Sheet,
   SheetContent,
   SheetHeader,
   SheetTitle,
   SheetTrigger,
-} from "../../../components/ui/sheet";
-import { formatDeliveryStatus } from "../../delivery/types";
-import { Button } from "../../../components/ui/button";
+} from "@/components/ui/sheet";
+import { formatDeliveryStatus } from "@/pages/delivery/types";
+import { Button } from "@/components/ui/button";
 import {
   getProviderLogo,
   getProviderConfig,
   getTrackingUrl,
-} from "../../../config/courierProviders";
-import config from "../../../utils/config";
-import axiosInstance from "../../../api/axios";
+} from "@/config/courierProviders";
+import config from "@/utils/config";
+import axiosInstance from "@/api/axios";
+import DeliveryStageTracker from "./DeliveryStageCard";
 
 interface IDeliveryTimeline {
   status: string;
@@ -101,6 +102,64 @@ const IN_PROGRESS_KEYWORDS = [
 
 const TERMINAL_KEYWORDS = ["delivered", "partial", "return", "cancel", "fail"];
 
+// Horizontal header stepper (Pathao-style): fixed happy-path stages, with a
+// truck icon that travels along the progress line to the current stage.
+const POSITIVE_STAGES: {
+  key: string;
+  label: string;
+  icon: any;
+  match: string[];
+}[] = [
+  {
+    key: "placed",
+    label: "Order Placed",
+    icon: Box,
+    match: ["pending", "created", "request"],
+  },
+  {
+    key: "picked",
+    label: "Picked Up",
+    icon: Package,
+    match: ["picked", "pickup"],
+  },
+  {
+    key: "transit",
+    label: "In Transit",
+    icon: Truck,
+    match: ["transit", "hub", "warehouse"],
+  },
+  {
+    key: "out",
+    label: "Out for Delivery",
+    icon: Truck,
+    match: ["out for delivery", "assigned for delivery"],
+  },
+];
+
+const getTerminalLabel = (statusLower: string) => {
+  if (statusLower.includes("cancel")) return "Cancelled";
+  if (statusLower.includes("fail")) return "Failed";
+  return "Returned";
+};
+
+// Scans every known timeline entry and returns the furthest stage reached,
+// so the stepper reflects real progress even if the "current" entry is a
+// side-status like "hold" that doesn't map to a stage directly.
+const computeStageIndex = (
+  entries: { status: string }[],
+  stages: { match: string[] }[],
+) => {
+  let idx = 0;
+  stages.forEach((stage, i) => {
+    const matched = entries.some((entry) => {
+      const s = entry.status?.toLowerCase() || "";
+      return stage.match.some((k) => s.includes(k));
+    });
+    if (matched && i > idx) idx = i;
+  });
+  return idx;
+};
+
 const getProviderTheme = (provider: string) => {
   const p = provider?.toLowerCase() || "";
   switch (p) {
@@ -120,17 +179,17 @@ const getProviderTheme = (provider: string) => {
       };
     case "pathao":
       return {
-        gradient: "from-emerald-600 to-emerald-800",
-        lightBg: "bg-emerald-50",
-        lightBorder: "border-emerald-200",
-        accentText: "text-emerald-700",
-        dot: "bg-emerald-500",
-        line: "bg-emerald-200",
-        lineActive: "bg-emerald-500",
-        headerGradient: "from-emerald-600 via-emerald-700 to-emerald-950",
-        badgeBg: "bg-emerald-100 text-emerald-800",
-        ring: "ring-emerald-200",
-        solidChip: "bg-emerald-600",
+        gradient: "from-rose-600 to-rose-800",
+        lightBg: "bg-rose-50",
+        lightBorder: "border-rose-200",
+        accentText: "text-rose-700",
+        dot: "bg-rose-500",
+        line: "bg-rose-200",
+        lineActive: "bg-rose-500",
+        headerGradient: "from-rose-600 via-rose-700 to-rose-950",
+        badgeBg: "bg-rose-100 text-rose-800",
+        ring: "ring-rose-200",
+        solidChip: "bg-rose-600",
       };
     case "carrybee":
       return {
@@ -318,6 +377,44 @@ export const DeliveryTimelineBadge: React.FC<{
   );
   const showMovingTruck = isInProgress && !isTerminal;
 
+  // --- Horizontal header stepper ---
+  const isDelivered =
+    latestStatusLower.includes("delivered") &&
+    !latestStatusLower.includes("partial");
+  const isNegativeTerminal =
+    latestStatusLower.includes("return") ||
+    latestStatusLower.includes("cancel") ||
+    latestStatusLower.includes("fail");
+
+  const finalStageLabel = isNegativeTerminal
+    ? getTerminalLabel(latestStatusLower)
+    : "Delivered";
+  const finalStageIcon = isNegativeTerminal ? XCircle : CheckCircle2;
+
+  const stages = [
+    ...POSITIVE_STAGES,
+    {
+      key: "final",
+      label: finalStageLabel,
+      icon: finalStageIcon,
+      match: ["delivered"],
+    },
+  ];
+
+  // Prefer the merged history once loaded; fall back to the prop passed in
+  // from the parent so the stepper still has something to show immediately.
+  const entriesForStage =
+    allTimeline.length > 0 ? allTimeline : deliveryTimeline;
+
+  const stageIndex =
+    isNegativeTerminal || isDelivered
+      ? stages.length - 1
+      : computeStageIndex(entriesForStage, POSITIVE_STAGES);
+
+  const stageProgressPct =
+    stages.length > 1 ? (stageIndex / (stages.length - 1)) * 100 : 0;
+  const truckIsMoving = showMovingTruck && !isDelivered && !isNegativeTerminal;
+
   const consignmentId = courier?.consignmentId || "";
   const rawTrackingUrl = getTrackingUrl(provider, consignmentId);
   const trackingUrl = sanitizeTrackingUrl(rawTrackingUrl);
@@ -350,32 +447,6 @@ export const DeliveryTimelineBadge: React.FC<{
         </Button>
       </SheetTrigger>
       <SheetContent className='w-full sm:max-w-[440px] p-0 overflow-hidden border-0 shadow-2xl bg-slate-50'>
-        <style>{`
-          @keyframes truckDrive {
-            0% { transform: translateY(-2px); opacity: 0.35; }
-            50% { transform: translateY(16px); opacity: 1; }
-            100% { transform: translateY(34px); opacity: 0.35; }
-          }
-          @keyframes pulseRing {
-            0% { box-shadow: 0 0 0 0 rgba(59,130,246,0.35); }
-            70% { box-shadow: 0 0 0 8px rgba(59,130,246,0); }
-            100% { box-shadow: 0 0 0 0 rgba(59,130,246,0); }
-          }
-          .truck-drive {
-            animation: truckDrive 1.9s ease-in-out infinite;
-          }
-          .current-pulse {
-            animation: pulseRing 2s ease-in-out infinite;
-          }
-          .copy-pop {
-            animation: copyPop 0.25s ease-out;
-          }
-          @keyframes copyPop {
-            0% { transform: scale(0.85); opacity: 0; }
-            100% { transform: scale(1); opacity: 1; }
-          }
-        `}</style>
-
         {/* Provider Header */}
         <div
           className={`bg-gradient-to-br ${providerTheme.headerGradient} px-6 pt-6 pb-5 text-white relative overflow-hidden`}>
@@ -455,7 +526,6 @@ export const DeliveryTimelineBadge: React.FC<{
             </div>
           )}
         </div>
-
         {/* Content */}
         <div className='overflow-y-auto max-h-[calc(100vh-190px)] px-6 py-5'>
           {loading ? (
@@ -465,10 +535,19 @@ export const DeliveryTimelineBadge: React.FC<{
             </div>
           ) : (
             <>
+              {/* Horizontal step tracker with a traveling truck, Pathao-style */}
+              <DeliveryStageTracker
+                stages={stages}
+                stageIndex={stageIndex}
+                stageProgressPct={stageProgressPct}
+                isNegativeTerminal={isNegativeTerminal}
+                truckIsMoving={truckIsMoving}
+                provider={provider.toLowerCase()}
+              />
               {/* Deliveryman Card */}
               {courier?.deliveryManName && (
                 <div
-                  className={`rounded-2xl border ${providerTheme.lightBorder} ${providerTheme.lightBg} p-4 mb-4 shadow-sm`}>
+                  className={`rounded-2xl mt-2 border ${providerTheme.lightBorder} ${providerTheme.lightBg} p-4 mb-4 shadow-sm`}>
                   <div className='flex items-center gap-2 mb-3'>
                     <div
                       className={`w-8 h-8 rounded-full ${providerTheme.gradient} bg-gradient-to-br flex items-center justify-center shadow-sm`}>
@@ -507,7 +586,7 @@ export const DeliveryTimelineBadge: React.FC<{
               {/* COD Info */}
               {courier &&
                 (courier.codAmount > 0 || courier.collectedAmount > 0) && (
-                  <div className='rounded-2xl border border-slate-200 bg-white p-4 mb-4 shadow-sm'>
+                  <div className='rounded-2xl mt-2 border border-slate-200 bg-white p-4 mb-4 shadow-sm'>
                     <div className='grid grid-cols-2 gap-3'>
                       {courier.codAmount > 0 && (
                         <div>
@@ -544,7 +623,7 @@ export const DeliveryTimelineBadge: React.FC<{
                 )}
 
               {/* Status Timeline */}
-              <div className='rounded-2xl border border-slate-200 bg-white p-4 shadow-sm'>
+              <div className='rounded-2xl mt-2 border border-slate-200 bg-white p-4 shadow-sm'>
                 <h4 className='text-xs font-bold text-slate-400 uppercase tracking-wider mb-4'>
                   Status History
                 </h4>
@@ -581,7 +660,7 @@ export const DeliveryTimelineBadge: React.FC<{
                                 }`}
                               />
                             </div>
-                            {!isLast && (
+                            {/* {!isLast && (
                               <div
                                 className={`relative w-0.5 flex-1 my-1 ${
                                   isFirst
@@ -594,7 +673,7 @@ export const DeliveryTimelineBadge: React.FC<{
                                   />
                                 )}
                               </div>
-                            )}
+                            )} */}
                           </div>
                           {/* Content */}
                           <div
