@@ -173,7 +173,6 @@ const JobsManagement = () => {
     useState<CacheWarmupStatus | null>(null);
   const [cacheStats, setCacheStats] = useState<CacheStats | null>(null);
   const [deliverySyncResult, setDeliverySyncResult] = useState<any>(null);
-  const [deliverySyncLogs, setDeliverySyncLogs] = useState<string[]>([]);
 
   // Cache warmup options
   const [selectedTargets, setSelectedTargets] = useState<string[]>([]);
@@ -394,98 +393,20 @@ const JobsManagement = () => {
   const triggerDeliverySync = async () => {
     setLoading((prev) => ({ ...prev, deliverySync: true }));
     setDeliverySyncResult(null);
-    setDeliverySyncLogs([]);
-
-    const addLog = (msg: string) => {
-      setDeliverySyncLogs((prev) => [
-        ...prev,
-        `[${new Date().toLocaleTimeString()}] ${msg}`,
-      ]);
-    };
 
     try {
-      const token = localStorage.getItem("token") || "";
-      const baseUrl = axiosInstance.defaults.baseURL || "";
-
-      const response = await fetch(
-        `${baseUrl}/api/v1/jobs/trigger-delivery-sync`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-        },
+      const response = await axiosInstance.post(
+        "/api/v1/jobs/trigger-delivery-sync",
       );
 
-      if (!response.ok) {
-        throw new Error(`HTTP ${response.status}`);
-      }
-
-      const reader = response.body?.getReader();
-      if (!reader) throw new Error("No response body");
-
-      const decoder = new TextDecoder();
-      let buffer = "";
-
-      while (true) {
-        const { done, value } = await reader.read();
-        if (done) break;
-
-        buffer += decoder.decode(value, { stream: true });
-        const lines = buffer.split("\n");
-        buffer = lines.pop() || "";
-
-        let eventType = "";
-        for (const line of lines) {
-          if (line.startsWith("event: ")) {
-            eventType = line.slice(7).trim();
-          } else if (line.startsWith("data: ")) {
-            const rawData = line.slice(6);
-            try {
-              const data = JSON.parse(rawData);
-
-              if (eventType === "start") {
-                addLog(data.message || "Sync started");
-              } else if (eventType === "found") {
-                addLog(data.message || `Found ${data.total} orders`);
-              } else if (eventType === "batch_start") {
-                addLog(data.message);
-              } else if (eventType === "order_synced") {
-                addLog(`✓ ${data.message} (${data.synced}/${data.total})`);
-              } else if (eventType === "order_failed") {
-                addLog(`✗ ${data.message}`);
-              } else if (eventType === "order_error") {
-                addLog(`✗ ${data.message}`);
-              } else if (eventType === "batch_complete") {
-                addLog(data.message);
-              } else if (eventType === "complete") {
-                setDeliverySyncResult(data);
-                addLog(
-                  `Sync complete: ${data.synced} synced, ${data.failed} failed in ${data.duration}`,
-                );
-                toast.success(
-                  `Delivery sync complete: ${data.synced} synced, ${data.failed} failed`,
-                );
-              } else if (eventType === "done") {
-                if (!data.success) {
-                  setDeliverySyncResult(data.data);
-                  addLog(`Sync failed: ${data.data?.error || "Unknown error"}`);
-                  toast.error("Delivery sync failed");
-                }
-              } else if (eventType === "error") {
-                addLog(`Error: ${data.error}`);
-                toast.error("Delivery sync error");
-              }
-            } catch {
-              // skip unparseable lines
-            }
-          }
-        }
+      if (response.data.success) {
+        toast.success("Delivery sync queued. You will be notified on completion.");
+        setDeliverySyncResult({ jobId: response.data.data.jobId });
       }
     } catch (error: any) {
-      addLog(`Connection error: ${error.message}`);
-      toast.error("Failed to connect to delivery sync");
+      toast.error(
+        error?.response?.data?.error || "Failed to queue delivery sync",
+      );
     } finally {
       setLoading((prev) => ({ ...prev, deliverySync: false }));
     }
@@ -902,7 +823,7 @@ const JobsManagement = () => {
                 {loading.deliverySync ? (
                   <>
                     <RefreshCw className='mr-2 h-4 w-4 animate-spin' />
-                    Syncing...
+                    Queuing...
                   </>
                 ) : (
                   <>
@@ -914,52 +835,17 @@ const JobsManagement = () => {
 
               {deliverySyncResult && (
                 <div className='rounded-xl border border-slate-100 bg-slate-50 p-3'>
-                  <SectionLabel>Last Sync Result</SectionLabel>
-                  <div className='mt-2 grid grid-cols-3 gap-2'>
-                    <StatBlock
-                      label='Synced'
-                      value={deliverySyncResult.synced || 0}
-                      tone='success'
-                    />
-                    <StatBlock
-                      label='Failed'
-                      value={deliverySyncResult.failed || 0}
-                      tone={
-                        (deliverySyncResult.failed || 0) > 0
-                          ? "danger"
-                          : "default"
-                      }
-                    />
-                    <StatBlock
-                      label='Duration'
-                      value={deliverySyncResult.duration || "-"}
-                    />
-                  </div>
-                  <div className='mt-2 text-center text-[11px] text-slate-500'>
-                    Total orders processed:{" "}
-                    <span className='font-semibold'>
-                      {deliverySyncResult.total || 0}
-                    </span>
-                  </div>
-                </div>
-              )}
-
-              {deliverySyncLogs.length > 0 && (
-                <div className='rounded-xl border border-slate-100 bg-slate-50 p-3'>
-                  <SectionLabel>Sync Log</SectionLabel>
-                  <div className='mt-2 max-h-40 space-y-1 overflow-y-auto text-[11px] text-slate-600'>
-                    {deliverySyncLogs.map((log, i) => (
-                      <div key={i} className='font-mono'>
-                        {log}
-                      </div>
-                    ))}
+                  <SectionLabel>Job Queued</SectionLabel>
+                  <div className='mt-2 text-xs text-slate-600'>
+                    Job ID: <span className='font-mono font-semibold'>#{deliverySyncResult.jobId}</span>
+                    <span className='ml-2 text-slate-400'>— You will receive a notification when complete</span>
                   </div>
                 </div>
               )}
 
               <div className='flex items-start gap-2 rounded-lg bg-slate-50 p-3 text-xs text-slate-500'>
                 <Info className='mt-0.5 h-3.5 w-3.5 shrink-0 text-slate-400' />
-                <p>Syncs pending orders from Steadfast, Pathao, and Carrybee</p>
+                <p>Syncs pending orders from Steadfast, Pathao, and Carrybee. You will be notified when the sync completes.</p>
               </div>
             </CardContent>
           </Card>
