@@ -96,30 +96,27 @@ const InfoRow = ({
 const Section = ({
   title,
   icon: Icon,
-  iconColor = "text-gray-500",
-  iconBg = "bg-gray-100",
+  iconBg,
+  iconColor,
   children,
-  className,
+  trailing,
 }: {
   title: string;
   icon: React.ElementType;
-  iconColor?: string;
-  iconBg?: string;
+  iconBg: string;
+  iconColor: string;
   children: React.ReactNode;
-  className?: string;
+  trailing?: React.ReactNode;
 }) => (
-  <div
-    className={cn(
-      "rounded-xl border border-gray-100 bg-white overflow-hidden",
-      className,
-    )}>
-    <div className='flex items-center gap-2.5 px-4 py-3 border-b border-gray-100 bg-gray-50/60'>
+  <div className='rounded-xl border border-gray-100 bg-white overflow-hidden'>
+    <div className='flex items-center gap-2.5 px-4 py-2.5 bg-gray-50/70 border-b border-gray-100'>
       <span className={cn("p-1.5 rounded-lg", iconBg)}>
         <Icon className={cn("h-3.5 w-3.5", iconColor)} />
       </span>
-      <span className='text-xs font-semibold text-gray-700 tracking-wide uppercase'>
+      <span className='text-[12px] font-bold uppercase tracking-widest text-gray-500'>
         {title}
       </span>
+      {trailing && <div className='ml-auto'>{trailing}</div>}
     </div>
     <div className='px-4 py-1'>{children}</div>
   </div>
@@ -392,7 +389,6 @@ export const OrderDetailsSheet: React.FC<OrderDetailsSheetProps> = ({
                 {order.products.map((product, index) => {
                   const variationData = product.variation || product.variant;
                   const hasVariationData =
-                    (product.hasVariation || product.variant) &&
                     variationData &&
                     (variationData.size || variationData.color);
 

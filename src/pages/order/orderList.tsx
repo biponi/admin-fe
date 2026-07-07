@@ -1483,7 +1483,7 @@ const OrderList = () => {
                         <p className='text-[12px] text-gray-400 mb-1.5'>
                           Qty: {product?.quantity}
                         </p>
-                        {product?.hasVariation && (
+                        {!!product?.variation && (
                           <span className='inline-flex items-center gap-1 text-[12px] font-semibold px-1.5 py-0.5 rounded bg-orange-50 text-orange-700 border border-orange-100'>
                             {[
                               product?.variation?.color,
