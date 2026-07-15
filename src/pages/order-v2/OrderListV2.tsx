@@ -11,7 +11,7 @@
  * - Loading state: centered spinner with subtle card backdrop.
  */
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import {
@@ -292,6 +292,19 @@ export const OrderListV2: React.FC = () => {
   useEffect(() => {
     fetchOrders(true);
   }, [fetchOrders]);
+
+  // ── Debounced search ─────────────────────────────────────
+  const isInitialMount = useRef(true);
+  useEffect(() => {
+    if (isInitialMount.current) {
+      isInitialMount.current = false;
+      return;
+    }
+    const timer = setTimeout(() => {
+      fetchOrders();
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [searchQuery, fetchOrders]);
 
   // ── Keyboard shortcuts ───────────────────────────────────
   const shortcuts: KeyboardShortcut[] = [

@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import {
   Card,
   CardContent,
@@ -16,6 +16,7 @@ import {
 import { Avatar, AvatarFallback } from "../../../components/ui/avatar";
 import { Badge } from "../../../components/ui/badge";
 import { Separator } from "../../../components/ui/separator";
+import { Button } from "../../../components/ui/button";
 import { useCommission } from "../../../hooks/useCommission";
 import { CommissionStatusBadge } from "../../commission/components/CommissionStatusBadge";
 import {
@@ -23,7 +24,14 @@ import {
   formatCurrency,
 } from "../../../utils/inventoryReportUtils";
 import { Commission } from "../../../api/commission";
-import { Loader2, Package, Calendar, CheckCircle2 } from "lucide-react";
+import {
+  Loader2,
+  Package,
+  Calendar,
+  CheckCircle2,
+  ChevronLeft,
+  ChevronRight,
+} from "lucide-react";
 
 interface UserCommissionTableProps {
   userId: string;
@@ -33,26 +41,36 @@ export const UserCommissionTable: React.FC<UserCommissionTableProps> = ({
   userId,
 }) => {
   const [commissions, setCommissions] = useState<Commission[]>([]);
-  //eslint-disable-next-line
   const [pagination, setPagination] = useState({
     currentPage: 1,
     totalPages: 1,
     totalItems: 0,
   });
+  const [isLoadingPage, setIsLoadingPage] = useState(false);
   const { fetchPersonalCommissions, isLoading } = useCommission();
 
-  useEffect(() => {
-    const loadCommissions = async () => {
-      const data = await fetchPersonalCommissions({ page: 1, limit: 20 });
+  const loadCommissions = useCallback(
+    async (page: number) => {
+      setIsLoadingPage(true);
+      const data = await fetchPersonalCommissions({ page, limit: 20 });
       if (data) {
         setCommissions(data.commissions);
         setPagination(data.pagination);
       }
-    };
+      setIsLoadingPage(false);
+    },
+    [fetchPersonalCommissions],
+  );
 
-    loadCommissions();
-    //eslint-disable-next-line
-  }, []);
+  useEffect(() => {
+    loadCommissions(1);
+  }, [loadCommissions]);
+
+  const handlePageChange = (page: number) => {
+    if (page < 1 || page > pagination.totalPages || isLoadingPage) return;
+    setPagination((prev) => ({ ...prev, currentPage: page }));
+    loadCommissions(page);
+  };
 
   return (
     <Card>
@@ -189,6 +207,40 @@ export const UserCommissionTable: React.FC<UserCommissionTableProps> = ({
                 </TableBody>
               </Table>
             </div>
+
+            {/* Pagination */}
+            {pagination.totalPages > 1 && (
+              <div className='flex items-center justify-between gap-4 pt-4'>
+                <span className='text-sm text-muted-foreground'>
+                  Page {pagination.currentPage} of {pagination.totalPages}
+                </span>
+                <div className='flex items-center gap-1'>
+                  <Button
+                    variant='outline'
+                    size='sm'
+                    onClick={() =>
+                      handlePageChange(pagination.currentPage - 1)
+                    }
+                    disabled={pagination.currentPage <= 1 || isLoadingPage}
+                    className='h-8 w-8 p-0'>
+                    <ChevronLeft className='h-4 w-4' />
+                  </Button>
+                  <Button
+                    variant='outline'
+                    size='sm'
+                    onClick={() =>
+                      handlePageChange(pagination.currentPage + 1)
+                    }
+                    disabled={
+                      pagination.currentPage >= pagination.totalPages ||
+                      isLoadingPage
+                    }
+                    className='h-8 w-8 p-0'>
+                    <ChevronRight className='h-4 w-4' />
+                  </Button>
+                </div>
+              </div>
+            )}
           </>
         )}
       </CardContent>

@@ -137,7 +137,7 @@ export const useOrderStore = create<OrderState>()(
 
             // If there's a search query, use searchOrders API
             if (searchQuery && searchQuery.trim() !== "") {
-              response = await searchOrders(searchQuery, apiStatus || "processing", pageSize, currentPage);
+              response = await searchOrders(searchQuery, apiStatus, pageSize, currentPage);
             } else {
               // Otherwise, use regular getOrders API
               response = await getOrders(pageSize, currentPage, apiStatus);
@@ -231,7 +231,6 @@ export const useOrderStore = create<OrderState>()(
 
         setSearchQuery: (query) => {
           set({ searchQuery: query, currentPage: 1 });
-          get().fetchOrders();
         },
 
         saveFilter: (name, filter) => {
