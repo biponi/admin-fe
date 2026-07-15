@@ -104,8 +104,8 @@ export const ProductAdjustmentDialog: React.FC<ProductAdjustmentSheetProps> = ({
   const { toast } = useToast();
   const { hasRequiredPermission } = useRoleCheck();
 
-  const canIncreaseStock = hasRequiredPermission("product", "store_increase");
-  const canDecreaseStock = hasRequiredPermission("product", "store_decrease");
+  const canIncreaseStock = hasRequiredPermission("product", "stock_increase");
+  const canDecreaseStock = hasRequiredPermission("product", "stock_decrease");
 
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);

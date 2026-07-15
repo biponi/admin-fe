@@ -25,8 +25,8 @@ export const ProductAdjustmentForm: React.FC<ProductAdjustmentFormProps> = ({
   const { adjustStock, isLoading, error } = useProductAdjustment();
   const { hasRequiredPermission } = useRoleCheck();
 
-  const canIncreaseStock = hasRequiredPermission("product", "store_increase");
-  const canDecreaseStock = hasRequiredPermission("product", "store_decrease");
+  const canIncreaseStock = hasRequiredPermission("product", "stock_increase");
+  const canDecreaseStock = hasRequiredPermission("product", "stock_decrease");
 
   const [formData, setFormData] = useState({
     adjustmentType: "add" as AdjustmentType,
