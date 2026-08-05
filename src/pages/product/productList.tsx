@@ -361,29 +361,47 @@ const MobilePagination: React.FC<{
   limit: number;
   onPrev: () => void;
   onNext: () => void;
-}> = ({ currentPageNum, totalPages, totalProducts, limit, onPrev, onNext }) => (
-  <div className='flex items-center justify-between bg-white border-t border-zinc-100 px-4 py-3'>
-    <button
-      disabled={currentPageNum < 2}
-      onClick={onPrev}
-      className='flex items-center gap-1.5 text-sm font-medium text-zinc-600 disabled:opacity-30 disabled:cursor-not-allowed active:scale-95 transition-transform'>
-      <ChevronLeft className='h-4 w-4' /> Prev
-    </button>
-    <div className='text-center'>
-      <p className='text-xs font-semibold text-zinc-800'>
-        {currentPageNum} / {totalPages}
-      </p>
-      <p className='text-[10px] text-zinc-400'>
-        {Math.max(1, (currentPageNum - 1) * limit + 1)}–
-        {Math.min(currentPageNum * limit, totalProducts)} of {totalProducts}
-      </p>
+  onLimitChange: (limit: number) => void;
+}> = ({ currentPageNum, totalPages, totalProducts, limit, onPrev, onNext, onLimitChange }) => (
+  <div className='bg-white border-t border-zinc-100 px-4 py-3'>
+    <div className='flex items-center justify-between'>
+      <button
+        disabled={currentPageNum < 2}
+        onClick={onPrev}
+        className='flex items-center gap-1.5 text-sm font-medium text-zinc-600 disabled:opacity-30 disabled:cursor-not-allowed active:scale-95 transition-transform'>
+        <ChevronLeft className='h-4 w-4' /> Prev
+      </button>
+      <div className='text-center'>
+        <p className='text-xs font-semibold text-zinc-800'>
+          {currentPageNum} / {totalPages}
+        </p>
+        <p className='text-[10px] text-zinc-400'>
+          {Math.max(1, (currentPageNum - 1) * limit + 1)}–
+          {Math.min(currentPageNum * limit, totalProducts)} of {totalProducts}
+        </p>
+      </div>
+      <button
+        disabled={currentPageNum >= totalPages}
+        onClick={onNext}
+        className='flex items-center gap-1.5 text-sm font-medium text-zinc-600 disabled:opacity-30 disabled:cursor-not-allowed active:scale-95 transition-transform'>
+        Next <ChevronRight className='h-4 w-4' />
+      </button>
     </div>
-    <button
-      disabled={currentPageNum >= totalPages}
-      onClick={onNext}
-      className='flex items-center gap-1.5 text-sm font-medium text-zinc-600 disabled:opacity-30 disabled:cursor-not-allowed active:scale-95 transition-transform'>
-      Next <ChevronRight className='h-4 w-4' />
-    </button>
+    <div className='flex items-center justify-center mt-2 pt-2 border-t border-zinc-100'>
+      <span className='text-[10px] text-zinc-400 mr-1.5'>Per page</span>
+      <Select value={`${limit}`} onValueChange={(v) => onLimitChange(parseInt(v, 10))}>
+        <SelectTrigger className='h-6 w-[60px] text-[10px] rounded-md border-zinc-200'>
+          <SelectValue />
+        </SelectTrigger>
+        <SelectContent>
+          {["20", "50", "70", "100"].map((v) => (
+            <SelectItem key={v} value={v} className='text-[10px]'>
+              {v}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+    </div>
   </div>
 );
 
@@ -491,15 +509,18 @@ const ProductList: React.FC<Props> = ({ handleEditProduct }) => {
   }, [debounceHandler]);
 
   // Wrap page-change to use table-only loading state
-  const handlePageChange = useCallback(async (delta: number) => {
-    setIsTableLoading(true);
-    try {
-      await updateCurrentPage(Number(delta));
-    } finally {
-      // give the products state time to settle
-      setTimeout(() => setIsTableLoading(false), 400);
-    }
-  }, [updateCurrentPage]);
+  const handlePageChange = useCallback(
+    async (delta: number) => {
+      setIsTableLoading(true);
+      try {
+        await updateCurrentPage(Number(delta));
+      } finally {
+        // give the products state time to settle
+        setTimeout(() => setIsTableLoading(false), 400);
+      }
+    },
+    [updateCurrentPage],
+  );
 
   // Also track when productFetching transitions (for search/filter changes — those are fine to show overlay too)
   const prevFetching = useRef(productFetching);
@@ -866,7 +887,7 @@ const ProductList: React.FC<Props> = ({ handleEditProduct }) => {
 
         {/* Sticky bottom pagination */}
         {inputValue === "" && totalPages > 1 && (
-          <div className='sticky bottom-0 z-20 border-t border-zinc-200 bg-white/95 backdrop-blur-sm safe-area-bottom'>
+          <div className='sticky bottom-0 z-20 border-t mb-20 border-zinc-200 bg-white/95 backdrop-blur-sm safe-area-bottom'>
             <MobilePagination
               currentPageNum={currentPageNum}
               totalPages={totalPages}
@@ -874,6 +895,7 @@ const ProductList: React.FC<Props> = ({ handleEditProduct }) => {
               limit={limit}
               onPrev={() => handlePageChange(-1)}
               onNext={() => handlePageChange(1)}
+              onLimitChange={setLimit}
             />
           </div>
         )}
@@ -912,7 +934,11 @@ const ProductList: React.FC<Props> = ({ handleEditProduct }) => {
         open={showStatusDrawer}
         onOpenChange={setShowStatusDrawer}
         onSelect={(t) => setMobileSelectedTab(t as TabKey)}
-        options={TAB_CONFIG.map(({ value, label, badgeClass }) => ({ value, label, badgeClass }))}
+        options={TAB_CONFIG.map(({ value, label, badgeClass }) => ({
+          value,
+          label,
+          badgeClass,
+        }))}
         counts={tabCounts}
         selectedTab={mobileSelectedTab}
       />
@@ -921,30 +947,48 @@ const ProductList: React.FC<Props> = ({ handleEditProduct }) => {
       <Drawer open={showCategoryDrawer} onOpenChange={setShowCategoryDrawer}>
         <DrawerContent className='rounded-t-2xl max-h-[70vh]'>
           <DrawerHeader className='pb-2'>
-            <DrawerTitle className='text-base font-semibold'>Filter by Category</DrawerTitle>
-            <DrawerDescription className='text-xs'>Select a category to filter products</DrawerDescription>
+            <DrawerTitle className='text-base font-semibold'>
+              Filter by Category
+            </DrawerTitle>
+            <DrawerDescription className='text-xs'>
+              Select a category to filter products
+            </DrawerDescription>
           </DrawerHeader>
           <div className='px-4 pb-4 overflow-y-auto max-h-[55vh]'>
             <div className='space-y-1'>
               <button
-                onClick={() => { setSelectedCategory(""); setShowCategoryDrawer(false); }}
+                onClick={() => {
+                  setSelectedCategory("");
+                  setShowCategoryDrawer(false);
+                }}
                 className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-colors ${!selectedCategory ? "bg-indigo-50 text-indigo-700 border border-indigo-200" : "text-zinc-600 hover:bg-zinc-50"}`}>
-                <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${!selectedCategory ? "border-indigo-500 bg-indigo-500" : "border-zinc-300"}`}>
-                  {!selectedCategory && <div className='w-2 h-2 rounded-full bg-white' />}
+                <div
+                  className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${!selectedCategory ? "border-indigo-500 bg-indigo-500" : "border-zinc-300"}`}>
+                  {!selectedCategory && (
+                    <div className='w-2 h-2 rounded-full bg-white' />
+                  )}
                 </div>
                 All Categories
               </button>
               {categories.map((cat) => (
                 <button
                   key={cat.id}
-                  onClick={() => { setSelectedCategory(cat.id); setShowCategoryDrawer(false); }}
+                  onClick={() => {
+                    setSelectedCategory(cat.id);
+                    setShowCategoryDrawer(false);
+                  }}
                   className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-colors ${selectedCategory === cat.id ? "bg-indigo-50 text-indigo-700 border border-indigo-200" : "text-zinc-600 hover:bg-zinc-50"}`}>
-                  <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center shrink-0 ${selectedCategory === cat.id ? "border-indigo-500 bg-indigo-500" : "border-zinc-300"}`}>
-                    {selectedCategory === cat.id && <div className='w-2 h-2 rounded-full bg-white' />}
+                  <div
+                    className={`w-5 h-5 rounded-full border-2 flex items-center justify-center shrink-0 ${selectedCategory === cat.id ? "border-indigo-500 bg-indigo-500" : "border-zinc-300"}`}>
+                    {selectedCategory === cat.id && (
+                      <div className='w-2 h-2 rounded-full bg-white' />
+                    )}
                   </div>
                   <span className='truncate'>{cat.name}</span>
                   {cat.totalProducts > 0 && (
-                    <span className='ml-auto text-xs text-zinc-400 shrink-0'>{cat.totalProducts}</span>
+                    <span className='ml-auto text-xs text-zinc-400 shrink-0'>
+                      {cat.totalProducts}
+                    </span>
                   )}
                 </button>
               ))}
@@ -952,7 +996,9 @@ const ProductList: React.FC<Props> = ({ handleEditProduct }) => {
           </div>
           <DrawerFooter className='pt-0 pb-6'>
             <DrawerClose asChild>
-              <Button variant='outline' className='w-full'>Close</Button>
+              <Button variant='outline' className='w-full'>
+                Close
+              </Button>
             </DrawerClose>
           </DrawerFooter>
         </DrawerContent>
@@ -1030,30 +1076,36 @@ const ProductList: React.FC<Props> = ({ handleEditProduct }) => {
               selectedCategory={selectedCategory}
             />
             {/* Sort controls */}
-            <Select value={sortBy} onValueChange={(val) => setSortBy(val as SortField)}>
-              <SelectTrigger className="h-8 w-36 text-xs">
-                <ArrowUpDown className="h-3 w-3 mr-1.5" />
+            <Select
+              value={sortBy}
+              onValueChange={(val) => setSortBy(val as SortField)}>
+              <SelectTrigger className='h-8 w-36 text-xs'>
+                <ArrowUpDown className='h-3 w-3 mr-1.5' />
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
                 {Object.entries(SORT_FIELD_LABELS).map(([value, label]) => (
-                  <SelectItem key={value} value={value} className="text-xs">
+                  <SelectItem key={value} value={value} className='text-xs'>
                     {label}
                   </SelectItem>
                 ))}
               </SelectContent>
             </Select>
             <Button
-              variant="ghost"
-              size="sm"
+              variant='ghost'
+              size='sm'
               onClick={() => setSortOrder(sortOrder === "asc" ? "desc" : "asc")}
-              className="h-8 w-8 px-0"
-              title={sortOrder === "asc" ? "Ascending — click for descending" : "Descending — click for ascending"}
-            >
-              {sortOrder === "asc"
-                ? <ArrowUp className="h-3.5 w-3.5" />
-                : <ArrowDown className="h-3.5 w-3.5" />
-              }
+              className='h-8 w-8 px-0'
+              title={
+                sortOrder === "asc"
+                  ? "Ascending — click for descending"
+                  : "Descending — click for ascending"
+              }>
+              {sortOrder === "asc" ? (
+                <ArrowUp className='h-3.5 w-3.5' />
+              ) : (
+                <ArrowDown className='h-3.5 w-3.5' />
+              )}
             </Button>
             {(inputValue || selectedCategory) && (
               <Button
