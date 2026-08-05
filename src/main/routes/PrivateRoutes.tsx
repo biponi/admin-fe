@@ -52,6 +52,8 @@ import CreateGlobalCoupon from "../../pages/coupon/GlobalCoupons/CreateGlobalCou
 import CustomerCouponsPage from "../../pages/coupon/CustomerCoupons";
 import CouponAnalyticsPage from "../../pages/coupon/Analytics";
 import OperationRequestsPage from "../../pages/operation-requests";
+import BlogPage from "../../pages/blog";
+import BlogForm from "../../pages/blog/blogForm";
 
 // Layout switcher component for create order
 const CreateOrderLayoutSwitch = () => {
@@ -515,6 +517,36 @@ export const ProtectedRoutes = () => {
           <ProtectedRoute page='Coupon' requiredAction='analytics'>
             <MainViewComponent title='Coupon Analytics'>
               <CouponAnalyticsPage />
+            </MainViewComponent>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path='/blog'
+        element={
+          <ProtectedRoute page='Blog' requiredAction='view'>
+            <MainViewComponent title='Blog'>
+              <BlogPage />
+            </MainViewComponent>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path='/blog/create'
+        element={
+          <ProtectedRoute page='Blog' requiredAction='create'>
+            <MainViewComponent title='Create Blog Post'>
+              <BlogForm />
+            </MainViewComponent>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path='/blog/edit/:id'
+        element={
+          <ProtectedRoute page='Blog' requiredAction='edit'>
+            <MainViewComponent title='Edit Blog Post'>
+              <BlogForm />
             </MainViewComponent>
           </ProtectedRoute>
         }

@@ -180,11 +180,15 @@ export const editProduct = async (
 // Function to search for products
 export const searchProducts = async (
   searchQuery: any,
-  categoryId?: string
+  categoryId?: string,
+  sortBy?: string,
+  sortOrder?: string,
 ): Promise<ApiResponse<any>> => {
   try {
     const requestBody: any = { query: searchQuery };
     if (categoryId) requestBody.categoryId = categoryId;
+    if (sortBy) requestBody.sortBy = sortBy;
+    if (sortOrder) requestBody.sortOrder = sortOrder;
 
     const response = await axios.post<any>(
       config.product.searchProduct(),

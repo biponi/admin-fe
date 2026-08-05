@@ -21,6 +21,7 @@ import {
   BarChart3,
   ClipboardCheck,
   FileEdit,
+  FileText,
 } from "lucide-react";
 
 export const navItems = [
@@ -271,6 +272,24 @@ export const navItems = [
     link: "/commission",
     active: true,
     id: "commission",
+    roles: ["admin", "manager"],
+  },
+  {
+    icon: <FileText className='w-5 h-5' />,
+    title: "Blog",
+    link: "/blog",
+    active: true,
+    id: "Blog",
+    items: [
+      {
+        title: "All Posts",
+        url: "/blog",
+      },
+      {
+        title: "Create Post",
+        url: "/blog/create",
+      },
+    ],
     roles: ["admin", "manager"],
   },
   // {

@@ -304,6 +304,25 @@ const config = {
     // Commission export endpoints
     getExportReport: () => `${baseURL}/commission/export`,
   },
+  blog: {
+    getAllPosts: () => `${baseURL}/blog/all`,
+    getPostById: (id: string) => `${baseURL}/blog/all/${id}`,
+    createPost: () => `${baseURL}/blog/add`,
+    updatePost: (id: string) => `${baseURL}/blog/update/${id}`,
+    deletePost: (id: string) => `${baseURL}/blog/delete/${id}`,
+    publishPost: (id: string) => `${baseURL}/blog/publish/${id}`,
+    archivePost: (id: string) => `${baseURL}/blog/archive/${id}`,
+    getSeoData: (slug: string) => `${baseURL}/blog/seo-data/${slug}`,
+    keywordSuggest: () => `${baseURL}/blog/keyword-suggest`,
+
+    // Blog Categories
+    getAllCategories: () => `${baseURL}/blog-category/all`,
+    getCategoryByIdOrSlug: (identifier: string) =>
+      `${baseURL}/blog-category/${identifier}`,
+    createCategory: () => `${baseURL}/blog-category/add`,
+    updateCategory: (id: string) => `${baseURL}/blog-category/update/${id}`,
+    deleteCategory: (id: string) => `${baseURL}/blog-category/delete/${id}`,
+  },
   operationRequest: {
     // Product deletion request endpoints
     createProductDelete: (productId: string) =>

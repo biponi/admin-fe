@@ -42,4 +42,5 @@ export const pagePermissions: Record<string, string[]> = {
   Commission: ["view", "edit", "update_status", "delete", "personal_access"],
   DailyReport: ["view"],
   OperationRequest: ["view", "edit", "approve", "reject"],
+  Blog: ["view", "create", "edit", "delete"],
 };

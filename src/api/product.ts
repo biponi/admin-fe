@@ -33,11 +33,13 @@ export const getProductById = async (id: string): Promise<ApiResponse<any>> => {
   }
 };
 
-// Function to fetch products (with optional category filter)
+// Function to fetch products (with optional category filter and sorting)
 export const getProducts = async (
   limit = 20,
   page = 1,
-  categoryId?: string
+  categoryId?: string,
+  sortBy?: string,
+  sortOrder?: string,
 ): Promise<ApiResponse<any>> => {
   try {
     const params: any = { limit, page };
@@ -46,6 +48,9 @@ export const getProducts = async (
     if (categoryId && categoryId !== "all") {
       params.categoryId = categoryId;
     }
+
+    if (sortBy) params.sortBy = sortBy;
+    if (sortOrder) params.sortOrder = sortOrder;
 
     const response = await axios.get<any>(config.product.getProductList(), {
       params,

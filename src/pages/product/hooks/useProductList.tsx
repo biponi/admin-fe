@@ -3,6 +3,9 @@ import { getProducts } from "../../../api/product";
 import { useToast } from "../../../components/ui/use-toast";
 import { deleteProduct, searchProducts } from "../../../api";
 
+export type SortField = "priority" | "name" | "price" | "quantity" | "createdAt" | "updatedAt";
+export type SortOrder = "asc" | "desc";
+
 export const useProductList = () => {
   const { toast } = useToast();
   const [productFetching, setProductFetching] = useState(false);
@@ -14,6 +17,8 @@ export const useProductList = () => {
   const [selectedCategory, setSelectedCategory] = useState("all");
   const [searchQuery, setSearchQuery] = useState("");
   const [limit, setLimit] = useState(20);
+  const [sortBy, setSortBy] = useState<SortField>("priority");
+  const [sortOrder, setSortOrder] = useState<SortOrder>("desc");
 
   const refreshList = () => {
     if (!selectedCategory || selectedCategory === "all") getProductList();
@@ -29,7 +34,7 @@ export const useProductList = () => {
     if (currentPageNum !== 1) setCurrentPage(1);
     else refreshList();
     //eslint-disable-next-line
-  }, [selectedCategory, limit]);
+  }, [selectedCategory, limit, sortBy, sortOrder]);
 
   useEffect(() => {
     searchProductByQuery();
@@ -38,7 +43,7 @@ export const useProductList = () => {
 
   const getProductList = async () => {
     setProductFetching(true);
-    const response = await getProducts(limit, currentPageNum);
+    const response = await getProducts(limit, currentPageNum, undefined, sortBy, sortOrder);
     if (response?.success && !!response?.data) {
       const {
         totalProducts,
@@ -46,13 +51,6 @@ export const useProductList = () => {
         currentPage,
         products,
       } = response?.data;
-      console.log(
-        "getProductList",
-        totalProducts,
-        tp,
-        currentPage,
-        products,
-      );
       setTotalPages(tp);
       totalPagesRef.current = tp;
       if (currentPageNum !== currentPage) setCurrentPage(Number(currentPage));
@@ -71,7 +69,7 @@ export const useProductList = () => {
 
   const getProductListByCategoryId = async () => {
     setProductFetching(true);
-    const response = await getProducts(limit, currentPageNum, selectedCategory);
+    const response = await getProducts(limit, currentPageNum, selectedCategory, sortBy, sortOrder);
     if (response?.success && !!response?.data) {
       const {
         totalProducts,
@@ -98,7 +96,7 @@ export const useProductList = () => {
   const searchProductByQuery = async () => {
     const categoryId =
       selectedCategory !== "all" ? selectedCategory : undefined;
-    const response = await searchProducts(searchQuery, categoryId);
+    const response = await searchProducts(searchQuery, categoryId, sortBy, sortOrder);
     if (response?.success) {
       //@ts-ignore
       setProducts(response.data);
@@ -149,5 +147,9 @@ export const useProductList = () => {
     updateCurrentPage,
     setSelectedCategory,
     getProductListByCategoryId,
+    sortBy,
+    setSortBy,
+    sortOrder,
+    setSortOrder,
   };
 };

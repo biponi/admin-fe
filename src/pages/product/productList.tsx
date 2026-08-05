@@ -16,6 +16,9 @@ import {
   X,
   RefreshCw,
   FolderTree,
+  ArrowUpDown,
+  ArrowUp,
+  ArrowDown,
 } from "lucide-react";
 import { Button } from "../../components/ui/button";
 import {
@@ -72,6 +75,10 @@ import {
 import useRoleCheck from "../auth/hooks/useRoleCheck";
 import CategoryFilterDropdown from "./components/FilterByCategory";
 import MobileProductCard from "./components/MobileProductCard";
+import { MobileProductSortSheet } from "./components/MobileProductSortSheet";
+import { MobileProductBottomNav } from "./components/MobileProductBottomNav";
+import { MobileStatusDrawer } from "./components/MobileStatusDrawer";
+import type { SortField, SortOrder } from "./hooks/useProductList";
 import { MobileKeyboardSearch } from "../order/components/MobileKeyboardSearch";
 import { cn } from "@/lib/utils";
 
@@ -423,6 +430,10 @@ const ProductList: React.FC<Props> = ({ handleEditProduct }) => {
     selectedCategory,
     deleteProductData,
     setSelectedCategory,
+    sortBy,
+    setSortBy,
+    sortOrder,
+    setSortOrder,
   } = useProductList();
 
   const navigate = useNavigate();
@@ -437,8 +448,25 @@ const ProductList: React.FC<Props> = ({ handleEditProduct }) => {
   const [mobileSelectedTab, setMobileSelectedTab] = useState<TabKey>("all");
   const [showKeyboardSearch, setShowKeyboardSearch] = useState(false);
   const [showCategoryDrawer, setShowCategoryDrawer] = useState(false);
+  const [showSortSheet, setShowSortSheet] = useState(false);
+  const [showStatusDrawer, setShowStatusDrawer] = useState(false);
   // ← KEY: separate "table only" loading state so page chrome never re-mounts
   const [isTableLoading, setIsTableLoading] = useState(false);
+
+  // Sort field labels for desktop dropdown
+  const SORT_FIELD_LABELS: Record<SortField, string> = {
+    priority: "Priority",
+    createdAt: "Created",
+    updatedAt: "Updated",
+    name: "Name",
+    price: "Price",
+    quantity: "Stock",
+  };
+
+  const handleMobileSort = (field: SortField, order: SortOrder) => {
+    setSortBy(field);
+    setSortOrder(order);
+  };
 
   const handleViewProductDetails = (id: string) => navigate(`/products/${id}`);
 
@@ -765,56 +793,6 @@ const ProductList: React.FC<Props> = ({ handleEditProduct }) => {
               </p>
             </div>
             <div className='flex items-center gap-2'>
-              <Button
-                onClick={() => setShowKeyboardSearch(true)}
-                className='w-8 flex items-center justify-center rounded-md border border-zinc-200 bg-white text-zinc-500 transition-colors'>
-                <Search className='w-4 h-4' />
-              </Button>
-              <Drawer open={showCategoryDrawer} onOpenChange={setShowCategoryDrawer}>
-                <DrawerTrigger asChild>
-                  <Button
-                    className={`w-8 flex items-center justify-center rounded-md border bg-white transition-colors ${selectedCategory ? "border-indigo-300 text-indigo-600 bg-indigo-50" : "border-zinc-200 text-zinc-500"}`}>
-                    <FolderTree className='w-4 h-4' />
-                  </Button>
-                </DrawerTrigger>
-                <DrawerContent className='rounded-t-2xl max-h-[70vh]'>
-                  <DrawerHeader className='pb-2'>
-                    <DrawerTitle className='text-base font-semibold'>Filter by Category</DrawerTitle>
-                    <DrawerDescription className='text-xs'>Select a category to filter products</DrawerDescription>
-                  </DrawerHeader>
-                  <div className='px-4 pb-4 overflow-y-auto max-h-[55vh]'>
-                    <div className='space-y-1'>
-                      <button
-                        onClick={() => { setSelectedCategory(""); setShowCategoryDrawer(false); }}
-                        className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-colors ${!selectedCategory ? "bg-indigo-50 text-indigo-700 border border-indigo-200" : "text-zinc-600 hover:bg-zinc-50"}`}>
-                        <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${!selectedCategory ? "border-indigo-500 bg-indigo-500" : "border-zinc-300"}`}>
-                          {!selectedCategory && <div className='w-2 h-2 rounded-full bg-white' />}
-                        </div>
-                        All Categories
-                      </button>
-                      {categories.map((cat) => (
-                        <button
-                          key={cat.id}
-                          onClick={() => { setSelectedCategory(cat.id); setShowCategoryDrawer(false); }}
-                          className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-colors ${selectedCategory === cat.id ? "bg-indigo-50 text-indigo-700 border border-indigo-200" : "text-zinc-600 hover:bg-zinc-50"}`}>
-                          <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center shrink-0 ${selectedCategory === cat.id ? "border-indigo-500 bg-indigo-500" : "border-zinc-300"}`}>
-                            {selectedCategory === cat.id && <div className='w-2 h-2 rounded-full bg-white' />}
-                          </div>
-                          <span className='truncate'>{cat.name}</span>
-                          {cat.totalProducts > 0 && (
-                            <span className='ml-auto text-xs text-zinc-400 shrink-0'>{cat.totalProducts}</span>
-                          )}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                  <DrawerFooter className='pt-0 pb-6'>
-                    <DrawerClose asChild>
-                      <Button variant='outline' className='w-full'>Close</Button>
-                    </DrawerClose>
-                  </DrawerFooter>
-                </DrawerContent>
-              </Drawer>
               {hasRequiredPermission("product", "create") && (
                 <Button
                   onClick={() => navigate("/products/create")}
@@ -823,15 +801,6 @@ const ProductList: React.FC<Props> = ({ handleEditProduct }) => {
                 </Button>
               )}
             </div>
-          </div>
-
-          {/* Tab pills */}
-          <div className='py-2'>
-            <MobileTabPills
-              selectedTab={mobileSelectedTab}
-              onTabChange={(t) => setMobileSelectedTab(t as TabKey)}
-              counts={tabCounts}
-            />
           </div>
         </div>
 
@@ -908,6 +877,17 @@ const ProductList: React.FC<Props> = ({ handleEditProduct }) => {
             />
           </div>
         )}
+
+        {/* Mobile bottom navigation */}
+        <MobileProductBottomNav
+          onSearchClick={() => setShowKeyboardSearch(true)}
+          onStatusClick={() => setShowStatusDrawer(true)}
+          onCategoryClick={() => setShowCategoryDrawer(true)}
+          onSortClick={() => setShowSortSheet(true)}
+          hasActiveStatus={mobileSelectedTab !== "all"}
+          hasActiveCategory={!!selectedCategory}
+          hasActiveSort={sortBy !== "priority"}
+        />
       </div>
 
       {/* Mobile keyboard search */}
@@ -917,6 +897,66 @@ const ProductList: React.FC<Props> = ({ handleEditProduct }) => {
         onSearchChange={setInputValue}
         onClose={() => setShowKeyboardSearch(false)}
       />
+
+      {/* Mobile sort sheet */}
+      <MobileProductSortSheet
+        open={showSortSheet}
+        onOpenChange={setShowSortSheet}
+        onSort={handleMobileSort}
+        initialField={sortBy}
+        initialOrder={sortOrder}
+      />
+
+      {/* Mobile status drawer */}
+      <MobileStatusDrawer
+        open={showStatusDrawer}
+        onOpenChange={setShowStatusDrawer}
+        onSelect={(t) => setMobileSelectedTab(t as TabKey)}
+        options={TAB_CONFIG.map(({ value, label, badgeClass }) => ({ value, label, badgeClass }))}
+        counts={tabCounts}
+        selectedTab={mobileSelectedTab}
+      />
+
+      {/* Mobile category drawer */}
+      <Drawer open={showCategoryDrawer} onOpenChange={setShowCategoryDrawer}>
+        <DrawerContent className='rounded-t-2xl max-h-[70vh]'>
+          <DrawerHeader className='pb-2'>
+            <DrawerTitle className='text-base font-semibold'>Filter by Category</DrawerTitle>
+            <DrawerDescription className='text-xs'>Select a category to filter products</DrawerDescription>
+          </DrawerHeader>
+          <div className='px-4 pb-4 overflow-y-auto max-h-[55vh]'>
+            <div className='space-y-1'>
+              <button
+                onClick={() => { setSelectedCategory(""); setShowCategoryDrawer(false); }}
+                className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-colors ${!selectedCategory ? "bg-indigo-50 text-indigo-700 border border-indigo-200" : "text-zinc-600 hover:bg-zinc-50"}`}>
+                <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${!selectedCategory ? "border-indigo-500 bg-indigo-500" : "border-zinc-300"}`}>
+                  {!selectedCategory && <div className='w-2 h-2 rounded-full bg-white' />}
+                </div>
+                All Categories
+              </button>
+              {categories.map((cat) => (
+                <button
+                  key={cat.id}
+                  onClick={() => { setSelectedCategory(cat.id); setShowCategoryDrawer(false); }}
+                  className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-colors ${selectedCategory === cat.id ? "bg-indigo-50 text-indigo-700 border border-indigo-200" : "text-zinc-600 hover:bg-zinc-50"}`}>
+                  <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center shrink-0 ${selectedCategory === cat.id ? "border-indigo-500 bg-indigo-500" : "border-zinc-300"}`}>
+                    {selectedCategory === cat.id && <div className='w-2 h-2 rounded-full bg-white' />}
+                  </div>
+                  <span className='truncate'>{cat.name}</span>
+                  {cat.totalProducts > 0 && (
+                    <span className='ml-auto text-xs text-zinc-400 shrink-0'>{cat.totalProducts}</span>
+                  )}
+                </button>
+              ))}
+            </div>
+          </div>
+          <DrawerFooter className='pt-0 pb-6'>
+            <DrawerClose asChild>
+              <Button variant='outline' className='w-full'>Close</Button>
+            </DrawerClose>
+          </DrawerFooter>
+        </DrawerContent>
+      </Drawer>
 
       {/* ══════════════════════════════════════════════════════════════════════
           DESKTOP VIEW (≥ sm)
@@ -989,6 +1029,32 @@ const ProductList: React.FC<Props> = ({ handleEditProduct }) => {
               setSelectedCategory={setSelectedCategory}
               selectedCategory={selectedCategory}
             />
+            {/* Sort controls */}
+            <Select value={sortBy} onValueChange={(val) => setSortBy(val as SortField)}>
+              <SelectTrigger className="h-8 w-36 text-xs">
+                <ArrowUpDown className="h-3 w-3 mr-1.5" />
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {Object.entries(SORT_FIELD_LABELS).map(([value, label]) => (
+                  <SelectItem key={value} value={value} className="text-xs">
+                    {label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setSortOrder(sortOrder === "asc" ? "desc" : "asc")}
+              className="h-8 w-8 px-0"
+              title={sortOrder === "asc" ? "Ascending — click for descending" : "Descending — click for ascending"}
+            >
+              {sortOrder === "asc"
+                ? <ArrowUp className="h-3.5 w-3.5" />
+                : <ArrowDown className="h-3.5 w-3.5" />
+              }
+            </Button>
             {(inputValue || selectedCategory) && (
               <Button
                 variant='ghost'

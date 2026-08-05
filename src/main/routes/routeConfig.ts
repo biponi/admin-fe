@@ -51,5 +51,23 @@ export const protectedRouteConfigs: RouteConfig[] = [
     requiredAction: "view",
     title: "Operation Requests",
   },
+  {
+    path: "/blog",
+    page: "Blog",
+    requiredAction: "view",
+    title: "Blog",
+  },
+  {
+    path: "/blog/create",
+    page: "Blog",
+    requiredAction: "create",
+    title: "Create Blog Post",
+  },
+  {
+    path: "/blog/edit/:id",
+    page: "Blog",
+    requiredAction: "edit",
+    title: "Edit Blog Post",
+  },
   // Add more routes here...
 ];
