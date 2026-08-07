@@ -20,6 +20,7 @@ import {
   ArrowUpAZ,
   DollarSign,
   Package,
+  PackageX,
   X,
 } from "lucide-react"
 import type { SortField, SortOrder } from "../hooks/useProductList"
@@ -43,6 +44,7 @@ const SORT_FIELDS: Array<{
   { value: "name", label: "Name", icon: ArrowUpAZ },
   { value: "price", label: "Price", icon: DollarSign },
   { value: "quantity", label: "Stock", icon: Package },
+  { value: "outofstock", label: "Out of Stock", icon: PackageX },
 ]
 
 export function MobileProductSortSheet({

@@ -479,6 +479,7 @@ const ProductList: React.FC<Props> = ({ handleEditProduct }) => {
     name: "Name",
     price: "Price",
     quantity: "Stock",
+    outofstock: "Out of Stock",
   };
 
   const handleMobileSort = (field: SortField, order: SortOrder) => {

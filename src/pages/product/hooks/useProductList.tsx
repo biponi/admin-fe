@@ -3,7 +3,7 @@ import { getProducts } from "../../../api/product";
 import { useToast } from "../../../components/ui/use-toast";
 import { deleteProduct, searchProducts } from "../../../api";
 
-export type SortField = "priority" | "name" | "price" | "quantity" | "createdAt" | "updatedAt";
+export type SortField = "priority" | "name" | "price" | "quantity" | "outofstock" | "createdAt" | "updatedAt";
 export type SortOrder = "asc" | "desc";
 
 export const useProductList = () => {

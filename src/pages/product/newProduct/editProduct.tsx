@@ -123,7 +123,7 @@ const EditProduct: React.FC<Props> = ({
       const initializedData = {
         ...productData,
         categoryIds: categoryIds,
-        categoryId: categoryIds[0] || productData.categoryId || "", // Ensure categoryId is set to first category
+        categoryId: productData.categoryId || categoryIds[0] || "",
         commissionType: productData.commissionType || "none",
         commissionRate: productData.commissionRate || 0,
       };
@@ -152,7 +152,9 @@ const EditProduct: React.FC<Props> = ({
         // Filter out any incomplete groups that might have come from the backend
         const { validGroups, invalidCount } = filterImageGroups(imageData);
         if (invalidCount > 0) {
-          console.warn(`Filtered out ${invalidCount} incomplete imageGroup(s) from backend data missing attribute or value`);
+          console.warn(
+            `Filtered out ${invalidCount} incomplete imageGroup(s) from backend data missing attribute or value`,
+          );
         }
         setImageGroups(validGroups);
       }
@@ -391,13 +393,19 @@ const EditProduct: React.FC<Props> = ({
     }
 
     // Ensure categoryId matches categoryIds[0] for consistency
-    if (formData.categoryId && formData.categoryIds?.length > 0 && formData.categoryId !== formData.categoryIds[0]) {
+    if (
+      formData.categoryId &&
+      formData.categoryIds?.length > 0 &&
+      !formData.categoryIds.includes(formData.categoryId)
+    ) {
       console.error("Category inconsistency detected:", {
         categoryId: formData.categoryId,
         categoryIds: formData.categoryIds,
-        categoryIds0: formData.categoryIds[0]
+        categoryIds0: formData.categoryIds[0],
       });
-      alert("Primary category must match the first selected category. Please reselect your categories.");
+      alert(
+        "Primary category must match the first selected category. Please reselect your categories.",
+      );
       return;
     }
 
@@ -405,15 +413,20 @@ const EditProduct: React.FC<Props> = ({
     if (imageGroups.length > 0) {
       const { validGroups, invalidCount } = filterImageGroups(imageGroups);
       if (invalidCount > 0) {
-        const incompleteGroups = imageGroups.filter(g => !validateImageGroup(g));
-        const groupList = incompleteGroups.map(g =>
-          `• ${g.displayLabel || g.id} (${g.attribute || 'no attribute'} - ${g.value || 'no value'})`
-        ).join('\n');
+        const incompleteGroups = imageGroups.filter(
+          (g) => !validateImageGroup(g),
+        );
+        const groupList = incompleteGroups
+          .map(
+            (g) =>
+              `• ${g.displayLabel || g.id} (${g.attribute || "no attribute"} - ${g.value || "no value"})`,
+          )
+          .join("\n");
 
         alert(
           `You have ${invalidCount} incomplete image group(s) that will not be saved:\n\n${groupList}\n\n` +
-          `Please edit each group and set both the "attribute" and "value" fields before saving.\n\n` +
-          `Incomplete groups are marked with an amber border and "Incomplete" badge.`
+            `Please edit each group and set both the "attribute" and "value" fields before saving.\n\n` +
+            `Incomplete groups are marked with an amber border and "Incomplete" badge.`,
         );
         return;
       }
@@ -464,7 +477,7 @@ const EditProduct: React.FC<Props> = ({
     console.log("imageGroups after filtering:", {
       validGroups: validImageGroups,
       invalidCount,
-      totalOriginal: imageGroups.length
+      totalOriginal: imageGroups.length,
     });
 
     // Log warning if incomplete groups were found
@@ -507,7 +520,8 @@ const EditProduct: React.FC<Props> = ({
     console.log("editProduct - Sending data to API:", {
       imageGroupsCount: productData.imageGroups?.length || 0,
       imageGroupImagesCount: productData.imageGroupImages?.length || 0,
-      imageGroupImageMappingsCount: productData.imageGroupImageMappings?.length || 0,
+      imageGroupImageMappingsCount:
+        productData.imageGroupImageMappings?.length || 0,
       imageGroups: productData.imageGroups,
     });
 
