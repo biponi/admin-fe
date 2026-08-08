@@ -202,26 +202,21 @@ const VariantDrawer: React.FC<VariantDrawerProps> = ({
   const [query, setQuery] = useState("");
   const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
 
-  const normalized = normalizeVariations(variants);
-
-  // Enrich normalized variations with images from image groups
-  const enrichedVariations = normalized.map((v) => {
-    // If already has image, keep it
-    if (v.image) return v;
-
-    // Try to find matching full variation by name to get imageGroupId
-    if (fullVariations) {
-      const fullVar = fullVariations.find((fv) => fv.name === v.name);
-      if (fullVar) {
-        const imgUrl = getVariationImageUrl(fullVar, imageGroups);
-        if (imgUrl) {
-          return { ...v, image: imgUrl };
-        }
-      }
-    }
-
-    return v;
-  });
+  // Use fullVariations directly when available — avoids fragile name-matching
+  const enrichedVariations: Variation[] =
+    fullVariations && fullVariations.length > 0
+      ? fullVariations.map((fv) => ({
+          name:
+            fv.name ||
+            fv.title ||
+            [fv.color, fv.size].filter(Boolean).join(" · ") ||
+            fv.sku,
+          image: getVariationImageUrl(fv, imageGroups) || undefined,
+          sku: fv.sku,
+          stock: fv.quantity,
+          price: fv.unitPrice,
+        }))
+      : normalizeVariations(variants);
 
   const hasVars = !isNoVariant(enrichedVariations);
   const withImages = enrichedVariations.filter((v) => v.image);
@@ -465,26 +460,21 @@ const SingleProductCardItem: React.FC<Props> = ({
   const [imgError, setImgError] = useState(false);
   const [drawerOpen, setDrawerOpen] = useState(false);
 
-  const normalized = normalizeVariations(variations);
-
-  // Enrich normalized variations with images from image groups
-  const enrichedVariations = normalized.map((v) => {
-    // If already has image, keep it
-    if (v.image) return v;
-
-    // Try to find matching full variation by name to get imageGroupId
-    if (variationList) {
-      const fullVar = variationList.find((fv) => fv.name === v.name);
-      if (fullVar) {
-        const imgUrl = getVariationImageUrl(fullVar, imageGroups);
-        if (imgUrl) {
-          return { ...v, image: imgUrl };
-        }
-      }
-    }
-
-    return v;
-  });
+  // Use variationList directly when available — avoids fragile name-matching
+  const enrichedVariations: Variation[] =
+    variationList && variationList.length > 0
+      ? variationList.map((fv) => ({
+          name:
+            fv.name ||
+            fv.title ||
+            [fv.color, fv.size].filter(Boolean).join(" · ") ||
+            fv.sku,
+          image: getVariationImageUrl(fv, imageGroups) || undefined,
+          sku: fv.sku,
+          stock: fv.quantity,
+          price: fv.unitPrice,
+        }))
+      : normalizeVariations(variations);
 
   const hasVars = !isNoVariant(enrichedVariations);
   const variantCount = hasVars ? enrichedVariations.length : 0;

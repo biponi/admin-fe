@@ -890,6 +890,8 @@ const ProductList: React.FC<Props> = ({ handleEditProduct }) => {
                       ? product.variantList
                       : ["No Variant"]
                   }
+                  variationList={product.variation}
+                  imageGroups={product.imageGroups}
                   updatedAt={
                     product.timestamps?.updatedAt || new Date().toISOString()
                   }
@@ -1312,6 +1314,8 @@ const ProductList: React.FC<Props> = ({ handleEditProduct }) => {
                             ? product.variantList
                             : ["No Variant"]
                         }
+                        variationList={product?.variation}
+                        imageGroups={product?.imageGroups}
                         handleUpdateProduct={handleEditProduct}
                         deleteExistingProduct={deleteProductData}
                         updatedAt={product?.timestamps?.updatedAt}
