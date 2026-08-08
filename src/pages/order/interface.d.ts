@@ -315,6 +315,82 @@ export interface IOrderStats {
   averageOrderValue: number;
 }
 
+// Return Order Interfaces
+export enum ReturnReason {
+  DEFECTIVE = "defective",
+  WRONG_ITEM = "wrong_item",
+  NOT_AS_DESCRIBED = "not_as_described",
+  CUSTOMER_REQUEST = "customer_request",
+  DAMAGED = "damaged",
+  OTHER = "other",
+}
+
+export enum ReturnOrderStatus {
+  RETURN = "return",
+  PENDING_REFUND = "pending_refund",
+  REFUNDED = "refunded",
+  REJECTED = "rejected",
+  PROCESSING = "processing",
+}
+
+export interface IReturnOrderProduct {
+  id: string;
+  productId: string;
+  name: string;
+  thumbnail?: string;
+  quantity: number;
+  unitPrice: number;
+  totalPrice: number;
+  discount?: number;
+  hasVariation?: boolean;
+  variation?: {
+    id?: string;
+    size?: string;
+    color?: string;
+  };
+}
+
+export interface IReturnOrder {
+  _id?: string;
+  id: string;
+  originalOrderId: string;
+  originalOrderNumber?: number;
+  orderNumber: number;
+  orderCreatedBy?: string;
+  creatorAvatar?: string;
+  active: boolean;
+  notes?: string;
+  returnReason: ReturnReason | string;
+  returnReasonDetails?: string;
+  customer: ICustomer;
+  status: ReturnOrderStatus | string;
+  totalPrice: number;
+  refundAmount: number;
+  paid?: number;
+  discount?: number;
+  deliveryCharge?: number;
+  remaining?: number;
+  timestamps: {
+    createdAt: string;
+    updatedAt: string;
+    processedAt?: string | null;
+  };
+  payment: IPayment[];
+  shipping: IShipping;
+  products: IReturnOrderProduct[];
+  // Virtual fields
+  ageInDays?: number;
+  statusDisplay?: string;
+}
+
+export interface IReturnOrderStats {
+  totalReturns: number;
+  totalRefundAmount: number;
+  averageRefundAmount: number;
+  returnReasonBreakdown: string[];
+  statusBreakdown: string[];
+}
+
 export interface IOrderFilter {
   status?: OrderStatus | string;
   active?: boolean;

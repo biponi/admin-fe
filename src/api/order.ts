@@ -1,7 +1,12 @@
 import axios from "./axios";
 import config from "../utils/config";
 import { handleApiError } from ".";
-import { CourierProvider, IOrder } from "../pages/order/interface";
+import {
+  CourierProvider,
+  IOrder,
+  IReturnOrder,
+  IReturnOrderStats,
+} from "../pages/order/interface";
 
 interface ApiResponse<T> {
   success: boolean;
@@ -595,6 +600,156 @@ export const getOrderDetails = async (
     }
   } catch (error: any) {
     console.error("Error getting order details:", error.message);
+    return handleApiError(error);
+  }
+};
+
+// ============================================
+// Order Return API
+// ============================================
+
+export interface ReturnProductsPayload {
+  orderId: number;
+  products: Array<{
+    productId: string;
+    hasVariation: boolean;
+    variation?: { id: string } | null;
+    quantity: number;
+  }>;
+  returnReason?: string;
+  returnReasonDetails?: string;
+}
+
+export interface ReturnProductsResponse {
+  refundAmount: number;
+}
+
+export const returnProducts = async (
+  payload: ReturnProductsPayload,
+): Promise<ApiResponse<ReturnProductsResponse>> => {
+  try {
+    const response = await axios.post<ReturnProductsResponse>(
+      config.order.returnProducts(),
+      payload,
+    );
+    if (response.status === 200) {
+      return { success: true, data: response.data };
+    } else {
+      return {
+        success: false,
+        error: "Failed to process return",
+      };
+    }
+  } catch (error: any) {
+    console.error("Error processing return:", error.message);
+    return handleApiError(error);
+  }
+};
+
+// ============================================
+// Return Orders Management API
+// ============================================
+
+export interface ReturnOrdersListResponse {
+  returnOrders: IReturnOrder[];
+  totalReturnOrders: number;
+  totalPages: number;
+  currentPage: number;
+  returnOrderStats: IReturnOrderStats;
+}
+
+/**
+ * Get return orders list
+ * @param limit - Number of return orders per page
+ * @param page - Page number
+ * @param status - Filter by status
+ */
+export const getReturnOrders = async (
+  limit = 50,
+  page = 1,
+  status = "",
+): Promise<ApiResponse<ReturnOrdersListResponse>> => {
+  try {
+    const response = await axios.get<{
+      success: boolean;
+      data?: ReturnOrdersListResponse;
+      error?: string;
+    }>(config.order.getReturnOrders(), {
+      params: { limit, page, status },
+    });
+    if (response.status === 200 && response.data.success) {
+      return { success: true, data: response.data.data };
+    } else {
+      return {
+        success: false,
+        error: response.data?.error || "Failed to get return orders",
+      };
+    }
+  } catch (error: any) {
+    console.error("Error getting return orders:", error.message);
+    return handleApiError(error);
+  }
+};
+
+/**
+ * Search return orders by query
+ * @param query - Search query (phone, name, order number)
+ * @param status - Filter by status
+ * @param limit - Number of results per page
+ * @param page - Page number
+ */
+export const searchReturnOrders = async (
+  query: string,
+  status = "",
+  limit = 50,
+  page = 1,
+): Promise<ApiResponse<ReturnOrdersListResponse>> => {
+  try {
+    const response = await axios.post<{
+      success: boolean;
+      data?: ReturnOrdersListResponse;
+      error?: string;
+    }>(config.order.searchReturnOrders(), {
+      params: { limit, page },
+      query,
+      status,
+    });
+    if (response.status === 200 && response.data.success) {
+      return { success: true, data: response.data.data };
+    } else {
+      return {
+        success: false,
+        error: response.data?.error || "Failed to search return orders",
+      };
+    }
+  } catch (error: any) {
+    console.error("Error searching return orders:", error.message);
+    return handleApiError(error);
+  }
+};
+
+/**
+ * Get return order statistics
+ */
+export const getReturnOrderStats = async (): Promise<
+  ApiResponse<IReturnOrderStats>
+> => {
+  try {
+    const response = await axios.get<{
+      success: boolean;
+      data?: IReturnOrderStats;
+      error?: string;
+    }>(config.order.getReturnOrderStats());
+    if (response.status === 200 && response.data.success) {
+      return { success: true, data: response.data.data };
+    } else {
+      return {
+        success: false,
+        error: response.data?.error || "Failed to get return order stats",
+      };
+    }
+  } catch (error: any) {
+    console.error("Error getting return order stats:", error.message);
     return handleApiError(error);
   }
 };

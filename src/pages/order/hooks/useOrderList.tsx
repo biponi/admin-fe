@@ -7,9 +7,17 @@ import {
   searchOrders,
   deleteOrder,
   orderBulkAction,
+  getReturnOrders,
+  searchReturnOrders,
+  getReturnOrderStats,
 } from "../../../api/order";
 import useLoginAuth from "../../auth/hooks/useLoginAuth";
-import { IOrder, IOrderStatusCount } from "../interface";
+import {
+  IOrder,
+  IOrderStatusCount,
+  IReturnOrder,
+  IReturnOrderStats,
+} from "../interface";
 
 export const useOrderList = () => {
   const { toast } = useToast();
@@ -31,6 +39,19 @@ export const useOrderList = () => {
   const [orderStatusCount, setOrderStatusCount] =
     useState<IOrderStatusCount | null>(null);
 
+  // Return orders state
+  const [returnOrders, setReturnOrders] = useState<IReturnOrder[]>([]);
+  const [returnOrderStats, setReturnOrderStats] =
+    useState<IReturnOrderStats | null>(null);
+  const [returnOrderFetching, setReturnOrderFetching] = useState(false);
+  const [totalReturnOrders, setTotalReturnOrders] = useState(0);
+  const [returnTotalPages, setReturnTotalPages] = useState(0);
+  const [returnCurrentPage, setReturnCurrentPage] = useState(1);
+  const [returnSearchQuery, setReturnSearchQuery] = useState("");
+  const [returnSelectedStatus, setReturnSelectedStatus] = useState<string>("");
+  const [selectedReturnOrder, setSelectedReturnOrder] =
+    useState<IReturnOrder | null>(null);
+
   useEffect(() => {
     if (currentPageNum === 1) return;
     else getOrderList();
@@ -46,6 +67,19 @@ export const useOrderList = () => {
     else searchOrderByQuery();
     //eslint-disable-next-line
   }, [searchQuery, selectedStatus]);
+
+  // Return orders effects
+  useEffect(() => {
+    if (returnCurrentPage === 1) return;
+    else getReturnOrderList();
+    //eslint-disable-next-line
+  }, [returnCurrentPage]);
+
+  useEffect(() => {
+    if (returnSearchQuery === "") setReturnCurrentPage(1);
+    else searchReturnOrderByQuery();
+    //eslint-disable-next-line
+  }, [returnSearchQuery, returnSelectedStatus]);
 
   const refresh = async () => {
     const response = await getOrders(limit, currentPageNum, selectedStatus);
@@ -100,6 +134,82 @@ export const useOrderList = () => {
     const response = await getOrderAnalysis();
     if (response.success) {
       setAnalytics({ ...response.data });
+    }
+  };
+
+  // Return orders functions
+  const getReturnOrderList = async () => {
+    setReturnOrderFetching(true);
+    try {
+      const response = await getReturnOrders(
+        limit,
+        returnCurrentPage,
+        returnSelectedStatus
+      );
+      if (response?.success && response?.data) {
+        const {
+          returnOrders: orders,
+          totalReturnOrders: total,
+          totalPages: pages,
+          currentPage,
+          returnOrderStats: stats,
+        } = response.data;
+        setReturnOrders(orders || []);
+        setTotalReturnOrders(total || 0);
+        setReturnTotalPages(pages || 0);
+        if (currentPage !== returnCurrentPage)
+          setReturnCurrentPage(Number(currentPage));
+        setReturnOrderStats(stats || null);
+      } else {
+        toast({
+          variant: "destructive",
+          title: "Return Orders Error",
+          description: response?.error,
+        });
+      }
+    } catch (error) {
+      console.error("Error fetching return orders:", error);
+    } finally {
+      setReturnOrderFetching(false);
+    }
+  };
+
+  const searchReturnOrderByQuery = async () => {
+    try {
+      const response = await searchReturnOrders(
+        returnSearchQuery,
+        returnSelectedStatus,
+        limit,
+        returnCurrentPage
+      );
+      if (response?.success && response?.data) {
+        const {
+          returnOrders: orders,
+          totalReturnOrders: total,
+          totalPages: pages,
+          currentPage,
+          returnOrderStats: stats,
+        } = response.data;
+        setReturnOrders(orders || []);
+        setTotalReturnOrders(total || 0);
+        setReturnTotalPages(pages || 0);
+        if (currentPage !== returnCurrentPage)
+          setReturnCurrentPage(Number(currentPage));
+        setReturnOrderStats(stats || null);
+      }
+    } catch (error) {
+      console.error("Error searching return orders:", error);
+    }
+  };
+
+  const fetchReturnOrderStats = async () => {
+    try {
+      const response = await getReturnOrderStats();
+      if (response?.success && response?.data) {
+        setReturnOrderStats(response.data);
+      }
+    } catch (error) {
+      console.error("Error fetching return order stats:", error);
     }
   };
 
@@ -232,5 +342,22 @@ export const useOrderList = () => {
     setSelectedStatus,
     updateCurrentPage,
     performOrderBulkUpdate,
+
+    // Return orders
+    returnOrders,
+    returnOrderStats,
+    returnOrderFetching,
+    totalReturnOrders,
+    returnTotalPages,
+    returnCurrentPage,
+    returnSearchQuery,
+    returnSelectedStatus,
+    selectedReturnOrder,
+    setReturnCurrentPage,
+    setReturnSearchQuery,
+    setReturnSelectedStatus,
+    setSelectedReturnOrder,
+    getReturnOrderList,
+    fetchReturnOrderStats,
   };
 };

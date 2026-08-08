@@ -22,6 +22,7 @@ import {
   ClipboardCheck,
   FileEdit,
   FileText,
+  RotateCcw,
 } from "lucide-react";
 
 export const navItems = [
@@ -53,6 +54,14 @@ export const navItems = [
         url: "/order/create",
       },
     ],
+    roles: ["admin", "manager", "moderator"],
+  },
+  {
+    icon: <RotateCcw className='w-5 h-5' />,
+    title: "Returns",
+    link: "/order?view=returns",
+    active: true,
+    id: "returns",
     roles: ["admin", "manager", "moderator"],
   },
   {

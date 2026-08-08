@@ -14,6 +14,7 @@ import {
   AlertTriangle,
   Truck,
   RefreshCcw,
+  RotateCcw,
   ShieldAlert,
   ShieldCheck,
   Shield,
@@ -72,6 +73,7 @@ interface OrderTableProps {
   onViewFraud?: (order: IOrder) => void;
   onViewTracking?: (order: IOrder) => void;
   onReturnOrder?: (order: IOrder) => void;
+  onViewReturnDetails?: (order: IOrder) => void;
   className?: string;
 }
 
@@ -87,6 +89,7 @@ export const OrderTable: React.FC<OrderTableProps> = ({
   onViewFraud,
   onViewTracking,
   onReturnOrder,
+  onViewReturnDetails,
   className,
 }) => {
   return (
@@ -409,6 +412,13 @@ export const OrderTable: React.FC<OrderTableProps> = ({
                             onClick={() => onReturnOrder?.(order)}>
                             <RefreshCcw className='mr-2 h-4 w-4' />
                             Return Products
+                          </DropdownMenuItem>
+                        )}
+                        {order.isReturn && (
+                          <DropdownMenuItem
+                            onClick={() => onViewReturnDetails?.(order)}>
+                            <RotateCcw className='mr-2 h-4 w-4' />
+                            View Return Details
                           </DropdownMenuItem>
                         )}
                         {hasHighRisk && (

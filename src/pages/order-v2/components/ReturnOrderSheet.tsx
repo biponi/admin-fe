@@ -41,8 +41,7 @@ import { Separator } from "../../../components/ui/separator";
 import { Textarea } from "../../../components/ui/textarea";
 import { RadioGroup, RadioGroupItem } from "../../../components/ui/radio-group";
 import { useToast } from "../../../components/ui/use-toast";
-import axiosInstance from "../../../api/axios";
-import config from "../../../utils/config";
+import { returnProducts } from "../../../api/order";
 import type { IOrder } from "../types";
 import { formatCurrency } from "../lib/utils";
 
@@ -133,6 +132,8 @@ export const ReturnOrderSheet: React.FC<ReturnOrderSheetProps> = ({
   const [returnReasonDetails, setReturnReasonDetails] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  // Workaround: Radix UI Sheet/Dialog leaves orphaned portal overlays in the DOM
+  // after close. Clean them up after the close animation completes (400ms).
   useEffect(() => {
     if (!open) {
       const timer = setTimeout(() => {
@@ -149,6 +150,12 @@ export const ReturnOrderSheet: React.FC<ReturnOrderSheetProps> = ({
       return () => clearTimeout(timer);
     }
   }, [open]);
+
+  const getVariationData = (product: any) => {
+    const v = product.variation || product.variant;
+    if (v && (v.size || v.color)) return v;
+    return null;
+  };
 
   const handleProductSelection = (
     productId: string,
@@ -277,17 +284,21 @@ export const ReturnOrderSheet: React.FC<ReturnOrderSheetProps> = ({
 
     setIsSubmitting(true);
     try {
-      const response = await axiosInstance.post(config.order.returnProducts(), {
+      const result = await returnProducts({
         orderId: order.id,
         products: selectedProducts,
-        returnReason: returnReason,
+        returnReason,
         returnReasonDetails: returnReasonDetails.trim(),
       });
+
+      if (!result.success) {
+        throw new Error(result.error || "Failed to process return");
+      }
 
       toast({
         title: "Return processed successfully",
         description: `Refund amount: ${formatCurrency(
-          response.data.refundAmount,
+          result.data?.refundAmount ?? 0,
         )}`,
       });
 
@@ -474,18 +485,10 @@ export const ReturnOrderSheet: React.FC<ReturnOrderSheetProps> = ({
                     type='button'
                     onClick={() => {
                       order.products.forEach((product) => {
-                        const productVariationData =
-                          product.variation || product.variant;
-                        const productHasVariationData =
-                          (product.hasVariation || product.variant) &&
-                          productVariationData &&
-                          (productVariationData.size ||
-                            productVariationData.color);
+                        const v = getVariationData(product);
                         handleQuantityChange(
                           product.productId,
-                          productHasVariationData
-                            ? productVariationData?.id || null
-                            : null,
+                          v ? v.id : null,
                           product.quantity,
                         );
                       });
@@ -508,12 +511,8 @@ export const ReturnOrderSheet: React.FC<ReturnOrderSheetProps> = ({
                   {/* Table Body */}
                   <div className='divide-y divide-gray-100'>
                     {order.products.map((product, index) => {
-                      const variationData =
-                        product.variation || product.variant;
-                      const hasVariationData =
-                        (product.hasVariation || product.variant) &&
-                        variationData &&
-                        (variationData.size || variationData.color);
+                      const variationData = getVariationData(product);
+                      const hasVariationData = variationData !== null;
 
                       const selectedProduct = selectedProducts.find(
                         (sp) =>

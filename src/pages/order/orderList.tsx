@@ -58,6 +58,9 @@ import {
 } from "../../components/ui/table";
 import { useOrderList } from "./hooks/useOrderList";
 import SingleItem from "./components/SingleOrderItem";
+import { ReturnOrderList } from "./components/ReturnOrderList";
+import { ReturnOrderDetailPanel } from "./components/ReturnOrderDetailPanel";
+import { ReturnOrderStats } from "./components/ReturnOrderStats";
 import { useEffect, useState, useMemo } from "react";
 import { Input } from "../../components/ui/input";
 import useDebounce from "../../customHook/useDebounce";
@@ -135,6 +138,7 @@ import { useIsMobile } from "../../hooks/use-mobile";
 import { BRAND_CONFIG } from "../../config/brand";
 import PlaceHolderImage from "../../assets/placeholder.svg";
 import { cn } from "@/lib/utils";
+import { showOrderModal } from "../../utils/orderModal";
 import EditOrderPanelContent from "../order-v2/components/EditCustomerInformationSheet";
 
 const OrderList = () => {
@@ -158,6 +162,23 @@ const OrderList = () => {
     orderStatusCount,
     setSelectedStatus,
     performOrderBulkUpdate,
+
+    // Return orders
+    returnOrders,
+    returnOrderStats,
+    returnOrderFetching,
+    totalReturnOrders,
+    returnTotalPages,
+    returnCurrentPage,
+    returnSearchQuery,
+    returnSelectedStatus,
+    selectedReturnOrder,
+    setReturnCurrentPage,
+    setReturnSearchQuery,
+    setReturnSelectedStatus,
+    setSelectedReturnOrder,
+    getReturnOrderList,
+    fetchReturnOrderStats,
   } = useOrderList();
 
   const { hasRequiredPermission, hasSomePermissionsForPage } = useRoleCheck();
@@ -192,6 +213,10 @@ const OrderList = () => {
   const [showFilterSheet, setShowFilterSheet] = useState<boolean>(false);
   const [showSortSheet, setShowSortSheet] = useState<boolean>(false);
   const [showKeyboardSearch, setShowKeyboardSearch] = useState<boolean>(false);
+
+  // Return order detail panel state
+  const [showReturnDetails, setShowReturnDetails] = useState<boolean>(false);
+  const [isReturnView, setIsReturnView] = useState<boolean>(false);
 
   const debounceHandler = useDebounce(inputValue, 500);
 
@@ -367,20 +392,25 @@ const OrderList = () => {
         icon: XCircle,
         count: orderStatusCount?.cancel ?? 0,
       },
-      {
-        key: "return",
-        label: "Return",
-        icon: RefreshCw,
-        count: orderStatusCount?.returnOrderCount ?? 0,
-      },
     ];
+
+    const activeTab = isReturnView ? "return" : selectedStatus;
 
     return (
       <div className='py-2 border-0 rounded-md  shadow-none flex justify-between items-center'>
         <Tabs
-          value={selectedStatus}
-          onValueChange={(value: string) => setSelectedStatus(value)}>
-          <TabsList className='grid w-full grid-cols-6 bg-gray-100 rounded-xl p-1'>
+          value={activeTab}
+          onValueChange={(value: string) => {
+            if (value === "return") {
+              setIsReturnView(true);
+              getReturnOrderList();
+              fetchReturnOrderStats();
+            } else {
+              setIsReturnView(false);
+              setSelectedStatus(value);
+            }
+          }}>
+          <TabsList className='grid w-full grid-cols-7 bg-gray-100 rounded-xl p-1'>
             {statusConfig.map(({ key, label, icon: Icon, count }) => (
               <TabsTrigger
                 key={key}
@@ -393,18 +423,33 @@ const OrderList = () => {
                 </span>
               </TabsTrigger>
             ))}
+            <TabsTrigger
+              value='return'
+              className='flex items-center gap-2 text-sm font-medium data-[state=active]:bg-orange-500 data-[state=active]:text-white data-[state=active]:shadow-sm rounded-lg transition-all duration-200'>
+              <RotateCcw className='w-4 h-4' />
+              <span className='hidden lg:inline'>Returns</span>
+              <span className='font-semibold'>
+                ({orderStatusCount?.returnOrderCount ?? 0})
+              </span>
+            </TabsTrigger>
           </TabsList>
         </Tabs>
         {/* Action Buttons */}
         <div className='flex items-center gap-3 justify-between md:justify-normal'>
           <Button
             variant='outline'
-            onClick={() => getOrderList()}
+            onClick={() => {
+              if (isReturnView) {
+                getReturnOrderList();
+              } else {
+                getOrderList();
+              }
+            }}
             className='border-gray-300 hover:bg-gray-50 w-full md:w-auto'>
             <RefreshCw className='w-4 h-4 mr-2' />
             Refresh
           </Button>
-          {hasRequiredPermission("order", "create") && (
+          {!isReturnView && hasRequiredPermission("order", "create") && (
             <Button
               onClick={() => navigate("/order/create")}
               className='bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white shadow-lg'
@@ -1981,6 +2026,10 @@ const OrderList = () => {
   };
 
   const mainView = () => {
+    if (isReturnView) {
+      return renderReturnOrdersView();
+    }
+
     if (orderFetching) {
       return (
         <>
@@ -2020,6 +2069,160 @@ const OrderList = () => {
         </>
       );
     }
+  };
+
+  const renderReturnOrdersView = () => {
+    return (
+      <div className='min-h-screen md:min-h-[80vh] bg-white'>
+        <div className='max-w-full mx-auto px-0 sm:px-6 lg:px-8'>
+          {/* Header Section */}
+          <div className='mb-2 px-4 md:px-0'>
+            <div className='flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6'>
+              <div className='space-y-2'>
+                <div className='flex items-center gap-3'>
+                  <div className='w-6 h-6 md:w-12 md:h-12 bg-gradient-to-r from-orange-500 to-amber-600 rounded-xl flex items-center justify-center'>
+                    <RotateCcw className='w-4 h-4 md:w-6 md:h-6 text-white' />
+                  </div>
+                  <div>
+                    <h1 className='text-lg md:text-3xl font-bold text-gray-900'>
+                      Return Orders
+                    </h1>
+                    <p className='text-gray-600 hidden md:block'>
+                      Manage returns and process refunds
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Return Order Stats */}
+          <div className='mb-4 px-4 md:px-0'>
+            <ReturnOrderStats stats={returnOrderStats} />
+          </div>
+
+          {/* Search + Actions Bar */}
+          <div className='mb-2 px-4 md:px-0'>
+            <div className='flex flex-col sm:flex-row gap-3 items-stretch sm:items-center justify-between'>
+              <div className='relative flex-1 max-w-md'>
+                <Search className='absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4' />
+                <Input
+                  type='text'
+                  placeholder='Search return orders, customers, or order numbers...'
+                  value={returnSearchQuery}
+                  onChange={(event) => setReturnSearchQuery(event.target.value)}
+                  className='pl-10 pr-4 h-10 border-2 focus:border-orange-500 rounded-xl'
+                />
+              </div>
+              <div className='flex items-center gap-2'>
+                <Button
+                  variant='outline'
+                  size='sm'
+                  onClick={() => {
+                    getReturnOrderList();
+                    fetchReturnOrderStats();
+                  }}
+                  className='border-gray-300 hover:bg-gray-50'>
+                  <RefreshCw className='w-4 h-4 mr-1.5' />
+                  Refresh
+                </Button>
+                <Button
+                  variant='outline'
+                  size='sm'
+                  onClick={() => setIsReturnView(false)}
+                  className='border-orange-300 text-orange-700 hover:bg-orange-50'>
+                  <ShoppingBag className='w-4 h-4 mr-1.5' />
+                  Back to Orders
+                </Button>
+              </div>
+            </div>
+          </div>
+
+          {/* Return Orders List */}
+          <div className='px-4 md:px-0'>
+            {returnOrderFetching ? (
+              <div className='flex flex-col items-center justify-center py-12'>
+                <Loader2 className='w-8 h-8 text-orange-600 animate-spin mb-4' />
+                <p className='text-gray-600'>Loading return orders...</p>
+              </div>
+            ) : (
+              <>
+                <ReturnOrderList
+                  returnOrders={returnOrders}
+                  onViewDetails={(order) => {
+                    setSelectedReturnOrder(order);
+                    setShowReturnDetails(true);
+                  }}
+                />
+
+                {/* Pagination */}
+                {returnOrders.length > 0 && (
+                  <div className='mt-4 flex items-center justify-between'>
+                    <div className='text-sm text-gray-600'>
+                      Showing{' '}
+                      <span className='font-semibold'>
+                        {(returnCurrentPage - 1) * limit + 1}-
+                        {Math.min(returnCurrentPage * limit, totalReturnOrders)}
+                      </span>{' '}
+                      of{' '}
+                      <span className='font-semibold'>{totalReturnOrders}</span>{' '}
+                      return orders
+                    </div>
+                    <div className='flex items-center gap-2'>
+                      <Select
+                        value={`${limit}`}
+                        onValueChange={(value: string) =>
+                          setLimit(parseInt(value, 10))
+                        }>
+                        <SelectTrigger className='w-24'>
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectGroup>
+                            <SelectLabel>Per page</SelectLabel>
+                            <SelectItem value='10'>10</SelectItem>
+                            <SelectItem value='50'>50</SelectItem>
+                            <SelectItem value='100'>100</SelectItem>
+                          </SelectGroup>
+                        </SelectContent>
+                      </Select>
+                      <div className='flex gap-1'>
+                        <Button
+                          disabled={returnCurrentPage < 2}
+                          variant='outline'
+                          size='sm'
+                          onClick={() => setReturnCurrentPage(returnCurrentPage - 1)}>
+                          <ChevronLeft className='h-4 w-4' />
+                        </Button>
+                        <Button
+                          disabled={returnCurrentPage >= returnTotalPages}
+                          variant='outline'
+                          size='sm'
+                          onClick={() => setReturnCurrentPage(returnCurrentPage + 1)}>
+                          <ChevronRight className='h-4 w-4' />
+                        </Button>
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </>
+            )}
+          </div>
+        </div>
+
+        {/* Return Order Detail Panel */}
+        <ReturnOrderDetailPanel
+          isOpen={showReturnDetails}
+          onClose={() => setShowReturnDetails(false)}
+          returnOrder={selectedReturnOrder}
+          onViewOriginalOrder={() => {
+            if (selectedReturnOrder?.originalOrderNumber) {
+              showOrderModal(selectedReturnOrder.originalOrderNumber);
+            }
+          }}
+        />
+      </div>
+    );
   };
 
   const handleCourierSelection = async (courierProvider: CourierProvider) => {

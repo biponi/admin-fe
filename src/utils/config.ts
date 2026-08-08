@@ -103,6 +103,11 @@ const config = {
     getProcessingOrderCount: () => `${baseURL}/order/prior/processing/count`,
     getCustomerAddress: () => `${baseURL}/order/customer-addresses`,
     getCustomerSummary: () => `${baseURL}/order/customer-summary`,
+
+    // Return Orders Endpoints
+    getReturnOrders: () => `${baseURL}/order/prior/return-orders`,
+    searchReturnOrders: () => `${baseURL}/order/prior/return-orders/search`,
+    getReturnOrderStats: () => `${baseURL}/order/prior/return-orders/stats`,
   },
   transaction: {
     create: () => `${baseURL}/transection/create`,

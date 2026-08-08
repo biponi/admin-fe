@@ -42,6 +42,7 @@ import { FloatingHelpButton } from "./components/FloatingHelpButton";
 import { OnboardingTour } from "./components/OnboardingTour";
 import { FraudDetectionContent } from "./components/FraudDetectionContent";
 import { ReturnOrderSheet } from "./components/ReturnOrderSheet";
+import { ReturnOrdersView } from "./components/ReturnOrdersView";
 import { InvoicePreviewModal } from "./components/InvoicePreviewModal";
 import { PackingSlipPreviewModal } from "./components/PackingSlipPreviewModal";
 import { Button } from "../../components/ui/button";
@@ -843,63 +844,69 @@ export const OrderListV2: React.FC = () => {
         </div>
       </motion.header>
 
-      {/* ── Order table ───────────────────────────────────── */}
-      <div className='flex-1 overflow-auto px-4 sm:px-6 lg:px-8 py-5'>
-        {isLoading ? (
-          <div className='flex items-center justify-center h-72'>
-            <div className='flex flex-col items-center gap-3 text-center bg-white rounded-2xl border border-gray-100 shadow-sm px-12 py-10'>
-              <Loader2 className='h-8 w-8 animate-spin text-blue-600' />
-              <p className='text-sm font-medium text-gray-700'>
-                Loading orders…
-              </p>
-              <p className='text-xs text-gray-400'>This won't take long</p>
+      {/* ── Main content ──────────────────────────────────── */}
+      {activeTab === "return" ? (
+        <ReturnOrdersView
+          onBackToOrders={() => handleTabChange("all")}
+        />
+      ) : (
+        <div className='flex-1 overflow-auto px-4 sm:px-6 lg:px-8 py-5'>
+          {isLoading ? (
+            <div className='flex items-center justify-center h-72'>
+              <div className='flex flex-col items-center gap-3 text-center bg-white rounded-2xl border border-gray-100 shadow-sm px-12 py-10'>
+                <Loader2 className='h-8 w-8 animate-spin text-blue-600' />
+                <p className='text-sm font-medium text-gray-700'>
+                  Loading orders…
+                </p>
+                <p className='text-xs text-gray-400'>This won't take long</p>
+              </div>
             </div>
-          </div>
-        ) : (
-          <motion.div
-            variants={fadeIn}
-            initial='hidden'
-            animate='visible'
-            className='space-y-4'>
-            {/* Desktop */}
-            <div className='hidden md:block'>
-              <OrderTable
-                key='order-table-desktop'
-                orders={orders}
-                onSelectAll={handleSelectAll}
-                selectedIds={selection.selectedIds}
-                onSelect={handleOrderSelection}
-                onView={handleViewOrder}
-                onEdit={handleEditOrder}
-                onModify={handleModifyOrder}
-                onDelete={handleDeleteOrder}
-                onViewFraud={handleViewFraud}
-                onViewTracking={handleViewTracking}
-                onReturnOrder={handleReturnOrder}
-              />
-            </div>
+          ) : (
+            <motion.div
+              variants={fadeIn}
+              initial='hidden'
+              animate='visible'
+              className='space-y-4'>
+              {/* Desktop */}
+              <div className='hidden md:block'>
+                <OrderTable
+                  key='order-table-desktop'
+                  orders={orders}
+                  onSelectAll={handleSelectAll}
+                  selectedIds={selection.selectedIds}
+                  onSelect={handleOrderSelection}
+                  onView={handleViewOrder}
+                  onEdit={handleEditOrder}
+                  onModify={handleModifyOrder}
+                  onDelete={handleDeleteOrder}
+                  onViewFraud={handleViewFraud}
+                  onViewTracking={handleViewTracking}
+                  onReturnOrder={handleReturnOrder}
+                />
+              </div>
 
-            {/* Mobile */}
-            <div className='md:hidden'>
-              <MobileOrderList
-                key='mobile-order-list'
-                orders={orders}
-                selectedIds={selection.selectedIds}
-                onSelect={handleOrderSelection}
-                onView={handleViewOrder}
-                onEdit={handleEditOrder}
-                onDelete={handleDeleteOrder}
-                onViewFraud={handleViewFraud}
-                onViewTracking={handleViewTracking}
-                onReturnOrder={handleReturnOrder}
-              />
-            </div>
-          </motion.div>
-        )}
-      </div>
+              {/* Mobile */}
+              <div className='md:hidden'>
+                <MobileOrderList
+                  key='mobile-order-list'
+                  orders={orders}
+                  selectedIds={selection.selectedIds}
+                  onSelect={handleOrderSelection}
+                  onView={handleViewOrder}
+                  onEdit={handleEditOrder}
+                  onDelete={handleDeleteOrder}
+                  onViewFraud={handleViewFraud}
+                  onViewTracking={handleViewTracking}
+                  onReturnOrder={handleReturnOrder}
+                />
+              </div>
+            </motion.div>
+          )}
+        </div>
+      )}
 
       {/* ── Pagination ────────────────────────────────────── */}
-      {totalPages > 1 && (
+      {activeTab !== "return" && totalPages > 1 && (
         <div className='bg-white border-t border-gray-200 px-4 sm:px-6 lg:px-8 py-3'>
           <div className='flex items-center justify-between gap-4'>
             {/* Page size + info */}
@@ -956,22 +963,24 @@ export const OrderListV2: React.FC = () => {
       )}
 
       {/* ── Bulk actions bar ──────────────────────────────── */}
-      <BulkActionsBar
-        selectedCount={selection.selectedIds.size}
-        totalCount={orders.length}
-        isAllSelected={selection.isAllSelected}
-        onClearSelection={handleClearSelection}
-        onSelectAll={handleSelectAll}
-        onShipped={handleBulkShipped}
-        onComplete={handleBulkComplete}
-        onCancel={handleBulkCancel}
-        onGenerateInvoices={handleBulkInvoiceDownload}
-        onPrintInvoices={printBulkInvoices}
-        onGeneratePackingSlips={handleBulkPackingSlipDownload}
-        onPrintPackingSlips={printBulkPackingSlips}
-        onViewSelectedOrders={() => setSelectedOrdersViewerOpen(true)}
-        progress={bulkActionProgress}
-      />
+      {activeTab !== "return" && (
+        <BulkActionsBar
+          selectedCount={selection.selectedIds.size}
+          totalCount={orders.length}
+          isAllSelected={selection.isAllSelected}
+          onClearSelection={handleClearSelection}
+          onSelectAll={handleSelectAll}
+          onShipped={handleBulkShipped}
+          onComplete={handleBulkComplete}
+          onCancel={handleBulkCancel}
+          onGenerateInvoices={handleBulkInvoiceDownload}
+          onPrintInvoices={printBulkInvoices}
+          onGeneratePackingSlips={handleBulkPackingSlipDownload}
+          onPrintPackingSlips={printBulkPackingSlips}
+          onViewSelectedOrders={() => setSelectedOrdersViewerOpen(true)}
+          progress={bulkActionProgress}
+        />
+      )}
 
       {/* ── Courier selector ──────────────────────────────── */}
       <CourierSelector

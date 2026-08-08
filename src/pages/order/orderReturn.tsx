@@ -1,7 +1,6 @@
 import React, { useState } from "react";
-import config from "../../utils/config";
 import { IOrder } from "./interface";
-import axiosInstance from "../../api/axios";
+import { returnProducts } from "../../api/order";
 import {
   Card,
   CardContent,
@@ -53,6 +52,8 @@ const AdjustReturnProduct: React.FC<AdjustReturnProductProps> = ({
   const [selectedProducts, setSelectedProducts] = useState<SelectedProduct[]>(
     []
   );
+  const [returnReason, setReturnReason] = useState("");
+  const [returnReasonDetails, setReturnReasonDetails] = useState("");
 
   const handleProductSelection = (
     productId: string,
@@ -140,16 +141,22 @@ const AdjustReturnProduct: React.FC<AdjustReturnProductProps> = ({
     
     setIsSubmitting(true);
     try {
-      const response = await axiosInstance.post(config.order.returnProducts(), {
+      const result = await returnProducts({
         orderId: order.id,
         products: selectedProducts,
+        returnReason: returnReason || undefined,
+        returnReasonDetails: returnReasonDetails.trim() || undefined,
       });
 
-      toast.success(`Return processed successfully! Refund: ৳${response.data.refundAmount}`);
+      if (!result.success) {
+        throw new Error(result.error || "Failed to process return");
+      }
+
+      toast.success(`Return processed successfully! Refund: ৳${result.data?.refundAmount ?? 0}`);
       handleClose();
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error adjusting return:", error);
-      toast.error("Failed to process return. Please try again.");
+      toast.error(error.message || "Failed to process return. Please try again.");
     } finally {
       setIsSubmitting(false);
     }
@@ -198,6 +205,35 @@ const AdjustReturnProduct: React.FC<AdjustReturnProductProps> = ({
                 Select the products and quantities you want to return. The refund amount will be calculated automatically.
               </AlertDescription>
             </Alert>
+
+            {/* Return Reason */}
+            <div className="mb-4 space-y-2">
+              <Label className="text-sm font-medium text-gray-700">Return Reason</Label>
+              <select
+                value={returnReason}
+                onChange={(e) => setReturnReason(e.target.value)}
+                className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-400"
+              >
+                <option value="">Select a reason...</option>
+                <option value="defective">Defective product</option>
+                <option value="wrong_item">Wrong item sent</option>
+                <option value="not_as_described">Not as described</option>
+                <option value="customer_request">Customer request</option>
+                <option value="damaged">Damaged in transit</option>
+                <option value="other">Other</option>
+              </select>
+            </div>
+
+            {/* Return Details */}
+            <div className="mb-6 space-y-2">
+              <Label className="text-sm font-medium text-gray-700">Additional Details</Label>
+              <textarea
+                value={returnReasonDetails}
+                onChange={(e) => setReturnReasonDetails(e.target.value)}
+                placeholder="Describe the issue..."
+                className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm min-h-[60px] resize-none bg-white focus:outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-400"
+              />
+            </div>
 
             {/* Products List */}
             <ScrollArea className="max-h-[50vh] pr-4">

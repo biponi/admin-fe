@@ -15,6 +15,7 @@ import {
   Edit,
   Trash2,
   RefreshCcw,
+  RotateCcw,
   AlertTriangle,
   Truck,
   CheckCircle2,
@@ -47,6 +48,7 @@ interface MobileOrderListProps {
   onViewFraud?: (order: IOrder) => void;
   onViewTracking?: (order: IOrder) => void;
   onReturnOrder?: (order: IOrder) => void;
+  onViewReturnDetails?: (order: IOrder) => void;
 }
 
 export const MobileOrderList: React.FC<MobileOrderListProps> = ({
@@ -59,6 +61,7 @@ export const MobileOrderList: React.FC<MobileOrderListProps> = ({
   onViewFraud,
   onViewTracking,
   onReturnOrder,
+  onViewReturnDetails,
 }) => {
   if (orders.length === 0) {
     return (
@@ -138,6 +141,12 @@ export const MobileOrderList: React.FC<MobileOrderListProps> = ({
                           <DropdownMenuItem onClick={() => onReturnOrder?.(order)}>
                             <RefreshCcw className="mr-2 h-4 w-4" />
                             Return Products
+                          </DropdownMenuItem>
+                        )}
+                        {order.isReturn && (
+                          <DropdownMenuItem onClick={() => onViewReturnDetails?.(order)}>
+                            <RotateCcw className="mr-2 h-4 w-4" />
+                            View Return Details
                           </DropdownMenuItem>
                         )}
                         {hasHighRisk && (

@@ -62,6 +62,11 @@ const statusConfig: Record<
     color: 'bg-gray-100 text-gray-800 border-gray-200',
     icon: '⚠',
   },
+  return: {
+    label: 'Returned',
+    color: 'bg-orange-100 text-orange-800 border-orange-200',
+    icon: '↩',
+  },
 
   // Delivery statuses
   not_shipped: {
