@@ -24,6 +24,7 @@ interface MobileStatusDrawerProps {
   options: TabOption[]
   counts: Record<string, number>
   selectedTab: string
+  isInactiveView?: boolean
 }
 
 export function MobileStatusDrawer({
@@ -33,6 +34,7 @@ export function MobileStatusDrawer({
   options,
   counts,
   selectedTab,
+  isInactiveView = false,
 }: MobileStatusDrawerProps) {
   const handleSelect = (value: string) => {
     onSelect(value)
@@ -44,7 +46,7 @@ export function MobileStatusDrawer({
       <DrawerContent className="rounded-t-2xl max-h-[70vh]">
         <DrawerHeader className="pb-2 flex flex-row items-center justify-between">
           <div className="flex items-center gap-2">
-            <ListFilter className="h-5 w-5 text-indigo-600" />
+            <ListFilter className={`h-5 w-5 ${isInactiveView ? "text-orange-500" : "text-indigo-600"}`} />
             <div>
               <DrawerTitle className="text-base font-semibold">Filter by Status</DrawerTitle>
               <DrawerDescription className="text-xs">Select a status to filter products</DrawerDescription>
@@ -67,20 +69,30 @@ export function MobileStatusDrawer({
                   onClick={() => handleSelect(option.value)}
                   className={`w-full flex items-center justify-between px-4 py-3 rounded-xl text-sm font-medium transition-colors ${
                     isSelected
-                      ? "bg-indigo-50 text-indigo-700 border border-indigo-200"
+                      ? isInactiveView
+                        ? "bg-orange-50 text-orange-700 border border-orange-200"
+                        : "bg-indigo-50 text-indigo-700 border border-indigo-200"
                       : "text-zinc-600 hover:bg-zinc-50 border border-transparent"
                   }`}
                 >
                   <div className="flex items-center gap-3">
                     <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${
-                      isSelected ? "border-indigo-500 bg-indigo-500" : "border-zinc-300"
+                      isSelected
+                        ? isInactiveView
+                          ? "border-orange-500 bg-orange-500"
+                          : "border-indigo-500 bg-indigo-500"
+                        : "border-zinc-300"
                     }`}>
                       {isSelected && <div className="w-2 h-2 rounded-full bg-white" />}
                     </div>
                     <span>{option.label}</span>
                   </div>
                   <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${
-                    isSelected ? "bg-indigo-100 text-indigo-700" : option.badgeClass
+                    isSelected
+                      ? isInactiveView
+                        ? "bg-orange-100 text-orange-700"
+                        : "bg-indigo-100 text-indigo-700"
+                      : option.badgeClass
                   }`}>
                     {counts[option.value]}
                   </span>

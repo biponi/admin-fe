@@ -9,6 +9,7 @@ interface MobileProductBottomNavProps {
   hasActiveStatus?: boolean
   hasActiveCategory?: boolean
   hasActiveSort?: boolean
+  isInactiveView?: boolean
 }
 
 export function MobileProductBottomNav({
@@ -19,6 +20,7 @@ export function MobileProductBottomNav({
   hasActiveStatus = false,
   hasActiveCategory = false,
   hasActiveSort = false,
+  isInactiveView = false,
 }: MobileProductBottomNavProps) {
   const navItems = [
     {
@@ -62,14 +64,20 @@ export function MobileProductBottomNav({
                 onClick={item.onClick}
                 className={`relative h-14 rounded-xl px-2 py-1.5 transition-all active:scale-[0.97] ${
                   item.isActive
-                    ? "bg-indigo-50 text-indigo-700 hover:bg-indigo-100"
+                    ? isInactiveView
+                      ? "bg-orange-50 text-orange-700 hover:bg-orange-100"
+                      : "bg-indigo-50 text-indigo-700 hover:bg-indigo-100"
                     : "text-gray-600 hover:bg-gray-100 hover:text-gray-900"
                 }`}
               >
                 <span className="flex flex-col items-center gap-1">
                   <span
                     className={`relative flex h-6 w-8 items-center justify-center rounded-full ${
-                      item.isActive ? "bg-indigo-600 text-white" : "text-gray-500"
+                      item.isActive
+                        ? isInactiveView
+                          ? "bg-orange-500 text-white"
+                          : "bg-indigo-600 text-white"
+                        : "text-gray-500"
                     }`}
                   >
                     <Icon className="h-4.5 w-4.5" />

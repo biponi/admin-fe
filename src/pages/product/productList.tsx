@@ -821,7 +821,7 @@ const ProductList: React.FC<Props> = ({ handleEditProduct }) => {
         {/* Sticky top bar */}
         <div className='sticky top-0 z-30 bg-white border-b border-zinc-200 shadow-sm'>
           {/* Header row */}
-          <div className='flex items-center justify-between px-4 py-3 bg-gradient-to-r from-red-500 to-orange-500'>
+          <div className={`flex items-center justify-between px-4 py-3 bg-gradient-to-r ${isInactiveView ? "from-orange-500 to-amber-500" : "from-red-500 to-orange-500"}`}>
             <div>
               <h1 className='text-lg font-bold text-white leading-tight'>
                 Products
@@ -926,6 +926,7 @@ const ProductList: React.FC<Props> = ({ handleEditProduct }) => {
           hasActiveStatus={mobileSelectedTab !== "all"}
           hasActiveCategory={!!selectedCategory}
           hasActiveSort={sortBy !== "priority"}
+          isInactiveView={isInactiveView}
         />
       </div>
 
@@ -958,6 +959,7 @@ const ProductList: React.FC<Props> = ({ handleEditProduct }) => {
         }))}
         counts={tabCounts}
         selectedTab={mobileSelectedTab}
+        isInactiveView={isInactiveView}
       />
 
       {/* Mobile category drawer */}
@@ -1032,7 +1034,7 @@ const ProductList: React.FC<Props> = ({ handleEditProduct }) => {
         {/* Page header */}
         <div className='flex items-center justify-between'>
           <div className='flex items-center gap-2.5'>
-            <div className='w-8 h-8 rounded-lg bg-indigo-600 flex items-center justify-center'>
+            <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${isInactiveView ? "bg-orange-500" : "bg-indigo-600"}`}>
               <ShoppingBag className='h-4 w-4 text-white' />
             </div>
             <div>
@@ -1052,7 +1054,7 @@ const ProductList: React.FC<Props> = ({ handleEditProduct }) => {
               <Button
                 size='sm'
                 onClick={() => navigate("/products/create")}
-                className='h-8 text-xs gap-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg px-3'>
+                className={`h-8 text-xs gap-1.5 text-white rounded-lg px-3 ${isInactiveView ? "bg-orange-500 hover:bg-orange-600" : "bg-indigo-600 hover:bg-indigo-700"}`}>
                 <PlusCircle className='h-3.5 w-3.5' /> New Product
               </Button>
             )}
@@ -1075,7 +1077,7 @@ const ProductList: React.FC<Props> = ({ handleEditProduct }) => {
               <Input
                 type='text'
                 placeholder='Search by name, SKU, category…'
-                className='pl-9 h-8 text-sm bg-white border-zinc-200 rounded-lg placeholder:text-zinc-400 focus-visible:ring-1 focus-visible:ring-indigo-500'
+                className={`pl-9 h-8 text-sm bg-white border-zinc-200 rounded-lg placeholder:text-zinc-400 focus-visible:ring-1 ${isInactiveView ? "focus-visible:ring-orange-500" : "focus-visible:ring-indigo-500"}`}
                 value={inputValue}
                 onChange={(e) => setInputValue(e.target.value)}
               />
@@ -1170,7 +1172,9 @@ const ProductList: React.FC<Props> = ({ handleEditProduct }) => {
                 onClick={() => setSelectedTab(value)}
                 className={`relative flex items-center gap-2 h-10 px-3 text-sm font-medium whitespace-nowrap border-b-2 transition-colors ${
                   selectedTab === value
-                    ? "border-indigo-600 text-indigo-600"
+                    ? isInactiveView
+                      ? "border-orange-500 text-orange-600"
+                      : "border-indigo-600 text-indigo-600"
                     : "border-transparent text-zinc-500 hover:text-zinc-700"
                 }`}>
                 {label}
@@ -1181,6 +1185,16 @@ const ProductList: React.FC<Props> = ({ handleEditProduct }) => {
               </button>
             ))}
           </div>
+
+          {/* Inactive mode banner */}
+          {isInactiveView && (
+            <div className='flex items-center gap-2 px-4 py-2 bg-orange-50 border-b border-orange-100'>
+              <Info className='h-3.5 w-3.5 text-orange-500 shrink-0' />
+              <span className='text-xs font-medium text-orange-700'>
+                You're viewing inactive products only
+              </span>
+            </div>
+          )}
 
           {/* Table area — relative so the overlay can position against it */}
           <div className='relative'>
