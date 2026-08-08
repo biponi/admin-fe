@@ -2097,9 +2097,11 @@ const OrderList = () => {
           </div>
 
           {/* Return Order Stats */}
-          <div className='mb-4 px-4 md:px-0'>
-            <ReturnOrderStats stats={returnOrderStats} />
-          </div>
+          {hasRequiredPermission("report", "view") && (
+            <div className='mb-4 px-4 md:px-0'>
+              <ReturnOrderStats stats={returnOrderStats} />
+            </div>
+          )}
 
           {/* Search + Actions Bar */}
           <div className='mb-2 px-4 md:px-0'>
@@ -2159,13 +2161,13 @@ const OrderList = () => {
                 {returnOrders.length > 0 && (
                   <div className='mt-4 flex items-center justify-between'>
                     <div className='text-sm text-gray-600'>
-                      Showing{' '}
+                      Showing{" "}
                       <span className='font-semibold'>
                         {(returnCurrentPage - 1) * limit + 1}-
                         {Math.min(returnCurrentPage * limit, totalReturnOrders)}
-                      </span>{' '}
-                      of{' '}
-                      <span className='font-semibold'>{totalReturnOrders}</span>{' '}
+                      </span>{" "}
+                      of{" "}
+                      <span className='font-semibold'>{totalReturnOrders}</span>{" "}
                       return orders
                     </div>
                     <div className='flex items-center gap-2'>
@@ -2191,14 +2193,18 @@ const OrderList = () => {
                           disabled={returnCurrentPage < 2}
                           variant='outline'
                           size='sm'
-                          onClick={() => setReturnCurrentPage(returnCurrentPage - 1)}>
+                          onClick={() =>
+                            setReturnCurrentPage(returnCurrentPage - 1)
+                          }>
                           <ChevronLeft className='h-4 w-4' />
                         </Button>
                         <Button
                           disabled={returnCurrentPage >= returnTotalPages}
                           variant='outline'
                           size='sm'
-                          onClick={() => setReturnCurrentPage(returnCurrentPage + 1)}>
+                          onClick={() =>
+                            setReturnCurrentPage(returnCurrentPage + 1)
+                          }>
                           <ChevronRight className='h-4 w-4' />
                         </Button>
                       </div>

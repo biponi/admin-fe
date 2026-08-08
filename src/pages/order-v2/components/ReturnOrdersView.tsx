@@ -32,6 +32,7 @@ import {
   SelectValue,
 } from "../../../components/ui/select";
 import type { IReturnOrder, IReturnOrderStats } from "../../order/interface";
+import useRoleCheck from "@/pages/auth/hooks/useRoleCheck";
 
 interface ReturnOrdersViewProps {
   onBackToOrders?: () => void;
@@ -40,6 +41,7 @@ interface ReturnOrdersViewProps {
 const ReturnOrdersView: React.FC<ReturnOrdersViewProps> = ({
   onBackToOrders,
 }) => {
+  const { hasRequiredPermission } = useRoleCheck();
   const [returnOrders, setReturnOrders] = useState<IReturnOrder[]>([]);
   const [returnOrderStats, setReturnOrderStats] =
     useState<IReturnOrderStats | null>(null);
@@ -146,9 +148,11 @@ const ReturnOrdersView: React.FC<ReturnOrdersViewProps> = ({
     <div className='flex flex-col h-full bg-white'>
       <div className='flex-1 overflow-auto px-3 sm:px-6 lg:px-8 py-3 sm:py-5'>
         {/* Stats */}
-        <div className='mb-3 sm:mb-4'>
-          <ReturnOrderStats stats={returnOrderStats} />
-        </div>
+        {hasRequiredPermission("report", "view") && (
+          <div className='mb-3 sm:mb-4'>
+            <ReturnOrderStats stats={returnOrderStats} />
+          </div>
+        )}
 
         {/* Search + Actions */}
         <div className='mb-3 sm:mb-4 space-y-2 sm:space-y-0 flex justify-between items-center gap-2 sm:gap-3 flex-col sm:flex-row'>

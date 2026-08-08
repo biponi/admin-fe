@@ -837,18 +837,18 @@ export const OrderListV2: React.FC = () => {
             </div>
 
             {/* Search */}
-            <div className='flex-shrink-0'>
-              <SearchBar value={searchQuery} onChange={setSearchQuery} />
-            </div>
+            {activeTab !== "return" && (
+              <div className='flex-shrink-0'>
+                <SearchBar value={searchQuery} onChange={setSearchQuery} />
+              </div>
+            )}
           </div>
         </div>
       </motion.header>
 
       {/* ── Main content ──────────────────────────────────── */}
       {activeTab === "return" ? (
-        <ReturnOrdersView
-          onBackToOrders={() => handleTabChange("all")}
-        />
+        <ReturnOrdersView onBackToOrders={() => handleTabChange("all")} />
       ) : (
         <div className='flex-1 overflow-auto px-4 sm:px-6 lg:px-8 py-5'>
           {isLoading ? (
