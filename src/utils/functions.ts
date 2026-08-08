@@ -310,3 +310,72 @@ export const getVariationImageUrl = (
   // No image found
   return null;
 };
+
+/**
+ * Collect all unique image URLs from a product:
+ * thumbnail + variation images + image group images.
+ * Deduplicates by normalized URL string and File identity.
+ */
+export const getAllProductImages = (product: {
+  thumbnail?: string;
+  variation?: Array<{ images?: (File | string)[]; imageGroupId?: string }>;
+  imageGroups?: Array<{ id: string; images: (File | string)[] }>;
+}): string[] => {
+  const seen = new Set<string>();
+  const result: string[] = [];
+
+  const normalizeUrl = (url: string): string => {
+    try {
+      const u = new URL(url, window.location.origin);
+      u.search = "";
+      u.hash = "";
+      return u.href.replace(/\/+$/, "");
+    } catch {
+      return url.split("?")[0].replace(/\/+$/, "");
+    }
+  };
+
+  const add = (url: string | null | undefined) => {
+    if (!url) return;
+    // blob URLs from File objects — use the raw URL as-is since each createObjectURL is unique
+    if (url.startsWith("blob:")) {
+      if (!seen.has(url)) {
+        seen.add(url);
+        result.push(url);
+      }
+      return;
+    }
+    const normalized = normalizeUrl(url);
+    if (!seen.has(normalized)) {
+      seen.add(normalized);
+      result.push(url);
+    }
+  };
+
+  // 1. Main thumbnail
+  add(product.thumbnail);
+
+  // 2. Variation images (resolved via image groups)
+  if (product.variation) {
+    for (const v of product.variation) {
+      add(getVariationImageUrl(v, product.imageGroups));
+    }
+  }
+
+  // 3. Image group images (all images, not just first)
+  if (product.imageGroups) {
+    for (const group of product.imageGroups) {
+      if (group.images) {
+        for (const img of group.images) {
+          if (typeof img === "string") {
+            add(img);
+          } else if (img instanceof File) {
+            add(URL.createObjectURL(img));
+          }
+        }
+      }
+    }
+  }
+
+  return result;
+};

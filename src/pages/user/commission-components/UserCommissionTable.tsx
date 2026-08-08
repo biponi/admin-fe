@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import {
   Card,
   CardContent,
@@ -17,6 +17,13 @@ import { Avatar, AvatarFallback } from "../../../components/ui/avatar";
 import { Badge } from "../../../components/ui/badge";
 import { Separator } from "../../../components/ui/separator";
 import { Button } from "../../../components/ui/button";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "../../../components/ui/select";
 import { useCommission } from "../../../hooks/useCommission";
 import { CommissionStatusBadge } from "../../commission/components/CommissionStatusBadge";
 import {
@@ -24,6 +31,8 @@ import {
   formatCurrency,
 } from "../../../utils/inventoryReportUtils";
 import { Commission } from "../../../api/commission";
+import { DateRangePicker } from "../../../coreComponents/DateRangePicker";
+import { DateRange } from "react-day-picker";
 import {
   Loader2,
   Package,
@@ -31,7 +40,9 @@ import {
   CheckCircle2,
   ChevronLeft,
   ChevronRight,
+  X,
 } from "lucide-react";
+import { startOfDay, endOfDay } from "date-fns";
 
 interface UserCommissionTableProps {
   userId: string;
@@ -47,24 +58,57 @@ export const UserCommissionTable: React.FC<UserCommissionTableProps> = ({
     totalItems: 0,
   });
   const [isLoadingPage, setIsLoadingPage] = useState(false);
+  const [dateRange, setDateRange] = useState<DateRange>({
+    from: undefined,
+    to: undefined,
+  });
+  const [statusFilter, setStatusFilter] = useState<string>("all");
   const { fetchPersonalCommissions, isLoading } = useCommission();
+
+  const filterParams = useMemo(() => {
+    const params: Record<string, any> = {
+      page: 1,
+      limit: 20,
+    };
+    if (dateRange.from) {
+      params.startDate = startOfDay(dateRange.from).toISOString();
+    }
+    if (dateRange.to) {
+      params.endDate = endOfDay(dateRange.to).toISOString();
+    }
+    if (statusFilter !== "all") {
+      params.status = statusFilter;
+    }
+    return params;
+  }, [dateRange, statusFilter]);
 
   const loadCommissions = useCallback(
     async (page: number) => {
       setIsLoadingPage(true);
-      const data = await fetchPersonalCommissions({ page, limit: 20 });
+      const data = await fetchPersonalCommissions({
+        ...filterParams,
+        page,
+      });
       if (data) {
         setCommissions(data.commissions);
         setPagination(data.pagination);
       }
       setIsLoadingPage(false);
     },
-    [fetchPersonalCommissions],
+    [fetchPersonalCommissions, filterParams],
   );
 
   useEffect(() => {
     loadCommissions(1);
   }, [loadCommissions]);
+
+  const hasActiveFilters =
+    dateRange.from !== undefined || dateRange.to !== undefined || statusFilter !== "all";
+
+  const clearFilters = () => {
+    setDateRange({ from: undefined, to: undefined });
+    setStatusFilter("all");
+  };
 
   const handlePageChange = (page: number) => {
     if (page < 1 || page > pagination.totalPages || isLoadingPage) return;
@@ -78,6 +122,57 @@ export const UserCommissionTable: React.FC<UserCommissionTableProps> = ({
         <CardTitle>My Commissions</CardTitle>
       </CardHeader>
       <CardContent>
+        {/* Filter Bar */}
+        <div className="mb-4 space-y-3">
+          {/* Date Range Picker + Status Filter */}
+          <div className="flex items-center gap-3 flex-wrap">
+            <DateRangePicker
+              initialDateFrom={dateRange.from}
+              initialDateTo={dateRange.to}
+              showCompare={false}
+              onUpdate={(values: { range: DateRange }) => {
+                setDateRange({
+                  from: values.range.from ? startOfDay(values.range.from) : undefined,
+                  to: values.range.to ? endOfDay(values.range.to) : undefined,
+                });
+              }}
+            />
+
+            <div className="flex items-center gap-2">
+              <span className="text-sm font-medium text-muted-foreground">
+                Status:
+              </span>
+              <Select value={statusFilter} onValueChange={setStatusFilter}>
+                <SelectTrigger className="w-[140px] h-9 text-xs">
+                  <SelectValue placeholder="All Statuses" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Statuses</SelectItem>
+                  <SelectItem value="pending">Pending</SelectItem>
+                  <SelectItem value="unpaid">Unpaid</SelectItem>
+                  <SelectItem value="paid">Paid</SelectItem>
+                  <SelectItem value="hold">Hold</SelectItem>
+                  <SelectItem value="cancelled">Cancelled</SelectItem>
+                  <SelectItem value="removed">Removed</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            {hasActiveFilters && (
+              <Button
+                variant="ghost"
+                size="sm"
+                className="h-9 text-xs text-muted-foreground"
+                onClick={clearFilters}>
+                <X className="h-3 w-3 mr-1" />
+                Clear Filters
+              </Button>
+            )}
+          </div>
+        </div>
+
+        <Separator className="mb-4" />
+
         {isLoading ? (
           <div className='flex justify-center items-center py-8'>
             <Loader2 className='h-8 w-8 animate-spin text-muted-foreground' />

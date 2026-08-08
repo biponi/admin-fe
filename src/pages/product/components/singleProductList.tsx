@@ -27,7 +27,11 @@ import { ProductAdjustmentHistory } from "./ProductAdjustmentHistory";
 import DeleteRequestDialog from "./DeleteRequestDialog";
 import type { IVariation } from "../interface";
 import PlaceHolderImage from "../../../assets/placeholder.svg";
-import { getVariationImageUrl } from "../../../utils/functions";
+import {
+  getVariationImageUrl,
+  getAllProductImages,
+} from "../../../utils/functions";
+import { ImageLightbox } from "../../../components/ImageLightbox";
 
 dayjs.extend(advancedFormat);
 
@@ -332,8 +336,23 @@ const SingleItem: React.FC<Props> = ({
   const [adjustDialogOpen, setAdjustDialogOpen] = useState(false);
   const [historyDialogOpen, setHistoryDialogOpen] = useState(false);
   const [isVariationPopoverOpen, setIsVariationPopoverOpen] = useState(false);
+  const [thumbLightboxImages, setThumbLightboxImages] = useState<string[]>([]);
+  const [thumbLightboxIndex, setThumbLightboxIndex] = useState(0);
+
+  const handleThumbnailClick = () => {
+    const images = getAllProductImages({
+      thumbnail: image,
+      variation: variationList,
+      imageGroups,
+    });
+    if (images.length > 0) {
+      setThumbLightboxImages(images);
+      setThumbLightboxIndex(0);
+    }
+  };
 
   return (
+    <>
     <TableRow className='group border-b border-zinc-100 transition-colors hover:bg-zinc-50/60 align-top rounded-md'>
       {/* Image + active dot */}
       <TableCell className='pt-3 pl-3 pr-2 w-20'>
@@ -341,9 +360,10 @@ const SingleItem: React.FC<Props> = ({
           <img
             src={image || PlaceHolderImage}
             alt={title}
-            className={`h-16 w-20 rounded-lg object-cover border border-zinc-200 ${
+            className={`h-16 w-20 rounded-lg object-cover border border-zinc-200 cursor-pointer ${
               !active ? "opacity-50" : ""
             }`}
+            onClick={handleThumbnailClick}
             onError={(e) => {
               (e.target as HTMLImageElement).src = PlaceHolderImage;
             }}
@@ -498,6 +518,18 @@ const SingleItem: React.FC<Props> = ({
         />
       )}
     </TableRow>
+
+    {/* Thumbnail image lightbox */}
+    {thumbLightboxImages.length > 0 && (
+      <ImageLightbox
+        images={thumbLightboxImages}
+        initialIndex={thumbLightboxIndex}
+        open={thumbLightboxImages.length > 0}
+        onClose={() => setThumbLightboxImages([])}
+        alt={title}
+      />
+    )}
+    </>
   );
 };
 

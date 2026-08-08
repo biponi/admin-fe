@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Package,
   Edit,
@@ -11,8 +11,6 @@ import {
   Search,
   ImageOff,
   ZoomIn,
-  ChevronLeft,
-  ChevronRight,
   X,
   BoxIcon,
   RotateCcw,
@@ -25,7 +23,12 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "../../../components/ui/dropdown-menu";
-import { cn, getVariationImageUrl } from "../../../utils/functions";
+import {
+  cn,
+  getVariationImageUrl,
+  getAllProductImages,
+} from "../../../utils/functions";
+import { ImageLightbox } from "../../../components/ImageLightbox";
 import useRoleCheck from "../../auth/hooks/useRoleCheck";
 import dayjs from "dayjs";
 import ShareButton from "../../../common/ShareButton";
@@ -74,122 +77,6 @@ const normalizeVariations = (v: string[] | Variation[]): Variation[] => {
 const isNoVariant = (v: Variation[]) =>
   v.length === 1 && v[0].name === "No Variant";
 
-/* ─── Variant Image Lightbox ─────────────────────────────── */
-
-interface LightboxProps {
-  variants: Variation[];
-  startIndex: number;
-  onClose: () => void;
-}
-
-const VariantLightbox: React.FC<LightboxProps> = ({
-  variants,
-  startIndex,
-  onClose,
-}) => {
-  const [idx, setIdx] = useState(startIndex);
-  const withImages = variants.filter((v) => v.image);
-  const current = withImages[idx];
-
-  const prev = useCallback(
-    () => setIdx((i) => (i - 1 + withImages.length) % withImages.length),
-    [withImages.length],
-  );
-  const next = useCallback(
-    () => setIdx((i) => (i + 1) % withImages.length),
-    [withImages.length],
-  );
-
-  useEffect(() => {
-    const handler = (e: KeyboardEvent) => {
-      if (e.key === "Escape") onClose();
-      if (e.key === "ArrowLeft") prev();
-      if (e.key === "ArrowRight") next();
-    };
-    window.addEventListener("keydown", handler);
-    return () => window.removeEventListener("keydown", handler);
-  }, [onClose, prev, next]);
-
-  if (!current) return null;
-
-  return (
-    <div
-      className='fixed inset-0 z-[200] flex items-center justify-center bg-black/80'
-      onClick={onClose}>
-      <div
-        className='relative max-w-lg w-full mx-4 rounded-2xl overflow-hidden bg-zinc-900 shadow-2xl'
-        onClick={(e) => e.stopPropagation()}>
-        <button
-          onClick={onClose}
-          className='absolute top-3 right-3 z-10 w-8 h-8 flex items-center justify-center rounded-full bg-black/50 text-white hover:bg-black/70 transition-colors'
-          aria-label='Close lightbox'>
-          <X className='w-4 h-4' />
-        </button>
-
-        <div className='aspect-square w-full bg-zinc-800'>
-          <img
-            src={current.image}
-            alt={current.name}
-            className='w-full h-full object-contain'
-          />
-        </div>
-
-        <div className='px-5 py-4 flex items-center justify-between'>
-          <div>
-            <p className='text-white font-semibold text-sm'>{current.name}</p>
-            {current.sku && (
-              <p className='text-zinc-400 text-xs font-mono mt-0.5'>
-                {current.sku}
-              </p>
-            )}
-          </div>
-          <span className='text-zinc-500 text-xs'>
-            {idx + 1} / {withImages.length}
-          </span>
-        </div>
-
-        {withImages.length > 1 && (
-          <>
-            <button
-              onClick={prev}
-              className='absolute left-3 top-[45%] -translate-y-1/2 w-9 h-9 flex items-center justify-center rounded-full bg-black/50 text-white hover:bg-black/70 transition-colors'
-              aria-label='Previous image'>
-              <ChevronLeft className='w-5 h-5' />
-            </button>
-            <button
-              onClick={next}
-              className='absolute right-3 top-[45%] -translate-y-1/2 w-9 h-9 flex items-center justify-center rounded-full bg-black/50 text-white hover:bg-black/70 transition-colors'
-              aria-label='Next image'>
-              <ChevronRight className='w-5 h-5' />
-            </button>
-          </>
-        )}
-
-        {withImages.length > 1 && (
-          <div className='flex gap-2 px-5 pb-4 overflow-x-auto'>
-            {withImages.map((v, i) => (
-              <button
-                key={i}
-                onClick={() => setIdx(i)}
-                className={`shrink-0 w-12 h-12 rounded-lg overflow-hidden border-2 transition-all ${
-                  i === idx
-                    ? "border-indigo-400 scale-105"
-                    : "border-transparent opacity-50 hover:opacity-100"
-                }`}>
-                <img
-                  src={v.image}
-                  alt={v.name}
-                  className='w-full h-full object-cover'
-                />
-              </button>
-            ))}
-          </div>
-        )}
-      </div>
-    </div>
-  );
-};
-
 /* ─── Variant Drawer ─────────────────────────────────────── */
 
 interface VariantDrawerProps {
@@ -212,7 +99,8 @@ const VariantDrawer: React.FC<VariantDrawerProps> = ({
   fullVariations,
 }) => {
   const [query, setQuery] = useState("");
-  const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
+  const [lightboxImages, setLightboxImages] = useState<string[]>([]);
+  const [lightboxIndex, setLightboxIndex] = useState(0);
 
   // Use fullVariations directly when available — avoids fragile name-matching
   const enrichedVariations: Variation[] =
@@ -239,13 +127,20 @@ const VariantDrawer: React.FC<VariantDrawerProps> = ({
       )
     : [];
 
+  const handleImageClick = (variant: Variation) => {
+    const imgs = withImages.map((v) => v.image!);
+    const idx = imgs.indexOf(variant.image!);
+    setLightboxImages(imgs);
+    setLightboxIndex(idx >= 0 ? idx : 0);
+  };
+
   useEffect(() => {
     if (!open) return;
     const h = (e: KeyboardEvent) =>
-      e.key === "Escape" && !lightboxIndex && onClose();
+      e.key === "Escape" && lightboxImages.length === 0 && onClose();
     window.addEventListener("keydown", h);
     return () => window.removeEventListener("keydown", h);
-  }, [open, onClose, lightboxIndex]);
+  }, [open, onClose, lightboxImages.length]);
 
   // Prevent body scroll when drawer is open
   useEffect(() => {
@@ -359,9 +254,6 @@ const VariantDrawer: React.FC<VariantDrawerProps> = ({
           ) : (
             <div className='grid grid-cols-2 sm:grid-cols-3 gap-3'>
               {filtered.map((variant, index) => {
-                const imgIndex = withImages.findIndex(
-                  (v) => v.name === variant.name,
-                );
                 return (
                   <div
                     key={index}
@@ -374,9 +266,7 @@ const VariantDrawer: React.FC<VariantDrawerProps> = ({
                           className='w-full h-full object-cover group-hover:scale-105 transition-transform duration-300'
                         />
                         <button
-                          onClick={() =>
-                            imgIndex >= 0 && setLightboxIndex(imgIndex)
-                          }
+                          onClick={() => handleImageClick(variant)}
                           className='absolute inset-0 flex items-center justify-center bg-black/0 group-hover:bg-black/25 transition-colors'
                           aria-label={`Zoom ${variant.name}`}>
                           <ZoomIn className='w-6 h-6 text-white opacity-0 group-hover:opacity-100 transition-opacity drop-shadow' />
@@ -440,11 +330,13 @@ const VariantDrawer: React.FC<VariantDrawerProps> = ({
       </div>
 
       {/* Lightbox — z above drawer */}
-      {lightboxIndex !== null && (
-        <VariantLightbox
-          variants={enrichedVariations}
-          startIndex={lightboxIndex}
-          onClose={() => setLightboxIndex(null)}
+      {lightboxImages.length > 0 && (
+        <ImageLightbox
+          images={lightboxImages}
+          initialIndex={lightboxIndex}
+          open={lightboxImages.length > 0}
+          onClose={() => setLightboxImages([])}
+          alt='Variation image'
         />
       )}
     </>
@@ -473,11 +365,25 @@ const MobileProductCard: React.FC<MobileProductCardProps> = ({
 }) => {
   const { hasRequiredPermission, hasSomePermissionsForPage } = useRoleCheck();
   const [drawerOpen, setDrawerOpen] = useState(false);
+  const [thumbLightboxImages, setThumbLightboxImages] = useState<string[]>([]);
+  const [thumbLightboxIndex, setThumbLightboxIndex] = useState(0);
   const dialogBtn = React.useRef<HTMLButtonElement>(null);
 
   const handleVariantClick = () => {
     if (onViewVariations) onViewVariations();
     else setDrawerOpen(true);
+  };
+
+  const handleThumbnailClick = () => {
+    const images = getAllProductImages({
+      thumbnail: image,
+      variation: variationList,
+      imageGroups,
+    });
+    if (images.length > 0) {
+      setThumbLightboxImages(images);
+      setThumbLightboxIndex(0);
+    }
   };
 
   const formatNumber = (num: number): string => {
@@ -503,7 +409,8 @@ const MobileProductCard: React.FC<MobileProductCardProps> = ({
               <img
                 src={image}
                 alt={title}
-                className='w-full h-full object-cover group-hover:scale-[1.04] transition-transform duration-500'
+                className='w-full h-full object-cover group-hover:scale-[1.04] transition-transform duration-500 cursor-pointer'
+                onClick={handleThumbnailClick}
                 onError={(e) => {
                   e.currentTarget.style.display = "none";
                 }}
@@ -707,6 +614,17 @@ const MobileProductCard: React.FC<MobileProductCardProps> = ({
           Trigger Delete Dialog
         </button>
       </DeleteRequestDialog>
+
+      {/* Thumbnail image lightbox */}
+      {thumbLightboxImages.length > 0 && (
+        <ImageLightbox
+          images={thumbLightboxImages}
+          initialIndex={thumbLightboxIndex}
+          open={thumbLightboxImages.length > 0}
+          onClose={() => setThumbLightboxImages([])}
+          alt={title}
+        />
+      )}
     </>
   );
 };
