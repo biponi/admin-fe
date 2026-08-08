@@ -19,6 +19,7 @@ import {
   ArrowUpDown,
   ArrowUp,
   ArrowDown,
+  Info,
 } from "lucide-react";
 import { Button } from "../../components/ui/button";
 import {
@@ -452,6 +453,8 @@ const ProductList: React.FC<Props> = ({ handleEditProduct }) => {
     setSortBy,
     sortOrder,
     setSortOrder,
+    activeOnly,
+    setActiveOnly,
   } = useProductList();
 
   const navigate = useNavigate();
@@ -508,6 +511,19 @@ const ProductList: React.FC<Props> = ({ handleEditProduct }) => {
   useEffect(() => {
     setSearchQuery(inputValue);
   }, [debounceHandler]);
+
+  // Sync desktop tab selection → activeOnly
+  useEffect(() => {
+    setActiveOnly(selectedTab !== "inactive");
+  }, [selectedTab]);
+
+  // Sync mobile tab selection → activeOnly
+  useEffect(() => {
+    setActiveOnly(mobileSelectedTab !== "inactive");
+  }, [mobileSelectedTab]);
+
+  // Whether the inactive tab is active (desktop or mobile)
+  const isInactiveView = selectedTab === "inactive" || mobileSelectedTab === "inactive";
 
   // Wrap page-change to use table-only loading state
   const handlePageChange = useCallback(

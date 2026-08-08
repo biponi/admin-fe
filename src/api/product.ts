@@ -40,6 +40,7 @@ export const getProducts = async (
   categoryId?: string,
   sortBy?: string,
   sortOrder?: string,
+  activeOnly?: boolean,
 ): Promise<ApiResponse<any>> => {
   try {
     const params: any = { limit, page };
@@ -51,6 +52,7 @@ export const getProducts = async (
 
     if (sortBy) params.sortBy = sortBy;
     if (sortOrder) params.sortOrder = sortOrder;
+    if (activeOnly === false) params.activeOnly = false;
 
     const response = await axios.get<any>(config.product.getProductList(), {
       params,

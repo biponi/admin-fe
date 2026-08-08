@@ -19,6 +19,7 @@ export const useProductList = () => {
   const [limit, setLimit] = useState(20);
   const [sortBy, setSortBy] = useState<SortField>("priority");
   const [sortOrder, setSortOrder] = useState<SortOrder>("desc");
+  const [activeOnly, setActiveOnly] = useState<boolean>(true);
 
   const refreshList = () => {
     if (!selectedCategory || selectedCategory === "all") getProductList();
@@ -34,7 +35,7 @@ export const useProductList = () => {
     if (currentPageNum !== 1) setCurrentPage(1);
     else refreshList();
     //eslint-disable-next-line
-  }, [selectedCategory, limit, sortBy, sortOrder]);
+  }, [selectedCategory, limit, sortBy, sortOrder, activeOnly]);
 
   useEffect(() => {
     searchProductByQuery();
@@ -43,7 +44,7 @@ export const useProductList = () => {
 
   const getProductList = async () => {
     setProductFetching(true);
-    const response = await getProducts(limit, currentPageNum, undefined, sortBy, sortOrder);
+    const response = await getProducts(limit, currentPageNum, undefined, sortBy, sortOrder, activeOnly);
     if (response?.success && !!response?.data) {
       const {
         totalProducts,
@@ -69,7 +70,7 @@ export const useProductList = () => {
 
   const getProductListByCategoryId = async () => {
     setProductFetching(true);
-    const response = await getProducts(limit, currentPageNum, selectedCategory, sortBy, sortOrder);
+    const response = await getProducts(limit, currentPageNum, selectedCategory, sortBy, sortOrder, activeOnly);
     if (response?.success && !!response?.data) {
       const {
         totalProducts,
@@ -151,5 +152,7 @@ export const useProductList = () => {
     setSortBy,
     sortOrder,
     setSortOrder,
+    activeOnly,
+    setActiveOnly,
   };
 };
