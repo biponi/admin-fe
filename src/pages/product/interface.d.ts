@@ -115,11 +115,16 @@ export interface ICategory {
   name: string;
   slug?: string;
   description?: string;
+  shortDescription?: string;
   discount: number;
-  discountType?: string;
+  discountType?: "%" | "fixed" | "flat";
   active: boolean;
   google_category_type?: string;
   img?: string;
+  focusKeyphrase?: string;
+  seoTitle?: string;
+  metaDescription?: string;
+  tags?: string[];
 
   // Hierarchy fields
   parentId?: string | null;
@@ -145,12 +150,17 @@ export interface ICategory {
 export interface ICreateCategory {
   name: string;
   description?: string;
+  shortDescription?: string;
   discount?: number;
-  discountType?: string;
+  discountType?: "%" | "fixed" | "flat";
   active?: boolean;
   google_category_type?: string;
   img?: File | string;
   parentId?: string | null;
+  focusKeyphrase?: string;
+  seoTitle?: string;
+  metaDescription?: string;
+  tags?: string[];
 }
 
 export interface ICategoryTree extends ICategory {

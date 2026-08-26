@@ -28,8 +28,8 @@ import EmptyView from "../../../coreComponents/emptyView";
 import { ICategory } from "../interface";
 import useCategory from "../hooks/useCategory";
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { SkeletonCard } from "../../../coreComponents/sekeleton";
-import UpdateCategory from "./updateCategory";
 import useRoleCheck from "../../auth/hooks/useRoleCheck";
 import MobileCategoryHeader from "./components/MobileCategoryHeader";
 import MobileCategoryCard from "./components/MobileCategoryCard";
@@ -38,20 +38,14 @@ import MobileCategoryEmpty from "./components/MobileCategoryEmpty";
 import MainView from "../../../coreComponents/mainView";
 
 const CategoryList = () => {
+  const navigate = useNavigate();
   const {
     loading,
     categories,
     fetchCategories,
-    createCategory,
-    editExistingCategory,
     deleteExistingCategory,
   } = useCategory();
   const { hasRequiredPermission, hasSomePermissionsForPage } = useRoleCheck();
-  const [openCreateDialog, setOpenCreateDialog] = useState(false);
-  const [openUpdateDialog, setOpenUpdateDialog] = useState(false);
-  const [selectedCategory, setSelectedCategory] = useState<ICategory | null>(
-    null,
-  );
   const [viewMode, setViewMode] = useState<"flat" | "tree">("flat");
   const [levelFilter, setLevelFilter] = useState<string>("all");
   const [searchQuery, setSearchQuery] = useState("");
@@ -85,10 +79,6 @@ const CategoryList = () => {
       cat.name.toLowerCase().includes(searchQuery.toLowerCase()),
     );
   };
-
-  useEffect(() => {
-    if (!!selectedCategory) setOpenUpdateDialog(true);
-  }, [selectedCategory]);
 
   const getCategoryBreadcrumb = (
     parentId: string | null,
@@ -165,7 +155,7 @@ const CategoryList = () => {
         description='You can start adding products as soon as you add a category.'
         buttonText='Add New Category'
         handleButtonClick={() => {
-          setOpenCreateDialog(true);
+          navigate("/category/create");
         }}
       />
     ) : (
@@ -191,7 +181,7 @@ const CategoryList = () => {
       breadcrumb={getCategoryBreadcrumb(category?.parentId ?? null, category)}
       isChild={isChild}
       handleEditBtnClick={() => {
-        setSelectedCategory(category);
+        navigate(`/category/edit/${category.id}`);
       }}
       deleteExistingCategory={deleteExistingCategory}
     />
@@ -201,7 +191,7 @@ const CategoryList = () => {
     viewMode === "tree" ? (
       <CategoryTree
         categories={buildCategoryTree(categoryList)}
-        onEdit={(category: any) => setSelectedCategory(category)}
+        onEdit={(category: any) => navigate(`/category/edit/${category.id}`)}
         deleteExistingCategory={deleteExistingCategory}
         getBreadcrumb={(category: any) =>
           getCategoryBreadcrumb(category?.parentId ?? null, category)
@@ -273,7 +263,7 @@ const CategoryList = () => {
           activeCategories={activeCategories}
           inactiveCategories={inactiveCategories}
           hasCreatePermission={hasRequiredPermission("category", "create")}
-          onCreateCategory={() => setOpenCreateDialog(true)}
+        onCreateCategory={() => navigate("/category/create")}
           selectedTab={activeTab}
         />
 
@@ -319,7 +309,7 @@ const CategoryList = () => {
                     category?.parentId ?? null,
                     category,
                   )}
-                  onEdit={() => setSelectedCategory(category)}
+                  onEdit={() => navigate(`/category/edit/${category.id}`)}
                   onDelete={deleteExistingCategory}
                 />
               ))}
@@ -364,7 +354,7 @@ const CategoryList = () => {
 
                 {hasRequiredPermission("category", "create") && (
                   <button
-                    onClick={() => setOpenCreateDialog(true)}
+                    onClick={() => navigate("/category/create")}
                     className='inline-flex items-center gap-1.5 px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 active:bg-blue-800 transition-all duration-150 shadow-sm shadow-blue-200'>
                     <PlusCircle className='h-4 w-4' />
                     Add Category
@@ -528,7 +518,7 @@ const CategoryList = () => {
             !searchQuery &&
             levelFilter === "all" && (
               <button
-                onClick={() => setOpenCreateDialog(true)}
+                onClick={() => navigate("/category/create")}
                 className='mt-4 inline-flex items-center gap-1.5 px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-all duration-150 shadow-sm shadow-blue-200'>
                 <PlusCircle className='h-4 w-4' />
                 Add Category
@@ -610,35 +600,6 @@ const CategoryList = () => {
     );
   };
 
-  const renderAddNewCategoryDialog = () => {
-    return (
-      <UpdateCategory
-        loading={loading}
-        categories={categories}
-        createCategory={createCategory}
-        editExistingCategory={editExistingCategory}
-        isNewCategory={true}
-        open={openCreateDialog}
-        handleOpenChange={(open) => setOpenCreateDialog(open)}
-      />
-    );
-  };
-
-  const renderUpdateCategoryDialog = () => {
-    return (
-      <UpdateCategory
-        loading={loading}
-        categories={categories}
-        createCategory={createCategory}
-        editExistingCategory={editExistingCategory}
-        isNewCategory={false}
-        open={openUpdateDialog}
-        category={selectedCategory}
-        handleOpenChange={(open) => setOpenUpdateDialog(open)}
-      />
-    );
-  };
-
   const mainView = () => {
     if (loading) {
       return (
@@ -673,11 +634,7 @@ const CategoryList = () => {
 
   return (
     <MainView title='Categories'>
-      <>
-        {mainView()}
-        {renderAddNewCategoryDialog()}
-        {!!categories && categories.length > 0 && renderUpdateCategoryDialog()}
-      </>
+      {mainView()}
     </MainView>
   );
 };

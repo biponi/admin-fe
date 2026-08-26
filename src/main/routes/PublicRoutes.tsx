@@ -1,6 +1,8 @@
 import { Route } from "react-router-dom";
 import ProductPage from "../../pages/product";
 import Category from "../../pages/product/category";
+import CreateCategoryPage from "../../pages/product/category/createCategory";
+import EditCategoryPage from "../../pages/product/category/editCategory";
 import CreateNewProduct from "../../pages/product/newProduct";
 import UpdateProduct from "../../pages/product/newProduct/editProductIndex";
 import OrderManagement from "../../pages/order-v2"; // V2 with toggle support
@@ -18,6 +20,8 @@ export const publicRoutes = (
     <Route path='/products/update/:id' element={<UpdateProduct />} />
     <Route path='/products/create' element={<CreateNewProduct />} />
     <Route path='/category' element={<Category />} />
+    <Route path='/category/create' element={<CreateCategoryPage />} />
+    <Route path='/category/edit/:id' element={<EditCategoryPage />} />
     <Route path='/order' element={<OrderManagement />} />
     <Route path='/order/modify/:orderId' element={<ModifyOrder />} />
     <Route path='/order/:orderId/history' element={<ModificationHistory />} />

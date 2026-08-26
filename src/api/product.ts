@@ -199,7 +199,6 @@ export const getCategoryByIdOrSlug = async (
 export const addCategory = async (
   newCategoryData: any
 ): Promise<ApiResponse<any>> => {
-  console.log("data", newCategoryData);
   try {
     // Create FormData for file upload
     const formData = new FormData();
@@ -207,12 +206,24 @@ export const addCategory = async (
     // Append text fields
     formData.append("name", newCategoryData.name || "");
     formData.append("description", newCategoryData.description || "");
+    formData.append("shortDescription", newCategoryData.shortDescription || "");
     formData.append("discount", newCategoryData.discount?.toString() || "0");
+    formData.append("discountType", newCategoryData.discountType || "%");
     formData.append("active", newCategoryData.active?.toString() || "true");
     formData.append(
       "google_category_type",
       newCategoryData.google_category_type || ""
     );
+
+    // Append SEO fields
+    formData.append("focusKeyphrase", newCategoryData.focusKeyphrase || "");
+    formData.append("seoTitle", newCategoryData.seoTitle || "");
+    formData.append("metaDescription", newCategoryData.metaDescription || "");
+
+    // Append tags as JSON
+    if (newCategoryData.tags && Array.isArray(newCategoryData.tags)) {
+      formData.append("tags", JSON.stringify(newCategoryData.tags));
+    }
 
     // Append parentId if exists
     if (newCategoryData.parentId) {
@@ -260,12 +271,24 @@ export const editCategory = async (
     // Append text fields
     formData.append("name", newCategoryData.name || "");
     formData.append("description", newCategoryData.description || "");
+    formData.append("shortDescription", newCategoryData.shortDescription || "");
     formData.append("discount", newCategoryData.discount?.toString() || "0");
+    formData.append("discountType", newCategoryData.discountType || "%");
     formData.append("active", newCategoryData.active?.toString() || "true");
     formData.append(
       "google_category_type",
       newCategoryData.google_category_type || ""
     );
+
+    // Append SEO fields
+    formData.append("focusKeyphrase", newCategoryData.focusKeyphrase || "");
+    formData.append("seoTitle", newCategoryData.seoTitle || "");
+    formData.append("metaDescription", newCategoryData.metaDescription || "");
+
+    // Append tags as JSON
+    if (newCategoryData.tags && Array.isArray(newCategoryData.tags)) {
+      formData.append("tags", JSON.stringify(newCategoryData.tags));
+    }
 
     // Append parentId (can be null for root categories)
     if (newCategoryData.parentId) {

@@ -150,6 +150,10 @@ const config = {
 
     // Delete category (supports ?force=true query param)
     deleteCategory: (id: string) => `${baseURL}/category/delete/${id}`,
+
+    // AI SEO generation (advisory; apply via editCategory)
+    aiSeoSuggest: () => `${baseURL}/category/ai-seo/suggest`,
+    aiSeoGenerate: (id: string) => `${baseURL}/category/ai-seo/generate/${id}`,
   },
   campaign: {
     createCampaign: () => `${baseURL}/campaign/create`,
