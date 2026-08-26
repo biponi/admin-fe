@@ -6,6 +6,7 @@ import { Badge } from "../ui/badge";
 import { Card, CardContent } from "../ui/card";
 import { X, Upload, Image as ImageIcon } from "lucide-react";
 import { toast } from "sonner";
+import { ImageViewerDialog } from "./ImageViewerDialog";
 
 interface VariantImageUploaderProps {
   variantId: string;
@@ -26,10 +27,12 @@ export const VariantImageUploader: React.FC<VariantImageUploaderProps> = ({
 }) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [previewUrls, setPreviewUrls] = useState<string[]>([]);
+  const [viewerOpen, setViewerOpen] = useState(false);
+  const [viewerIndex, setViewerIndex] = useState(0);
+  const lastTapRef = useRef<number>(0);
 
   // Sync preview URLs with images prop
   React.useEffect(() => {
-    // Generate new preview URLs
     const newPreviews = images.map((image) => {
       if (typeof image === "string") {
         return image;
@@ -40,7 +43,6 @@ export const VariantImageUploader: React.FC<VariantImageUploaderProps> = ({
 
     setPreviewUrls(newPreviews);
 
-    // Cleanup function - revoke URLs when effect runs again or unmounts
     return () => {
       newPreviews.forEach((url) => {
         if (url.startsWith("blob:")) {
@@ -48,18 +50,16 @@ export const VariantImageUploader: React.FC<VariantImageUploaderProps> = ({
         }
       });
     };
-  }, [images, variantId]); // Add variantId to dependency array
+  }, [images, variantId]);
 
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []);
 
-    // Validate file count
     if (images.length + files.length > maxImages) {
       toast.error(`Maximum ${maxImages} images allowed per variant`);
       return;
     }
 
-    // Validate file types
     const invalidFiles = files.filter(
       (file) => !file.type.startsWith("image/"),
     );
@@ -68,20 +68,15 @@ export const VariantImageUploader: React.FC<VariantImageUploaderProps> = ({
       return;
     }
 
-    // Validate file sizes (10MB max)
     const oversizedFiles = files.filter((file) => file.size > 10 * 1024 * 1024);
     if (oversizedFiles.length > 0) {
       toast.error("File size exceeds 10MB limit");
       return;
     }
 
-    // Create new images array
     const newImages = [...images, ...files];
-
-    // Update parent state (previewUrls will sync via useEffect)
     onImagesChange(variantId, newImages);
 
-    // Reset file input
     if (fileInputRef.current) {
       fileInputRef.current.value = "";
     }
@@ -102,6 +97,24 @@ export const VariantImageUploader: React.FC<VariantImageUploaderProps> = ({
   const getImageType = (image: File | string): "existing" | "new" => {
     return typeof image === "string" ? "existing" : "new";
   };
+
+  const handleImageDoubleClick = (index: number) => {
+    setViewerIndex(index);
+    setViewerOpen(true);
+  };
+
+  const handleImageTouchEnd = (index: number) => {
+    const now = Date.now();
+    if (now - lastTapRef.current < 300) {
+      setViewerIndex(index);
+      setViewerOpen(true);
+      lastTapRef.current = 0;
+    } else {
+      lastTapRef.current = now;
+    }
+  };
+
+  const allImageUrls = previewUrls.filter((url) => url);
 
   return (
     <div className='space-y-3'>
@@ -158,41 +171,45 @@ export const VariantImageUploader: React.FC<VariantImageUploaderProps> = ({
                 src={previewUrl}
                 alt={`${variantName} ${index + 1}`}
                 className='w-full h-24 sm:h-32 object-cover cursor-pointer hover:scale-105 transition-transform'
-                onClick={() => window.open(previewUrl, '_blank')}
-                title='Click to view full size'
+                onDoubleClick={() => handleImageDoubleClick(index)}
+                onTouchEnd={() => handleImageTouchEnd(index)}
+                title='Double-click to view full size'
               />
 
-              {/* Image type badge */}
+              {/* Image number badge - top left */}
+              <Badge
+                variant='secondary'
+                className='absolute top-1 left-1 text-xs shadow-sm z-10'>
+                {index + 1}
+              </Badge>
+
+              {/* Image type badge - bottom left */}
               {getImageType(images[index]) === "new" && (
                 <Badge
                   variant='default'
-                  className='absolute -top-2 -left-2 text-xs shadow-sm'>
+                  className='absolute bottom-1 left-1 text-xs shadow-sm z-10'>
                   New
                 </Badge>
               )}
 
-              {/* Image number badge */}
-              <Badge
-                variant='secondary'
-                className='absolute -top-2 -right-2 text-xs shadow-sm'>
-                {index + 1}
-              </Badge>
-
-              {/* Remove button - show on hover */}
+              {/* Remove button - top right, always visible */}
               {!disabled && (
                 <Button
                   type='button'
                   variant='destructive'
                   size='icon'
-                  className='absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity z-50 hover:scale-110'
-                  onClick={() => handleRemoveImage(index)}
+                  className='absolute top-1 right-1 z-20 h-6 w-6 bg-black/60 hover:bg-red-600 text-white border border-white/20 backdrop-blur-sm shadow-sm'
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleRemoveImage(index);
+                  }}
                   title='Remove image'>
-                  <X className='h-4 w-4' />
+                  <X className='h-3.5 w-3.5' />
                 </Button>
               )}
 
               {/* Hover overlay */}
-              <div className='absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity rounded-md' />
+              <div className='absolute inset-0 bg-black/30 opacity-0 group-hover:opacity-100 transition-opacity rounded-md pointer-events-none' />
             </div>
           ))}
         </div>
@@ -202,6 +219,15 @@ export const VariantImageUploader: React.FC<VariantImageUploaderProps> = ({
       <p className='text-xs text-muted-foreground'>
         Accepted formats: PNG, JPG, JPEG, WebP. Max size: 10MB per file.
       </p>
+
+      {/* Image viewer dialog/drawer */}
+      <ImageViewerDialog
+        images={allImageUrls}
+        initialIndex={viewerIndex}
+        open={viewerOpen}
+        onClose={() => setViewerOpen(false)}
+        alt={variantName}
+      />
     </div>
   );
 };

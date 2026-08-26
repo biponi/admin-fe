@@ -48,6 +48,7 @@ interface CategoryFormProps {
 }
 
 const defaultCategory = {
+  id: "",
   name: "",
   img: "",
   description: "",
@@ -99,10 +100,12 @@ const CategoryForm: React.FC<CategoryFormProps> = ({
   const [isAIModalOpen, setIsAIModalOpen] = useState(false);
   const [aiVersions, setAiVersions] = useState<AIGenerationVersion[]>([]);
   const [activeVersionIndex, setActiveVersionIndex] = useState(0);
+  const [appliedFields, setAppliedFields] = useState<Set<string>>(new Set());
 
   useEffect(() => {
     if (existingCategory && mode === "edit") {
       setFormData({
+        id: existingCategory.id,
         name: existingCategory.name || "",
         img: existingCategory.img || "",
         description: existingCategory.description || "",
@@ -225,10 +228,58 @@ const CategoryForm: React.FC<CategoryFormProps> = ({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [aiVersions]);
 
+  // Auto-detect when form content matches AI-generated content (e.g. copy-paste)
+  useEffect(() => {
+    if (aiVersions.length === 0) return;
+    const active = aiVersions[activeVersionIndex]?.result?.content;
+    if (!active) return;
+
+    const newApplied = new Set(appliedFields);
+    let changed = false;
+
+    const markIfMatch = (key: string, formVal: string, aiVal: string) => {
+      if (formVal === aiVal && !newApplied.has(key)) {
+        newApplied.add(key);
+        changed = true;
+      }
+    };
+
+    markIfMatch("description", formData.description, active.description || "");
+    markIfMatch("shortDescription", formData.shortDescription, active.shortDescription || "");
+    markIfMatch("seoTitle", formData.seoTitle, active.seoTitle || "");
+    markIfMatch("focusKeyphrase", formData.focusKeyphrase, active.focusKeyphrase || "");
+    markIfMatch("metaDescription", formData.metaDescription, active.metaDescription || "");
+    markIfMatch("google_category_type", formData.google_category_type, active.google_category_type || "");
+
+    const sortedFormTags = [...(formData.tags || [])].sort();
+    const sortedAiTags = [...(active.tags || [])].sort();
+    if (
+      sortedFormTags.length === sortedAiTags.length &&
+      sortedFormTags.every((t, i) => t === sortedAiTags[i]) &&
+      !newApplied.has("tags")
+    ) {
+      newApplied.add("tags");
+      changed = true;
+    }
+
+    if (changed) setAppliedFields(newApplied);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [formData, aiVersions, activeVersionIndex]);
+
   const handleVersionGenerated = (version: AIGenerationVersion) => {
     setAiVersions((prev) => [version, ...prev].slice(0, MAX_VERSIONS));
     setActiveVersionIndex(0);
   };
+
+  const ALL_AI_FIELDS = [
+    "description",
+    "shortDescription",
+    "focusKeyphrase",
+    "seoTitle",
+    "metaDescription",
+    "tags",
+    "google_category_type",
+  ];
 
   const handleApplyAIField = (
     field: keyof AiSeoContent,
@@ -241,6 +292,7 @@ const CategoryForm: React.FC<CategoryFormProps> = ({
       }
       return { ...prev, [field]: value } as typeof prev;
     });
+    setAppliedFields((prev) => new Set([...prev, field as string]));
   };
 
   const handleApplyAllFromVersion = (version: AIGenerationVersion) => {
@@ -256,6 +308,7 @@ const CategoryForm: React.FC<CategoryFormProps> = ({
       google_category_type:
         body.google_category_type ?? prev.google_category_type,
     }));
+    setAppliedFields((prev) => new Set([...prev, ...ALL_AI_FIELDS]));
   };
 
   const handleApplySuggestion = (
@@ -275,11 +328,13 @@ const CategoryForm: React.FC<CategoryFormProps> = ({
       if (value.trim())
         setFormData((prev) => ({ ...prev, name: value.trim() }));
     }
+    setAppliedFields((prev) => new Set([...prev, `suggestion:${field}`]));
   };
 
   const handleClearVersions = () => {
     setAiVersions([]);
     setActiveVersionIndex(0);
+    setAppliedFields(new Set());
     try {
       localStorage.removeItem(versionsStorageKey);
     } catch {
@@ -350,6 +405,7 @@ const CategoryForm: React.FC<CategoryFormProps> = ({
           parentId={formData.parentId}
           onVersionGenerated={handleVersionGenerated}
           onApplySuggestion={handleApplySuggestion}
+          appliedFields={appliedFields}
         />
 
         {/* AI Generated Versions Panel */}
@@ -363,6 +419,7 @@ const CategoryForm: React.FC<CategoryFormProps> = ({
               onApplyAll={handleApplyAllFromVersion}
               onApplySuggestion={handleApplySuggestion}
               onClear={handleClearVersions}
+              appliedFields={appliedFields}
             />
           </div>
         )}

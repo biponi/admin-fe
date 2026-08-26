@@ -50,6 +50,7 @@ export interface StreamingAIModalProps {
   parentId?: string | null;
   onVersionGenerated: (version: AIGenerationVersion) => void;
   onApplySuggestion?: (field: AiSeoSuggestion["field"], value: string) => void;
+  appliedFields?: Set<string>;
 }
 
 const FIELD_LABELS: Record<string, string> = {
@@ -86,6 +87,7 @@ export default function StreamingAIModal({
   parentId,
   onVersionGenerated,
   onApplySuggestion,
+  appliedFields = new Set(),
 }: StreamingAIModalProps) {
   const [status, setStatus] = useState<StreamStatus>("idle");
   const [streamedDescription, setStreamedDescription] = useState("");
@@ -93,6 +95,7 @@ export default function StreamingAIModal({
   const [meta, setMeta] = useState<AiSeoMeta | null>(null);
   const [errorMessage, setErrorMessage] = useState("");
   const [notes, setNotes] = useState("");
+  const [justApplied, setJustApplied] = useState<string | null>(null);
   const abortRef = useRef<AbortController | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
   // Emit-once guard per completed generation
@@ -104,8 +107,14 @@ export default function StreamingAIModal({
     setResult(null);
     setMeta(null);
     setErrorMessage("");
+    setJustApplied(null);
     abortRef.current?.abort();
     abortRef.current = null;
+  }, []);
+
+  const triggerFlash = useCallback((key: string) => {
+    setJustApplied(key);
+    setTimeout(() => setJustApplied(null), 1200);
   }, []);
 
   useEffect(() => {
@@ -270,36 +279,56 @@ export default function StreamingAIModal({
             Suggestions
           </span>
         </div>
-        {result.suggestions.map((s, i) => (
-          <div
-            key={i}
-            className="flex items-start justify-between gap-3 bg-amber-50/60 border border-amber-100 rounded-md p-2.5">
-            <div className="min-w-0">
-              <p className="text-[11px] font-medium text-[#141413]">
-                <span className="text-slate-400 uppercase tracking-wide mr-1.5">
-                  {SUGGESTION_LABELS[s.field] || s.field}:
-                </span>
-                {s.value}
-              </p>
-              {s.reason && (
-                <p className="text-[11px] text-slate-500 mt-0.5 leading-snug">
-                  {s.reason}
+        {result.suggestions.map((s, i) => {
+          const sugKey = `suggestion:${s.field}`;
+          const isApplied = appliedFields.has(sugKey);
+          const isFlashing = justApplied === sugKey;
+
+          return (
+            <div
+              key={i}
+              className="flex items-start justify-between gap-3 bg-amber-50/60 border border-amber-100 rounded-md p-2.5">
+              <div className="min-w-0">
+                <p className="text-[11px] font-medium text-[#141413]">
+                  <span className="text-slate-400 uppercase tracking-wide mr-1.5">
+                    {SUGGESTION_LABELS[s.field] || s.field}:
+                  </span>
+                  {s.value}
                 </p>
+                {s.reason && (
+                  <p className="text-[11px] text-slate-500 mt-0.5 leading-snug">
+                    {s.reason}
+                  </p>
+                )}
+              </div>
+              {applicable.includes(s.field) && onApplySuggestion && (
+                <Button
+                  type="button"
+                  size="sm"
+                  variant={isApplied ? "ghost" : "outline"}
+                  disabled={isApplied}
+                  onClick={() => {
+                    onApplySuggestion(s.field, s.value);
+                    triggerFlash(sugKey);
+                  }}
+                  className={`h-6 px-2 shrink-0 text-[10px] rounded-md gap-1 transition-all duration-300 ${
+                    isFlashing
+                      ? "bg-emerald-500 text-white scale-110 border-emerald-500"
+                      : isApplied
+                        ? "text-emerald-600 hover:text-emerald-700 border-transparent"
+                        : "border-slate-300"
+                  }`}>
+                  {isApplied ? (
+                    <CheckCircle2 className="h-3 w-3" />
+                  ) : (
+                    <Check className="h-3 w-3" />
+                  )}
+                  {isApplied ? "Applied" : "Apply"}
+                </Button>
               )}
             </div>
-            {applicable.includes(s.field) && onApplySuggestion && (
-              <Button
-                type="button"
-                size="sm"
-                variant="outline"
-                onClick={() => onApplySuggestion(s.field, s.value)}
-                className="h-6 px-2 shrink-0 text-[10px] border-slate-300 rounded-md gap-1">
-                <Check className="h-3 w-3" />
-                Apply
-              </Button>
-            )}
-          </div>
-        ))}
+          );
+        })}
       </div>
     );
   };
