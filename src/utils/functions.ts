@@ -5,6 +5,17 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
 }
 
+// Slugify for the live URL preview in product forms — mirrors the backend's
+// slugify(name, { lower, strict, trim }) closely enough for display purposes.
+export const slugifyText = (value: string): string =>
+  value
+    .toString()
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9\s-]/g, "")
+    .replace(/[\s_-]+/g, "-")
+    .replace(/^-+|-+$/g, "");
+
 export const isValidImageUrl = (url: string): boolean => {
   // Regular expression to match common image file extensions
   const imageExtensions = /\.(jpg|jpeg|png|gif|bmp|webp)$/i;

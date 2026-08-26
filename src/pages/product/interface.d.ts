@@ -30,6 +30,14 @@ export interface IProduct {
     updatedAt: string;
   };
   imageGroups?: IImageGroup[]; // NEW: Image groups for color/attribute-based image organization
+
+  // ── Content & SEO (returned by GET /product/single/:id — full doc)
+  shortDescription?: string;
+  focusKeyphrase?: string;
+  seoTitle?: string;
+  seoDescription?: string;
+  tags?: string[];
+  brand?: string;
 }
 
 export interface IOrderProduct extends IProduct {
@@ -81,6 +89,15 @@ export interface IProductCreateData {
   variantImageMappings?: IVariantImageMapping[]; // Maps variantIds to image indices
   commissionType?: "percentage" | "fixed" | "none";
   commissionRate?: number;
+
+  // ── Content & SEO (AI suggestions apply into these fields)
+  slug?: string; // auto-derived from name; admin-editable
+  shortDescription?: string;
+  focusKeyphrase?: string;
+  seoTitle?: string;
+  seoDescription?: string;
+  tags?: string[];
+  brand?: string;
 }
 
 export interface IProductUpdateData {
@@ -107,6 +124,15 @@ export interface IProductUpdateData {
   removeVariantImageIndexes?: IRemoveVariantImageMapping[]; // Variant images to remove
   commissionType?: "percentage" | "fixed" | "none";
   commissionRate?: number;
+
+  // ── Content & SEO (AI suggestions apply into these fields)
+  slug?: string; // auto-derived from name; admin-editable
+  shortDescription?: string;
+  focusKeyphrase?: string;
+  seoTitle?: string;
+  seoDescription?: string;
+  tags?: string[];
+  brand?: string;
 }
 // Updated interfaces for hierarchical categories
 

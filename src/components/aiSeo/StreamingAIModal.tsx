@@ -1,18 +1,21 @@
+// Shared streaming AI-SEO generation dialog for any entity (category,
+// product). Entity labels, copy, endpoints, and applicable suggestions come
+// from AiEntityConfig — the SSE flow is identical for all entities.
 import { useEffect, useRef, useState, useCallback } from "react";
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
-} from "../../../../components/ui/dialog";
-import { Button } from "../../../../components/ui/button";
-import { Textarea } from "../../../../components/ui/textarea";
+} from "../../components/ui/dialog";
+import { Button } from "../../components/ui/button";
+import { Textarea } from "../../components/ui/textarea";
 import {
   Accordion,
   AccordionItem,
   AccordionTrigger,
   AccordionContent,
-} from "../../../../components/ui/accordion";
+} from "../../components/ui/accordion";
 import {
   Loader2,
   CheckCircle2,
@@ -24,14 +27,14 @@ import {
   Lightbulb,
   Check,
 } from "lucide-react";
-import config from "../../../../utils/config";
 import {
-  streamCategorySeo,
+  streamSeo,
   AIGenerationVersion,
   AiSeoResult,
   AiSeoMeta,
   AiSeoSuggestion,
-} from "../../../../api/aiSeo";
+} from "../../api/aiSeo";
+import { AiEntityConfig } from "./aiEntityConfig";
 
 type StreamStatus =
   | "idle"
@@ -44,33 +47,17 @@ type StreamStatus =
 export interface StreamingAIModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  entity: AiEntityConfig;
   mode: "create" | "edit";
-  categoryId?: string;
-  categoryName: string;
-  parentId?: string | null;
+  entityId?: string;
+  entityName: string;
+  /** Extra create-mode context the backend suggest endpoint accepts
+   *  (product: categoryId/brand/price; category: parentId). */
+  extraPayload?: Record<string, unknown>;
   onVersionGenerated: (version: AIGenerationVersion) => void;
   onApplySuggestion?: (field: AiSeoSuggestion["field"], value: string) => void;
   appliedFields?: Set<string>;
 }
-
-const FIELD_LABELS: Record<string, string> = {
-  description: "Description",
-  shortDescription: "Short Description",
-  focusKeyphrase: "Focus Keyphrase",
-  seoTitle: "SEO Title",
-  metaDescription: "Meta Description",
-  tags: "Tags",
-  google_category_type: "Google Category",
-};
-
-const SUGGESTION_LABELS: Record<AiSeoSuggestion["field"], string> = {
-  discount: "Discount",
-  discountType: "Discount Type",
-  name: "Category Name",
-  img: "Image",
-  internalLinks: "Internal Links",
-  general: "General",
-};
 
 function stripHtml(html: string): string {
   return html.replace(/<[^>]*>/g, "");
@@ -81,10 +68,11 @@ let versionCounter = 0;
 export default function StreamingAIModal({
   open,
   onOpenChange,
+  entity,
   mode,
-  categoryId,
-  categoryName,
-  parentId,
+  entityId,
+  entityName,
+  extraPayload,
   onVersionGenerated,
   onApplySuggestion,
   appliedFields = new Set(),
@@ -140,8 +128,7 @@ export default function StreamingAIModal({
     };
   }, []);
 
-  const canGenerate =
-    mode === "edit" || !!categoryName.trim();
+  const canGenerate = mode === "edit" || !!entityName.trim();
 
   const startStreaming = useCallback(
     async (regenerate: boolean) => {
@@ -159,19 +146,19 @@ export default function StreamingAIModal({
       emittedRef.current = null;
 
       const path =
-        mode === "edit" && categoryId
-          ? config.category.aiSeoGenerate(categoryId)
-          : config.category.aiSeoSuggest();
+        mode === "edit" && entityId
+          ? entity.generatePath(entityId)
+          : entity.suggestPath();
 
       try {
-        const finalResult = await streamCategorySeo(
+        const finalResult = await streamSeo(
           path,
           {
-            name: mode === "create" ? categoryName : undefined,
-            parentId: mode === "create" ? parentId : undefined,
+            name: mode === "create" ? entityName : undefined,
             notes: notes.trim() || undefined,
             regenerate,
-          },
+            ...(mode === "create" ? extraPayload : {}),
+          } as any,
           {
             onMeta: (m) => {
               setMeta(m);
@@ -202,7 +189,7 @@ export default function StreamingAIModal({
         }
       }
     },
-    [canGenerate, categoryId, categoryName, mode, notes, onVersionGenerated, parentId]
+    [canGenerate, entity, entityId, entityName, extraPayload, mode, notes, onVersionGenerated]
   );
 
   // Mark done when both the done event and full result arrived via callbacks
@@ -239,38 +226,39 @@ export default function StreamingAIModal({
   const isBusy = status === "connecting" || status === "streaming";
   const rateLimited = errorMessage.toLowerCase().includes("rate limit");
 
+  const fieldLabel = (key: string) =>
+    entity.fields.find((f) => f.key === key)?.label || key;
+
+  const fieldValue = (key: string): string => {
+    if (!result) return "";
+    if (key === "tags") return (result.content.tags || []).join(", ");
+    return (result.content as any)[key] ?? "";
+  };
+
+  const isHtmlField = (key: string) => {
+    const field = entity.fields.find((f) => f.key === key);
+    return key === "description" || !!field?.clip;
+  };
+
   const renderFieldRows = () => {
     if (!result) return null;
-    const fields: [string, string][] = [
-      ["description", result.content.description],
-      ["shortDescription", result.content.shortDescription],
-      ["focusKeyphrase", result.content.focusKeyphrase],
-      ["seoTitle", result.content.seoTitle],
-      ["metaDescription", result.content.metaDescription],
-      ["tags", (result.content.tags || []).join(", ")],
-      ["google_category_type", result.content.google_category_type],
-    ];
-    return fields.map(([key, value]) => (
-      <div key={key} className="space-y-1.5">
-        <span className="text-[10px] font-semibold uppercase tracking-wider text-slate-400">
-          {FIELD_LABELS[key]}
-        </span>
-        <div className="text-[13px] text-[#141413] leading-relaxed bg-white border border-slate-200 rounded-md p-3 min-h-[36px] whitespace-pre-wrap break-words">
-          {key === "description" || key === "metaDescription"
-            ? stripHtml(value)
-            : value || "—"}
+    return entity.fields.map((field) => {
+      const value = fieldValue(field.key);
+      return (
+        <div key={field.key} className="space-y-1.5">
+          <span className="text-[10px] font-semibold uppercase tracking-wider text-slate-400">
+            {field.label}
+          </span>
+          <div className="text-[13px] text-[#141413] leading-relaxed bg-white border border-slate-200 rounded-md p-3 min-h-[36px] whitespace-pre-wrap break-words">
+            {isHtmlField(field.key) ? stripHtml(value) : value || "—"}
+          </div>
         </div>
-      </div>
-    ));
+      );
+    });
   };
 
   const renderSuggestions = () => {
     if (!result?.suggestions?.length) return null;
-    const applicable: AiSeoSuggestion["field"][] = [
-      "discount",
-      "discountType",
-      "name",
-    ];
     return (
       <div className="space-y-2">
         <div className="flex items-center gap-1.5 pt-2">
@@ -291,7 +279,7 @@ export default function StreamingAIModal({
               <div className="min-w-0">
                 <p className="text-[11px] font-medium text-[#141413]">
                   <span className="text-slate-400 uppercase tracking-wide mr-1.5">
-                    {SUGGESTION_LABELS[s.field] || s.field}:
+                    {entity.suggestionLabels[s.field] || s.field}:
                   </span>
                   {s.value}
                 </p>
@@ -301,31 +289,32 @@ export default function StreamingAIModal({
                   </p>
                 )}
               </div>
-              {applicable.includes(s.field) && onApplySuggestion && (
-                <Button
-                  type="button"
-                  size="sm"
-                  variant={isApplied ? "ghost" : "outline"}
-                  disabled={isApplied}
-                  onClick={() => {
-                    onApplySuggestion(s.field, s.value);
-                    triggerFlash(sugKey);
-                  }}
-                  className={`h-6 px-2 shrink-0 text-[10px] rounded-md gap-1 transition-all duration-300 ${
-                    isFlashing
-                      ? "bg-emerald-500 text-white scale-110 border-emerald-500"
-                      : isApplied
-                        ? "text-emerald-600 hover:text-emerald-700 border-transparent"
-                        : "border-slate-300"
-                  }`}>
-                  {isApplied ? (
-                    <CheckCircle2 className="h-3 w-3" />
-                  ) : (
-                    <Check className="h-3 w-3" />
-                  )}
-                  {isApplied ? "Applied" : "Apply"}
-                </Button>
-              )}
+              {entity.applicableSuggestions.includes(s.field) &&
+                onApplySuggestion && (
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant={isApplied ? "ghost" : "outline"}
+                    disabled={isApplied}
+                    onClick={() => {
+                      onApplySuggestion(s.field, s.value);
+                      triggerFlash(sugKey);
+                    }}
+                    className={`h-6 px-2 shrink-0 text-[10px] rounded-md gap-1 transition-all duration-300 ${
+                      isFlashing
+                        ? "bg-emerald-500 text-white scale-110 border-emerald-500"
+                        : isApplied
+                          ? "text-emerald-600 hover:text-emerald-700 border-transparent"
+                          : "border-slate-300"
+                    }`}>
+                    {isApplied ? (
+                      <CheckCircle2 className="h-3 w-3" />
+                    ) : (
+                      <Check className="h-3 w-3" />
+                    )}
+                    {isApplied ? "Applied" : "Apply"}
+                  </Button>
+                )}
             </div>
           );
         })}
@@ -361,8 +350,8 @@ export default function StreamingAIModal({
               </div>
             )}
             <DialogTitle className="text-base font-semibold text-[#141413]">
-              {isBusy && `Generating content for "${categoryName}"...`}
-              {status === "idle" && `Generate AI content for "${categoryName}"`}
+              {isBusy && `Generating content for "${entityName}"...`}
+              {status === "idle" && `Generate AI content for "${entityName}"`}
               {status === "done" && "Content generated successfully"}
               {status === "error" && "Generation failed"}
               {status === "aborted" && "Generation stopped"}
@@ -381,13 +370,13 @@ export default function StreamingAIModal({
             <div className="space-y-3">
               <p className="text-[12px] text-slate-500 leading-relaxed">
                 {mode === "edit"
-                  ? "SEO content will be generated using this category's real products and hierarchy."
-                  : "Add optional hints to guide the generation, then start."}
+                  ? entity.copy.modalHintEdit
+                  : entity.copy.modalHintCreate}
               </p>
               <Textarea
                 value={notes}
                 onChange={(e) => setNotes(e.target.value)}
-                placeholder="Optional hints — e.g. '20000mAh power banks, popular with commuters' (sent to the AI)"
+                placeholder={entity.copy.notesPlaceholder}
                 className="min-h-[70px] text-[13px] bg-white border-slate-200 rounded-md"
                 maxLength={2000}
               />
@@ -443,54 +432,41 @@ export default function StreamingAIModal({
             <div className="space-y-4">
               <Accordion
                 type="multiple"
-                defaultValue={[
-                  "shortDescription",
-                  "focusKeyphrase",
-                  "seoTitle",
-                  "metaDescription",
-                  "tags",
-                  "google_category_type",
-                ]}
+                defaultValue={entity.fields
+                  .slice(1)
+                  .map((f) => f.key)}
                 className="space-y-2">
-                {(
-                  [
-                    ["description", result.content.description],
-                    ["shortDescription", result.content.shortDescription],
-                    ["focusKeyphrase", result.content.focusKeyphrase],
-                    ["seoTitle", result.content.seoTitle],
-                    ["metaDescription", result.content.metaDescription],
-                    ["tags", (result.content.tags || []).join(", ")],
-                    [
-                      "google_category_type",
-                      result.content.google_category_type,
-                    ],
-                  ] as [string, string][]
-                ).map(([key, value]) => (
-                  <AccordionItem
-                    key={key}
-                    value={key}
-                    className="rounded-lg border border-slate-200 bg-white overflow-hidden">
-                    <AccordionTrigger className="px-3 py-2.5 hover:no-underline [&[data-state=open]]:border-b [&[data-state=open]]:border-slate-100">
-                      <div className="flex items-center justify-between w-full mr-2">
-                        <span className="text-[11px] font-semibold uppercase tracking-wider text-slate-500">
-                          {FIELD_LABELS[key]}
-                        </span>
-                        <span className="text-[11px] text-slate-400 truncate max-w-[200px] ml-2">
-                          {key === "description" || key === "metaDescription"
-                            ? stripHtml(value).slice(0, 50) + (stripHtml(value).length > 50 ? "..." : "")
-                            : (value || "—").slice(0, 50) + ((value || "").length > 50 ? "..." : "")}
-                        </span>
-                      </div>
-                    </AccordionTrigger>
-                    <AccordionContent className="px-3 pb-3">
-                      <div className="text-[13px] text-[#141413] leading-relaxed whitespace-pre-wrap break-words">
-                        {key === "description" || key === "metaDescription"
-                          ? stripHtml(value)
-                          : value || "—"}
-                      </div>
-                    </AccordionContent>
-                  </AccordionItem>
-                ))}
+                {entity.fields.map((field) => {
+                  const value = fieldValue(field.key);
+                  return (
+                    <AccordionItem
+                      key={field.key}
+                      value={field.key}
+                      className="rounded-lg border border-slate-200 bg-white overflow-hidden">
+                      <AccordionTrigger className="px-3 py-2.5 hover:no-underline [&[data-state=open]]:border-b [&[data-state=open]]:border-slate-100">
+                        <div className="flex items-center justify-between w-full mr-2">
+                          <span className="text-[11px] font-semibold uppercase tracking-wider text-slate-500">
+                            {field.label}
+                          </span>
+                          <span className="text-[11px] text-slate-400 truncate max-w-[200px] ml-2">
+                            {isHtmlField(field.key)
+                              ? stripHtml(value).slice(0, 50) +
+                                (stripHtml(value).length > 50 ? "..." : "")
+                              : (value || "—").slice(0, 50) +
+                                ((value || "").length > 50 ? "..." : "")}
+                          </span>
+                        </div>
+                      </AccordionTrigger>
+                      <AccordionContent className="px-3 pb-3">
+                        <div className="text-[13px] text-[#141413] leading-relaxed whitespace-pre-wrap break-words">
+                          {isHtmlField(field.key)
+                            ? stripHtml(value)
+                            : value || "—"}
+                        </div>
+                      </AccordionContent>
+                    </AccordionItem>
+                  );
+                })}
               </Accordion>
               {renderSuggestions()}
               {result.warnings?.length > 0 && (

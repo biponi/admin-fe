@@ -46,6 +46,17 @@ import TiptapEditor from "../../../components/ui/tiptap";
 import { Switch } from "../../../components/ui/switch";
 import PlaceHolderImage from "../../../assets/placeholder.svg";
 import CustomAlertDialog from "../../../coreComponents/OptionModal";
+import AIGenerateButton from "../../../components/aiSeo/AIGenerateButton";
+import StreamingAIModal from "../../../components/aiSeo/StreamingAIModal";
+import AIVersionsPanel from "../../../components/aiSeo/AIVersionsPanel";
+import { productAiConfig } from "../../../components/aiSeo/aiEntityConfig";
+import ProductSeoCard from "./components/ProductSeoCard";
+import { slugifyText } from "../../../utils/functions";
+import {
+  AIGenerationVersion,
+  AiSeoContent,
+  AiSeoSuggestion,
+} from "../../../api/aiSeo";
 
 import {
   ICategory,
@@ -60,6 +71,7 @@ import { VariantImageUploader } from "../../../components/product/VariantImageUp
 import { ImageGroupManager } from "../../../components/product/ImageGroupManager";
 import V2SimpleVariationManager from "../../../components/product/V2SimpleVariationManager";
 import V1VariationManager from "../../../components/product/V1VariationManager";
+import { BRAND_CONFIG } from "../../../config/brand";
 
 interface Props {
   productData: IProductUpdateData;
@@ -77,6 +89,9 @@ const defaultVariation = {
   quantity: 0,
   unitPrice: 0,
 };
+
+// Cap on stored AI generation versions (newest kept)
+const MAX_VERSIONS = 5;
 
 const EditProduct: React.FC<Props> = ({
   productData,
@@ -96,6 +111,12 @@ const EditProduct: React.FC<Props> = ({
     Record<string, number[]>
   >({});
   const [imageGroups, setImageGroups] = useState<IImageGroup[]>([]);
+  // ── AI SEO generation state (mirrors CategoryForm) ──
+  const [isAIModalOpen, setIsAIModalOpen] = useState(false);
+  const [aiVersions, setAiVersions] = useState<AIGenerationVersion[]>([]);
+  const [activeVersionIndex, setActiveVersionIndex] = useState(0);
+  const [appliedFields, setAppliedFields] = useState<Set<string>>(new Set());
+  const [slugManuallyEdited, setSlugManuallyEdited] = useState(false);
   const fileRef = useRef(null);
   const fileRef2 = useRef(null);
   const dialogBtn = useRef(null);
@@ -126,6 +147,14 @@ const EditProduct: React.FC<Props> = ({
         categoryId: productData.categoryId || categoryIds[0] || "",
         commissionType: productData.commissionType || "none",
         commissionRate: productData.commissionRate || 0,
+        // SEO fields (full doc comes back from GET /product/single/:id)
+        slug: productData.slug || "",
+        shortDescription: productData.shortDescription || "",
+        focusKeyphrase: productData.focusKeyphrase || "",
+        seoTitle: productData.seoTitle || "",
+        seoDescription: productData.seoDescription || "",
+        tags: productData.tags || [],
+        brand: productData.brand || BRAND_CONFIG.shortName,
       };
 
       console.log("Edit Product - Initialized data:", {
@@ -209,6 +238,190 @@ const EditProduct: React.FC<Props> = ({
       ...formData,
       description: content,
     });
+  };
+
+  // ── SEO card + AI version handling ──────────────────────────────────
+
+  // Auto-derive the slug from the name while it hasn't been manually edited
+  useEffect(() => {
+    if (!slugManuallyEdited && formData?.name) {
+      const derived = slugifyText(formData.name);
+      if (derived !== formData.slug) {
+        updateFormData({ ...formData, slug: derived });
+      }
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [formData?.name, slugManuallyEdited]);
+
+  const handleSeoChange = (patch: Partial<IProductUpdateData>) => {
+    if (patch.slug !== undefined && patch.slug !== formData?.slug) {
+      setSlugManuallyEdited(true);
+    }
+    updateFormData({ ...formData, ...patch } as IProductUpdateData);
+  };
+
+  const handleResetSlug = () => {
+    setSlugManuallyEdited(false);
+    updateFormData({
+      ...formData,
+      slug: slugifyText(formData?.name || ""),
+    } as IProductUpdateData);
+  };
+
+  const versionsStorageKey = `ai-seo-versions:product:${productData?.id}`;
+
+  // Restore persisted versions once per product
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem(versionsStorageKey);
+      if (!raw) return;
+      const parsed = JSON.parse(raw);
+      if (Array.isArray(parsed) && parsed.every((v) => v?.result?.content)) {
+        setAiVersions(parsed.slice(0, MAX_VERSIONS));
+        setActiveVersionIndex(0);
+      }
+    } catch {
+      // Corrupt payload — start fresh
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [productData?.id]);
+
+  useEffect(() => {
+    if (aiVersions.length === 0) return;
+    try {
+      localStorage.setItem(versionsStorageKey, JSON.stringify(aiVersions));
+    } catch {
+      // Storage full/unavailable — in-memory versions still work
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [aiVersions]);
+
+  // Auto-detect when form content matches AI-generated content (e.g. copy-paste)
+  useEffect(() => {
+    if (aiVersions.length === 0 || !formData) return;
+    const active = aiVersions[activeVersionIndex]?.result?.content;
+    if (!active) return;
+
+    const newApplied = new Set(appliedFields);
+    let changed = false;
+
+    const markIfMatch = (key: string, formVal: any, aiVal: any) => {
+      if (formVal === aiVal && !newApplied.has(key)) {
+        newApplied.add(key);
+        changed = true;
+      }
+    };
+
+    markIfMatch("description", formData.description, active.description || "");
+    markIfMatch(
+      "shortDescription",
+      formData.shortDescription || "",
+      active.shortDescription || "",
+    );
+    markIfMatch("seoTitle", formData.seoTitle || "", active.seoTitle || "");
+    markIfMatch(
+      "focusKeyphrase",
+      formData.focusKeyphrase || "",
+      active.focusKeyphrase || "",
+    );
+    markIfMatch(
+      "seoDescription",
+      formData.seoDescription || "",
+      active.seoDescription || "",
+    );
+
+    const sortedFormTags = [...(formData.tags || [])].sort();
+    const sortedAiTags = [...(active.tags || [])].sort();
+    if (
+      sortedFormTags.length === sortedAiTags.length &&
+      sortedFormTags.every((t, i) => t === sortedAiTags[i]) &&
+      !newApplied.has("tags")
+    ) {
+      newApplied.add("tags");
+      changed = true;
+    }
+
+    if (changed) setAppliedFields(newApplied);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [formData, aiVersions, activeVersionIndex]);
+
+  const handleVersionGenerated = (version: AIGenerationVersion) => {
+    setAiVersions((prev) => [version, ...prev].slice(0, MAX_VERSIONS));
+    setActiveVersionIndex(0);
+  };
+
+  const ALL_AI_FIELDS = productAiConfig.fields.map((f) => f.key);
+
+  const handleApplyAIField = (
+    field: keyof AiSeoContent,
+    value: AiSeoContent[keyof AiSeoContent],
+  ) => {
+    updateFormData((prev: any) => {
+      if (field === "tags" && Array.isArray(value)) {
+        const merged = Array.from(new Set([...(prev.tags || []), ...value]));
+        return { ...prev, tags: merged };
+      }
+      return { ...prev, [field]: value };
+    });
+    setAppliedFields((prev) => new Set([...prev, field as string]));
+  };
+
+  const handleApplyAllFromVersion = (version: AIGenerationVersion) => {
+    const body: any = version.result.suggestedUpdateBody || version.result.content;
+    updateFormData((prev: any) => ({
+      ...prev,
+      description: body.description ?? prev.description,
+      shortDescription: body.shortDescription ?? prev.shortDescription,
+      focusKeyphrase: body.focusKeyphrase ?? prev.focusKeyphrase,
+      seoTitle: body.seoTitle ?? prev.seoTitle,
+      seoDescription: body.seoDescription ?? prev.seoDescription,
+      tags: body.tags ?? prev.tags,
+    }));
+    setAppliedFields((prev) => new Set([...prev, ...ALL_AI_FIELDS]));
+  };
+
+  const handleApplySuggestion = (
+    field: AiSeoSuggestion["field"],
+    value: string,
+  ) => {
+    if (field === "discount") {
+      const parsed = parseFloat(value);
+      if (!Number.isNaN(parsed)) {
+        updateFormData({ ...formData, discount: parsed });
+      }
+    } else if (field === "name") {
+      if (value.trim())
+        updateFormData({ ...formData, name: value.trim() } as IProductUpdateData);
+    } else if (field === "slug") {
+      const cleaned = value.trim().toLowerCase().replace(/[^a-z0-9-]+/g, "-").replace(/^-+|-+$/g, "");
+      if (cleaned) {
+        setSlugManuallyEdited(true);          // keep the applied slug on name changes
+        updateFormData({ ...formData, slug: cleaned });
+      }
+    } else if (field === "tags") {
+      const suggested = value
+        .split(",")
+        .map((t) => t.trim().toLowerCase())
+        .filter(Boolean);
+      if (suggested.length) {
+        updateFormData({
+          ...formData,
+          tags: Array.from(new Set([...(formData.tags || []), ...suggested])),
+        } as IProductUpdateData);
+      }
+    }
+    setAppliedFields((prev) => new Set([...prev, `suggestion:${field}`]));
+  };
+
+  const handleClearVersions = () => {
+    setAiVersions([]);
+    setActiveVersionIndex(0);
+    setAppliedFields(new Set());
+    try {
+      localStorage.removeItem(versionsStorageKey);
+    } catch {
+      // ignore
+    }
   };
 
   // Handle variation field updates (name, color, size - NOT quantity)
@@ -561,6 +774,7 @@ const EditProduct: React.FC<Props> = ({
               </div>
 
               <div className='flex items-center gap-3'>
+                <AIGenerateButton onClick={() => setIsAIModalOpen(true)} />
                 <Button
                   variant='outline'
                   onClick={() => {
@@ -588,6 +802,35 @@ const EditProduct: React.FC<Props> = ({
             </div>
           </div>
         </div>
+
+        {/* AI SEO Generation */}
+        <StreamingAIModal
+          open={isAIModalOpen}
+          onOpenChange={setIsAIModalOpen}
+          entity={productAiConfig}
+          mode='edit'
+          entityId={productData?.id}
+          entityName={formData?.name || productData?.name || "Product"}
+          onVersionGenerated={handleVersionGenerated}
+          onApplySuggestion={handleApplySuggestion}
+          appliedFields={appliedFields}
+        />
+
+        {aiVersions.length > 0 && (
+          <div className='mb-6 sm:mb-8'>
+            <AIVersionsPanel
+              entity={productAiConfig}
+              versions={aiVersions}
+              activeIndex={activeVersionIndex}
+              onSelectVersion={setActiveVersionIndex}
+              onApplyField={handleApplyAIField}
+              onApplyAll={handleApplyAllFromVersion}
+              onApplySuggestion={handleApplySuggestion}
+              onClear={handleClearVersions}
+              appliedFields={appliedFields}
+            />
+          </div>
+        )}
 
         {/* Stats Overview Cards */}
         <div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 lg:gap-6 mb-6 sm:mb-8'>
@@ -720,6 +963,36 @@ const EditProduct: React.FC<Props> = ({
               </CardContent>
             </Card>
 
+            {/* SEO Card */}
+            <Card className='border-none shadow-xl bg-white/80 dark:bg-slate-900/80 backdrop-blur-sm'>
+              <CardHeader className='border-b border-slate-200 dark:border-slate-700'>
+                <CardTitle className='text-xl flex items-center gap-2'>
+                  <div className='p-2 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-lg shadow-lg'>
+                    <BarChart3 className='w-5 h-5 text-white' />
+                  </div>
+                  SEO Settings
+                </CardTitle>
+                <CardDescription>
+                  Slug, meta data, and tags for search engines
+                </CardDescription>
+              </CardHeader>
+              <CardContent className='pt-6'>
+                <ProductSeoCard
+                  value={{
+                    slug: formData?.slug || "",
+                    shortDescription: formData?.shortDescription || "",
+                    focusKeyphrase: formData?.focusKeyphrase || "",
+                    seoTitle: formData?.seoTitle || "",
+                    seoDescription: formData?.seoDescription || "",
+                    tags: formData?.tags || [],
+                  }}
+                  onChange={handleSeoChange}
+                  onResetSlug={handleResetSlug}
+                  slugManuallyEdited={slugManuallyEdited}
+                />
+              </CardContent>
+            </Card>
+
             {/* Product Details Card */}
             <Card className='border-none shadow-xl bg-white/80 dark:bg-slate-900/80 backdrop-blur-sm'>
               <CardHeader className='border-b border-slate-200 dark:border-slate-700'>
@@ -773,6 +1046,27 @@ const EditProduct: React.FC<Props> = ({
                       />
                       <p className='text-xs text-slate-600 dark:text-slate-400'>
                         Stock Keeping Unit - unique identifier
+                      </p>
+                    </div>
+
+                    <div className='space-y-2'>
+                      <Label
+                        htmlFor='brand'
+                        className='text-sm font-semibold flex items-center gap-2'>
+                        <Tag className='w-4 h-4 text-slate-500' />
+                        Brand
+                      </Label>
+                      <Input
+                        id='brand'
+                        name='brand'
+                        type='text'
+                        value={formData?.brand || ""}
+                        onChange={handleChange}
+                        placeholder='e.g. Samsung'
+                        className='h-11 border-2 focus:border-indigo-500 transition-colors'
+                      />
+                      <p className='text-xs text-slate-600 dark:text-slate-400'>
+                        Used for SEO content and AI generation grounding
                       </p>
                     </div>
                   </div>

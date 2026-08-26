@@ -30,9 +30,10 @@ import {
 import { Badge } from "../../../../components/ui/badge";
 import TiptapEditor from "../../../../components/ui/tiptap";
 import PlaceHolderImage from "../../../../assets/placeholder.svg";
-import AIGenerateButton from "./AIGenerateButton";
-import StreamingAIModal from "./StreamingAIModal";
-import AIVersionsPanel from "./AIVersionsPanel";
+import AIGenerateButton from "../../../../components/aiSeo/AIGenerateButton";
+import StreamingAIModal from "../../../../components/aiSeo/StreamingAIModal";
+import AIVersionsPanel from "../../../../components/aiSeo/AIVersionsPanel";
+import { categoryAiConfig } from "../../../../components/aiSeo/aiEntityConfig";
 import {
   AIGenerationVersion,
   AiSeoContent,
@@ -399,10 +400,11 @@ const CategoryForm: React.FC<CategoryFormProps> = ({
         <StreamingAIModal
           open={isAIModalOpen}
           onOpenChange={setIsAIModalOpen}
+          entity={categoryAiConfig}
           mode={mode}
-          categoryId={existingCategory?.id}
-          categoryName={formData.name || existingCategory?.name || "Category"}
-          parentId={formData.parentId}
+          entityId={existingCategory?.id}
+          entityName={formData.name || existingCategory?.name || "Category"}
+          extraPayload={{ parentId: formData.parentId }}
           onVersionGenerated={handleVersionGenerated}
           onApplySuggestion={handleApplySuggestion}
           appliedFields={appliedFields}
@@ -412,6 +414,7 @@ const CategoryForm: React.FC<CategoryFormProps> = ({
         {aiVersions.length > 0 && (
           <div className='mb-6'>
             <AIVersionsPanel
+              entity={categoryAiConfig}
               versions={aiVersions}
               activeIndex={activeVersionIndex}
               onSelectVersion={setActiveVersionIndex}

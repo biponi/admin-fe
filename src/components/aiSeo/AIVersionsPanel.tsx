@@ -1,13 +1,16 @@
+// Shared AI-generated versions panel for any entity (category, product).
+// Field labels, suggestion labels, and applicable suggestions come from
+// AiEntityConfig; the apply/flash/version-pager flow is identical.
 import { useState, useCallback } from "react";
 import { formatDistanceToNow } from "date-fns";
-import { Button } from "../../../../components/ui/button";
-import { Badge } from "../../../../components/ui/badge";
+import { Button } from "../../components/ui/button";
+import { Badge } from "../../components/ui/badge";
 import {
   Accordion,
   AccordionItem,
   AccordionTrigger,
   AccordionContent,
-} from "../../../../components/ui/accordion";
+} from "../../components/ui/accordion";
 import {
   Sparkles,
   Check,
@@ -21,9 +24,11 @@ import {
   AIGenerationVersion,
   AiSeoSuggestion,
   AiSeoContent,
-} from "../../../../api/aiSeo";
+} from "../../api/aiSeo";
+import { AiEntityConfig } from "./aiEntityConfig";
 
 interface AIVersionsPanelProps {
+  entity: AiEntityConfig;
   versions: AIGenerationVersion[];
   activeIndex: number;
   onSelectVersion: (index: number) => void;
@@ -37,56 +42,12 @@ interface AIVersionsPanelProps {
   appliedFields: Set<string>;
 }
 
-const ALL_AI_FIELDS = [
-  "description",
-  "shortDescription",
-  "focusKeyphrase",
-  "seoTitle",
-  "metaDescription",
-  "tags",
-  "google_category_type",
-];
-
-const FIELD_LABELS: {
-  key: keyof AiSeoContent;
-  label: string;
-  clip?: boolean;
-}[] = [
-  { key: "description", label: "Description", clip: true },
-  { key: "shortDescription", label: "Short Description", clip: true },
-  { key: "focusKeyphrase", label: "Focus Keyphrase" },
-  { key: "seoTitle", label: "SEO Title" },
-  { key: "metaDescription", label: "Meta Description", clip: true },
-  { key: "tags", label: "Tags" },
-  { key: "google_category_type", label: "Google Category" },
-];
-
-const SUGGESTION_LABELS: Record<AiSeoSuggestion["field"], string> = {
-  discount: "Discount",
-  discountType: "Discount Type",
-  name: "Category Name",
-  img: "Image",
-  internalLinks: "Internal Links",
-  general: "General",
-};
-
 function stripHtml(html: string): string {
   return html.replace(/<[^>]*>/g, "");
 }
 
-function displayValue(field: keyof AiSeoContent, value: any): string {
-  if (field === "tags" && Array.isArray(value)) return value.join(", ");
-  if (
-    (field === "description" || field === "metaDescription") &&
-    typeof value === "string" &&
-    value.startsWith("<")
-  ) {
-    return stripHtml(value);
-  }
-  return value == null || value === "" ? "—" : String(value);
-}
-
 export default function AIVersionsPanel({
+  entity,
   versions,
   activeIndex,
   onSelectVersion,
@@ -107,24 +68,32 @@ export default function AIVersionsPanel({
 
   const clampedIndex = Math.min(activeIndex, versions.length - 1);
   const active = versions[clampedIndex];
-  const applicable: AiSeoSuggestion["field"][] = [
-    "discount",
-    "discountType",
-    "name",
-  ];
 
-  const allApplied = ALL_AI_FIELDS.every((f) => appliedFields.has(f));
+  const allApplied = entity.fields.every((f) => appliedFields.has(f.key));
+
+  const displayValue = (fieldKey: string, value: any): string => {
+    if (fieldKey === "tags" && Array.isArray(value)) return value.join(", ");
+    const field = entity.fields.find((f) => f.key === fieldKey);
+    if (
+      (fieldKey === "description" || field?.clip) &&
+      typeof value === "string" &&
+      value.startsWith("<")
+    ) {
+      return stripHtml(value);
+    }
+    return value == null || value === "" ? "—" : String(value);
+  };
 
   return (
-    <div className="rounded-lg border border-slate-200 bg-slate-50/70 overflow-hidden">
+    <div className='rounded-lg border border-slate-200 bg-slate-50/70 overflow-hidden'>
       {/* Header: version switcher + clear */}
-      <div className="flex items-center justify-between px-3 py-2 border-b border-slate-200 bg-white">
-        <div className="flex items-center gap-2">
-          <Sparkles className="h-3.5 w-3.5 text-slate-400" />
-          <span className="text-[10px] font-semibold uppercase tracking-wider text-slate-400">
+      <div className='flex items-center justify-between px-3 py-2 border-b border-slate-200 bg-white'>
+        <div className='flex items-center gap-2'>
+          <Sparkles className='h-3.5 w-3.5 text-slate-400' />
+          <span className='text-[10px] font-semibold uppercase tracking-wider text-slate-400'>
             AI Versions
           </span>
-          <div className="flex items-center gap-1 ml-2">
+          <div className='flex items-center gap-1 ml-2'>
             <Button
               type='button'
               variant='ghost'
@@ -169,10 +138,11 @@ export default function AIVersionsPanel({
       <div className='px-3 py-3 max-h-[340px] overflow-y-auto'>
         <Accordion
           type='multiple'
-          defaultValue={FIELD_LABELS.map(({ key }) => key)}
+          defaultValue={entity.fields.map(({ key }) => key)}
           className='space-y-1.5'>
-          {FIELD_LABELS.map(({ key, label }) => {
-            const value = displayValue(key, active.result.content?.[key]);
+          {entity.fields.map(({ key, label, clip }) => {
+            const rawValue = (active.result.content as any)?.[key];
+            const value = displayValue(key, rawValue);
             const isTag = key === "tags";
             const tags = isTag
               ? Array.isArray(active.result.content?.tags)
@@ -194,9 +164,7 @@ export default function AIVersionsPanel({
                     </span>
                     <div className='flex items-center gap-2'>
                       <span className='text-[11px] text-slate-400 truncate max-w-[120px]'>
-                        {value.length > 30
-                          ? value.slice(0, 30) + "..."
-                          : value}
+                        {value.length > 30 ? value.slice(0, 30) + "..." : value}
                       </span>
                       <Button
                         type='button'
@@ -205,7 +173,7 @@ export default function AIVersionsPanel({
                         disabled={isApplied}
                         onClick={(e) => {
                           e.stopPropagation();
-                          onApplyField(key, active.result.content?.[key]);
+                          onApplyField(key as keyof AiSeoContent, rawValue);
                           triggerFlash(key);
                         }}
                         className={`h-5 px-1.5 shrink-0 text-[9px] rounded gap-0.5 transition-all duration-300 ${
@@ -270,7 +238,7 @@ export default function AIVersionsPanel({
                   <div className='min-w-0'>
                     <p className='text-[11px] font-medium text-[#141413]'>
                       <span className='text-slate-400 uppercase tracking-wide mr-1.5'>
-                        {SUGGESTION_LABELS[s.field] || s.field}:
+                        {entity.suggestionLabels[s.field] || s.field}:
                       </span>
                       {s.value}
                     </p>
@@ -280,7 +248,7 @@ export default function AIVersionsPanel({
                       </p>
                     )}
                   </div>
-                  {applicable.includes(s.field) && (
+                  {entity.applicableSuggestions.includes(s.field) && (
                     <Button
                       type='button'
                       size='sm'

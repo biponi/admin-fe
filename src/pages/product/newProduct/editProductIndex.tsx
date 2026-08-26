@@ -128,7 +128,12 @@ const UpdateProduct = () => {
       }
 
       setLoading(true);
-      const response = await editProduct(buildFormDataFromObject(productData));
+      // Tags go as one JSON string — buildFormDataFromObject would emit
+      // tags[0], tags[1], ... keys which the backend can't reassemble.
+      const { tags, ...rest } = productData as any;
+      const formData = buildFormDataFromObject(rest);
+      if (tags && tags.length > 0) formData.append("tags", JSON.stringify(tags));
+      const response = await editProduct(formData);
       setLoading(false);
       if (response?.success) {
         toast({

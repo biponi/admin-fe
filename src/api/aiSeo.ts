@@ -9,19 +9,31 @@ interface ApiResponse<T> {
 }
 
 // ── Types (backend contract: biponi-express service/ai) ───────────────────
+// Per-entity shapes overlap but differ: category carries metaDescription +
+// google_category_type; product carries seoDescription. The optional keys
+// keep one interface indexable by `keyof AiSeoContent` for both entities.
 
 export interface AiSeoContent {
   description: string;
   shortDescription: string;
   focusKeyphrase: string;
   seoTitle: string;
-  metaDescription: string;
+  metaDescription?: string;
+  seoDescription?: string;
   tags: string[];
-  google_category_type: string;
+  google_category_type?: string;
 }
 
 export interface AiSeoSuggestion {
-  field: "discount" | "discountType" | "name" | "img" | "internalLinks" | "general";
+  field:
+    | "discount"
+    | "discountType"
+    | "name"
+    | "slug"
+    | "tags"
+    | "img"
+    | "internalLinks"
+    | "general";
   value: string;
   reason: string;
 }
@@ -66,6 +78,16 @@ export interface AiSeoPayload {
   parentId?: string | null;
   notes?: string;
   sampleProducts?: string[];
+  regenerate?: boolean;
+}
+
+export interface ProductAiSeoPayload {
+  name?: string;
+  categoryId?: string | null;
+  brand?: string;
+  notes?: string;
+  price?: number;
+  sampleAttributes?: string[];
   regenerate?: boolean;
 }
 
@@ -139,6 +161,38 @@ export const generateCategorySeo = async (
   }
 };
 
+export const suggestProductSeo = async (
+  data: ProductAiSeoPayload
+): Promise<ApiResponse<AiSeoResult>> => {
+  try {
+    const response = await axios.post<any>(config.product.aiSeoSuggest(), data);
+    if (response.status === 200)
+      return { success: true, data: response.data?.data };
+    return { success: false, error: response.data.error || "Failed to generate SEO content" };
+  } catch (error: any) {
+    console.error("Error suggesting product SEO:", error.message);
+    return handleApiError(error);
+  }
+};
+
+export const generateProductSeo = async (
+  productId: string,
+  data: ProductAiSeoPayload
+): Promise<ApiResponse<AiSeoResult>> => {
+  try {
+    const response = await axios.post<any>(
+      config.product.aiSeoGenerate(productId),
+      data
+    );
+    if (response.status === 200)
+      return { success: true, data: response.data?.data };
+    return { success: false, error: response.data.error || "Failed to generate SEO content" };
+  } catch (error: any) {
+    console.error("Error generating product SEO:", error.message);
+    return handleApiError(error);
+  }
+};
+
 // ── Streaming (fetch + ReadableStream; first SSE consumer in the app) ──────
 
 function absoluteUrl(path: string): string {
@@ -174,14 +228,14 @@ async function openSse(
 }
 
 /**
- * Stream AI SEO generation over SSE. Events: meta → description* → done,
- * or error. Resolves with the final result, or rejects on transport errors
- * (callback onError also fires for every failure, including stream-level
- * error events from the server).
+ * Stream AI SEO generation over SSE for any entity (path is supplied by the
+ * caller). Events: meta → description* → done, or error. Resolves with the
+ * final result, or rejects on transport errors (callback onError also fires
+ * for every failure, including stream-level error events from the server).
  */
-export async function streamCategorySeo(
+export async function streamSeo(
   path: string,
-  data: AiSeoPayload,
+  data: AiSeoPayload | ProductAiSeoPayload,
   callbacks: AiSeoStreamCallbacks,
   signal: AbortSignal
 ): Promise<AiSeoResult | null> {
@@ -251,3 +305,6 @@ export async function streamCategorySeo(
 
   return finalResult;
 }
+
+// Back-compat alias for existing category imports
+export const streamCategorySeo = streamSeo;

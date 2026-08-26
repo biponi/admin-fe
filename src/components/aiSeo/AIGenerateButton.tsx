@@ -1,4 +1,4 @@
-import { Button } from "../../../../components/ui/button";
+import { Button } from "../../components/ui/button";
 import { Sparkles } from "lucide-react";
 
 interface AIGenerateButtonProps {

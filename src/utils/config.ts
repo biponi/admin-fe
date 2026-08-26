@@ -61,6 +61,10 @@ const config = {
 
     // Product Report Endpoints
     getProductReport: () => `${baseURL}/product/report`,
+
+    // AI SEO generation (advisory; apply via editProduct)
+    aiSeoSuggest: () => `${baseURL}/product/ai-seo/suggest`,
+    aiSeoGenerate: (id: string) => `${baseURL}/product/ai-seo/generate/${id}`,
   },
   order: {
     createOrder: () => `${baseURL}/order/prior/create`,
