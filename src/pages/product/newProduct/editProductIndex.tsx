@@ -5,20 +5,20 @@ import MainView from "../../../coreComponents/mainView";
 import { IProductUpdateData, IVariation } from "../interface";
 import DefaultLoading from "../../../coreComponents/defaultLoading";
 import useCategory from "../hooks/useCategory";
-import { buildFormDataFromObject, filterImageGroups } from "../../../utils/functions";
-import { useNavigate, useParams } from "react-router-dom";
+import {
+  buildFormDataFromObject,
+  filterImageGroups,
+} from "../../../utils/functions";
+import { useParams } from "react-router-dom";
 import EditProduct from "./editProduct";
 import { getProductById } from "../../../api/product";
-import { Button } from "../../../components/ui/button";
-import { ArrowLeft } from "lucide-react";
 
 const UpdateProduct = () => {
   const { toast } = useToast();
-  const navigate = useNavigate();
   const { categories, fetchCategories } = useCategory();
   const [loading, setLoading] = useState(false);
   const [productData, setProductData] = useState<IProductUpdateData | null>(
-    null
+    null,
   );
 
   const { id } = useParams();
@@ -111,18 +111,23 @@ const UpdateProduct = () => {
       // Safety check: validate imageGroups before building FormData
       const imageData = (productData as any).imageGroups;
       if (imageData && Array.isArray(imageData)) {
-        console.log('editProductIndex - imageGroups before API call:', imageData);
+        console.log(
+          "editProductIndex - imageGroups before API call:",
+          imageData,
+        );
 
         const { validGroups, invalidCount } = filterImageGroups(imageData);
 
-        console.log('editProductIndex - imageGroups validation:', {
+        console.log("editProductIndex - imageGroups validation:", {
           validGroups,
           invalidCount,
-          totalOriginal: imageData.length
+          totalOriginal: imageData.length,
         });
 
         if (invalidCount > 0) {
-          console.warn(`editProductIndex - Found ${invalidCount} invalid imageGroup(s), replacing with valid groups`);
+          console.warn(
+            `editProductIndex - Found ${invalidCount} invalid imageGroup(s), replacing with valid groups`,
+          );
           (productData as any).imageGroups = validGroups;
         }
       }
@@ -132,7 +137,8 @@ const UpdateProduct = () => {
       // tags[0], tags[1], ... keys which the backend can't reassemble.
       const { tags, ...rest } = productData as any;
       const formData = buildFormDataFromObject(rest);
-      if (tags && tags.length > 0) formData.append("tags", JSON.stringify(tags));
+      if (tags && tags.length > 0)
+        formData.append("tags", JSON.stringify(tags));
       const response = await editProduct(formData);
       setLoading(false);
       if (response?.success) {
@@ -156,18 +162,10 @@ const UpdateProduct = () => {
   };
   const mainView = () => {
     if (loading) {
-      return <DefaultLoading title="Updating product" />;
+      return <DefaultLoading title='Updating product' />;
     } else if (productData !== null) {
       return (
         <>
-          <Button
-            className="block sm:hidden sm:mr-auto "
-            size={"icon"}
-            variant={"ghost"}
-            onClick={() => navigate("/products")}
-          >
-            <ArrowLeft className=" size-5 " />
-          </Button>
           <EditProduct
             productData={productData}
             categories={categories}
@@ -178,7 +176,7 @@ const UpdateProduct = () => {
     } else return <></>;
   };
   return (
-    <MainView title="Add New Product">
+    <MainView title='Add New Product'>
       <>{mainView()}</>
     </MainView>
   );

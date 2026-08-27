@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { ICategory, IChangeEvent } from "../../interface";
 import {
@@ -31,8 +31,7 @@ import { Badge } from "../../../../components/ui/badge";
 import TiptapEditor from "../../../../components/ui/tiptap";
 import PlaceHolderImage from "../../../../assets/placeholder.svg";
 import AIGenerateButton from "../../../../components/aiSeo/AIGenerateButton";
-import StreamingAIModal from "../../../../components/aiSeo/StreamingAIModal";
-import AIVersionsPanel from "../../../../components/aiSeo/AIVersionsPanel";
+import AIVersionsSheet from "../../../../components/aiSeo/AIVersionsSheet";
 import { categoryAiConfig } from "../../../../components/aiSeo/aiEntityConfig";
 import {
   AIGenerationVersion,
@@ -98,7 +97,7 @@ const CategoryForm: React.FC<CategoryFormProps> = ({
   const [image, setImage] = useState<File | null>(null);
   const [formData, setFormData] = useState(defaultCategory);
   const [tagInput, setTagInput] = useState("");
-  const [isAIModalOpen, setIsAIModalOpen] = useState(false);
+  const [isAISheetOpen, setIsAISheetOpen] = useState(false);
   const [aiVersions, setAiVersions] = useState<AIGenerationVersion[]>([]);
   const [activeVersionIndex, setActiveVersionIndex] = useState(0);
   const [appliedFields, setAppliedFields] = useState<Set<string>>(new Set());
@@ -246,11 +245,27 @@ const CategoryForm: React.FC<CategoryFormProps> = ({
     };
 
     markIfMatch("description", formData.description, active.description || "");
-    markIfMatch("shortDescription", formData.shortDescription, active.shortDescription || "");
+    markIfMatch(
+      "shortDescription",
+      formData.shortDescription,
+      active.shortDescription || "",
+    );
     markIfMatch("seoTitle", formData.seoTitle, active.seoTitle || "");
-    markIfMatch("focusKeyphrase", formData.focusKeyphrase, active.focusKeyphrase || "");
-    markIfMatch("metaDescription", formData.metaDescription, active.metaDescription || "");
-    markIfMatch("google_category_type", formData.google_category_type, active.google_category_type || "");
+    markIfMatch(
+      "focusKeyphrase",
+      formData.focusKeyphrase,
+      active.focusKeyphrase || "",
+    );
+    markIfMatch(
+      "metaDescription",
+      formData.metaDescription,
+      active.metaDescription || "",
+    );
+    markIfMatch(
+      "google_category_type",
+      formData.google_category_type,
+      active.google_category_type || "",
+    );
 
     const sortedFormTags = [...(formData.tags || [])].sort();
     const sortedAiTags = [...(active.tags || [])].sort();
@@ -267,10 +282,10 @@ const CategoryForm: React.FC<CategoryFormProps> = ({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [formData, aiVersions, activeVersionIndex]);
 
-  const handleVersionGenerated = (version: AIGenerationVersion) => {
+  const handleVersionGenerated = useCallback((version: AIGenerationVersion) => {
     setAiVersions((prev) => [version, ...prev].slice(0, MAX_VERSIONS));
     setActiveVersionIndex(0);
-  };
+  }, []);
 
   const ALL_AI_FIELDS = [
     "description",
@@ -367,7 +382,7 @@ const CategoryForm: React.FC<CategoryFormProps> = ({
               variant='outline'
               size='sm'
               onClick={() => navigate("/category")}
-              className='border-slate-300 text-slate-600 hover:bg-slate-50 rounded-md'>
+              className='border-slate-300 text-slate-600 hover:bg-slate-50 rounded-md hidden sm:inline-flex'>
               <ArrowLeft className='h-4 w-4 mr-2' />
               Back
             </Button>
@@ -392,60 +407,22 @@ const CategoryForm: React.FC<CategoryFormProps> = ({
             </div>
           </div>
           <AIGenerateButton
-            onClick={() => setIsAIModalOpen(true)}
+            onClick={() => setIsAISheetOpen(true)}
             disabled={(mode === "create" && !formData.name) || loading}
           />
         </div>
 
-        <StreamingAIModal
-          open={isAIModalOpen}
-          onOpenChange={setIsAIModalOpen}
-          entity={categoryAiConfig}
-          mode={mode}
-          entityId={existingCategory?.id}
-          entityName={formData.name || existingCategory?.name || "Category"}
-          extraPayload={{ parentId: formData.parentId }}
-          onVersionGenerated={handleVersionGenerated}
-          onApplySuggestion={handleApplySuggestion}
-          appliedFields={appliedFields}
-        />
-
-        {/* AI Generated Versions Panel */}
-        {aiVersions.length > 0 && (
-          <div className='mb-6'>
-            <AIVersionsPanel
-              entity={categoryAiConfig}
-              versions={aiVersions}
-              activeIndex={activeVersionIndex}
-              onSelectVersion={setActiveVersionIndex}
-              onApplyField={handleApplyAIField}
-              onApplyAll={handleApplyAllFromVersion}
-              onApplySuggestion={handleApplySuggestion}
-              onClear={handleClearVersions}
-              appliedFields={appliedFields}
-            />
-          </div>
-        )}
-
         {/* Preview Strip */}
-        <div className='flex items-center gap-3 rounded-lg border border-slate-200 bg-[#FAF9F6] p-3 mb-6'>
+        <div className='flex items-center gap-3 bg-white rounded-xl border border-slate-200 px-4 py-3 shadow-sm mb-6'>
           <img
             alt='Category preview'
             src={previewImageSrc}
-            className='h-10 w-10 shrink-0 rounded-md object-cover border border-slate-200'
+            className='h-10 w-10 shrink-0 rounded-lg object-cover border border-slate-200'
           />
           <div className='min-w-0 flex-1'>
             <div className='flex items-center gap-1.5'>
               <span className='truncate text-[13px] font-semibold text-[#141413]'>
                 {formData.name || "New category"}
-              </span>
-              <span
-                className={`shrink-0 rounded-full px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wider ${
-                  formData.active
-                    ? "bg-[#141413] text-white"
-                    : "bg-slate-200 text-slate-600"
-                }`}>
-                {formData.active ? "Active" : "Inactive"}
               </span>
             </div>
             <div className='truncate text-[11px] text-slate-400 mt-0.5 font-mono'>
@@ -459,14 +436,19 @@ const CategoryForm: React.FC<CategoryFormProps> = ({
               )}
             </div>
           </div>
-          {!!formData.discount && Number(formData.discount) > 0 && (
-            <span className='shrink-0 rounded-full border border-slate-300 bg-white px-2 py-0.5 text-[11px] font-mono font-medium text-[#141413]'>
-              {isFixedDiscount
-                ? `\u09F3${formData.discount}`
-                : `${formData.discount}%`}{" "}
-              off
+          <div className='flex items-center gap-2 shrink-0'>
+            <span
+              className={`text-xs font-medium ${formData.active ? "text-emerald-600" : "text-slate-400"}`}>
+              {formData.active ? "Active" : "Inactive"}
             </span>
-          )}
+            <Switch
+              checked={formData.active}
+              onCheckedChange={(checked) =>
+                setFormData((prev) => ({ ...prev, active: checked }))
+              }
+              className='data-[state=checked]:bg-emerald-500'
+            />
+          </div>
         </div>
 
         {/* Form Grid */}
@@ -804,35 +786,13 @@ const CategoryForm: React.FC<CategoryFormProps> = ({
           </div>
         </div>
 
-        {/* Section 5: Settings & Media (Full Width) */}
+        {/* Section 5: Media (Full Width) */}
         <div className='rounded-lg border border-slate-200 bg-white p-4 mb-6'>
           <SectionHeading
             icon={<Settings2 className='h-3.5 w-3.5' />}
             title='Settings & media'
           />
-          <div className='flex flex-col sm:flex-row items-start sm:items-center gap-6'>
-            <div className='flex items-center justify-between gap-3 rounded-md bg-slate-50 border border-slate-200 p-3 flex-1'>
-              <div>
-                <Label
-                  htmlFor='active-status'
-                  className='cursor-pointer text-[13px] font-medium text-slate-600'>
-                  Active status
-                </Label>
-                <p className='text-[11px] text-slate-400 mt-0.5'>
-                  {formData.active
-                    ? "Visible to customers"
-                    : "Hidden from customers"}
-                </p>
-              </div>
-              <Switch
-                id='active-status'
-                checked={formData.active}
-                onCheckedChange={(value) =>
-                  setFormData((prev) => ({ ...prev, active: value }))
-                }
-              />
-            </div>
-
+          <div className='flex flex-col sm:flex-row items-start gap-6'>
             <div className='grid w-full sm:w-auto gap-1.5 flex-1'>
               <Label
                 htmlFor='picture'
@@ -840,41 +800,76 @@ const CategoryForm: React.FC<CategoryFormProps> = ({
                 <ImageIcon className='h-3.5 w-3.5' />
                 Category image
               </Label>
-              <div className='flex items-center gap-3'>
-                <img
-                  alt='Selected'
-                  src={previewImageSrc}
-                  className='h-9 w-9 shrink-0 rounded-md object-cover border border-slate-200'
-                />
-                <Input
-                  id='picture'
-                  type='file'
-                  accept='image/*'
-                  onChange={(e) => {
-                    const file = e.target.files?.[0];
-                    if (file) setImage(file);
-                  }}
-                  className='h-9 border-slate-200 text-[13px] rounded-md file:mr-3 file:h-full file:rounded-md file:border-0 file:bg-slate-100 file:px-3 file:text-[11px] file:font-medium file:text-slate-700 hover:file:bg-slate-200'
-                />
+              <div className='flex items-center gap-4'>
+                <div className='relative'>
+                  <img
+                    alt='Category preview'
+                    src={previewImageSrc}
+                    className='h-24 w-24 shrink-0 rounded-lg object-cover border border-slate-200'
+                  />
+                  {image && (
+                    <button
+                      type='button'
+                      onClick={() => setImage(null)}
+                      className='absolute -top-2 -right-2 p-1 bg-red-500 hover:bg-red-600 text-white rounded-full shadow-sm z-10'>
+                      <X className='h-3 w-3' />
+                    </button>
+                  )}
+                </div>
+                <div className='space-y-2'>
+                  <Input
+                    id='picture'
+                    type='file'
+                    accept='image/*'
+                    onChange={(e) => {
+                      const file = e.target.files?.[0];
+                      if (file) setImage(file);
+                    }}
+                    className='h-9 border-slate-200 text-[13px] rounded-md file:mr-3 file:h-full file:rounded-md file:border-0 file:bg-slate-100 file:px-3 file:text-[11px] file:font-medium file:text-slate-700 hover:file:bg-slate-200'
+                  />
+                  <p className='text-[11px] text-slate-400'>
+                    Recommended: 512×512px. Max 2MB.
+                  </p>
+                </div>
               </div>
             </div>
           </div>
         </div>
 
+        {/* AI Versions Sheet */}
+        <AIVersionsSheet
+          open={isAISheetOpen}
+          onOpenChange={setIsAISheetOpen}
+          entity={categoryAiConfig}
+          mode={mode}
+          entityId={existingCategory?.id}
+          entityName={formData.name || existingCategory?.name || "Category"}
+          extraPayload={{ parentId: formData.parentId }}
+          versions={aiVersions}
+          activeIndex={activeVersionIndex}
+          onSelectVersion={setActiveVersionIndex}
+          onVersionGenerated={handleVersionGenerated}
+          onApplyField={handleApplyAIField}
+          onApplyAll={handleApplyAllFromVersion}
+          onApplySuggestion={handleApplySuggestion}
+          onClear={handleClearVersions}
+          appliedFields={appliedFields}
+        />
+
         {/* Action Bar */}
-        <div className='sticky bottom-0 bg-[#FAF9F6] border-t border-slate-200 py-4 -mx-4 sm:-mx-6 lg:-mx-8 px-4 sm:px-6 lg:px-8'>
+        <div className='sticky bottom-0 bg-[#FAF9F6] border-t border-slate-200 py-4  sm:-mx-6 lg:-mx-8 px-4 sm:px-6 lg:px-8'>
           <div className='flex items-center justify-end gap-3'>
             <Button
               type='button'
               variant='outline'
               onClick={() => navigate("/category")}
-              className='border-slate-300 text-slate-600 hover:bg-slate-50 rounded-md'>
+              className='border-slate-300 text-slate-600 hover:bg-slate-50 rounded-md w-full sm:w-auto'>
               Cancel
             </Button>
             <Button
               disabled={!formData.name || loading}
               onClick={handleSubmit}
-              className='bg-[#141413] hover:bg-[#2a2a2a] active:bg-black text-white rounded-md'>
+              className='bg-[#141413] hover:bg-[#2a2a2a] active:bg-black w-full sm:w-auto text-white rounded-md'>
               {loading ? (
                 <>
                   <Loader2 className='h-4 w-4 mr-2 animate-spin' />

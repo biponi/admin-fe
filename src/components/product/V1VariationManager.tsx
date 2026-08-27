@@ -19,6 +19,8 @@ interface V1VariationManagerProps {
   ) => void;
   onDeleteVariation: (index: number) => void;
   onVariantImagesChange: (variantId: string, images: (File | string)[]) => void;
+  productImages?: (File | string)[];
+  imageGroups?: Array<{ id: string; attribute?: string; value?: string; images?: (File | string)[]; variantOverrides?: Array<{ variantId: string; images?: (File | string)[] }> }>;
 }
 
 /* ── tiny field primitive ─────────────────────────────────────── */
@@ -55,7 +57,22 @@ const V1VariationManager: React.FC<V1VariationManagerProps> = ({
   onUpdateVariation,
   onDeleteVariation,
   onVariantImagesChange,
+  productImages = [],
+  imageGroups = [],
 }) => {
+  // Compute fallback images for a variant: group images (with override) or product images
+  const getFallbackImages = (variation: IVariation): (File | string)[] => {
+    if (variation.imageGroupId) {
+      const group = imageGroups.find((g) => g.id === variation.imageGroupId);
+      if (group) {
+        const override = group.variantOverrides?.find((o) => o.variantId === variation.id);
+        if (override?.images?.length) return override.images;
+        if (group.images?.length) return group.images;
+      }
+    }
+    return productImages;
+ };
+
   if (!variations || variations.length === 0) {
     return (
       <div className='flex flex-col items-center justify-center gap-2 py-14 rounded-xl border border-dashed border-border/60 bg-muted/20'>
@@ -198,6 +215,7 @@ const V1VariationManager: React.FC<V1VariationManagerProps> = ({
             }
             images={variantImages[variation.id] || []}
             onImagesChange={onVariantImagesChange}
+            fallbackImages={getFallbackImages(variation)}
           />
         </div>
       ))}

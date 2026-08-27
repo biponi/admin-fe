@@ -64,12 +64,10 @@ export const buildFormDataFromObject = (data: any): FormData => {
   // This ensures variant images are sent as a flat array
   const variantImages = data.variantImages;
   const variantImageMappings = data.variantImageMappings;
-  const removeVariantImageIndexes = data.removeVariantImageIndexes;
 
   // Remove these from data so they don't get processed in the loop below
   delete data.variantImages;
   delete data.variantImageMappings;
-  delete data.removeVariantImageIndexes;
 
   // Handle variant images array separately
   if (variantImages && Array.isArray(variantImages)) {
@@ -85,12 +83,6 @@ export const buildFormDataFromObject = (data: any): FormData => {
   if (variantImageMappings && Array.isArray(variantImageMappings)) {
     console.log('variantImageMappings:', variantImageMappings);
     formData.append('variantImageMapping', JSON.stringify(variantImageMappings));
-  }
-
-  // Handle remove variant image indexes
-  if (removeVariantImageIndexes && Array.isArray(removeVariantImageIndexes)) {
-    console.log('removeVariantImageIndexes:', removeVariantImageIndexes);
-    formData.append('removeVariantImageIndexes', JSON.stringify(removeVariantImageIndexes));
   }
 
   // Iterate over the properties of the input object
@@ -122,20 +114,13 @@ export const buildFormDataFromObject = (data: any): FormData => {
 
       if (key === 'variation' && Array.isArray(value)) {
         // Special handling for variation array
-        // We need to ensure images array in variation doesn't include File objects
-        // as they're already sent via variantImages
+        // Always emit images array as the final list (replace semantics)
+        // Filter to string URLs only; Files travel via variantImages file field
         value.forEach((variation: any, index: number) => {
-          // Create a clean variation object without File objects in images
           const { images, ...variationData } = variation;
-
-          // If images array exists and contains strings (existing URLs), include them
-          if (images && Array.isArray(images) && images.length > 0) {
-            const existingImages = images.filter((img: any) => typeof img === 'string');
-            if (existingImages.length > 0) {
-              variationData.images = existingImages;
-            }
-          }
-
+          variationData.images = Array.isArray(images)
+            ? images.filter((img: any) => typeof img === 'string')
+            : [];
           formData.append(`variation[${index}]`, JSON.stringify(variationData));
         });
       } else if (key === 'imageGroups' && Array.isArray(value)) {

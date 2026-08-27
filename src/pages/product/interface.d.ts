@@ -64,12 +64,6 @@ export interface IVariantImageMapping {
   imageIndex: number; // Index pointing to a specific image in the variantImages array
 }
 
-// Variant image removal mapping for edit
-export interface IRemoveVariantImageMapping {
-  variantId: string;
-  imageIndexes: number[]; // Indices to remove from variant.images array
-}
-
 export interface IProductCreateData {
   name: string;
   active: boolean;
@@ -121,7 +115,6 @@ export interface IProductUpdateData {
   removeAbleVarations?: string[];
   variantImages?: File[]; // New variant image files to upload
   variantImageMappings?: IVariantImageMapping[]; // Maps variantIds to image indices
-  removeVariantImageIndexes?: IRemoveVariantImageMapping[]; // Variant images to remove
   commissionType?: "percentage" | "fixed" | "none";
   commissionRate?: number;
 

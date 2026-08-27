@@ -40,7 +40,7 @@ export const UserProfileHeader: React.FC<UserProfileHeaderProps> = ({
     : [];
 
   return (
-    <div style={styles.root}>
+    <div className='md:p-6 p-1' style={styles.root}>
       {/* Ambient blobs — same palette as the panel system */}
       <div style={{ ...styles.blob, ...styles.blob1 }} />
       <div style={{ ...styles.blob, ...styles.blob2 }} />
@@ -124,7 +124,6 @@ const styles: Record<string, React.CSSProperties> = {
     overflow: "hidden",
     background:
       "linear-gradient(135deg, #eef2ff 0%, #f0fdf4 50%, #faf5ff 100%)",
-    padding: "2rem 1.5rem",
   },
 
   /* Blobs */

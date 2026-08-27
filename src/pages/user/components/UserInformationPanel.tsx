@@ -472,7 +472,7 @@ const styles: Record<string, React.CSSProperties> = {
   root: {
     position: "relative",
     width: "100%",
-    padding: "2rem",
+    padding: "4px",
     background:
       "linear-gradient(135deg, #eef2ff 0%, #f0fdf4 50%, #faf5ff 100%)",
     borderRadius: 28,

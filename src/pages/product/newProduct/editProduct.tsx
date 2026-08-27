@@ -1,29 +1,16 @@
 import {
   Package,
-  Tag,
-  Palette,
-  Ruler,
-  Hash,
-  Box,
-  ShoppingBag,
-  BarChart3,
   Upload,
   Save,
   X as XIcon,
-  Trash,
   PlusCircle,
-  Plus,
   X,
   DollarSign,
+  FileText,
+  Layers,
+  Image,
+  Search,
 } from "lucide-react";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-  CardFooter,
-} from "../../../components/ui/card";
 import {
   Select,
   SelectContent,
@@ -38,20 +25,17 @@ import {
   TabsTrigger,
 } from "../../../components/ui/tabs";
 import { useEffect, useState, useRef } from "react";
-import { Badge } from "../../../components/ui/badge";
 import { Input } from "../../../components/ui/input";
 import { Label } from "../../../components/ui/label";
-import { Button } from "../../../components/ui/button";
 import TiptapEditor from "../../../components/ui/tiptap";
 import { Switch } from "../../../components/ui/switch";
 import PlaceHolderImage from "../../../assets/placeholder.svg";
 import CustomAlertDialog from "../../../coreComponents/OptionModal";
 import AIGenerateButton from "../../../components/aiSeo/AIGenerateButton";
-import StreamingAIModal from "../../../components/aiSeo/StreamingAIModal";
-import AIVersionsPanel from "../../../components/aiSeo/AIVersionsPanel";
+import AIVersionsSheet from "../../../components/aiSeo/AIVersionsSheet";
 import { productAiConfig } from "../../../components/aiSeo/aiEntityConfig";
 import ProductSeoCard from "./components/ProductSeoCard";
-import { slugifyText } from "../../../utils/functions";
+import { slugifyText, validateImageGroup } from "../../../utils/functions";
 import {
   AIGenerationVersion,
   AiSeoContent,
@@ -107,12 +91,10 @@ const EditProduct: React.FC<Props> = ({
   const [variantImages, setVariantImages] = useState<
     Record<string, (File | string)[]>
   >({});
-  const [removedVariantImageIndexes, setRemovedVariantImageIndexes] = useState<
-    Record<string, number[]>
-  >({});
   const [imageGroups, setImageGroups] = useState<IImageGroup[]>([]);
+  const [activeTab, setActiveTab] = useState("basic");
   // ── AI SEO generation state (mirrors CategoryForm) ──
-  const [isAIModalOpen, setIsAIModalOpen] = useState(false);
+  const [isAISheetOpen, setIsAISheetOpen] = useState(false);
   const [aiVersions, setAiVersions] = useState<AIGenerationVersion[]>([]);
   const [activeVersionIndex, setActiveVersionIndex] = useState(0);
   const [appliedFields, setAppliedFields] = useState<Set<string>>(new Set());
@@ -169,9 +151,7 @@ const EditProduct: React.FC<Props> = ({
       // Initialize variant images from product data
       const initialVariantImages: Record<string, (File | string)[]> = {};
       productData.variation?.forEach((variant) => {
-        if (variant.images && variant.images.length > 0) {
-          initialVariantImages[variant.id] = variant.images;
-        }
+        initialVariantImages[variant.id] = variant.images ?? [];
       });
       setVariantImages(initialVariantImages);
 
@@ -367,7 +347,8 @@ const EditProduct: React.FC<Props> = ({
   };
 
   const handleApplyAllFromVersion = (version: AIGenerationVersion) => {
-    const body: any = version.result.suggestedUpdateBody || version.result.content;
+    const body: any =
+      version.result.suggestedUpdateBody || version.result.content;
     updateFormData((prev: any) => ({
       ...prev,
       description: body.description ?? prev.description,
@@ -391,11 +372,18 @@ const EditProduct: React.FC<Props> = ({
       }
     } else if (field === "name") {
       if (value.trim())
-        updateFormData({ ...formData, name: value.trim() } as IProductUpdateData);
+        updateFormData({
+          ...formData,
+          name: value.trim(),
+        } as IProductUpdateData);
     } else if (field === "slug") {
-      const cleaned = value.trim().toLowerCase().replace(/[^a-z0-9-]+/g, "-").replace(/^-+|-+$/g, "");
+      const cleaned = value
+        .trim()
+        .toLowerCase()
+        .replace(/[^a-z0-9-]+/g, "-")
+        .replace(/^-+|-+$/g, "");
       if (cleaned) {
-        setSlugManuallyEdited(true);          // keep the applied slug on name changes
+        setSlugManuallyEdited(true); // keep the applied slug on name changes
         updateFormData({ ...formData, slug: cleaned });
       }
     } else if (field === "tags") {
@@ -487,24 +475,14 @@ const EditProduct: React.FC<Props> = ({
 
   // Add new variation
   const addNewVariation = () => {
-    let arr = [];
-    if (formData.variation && formData.variation.length > 0) {
-      arr = [...formData.variation];
-      const newId = formData.variation.length.toString();
-      arr.push({
-        ...defaultVariation,
-        id: newId,
-        sku: `${formData.sku}-${newId}`,
-        unitPrice: isSameUnitPrice ? formData?.unitPrice : 0,
-      });
-    } else {
-      arr.push({
-        ...defaultVariation,
-        id: "0",
-        sku: `${formData.sku}-0`,
-        unitPrice: isSameUnitPrice ? formData?.unitPrice : 0,
-      });
-    }
+    const arr: IVariation[] = formData.variation ? [...formData.variation] : [];
+    const newId = crypto.randomUUID();
+    arr.push({
+      ...defaultVariation,
+      id: newId,
+      sku: `${formData.sku}-${newId.slice(0, 8)}`,
+      unitPrice: isSameUnitPrice ? formData?.unitPrice : 0,
+    });
 
     updateFormData({
       ...formData,
@@ -523,30 +501,10 @@ const EditProduct: React.FC<Props> = ({
     variantId: string,
     images: (File | string)[],
   ) => {
-    setVariantImages((prev) => {
-      const previousImages = prev[variantId] || [];
-      const newImages = images;
-
-      // Track removed indices (only for existing string URLs)
-      const removedIndices: number[] = [];
-      previousImages.forEach((img, index) => {
-        if (typeof img === "string" && !newImages.includes(img)) {
-          removedIndices.push(index);
-        }
-      });
-
-      if (removedIndices.length > 0) {
-        setRemovedVariantImageIndexes((prev) => ({
-          ...prev,
-          [variantId]: removedIndices,
-        }));
-      }
-
-      return {
-        ...prev,
-        [variantId]: newImages,
-      };
-    });
+    setVariantImages((prev) => ({
+      ...prev,
+      [variantId]: images,
+    }));
   };
 
   // V1 Variation View - Advanced Mode
@@ -555,6 +513,8 @@ const EditProduct: React.FC<Props> = ({
       <V1VariationManager
         variations={formData.variation || []}
         variantImages={variantImages}
+        // NOTE: readonly={true} only locks the quantity field — the image uploader
+        // remains editable, as variant images must be changeable on edit.
         readonly={true}
         showPrice={false}
         showVariantName={false}
@@ -563,6 +523,8 @@ const EditProduct: React.FC<Props> = ({
         onUpdateVariation={updateVariationData}
         onDeleteVariation={deleteVariation}
         onVariantImagesChange={handleVariantImagesChange}
+        productImages={formData.images || []}
+        imageGroups={imageGroups}
       />
     );
   };
@@ -576,9 +538,9 @@ const EditProduct: React.FC<Props> = ({
         onSubmit={() => {
           updateFormData(productData);
         }}>
-        <Button className='hidden' ref={dialogBtn}>
+        <button className='hidden' ref={dialogBtn}>
           show dialog
-        </Button>
+        </button>
       </CustomAlertDialog>
     );
   };
@@ -591,9 +553,9 @@ const EditProduct: React.FC<Props> = ({
         onSubmit={() => {
           updateProductAndExit();
         }}>
-        <Button className='hidden' ref={updateDialogBtn}>
+        <button className='hidden' ref={updateDialogBtn}>
           show dialog
-        </Button>
+        </button>
       </CustomAlertDialog>
     );
   };
@@ -668,13 +630,11 @@ const EditProduct: React.FC<Props> = ({
       }
     }
 
-    // Build remove variant image indexes mapping
-    const removeVariantImageIndexes = Object.entries(removedVariantImageIndexes)
-      .filter(([_, indices]) => indices.length > 0)
-      .map(([variantId, imageIndexes]) => ({
-        variantId,
-        imageIndexes,
-      }));
+    // Sync variation with the final images from uploader state (replace semantics)
+    const variationWithFinalImages = formData.variation.map((v) => ({
+      ...v,
+      images: (variantImages[v.id] || []).filter((img) => typeof img === "string"),
+    }));
 
     // Prepare image group images for upload
     const imageGroupImageList: File[] = [];
@@ -702,7 +662,7 @@ const EditProduct: React.FC<Props> = ({
 
     for (const group of validImageGroups) {
       const groupImages = group.images.filter(
-        (img) => img instanceof File,
+        (img: any) => img instanceof File,
       ) as File[];
 
       groupImages.forEach(() => {
@@ -717,9 +677,9 @@ const EditProduct: React.FC<Props> = ({
 
     const productData = {
       ...formData,
+      variation: variationWithFinalImages,
       variantImages: variantImageFileList,
       variantImageMappings,
-      removeVariantImageIndexes,
       imageGroups: validImageGroups.length > 0 ? validImageGroups : undefined,
       imageGroupImages:
         imageGroupImageList.length > 0 ? imageGroupImageList : undefined,
@@ -740,411 +700,326 @@ const EditProduct: React.FC<Props> = ({
 
     const response = await updateProduct(productData);
     if (!!response) {
-      // Clear the removed image indexes state after successful update
-      // This ensures that removed images are not tracked again after the page refreshes
-      setRemovedVariantImageIndexes({});
-
       // Note: The parent component (editProductIndex) updates productData prop after successful update
       // The useEffect hook (lines 105-154) will automatically re-run and refresh variantImages state
       // from the updated productData prop, ensuring UI matches the backend state
-
-      // updateFormData({ ...defaultValue });
     }
   };
 
   return (
-    <div className='w-full min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 dark:from-slate-950 dark:via-slate-900 dark:to-slate-950'>
-      <div className='container mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8 lg:py-12'>
+    <div className='min-h-screen bg-slate-50/60'>
+      <div className='max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6'>
         {/* Header Section */}
-        <div className='mb-6 sm:mb-8'>
-          <div className='flex flex-col gap-3 sm:gap-4'>
-            <div className='flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4'>
-              <div className='flex items-start gap-3 sm:gap-4'>
-                <div className='hidden sm:flex items-center justify-center w-12 h-12 lg:w-14 lg:h-14 rounded-2xl bg-gradient-to-br from-blue-500 to-indigo-600 shadow-lg shadow-blue-500/30'>
-                  <ShoppingBag className='w-6 h-6 lg:w-7 lg:h-7 text-white' />
-                </div>
-                <div className='flex-1'>
-                  <h1 className='text-2xl sm:text-3xl lg:text-4xl font-bold tracking-tight bg-gradient-to-r from-slate-900 to-slate-700 dark:from-white dark:to-slate-300 bg-clip-text text-transparent'>
-                    Edit Product
-                  </h1>
-                  <p className='text-sm sm:text-base text-slate-600 dark:text-slate-400 mt-1 sm:mt-2'>
-                    Update product information and settings
-                  </p>
-                </div>
-              </div>
+        <div className='flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4'>
+          <div className='flex items-center gap-3'>
+            <div className='flex items-center justify-center w-10 h-10 rounded-xl bg-indigo-600 shadow-sm shadow-indigo-200'>
+              <Package className='h-5 w-5 text-white' />
+            </div>
+            <div>
+              <h1 className='text-xl font-semibold text-slate-900 leading-tight'>
+                Edit Product
+              </h1>
+              <p className='text-sm text-slate-500 mt-0.5'>
+                Update product information and settings
+              </p>
+            </div>
+          </div>
 
-              <div className='flex items-center gap-3'>
-                <AIGenerateButton onClick={() => setIsAIModalOpen(true)} />
-                <Button
-                  variant='outline'
-                  onClick={() => {
-                    if (dialogBtn?.current) {
-                      //@ts-ignore
-                      dialogBtn.current.click();
-                    }
-                  }}
-                  className='min-w-[100px] hover:bg-red-50 hover:text-red-600 hover:border-red-300 dark:hover:bg-red-950'>
-                  <XIcon className='w-4 h-4 mr-2' />
-                  Discard
-                </Button>
-                <Button
-                  onClick={() => {
-                    if (updateDialogBtn?.current) {
-                      //@ts-ignore
-                      updateDialogBtn.current.click();
-                    }
-                  }}
-                  className='min-w-[140px] bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700'>
-                  <Save className='w-4 h-4 mr-2' />
-                  Update Product
-                </Button>
-              </div>
+          <div className='flex items-center gap-2'>
+            <AIGenerateButton onClick={() => setIsAISheetOpen(true)} />
+            <div className='hidden sm:flex items-center gap-2'>
+              <button
+                onClick={() => {
+                  if (dialogBtn?.current) {
+                    //@ts-ignore
+                    dialogBtn.current.click();
+                  }
+                }}
+                className='inline-flex items-center gap-1.5 px-3 py-2 text-sm font-medium text-slate-600 bg-white border border-slate-200 rounded-lg hover:bg-slate-50 hover:border-slate-300 transition-all duration-150 shadow-sm'>
+                <XIcon className='h-4 w-4' />
+                <span>Discard</span>
+              </button>
+              <button
+                onClick={() => {
+                  if (updateDialogBtn?.current) {
+                    //@ts-ignore
+                    updateDialogBtn.current.click();
+                  }
+                }}
+                className='inline-flex items-center gap-1.5 px-4 py-2 text-sm font-medium text-white bg-indigo-600 rounded-lg hover:bg-indigo-700 active:bg-indigo-800 transition-all duration-150 shadow-sm shadow-indigo-200'>
+                <Save className='h-4 w-4' />
+                Update Product
+              </button>
             </div>
           </div>
         </div>
 
-        {/* AI SEO Generation */}
-        <StreamingAIModal
-          open={isAIModalOpen}
-          onOpenChange={setIsAIModalOpen}
-          entity={productAiConfig}
-          mode='edit'
-          entityId={productData?.id}
-          entityName={formData?.name || productData?.name || "Product"}
-          onVersionGenerated={handleVersionGenerated}
-          onApplySuggestion={handleApplySuggestion}
-          appliedFields={appliedFields}
-        />
-
-        {aiVersions.length > 0 && (
-          <div className='mb-6 sm:mb-8'>
-            <AIVersionsPanel
-              entity={productAiConfig}
-              versions={aiVersions}
-              activeIndex={activeVersionIndex}
-              onSelectVersion={setActiveVersionIndex}
-              onApplyField={handleApplyAIField}
-              onApplyAll={handleApplyAllFromVersion}
-              onApplySuggestion={handleApplySuggestion}
-              onClear={handleClearVersions}
-              appliedFields={appliedFields}
+        {/* Preview Strip */}
+        <div className='flex items-center gap-3 bg-white rounded-xl border border-slate-100 px-4 py-3 shadow-sm'>
+          <div className='h-10 w-10 shrink-0 rounded-lg bg-slate-100 flex items-center justify-center overflow-hidden'>
+            {formData.thumbnail ? (
+              <img
+                src={
+                  typeof formData.thumbnail === "string"
+                    ? formData.thumbnail
+                    : URL.createObjectURL(formData.thumbnail)
+                }
+                alt=''
+                className='h-full w-full object-cover'
+              />
+            ) : (
+              <Package className='w-5 h-5 text-slate-400' />
+            )}
+          </div>
+          <div className='min-w-0 flex-1'>
+            <div className='flex items-center gap-1.5'>
+              <span className='truncate text-[13px] font-semibold text-slate-900'>
+                {formData.name || "Product"}
+              </span>
+            </div>
+            <div className='truncate text-[11px] text-slate-400 mt-0.5 font-mono'>
+              {formData.sku || "No SKU"} · {formData.categoryIds?.length || 0}{" "}
+              categories
+            </div>
+          </div>
+          <div className='flex items-center gap-2 shrink-0'>
+            <span
+              className={`text-xs font-medium ${formData.active ? "text-emerald-600" : "text-slate-400"}`}>
+              {formData.active ? "Active" : "Inactive"}
+            </span>
+            <Switch
+              checked={formData.active}
+              onCheckedChange={(checked) =>
+                updateFormData({ ...formData, active: checked })
+              }
+              className='data-[state=checked]:bg-emerald-500'
             />
           </div>
-        )}
-
-        {/* Stats Overview Cards */}
-        <div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 lg:gap-6 mb-6 sm:mb-8'>
-          {/* Total Stock Card */}
-          <Card className='border-none shadow-lg bg-gradient-to-br from-emerald-500 to-teal-600 text-white overflow-hidden relative'>
-            <div className='absolute top-0 right-0 w-24 h-24 sm:w-32 sm:h-32 bg-white/10 rounded-full -mr-8 -mt-8 sm:-mr-12 sm:-mt-12' />
-            <CardContent className='p-4 sm:p-6 relative z-10'>
-              <div className='flex items-center justify-between mb-2 sm:mb-3'>
-                <div className='p-2 sm:p-2.5 bg-white/20 rounded-lg sm:rounded-xl backdrop-blur-sm'>
-                  <Package className='w-5 h-5 sm:w-6 sm:h-6' />
-                </div>
-                <BarChart3 className='w-5 h-5 sm:w-6 sm:h-6 opacity-50' />
-              </div>
-              <p className='text-xs sm:text-sm font-medium opacity-90 mb-1'>
-                Total Stock
-              </p>
-              <p className='text-2xl sm:text-3xl lg:text-4xl font-bold'>
-                {totalQuantity}
-              </p>
-            </CardContent>
-          </Card>
-
-          {/* Total Variations Card */}
-          <Card className='border-none shadow-lg bg-gradient-to-br from-blue-500 to-cyan-600 text-white overflow-hidden relative'>
-            <div className='absolute top-0 right-0 w-24 h-24 sm:w-32 sm:h-32 bg-white/10 rounded-full -mr-8 -mt-8 sm:-mr-12 sm:-mt-12' />
-            <CardContent className='p-4 sm:p-6 relative z-10'>
-              <div className='flex items-center justify-between mb-2 sm:mb-3'>
-                <div className='p-2 sm:p-2.5 bg-white/20 rounded-lg sm:rounded-xl backdrop-blur-sm'>
-                  <Box className='w-5 h-5 sm:w-6 sm:h-6' />
-                </div>
-                <Tag className='w-5 h-5 sm:w-6 sm:h-6 opacity-50' />
-              </div>
-              <p className='text-xs sm:text-sm font-medium opacity-90 mb-1'>
-                Total Variants
-              </p>
-              <p className='text-2xl sm:text-3xl lg:text-4xl font-bold'>
-                {formData?.variation?.length || 0}
-              </p>
-            </CardContent>
-          </Card>
-
-          {/* Colors Card */}
-          <Card className='border-none shadow-lg bg-gradient-to-br from-purple-500 to-pink-600 text-white overflow-hidden relative'>
-            <div className='absolute top-0 right-0 w-24 h-24 sm:w-32 sm:h-32 bg-white/10 rounded-full -mr-8 -mt-8 sm:-mr-12 sm:-mt-12' />
-            <CardContent className='p-4 sm:p-6 relative z-10'>
-              <div className='flex items-center justify-between mb-2 sm:mb-3'>
-                <div className='p-2 sm:p-2.5 bg-white/20 rounded-lg sm:rounded-xl backdrop-blur-sm'>
-                  <Palette className='w-5 h-5 sm:w-6 sm:h-6' />
-                </div>
-                <Palette className='w-5 h-5 sm:w-6 sm:h-6 opacity-50' />
-              </div>
-              <p className='text-xs sm:text-sm font-medium opacity-90 mb-1'>
-                Unique Colors
-              </p>
-              <p className='text-2xl sm:text-3xl lg:text-4xl font-bold'>
-                {uniqueColors.length}
-              </p>
-            </CardContent>
-          </Card>
-
-          {/* Sizes Card */}
-          <Card className='border-none shadow-lg bg-gradient-to-br from-orange-500 to-red-600 text-white overflow-hidden relative'>
-            <div className='absolute top-0 right-0 w-24 h-24 sm:w-32 sm:h-32 bg-white/10 rounded-full -mr-8 -mt-8 sm:-mr-12 sm:-mt-12' />
-            <CardContent className='p-4 sm:p-6 relative z-10'>
-              <div className='flex items-center justify-between mb-2 sm:mb-3'>
-                <div className='p-2 sm:p-2.5 bg-white/20 rounded-lg sm:rounded-xl backdrop-blur-sm'>
-                  <Ruler className='w-5 h-5 sm:w-6 sm:h-6' />
-                </div>
-                <Ruler className='w-5 h-5 sm:w-6 sm:h-6 opacity-50' />
-              </div>
-              <p className='text-xs sm:text-sm font-medium opacity-90 mb-1'>
-                Unique Sizes
-              </p>
-              <p className='text-2xl sm:text-3xl lg:text-4xl font-bold'>
-                {uniqueSizes.length}
-              </p>
-            </CardContent>
-          </Card>
         </div>
 
-        {/* Main Content Grid */}
-        <div className='grid gap-6 lg:gap-8 lg:grid-cols-[2fr_1fr]'>
-          {/* Left Column - Editable Fields */}
-          <div className='space-y-6'>
-            {/* Basic Information Card */}
-            <Card className='border-none shadow-xl bg-white/80 dark:bg-slate-900/80 backdrop-blur-sm'>
-              <CardHeader className='border-b border-slate-200 dark:border-slate-700'>
-                <CardTitle className='text-xl flex items-center gap-2'>
-                  <div className='p-2 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-lg shadow-lg'>
-                    <ShoppingBag className='w-5 h-5 text-white' />
-                  </div>
-                  Basic Information
-                </CardTitle>
-                <CardDescription>
-                  Update the essential details about your product
-                </CardDescription>
-              </CardHeader>
-              <CardContent className='space-y-6 pt-6'>
-                <div className='space-y-2'>
-                  <Label
-                    htmlFor='name'
-                    className='text-sm font-semibold flex items-center gap-2'>
-                    <Tag className='w-4 h-4 text-blue-500' />
-                    Product Name *
-                  </Label>
-                  <Input
-                    id='name'
-                    name='name'
-                    type='text'
-                    value={formData?.name || ""}
-                    onChange={handleChange}
-                    placeholder='Enter product name'
-                    className='h-11 border-2 focus:border-blue-500 transition-colors'
-                    required
-                  />
-                </div>
+        {/* Tabs */}
+        <div className='bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden'>
+          <Tabs
+            value={activeTab}
+            onValueChange={setActiveTab}
+            className='w-full'>
+            <div className='border-b border-slate-100'>
+              <TabsList className='h-auto bg-transparent p-0 gap-0 rounded-none flex justify-start overflow-x-auto scrollbar-hide'>
+                {[
+                  { value: "basic", icon: FileText, label: "Basic Info" },
+                  { value: "details", icon: Package, label: "Details" },
+                  { value: "pricing", icon: DollarSign, label: "Pricing" },
+                  { value: "variations", icon: Layers, label: "Variations" },
+                  { value: "images", icon: Image, label: "Images" },
+                  { value: "seo", icon: Search, label: "SEO" },
+                ].map((tab) => (
+                  <TabsTrigger
+                    key={tab.value}
+                    value={tab.value}
+                    className='relative flex items-center gap-2 px-4 py-4 text-sm font-medium rounded-none border-b-2 border-transparent text-slate-500 hover:text-slate-700 data-[state=active]:text-indigo-600 data-[state=active]:border-indigo-600 data-[state=active]:bg-transparent transition-all duration-150 focus-visible:outline-none flex-shrink-0'>
+                    <tab.icon className='h-4 w-4' />
+                    <span className='hidden sm:inline'>{tab.label}</span>
+                  </TabsTrigger>
+                ))}
+              </TabsList>
+            </div>
 
-                <div className='space-y-2'>
-                  <Label
-                    htmlFor='description'
-                    className='text-sm font-semibold'>
-                    Description
-                  </Label>
-                  <TiptapEditor
-                    content={formData?.description || ""}
-                    onChange={handleDescriptionChange}
-                    placeholder='Describe your product features, benefits, and specifications...'
-                  />
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* SEO Card */}
-            <Card className='border-none shadow-xl bg-white/80 dark:bg-slate-900/80 backdrop-blur-sm'>
-              <CardHeader className='border-b border-slate-200 dark:border-slate-700'>
-                <CardTitle className='text-xl flex items-center gap-2'>
-                  <div className='p-2 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-lg shadow-lg'>
-                    <BarChart3 className='w-5 h-5 text-white' />
+            {/* Tab: Basic Info */}
+            <TabsContent
+              value='basic'
+              className='p-4 sm:p-6 mt-0 focus-visible:outline-none'>
+              <div className='grid gap-6 '>
+                <div className='space-y-4'>
+                  <div className='space-y-1'>
+                    <h3 className='text-sm font-medium text-slate-900'>
+                      Basic Information
+                    </h3>
+                    <p className='text-xs text-slate-500'>
+                      Core product details
+                    </p>
                   </div>
-                  SEO Settings
-                </CardTitle>
-                <CardDescription>
-                  Slug, meta data, and tags for search engines
-                </CardDescription>
-              </CardHeader>
-              <CardContent className='pt-6'>
-                <ProductSeoCard
-                  value={{
-                    slug: formData?.slug || "",
-                    shortDescription: formData?.shortDescription || "",
-                    focusKeyphrase: formData?.focusKeyphrase || "",
-                    seoTitle: formData?.seoTitle || "",
-                    seoDescription: formData?.seoDescription || "",
-                    tags: formData?.tags || [],
-                  }}
-                  onChange={handleSeoChange}
-                  onResetSlug={handleResetSlug}
-                  slugManuallyEdited={slugManuallyEdited}
-                />
-              </CardContent>
-            </Card>
-
-            {/* Product Details Card */}
-            <Card className='border-none shadow-xl bg-white/80 dark:bg-slate-900/80 backdrop-blur-sm'>
-              <CardHeader className='border-b border-slate-200 dark:border-slate-700'>
-                <CardTitle className='text-xl flex items-center gap-2'>
-                  <div className='p-2 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-lg shadow-lg'>
-                    <Package className='w-5 h-5 text-white' />
-                  </div>
-                  Product Details
-                </CardTitle>
-                <CardDescription>
-                  Update category, SKU, pricing, and inventory information
-                </CardDescription>
-              </CardHeader>
-              <CardContent className='space-y-6 pt-6'>
-                <div className='grid gap-6 sm:grid-cols-2'>
-                  <div className='space-y-4'>
-                    <MultiCategorySelect
-                      categories={categories}
-                      selectedCategoryIds={formData?.categoryIds || []}
-                      primaryCategoryId={formData?.categoryId || ""}
-                      setSelectedCategoryIds={(ids: string[]) => {
-                        updateFormData({
-                          ...formData,
-                          categoryIds: ids,
-                        });
-                      }}
-                      setPrimaryCategoryId={(id: string) => {
-                        updateFormData({
-                          ...formData,
-                          categoryId: id,
-                        });
-                      }}
+                  <div className='space-y-2'>
+                    <Label
+                      htmlFor='name'
+                      className='text-sm font-medium text-slate-700'>
+                      Product Name <span className='text-red-500'>*</span>
+                    </Label>
+                    <Input
+                      id='name'
+                      name='name'
+                      type='text'
+                      value={formData?.name || ""}
+                      onChange={handleChange}
+                      placeholder='Enter product name'
+                      className='h-10'
+                      required
                     />
-
-                    <div className='space-y-2'>
-                      <Label
-                        htmlFor='product-sku'
-                        className='text-sm font-semibold flex items-center gap-2'>
-                        <Hash className='w-4 h-4 text-slate-500' />
-                        Product SKU *
-                      </Label>
-                      <Input
-                        id='product-sku'
-                        name='sku'
-                        type='text'
-                        value={formData?.sku || ""}
-                        onChange={handleChange}
-                        placeholder='Enter unique SKU'
-                        className='h-11 font-mono border-2 focus:border-indigo-500 transition-colors'
-                        required
-                      />
-                      <p className='text-xs text-slate-600 dark:text-slate-400'>
-                        Stock Keeping Unit - unique identifier
-                      </p>
-                    </div>
-
-                    <div className='space-y-2'>
-                      <Label
-                        htmlFor='brand'
-                        className='text-sm font-semibold flex items-center gap-2'>
-                        <Tag className='w-4 h-4 text-slate-500' />
-                        Brand
-                      </Label>
-                      <Input
-                        id='brand'
-                        name='brand'
-                        type='text'
-                        value={formData?.brand || ""}
-                        onChange={handleChange}
-                        placeholder='e.g. Samsung'
-                        className='h-11 border-2 focus:border-indigo-500 transition-colors'
-                      />
-                      <p className='text-xs text-slate-600 dark:text-slate-400'>
-                        Used for SEO content and AI generation grounding
-                      </p>
-                    </div>
                   </div>
-
-                  <div className='space-y-4'>
-                    <div className='space-y-2'>
-                      <Label
-                        htmlFor='product-unit-price'
-                        className='text-sm font-semibold flex items-center gap-2'>
-                        <Tag className='w-4 h-4 text-green-500' />
-                        Unit Price *
-                      </Label>
-                      <Input
-                        id='product-unit-price'
-                        name='unitPrice'
-                        type='text'
-                        value={formData?.unitPrice || ""}
-                        onChange={handleChange}
-                        placeholder='0.00'
-                        className='h-11 border-2 focus:border-green-500 transition-colors'
-                        required
-                      />
-                    </div>
-
-                    <div className='space-y-2'>
-                      <Label
-                        htmlFor='quantity'
-                        className='text-sm font-semibold flex items-center gap-2'>
-                        <Package className='w-4 h-4 text-emerald-500' />
-                        Total Quantity
-                      </Label>
-                      <Input
-                        id='quantity'
-                        name='quantity'
-                        type='number'
-                        value={formData?.quantity || 0}
-                        onChange={handleChange}
-                        placeholder='0'
-                        className={`h-11 border-2 transition-colors ${
-                          formData?.variation && formData.variation.length > 0
-                            ? "bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 cursor-not-allowed"
-                            : "focus:border-emerald-500"
-                        }`}
-                        min='0'
-                        disabled={
-                          formData?.variation && formData.variation.length > 0
-                        }
-                      />
-                      {formData?.variation && formData.variation.length > 0 && (
-                        <p className='text-xs text-amber-600 dark:text-amber-400 font-medium'>
-                          ⚠️ Auto-calculated from variations
-                        </p>
-                      )}
-                    </div>
+                  <div className='space-y-2'>
+                    <Label
+                      htmlFor='description'
+                      className='text-sm font-medium text-slate-700'>
+                      Description
+                    </Label>
+                    <TiptapEditor
+                      content={formData?.description || ""}
+                      onChange={handleDescriptionChange}
+                      placeholder='Describe your product features, benefits, and specifications...'
+                    />
                   </div>
                 </div>
-              </CardContent>
-            </Card>
+                <div></div>
+              </div>
+            </TabsContent>
 
-            {/* Pricing & Discounts Card */}
-            <Card className='border-none shadow-xl bg-white/80 dark:bg-slate-900/80 backdrop-blur-sm'>
-              <CardHeader className='border-b border-slate-200 dark:border-slate-700'>
-                <CardTitle className='text-xl flex items-center gap-2'>
-                  <div className='p-2 bg-gradient-to-br from-green-500 to-emerald-600 rounded-lg shadow-lg'>
-                    <Tag className='w-5 h-5 text-white' />
+            {/* Tab: Details */}
+            <TabsContent
+              value='details'
+              className='p-4 sm:p-6 mt-0 focus-visible:outline-none'>
+              <div className='grid gap-6 sm:grid-cols-2'>
+                <div className='space-y-4'>
+                  <div className='space-y-1'>
+                    <h3 className='text-sm font-medium text-slate-900'>
+                      Category & Identification
+                    </h3>
+                    <p className='text-xs text-slate-500'>
+                      Organize and identify your product
+                    </p>
                   </div>
-                  Pricing & Discounts
-                </CardTitle>
-                <CardDescription>
-                  Configure discount options and promotional pricing
-                </CardDescription>
-              </CardHeader>
-              <CardContent className='space-y-6 pt-6'>
-                <div className='grid gap-6 sm:grid-cols-2'>
+                  <MultiCategorySelect
+                    categories={categories}
+                    selectedCategoryIds={formData?.categoryIds || []}
+                    primaryCategoryId={formData?.categoryId || ""}
+                    setSelectedCategoryIds={(ids: string[]) => {
+                      updateFormData({
+                        ...formData,
+                        categoryIds: ids,
+                      });
+                    }}
+                    setPrimaryCategoryId={(id: string) => {
+                      updateFormData({
+                        ...formData,
+                        categoryId: id,
+                      });
+                    }}
+                  />
+                  <div className='space-y-2'>
+                    <Label
+                      htmlFor='product-sku'
+                      className='text-sm font-medium text-slate-700'>
+                      Product SKU <span className='text-red-500'>*</span>
+                    </Label>
+                    <Input
+                      id='product-sku'
+                      name='sku'
+                      type='text'
+                      value={formData?.sku || ""}
+                      onChange={handleChange}
+                      placeholder='Enter unique SKU'
+                      className='h-10 font-mono'
+                      required
+                    />
+                    <p className='text-xs text-slate-500'>
+                      Stock Keeping Unit - unique identifier
+                    </p>
+                  </div>
+                  <div className='space-y-2'>
+                    <Label
+                      htmlFor='brand'
+                      className='text-sm font-medium text-slate-700'>
+                      Brand
+                    </Label>
+                    <Input
+                      id='brand'
+                      name='brand'
+                      type='text'
+                      value={formData?.brand || ""}
+                      onChange={handleChange}
+                      placeholder='e.g. Samsung'
+                      className='h-10'
+                    />
+                    <p className='text-xs text-slate-500'>
+                      Used for SEO content and AI generation
+                    </p>
+                  </div>
+                </div>
+                <div className='space-y-4'>
+                  <div className='space-y-1'>
+                    <h3 className='text-sm font-medium text-slate-900'>
+                      Pricing & Inventory
+                    </h3>
+                    <p className='text-xs text-slate-500'>
+                      Set price and stock quantity
+                    </p>
+                  </div>
+                  <div className='space-y-2'>
+                    <Label
+                      htmlFor='product-unit-price'
+                      className='text-sm font-medium text-slate-700'>
+                      Unit Price <span className='text-red-500'>*</span>
+                    </Label>
+                    <Input
+                      id='product-unit-price'
+                      name='unitPrice'
+                      type='text'
+                      value={formData?.unitPrice || ""}
+                      onChange={handleChange}
+                      placeholder='0.00'
+                      className='h-10'
+                      required
+                    />
+                  </div>
+                  <div className='space-y-2'>
+                    <Label
+                      htmlFor='quantity'
+                      className='text-sm font-medium text-slate-700'>
+                      Total Quantity
+                    </Label>
+                    <Input
+                      id='quantity'
+                      name='quantity'
+                      type='number'
+                      value={formData?.quantity || 0}
+                      onChange={handleChange}
+                      placeholder='0'
+                      className={`h-10 ${
+                        formData?.variation && formData.variation.length > 0
+                          ? "bg-slate-50 text-slate-500 cursor-not-allowed"
+                          : ""
+                      }`}
+                      min='0'
+                      disabled={
+                        formData?.variation && formData.variation.length > 0
+                      }
+                    />
+                    {formData?.variation && formData.variation.length > 0 && (
+                      <p className='text-xs text-amber-600 font-medium'>
+                        Auto-calculated from variations
+                      </p>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </TabsContent>
+
+            {/* Tab: Pricing */}
+            <TabsContent
+              value='pricing'
+              className='p-4 sm:p-6 mt-0 focus-visible:outline-none'>
+              <div className='grid gap-6 sm:grid-cols-2'>
+                <div className='space-y-4'>
+                  <div className='space-y-1'>
+                    <h3 className='text-sm font-medium text-slate-900'>
+                      Discount
+                    </h3>
+                    <p className='text-xs text-slate-500'>
+                      Set product discount rules
+                    </p>
+                  </div>
                   <div className='space-y-2'>
                     <Label
                       htmlFor='discount-type'
-                      className='text-sm font-semibold'>
+                      className='text-sm font-medium text-slate-700'>
                       Discount Type
                     </Label>
                     <Select
@@ -1155,9 +1030,7 @@ const EditProduct: React.FC<Props> = ({
                           discountType: value,
                         });
                       }}>
-                      <SelectTrigger
-                        id='discount-type'
-                        className='h-11 border-2'>
+                      <SelectTrigger id='discount-type' className='h-10'>
                         <SelectValue placeholder='Select discount type' />
                       </SelectTrigger>
                       <SelectContent>
@@ -1166,9 +1039,10 @@ const EditProduct: React.FC<Props> = ({
                       </SelectContent>
                     </Select>
                   </div>
-
                   <div className='space-y-2'>
-                    <Label htmlFor='discount' className='text-sm font-semibold'>
+                    <Label
+                      htmlFor='discount'
+                      className='text-sm font-medium text-slate-700'>
                       Discount Value
                     </Label>
                     <Input
@@ -1183,12 +1057,12 @@ const EditProduct: React.FC<Props> = ({
                         })
                       }
                       placeholder='0'
-                      className='h-11 border-2 focus:border-green-500 transition-colors'
+                      className='h-10'
                       min='0'
                       step={formData?.discountType === "%" ? "1" : "0.01"}
                     />
                     {formData?.discountType && (
-                      <p className='text-xs text-slate-600 dark:text-slate-400'>
+                      <p className='text-xs text-slate-500'>
                         {formData?.discountType === "%"
                           ? "Enter percentage (0-100)"
                           : "Enter fixed amount to deduct"}
@@ -1196,29 +1070,20 @@ const EditProduct: React.FC<Props> = ({
                     )}
                   </div>
                 </div>
-              </CardContent>
-            </Card>
 
-            {/* Commission Settings Card */}
-            <Card className='border-none shadow-xl bg-white/80 dark:bg-slate-900/80 backdrop-blur-sm'>
-              <CardHeader className='border-b border-slate-200 dark:border-slate-700'>
-                <CardTitle className='text-xl flex items-center gap-2'>
-                  <div className='p-2 bg-gradient-to-br from-purple-500 to-pink-600 rounded-lg shadow-lg'>
-                    <DollarSign className='w-5 h-5 text-white' />
+                <div className='space-y-4'>
+                  <div className='space-y-1'>
+                    <h3 className='text-sm font-medium text-slate-900'>
+                      Commission Settings
+                    </h3>
+                    <p className='text-xs text-slate-500'>
+                      Set seller commission rules
+                    </p>
                   </div>
-                  Commission Settings
-                </CardTitle>
-                <CardDescription>
-                  Configure commission for this product (optional)
-                </CardDescription>
-              </CardHeader>
-              <CardContent className='space-y-6 pt-6'>
-                <div className='grid gap-6 sm:grid-cols-2'>
-                  {/* Commission Type */}
                   <div className='space-y-2'>
                     <Label
                       htmlFor='edit-commission-type'
-                      className='text-sm font-semibold'>
+                      className='text-sm font-medium text-slate-700'>
                       Commission Type
                     </Label>
                     <Select
@@ -1234,9 +1099,7 @@ const EditProduct: React.FC<Props> = ({
                             value === "none" ? 0 : formData.commissionRate,
                         });
                       }}>
-                      <SelectTrigger
-                        id='edit-commission-type'
-                        className='h-11 border-2'>
+                      <SelectTrigger id='edit-commission-type' className='h-10'>
                         <SelectValue placeholder='Select commission type' />
                       </SelectTrigger>
                       <SelectContent>
@@ -1248,14 +1111,12 @@ const EditProduct: React.FC<Props> = ({
                       </SelectContent>
                     </Select>
                   </div>
-
-                  {/* Commission Rate */}
                   {(formData?.commissionType === "percentage" ||
                     formData?.commissionType === "fixed") && (
                     <div className='space-y-2'>
                       <Label
                         htmlFor='edit-commission-rate'
-                        className='text-sm font-semibold'>
+                        className='text-sm font-medium text-slate-700'>
                         {formData?.commissionType === "percentage"
                           ? "Commission Rate (%)"
                           : "Commission Amount"}
@@ -1282,72 +1143,181 @@ const EditProduct: React.FC<Props> = ({
                             ? "Enter percentage (e.g., 5 for 5%)"
                             : "Enter fixed amount"
                         }
-                        className='h-11 border-2 focus:border-purple-500 transition-colors'
+                        className='h-10'
                       />
-                      <p className='text-xs text-slate-600 dark:text-slate-400'>
-                        {formData?.commissionType === "percentage"
-                          ? "This percentage of the product price will be paid as commission"
-                          : "This fixed amount will be paid as commission per item"}
-                      </p>
                     </div>
                   )}
                 </div>
-              </CardContent>
-            </Card>
-          </div>
+              </div>
+            </TabsContent>
 
-          {/* Right Column - Status & Images */}
-          <div className='space-y-6'>
-            {/* Product Status Card */}
-            <Card className='border-none shadow-xl bg-white/80 dark:bg-slate-900/80 backdrop-blur-sm'>
-              <CardHeader className='border-b border-slate-200 dark:border-slate-700'>
-                <CardTitle className='text-lg'>Product Status</CardTitle>
-              </CardHeader>
-              <CardContent className='pt-6'>
-                <div className='space-y-3'>
-                  <Label className='text-sm font-semibold'>Status</Label>
-                  <Select
-                    value={formData?.active ? "active" : "inactive"}
-                    onValueChange={(value) => {
-                      updateFormData({
-                        ...formData,
-                        active: value === "active",
-                      });
-                    }}>
-                    <SelectTrigger id='status' className='h-11 border-2'>
-                      <SelectValue placeholder='Select status' />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value='active'>
-                        <div className='flex items-center gap-2'>
-                          <div className='w-2 h-2 rounded-full bg-green-500'></div>
-                          <span className='font-medium'>Active</span>
-                        </div>
-                      </SelectItem>
-                      <SelectItem value='inactive'>
-                        <div className='flex items-center gap-2'>
-                          <div className='w-2 h-2 rounded-full bg-red-500'></div>
-                          <span className='font-medium'>Inactive</span>
-                        </div>
-                      </SelectItem>
-                    </SelectContent>
-                  </Select>
+            {/* Tab: Variations */}
+            <TabsContent
+              value='variations'
+              className='p-4 sm:p-6 mt-0 focus-visible:outline-none'>
+              <div className='space-y-4'>
+                <div className='flex items-center justify-between'>
+                  <div className='space-y-1'>
+                    <h3 className='text-sm font-medium text-slate-900'>
+                      Product Variations
+                    </h3>
+                    <p className='text-xs text-slate-500'>
+                      Manage product variants and options
+                    </p>
+                  </div>
+                  {hasVariation && (
+                    <span className='text-[11px] font-medium px-2.5 py-0.5 rounded-full bg-indigo-100 text-indigo-700'>
+                      {formData?.variation?.length || 0} variation
+                      {(formData?.variation?.length || 0) !== 1 ? "s" : ""}
+                    </span>
+                  )}
                 </div>
-              </CardContent>
-            </Card>
+                <div className='space-y-3 p-3 bg-slate-50 rounded-lg border border-slate-200'>
+                  <div className='flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4'>
+                    <div className='flex items-center gap-4'>
+                      <Label
+                        htmlFor='variation-toggle'
+                        className='text-sm font-medium text-slate-700'>
+                        Enable Variations
+                      </Label>
+                      <div className='flex items-center gap-2'>
+                        <span
+                          className={`text-sm ${
+                            !hasVariation
+                              ? "font-semibold text-slate-900"
+                              : "text-slate-500"
+                          }`}>
+                          No
+                        </span>
+                        <Switch
+                          id='variation-toggle'
+                          checked={hasVariation}
+                          onCheckedChange={(value) => {
+                            setHasVariation(value);
+                            if (!value) {
+                              updateFormData({ ...formData, variation: [] });
+                            }
+                          }}
+                        />
+                        <span
+                          className={`text-sm ${
+                            hasVariation
+                              ? "font-semibold text-slate-900"
+                              : "text-slate-500"
+                          }`}>
+                          Yes
+                        </span>
+                      </div>
+                    </div>
+                    {hasVariation && (
+                      <div className='flex flex-col sm:flex-row sm:items-center gap-4'>
+                        <Label
+                          htmlFor='same-price-toggle'
+                          className='text-sm font-medium text-slate-700'>
+                          Same Unit Price for All
+                        </Label>
+                        <div className='flex items-center gap-2'>
+                          <span
+                            className={`text-sm ${
+                              !isSameUnitPrice
+                                ? "font-semibold text-slate-900"
+                                : "text-slate-500"
+                            }`}>
+                            No
+                          </span>
+                          <Switch
+                            id='same-price-toggle'
+                            checked={isSameUnitPrice}
+                            onCheckedChange={handleSameUnitPrice}
+                          />
+                          <span
+                            className={`text-sm ${
+                              isSameUnitPrice
+                                ? "font-semibold text-slate-900"
+                                : "text-slate-500"
+                            }`}>
+                            Yes
+                          </span>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
 
-            {/* Product Images Card */}
-            <Card className='border-none shadow-xl bg-white/80 dark:bg-slate-900/80 backdrop-blur-sm overflow-hidden'>
-              <CardHeader className='border-b border-slate-200 dark:border-slate-700'>
-                <div className='flex justify-between items-center'>
-                  <div>
-                    <CardTitle className='text-lg flex items-center gap-2'>
-                      <Upload className='w-5 h-5 text-blue-500' />
+                {hasVariation && (
+                  <Tabs
+                    value={variationTab}
+                    onValueChange={setVariationTab}
+                    className='w-full'>
+                    <TabsList className='grid w-full grid-cols-2 h-10 bg-slate-100 rounded-lg'>
+                      <TabsTrigger
+                        value='v1'
+                        className='flex items-center gap-2 text-sm rounded-md data-[state=active]:bg-white data-[state=active]:shadow-sm'>
+                        <span>Advanced</span>
+                        <span className='text-[10px] font-mono px-1.5 py-0.5 rounded border border-slate-300'>
+                          V1
+                        </span>
+                      </TabsTrigger>
+                      <TabsTrigger
+                        value='v2'
+                        className='flex items-center gap-2 text-sm rounded-md data-[state=active]:bg-white data-[state=active]:shadow-sm'>
+                        <span>Simple</span>
+                        <span className='text-[10px] font-mono px-1.5 py-0.5 rounded border border-slate-300'>
+                          V2
+                        </span>
+                      </TabsTrigger>
+                    </TabsList>
+                    <TabsContent value='v1' className='mt-4'>
+                      {renderV1VariationView()}
+                    </TabsContent>
+                    <TabsContent value='v2' className='mt-4'>
+                      <V2SimpleVariationManager
+                        formData={formData}
+                        updateFormData={updateFormData}
+                        isSameUnitPrice={isSameUnitPrice}
+                        mode='edit'
+                      />
+                      <p className='text-xs text-muted-foreground mt-4 text-center'>
+                        Variant images are managed on the Advanced tab.
+                      </p>
+                    </TabsContent>
+                  </Tabs>
+                )}
+
+                {!hasVariation && (
+                  <div className='text-center py-8 text-slate-500'>
+                    <Layers className='w-8 h-8 mx-auto mb-2 opacity-50' />
+                    <p className='text-sm'>
+                      Enable variations to add different sizes, colors, or other
+                      variants.
+                    </p>
+                  </div>
+                )}
+
+                {hasVariation && variationTab === "v1" && (
+                  <button
+                    onClick={addNewVariation}
+                    className='w-full inline-flex items-center justify-center gap-2 px-4 py-2.5 text-sm font-medium text-indigo-600 bg-indigo-50 border border-indigo-200 rounded-lg hover:bg-indigo-100 transition-all duration-150'>
+                    <PlusCircle className='h-4 w-4' />
+                    Add New Variation
+                  </button>
+                )}
+              </div>
+            </TabsContent>
+
+            {/* Tab: Images */}
+            <TabsContent
+              value='images'
+              className='p-4 sm:p-6 mt-0 focus-visible:outline-none'>
+              <div className='grid gap-6 sm:grid-cols-2'>
+                <div className='space-y-4'>
+                  <div className='space-y-1'>
+                    <h3 className='text-sm font-medium text-slate-900'>
                       Product Images
-                    </CardTitle>
-                    <CardDescription className='mt-1'>
-                      Main thumbnail and up to 6 additional images
-                    </CardDescription>
+                    </h3>
+                    <p className='text-xs text-slate-500'>
+                      Upload thumbnail and additional images
+                    </p>
                   </div>
                   <Input
                     id='picture-thumbnail'
@@ -1365,31 +1335,10 @@ const EditProduct: React.FC<Props> = ({
                       });
                     }}
                   />
-                  <Button
-                    variant='outline'
-                    size='sm'
-                    onClick={() => {
-                      if (!!fileRef) {
-                        //@ts-ignore
-                        fileRef.current.click();
-                      }
-                    }}
-                    className='hover:bg-blue-50 hover:border-blue-300 dark:hover:bg-blue-950'>
-                    <Upload className='h-4 w-4 mr-2' />
-                    Change Thumbnail
-                  </Button>
-                </div>
-              </CardHeader>
-              <CardContent className='pt-6'>
-                <div className='space-y-4'>
-                  {/* Main Thumbnail */}
-                  <div className='relative group'>
-                    <div className='absolute -top-2 -left-2 z-10 px-2 py-1 bg-gradient-to-r from-blue-500 to-indigo-600 text-white text-xs font-semibold rounded-md shadow-lg'>
-                      Main Thumbnail
-                    </div>
+                  <div className='relative'>
                     <img
                       alt='Product_thumbnail'
-                      className='aspect-square w-full rounded-xl object-cover shadow-lg border-2 border-blue-200 dark:border-blue-800'
+                      className='aspect-square w-full rounded-xl object-cover border border-slate-200'
                       src={
                         !!formData?.thumbnail
                           ? typeof formData?.thumbnail === "string"
@@ -1398,18 +1347,28 @@ const EditProduct: React.FC<Props> = ({
                           : PlaceHolderImage
                       }
                     />
+                    <button
+                      onClick={() => {
+                        if (!!fileRef) {
+                          //@ts-ignore
+                          fileRef.current.click();
+                        }
+                      }}
+                      className='absolute bottom-2 right-2 inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-slate-600 bg-white/90 backdrop-blur-sm border border-slate-200 rounded-lg hover:bg-white shadow-sm'>
+                      <Upload className='h-3.5 w-3.5' />
+                      Change
+                    </button>
                   </div>
 
-                  {/* Additional Images */}
                   <div className='space-y-2'>
-                    <Label className='text-sm font-semibold text-slate-700 dark:text-slate-300'>
+                    <Label className='text-sm font-medium text-slate-700'>
                       Additional Images ({formData?.images?.length || 0}/6)
                     </Label>
-                    <div className='grid grid-cols-3 gap-2 sm:gap-3'>
+                    <div className='grid grid-cols-3 gap-2'>
                       {formData?.images?.map((imgData, index) => (
                         <div
                           key={index}
-                          className='group relative aspect-square rounded-lg overflow-hidden border-2 border-slate-200 dark:border-slate-700 hover:border-blue-400 dark:hover:border-blue-500 transition-all'>
+                          className='group relative aspect-square rounded-lg overflow-hidden border border-slate-200 hover:border-indigo-300 transition-all'>
                           <img
                             alt={`Product_image_${index + 1}`}
                             className='w-full h-full object-cover'
@@ -1421,8 +1380,6 @@ const EditProduct: React.FC<Props> = ({
                                 : PlaceHolderImage
                             }
                           />
-
-                          {/* Remove button - appears on hover */}
                           <button
                             onClick={() => {
                               const images = formData.images.filter(
@@ -1444,17 +1401,11 @@ const EditProduct: React.FC<Props> = ({
                                 });
                               }
                             }}
-                            className='absolute top-1 right-1 sm:top-2 sm:right-2 p-1 sm:p-1.5 bg-red-500 hover:bg-red-600 text-white rounded-full opacity-0 group-hover:opacity-100 transition-all duration-200 shadow-lg hover:scale-110 z-10'>
-                            <XIcon className='w-3 h-3 sm:w-4 sm:h-4' />
+                            className='absolute top-1 right-1 p-1 bg-red-500 hover:bg-red-600 text-white rounded-full opacity-0 group-hover:opacity-100 transition-all z-10'>
+                            <X className='w-3 h-3' />
                           </button>
-
-                          {/* Image number badge */}
-                          <div className='absolute bottom-1 left-1 sm:bottom-2 sm:left-2 px-1.5 py-0.5 sm:px-2 sm:py-1 bg-black/60 text-white text-[10px] sm:text-xs font-medium rounded backdrop-blur-sm'>
-                            {index + 1}
-                          </div>
                         </div>
                       ))}
-
                       <Input
                         id='picture-additional'
                         type='file'
@@ -1467,303 +1418,128 @@ const EditProduct: React.FC<Props> = ({
                           //@ts-ignore
                           const files = Array.from(e.target.files);
                           if (!formData?.images) formData.images = [];
-
                           const remainingSlots = 6 - formData.images.length;
                           const filesToAdd = files.slice(0, remainingSlots);
-
                           updateFormData({
                             ...formData,
                             //@ts-ignore
                             images: [...formData.images, ...filesToAdd],
                           });
-
-                          // Reset file input
                           e.target.value = "";
                         }}
                       />
-
-                      {/* Upload button - show if less than 6 images */}
                       {(!formData?.images || formData?.images?.length < 6) && (
                         <button
-                          className='flex aspect-square w-full items-center justify-center rounded-lg border-2 border-dashed border-slate-300 dark:border-slate-600 hover:border-blue-400 hover:bg-blue-50 dark:hover:bg-blue-950 transition-all group'
+                          className='flex aspect-square w-full items-center justify-center rounded-lg border-2 border-dashed border-slate-300 hover:border-indigo-400 hover:bg-indigo-50 transition-all'
                           onClick={() => {
                             if (!!fileRef2) {
                               //@ts-ignore
                               fileRef2.current.click();
                             }
                           }}>
-                          <div className='flex flex-col items-center gap-1 sm:gap-2'>
-                            <Upload className='h-5 w-5 sm:h-6 sm:w-6 text-slate-400 group-hover:text-blue-500 transition-colors' />
-                            <span className='text-[10px] sm:text-xs text-slate-500 dark:text-slate-400 font-medium'>
-                              Add
-                            </span>
-                          </div>
+                          <Upload className='h-5 w-5 text-slate-400' />
                         </button>
                       )}
                     </div>
-
-                    {formData?.images && formData.images.length >= 6 && (
-                      <p className='text-xs text-amber-600 dark:text-amber-400 font-medium'>
-                        ⚠️ Maximum 6 additional images reached
-                      </p>
-                    )}
                   </div>
                 </div>
-              </CardContent>
-            </Card>
 
-            {/* Image Groups Card - NEW */}
-            {hasVariation && (
-              <Card className='border-none shadow-xl bg-white/80 dark:bg-slate-900/80 backdrop-blur-sm overflow-hidden'>
-                <CardHeader className='border-b border-slate-200 dark:border-slate-700'>
-                  <div className='flex justify-between items-center'>
-                    <div>
-                      <CardTitle className='text-lg flex items-center gap-2'>
-                        <Palette className='w-5 h-5 text-purple-500' />
+                {hasVariation && (
+                  <div className='space-y-4'>
+                    <div className='space-y-1'>
+                      <h3 className='text-sm font-medium text-slate-900'>
                         Image Groups
-                      </CardTitle>
-                      <CardDescription className='mt-1'>
+                      </h3>
+                      <p className='text-xs text-slate-500'>
                         Organize images by color/attribute (optional)
-                      </CardDescription>
+                      </p>
                     </div>
+                    <ImageGroupManager
+                      imageGroups={imageGroups}
+                      variations={formData.variation || []}
+                      onImageGroupsChange={setImageGroups}
+                      mode='edit'
+                    />
                   </div>
-                </CardHeader>
-                <CardContent className='pt-6'>
-                  <ImageGroupManager
-                    imageGroups={imageGroups}
-                    variations={formData.variation || []}
-                    onImageGroupsChange={setImageGroups}
-                    mode='edit'
-                  />
-                </CardContent>
-              </Card>
-            )}
+                )}
+              </div>
+            </TabsContent>
+
+            {/* Tab: SEO */}
+            <TabsContent
+              value='seo'
+              className='p-4 sm:p-6 mt-0 focus-visible:outline-none'>
+              <div className='space-y-1 mb-4'>
+                <h3 className='text-sm font-medium text-slate-900'>
+                  SEO Settings
+                </h3>
+                <p className='text-xs text-slate-500'>
+                  Optimize your product for search engines
+                </p>
+              </div>
+              <ProductSeoCard
+                value={{
+                  slug: formData?.slug || "",
+                  shortDescription: formData?.shortDescription || "",
+                  focusKeyphrase: formData?.focusKeyphrase || "",
+                  seoTitle: formData?.seoTitle || "",
+                  seoDescription: formData?.seoDescription || "",
+                  tags: formData?.tags || [],
+                }}
+                onChange={handleSeoChange}
+                onResetSlug={handleResetSlug}
+                slugManuallyEdited={slugManuallyEdited}
+              />
+            </TabsContent>
+          </Tabs>
+        </div>
+
+        {/* Mobile Bottom Action Bar */}
+        <div className='fixed inset-x-0 bottom-0 z-50 sm:hidden bg-white/95 backdrop-blur-md border-t border-slate-200 px-4 py-3 pb-[calc(env(safe-area-inset-bottom,0px)+12px)]'>
+          <div className='flex gap-3'>
+            <button
+              className='flex-1 h-11 inline-flex items-center justify-center gap-2 px-4 py-2 text-sm font-medium text-slate-600 bg-white border border-slate-200 rounded-lg'
+              onClick={() => {
+                if (dialogBtn?.current) {
+                  //@ts-ignore
+                  dialogBtn.current.click();
+                }
+              }}>
+              <XIcon className='w-4 h-4' />
+              Discard
+            </button>
+            <button
+              className='flex-1 h-11 inline-flex items-center justify-center gap-2 px-4 py-2 text-sm font-medium text-white bg-indigo-600 rounded-lg'
+              onClick={() => {
+                if (updateDialogBtn?.current) {
+                  //@ts-ignore
+                  updateDialogBtn.current.click();
+                }
+              }}>
+              <Save className='w-4 h-4' />
+              Update
+            </button>
           </div>
         </div>
 
-        {/* Variations Section */}
-        <div className='mt-6 sm:mt-8'>
-          <Card className='border-none shadow-xl bg-white/80 dark:bg-slate-900/80 backdrop-blur-sm'>
-            <CardHeader className='border-b border-slate-200 dark:border-slate-700'>
-              <CardTitle className='flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2'>
-                <div className='flex items-center gap-2'>
-                  <div className='p-2 bg-gradient-to-br from-purple-500 to-pink-600 rounded-lg shadow-lg'>
-                    <Box className='w-5 h-5 text-white' />
-                  </div>
-                  <span>Product Variations</span>
-                </div>
-                {hasVariation && (
-                  <Badge
-                    variant='secondary'
-                    className='w-fit bg-gradient-to-r from-purple-100 to-pink-100 dark:from-purple-900 dark:to-pink-900 border-0'>
-                    {formData?.variation?.length || 0} variation
-                    {(formData?.variation?.length || 0) !== 1 ? "s" : ""}
-                  </Badge>
-                )}
-              </CardTitle>
-              <CardDescription>
-                Configure product variations with different sizes, colors, and
-                pricing options.
-              </CardDescription>
-            </CardHeader>
-
-            <CardContent className='space-y-6 pt-6'>
-              {/* Variation Toggle */}
-              <div className='space-y-4 p-4 bg-gradient-to-r from-slate-50 to-blue-50 dark:from-slate-800 dark:to-slate-700 rounded-lg border-2 border-slate-200 dark:border-slate-600'>
-                <div className='flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4'>
-                  <div className='flex items-center gap-4'>
-                    <Label
-                      htmlFor='variation-toggle'
-                      className='text-base font-medium'>
-                      Enable Variations
-                    </Label>
-                    <div className='flex items-center gap-2'>
-                      <span
-                        className={`text-sm ${
-                          !hasVariation
-                            ? "font-semibold text-foreground"
-                            : "text-muted-foreground"
-                        }`}
-                        aria-hidden='true'>
-                        No
-                      </span>
-                      <Switch
-                        id='variation-toggle'
-                        checked={hasVariation}
-                        onCheckedChange={(value) => {
-                          setHasVariation(value);
-                          if (!value) {
-                            updateFormData({ ...formData, variation: [] });
-                            setV2Colors([]);
-                            setV2Sizes([]);
-                          }
-                        }}
-                        aria-describedby='variation-help'
-                      />
-                      <span
-                        className={`text-sm ${
-                          hasVariation
-                            ? "font-semibold text-foreground"
-                            : "text-muted-foreground"
-                        }`}
-                        aria-hidden='true'>
-                        Yes
-                      </span>
-                    </div>
-                  </div>
-
-                  {hasVariation && (
-                    <div className='flex flex-col sm:flex-row sm:items-center gap-4'>
-                      <Label
-                        htmlFor='same-price-toggle'
-                        className='text-sm font-medium'>
-                        Same Unit Price for All
-                      </Label>
-                      <div className='flex items-center gap-2'>
-                        <span
-                          className={`text-sm ${
-                            !isSameUnitPrice
-                              ? "font-semibold text-foreground"
-                              : "text-muted-foreground"
-                          }`}
-                          aria-hidden='true'>
-                          No
-                        </span>
-                        <Switch
-                          id='same-price-toggle'
-                          checked={isSameUnitPrice}
-                          onCheckedChange={handleSameUnitPrice}
-                          aria-describedby='same-price-help'
-                        />
-                        <span
-                          className={`text-sm ${
-                            isSameUnitPrice
-                              ? "font-semibold text-foreground"
-                              : "text-muted-foreground"
-                          }`}
-                          aria-hidden='true'>
-                          Yes
-                        </span>
-                      </div>
-                    </div>
-                  )}
-                </div>
-
-                <div className='space-y-1 text-xs text-slate-700 dark:text-slate-300'>
-                  <p id='variation-help'>
-                    Enable variations to create different versions of your
-                    product with unique combinations of attributes.
-                  </p>
-                  {hasVariation && (
-                    <p id='same-price-help'>
-                      When enabled, all variations will inherit the main
-                      product's unit price.
-                    </p>
-                  )}
-                </div>
-              </div>
-
-              {hasVariation && (
-                <Tabs
-                  value={variationTab}
-                  onValueChange={setVariationTab}
-                  className='w-full'>
-                  <TabsList className='grid w-full grid-cols-2'>
-                    <TabsTrigger value='v1' className='flex items-center gap-2'>
-                      <span>Advanced</span>
-                      <Badge variant='outline' className='text-xs'>
-                        V1
-                      </Badge>
-                    </TabsTrigger>
-                    <TabsTrigger value='v2' className='flex items-center gap-2'>
-                      <span>Simple</span>
-                      <Badge variant='outline' className='text-xs'>
-                        V2
-                      </Badge>
-                    </TabsTrigger>
-                  </TabsList>
-
-                  <TabsContent value='v1' className='mt-6'>
-                    <div className='space-y-4'>
-                      <div className='text-sm text-slate-700 dark:text-slate-300 bg-blue-50 dark:bg-blue-950/20 p-3 rounded-lg border'>
-                        <strong>Advanced Mode:</strong> Manually configure each
-                        variation with full control over all properties.
-                      </div>
-                      {renderV1VariationView()}
-                    </div>
-                  </TabsContent>
-
-                  <TabsContent value='v2' className='mt-6'>
-                    <div className='space-y-4'>
-                      <div className='text-sm text-slate-700 dark:text-slate-300 bg-green-50 dark:bg-green-950/20 p-3 rounded-lg border'>
-                        <strong>Simple Mode:</strong> Quick setup for size and
-                        color combinations. Variations are auto-generated.
-                      </div>
-                      <V2SimpleVariationManager
-                        formData={formData}
-                        updateFormData={updateFormData}
-                        isSameUnitPrice={isSameUnitPrice}
-                        mode='edit'
-                      />
-                    </div>
-                  </TabsContent>
-                </Tabs>
-              )}
-
-              {!hasVariation && (
-                <div className='text-center py-12 text-slate-600 dark:text-slate-400'>
-                  <div className='inline-flex items-center justify-center w-16 h-16 rounded-full bg-gradient-to-br from-slate-100 to-slate-200 dark:from-slate-800 dark:to-slate-700 mb-4'>
-                    <Box className='w-8 h-8 text-slate-400' />
-                  </div>
-                  <p className='mb-2 font-medium'>No variations configured</p>
-                  <p className='text-sm'>
-                    Enable variations above to add different sizes, colors, or
-                    other variants.
-                  </p>
-                </div>
-              )}
-            </CardContent>
-
-            {hasVariation && variationTab === "v1" && (
-              <CardFooter className='border-t bg-slate-50 dark:bg-slate-800/50 pt-4'>
-                <Button
-                  onClick={addNewVariation}
-                  variant='outline'
-                  className='w-full hover:bg-blue-50 hover:border-blue-300 dark:hover:bg-blue-950'>
-                  <PlusCircle className='h-4 w-4 mr-2' />
-                  Add New Variation
-                </Button>
-              </CardFooter>
-            )}
-          </Card>
-        </div>
-
-        {/* Mobile Action Buttons */}
-        <div className='flex items-center justify-center gap-3 mt-6 sm:mt-8 lg:hidden'>
-          <Button
-            variant='outline'
-            onClick={() => {
-              if (dialogBtn?.current) {
-                //@ts-ignore
-                dialogBtn.current.click();
-              }
-            }}
-            className='hover:bg-red-50 hover:text-red-600 hover:border-red-300'>
-            <XIcon className='w-4 h-4 mr-2' />
-            Discard
-          </Button>
-          <Button
-            onClick={() => {
-              if (updateDialogBtn?.current) {
-                //@ts-ignore
-                updateDialogBtn.current.click();
-              }
-            }}
-            className='bg-gradient-to-r from-blue-600 to-indigo-600'>
-            <Save className='w-4 h-4 mr-2' />
-            Save Product
-          </Button>
-        </div>
+        {/* AI Versions Sheet */}
+        <AIVersionsSheet
+          open={isAISheetOpen}
+          onOpenChange={setIsAISheetOpen}
+          entity={productAiConfig}
+          mode='edit'
+          entityId={productData?.id}
+          entityName={formData?.name || productData?.name || "Product"}
+          versions={aiVersions}
+          activeIndex={activeVersionIndex}
+          onSelectVersion={setActiveVersionIndex}
+          onVersionGenerated={handleVersionGenerated}
+          onApplyField={handleApplyAIField}
+          onApplyAll={handleApplyAllFromVersion}
+          onApplySuggestion={handleApplySuggestion}
+          onClear={handleClearVersions}
+          appliedFields={appliedFields}
+        />
       </div>
       {discardDialog()}
       {updateDiscardDialog()}
