@@ -6,6 +6,8 @@ import Image from '@tiptap/extension-image'
 import TextAlign from '@tiptap/extension-text-align'
 import Placeholder from '@tiptap/extension-placeholder'
 import Youtube from '@tiptap/extension-youtube'
+import { Table, TableRow, TableHeader, TableCell } from '@tiptap/extension-table'
+import { Details, DetailsSummary, DetailsContent } from '@tiptap/extension-details'
 import {
   Bold,
   Italic,
@@ -30,12 +32,18 @@ import {
   WrapText,
   RemoveFormatting,
   Video,
-  Youtube as YoutubeIcon,
+  Table as TableIcon,
+  Rows3,
+  Columns3,
+  Trash2,
+  HelpCircle,
+  Plus,
 } from 'lucide-react'
 import { useCallback, useEffect, useState } from 'react'
 import { VideoEmbed } from './extensions/VideoEmbed'
 import { SocialMediaEmbed } from './extensions/SocialMediaEmbed'
 import EmbedDialog from './EmbedDialog'
+import { normalizeDetailsHtml } from './normalizeDetailsHtml'
 
 interface TiptapEditorProps {
   content?: string
@@ -290,6 +298,76 @@ const MenuBar = ({ editor }: { editor: any }) => {
         </button>
       </div>
 
+      {/* Table */}
+      <div className="flex gap-1 border-r border-gray-300 dark:border-gray-600 pr-2">
+        <button
+          type="button"
+          onClick={() => editor.chain().focus().insertTable({ rows: 3, cols: 2, withHeaderRow: true }).run()}
+          className="p-2 rounded hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
+          title="Insert Table"
+        >
+          <TableIcon className="w-4 h-4" />
+        </button>
+        {editor.isActive('table') && (
+          <>
+            <button
+              type="button"
+              onClick={() => editor.chain().focus().addRowAfter().run()}
+              className="p-2 rounded hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
+              title="Add Row After"
+            >
+              <Plus className="w-4 h-4" />
+            </button>
+            <button
+              type="button"
+              onClick={() => editor.chain().focus().addColumnAfter().run()}
+              className="p-2 rounded hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
+              title="Add Column After"
+            >
+              <Columns3 className="w-4 h-4" />
+            </button>
+            <button
+              type="button"
+              onClick={() => editor.chain().focus().deleteRow().run()}
+              className="p-2 rounded hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
+              title="Delete Row"
+            >
+              <Trash2 className="w-4 h-4" />
+            </button>
+            <button
+              type="button"
+              onClick={() => editor.chain().focus().deleteColumn().run()}
+              className="p-2 rounded hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
+              title="Delete Column"
+            >
+              <Trash2 className="w-4 h-4" />
+            </button>
+            <button
+              type="button"
+              onClick={() => editor.chain().focus().deleteTable().run()}
+              className="p-2 rounded hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
+              title="Delete Table"
+            >
+              <Trash2 className="w-4 h-4" />
+            </button>
+          </>
+        )}
+      </div>
+
+      {/* FAQ Block */}
+      <div className="flex gap-1 border-r border-gray-300 dark:border-gray-600 pr-2">
+        <button
+          type="button"
+          onClick={() => editor.chain().focus().insertContent(
+            '<details><summary>New question?</summary><div data-type="detailsContent"><p>Write the answer here.</p></div></details>'
+          ).run()}
+          className="p-2 rounded hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
+          title="Insert FAQ Block"
+        >
+          <HelpCircle className="w-4 h-4" />
+        </button>
+      </div>
+
       {/* History */}
       <div className="flex gap-1 border-r border-gray-300 dark:border-gray-600 pr-2">
         <button
@@ -376,6 +454,17 @@ export const TiptapEditor = ({
       }),
       VideoEmbed,
       SocialMediaEmbed,
+      // Table extensions
+      Table.configure({
+        resizable: false,
+      }),
+      TableRow,
+      TableHeader,
+      TableCell,
+      // FAQ/Details extensions
+      Details,
+      DetailsSummary,
+      DetailsContent,
     ],
     content,
     onUpdate: ({ editor }) => {
@@ -391,7 +480,7 @@ export const TiptapEditor = ({
   // Update editor content when the content prop changes
   useEffect(() => {
     if (editor && content !== editor.getHTML()) {
-      editor.commands.setContent(content)
+      editor.commands.setContent(normalizeDetailsHtml(content))
     }
   }, [content, editor])
 

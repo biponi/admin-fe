@@ -20,6 +20,8 @@ import {
   ArrowUp,
   ArrowDown,
   Info,
+  Tag,
+  Percent,
 } from "lucide-react";
 import { Button } from "../../components/ui/button";
 import {
@@ -52,6 +54,12 @@ import {
   SelectValue,
 } from "../../components/ui/select";
 import SingleProductCardItem from "./components/singleProductCard";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "../../components/ui/tooltip";
 import { getProductSummary } from "../../api/product";
 import { errorToast } from "../../utils/toast";
 import { Progress } from "../../components/ui/progress";
@@ -157,13 +165,56 @@ const StatCard: React.FC<{
   description: string;
   icon: React.ReactNode;
   accent: string;
-}> = ({ title, value, description, icon, accent }) => (
+  info?: { title: string; description: string; formula?: string };
+}> = ({ title, value, description, icon, accent, info }) => (
   <div
     className={`relative overflow-hidden rounded-xl border bg-white p-4 ${accent}`}>
     <div className='flex items-start justify-between gap-2'>
       <div className='min-w-0'>
-        <p className='text-[10px] font-semibold text-zinc-400 uppercase tracking-wider mb-1'>
+        <p className='text-[10px] font-semibold text-zinc-400 uppercase tracking-wider mb-1 flex items-center gap-1'>
           {title}
+          {info && (
+            // Local provider: ModernLayout doesn't wrap the app in TooltipProvider
+            <TooltipProvider delayDuration={150}>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <span
+                    role='button'
+                    tabIndex={0}
+                    aria-label={`About ${title}`}
+                    className='shrink-0 inline-flex items-center justify-center rounded-full text-zinc-300 hover:text-indigo-600 transition-colors cursor-help align-middle'>
+                    <Info className='h-3 w-3' />
+                  </span>
+                </TooltipTrigger>
+                <TooltipContent
+                  side='bottom'
+                  align='start'
+                  sideOffset={6}
+                  className='w-72 p-0 bg-white border border-zinc-200 shadow-lg'>
+                  <div className='border-b border-zinc-100 px-3 py-2'>
+                    <h4 className='text-xs font-semibold text-zinc-900'>
+                      {info.title}
+                    </h4>
+                  </div>
+                  <div className='px-3 py-2 space-y-2'>
+                    <p className='text-[11px] text-zinc-600 leading-relaxed'>
+                      {info.description}
+                    </p>
+                    {info.formula && (
+                      <div className='bg-zinc-50 rounded-md px-2 py-1.5'>
+                        <p className='text-[9px] font-medium text-zinc-500 uppercase tracking-wide mb-0.5'>
+                          How it&apos;s calculated
+                        </p>
+                        <p className='text-[10px] text-zinc-700 font-mono leading-relaxed'>
+                          {info.formula}
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+          )}
         </p>
         <p className='text-2xl font-bold text-zinc-900 leading-tight'>
           {value}
@@ -557,6 +608,12 @@ const ProductList: React.FC<Props> = ({ handleEditProduct }) => {
       accent: "border-blue-100",
       key: "totalActiveProducts",
       total: summary?.totalActiveProductType,
+      info: {
+        title: "Active Products",
+        description:
+          "Count of active, non-deleted products in the catalog. Includes zero-stock products.",
+        formula: "products where active = true and not soft-deleted",
+      },
     },
     {
       title: "Total Stock",
@@ -566,6 +623,13 @@ const ProductList: React.FC<Props> = ({ handleEditProduct }) => {
       accent: "border-emerald-100",
       key: "totalStock",
       total: summary?.totalActiveProducts,
+      info: {
+        title: "Total Stock",
+        description:
+          "Total sellable units across all products. For variant products, only active variants are counted.",
+        formula:
+          "Σ product quantity (variant products: Σ active variant quantity)",
+      },
     },
     {
       title: "Variations",
@@ -575,6 +639,12 @@ const ProductList: React.FC<Props> = ({ handleEditProduct }) => {
       accent: "border-violet-100",
       key: "totalVariants",
       total: summary?.totalActiveProductVariations,
+      info: {
+        title: "Variations",
+        description:
+          "Number of variant combinations (size, color, etc.) across all active products.",
+        formula: "Σ variation array sizes",
+      },
     },
     {
       title: "Inventory Value",
@@ -584,8 +654,54 @@ const ProductList: React.FC<Props> = ({ handleEditProduct }) => {
       description: "Total valuation",
       icon: <FilePieChart className='h-4 w-4 text-amber-500' />,
       accent: "border-amber-100",
+      prefix: "৳",
       key: "totalPrice",
       total: summary?.totalActiveProductPrice,
+      info: {
+        title: "Inventory Value",
+        description:
+          "Catalog value of all stock at list price, before any discounts are applied.",
+        formula: "Σ (quantity × unit price) per product / variant",
+      },
+    },
+    {
+      title: "Discounted Value",
+      value: summary
+        ? `৳${formatNumber(summary.totalActiveProductDiscountedPrice)}`
+        : "—",
+      description: summary?.appliedCampaign
+        ? `🏷 ${summary.appliedCampaign.title}`
+        : "After all discounts",
+      icon: <Tag className='h-4 w-4 text-rose-500' />,
+      accent: "border-rose-100",
+      prefix: "৳",
+      key: "totalDiscountedPrice",
+      total: summary?.totalActiveProductDiscountedPrice,
+      info: {
+        title: "Discounted Value",
+        description:
+          "What the current stock is worth after discounts. One discount applies per product, by priority: campaign first, then category, then the product's own discount.",
+        formula:
+          "Σ quantity × (price − unit discount); discount = campaign > category > product; % floored per unit",
+      },
+    },
+    {
+      title: "Discount Amount",
+      value: summary
+        ? `৳${formatNumber(summary.totalActiveProductDiscountAmount)}`
+        : "—",
+      description: "Total reduction applied",
+      icon: <Percent className='h-4 w-4 text-orange-500' />,
+      accent: "border-orange-100",
+      prefix: "৳",
+      key: "totalDiscountAmount",
+      total: summary?.totalActiveProductDiscountAmount,
+      info: {
+        title: "Discount Amount",
+        description:
+          "Total discount reduction across all in-stock units, using the same discount priority as Discounted Value.",
+        formula: "Σ quantity × unit discount (campaign > category > product)",
+      },
     },
   ];
 
@@ -640,7 +756,7 @@ const ProductList: React.FC<Props> = ({ handleEditProduct }) => {
             </SheetDescription>
           </SheetHeader>
           <div className='grid grid-cols-1 gap-6 lg:grid-cols-2'>
-            {statCards.map(({ title, total, key }, i) => (
+            {statCards.map(({ title, total, key, prefix }, i) => (
               <div key={i}>
                 <h4 className='text-xs font-semibold text-zinc-500 uppercase tracking-wider mb-3 pb-2 border-b'>
                   {title}
@@ -659,6 +775,7 @@ const ProductList: React.FC<Props> = ({ handleEditProduct }) => {
                               {res.categoryName}
                             </span>
                             <span className='text-sm font-semibold text-zinc-900 ml-2 shrink-0'>
+                              {prefix}
                               {formatNumber(val)}
                             </span>
                           </div>
@@ -1064,7 +1181,7 @@ const ProductList: React.FC<Props> = ({ handleEditProduct }) => {
         </div>
 
         {/* Stats row */}
-        <div className='grid grid-cols-4 gap-3'>
+        <div className='grid grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-3'>
           {statCards.map((card, i) => (
             <StatCard key={i} {...card} />
           ))}

@@ -2,6 +2,7 @@
 // product). Entity labels, copy, endpoints, and applicable suggestions come
 // from AiEntityConfig — the SSE flow is identical for all entities.
 import { useEffect, useRef, useState, useCallback } from "react";
+import DOMPurify from "dompurify";
 import {
   Dialog,
   DialogContent,
@@ -61,6 +62,18 @@ export interface StreamingAIModalProps {
 
 function stripHtml(html: string): string {
   return html.replace(/<[^>]*>/g, "");
+}
+
+// Allow-list for rendering finished AI HTML (tables, FAQ details) in the
+// preview — mirrors what the TipTap editor accepts. Live-streaming chunks
+// stay plain text (they are mid-tag while streaming).
+const PREVIEW_ALLOWED_TAGS = [
+  "p", "br", "strong", "b", "em", "i", "u", "s", "h2", "h3", "ul", "ol", "li",
+  "table", "thead", "tbody", "tr", "th", "td", "details", "summary", "div",
+];
+
+function sanitizePreview(html: string): string {
+  return DOMPurify.sanitize(html, { ALLOWED_TAGS: PREVIEW_ALLOWED_TAGS });
 }
 
 let versionCounter = 0;
@@ -249,8 +262,15 @@ export default function StreamingAIModal({
           <span className="text-[10px] font-semibold uppercase tracking-wider text-slate-400">
             {field.label}
           </span>
-          <div className="text-[13px] text-[#141413] leading-relaxed bg-white border border-slate-200 rounded-md p-3 min-h-[36px] whitespace-pre-wrap break-words">
-            {isHtmlField(field.key) ? stripHtml(value) : value || "—"}
+          <div className="text-[13px] text-[#141413] leading-relaxed bg-white border border-slate-200 rounded-md p-3 min-h-[36px] break-words">
+            {isHtmlField(field.key) ? (
+              <div
+                className="ai-seo-preview [&_table]:w-full [&_table]:border-collapse [&_table]:my-2 [&_th]:border [&_th]:border-slate-300 [&_th]:bg-slate-50 [&_th]:p-1.5 [&_th]:text-left [&_td]:border [&_td]:border-slate-300 [&_td]:p-1.5 [&_details]:border [&_details]:border-slate-200 [&_details]:rounded-md [&_details]:my-1.5 [&_details]:p-2 [&_summary]:font-semibold [&_summary]:cursor-pointer [&_div[data-type]]:mt-1.5"
+                dangerouslySetInnerHTML={{ __html: sanitizePreview(value) }}
+              />
+            ) : (
+              <span className="whitespace-pre-wrap">{value || "—"}</span>
+            )}
           </div>
         </div>
       );
@@ -458,11 +478,16 @@ export default function StreamingAIModal({
                         </div>
                       </AccordionTrigger>
                       <AccordionContent className="px-3 pb-3">
-                        <div className="text-[13px] text-[#141413] leading-relaxed whitespace-pre-wrap break-words">
-                          {isHtmlField(field.key)
-                            ? stripHtml(value)
-                            : value || "—"}
-                        </div>
+                        {isHtmlField(field.key) ? (
+                          <div
+                            className="ai-seo-preview text-[13px] text-[#141413] leading-relaxed break-words [&_table]:w-full [&_table]:border-collapse [&_table]:my-2 [&_th]:border [&_th]:border-slate-300 [&_th]:bg-slate-50 [&_th]:p-1.5 [&_th]:text-left [&_td]:border [&_td]:border-slate-300 [&_td]:p-1.5 [&_details]:border [&_details]:border-slate-200 [&_details]:rounded-md [&_details]:my-1.5 [&_details]:p-2 [&_summary]:font-semibold [&_summary]:cursor-pointer [&_div[data-type]]:mt-1.5"
+                            dangerouslySetInnerHTML={{ __html: sanitizePreview(value) }}
+                          />
+                        ) : (
+                          <div className="text-[13px] text-[#141413] leading-relaxed whitespace-pre-wrap break-words">
+                            {value || "—"}
+                          </div>
+                        )}
                       </AccordionContent>
                     </AccordionItem>
                   );

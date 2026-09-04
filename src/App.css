@@ -181,3 +181,63 @@
     background: rgba(255, 255, 255, 0.3);
   }
 }
+
+/* TipTap Editor Styles for Tables and FAQ/Details */
+.tiptap table {
+  border-collapse: collapse;
+  table-layout: fixed;
+  width: 100%;
+  margin: 0.75em 0;
+}
+
+.tiptap th,
+.tiptap td {
+  border: 1px solid #d1d5db;
+  padding: 6px 10px;
+  vertical-align: top;
+  text-align: left;
+}
+
+.tiptap th {
+  background: #f9fafb;
+  font-weight: 600;
+}
+
+.tiptap .selectedCell:after {
+  z-index: 10;
+  opacity: 0.5;
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.tiptap details {
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  padding: 8px 12px;
+  margin: 0.75em 0;
+}
+
+.tiptap summary {
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.tiptap div[data-type="detailsContent"] {
+  margin-top: 6px;
+}
+
+/* Dark mode variants */
+.dark .tiptap th {
+  background: #374151;
+  border-color: #4b5563;
+}
+
+.dark .tiptap td {
+  border-color: #4b5563;
+}
+
+.dark .tiptap details {
+  border-color: #4b5563;
+}

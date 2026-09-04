@@ -245,6 +245,25 @@ export interface CategoryStockSummary {
   totalActiveProducts: number;
   totalVariants: number;
   totalPrice: number;
+  totalDiscountedPrice: number;
+  totalDiscountAmount: number;
+  discountSources?: Record<string, number>;
+}
+
+export interface AppliedCampaign {
+  id: string;
+  title: string;
+  discount: number;
+  discountType: string;
+}
+
+export interface StockSummaryTotals {
+  totalInventoryValue: number;
+  totalDiscountedInventoryValue: number;
+  totalDiscountAmount: number;
+  totalStock: number;
+  totalProducts: number;
+  totalVariants: number;
 }
 
 export interface StockSummaryResponse {
@@ -253,6 +272,10 @@ export interface StockSummaryResponse {
   totalActiveProducts: number;
   totalActiveProductVariations: number;
   totalActiveProductType: number;
+  totalActiveProductDiscountedPrice: number;
+  totalActiveProductDiscountAmount: number;
+  totals?: StockSummaryTotals;
+  appliedCampaign?: AppliedCampaign | null;
 }
 
 // Multi-category support types

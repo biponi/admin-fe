@@ -3109,6 +3109,11 @@
   resolved "https://registry.yarnpkg.com/@tiptap/extension-code/-/extension-code-3.25.0.tgz#57e6d2c91fe86908fac2d395a3aebe975fd29161"
   integrity sha512-1Lcwwny7JwQ6m2wEqytKWmSfQzV0ONhZqUmMaAAAFvDCCG7dRPOVKT+3s0UqFlGePP1xbYl0Yy0YOVv3M6sedg==
 
+"@tiptap/extension-details@3.23.1":
+  version "3.23.1"
+  resolved "https://registry.yarnpkg.com/@tiptap/extension-details/-/extension-details-3.23.1.tgz#e0946a69abf7feaf42cc431d91fdefb71ef46ed8"
+  integrity sha512-SDwUVQ9plAfJkJ4hUObs1tJsIoNPkOJitz4V8//95ZLvBHwHXrIulqoXh5QGy8h6toshsneRzHG+PKX75/lP+w==
+
 "@tiptap/extension-document@^3.25.0":
   version "3.25.0"
   resolved "https://registry.yarnpkg.com/@tiptap/extension-document/-/extension-document-3.25.0.tgz#2bdf417c7c10f62adff25b7e18782d73b16a3438"
@@ -3195,6 +3200,11 @@
   version "3.25.0"
   resolved "https://registry.yarnpkg.com/@tiptap/extension-strike/-/extension-strike-3.25.0.tgz#9cf8ac67202332daff7ee124d4b2662a1d980b36"
   integrity sha512-rtM9tkqH8XWay7TplUcXPjlBiNg/dbEOuaCvZGvNxTw8xbH+cmEGPxojWVW6oVMsQodBlUoNveATE2yzhiUB1A==
+
+"@tiptap/extension-table@3.23.1":
+  version "3.23.1"
+  resolved "https://registry.yarnpkg.com/@tiptap/extension-table/-/extension-table-3.23.1.tgz#e4daa1a78b3d20a21eb382fa458270f3586e6ad7"
+  integrity sha512-EOcz0TCC+1LJwM4c36YYwzdH4RaYAn2j0ypjeDflFwJWMMKXWdJDm/zHc2mW0i7aiuUUwQj9791NLEQOl3mPjg==
 
 "@tiptap/extension-text-align@^3.23.1":
   version "3.25.0"
@@ -3492,7 +3502,7 @@
   dependencies:
     "@types/node" "*"
 
-"@types/trusted-types@^2.0.2":
+"@types/trusted-types@^2.0.2", "@types/trusted-types@^2.0.7":
   version "2.0.7"
   resolved "https://registry.yarnpkg.com/@types/trusted-types/-/trusted-types-2.0.7.tgz#baccb07a970b91707df3a3e8ba6896c57ead2d11"
   integrity sha512-ScaPdn1dQczgbl0QFTeTOmVHFULt394XJgOQNoyVhZ6r2vLnMLJfBPd53SB52T/3G36VI1/g2MZaX0cwDuXsfw==
@@ -4692,6 +4702,13 @@ dompurify@^2.5.4:
   version "2.5.9"
   resolved "https://registry.yarnpkg.com/dompurify/-/dompurify-2.5.9.tgz#80481ec22dfac67285cc274cb51a45c1e9fa9c42"
   integrity sha512-i6mvVmWN4xo9LrhCOZrDgSs9noW6nOahbrmzjRbPF36YPyj5Ue5lgok0MHDWkG7xzpWFO2OYttXdzM7rJxHvNA==
+
+dompurify@^3.4.2:
+  version "3.4.14"
+  resolved "https://registry.yarnpkg.com/dompurify/-/dompurify-3.4.14.tgz#a789edb2c7bcdb69a93713a34edb7e0a5245d8c9"
+  integrity sha512-dVoH9z+MY+C9IilgGCk3YfFqjLi3fChm2OiKJMzh6axrJ5qwxqWaZamgmHrpv22CN/KdbZJuGEGgfQoL00LTdg==
+  optionalDependencies:
+    "@types/trusted-types" "^2.0.7"
 
 dotenv-expand@^11.0.6:
   version "11.0.7"
