@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import {
   RefreshCw,
+  RotateCcw,
   Clock,
   CheckCircle2,
   XCircle,
@@ -8,8 +9,16 @@ import {
   Zap,
   Info,
 } from "lucide-react";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "../../../components/ui/table";
 import { useBulkCommunication } from "../hooks/useBulkCommunication";
-import { BulkMessageType } from "../interface";
+import { BulkMessageType, FailedJob } from "../interface";
 
 interface QueueStatsProps {
   type: BulkMessageType;
@@ -77,19 +86,32 @@ const LEGEND = [
 ];
 
 const QueueStats = ({ type }: QueueStatsProps) => {
-  const { queueStats, fetchQueueStats } = useBulkCommunication(type);
+  const { queueStats, fetchQueueStats, failedJobs, fetchFailedJobs, retryJob } =
+    useBulkCommunication(type);
   const [refreshing, setRefreshing] = useState(false);
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
+  const [retryingId, setRetryingId] = useState<string | null>(null);
 
   useEffect(() => {
     fetchQueueStats().then(() => setLastUpdated(new Date()));
-  }, [fetchQueueStats]);
+    fetchFailedJobs();
+  }, [fetchQueueStats, fetchFailedJobs]);
 
   const handleRefresh = async () => {
     setRefreshing(true);
-    await fetchQueueStats();
+    await Promise.all([fetchQueueStats(), fetchFailedJobs()]);
     setLastUpdated(new Date());
     setRefreshing(false);
+  };
+
+  const handleRetry = async (job: FailedJob) => {
+    setRetryingId(job.id);
+    const success = await retryJob(job.id);
+    if (success) {
+      await Promise.all([fetchQueueStats(), fetchFailedJobs()]);
+      setLastUpdated(new Date());
+    }
+    setRetryingId(null);
   };
 
   const total = queueStats?.total ?? 0;
@@ -215,6 +237,106 @@ const QueueStats = ({ type }: QueueStatsProps) => {
             </p>
           </div>
         ))}
+      </div>
+
+      {/* Failed jobs */}
+      <div className='rounded-xl border border-slate-100 bg-white shadow-sm overflow-hidden'>
+        <div className='flex items-center justify-between px-4 py-3.5 border-b border-slate-100'>
+          <div className='flex items-center gap-2'>
+            <XCircle className='h-3.5 w-3.5 text-rose-500' />
+            <h3 className='text-sm font-semibold text-slate-800'>
+              Failed Jobs
+            </h3>
+            <span className='text-[10px] font-semibold px-1.5 py-0.5 rounded-full bg-rose-50 text-rose-600 ring-1 ring-rose-100 tabular-nums'>
+              {(failedJobs?.length ?? 0).toLocaleString()}
+            </span>
+          </div>
+          <button
+            onClick={() => fetchFailedJobs()}
+            disabled={retryingId !== null}
+            className='inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-medium text-slate-600 bg-white border border-slate-200 rounded-lg hover:bg-slate-50 disabled:opacity-50 transition-colors'>
+            <RefreshCw className='h-3 w-3' />
+            Refresh
+          </button>
+        </div>
+
+        {failedJobs === null ? (
+          <div className='flex items-center justify-center h-24'>
+            <div className='w-6 h-6 border-2 border-indigo-600 border-t-transparent rounded-full animate-spin' />
+          </div>
+        ) : failedJobs.length === 0 ? (
+          <div className='flex flex-col items-center justify-center h-24 gap-1.5'>
+            <CheckCircle2 className='h-5 w-5 text-emerald-500' />
+            <p className='text-sm text-slate-500'>No failed jobs</p>
+          </div>
+        ) : (
+          <div className='overflow-x-auto'>
+            <Table>
+              <TableHeader>
+                <TableRow className='bg-slate-50/60 hover:bg-slate-50/60'>
+                  <TableHead className='h-9 text-xs'>
+                    {type === "sms" ? "Phone Number" : "Email"}
+                  </TableHead>
+                  <TableHead className='h-9 text-xs'>Campaign</TableHead>
+                  <TableHead className='h-9 text-xs'>Reason</TableHead>
+                  <TableHead className='h-9 text-xs'>Attempts</TableHead>
+                  <TableHead className='h-9 text-xs'>Failed At</TableHead>
+                  <TableHead className='h-9 text-xs text-right'>
+                    Action
+                  </TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {failedJobs.map((job) => {
+                  const isRetrying = retryingId === job.id;
+                  const recipient =
+                    type === "sms"
+                      ? job.data?.phoneNumber
+                      : job.data?.email;
+                  return (
+                    <TableRow key={job.id}>
+                      <TableCell className='py-2.5 text-xs font-medium text-slate-700 whitespace-nowrap'>
+                        {recipient || "—"}
+                      </TableCell>
+                      <TableCell className='py-2.5 text-xs text-slate-600 whitespace-nowrap'>
+                        {job.data?.campaignName || "—"}
+                      </TableCell>
+                      <TableCell className='py-2.5 text-xs text-slate-500 max-w-[260px]'>
+                        <span
+                          className='block truncate text-rose-600'
+                          title={job.failedReason}>
+                          {job.failedReason || "Unknown error"}
+                        </span>
+                      </TableCell>
+                      <TableCell className='py-2.5 text-xs text-slate-600 tabular-nums'>
+                        {job.attemptsMade ?? 0}
+                      </TableCell>
+                      <TableCell className='py-2.5 text-xs text-slate-500 whitespace-nowrap'>
+                        {new Date(job.createdAt).toLocaleString([], {
+                          month: "short",
+                          day: "numeric",
+                          hour: "2-digit",
+                          minute: "2-digit",
+                        })}
+                      </TableCell>
+                      <TableCell className='py-2.5 text-right'>
+                        <button
+                          onClick={() => handleRetry(job)}
+                          disabled={isRetrying}
+                          className='inline-flex items-center gap-1 px-2.5 py-1 text-xs font-medium text-indigo-600 bg-white border border-indigo-200 rounded-lg hover:bg-indigo-50 disabled:opacity-50 transition-colors'>
+                          <RotateCcw
+                            className={`h-3 w-3 ${isRetrying ? "animate-spin" : ""}`}
+                          />
+                          {isRetrying ? "Retrying…" : "Retry"}
+                        </button>
+                      </TableCell>
+                    </TableRow>
+                  );
+                })}
+              </TableBody>
+            </Table>
+          </div>
+        )}
       </div>
 
       {/* Legend */}

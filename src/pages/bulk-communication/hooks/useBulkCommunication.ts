@@ -5,6 +5,7 @@ import {
   EmailCampaign,
   CampaignQueryParams,
   QueueStats,
+  FailedJob,
   BulkMessageType,
 } from '../interface';
 import * as bulkSMSAPI from '../../../api/bulkSMS';
@@ -16,6 +17,7 @@ export const useBulkCommunication = (type: BulkMessageType) => {
   const [campaigns, setCampaigns] = useState<(SMSCampaign | EmailCampaign)[] | null>(null);
   const [selectedCampaign, setSelectedCampaign] = useState<SMSCampaign | EmailCampaign | null>(null);
   const [queueStats, setQueueStats] = useState<QueueStats | null>(null);
+  const [failedJobs, setFailedJobs] = useState<FailedJob[] | null>(null);
 
   // Fetch campaigns list
   const fetchCampaigns = useCallback(async (params?: CampaignQueryParams) => {
@@ -149,6 +151,23 @@ export const useBulkCommunication = (type: BulkMessageType) => {
     }
   }, [type, toast]);
 
+  // Fetch failed jobs
+  const fetchFailedJobs = useCallback(async (start = 0, end = 50) => {
+    const response = type === 'sms'
+      ? await bulkSMSAPI.getSMSFailedJobs(start, end)
+      : await bulkEmailAPI.getEmailFailedJobs(start, end);
+
+    if (response?.success && response?.data) {
+      setFailedJobs(response.data);
+    } else {
+      toast({
+        variant: 'destructive',
+        title: 'Error',
+        description: response?.message || 'Failed to fetch failed jobs',
+      });
+    }
+  }, [type, toast]);
+
   // Retry failed job
   const retryJob = useCallback(async (jobId: string) => {
     const response = type === 'sms'
@@ -176,12 +195,14 @@ export const useBulkCommunication = (type: BulkMessageType) => {
     campaigns,
     selectedCampaign,
     queueStats,
+    failedJobs,
     fetchCampaigns,
     fetchCampaign,
     createCampaign,
     cancelCampaign,
     deleteCampaign,
     fetchQueueStats,
+    fetchFailedJobs,
     retryJob,
     setSelectedCampaign,
   };
