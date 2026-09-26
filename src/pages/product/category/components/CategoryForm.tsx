@@ -28,6 +28,7 @@ import {
   SelectValue,
 } from "../../../../components/ui/select";
 import { Badge } from "../../../../components/ui/badge";
+import { Textarea } from "../../../../components/ui/textarea";
 import TiptapEditor from "../../../../components/ui/tiptap";
 import PlaceHolderImage from "../../../../assets/placeholder.svg";
 import AIGenerateButton from "../../../../components/aiSeo/AIGenerateButton";
@@ -117,7 +118,8 @@ const CategoryForm: React.FC<CategoryFormProps> = ({
         google_category_type: existingCategory.google_category_type || "",
         focusKeyphrase: existingCategory.focusKeyphrase || "",
         seoTitle: existingCategory.seoTitle || "",
-        metaDescription: existingCategory.metaDescription || "",
+        metaDescription:
+          existingCategory.metaDescription?.replace(/<[^>]*>/g, "") || "",
         tags: existingCategory.tags || [],
       });
     }
@@ -367,10 +369,7 @@ const CategoryForm: React.FC<CategoryFormProps> = ({
 
   const isFixedDiscount = formData.discountType === "fixed";
   const seoTitleLength = formData.seoTitle.length;
-  const metaDescLength = formData.metaDescription.replace(
-    /<[^>]*>/g,
-    "",
-  ).length;
+  const metaDescLength = formData.metaDescription.length;
 
   return (
     <div className='min-h-screen bg-[#FAF9F6]'>
@@ -726,16 +725,15 @@ const CategoryForm: React.FC<CategoryFormProps> = ({
                     {metaDescLength}/200
                   </span>
                 </div>
-                <TiptapEditor
-                  content={formData.metaDescription}
-                  onChange={(content) =>
-                    setFormData((prev) => ({
-                      ...prev,
-                      metaDescription: content,
-                    }))
-                  }
+                <Textarea
+                  id='metaDescription'
+                  name='metaDescription'
                   placeholder='Brief description for search engine results'
-                  className='border-slate-200 rounded-md min-h-[120px]'
+                  value={formData.metaDescription}
+                  onChange={handleChange}
+                  rows={3}
+                  maxLength={200}
+                  className='min-h-[80px] border-slate-200 focus-visible:ring-[#141413] focus-visible:border-[#141413] rounded-md text-[13px] resize-y'
                 />
                 <p className='text-[11px] text-slate-400'>
                   Appears below the title in search results. Recommended:
