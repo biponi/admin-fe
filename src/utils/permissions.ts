@@ -35,6 +35,7 @@ export const pagePermissions: Record<string, string[]> = {
   Delivery: ["view", "edit", "delete", "create"],
   Notifications: ["view", "edit", "delete", "create"],
   Audit: ["view"],
+  Activity: ["view"],
   Package: ["view", "create", "edit", "delete"],
   BulkCommunication: ["view", "create", "delete", "cancel"],
   Customer: ["view", "edit"],

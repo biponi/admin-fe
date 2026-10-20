@@ -26,6 +26,7 @@ import ReportsV2 from "../../pages/reports-v2";
 import DeliveryPage from "../../pages/delivery";
 import { NotificationPage } from "../../pages/notifications";
 import { AuditDashboard } from "../../pages/admin/components/AuditDashboard";
+import { ActivityLogPage } from "../../pages/admin/components/ActivityLogPage";
 import { StockAdjustmentsPage } from "../../pages/admin/components/StockAdjustmentsPage";
 import { OrderModificationsPage } from "../../pages/admin/components/OrderModificationsPage";
 import { PackageManagementPage } from "../../pages/package/PackageManagement";
@@ -92,6 +93,14 @@ export const ProtectedRoutes = () => {
         element={
           <ProtectedRoute page='audit' requiredAction='view'>
             <OrderModificationsPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path='/activity'
+        element={
+          <ProtectedRoute page='activity' requiredAction='view'>
+            <ActivityLogPage />
           </ProtectedRoute>
         }
       />

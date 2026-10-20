@@ -23,6 +23,7 @@ import {
   FileEdit,
   FileText,
   RotateCcw,
+  History,
 } from "lucide-react";
 
 export const navItems = [
@@ -229,6 +230,14 @@ export const navItems = [
         url: "/audit/order-modifications",
       },
     ],
+    roles: ["admin"],
+  },
+  {
+    icon: <History className='w-5 h-5' />,
+    title: "Activity Log",
+    link: "/activity",
+    active: true,
+    id: "activity",
     roles: ["admin"],
   },
   {

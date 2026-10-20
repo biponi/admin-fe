@@ -234,6 +234,13 @@ const config = {
     topPerformers: () => `${baseURL}/admin/audit/top-performers`,
     stockAdjustments: () => `${baseURL}/admin/audit/stock-adjustments`,
     orderModifications: () => `${baseURL}/admin/audit/order-modifications`,
+    // User Activity Log (footprint) Endpoints
+    activityFeed: () => `${baseURL}/admin/audit/activity`,
+    activityStats: () => `${baseURL}/admin/audit/activity/stats`,
+    activityEntry: (id: string) => `${baseURL}/admin/audit/activity/${id}`,
+    activityUserTimeline: (userId: string) =>
+      `${baseURL}/admin/audit/activity/user/${userId}`,
+    activityExport: () => `${baseURL}/admin/audit/activity/export`,
   },
   package: {
     // Package & Shipping Workflow Endpoints
