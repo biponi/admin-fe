@@ -13,7 +13,12 @@ interface InvoiceViewProps {
 }
 
 export const InvoiceView: React.FC<InvoiceViewProps> = ({ order }) => {
-  const subtotal = order.totalPrice - (order.deliveryCharge || 0);
+  // order.totalPrice is the gross product subtotal (delivery is stored
+  // separately, discounts are stored separately) — never subtract
+  // deliveryCharge here.
+  const subtotal = order.totalPrice;
+  const grandTotal =
+    subtotal + (order.deliveryCharge || 0) - (order.discount || 0);
 
   return (
     <div
@@ -153,7 +158,7 @@ export const InvoiceView: React.FC<InvoiceViewProps> = ({ order }) => {
           <div className='flex justify-between py-3 border-t-2 border-gray-800 mt-2'>
             <span className='text-base font-bold text-gray-800'>Total:</span>
             <span className='text-base font-bold text-gray-800'>
-              {formatCurrency(order.totalPrice)}
+              {formatCurrency(grandTotal)}
             </span>
           </div>
           <div className='flex justify-between py-2 border-b border-gray-300'>
@@ -205,7 +210,10 @@ export const renderInvoiceHTML = (order: IOrder): any => {
 };
 
 export const renderSampleInvoiceHTML = (order: IOrder): string => {
-  const subtotal = order.totalPrice - (order.deliveryCharge || 0);
+  // See InvoiceView: totalPrice is gross product subtotal.
+  const subtotal = order.totalPrice;
+  const grandTotal =
+    subtotal + (order.deliveryCharge || 0) - (order.discount || 0);
   return `
 <!DOCTYPE html>
 <html>
@@ -497,7 +505,7 @@ export const renderSampleInvoiceHTML = (order: IOrder): string => {
         }
         <div class="totals-row total">
           <span>Total:</span>
-          <span>${formatCurrency(order.totalPrice)}</span>
+          <span>${formatCurrency(grandTotal)}</span>
         </div>
         <div class="totals-row paid">
           <span>Paid:</span>
