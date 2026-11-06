@@ -20,6 +20,7 @@ import CreateRolePage from "../../pages/role/create";
 import ViewRolePage from "../../pages/role/viewRolePage";
 import ChatPage from "../../pages/chat";
 import { JobsManagement } from "../../pages/settings";
+import LocationSettings from "../../pages/settings/LocationSettings";
 import ReportPage from "../../pages/report";
 import DailyReportPage from "../../pages/report/DailyReport";
 import ReportsV2 from "../../pages/reports-v2";
@@ -280,6 +281,16 @@ export const ProtectedRoutes = () => {
           <ProtectedRoute page='settings' requiredAction='jobs_management'>
             <MainViewComponent title='Action Settings'>
               <JobsManagement />
+            </MainViewComponent>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path='/settings/locations'
+        element={
+          <ProtectedRoute page='settings' requiredAction='locations_management'>
+            <MainViewComponent title='Location Settings'>
+              <LocationSettings />
             </MainViewComponent>
           </ProtectedRoute>
         }

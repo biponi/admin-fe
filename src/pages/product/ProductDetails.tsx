@@ -11,6 +11,7 @@ import {
   ShoppingCart,
   RefreshCw,
   History,
+  Activity,
 } from "lucide-react";
 import useRoleCheck from "../auth/hooks/useRoleCheck";
 import { getProductById } from "../../api/product";
@@ -28,6 +29,7 @@ import CustomerHistoryTab from "./components/CustomerHistoryTab";
 import PurchaseOrderHistoryTab from "./components/PurchaseOrderHistoryTab";
 import AdjustmentHistoryTab from "./components/AdjustmentHistoryTab";
 import StoreReserveHistoryTab from "./components/StoreReserveHistoryTab";
+import QuantityTimelineTab from "./components/QuantityTimelineTab";
 
 const ProductDetails = () => {
   const { toast } = useToast();
@@ -103,7 +105,7 @@ const ProductDetails = () => {
 
   return (
     <MainView title='Product Details'>
-      <div className='mx-2 md:container space-y-6'>
+      <div className='mx-2 min-w-0 space-y-6'>
         {/* Header with Back Button and Refresh */}
         <div className='flex items-center justify-between'>
           <Button
@@ -133,7 +135,7 @@ const ProductDetails = () => {
         {/* Analytics Tabs */}
         <Tabs
           defaultValue='orders'
-          className='w-full rounded-lg border border-slate-200 bg-white shadow'>
+          className='w-full max-w-full rounded-lg border border-slate-200 bg-white shadow'>
           <TabsList className='h-auto bg-transparent p-0 rounded-none border-b flex justify-start w-full overflow-x-auto'>
             <TabsTrigger
               value='orders'
@@ -165,6 +167,12 @@ const ProductDetails = () => {
               <History className='h-4 w-4' />
               Store Reserve
             </TabsTrigger>
+            <TabsTrigger
+              value='timeline'
+              className='relative flex items-center gap-2 px-4 py-3 text-sm font-medium rounded-none border-b-2 border-transparent text-slate-500 hover:text-slate-700 data-[state=active]:text-indigo-600 data-[state=active]:border-indigo-600 data-[state=active]:bg-transparent transition-all whitespace-nowrap'>
+              <Activity className='h-4 w-4' />
+              Quantity Timeline
+            </TabsTrigger>
           </TabsList>
 
           <TabsContent value='orders' className='p-2 md:p-4'>
@@ -185,6 +193,10 @@ const ProductDetails = () => {
 
           <TabsContent value='store-reserve' className='p-2 md:p-4'>
             <StoreReserveHistoryTab productId={id} />
+          </TabsContent>
+
+          <TabsContent value='timeline' className='p-2 md:p-4  min-w-0'>
+            <QuantityTimelineTab productId={id} />
           </TabsContent>
         </Tabs>
       </div>

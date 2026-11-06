@@ -40,12 +40,13 @@ import {
   Package,
 } from "lucide-react";
 import { cn } from "../../lib/utils";
-import { BDDistrictList, BDDivisions } from "../../utils/contents";
 import {
   getLocationByFormattedString,
   getLocationByName,
 } from "../../utils/functions";
 import { calculateDeliveryCharge } from "../../utils/deliveryCharge";
+import { useLocations } from "../../hooks/useLocations";
+import { getCharge } from "../../api/location";
 import { ICustomer } from "./interface";
 import { isValidBDPhone, normalizeBDPhone } from "@/utils/helperFunction";
 
@@ -300,13 +301,21 @@ const EditCustomerInformation: React.FC<Props> = ({
     email: "",
     phoneNumber: "",
   });
+  // Dynamic locations + charges from the server config (legacy-shaped
+  // fallbacks until loaded)
+  const {
+    version: locationsVersion,
+    divisions: divisionList,
+    districts: districtList,
+    getChargeByName,
+  } = useLocations();
   const [shippingAddress, setShippingAddress] = useState<ShippingAddress>(
     () => ({
       address: shipping?.address ?? "",
       district:
-        getLocationByName(BDDistrictList, shipping?.district ?? "") ?? null,
+        getLocationByName(districtList, shipping?.district ?? "") ?? null,
       division:
-        getLocationByName(BDDivisions, shipping?.division ?? "") ?? null,
+        getLocationByName(divisionList, shipping?.division ?? "") ?? null,
     }),
   );
   const [updatedNotes, setUpdatedNotes] = useState(notes);
@@ -326,9 +335,9 @@ const EditCustomerInformation: React.FC<Props> = ({
       setShippingAddress({
         address: shipping.address ?? "",
         district:
-          getLocationByName(BDDistrictList, shipping.district ?? "") ?? null,
+          getLocationByName(districtList, shipping.district ?? "") ?? null,
         division:
-          getLocationByName(BDDivisions, shipping.division ?? "") ?? null,
+          getLocationByName(divisionList, shipping.division ?? "") ?? null,
       });
     }
   }, [shipping]);
@@ -369,33 +378,76 @@ const EditCustomerInformation: React.FC<Props> = ({
 
   // ── Location handlers ───────────────────────────────────────────────────
   const handleDivisionChange = useCallback((id: string) => {
-    const division = BDDivisions.find((d) => d.id === id) ?? null;
+    const division = divisionList.find((d) => d.id === id) ?? null;
     setShippingAddress((prev) => ({ ...prev, division, district: null }));
   }, []);
 
   const handleDistrictChange = useCallback((id: string) => {
-    const district = BDDistrictList.find((d) => d.id === id) ?? null;
+    const district = districtList.find((d) => d.id === id) ?? null;
     setShippingAddress((prev) => ({ ...prev, district }));
   }, []);
 
   const filteredDistricts = useMemo(
     () =>
-      BDDistrictList.filter(
+      districtList.filter(
         (d) => d.division_id === shippingAddress.division?.id,
       ),
     [shippingAddress.division?.id],
   );
 
-  // Auto-calculate delivery charge when district/area changes
+  // Auto-calculate delivery charge when district/area changes, and recompute
+  // when the dynamic location config loads (locationsVersion bumps).
+  // Resolves live from the backend (authoritative zone charge) first, falling
+  // back to the cached tree / legacy tables when it fails or doesn't match.
   useEffect(() => {
     if (shippingAddress.division && shippingAddress.district) {
-      const chargeInfo = calculateDeliveryCharge(
-        shippingAddress.district.name,
-        shippingAddress.division.name,
-      );
-      updateField("deliveryCharge", chargeInfo.charge);
+      const district = shippingAddress.district.name;
+      const division = shippingAddress.division.name;
+      let cancelled = false;
+
+      (async () => {
+        const result = await getCharge(district, division);
+        const serverCharge =
+          result.success && result.data?.matched && result.data.charge !== null
+            ? result.data.charge
+            : undefined;
+        const charge =
+          serverCharge ??
+          getChargeByName(district, division) ??
+          calculateDeliveryCharge(district, division).charge;
+        if (!cancelled) updateField("deliveryCharge", charge);
+      })();
+
+      return () => {
+        cancelled = true;
+      };
     }
-  }, [shippingAddress.division, shippingAddress.district, updateField]);
+  }, [
+    shippingAddress.division,
+    shippingAddress.district,
+    locationsVersion,
+    updateField,
+  ]);
+
+  // When the dynamic location config arrives after mount, re-resolve the
+  // division/district from the stored names (they were matched against the
+  // constants at mount time)
+  useEffect(() => {
+    if (!locationsVersion) return;
+    setShippingAddress((prev) => {
+      const division =
+        prev.division ??
+        getLocationByName(divisionList, shipping?.division ?? "") ??
+        null;
+      const district =
+        prev.district ??
+        getLocationByName(districtList, shipping?.district ?? "") ??
+        null;
+      if (division === prev.division && district === prev.district) return prev;
+      return { ...prev, division, district };
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [locationsVersion]);
 
   const formatLocation = (loc: Location | null) => loc?.name ?? "";
 
@@ -551,7 +603,7 @@ const EditCustomerInformation: React.FC<Props> = ({
                 <LocationCombobox
                   value={shippingAddress.division?.id ?? ""}
                   onValueChange={handleDivisionChange}
-                  options={BDDivisions}
+                  options={divisionList}
                   placeholder='Select division'
                 />
               </Field>

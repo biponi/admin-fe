@@ -44,6 +44,12 @@ const config = {
         ? `${baseURL}/product/adjustments/${productId}`
         : `${baseURL}/product/adjustments`,
 
+    // Product Quantity Timeline Endpoints
+    getStockTimeline: (productId: string) =>
+      `${baseURL}/product/stock-timeline/${productId}`,
+    getStockTimelineEvent: (productId: string, eventId: string) =>
+      `${baseURL}/product/stock-timeline/${productId}/event/${eventId}`,
+
     // Multi-category endpoints
     addCategory: () => `${baseURL}/product/add-category`,
     removeCategory: () => `${baseURL}/product/remove-category`,

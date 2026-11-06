@@ -304,7 +304,70 @@ const GeoMapChart: React.FC<Props> = ({
             {chartData.length} entries
           </span>
         </div>
-        <div className='overflow-x-auto max-h-96 overflow-y-auto'>
+        {view === "district" ? (
+          <div className='max-h-96 overflow-y-auto p-4'>
+            <div className='grid grid-cols-1 gap-3 sm:grid-cols-2'>
+              {chartData.map((d, i) => {
+                const pct =
+                  maxCustomers > 0
+                    ? (d.customerCount / maxCustomers) * 100
+                    : 0;
+                return (
+                  <div
+                    key={d.name}
+                    className='rounded-xl border border-slate-100 bg-white p-4 transition-shadow hover:shadow-md'>
+                    <div className='flex items-center justify-between gap-2'>
+                      <div className='flex min-w-0 items-center gap-2'>
+                        <span
+                          className='flex h-6 w-6 shrink-0 items-center justify-center rounded-md text-[10px] font-bold'
+                          style={{ backgroundColor: d.color, color: "white" }}>
+                          {i + 1}
+                        </span>
+                        <p className='truncate text-sm font-semibold text-slate-900'>
+                          {d.name}
+                        </p>
+                      </div>
+                      {d.division && (
+                        <span className='shrink-0 rounded bg-slate-100 px-1.5 py-0.5 text-[10px] text-slate-500'>
+                          {d.division}
+                        </span>
+                      )}
+                    </div>
+                    <div className='mt-3 grid grid-cols-3 gap-2'>
+                      <div className='text-center'>
+                        <p className='truncate text-xs font-bold tabular-nums text-slate-900'>
+                          {formatNumber(d.customerCount)}
+                        </p>
+                        <p className='text-[10px] text-slate-400'>
+                          Customers
+                        </p>
+                      </div>
+                      <div className='text-center'>
+                        <p className='truncate text-xs font-bold tabular-nums text-slate-900'>
+                          {formatCurrency(d.revenue)}
+                        </p>
+                        <p className='text-[10px] text-slate-400'>Revenue</p>
+                      </div>
+                      <div className='text-center'>
+                        <p className='truncate text-xs font-bold tabular-nums text-slate-900'>
+                          {formatNumber(d.orders)}
+                        </p>
+                        <p className='text-[10px] text-slate-400'>Orders</p>
+                      </div>
+                    </div>
+                    <div className='mt-3 h-1.5 w-full rounded-full bg-slate-100'>
+                      <div
+                        className='h-1.5 rounded-full transition-all'
+                        style={{ width: `${pct}%`, backgroundColor: d.color }}
+                      />
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        ) : (
+          <div className='overflow-x-auto max-h-96 overflow-y-auto'>
           <table className='w-full text-sm'>
             <thead className='sticky top-0  z-10'>
               <tr className='bg-slate-100/80'>
@@ -312,13 +375,8 @@ const GeoMapChart: React.FC<Props> = ({
                   #
                 </th>
                 <th className='text-left px-4 py-2.5 text-xs font-semibold text-slate-500 uppercase tracking-wider'>
-                  {view === "district" ? "District" : "Division"}
+                  Division
                 </th>
-                {view === "district" && (
-                  <th className='text-left px-4 py-2.5 text-xs font-semibold text-slate-500 uppercase tracking-wider'>
-                    Division
-                  </th>
-                )}
                 <th className='text-right px-4 py-2.5 text-xs font-semibold text-slate-500 uppercase tracking-wider'>
                   Customers
                 </th>
@@ -348,13 +406,6 @@ const GeoMapChart: React.FC<Props> = ({
                     <td className='px-4 py-2.5 font-medium text-slate-900'>
                       {d.name}
                     </td>
-                    {view === "district" && (
-                      <td className='px-4 py-2.5'>
-                        <span className='text-[10px] text-slate-500 bg-slate-100 px-1.5 py-0.5 rounded'>
-                          {d.division}
-                        </span>
-                      </td>
-                    )}
                     <td className='px-4 py-2.5 text-right'>
                       <div className='flex items-center justify-end gap-2'>
                         <div className='w-16 bg-slate-100 rounded-full h-1.5'>
@@ -383,6 +434,7 @@ const GeoMapChart: React.FC<Props> = ({
             </tbody>
           </table>
         </div>
+        )}
       </div>
     </div>
   );

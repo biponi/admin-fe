@@ -29,8 +29,10 @@ import {
   X,
   Loader2,
 } from "lucide-react";
-import { BDDistrictList, BDDivisions } from "../../utils/contents";
 import { getLocationByFormattedString } from "../../utils/functions";
+import { useLocations } from "../../hooks/useLocations";
+import { calculateDeliveryCharge } from "../../utils/deliveryCharge";
+import { getCharge } from "../../api/location";
 import type { OrderSummary } from "../../pages/package/interface";
 import axios from "../../api/axios";
 import config from "../../utils/config";
@@ -219,6 +221,14 @@ export function EditOrderSheet({
   onOpenChange,
   onOrderUpdated,
 }: EditOrderSheetProps) {
+  // Dynamic locations from the server config (legacy-shaped fallbacks until
+  // loaded)
+  const {
+    version: locationsVersion,
+    divisions: divisionList,
+    districts: districtList,
+    getChargeByName,
+  } = useLocations();
   const [personalInfo, setPersonalInfo] = useState<CustomerInfo>({
     name: "",
     email: "",
@@ -237,10 +247,13 @@ export function EditOrderSheet({
   const { payment, remaining, finalAmount, updateField } =
     usePaymentCalculations({
       totalPrice: order?.totalPrice || 0,
-      deliveryCharge: 0,
+      deliveryCharge: order?.deliveryCharge || 0,
       discount:
         order?.totalPrice && order?.paid && order?.remaining
-          ? order.totalPrice + 0 - order.paid - order.remaining
+          ? order.totalPrice +
+            (order?.deliveryCharge || 0) -
+            order.paid -
+            order.remaining
           : 0,
       paid: order?.paid || 0,
     });
@@ -258,30 +271,64 @@ export function EditOrderSheet({
         address: order.shipping?.address ?? "",
         district:
           getLocationByFormattedString(
-            BDDistrictList,
+            districtList,
             order.shipping?.district ?? "",
           ) ?? null,
         division:
           getLocationByFormattedString(
-            BDDivisions,
+            divisionList,
             order.shipping?.division ?? "",
           ) ?? null,
       });
     }
-  }, [order]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [order, locationsVersion]);
+
+  // Auto-calculate delivery charge when district/area changes, and on load —
+  // resolved live from the backend (authoritative zone charge), falling back
+  // to the cached tree / legacy tables when it fails or doesn't match.
+  useEffect(() => {
+    if (shippingAddress.division && shippingAddress.district) {
+      const district = shippingAddress.district.name;
+      const division = shippingAddress.division.name;
+      let cancelled = false;
+
+      (async () => {
+        const result = await getCharge(district, division);
+        const serverCharge =
+          result.success && result.data?.matched && result.data.charge !== null
+            ? result.data.charge
+            : undefined;
+        const charge =
+          serverCharge ??
+          getChargeByName(district, division) ??
+          calculateDeliveryCharge(district, division).charge;
+        if (!cancelled) updateField("deliveryCharge", charge);
+      })();
+
+      return () => {
+        cancelled = true;
+      };
+    }
+  }, [
+    shippingAddress.division,
+    shippingAddress.district,
+    locationsVersion,
+    updateField,
+  ]);
 
   const handlePersonalChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setPersonalInfo((prev) => ({ ...prev, [e.target.name]: e.target.value }));
   };
 
   const handleDivisionChange = (id: string) => {
-    const division = BDDivisions.find((d) => d.id === id) ?? null;
+    const division = divisionList.find((d) => d.id === id) ?? null;
     setShippingAddress((prev) => ({ ...prev, division, district: null }));
     setDistrictQuery("");
   };
 
   const handleDistrictChange = (id: string) => {
-    const district = BDDistrictList.find((d) => d.id === id) ?? null;
+    const district = districtList.find((d) => d.id === id) ?? null;
     setShippingAddress((prev) => ({ ...prev, district }));
   };
 
@@ -324,7 +371,7 @@ export function EditOrderSheet({
 
   const filteredDistricts = useMemo(
     () =>
-      BDDistrictList.filter(
+      districtList.filter(
         (d) => d.division_id === shippingAddress.division?.id,
       ),
     [shippingAddress.division?.id],
@@ -401,7 +448,7 @@ export function EditOrderSheet({
                 <SearchableSelect
                   value={shippingAddress.division?.id ?? ""}
                   onValueChange={handleDivisionChange}
-                  options={BDDivisions}
+                  options={divisionList}
                   placeholder='Select division'
                   query={divisionQuery}
                   onQueryChange={setDivisionQuery}

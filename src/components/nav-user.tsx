@@ -1,6 +1,6 @@
 "use client";
 
-import { BadgeCheck, Bell, Code, LogOut, Sparkles } from "lucide-react";
+import { BadgeCheck, Bell, Code, LogOut, MapPin, Sparkles } from "lucide-react";
 
 import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
 import {
@@ -100,6 +100,16 @@ export function NavUser({
                   onClick={() => navigateToRoute("/settings/jobs")}>
                   <Code />
                   Actions
+                </DropdownMenuItem>
+              )}
+              {useRoleCheck().hasRequiredPermission(
+                "settings",
+                "locations_management",
+              ) && (
+                <DropdownMenuItem
+                  onClick={() => navigateToRoute("/settings/locations")}>
+                  <MapPin />
+                  Locations
                 </DropdownMenuItem>
               )}
               <DropdownMenuItem className='hidden'>

@@ -34,6 +34,7 @@ export interface OrderSummary {
   orderNumber: number;
   status: string;
   totalPrice: number;
+  deliveryCharge?: number;
   paid: number;
   remaining: number;
   quantity: number;

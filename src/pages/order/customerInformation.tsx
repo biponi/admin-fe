@@ -17,7 +17,9 @@ import {
 import { Label } from "../../components/ui/label";
 import { Input } from "../../components/ui/input";
 import { Separator } from "../../components/ui/separator";
-import { BDDistrictList, BDDivisions } from "../../utils/contents";
+import { useLocations } from "../../hooks/useLocations";
+import { calculateDeliveryCharge } from "../../utils/deliveryCharge";
+import { getCharge } from "../../api/location";
 import { Textarea } from "../../components/ui/textarea";
 import { Button } from "../../components/ui/button";
 import { Badge } from "../../components/ui/badge";
@@ -86,6 +88,14 @@ const CustomerInformation: React.FC<Props> = ({
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
   const [isValidating, setIsValidating] = useState(false);
 
+  // Dynamic locations + charges from the server config (legacy-shaped
+  // fallbacks until loaded)
+  const {
+    divisions: divisionList,
+    districts: districtList,
+    getChargeByName,
+  } = useLocations();
+
   // Transaction state
   const defaultTransaction = {
     totalPrice: orderTotal,
@@ -113,45 +123,41 @@ const CustomerInformation: React.FC<Props> = ({
     initialTransaction?.paid?.toString() || "0",
   );
 
-  // Calculate delivery charge based on location
-  const calculateDeliveryCharge = (
+  // Calculate delivery charge based on location — server-configured charge
+  // first (admin-managed locations), hardcoded tables as fallback
+  const calculateDeliveryChargeForLocation = (
     district: string,
     division: string,
   ): number => {
-    let deliveryChargeX = 150; // Default charge
-
-    if (
-      district.toLowerCase().includes("dhaka") &&
-      division.toLowerCase().includes("dhaka")
-    ) {
-      deliveryChargeX = 80;
-    } else if (
-      division.toLowerCase().includes("dhaka") &&
-      ["gazipur", "tongi", "narayanganj", "savar"].includes(
-        district.replace(/\s*\(.*?\)\s*/g, "").toLowerCase(),
-      )
-    ) {
-      deliveryChargeX = 130;
-    } else {
-      deliveryChargeX = 150;
-    }
-
-    return deliveryChargeX;
+    const serverCharge = getChargeByName(district, division);
+    if (serverCharge !== undefined) return serverCharge;
+    return calculateDeliveryCharge(district, division).charge;
   };
 
-  // Update delivery charge when division/district changes
+  // Update delivery charge when division/district changes — resolved live
+  // from the backend (authoritative zone charge), falling back to the cached
+  // locations tree / legacy tables when the request fails or doesn't match
   const updateDeliveryCharge = (shippingData: any) => {
     if (shippingData?.district?.name && shippingData?.division?.name) {
-      const calculatedCharge = calculateDeliveryCharge(
-        shippingData.district.name,
-        shippingData.division.name,
-      );
+      const district = shippingData.district.name;
+      const division = shippingData.division.name;
 
-      setTransaction((prev) => ({
-        ...prev,
-        deliveryCharge: calculatedCharge,
-      }));
-      setTempDeliveryCharge(calculatedCharge.toString());
+      const applyCharge = (charge: number) => {
+        setTransaction((prev) => ({
+          ...prev,
+          deliveryCharge: charge,
+        }));
+        setTempDeliveryCharge(charge.toString());
+      };
+
+      (async () => {
+        const result = await getCharge(district, division);
+        if (result.success && result.data?.matched && result.data.charge !== null) {
+          applyCharge(result.data.charge);
+        } else {
+          applyCharge(calculateDeliveryChargeForLocation(district, division));
+        }
+      })();
     }
   };
 
@@ -343,7 +349,7 @@ const CustomerInformation: React.FC<Props> = ({
 
   const handleShippingDivChange = (id: string, name: string) => {
     if (name === "division") {
-      const filteredDivision = BDDivisions.filter(
+      const filteredDivision = divisionList.filter(
         (division) => division?.id === id,
       );
       if (filteredDivision.length > 0) {
@@ -359,7 +365,7 @@ const CustomerInformation: React.FC<Props> = ({
         }
       }
     } else {
-      const filteredDistrict = BDDistrictList.filter((Area) => Area?.id === id);
+      const filteredDistrict = districtList.filter((Area) => Area?.id === id);
       if (filteredDistrict.length > 0) {
         const newShippingData = {
           ...shippingAddress,
@@ -587,7 +593,7 @@ const CustomerInformation: React.FC<Props> = ({
                     />
                   </div>
                 </div>
-                {BDDivisions.filter(
+                {divisionList.filter(
                   (division) =>
                     division.name
                       .toLowerCase()
@@ -650,7 +656,7 @@ const CustomerInformation: React.FC<Props> = ({
                         />
                       </div>
                     </div>
-                    {BDDistrictList.filter(
+                    {districtList.filter(
                       (district) =>
                         !!shippingAddress.division &&
                         //@ts-ignore

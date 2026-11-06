@@ -24,8 +24,9 @@ import {
   CardDescription,
   CardContent,
 } from "../../../components/ui/card";
-import { BDDivisions, BDDistrictList } from "../../../utils/contents";
 import { calculateDeliveryCharge } from "../../../utils/deliveryCharge";
+import { useLocations } from "../../../hooks/useLocations";
+import { getCharge } from "../../../api/location";
 import type { IShipping } from "../../order/interface.d";
 
 interface ShippingFormProps {
@@ -44,6 +45,15 @@ export function ShippingForm({
   const [districtSearch, setDistrictSearch] = useState("");
   const [divisionOpen, setDivisionOpen] = useState(false);
   const [districtPopoverOpen, setDistrictPopoverOpen] = useState(false);
+
+  // Dynamic locations + charges from the server config (falls back to the
+  // hardcoded constants until loaded)
+  const {
+    version: locationsVersion,
+    divisions: divisionOptions,
+    districts: districtOptions,
+    getChargeByName,
+  } = useLocations();
 
   // Reset district search when popover opens
   useEffect(() => {
@@ -65,35 +75,53 @@ export function ShippingForm({
   });
 
   const selectedDivision = useMemo(
-    () => BDDivisions.find((d) => d.name === shipping.division),
-    [shipping.division],
+    () => divisionOptions.find((d) => d.name === shipping.division),
+    [divisionOptions, shipping.division],
   );
 
   // Track last calculated charge to prevent duplicate calls
   const lastChargeRef = useRef<number | null>(null);
 
-  // Auto-calculate delivery charge when both fields are set.
-  // Uses refs for callbacks so this effect ONLY re-runs when the actual
-  // location values change — not when the callback reference changes.
+  // Auto-calculate delivery charge when both fields are set, and recompute
+  // when the dynamic location config loads (locationsVersion bumps).
+  // Resolves live from the backend (authoritative zone charge) first, falling
+  // back to the cached tree / legacy tables if the request fails or doesn't
+  // match. Uses refs for callbacks so this effect ONLY re-runs when the
+  // actual location values change — not when the callback reference changes.
   useEffect(() => {
     if (
       shipping.division &&
       shipping.district &&
       onDeliveryChargeChangeRef.current
     ) {
-      const chargeInfo = calculateDeliveryCharge(
-        shipping.district,
-        shipping.division,
-      );
-      const newCharge = chargeInfo.charge;
+      const district = shipping.district;
+      const division = shipping.division;
+      let cancelled = false;
 
-      // Only call callback if charge actually changed (idempotency guard)
-      if (lastChargeRef.current !== newCharge) {
-        lastChargeRef.current = newCharge;
-        onDeliveryChargeChangeRef.current(newCharge);
-      }
+      (async () => {
+        const result = await getCharge(district, division);
+        const serverCharge =
+          result.success && result.data?.matched && result.data.charge !== null
+            ? result.data.charge
+            : undefined;
+        const newCharge =
+          serverCharge ?? getChargeByName(district, division) ??
+          calculateDeliveryCharge(district, division).charge;
+        const onChargeChange = onDeliveryChargeChangeRef.current;
+
+        if (cancelled || !onChargeChange) return;
+        // Only call callback if charge actually changed (idempotency guard)
+        if (lastChargeRef.current !== newCharge) {
+          lastChargeRef.current = newCharge;
+          onChargeChange(newCharge);
+        }
+      })();
+
+      return () => {
+        cancelled = true;
+      };
     }
-  }, [shipping.division, shipping.district]); // ← safe: only location values
+  }, [shipping.division, shipping.district, locationsVersion]); // ← safe: only location values + config version
 
   // FIX: Send ONLY the changed field — never spread `shipping` here.
   // The store's setShippingInfo already merges: { ...state.shippingInfo, ...incoming }
@@ -116,13 +144,13 @@ export function ShippingForm({
   );
 
   const filteredDistricts = useMemo(() => {
-    const base = BDDistrictList.filter(
+    const base = districtOptions.filter(
       (d) => d.division_id === selectedDivision?.id,
     );
     if (!districtSearch) return base;
     const q = districtSearch.toLowerCase();
     return base.filter((d) => d.name.toLowerCase().includes(q));
-  }, [selectedDivision, districtSearch]);
+  }, [districtOptions, selectedDivision, districtSearch]);
 
   return (
     <Card className='border shadow-sm'>
@@ -161,7 +189,7 @@ export function ShippingForm({
                   <CommandList>
                     <CommandEmpty>No divisions found.</CommandEmpty>
                     <CommandGroup>
-                      {BDDivisions.map((division) => (
+                      {divisionOptions.map((division) => (
                         <CommandItem
                           key={division.id}
                           value={division.name}
