@@ -35,6 +35,7 @@ import { Badge } from "../../../components/ui/badge";
 import { Card, CardContent } from "../../../components/ui/card";
 import { Separator } from "../../../components/ui/separator";
 import { FraudDetection } from "../interface";
+import FraudDetailPanel from "../../../components/fraud/FraudDetailPanel";
 import dayjs from "dayjs";
 import relativeTime from "dayjs/plugin/relativeTime";
 
@@ -76,6 +77,12 @@ const FraudDetectionDrawer: React.FC<FraudDetectionDrawerProps> = ({
           <div className='p-4 text-center text-muted-foreground'>
             <AlertCircle className='h-12 w-12 mx-auto mb-2 opacity-50' />
             <p>This order has not been analyzed for fraud risk yet.</p>
+          </div>
+          <div className='overflow-y-auto px-4 max-h-[60vh]'>
+            <FraudDetailPanel
+              phoneNumber={phoneNumber}
+              customerName={customerName}
+            />
           </div>
           <DrawerFooter>
             <DrawerClose asChild>
@@ -411,7 +418,12 @@ const FraudDetectionDrawer: React.FC<FraudDetectionDrawerProps> = ({
               Customer: {customerName} • {phoneNumber}
             </DrawerDescription>
           </DrawerHeader>
-          <MainView />
+          <div className='overflow-y-auto px-4 max-h-[60vh]'>
+            <FraudDetailPanel
+              phoneNumber={phoneNumber}
+              customerName={customerName}
+            />
+          </div>
           <DrawerFooter>
             <DrawerClose asChild>
               <Button variant='outline'>Close</Button>
@@ -442,7 +454,12 @@ const FraudDetectionDrawer: React.FC<FraudDetectionDrawerProps> = ({
               Customer: {customerName} • {phoneNumber}
             </SheetDescription>
           </SheetHeader>
-          <MainView />
+          <div className='flex-1 overflow-y-auto px-4'>
+            <FraudDetailPanel
+              phoneNumber={phoneNumber}
+              customerName={customerName}
+            />
+          </div>
           <SheetFooter>
             <SheetClose asChild>
               <Button variant='outline'>Close</Button>

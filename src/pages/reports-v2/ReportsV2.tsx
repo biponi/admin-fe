@@ -27,6 +27,8 @@ import {
 import { DateRangePicker } from "../../coreComponents/DateRangePicker";
 import MainView from "../../coreComponents/mainView";
 import { cn } from "../../lib/utils";
+import { PageHeader } from "../../components/PageHeader";
+import { MobilePage, rippleProps } from "../../components/mobile";
 
 import ExecutiveDashboardTab from "./components/ExecutiveDashboardTab";
 import SalesTab from "./components/SalesTab";
@@ -330,35 +332,44 @@ const ReportsV2: React.FC = () => {
 
   return (
     <MainView title='Reports & Analytics V2'>
+      <MobilePage
+        title='Report Analytics'
+        icon={<BarChart3 className='h-5 w-5' />}
+        noBottomNav
+        actions={
+          <button
+            onClick={fetchAllData}
+            disabled={isLoading}
+            aria-label='Refresh'
+            className='m3-ripple grid h-10 w-10 shrink-0 place-items-center rounded-full bg-primary/10 text-primary active:scale-95 transition-transform disabled:opacity-50'
+            {...rippleProps()}>
+            <RefreshCw
+              className={cn('h-4.5 w-4.5', isLoading && 'animate-spin')}
+            />
+          </button>
+        }>
       <div className='min-h-screen bg-slate-50/60'>
-        <div className='max-w-[1600px] mx-auto px-3 sm:px-4 md:px-6 lg:px-8 py-4 sm:py-6 space-y-4 sm:space-y-6'>
+        <div className='max-w-[1600px] mx-auto px-3 sm:px-4 md:px-6 lg:px-8 py-4 sm:py-6 space-y-4 sm:space-y-6 mobile:pb-[calc(5rem+env(safe-area-inset-bottom))]'>
           {/* Header */}
-          <div className='flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3 sm:gap-4'>
-            <div className='flex items-center gap-3'>
-              <div className='flex items-center justify-center w-10 h-10 rounded-xl bg-indigo-600 shadow-sm shadow-indigo-200'>
-                <BarChart3 className='h-5 w-5 text-white' />
-              </div>
-              <div>
-                <h1 className='text-lg sm:text-xl font-semibold text-slate-900 leading-tight'>
-                  Reports & Analytics
-                </h1>
-                <p className='text-xs sm:text-sm text-slate-500 mt-0.5'>
-                  Comprehensive business intelligence dashboard
-                </p>
-              </div>
-            </div>
-            <Button
-              variant='outline'
-              size='sm'
-              onClick={fetchAllData}
-              disabled={isLoading}
-              className='border-slate-200 self-start'>
-              <RefreshCw
-                className={cn("h-4 w-4 mr-2", isLoading && "animate-spin")}
-              />
-              Refresh
-            </Button>
-          </div>
+          <PageHeader
+            className='mobile:hidden'
+            icon={<BarChart3 className='h-5 w-5 text-white' />}
+            title='Report Analytics'
+            subtitle='Comprehensive business intelligence dashboard'
+            actions={
+              <Button
+                variant='outline'
+                size='sm'
+                onClick={fetchAllData}
+                disabled={isLoading}
+                className='border-slate-200'>
+                <RefreshCw
+                  className={cn("h-4 w-4 mr-2", isLoading && "animate-spin")}
+                />
+                Refresh
+              </Button>
+            }
+          />
 
           {/* Data Freshness Notice */}
           <div className='bg-amber-50 border border-amber-200 rounded-xl px-3 sm:px-4 py-2.5 sm:py-3 flex items-center gap-2.5 sm:gap-3'>
@@ -517,6 +528,7 @@ const ReportsV2: React.FC = () => {
           </div>
         </div>
       </div>
+      </MobilePage>
     </MainView>
   );
 };

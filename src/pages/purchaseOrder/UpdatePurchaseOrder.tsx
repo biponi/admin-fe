@@ -50,11 +50,206 @@ import {
 } from "lucide-react";
 import { toast } from "react-hot-toast";
 import MainView from "../../coreComponents/mainView";
+import { MobilePage, MobileStickyActions } from "../../components/mobile";
+import { PageHeader } from "../../components/PageHeader";
+import { cn } from "../../utils/functions";
 // Import API functions
 import {
   fetchPurchaseOrderById,
   updatePurchaseOrder as updatePurchaseOrderAPI,
 } from "./services/purchaseOrderApi";
+
+// Types
+/* ─── Mobile Product Card (stacked alternative to the products table) ─── */
+interface MobileProductCardProps {
+  product: PurchaseOrderProduct;
+  index: number;
+  updating: boolean;
+  hasQuantityError: boolean;
+  hasPriceError: boolean;
+  quantityErrorMessage?: string;
+  priceErrorMessage?: string;
+  onQuantityChange: (index: number, value: string) => void;
+  onQuantityIncrement: (index: number) => void;
+  onQuantityDecrement: (index: number) => void;
+  onUnitPriceChange: (index: number, value: string) => void;
+  onRemove: (index: number) => void;
+}
+
+const MobileProductCard: React.FC<MobileProductCardProps> = ({
+  product,
+  index,
+  updating,
+  hasQuantityError,
+  hasPriceError,
+  quantityErrorMessage,
+  priceErrorMessage,
+  onQuantityChange,
+  onQuantityIncrement,
+  onQuantityDecrement,
+  onUnitPriceChange,
+  onRemove,
+}) => {
+  const hasChanged = product.quantity !== product.originalQuantity;
+  const lineTotal = (product.quantity || 0) * (product.unitPrice || 0);
+
+  return (
+    <div
+      className={cn(
+        "rounded-xl border bg-white p-3 shadow-sm space-y-3",
+        hasChanged ? "border-slate-200 bg-slate-50" : "border-slate-100",
+      )}>
+      {/* Product info */}
+      <div className='flex items-start gap-3'>
+        {product.image && (
+          <img
+            src={product.image}
+            alt={product.name}
+            className='w-10 h-10 rounded-lg object-cover shrink-0'
+          />
+        )}
+        <div className='flex-1 min-w-0'>
+          <p className='text-sm font-medium text-slate-900 leading-snug'>
+            {product.name}
+          </p>
+          <p className='text-xs font-mono text-slate-400 mt-0.5'>
+            {product.sku}
+          </p>
+          <div className='flex items-center gap-1.5 mt-1 flex-wrap'>
+            {product.variant ? (
+              <Badge variant='outline' className='text-[10px] px-2 py-0'>
+                {`${product.variant.color || ""}${
+                  product.variant.color && product.variant.size ? " - " : ""
+                }${product.variant.size || ""}`}
+              </Badge>
+            ) : (
+              <Badge variant='secondary' className='text-[10px] px-2 py-0'>
+                N/A
+              </Badge>
+            )}
+            {hasChanged && (
+              <span className='inline-flex items-center gap-1 text-[10px] font-medium text-indigo-600'>
+                <Edit className='h-3 w-3' />
+                Modified
+              </span>
+            )}
+          </div>
+        </div>
+
+        <AlertDialog>
+          <AlertDialogTrigger asChild>
+            <Button
+              variant='ghost'
+              size='sm'
+              disabled={updating}
+              className='h-8 w-8 p-0 shrink-0 text-destructive hover:text-destructive'
+              aria-label={`Remove ${product.name} from purchase order`}>
+              <Trash2 className='h-4 w-4' />
+            </Button>
+          </AlertDialogTrigger>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Remove Product</AlertDialogTitle>
+              <AlertDialogDescription>
+                Are you sure you want to remove "{product.name}" from this
+                purchase order? This action cannot be undone.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Cancel</AlertDialogCancel>
+              <AlertDialogAction
+                onClick={() => onRemove(index)}
+                className='bg-destructive text-destructive-foreground hover:bg-destructive/90'>
+                Remove
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+      </div>
+
+      {/* Quantity + price controls */}
+      <div className='grid grid-cols-2 gap-3'>
+        <div className='space-y-1.5'>
+          <Label className='text-[10px] font-semibold text-slate-500 uppercase tracking-wide'>
+            Quantity
+          </Label>
+          <div className='flex items-center gap-1'>
+            <Button
+              variant='outline'
+              size='sm'
+              onClick={() => onQuantityDecrement(index)}
+              disabled={
+                updating || !product.quantity || product.quantity <= 0
+              }
+              className='h-9 w-9 p-0 shrink-0'
+              aria-label={`Decrease quantity for ${product.name}`}>
+              <Minus className='h-3 w-3' />
+            </Button>
+            <Input
+              type='text'
+              value={product.quantity || ""}
+              onChange={(e) => onQuantityChange(index, e.target.value)}
+              className={cn(
+                "flex-1 text-center h-9",
+                hasQuantityError && "border-red-500",
+              )}
+              placeholder='0'
+              inputMode='numeric'
+              disabled={updating}
+              aria-label={`Quantity for ${product.name}`}
+            />
+            <Button
+              variant='outline'
+              size='sm'
+              onClick={() => onQuantityIncrement(index)}
+              disabled={updating}
+              className='h-9 w-9 p-0 shrink-0'
+              aria-label={`Increase quantity for ${product.name}`}>
+              <Plus className='h-3 w-3' />
+            </Button>
+          </div>
+          {hasQuantityError && quantityErrorMessage && (
+            <p className='text-xs text-red-500' role='alert'>
+              {quantityErrorMessage}
+            </p>
+          )}
+        </div>
+
+        <div className='space-y-1.5'>
+          <Label className='text-[10px] font-semibold text-slate-500 uppercase tracking-wide'>
+            Unit Price (৳)
+          </Label>
+          <Input
+            type='text'
+            value={product.unitPrice || ""}
+            onChange={(e) => onUnitPriceChange(index, e.target.value)}
+            className={cn(
+              "text-center h-9",
+              hasPriceError && "border-red-500",
+            )}
+            placeholder='0.00'
+            inputMode='decimal'
+            disabled={updating}
+            aria-label={`Unit price for ${product.name}`}
+          />
+          {hasPriceError && priceErrorMessage && (
+            <p className='text-xs text-red-500' role='alert'>
+              {priceErrorMessage}
+            </p>
+          )}
+        </div>
+      </div>
+
+      {/* Line total */}
+      <div className='flex items-center justify-between pt-2 border-t border-slate-100'>
+        <span className='text-xs text-muted-foreground'>Line total</span>
+        <span className='text-sm font-semibold text-primary'>
+          ৳{lineTotal.toFixed(2)}
+        </span>
+      </div>
+    </div>
+  );
+};
 
 // Types
 interface ProductVariant {
@@ -596,55 +791,72 @@ const UpdatePurchaseOrder: React.FC = () => {
 
   return (
     <MainView title='Update Purchase Order'>
+      <MobilePage
+        icon={<Package className='h-5 w-5 text-primary' />}
+        title={`Update PO #${purchaseOrder.purchaseNumber}`}
+        subtitle='Modify product quantities and pricing'
+        back
+        onBack={() => navigate("/purchase-order/list")}
+        actions={
+          <Button
+            variant='outline'
+            size='icon'
+            onClick={fetchData}
+            disabled={loading || updating}
+            aria-label='Refresh'
+            className='h-10 w-10 rounded-full shrink-0 bg-primary/10 text-primary border-primary/20 shadow-none active:scale-95 transition-transform'>
+            <RefreshCw className='w-4 h-4' />
+          </Button>
+        }
+      >
       <div className='min-h-screen bg-slate-50/60'>
-        <div className='max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6'>
+        <div className='max-w-7xl mx-auto px-4 md:px-6 lg:px-8 py-6 space-y-6'>
           {/* Header */}
-          <div className='flex items-center justify-between gap-4'>
-            <div className='flex items-center gap-3'>
-              <div className='flex items-center justify-center w-10 h-10 rounded-xl bg-indigo-600 shadow-sm shadow-indigo-200'>
-                <Edit className='h-5 w-5 text-white' />
-              </div>
-              <div>
-                <h1 className='text-xl font-semibold text-slate-900 leading-tight'>
-                  Update Purchase Order #{purchaseOrder.purchaseNumber}
-                </h1>
-                <p className='text-sm text-slate-500 mt-0.5'>
-                  Modify product quantities and pricing for this purchase order
-                </p>
-              </div>
-            </div>
-            <div className='flex items-center gap-2'>
-              <Button
-                variant='outline'
-                size='sm'
-                onClick={handleUndo}
-                disabled={historyIndex <= 0 || updating}
-                title='Undo (Ctrl+Z)'>
-                ↶ Undo
-              </Button>
-              <Button
-                variant='outline'
-                size='sm'
-                onClick={handleRedo}
-                disabled={historyIndex >= history.length - 1 || updating}
-                title='Redo (Ctrl+Y)'>
-                ↷ Redo
-              </Button>
-              <Button
-                variant='outline'
-                onClick={() => navigate("/purchase-order/list")}
-                disabled={updating}>
-                <ArrowLeft className='w-4 h-4 mr-2' />
-                Back
-              </Button>
-              <Button
-                onClick={fetchData}
-                variant='outline'
-                disabled={loading || updating}>
-                <RefreshCw className='w-4 h-4 mr-2' />
-                Refresh
-              </Button>
-            </div>
+          <div className='hidden md:block'>
+            <PageHeader
+              icon={<Package className='h-5 w-5' />}
+              title={`Update Purchase Order #${purchaseOrder.purchaseNumber}`}
+              subtitle='Modify product quantities and pricing for this purchase order'
+              count={
+                <span className='rounded-md px-2.5 py-1 text-base font-semibold text-slate-500 dark:text-slate-400 tabular-nums'>
+                  {stats.totalProducts} products
+                </span>
+              }
+              actions={
+                <div className='flex items-center gap-2'>
+                  <Button
+                    variant='outline'
+                    size='sm'
+                    onClick={handleUndo}
+                    disabled={historyIndex <= 0 || updating}
+                    title='Undo (Ctrl+Z)'>
+                    ↶ Undo
+                  </Button>
+                  <Button
+                    variant='outline'
+                    size='sm'
+                    onClick={handleRedo}
+                    disabled={historyIndex >= history.length - 1 || updating}
+                    title='Redo (Ctrl+Y)'>
+                    ↷ Redo
+                  </Button>
+                  <Button
+                    variant='outline'
+                    onClick={() => navigate("/purchase-order/list")}
+                    disabled={updating}>
+                    <ArrowLeft className='w-4 h-4 mr-2' />
+                    Back
+                  </Button>
+                  <Button
+                    onClick={fetchData}
+                    variant='outline'
+                    disabled={loading || updating}>
+                    <RefreshCw className='w-4 h-4 mr-2' />
+                    Refresh
+                  </Button>
+                </div>
+              }
+            />
           </div>
 
         {/* Stats Cards */}
@@ -870,6 +1082,8 @@ const UpdatePurchaseOrder: React.FC = () => {
               </div>
             ) : (
               <div className='space-y-4'>
+                {/* Desktop table */}
+                <div className='hidden md:block'>
                 <Table>
                   <TableHeader>
                     <TableRow>
@@ -1082,6 +1296,46 @@ const UpdatePurchaseOrder: React.FC = () => {
                     })}
                   </TableBody>
                 </Table>
+                </div>
+
+                {/* Mobile stacked cards */}
+                <div className='md:hidden space-y-3'>
+                  {products.map((product, index) => {
+                    const hasQuantityError = validationErrors.some(
+                      (e) =>
+                        e.productIndex === index && e.field === "quantity",
+                    );
+                    const hasPriceError = validationErrors.some(
+                      (e) =>
+                        e.productIndex === index && e.field === "unitPrice",
+                    );
+                    return (
+                      <MobileProductCard
+                        key={product.id}
+                        product={product}
+                        index={index}
+                        updating={updating}
+                        hasQuantityError={hasQuantityError}
+                        hasPriceError={hasPriceError}
+                        quantityErrorMessage={validationErrors.find(
+                          (e) =>
+                            e.productIndex === index &&
+                            e.field === "quantity",
+                        )?.message}
+                        priceErrorMessage={validationErrors.find(
+                          (e) =>
+                            e.productIndex === index &&
+                            e.field === "unitPrice",
+                        )?.message}
+                        onQuantityChange={handleQuantityChange}
+                        onQuantityIncrement={handleQuantityIncrement}
+                        onQuantityDecrement={handleQuantityDecrement}
+                        onUnitPriceChange={handleUnitPriceChange}
+                        onRemove={removeProduct}
+                      />
+                    );
+                  })}
+                </div>
 
                 {/* Summary */}
                 <div className='flex justify-end pt-4 border-t'>
@@ -1128,8 +1382,8 @@ const UpdatePurchaseOrder: React.FC = () => {
           </CardContent>
         </Card>
 
-        {/* Action Buttons */}
-        <div className='flex justify-end gap-4'>
+        {/* Action Buttons — inline on desktop only; mobile uses the sticky bar below */}
+        <div className='hidden md:flex justify-end gap-4'>
           <AlertDialog
             open={showDiscardDialog}
             onOpenChange={setShowDiscardDialog}>
@@ -1233,10 +1487,41 @@ const UpdatePurchaseOrder: React.FC = () => {
             </AlertDialogContent>
           </AlertDialog>
         </div>
+
+        {/* Mobile sticky save bar — sits above the global bottom tab bar */}
+        <MobileStickyActions className='bottom-[calc(4rem+env(safe-area-inset-bottom))] -mx-4'>
+          <div className='flex items-center gap-3'>
+            <Button
+              variant='outline'
+              className='flex-1 rounded-full h-11'
+              onClick={() => {
+                if (hasChanges) {
+                  setShowDiscardDialog(true);
+                } else {
+                  navigate("/purchase-order/list");
+                }
+              }}
+              disabled={updating}>
+              Cancel
+            </Button>
+            <Button
+              onClick={() => setShowConfirmDialog(true)}
+              disabled={updating || !hasChanges || hasValidationErrors}
+              className='flex-[2] rounded-full h-11 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold gap-2 m3-ripple'>
+              {updating ? (
+                <Loader2 className='h-4 w-4 animate-spin' />
+              ) : (
+                <Save className='h-4 w-4' />
+              )}
+              {updating ? "Updating..." : "Update Purchase Order"}
+            </Button>
+          </div>
+        </MobileStickyActions>
       </div>
     {/* End of max-w-7xl container */}
     </div>
   {/* End of bg-slate-50/60 wrapper */}
+      </MobilePage>
     </MainView>
   );
 };

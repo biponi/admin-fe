@@ -36,6 +36,7 @@ import { CustomerVerificationDialog } from "./components/CustomerVerificationDia
 import { CancelOrderDialog } from "./components/CancelOrderDialog";
 import { useToast } from "../../components/ui/use-toast";
 import { cn } from "../../lib/utils";
+import { MobileEmptyState, rippleProps } from "../../components/mobile";
 
 export const OrderConfirmation: React.FC = () => {
   const navigate = useNavigate();
@@ -114,9 +115,9 @@ export const OrderConfirmation: React.FC = () => {
   return (
     <MainView title='Order Confirmation'>
       <>
-        <div className='pb-8 space-y-3 sm:space-y-5 bg-slate-50'>
+        <div className='pb-8  bg-slate-50'>
           {/* ─── Mobile app-bar (native-app style) ─── */}
-          <div className='sm:hidden sticky top-0 z-20 -mx-3 px-3 py-3 bg-white/95 backdrop-blur border-b border-gray-100 flex items-center justify-between'>
+          <div className='mobile:flex hidden sticky top-0 z-20 -mx-3 px-3 py-3 bg-white/95 backdrop-blur border-b border-gray-100 flex items-center justify-between'>
             <div className='flex items-center gap-2.5 min-w-0'>
               <button
                 onClick={() => navigate("/order")}
@@ -125,9 +126,17 @@ export const OrderConfirmation: React.FC = () => {
                            flex items-center justify-center transition-colors'>
                 <ChevronLeft className='w-4.5 h-4.5 text-gray-700' />
               </button>
-              <h1 className='text-[15px] font-bold text-gray-900 truncate'>
-                Order Confirmation
-              </h1>
+              <div className='h-9 w-9 shrink-0 rounded-xl bg-primary/10 flex items-center justify-center'>
+                <CheckCircle2 className='h-5 w-5 text-primary' />
+              </div>
+              <div className='min-w-0'>
+                <h1 className='text-[15px] font-bold text-gray-900 truncate leading-tight'>
+                  Order Confirmation
+                </h1>
+                <p className='text-[11px] text-gray-400 truncate mt-0.5'>
+                  Verify processing orders before packaging
+                </p>
+              </div>
             </div>
             <button
               onClick={handleRefresh}
@@ -145,7 +154,7 @@ export const OrderConfirmation: React.FC = () => {
           </div>
 
           {/* ─── Desktop page header ─── */}
-          <div className='sticky top-0 bg-white/70 pb-4 px-40 backdrop-blur border-b border-gray-100 hidden sm:flex items-center justify-between pt-4'>
+          <div className='sticky top-0 bg-white/70 pb-4 px-40 backdrop-blur border-b border-gray-100 hidden md:flex items-center justify-between pt-4'>
             <div className='flex items-center gap-3'>
               <button
                 onClick={() => navigate("/order")}
@@ -153,27 +162,35 @@ export const OrderConfirmation: React.FC = () => {
                            flex items-center justify-center transition-colors shadow-sm'>
                 <ChevronLeft className='w-4 h-4 text-gray-600' />
               </button>
+              <div className='flex items-center justify-center h-10 w-10 rounded-lg bg-primary text-primary-foreground shadow-sm'>
+                <CheckCircle2 className='h-5 w-5' />
+              </div>
               <div>
-                <h1 className='text-lg font-bold text-gray-900 leading-none'>
+                <h1 className='text-[18px] font-semibold text-foreground tracking-tight leading-tight'>
                   Order Confirmation
                 </h1>
-                <p className='text-xs text-gray-400 mt-1'>
+                <p className='text-[13px] text-muted-foreground mt-0.5'>
                   Verify processing orders before packaging
                 </p>
               </div>
             </div>
 
-            <button
-              onClick={handleRefresh}
-              disabled={loading}
-              className='flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-gray-200
-                         bg-white hover:bg-gray-50 text-sm font-medium text-gray-600
-                         disabled:opacity-50 transition-colors shadow-sm'>
-              <RefreshCw
-                className={cn("w-3.5 h-3.5", loading && "animate-spin")}
-              />
-              <span>Refresh</span>
-            </button>
+            <div className='flex items-center gap-3'>
+              <span className='rounded-md px-2.5 py-1 text-base font-semibold text-gray-500 tabular-nums'>
+                {totalCount} total
+              </span>
+              <button
+                onClick={handleRefresh}
+                disabled={loading}
+                className='flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-gray-200
+                           bg-white hover:bg-gray-50 text-sm font-medium text-gray-600
+                           disabled:opacity-50 transition-colors shadow-sm'>
+                <RefreshCw
+                  className={cn("w-3.5 h-3.5", loading && "animate-spin")}
+                />
+                <span>Refresh</span>
+              </button>
+            </div>
           </div>
 
           {/* ─── Panel: the whole workspace lives inside one cohesive surface ─── */}
@@ -204,7 +221,7 @@ export const OrderConfirmation: React.FC = () => {
             </div>
 
             {/* Toolbar — desktop */}
-            <div className='hidden sm:flex items-center justify-between flex-wrap gap-3 px-5 py-3 border-b border-gray-100 bg-gray-50/40'>
+            <div className='hidden md:flex items-center justify-between flex-wrap gap-3 px-5 py-3 border-b border-gray-100 bg-gray-50/40'>
               <p className='text-xs text-gray-400 font-medium'>
                 Showing{" "}
                 <span className='text-gray-700 font-semibold'>
@@ -273,7 +290,7 @@ export const OrderConfirmation: React.FC = () => {
             </div>
 
             {/* Toolbar — mobile */}
-            <div className='sm:hidden flex items-center gap-2 px-3 py-2.5 border-b border-gray-100 bg-gray-50/40'>
+            <div className='mobile:flex hidden items-center gap-2 px-3 py-2.5 border-b border-gray-100 bg-gray-50/40'>
               <div className='relative flex-1'>
                 <Search className='absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-400' />
                 <Input
@@ -303,7 +320,7 @@ export const OrderConfirmation: React.FC = () => {
               </button>
             </div>
 
-            <p className='sm:hidden px-3 pt-2.5 text-[11px] text-gray-400 font-medium'>
+            <p className='mobile:block hidden px-3 pt-2.5 text-[11px] text-gray-400 font-medium'>
               Showing{" "}
               <span className='text-gray-700 font-semibold'>
                 {orders.length}
@@ -338,24 +355,44 @@ export const OrderConfirmation: React.FC = () => {
                   ))}
                 </div>
               ) : orders.length === 0 ? (
-                <div className='flex flex-col items-center justify-center py-16 sm:py-20 gap-3 rounded-xl border border-dashed border-gray-200 bg-gray-50/50'>
-                  <div className='w-14 h-14 rounded-2xl bg-white border border-gray-100 shadow-sm flex items-center justify-center'>
-                    <ClipboardList className='w-6 h-6 text-gray-300' />
+                <>
+                  {/* Desktop empty state */}
+                  <div className='hidden md:flex flex-col items-center justify-center py-16 sm:py-20 gap-3 rounded-xl border border-dashed border-gray-200 bg-gray-50/50'>
+                    <div className='w-14 h-14 rounded-2xl bg-white border border-gray-100 shadow-sm flex items-center justify-center'>
+                      <ClipboardList className='w-6 h-6 text-gray-300' />
+                    </div>
+                    <div className='text-center px-4'>
+                      <p className='text-sm font-semibold text-gray-700'>
+                        No orders pending confirmation
+                      </p>
+                      <p className='text-xs text-gray-400 mt-1'>
+                        All processing orders have been handled.
+                      </p>
+                    </div>
+                    <button
+                      onClick={handleRefresh}
+                      className='mt-1 text-xs font-medium text-indigo-600 hover:text-indigo-700 transition-colors'>
+                      Check for new orders →
+                    </button>
                   </div>
-                  <div className='text-center px-4'>
-                    <p className='text-sm font-semibold text-gray-700'>
-                      No orders pending confirmation
-                    </p>
-                    <p className='text-xs text-gray-400 mt-1'>
-                      All processing orders have been handled.
-                    </p>
+
+                  {/* Mobile — Material centered empty state */}
+                  <div className='mobile:block hidden'>
+                    <MobileEmptyState
+                      icon={<ClipboardList className='h-7 w-7' />}
+                      title='No orders pending confirmation'
+                      description='All processing orders have been handled.'
+                      action={
+                        <button
+                          onClick={handleRefresh}
+                          className='m3-ripple mt-1 rounded-full bg-indigo-50 px-4 py-2 text-xs font-semibold text-indigo-600 active:bg-indigo-100 transition-colors'
+                          {...rippleProps()}>
+                          Check for new orders
+                        </button>
+                      }
+                    />
                   </div>
-                  <button
-                    onClick={handleRefresh}
-                    className='mt-1 text-xs font-medium text-indigo-600 hover:text-indigo-700 transition-colors'>
-                    Check for new orders →
-                  </button>
-                </div>
+                </>
               ) : (
                 <div className='flex flex-col sm:grid sm:grid-cols-2 xl:grid-cols-3 gap-3 sm:gap-4 md:max-h-[49.5vh] md:overflow-y-auto'>
                   {orders.map((order) => (
@@ -375,7 +412,7 @@ export const OrderConfirmation: React.FC = () => {
             {totalPages > 1 && (
               <div className='flex items-center justify-between px-3 sm:px-5 py-3 border-t border-gray-100 bg-gray-50/40'>
                 {/* Desktop pager */}
-                <p className='hidden sm:block text-xs text-gray-400 tabular-nums'>
+                <p className='hidden md:block text-xs text-gray-400 tabular-nums'>
                   Page{" "}
                   <span className='font-semibold text-gray-700'>
                     {currentPage + 1}
@@ -386,7 +423,7 @@ export const OrderConfirmation: React.FC = () => {
                   </span>
                 </p>
 
-                <div className='hidden sm:flex items-center gap-1 ml-auto'>
+                <div className='hidden md:flex items-center gap-1 ml-auto'>
                   <button
                     onClick={() => handlePageChange(currentPage - 1)}
                     disabled={currentPage === 0 || loading}
@@ -424,7 +461,7 @@ export const OrderConfirmation: React.FC = () => {
                 </div>
 
                 {/* Mobile pager — simple, full-width, app-like */}
-                <div className='sm:hidden flex items-center gap-2 w-full'>
+                <div className='mobile:flex hidden items-center gap-2 w-full'>
                   <button
                     onClick={() => handlePageChange(currentPage - 1)}
                     disabled={currentPage === 0 || loading}
@@ -450,6 +487,12 @@ export const OrderConfirmation: React.FC = () => {
               </div>
             )}
           </div>
+
+          {/* Space for the global bottom tab bar on mobile */}
+          <div
+            className='mobile:block hidden h-[calc(4rem+env(safe-area-inset-bottom))]'
+            aria-hidden
+          />
         </div>
 
         {/* ─── Mobile sort & display drawer ─── */}

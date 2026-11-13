@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 
 import {
   formatISO,
@@ -11,39 +11,9 @@ import {
   subMonths,
 } from "date-fns";
 import {
-  Table,
-  TableHeader,
-  TableRow,
-  TableCell,
-  TableBody,
-} from "../../components/ui/table";
-import {
-  Card,
-  CardHeader,
-  CardContent,
-  CardTitle,
-} from "../../components/ui/card";
-import axiosInstance from "../../api/axios";
-import config from "../../utils/config";
-import RadialChartComponent from "./radialChart";
-import DynamicCard from "./reportCard";
-import InteractiveCardComponent from "./interactiveCard";
-import {
-  combineDailyComparison,
-  getRankWithEmoji,
-  structureStatusData,
-} from "./utils/functions";
-import InteractiveSingleCardComponent from "./interactiveSingleCard";
-import { DateRangePicker } from "../../coreComponents/DateRangePicker";
-import { DateRange } from "react-day-picker";
-import toast from "react-hot-toast";
-import { Button } from "../../components/ui/button";
-import {
   Loader,
   PieChart,
   BarChart3,
-  Crown,
-  Star,
   ShoppingCart,
   Landmark,
   BanknoteArrowDown,
@@ -53,7 +23,21 @@ import {
   Truck,
   TicketPercent,
 } from "lucide-react";
-import { useSettings } from "../../contexts/SettingsContext";
+import { DateRange } from "react-day-picker";
+import toast from "react-hot-toast";
+import { Button } from "../../components/ui/button";
+import axiosInstance from "../../api/axios";
+import config from "../../utils/config";
+import { PageHeader } from "../../components/PageHeader";
+import { DateRangePicker } from "../../coreComponents/DateRangePicker";
+import PillStatCard, { DashboardPeriod } from "./reportCard";
+import DonutGaugeCard from "./radialChart";
+import BreakdownRings from "./breakdownRings";
+import InteractiveCardComponent from "./interactiveCard";
+import InteractiveSingleCardComponent from "./interactiveSingleCard";
+import { TopCustomersPanel, TrendingProductsPanel } from "./activityPanels";
+import { combineDailyComparison, structureStatusData } from "./utils/functions";
+
 export interface ReportResponse {
   reports: {
     sales: number;
@@ -81,11 +65,11 @@ export interface ReportResponse {
       completedOrders: number;
     };
     dailyComparison: [
-      Array<any>, // Empty array for purchases
+      Array<any>, // Purchases
       Array<{
         _id: string; // e.g., date "2024-06-08"
         totalOrders: number;
-      }>
+      }>,
     ];
     orderStatusDailyComparison: Array<{
       _id: string; // e.g., date "2024-06-08"
@@ -96,13 +80,13 @@ export interface ReportResponse {
     }>;
   };
   bestProducts: Array<{
-    _id: string | null; // Can be null
+    _id: string | null;
     name: string;
     totalQuantity: number;
     totalRevenue: number;
   }>;
   topCustomers: Array<{
-    _id: string; // Customer identifier
+    _id: string;
     name: string;
     mobile: string;
     totalSpent: number;
@@ -131,19 +115,16 @@ export interface ReportResponse {
 }
 
 const DashboardPage: React.FC = () => {
-  const { theme } = useSettings();
-  const [selectedTab, setSelectedTab] = useState("today");
+  const [selectedTab, setSelectedTab] = useState<DashboardPeriod>("today");
   const [dateRange, setDateRange] = useState<{ start: Date; end: Date } | null>(
-    null
+    null,
   );
 
   const [analysisData, setAnalysisData] = useState<ReportResponse | null>(null);
   const [loading, setLoading] = useState(false);
   const [loadingCSV, setLoadingCSV] = useState(false);
 
-  const isThemed = theme !== "light" && theme !== "dark";
-
-  const setRange = (tab: string) => {
+  const setRange = (tab: DashboardPeriod) => {
     switch (tab) {
       case "lastWeek":
         setDateRange({
@@ -157,13 +138,14 @@ const DashboardPage: React.FC = () => {
           end: endOfMonth(subMonths(new Date(), 1)),
         });
         break;
-      case "last6Months":
+      case "last6Months": {
         const start = startOfMonth(subMonths(new Date(), 6));
         setDateRange({
           start,
           end: endOfMonth(new Date()),
         });
         break;
+      }
       case "today":
       default:
         setDateRange({
@@ -185,7 +167,7 @@ const DashboardPage: React.FC = () => {
             startDate: formatISO(dateRange?.start || new Date()),
             endDate: formatISO(dateRange?.end || new Date()),
           },
-        }
+        },
       );
       setAnalysisData(data);
     } catch (error) {
@@ -204,7 +186,7 @@ const DashboardPage: React.FC = () => {
         },
       });
       toast.success(
-        "Report generated successfully!, it will be mailed to admin."
+        "Report generated successfully!, it will be mailed to admin.",
       );
     } catch (error) {
       console.error("Error fetching data:", error);
@@ -226,117 +208,140 @@ const DashboardPage: React.FC = () => {
     //eslint-disable-next-line
   }, [selectedTab]);
 
+  const current = analysisData?.orderMetrics?.currentMetrics;
+  const previous = analysisData?.orderMetrics?.previousMonthMetrics;
+
+  const completedCount = useMemo(
+    () =>
+      analysisData?.reports?.processingAndCompleted?.find(
+        (e) => e._id?.toLowerCase() === "completed",
+      )?.count ?? 0,
+    [analysisData],
+  );
+
+  const processingCount = useMemo(
+    () =>
+      analysisData?.reports?.processingAndCompleted?.find(
+        (e) => e._id?.toLowerCase() === "processing",
+      )?.count ?? 0,
+    [analysisData],
+  );
+
+  const completionPercent = useMemo(() => {
+    const total = current?.totalOrders ?? 0;
+    if (!total) return 0;
+    return Math.round((completedCount / total) * 100);
+  }, [completedCount, current]);
+
+  const statusCounts = analysisData?.graphs?.statusCounts ?? [];
+
+  const currencyAmountGrowth = useMemo(() => {
+    const prev = previous?.totalAmount ?? 0;
+    const curr = current?.totalAmount ?? 0;
+    if (!prev) return undefined;
+    return ((curr - prev) / prev) * 100;
+  }, [current, previous]);
+
+  const dateLabel = `${dateRange?.start.toDateString() ?? ""} - ${
+    dateRange?.end.toDateString() ?? ""
+  }`;
+
   const mainReportView = () => {
     return (
       <>
-        {/* Key Metrics Overview - Mobile Optimized */}
-        <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6 mb-4 sm:mb-8'>
-          <DynamicCard
+        {/* Hero stats */}
+        <div className='grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-3 sm:gap-4'>
+          <PillStatCard
             icon={ShoppingCart}
             title='Total Orders'
             subtitle='Growth in total orders this period'
-            previousValue={
-              analysisData?.orderMetrics?.previousMonthMetrics?.totalOrders ?? 0
-            }
-            currentValue={
-              analysisData?.orderMetrics?.currentMetrics?.totalOrders ?? 0
-            }
+            previousValue={previous?.totalOrders}
+            currentValue={current?.totalOrders ?? 0}
+            prefix=''
+            period={selectedTab}
+            onPeriodChange={setRange}
           />
-          <DynamicCard
+          <PillStatCard
             icon={Landmark}
             title='Total Amount'
             subtitle='Growth in total amount by order this period'
-            previousValue={
-              analysisData?.orderMetrics?.previousMonthMetrics?.totalAmount ?? 0
-            }
-            currentValue={
-              analysisData?.orderMetrics?.currentMetrics?.totalAmount ?? 0
-            }
+            previousValue={previous?.totalAmount}
+            currentValue={current?.totalAmount ?? 0}
+            period={selectedTab}
+            onPeriodChange={setRange}
           />
-          <DynamicCard
-            icon={BanknoteArrowDown}
-            title='Total Purchase'
-            subtitle='This is only the total purchase amount this period'
-            previousValue={0}
-            currentValue={analysisData?.reports?.purchases ?? 0}
-          />
-          <DynamicCard
-            icon={BanknoteX}
-            title='Total Return'
-            subtitle='This is only the order return amount this period'
-            previousValue={0}
-            currentValue={analysisData?.reports?.returns ?? 0}
-          />
-        </div>
-
-        {/* Financial Metrics - Mobile Optimized */}
-        <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6 mb-4 sm:mb-8'>
-          <DynamicCard
+          <PillStatCard
             icon={HandCoins}
             title='Total Paid'
             subtitle='Growth in total paid this period'
-            previousValue={
-              analysisData?.orderMetrics?.previousMonthMetrics?.totalPaid ?? 0
-            }
-            currentValue={
-              analysisData?.orderMetrics?.currentMetrics?.totalPaid ?? 0
-            }
+            previousValue={previous?.totalPaid}
+            currentValue={current?.totalPaid ?? 0}
+            period={selectedTab}
+            onPeriodChange={setRange}
           />
-          <DynamicCard
+          <PillStatCard
             icon={Wallet2}
             title='Total Remaining'
             subtitle='Growth in order remaining this period'
-            previousValue={
-              analysisData?.orderMetrics?.previousMonthMetrics
-                ?.totalRemaining ?? 0
-            }
-            currentValue={
-              analysisData?.orderMetrics?.currentMetrics?.totalRemaining ?? 0
-            }
-          />
-          <DynamicCard
-            icon={Truck}
-            title='Total Delivery Charge'
-            subtitle='Growth in total delivery charge this period'
-            previousValue={
-              analysisData?.orderMetrics?.previousMonthMetrics
-                ?.totalDeliveryCharge ?? 0
-            }
-            currentValue={
-              analysisData?.orderMetrics?.currentMetrics?.totalDeliveryCharge ??
-              0
-            }
-          />
-          <DynamicCard
-            icon={TicketPercent}
-            title='Total Discount Amount'
-            subtitle='Growth in total discount amount by order this period'
-            previousValue={
-              analysisData?.orderMetrics?.previousMonthMetrics?.totalDiscount ??
-              0
-            }
-            currentValue={
-              analysisData?.orderMetrics?.currentMetrics?.totalDiscount ?? 0
-            }
+            previousValue={previous?.totalRemaining}
+            currentValue={current?.totalRemaining ?? 0}
+            period={selectedTab}
+            onPeriodChange={setRange}
           />
         </div>
 
-        {/* Charts Section - Mobile Optimized */}
-        <div className='hidden sm:grid grid-cols-1 xl:grid-cols-2 gap-4 sm:gap-8 mb-4 sm:mb-8 '>
-          <InteractiveCardComponent
-            title='Purchase Vs Order Amount'
-            subTitle={`Showing data from ${
-              dateRange?.start.toDateString() ?? ""
-            } to ${dateRange?.end.toDateString() ?? ""}`}
-            data={combineDailyComparison(
-              analysisData?.graphs?.dailyComparison ?? []
-            ).reverse()}
-            totalOrder={analysisData?.reports?.sales ?? 0}
-            totalPurchase={analysisData?.reports?.purchases ?? 0}
+        {/* Compact stats */}
+        <div className='grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-3 sm:gap-4'>
+          <PillStatCard
+            compact
+            icon={BanknoteArrowDown}
+            title='Total Purchase'
+            currentValue={analysisData?.reports?.purchases ?? 0}
           />
+          <PillStatCard
+            compact
+            icon={BanknoteX}
+            title='Total Return'
+            currentValue={analysisData?.reports?.returns ?? 0}
+          />
+          <PillStatCard
+            compact
+            icon={Truck}
+            title='Total Delivery Charge'
+            currentValue={current?.totalDeliveryCharge ?? 0}
+          />
+          <PillStatCard
+            compact
+            icon={TicketPercent}
+            title='Total Discount'
+            currentValue={current?.totalDiscount ?? 0}
+          />
+        </div>
 
+        {/* Insight row: completion gauge / breakdown rings / status timeline */}
+        <div className='grid grid-cols-1 xl:grid-cols-3 gap-3 sm:gap-4'>
+          <DonutGaugeCard
+            percent={completionPercent}
+            centerLabel='Completion rate'
+            chips={[
+              { label: "Completed", value: completedCount },
+              { label: "Processing", value: processingCount },
+            ]}
+          />
+          <BreakdownRings
+            title='Amount breakdown'
+            items={[
+              { label: "Sales", value: analysisData?.reports?.sales ?? 0 },
+              { label: "Paid", value: current?.totalPaid ?? 0 },
+              {
+                label: "Purchases",
+                value: analysisData?.reports?.purchases ?? 0,
+              },
+              { label: "Returns", value: analysisData?.reports?.returns ?? 0 },
+            ]}
+          />
           <InteractiveSingleCardComponent
-            title='Order Stauts Daily Comparison'
+            title='Order Status Daily'
             subTitle={`Showing data from ${
               dateRange?.start.toDateString() ?? ""
             } to ${dateRange?.end.toDateString() ?? ""}`}
@@ -344,341 +349,65 @@ const DashboardPage: React.FC = () => {
           />
         </div>
 
-        {/* Performance Tables - Mobile Optimized */}
-        <div className='hidden'>
-          <h2 className='text-lg sm:text-2xl font-bold mb-3 sm:mb-6 text-foreground'>
-            Performance Insights
-          </h2>
-          <div className='grid grid-cols-1 xl:grid-cols-2 gap-4 sm:gap-8'>
-            <Card className='group relative overflow-hidden hover:shadow-2xl transition-all duration-500 hover:-translate-y-1 bg-gradient-to-br from-card via-card/95 to-card/90 border-0 shadow-lg'>
-              {/* Decorative gradient overlay */}
-              <div className='absolute top-0 left-0 w-64 h-64 bg-gradient-to-br from-yellow-500/10 via-amber-500/5 to-transparent rounded-full blur-3xl -translate-x-32 -translate-y-32 group-hover:scale-150 transition-transform duration-700'></div>
-
-              <CardHeader className='pb-2 sm:pb-4 relative z-10'>
-                <div className='flex items-center space-x-2 sm:space-x-3'>
-                  <div className='p-1 sm:p-2 bg-gradient-to-br from-yellow-500/20 to-amber-500/10 rounded-xl shadow-inner'>
-                    <Crown className='h-4 w-4 sm:h-5 sm:w-5 text-yellow-600 dark:text-yellow-400' />
-                  </div>
-                  <CardTitle className='text-base sm:text-xl font-bold bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text'>
-                    Top Customers
-                  </CardTitle>
-                </div>
-              </CardHeader>
-              <CardContent className='pt-0 relative z-10'>
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableCell>#</TableCell>
-                      <TableCell>Customer Name</TableCell>
-                      <TableCell>Mobile Number</TableCell>
-                      <TableCell>Total Order</TableCell>
-                      <TableCell>Total Spent</TableCell>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {analysisData?.topCustomers.map((customer, index) => (
-                      <TableRow
-                        key={index}
-                        className='hover:bg-primary/5 transition-colors duration-200'>
-                        <TableCell className='font-semibold'>
-                          {getRankWithEmoji(index + 1)}
-                        </TableCell>
-                        <TableCell className='font-medium'>
-                          {customer?.name}
-                        </TableCell>
-                        <TableCell className='text-muted-foreground'>
-                          {customer?.mobile}
-                        </TableCell>
-                        <TableCell className='font-semibold'>
-                          {customer?.totalOrders}
-                        </TableCell>
-                        <TableCell className='font-bold text-primary'>
-                          ৳ {customer?.totalSpent}
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </CardContent>
-
-              {/* Bottom accent line */}
-              <div className='h-1 w-full bg-gradient-to-r from-yellow-500/40 via-amber-500/20 to-transparent'></div>
-            </Card>
-
-            <Card className='group relative overflow-hidden hover:shadow-2xl transition-all duration-500 hover:-translate-y-1 bg-gradient-to-br from-card via-card/95 to-card/90 border-0 shadow-lg'>
-              {/* Decorative gradient overlay */}
-              <div className='absolute top-0 right-0 w-64 h-64 bg-gradient-to-br from-blue-500/10 via-indigo-500/5 to-transparent rounded-full blur-3xl translate-x-32 -translate-y-32 group-hover:scale-150 transition-transform duration-700'></div>
-
-              <CardHeader className='pb-2 sm:pb-4 relative z-10'>
-                <div className='flex items-center space-x-2 sm:space-x-3'>
-                  <div className='p-1 sm:p-2 bg-gradient-to-br from-blue-500/20 to-indigo-500/10 rounded-xl shadow-inner'>
-                    <Star className='h-4 w-4 sm:h-5 sm:w-5 text-blue-600 dark:text-blue-400' />
-                  </div>
-                  <CardTitle className='text-base sm:text-xl font-bold bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text'>
-                    Trending Products
-                  </CardTitle>
-                </div>
-              </CardHeader>
-              <CardContent className='pt-0 relative z-10'>
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableCell>#</TableCell>
-                      <TableCell>Product</TableCell>
-                      <TableCell>Total Sales</TableCell>
-                      <TableCell>Estimate Amount</TableCell>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {analysisData?.bestProducts.map((product, index) => (
-                      <TableRow
-                        key={index}
-                        className='hover:bg-primary/5 transition-colors duration-200'>
-                        <TableCell className='font-semibold'>
-                          {index + 1}
-                        </TableCell>
-                        <TableCell className='font-medium'>
-                          {product?.name}
-                        </TableCell>
-                        <TableCell className='font-semibold text-muted-foreground'>
-                          {product?.totalQuantity}
-                        </TableCell>
-                        <TableCell className='font-bold text-primary'>
-                          {product?.totalRevenue}
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </CardContent>
-
-              {/* Bottom accent line */}
-              <div className='h-1 w-full bg-gradient-to-r from-blue-500/40 via-indigo-500/20 to-transparent'></div>
-            </Card>
+        {/* Status chips strip */}
+        {statusCounts.length > 0 && (
+          <div className='flex items-center gap-2 flex-wrap'>
+            {statusCounts.map((status) => (
+              <span
+                key={status._id}
+                className='bg-white rounded-full px-3 h-7 inline-flex items-center gap-1.5 text-xs font-medium text-[#1A1A1A]'>
+                <span className='h-2 w-2 rounded-full bg-[#E1573F]' />
+                <span className='capitalize'>{status._id}</span>
+                <span className='font-bold'>{status.count}</span>
+              </span>
+            ))}
           </div>
-        </div>
+        )}
 
-        {/* Status Analytics - Mobile Optimized */}
-        <div className='sm:hidden mb-4 sm:mb-8'>
-          <h2 className='text-lg text-center sm:text-2xl font-bold mb-3 sm:mb-6 text-foreground w-full px-6 py-2 shadow-2xl bg-white shadow-orange-5 border-orange-300 rounded-2xl'>
-            Order Status Analytics
-          </h2>
-          <div className='grid grid-cols-2 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-3 sm:gap-6'>
-            {!!analysisData?.reports?.processingAndCompleted &&
-              analysisData?.reports?.processingAndCompleted.length > 0 &&
-              !!analysisData?.reports?.processingAndCompleted[0]._id && (
-                <RadialChartComponent
-                  label={
-                    analysisData?.reports?.processingAndCompleted[0]._id ?? ""
-                  }
-                  title={`Total ${
-                    analysisData?.reports?.processingAndCompleted[0]._id ?? ""
-                  }`}
-                  subTitle={`${dateRange?.start.toDateString() ?? ""} - ${
-                    dateRange?.end.toDateString() ?? ""
-                  }`}
-                  count={
-                    analysisData?.reports?.processingAndCompleted[0].count ?? 0
-                  }
-                  footerSrting={` Showing total ${
-                    analysisData?.reports?.processingAndCompleted[0]._id ?? ""
-                  } data `}
-                  chartData={[
-                    {
-                      browser: "safari",
-                      [analysisData?.reports?.processingAndCompleted[0]._id ??
-                      ""]:
-                        analysisData?.reports?.processingAndCompleted[0]
-                          .count ?? 0,
-                      fill: "var(--color-safari)",
-                    },
-                  ]}
-                  total={
-                    analysisData?.orderMetrics?.currentMetrics?.totalOrders ?? 0
-                  }
-                />
-              )}
+        {/* Purchase vs Order Amount chart */}
+        <InteractiveCardComponent
+          title='Purchase Vs Order Amount'
+          subTitle={`Showing data from ${
+            dateRange?.start.toDateString() ?? ""
+          } to ${dateRange?.end.toDateString() ?? ""}`}
+          data={combineDailyComparison(
+            analysisData?.graphs?.dailyComparison ?? [],
+          ).reverse()}
+          totalOrder={analysisData?.reports?.sales ?? 0}
+          totalPurchase={analysisData?.reports?.purchases ?? 0}
+          growthPercentage={currencyAmountGrowth}
+        />
 
-            {!!analysisData?.reports?.processingAndCompleted &&
-              analysisData?.reports?.processingAndCompleted.length > 1 &&
-              !!analysisData?.reports?.processingAndCompleted[1]._id && (
-                <RadialChartComponent
-                  label={
-                    analysisData?.reports?.processingAndCompleted[1]._id ?? ""
-                  }
-                  title={`Total ${
-                    analysisData?.reports?.processingAndCompleted[1]._id ?? ""
-                  }`}
-                  subTitle={`${dateRange?.start.toDateString() ?? ""} - ${
-                    dateRange?.end.toDateString() ?? ""
-                  }`}
-                  count={
-                    analysisData?.reports?.processingAndCompleted[1].count ?? 0
-                  }
-                  footerSrting={` Showing total ${
-                    analysisData?.reports?.processingAndCompleted[1]._id ?? ""
-                  } data `}
-                  chartData={[
-                    {
-                      browser: "safari",
-                      [analysisData?.reports?.processingAndCompleted[1]._id ??
-                      ""]:
-                        analysisData?.reports?.processingAndCompleted[1]
-                          .count ?? 0,
-                      fill: "var(--color-safari)",
-                    },
-                  ]}
-                  total={
-                    analysisData?.orderMetrics?.currentMetrics?.totalOrders ?? 0
-                  }
-                />
-              )}
-
-            {!!analysisData?.reports?.failedAndCancelled &&
-              analysisData?.reports?.failedAndCancelled.length > 0 &&
-              !!analysisData?.reports?.failedAndCancelled[0]._id && (
-                <RadialChartComponent
-                  label={analysisData?.reports?.failedAndCancelled[0]._id ?? ""}
-                  title={`Total ${
-                    analysisData?.reports?.failedAndCancelled[0]._id ?? ""
-                  }`}
-                  subTitle={`${dateRange?.start.toDateString() ?? ""} - ${
-                    dateRange?.end.toDateString() ?? ""
-                  }`}
-                  count={
-                    analysisData?.reports?.failedAndCancelled[0].count ?? 0
-                  }
-                  footerSrting={` Showing total ${
-                    analysisData?.reports?.failedAndCancelled[0]._id ?? ""
-                  } data`}
-                  chartData={[
-                    {
-                      browser: "safari",
-                      [analysisData?.reports?.failedAndCancelled[0]._id ?? ""]:
-                        analysisData?.reports?.failedAndCancelled[0].count ?? 0,
-                      fill: "var(--color-safari)",
-                    },
-                  ]}
-                  total={
-                    analysisData?.orderMetrics?.currentMetrics?.totalOrders ?? 0
-                  }
-                />
-              )}
-
-            {!!analysisData?.reports?.failedAndCancelled &&
-              analysisData?.reports?.failedAndCancelled.length > 1 &&
-              !!analysisData?.reports?.failedAndCancelled[1]._id && (
-                <RadialChartComponent
-                  label={analysisData?.reports?.failedAndCancelled[1]._id ?? ""}
-                  title={`Total ${
-                    analysisData?.reports?.failedAndCancelled[1]._id ?? ""
-                  }`}
-                  subTitle={`${dateRange?.start.toDateString() ?? ""} - ${
-                    dateRange?.end.toDateString() ?? ""
-                  }`}
-                  count={
-                    analysisData?.reports?.failedAndCancelled[1].count ?? 0
-                  }
-                  footerSrting={` Showing total ${
-                    analysisData?.reports?.failedAndCancelled[1]._id ?? ""
-                  } data`}
-                  chartData={[
-                    {
-                      browser: "safari",
-                      [analysisData?.reports?.failedAndCancelled[1]._id ?? ""]:
-                        analysisData?.reports?.failedAndCancelled[1].count ?? 0,
-                      fill: "var(--color-safari)",
-                    },
-                  ]}
-                  total={
-                    analysisData?.orderMetrics?.currentMetrics?.totalOrders ?? 0
-                  }
-                />
-              )}
-
-            {!!analysisData?.reports?.failedAndCancelled &&
-              analysisData?.reports?.failedAndCancelled.length > 2 &&
-              !!analysisData?.reports?.failedAndCancelled[2]._id && (
-                <RadialChartComponent
-                  label={analysisData?.reports?.failedAndCancelled[2]._id ?? ""}
-                  title={`Total ${
-                    analysisData?.reports?.failedAndCancelled[2]._id ?? ""
-                  }`}
-                  subTitle={`${dateRange?.start.toDateString() ?? ""} - ${
-                    dateRange?.end.toDateString() ?? ""
-                  }`}
-                  count={
-                    analysisData?.reports?.failedAndCancelled[2].count ?? 0
-                  }
-                  footerSrting={` Showing total ${
-                    analysisData?.reports?.failedAndCancelled[2]._id ?? ""
-                  } data`}
-                  chartData={[
-                    {
-                      browser: "safari",
-                      [analysisData?.reports?.failedAndCancelled[2]._id ?? ""]:
-                        analysisData?.reports?.failedAndCancelled[2].count ?? 0,
-                      fill: "var(--color-safari)",
-                    },
-                  ]}
-                  total={
-                    analysisData?.orderMetrics?.currentMetrics?.totalOrders ?? 0
-                  }
-                />
-              )}
-          </div>
+        {/* Activity panels */}
+        <div className='grid grid-cols-1 xl:grid-cols-2 gap-3 sm:gap-4'>
+          <TopCustomersPanel
+            customers={analysisData?.topCustomers ?? []}
+            dateLabel={dateLabel}
+          />
+          <TrendingProductsPanel
+            products={analysisData?.bestProducts ?? []}
+            dateLabel={dateLabel}
+          />
         </div>
       </>
     );
   };
 
-  const getBackgroundClasses = () => {
-    if (isThemed) {
-      const themeGradients = {
-        blue: "min-h-screen bg-gradient-to-br from-blue-50 via-white to-blue-100/50",
-        green:
-          "min-h-screen bg-gradient-to-br from-green-50 via-white to-green-100/50",
-        purple:
-          "min-h-screen bg-gradient-to-br from-purple-50 via-white to-purple-100/50",
-        orange:
-          "min-h-screen bg-gradient-to-br from-orange-50 via-white to-orange-100/50",
-      };
-      return (
-        themeGradients[theme as keyof typeof themeGradients] ||
-        "min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-100/50"
-      );
-    }
-    return "min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-100/50";
-  };
-
-  const getHeaderClasses = () => {
-    return "bg-white/80 backdrop-blur-sm shadow-sm border-b border-slate-200";
-  };
-
   return (
-    <div className={getBackgroundClasses()}>
-      {/* Enhanced Header Section - Mobile Optimized */}
-      <div className={getHeaderClasses()}>
-        <div className='p-3 sm:p-4 lg:p-4'>
-          <div className='flex flex-col space-y-4 sm:space-y-6 lg:flex-row lg:items-center lg:justify-between lg:space-y-0'>
-            <div className='space-y-2 sm:space-y-3'>
-              <div className='flex items-center space-x-2 sm:space-x-3'>
-                <div className='p-2 sm:p-3 bg-gradient-to-r from-primary/20 to-primary/10 rounded-lg sm:rounded-xl'>
-                  <BarChart3 className='h-5 w-5 sm:h-8 sm:w-8 text-primary' />
-                </div>
-                <div className='min-w-0 flex-1'>
-                  <h1 className='text-base sm:text-lg font-bold bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text text-transparent truncate'>
-                    Dashboard Overview
-                  </h1>
-                  <p className='text-muted-foreground text-xs sm:text-sm mt-1 line-clamp-1'>
-                    Monitor your business performance and key metrics
-                  </p>
-                </div>
-              </div>
+    <div className='min-h-screen bg-[#E8E8E6] pb-6'>
+      <div className='bg-white rounded-[32px] md:rounded-[48px] p-3 sm:p-5 lg:p-6 mx-2 sm:mx-4 md:mx-6 my-3 sm:my-4 space-y-3 sm:space-y-4'>
+        {/* Header */}
+        <PageHeader
+          icon={
+            <div className='h-10 w-10 rounded-md bg-white flex items-center justify-center text-[#E1573F]'>
+              <BarChart3 className='h-5 w-5' strokeWidth={1.5} />
             </div>
-
-            {/* Control Panel - Mobile Optimized */}
-            <div className='flex flex-col sm:flex-row items-stretch sm:items-center space-y-2 sm:space-y-0 sm:space-x-3'>
+          }
+          title='Dashboard Overview'
+          subtitle='Monitor your business performance and key metrics'
+          stackOnMobile
+          actions={
+            <>
               <DateRangePicker
                 initialDateFrom={startOfDay(new Date())}
                 initialDateTo={endOfDay(new Date())}
@@ -693,9 +422,8 @@ const DashboardPage: React.FC = () => {
                   });
                 }}
               />
-
               <Button
-                className='bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-0.5 touch-manipulation text-sm sm:text-base h-9 sm:h-10'
+                className='bg-[#111111] hover:bg-[#1A1A1A] text-white rounded-full shadow-none h-9 sm:h-10 px-5 text-sm sm:text-base'
                 onClick={() => generateReport()}
                 disabled={loadingCSV}>
                 {loadingCSV ? (
@@ -703,34 +431,28 @@ const DashboardPage: React.FC = () => {
                 ) : (
                   <PieChart className='mr-2 h-4 w-4 sm:h-5 sm:w-5' />
                 )}
-                <span className='hidden sm:inline'>Generate Report</span>
-                <span className='sm:hidden'>Report</span>
+                <span className='hidden md:inline'>Generate Report</span>
+                <span className='md:hidden'>Report</span>
               </Button>
-            </div>
-          </div>
-        </div>
-      </div>
+            </>
+          }
+        />
 
-      {/* Main Content - Mobile Optimized */}
-      <div className='p-3 sm:p-4 space-y-4 sm:space-y-8 bg-white'>
         {loading ? (
-          <div className='space-y-8'>
-            <div className='text-center py-8 sm:py-12'>
-              <div className='inline-flex items-center justify-center w-12 h-12 sm:w-16 sm:h-16 bg-primary/10 rounded-full mb-4'>
-                <Loader className='h-6 w-6 sm:h-8 sm:w-8 text-primary animate-spin' />
-              </div>
-              <h3 className='text-lg sm:text-xl font-semibold text-foreground mb-2'>
-                Loading Dashboard Data
-              </h3>
-              <p className='text-sm sm:text-base text-muted-foreground'>
-                Please wait while we fetch your latest metrics...
-              </p>
-            </div>
-            <div className='grid grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6'>
+          <div className='space-y-3 sm:space-y-4'>
+            <div className='grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4'>
               {[...Array(8)].map((_, i) => (
                 <div
                   key={i}
-                  className='h-32 bg-card rounded-xl animate-pulse border shadow-sm'
+                  className='h-32 bg-[#EFEDEB] rounded-3xl animate-pulse'
+                />
+              ))}
+            </div>
+            <div className='grid grid-cols-1 xl:grid-cols-3 gap-3 sm:gap-4'>
+              {[...Array(3)].map((_, i) => (
+                <div
+                  key={i}
+                  className='h-72 bg-[#EFEDEB] rounded-3xl animate-pulse'
                 />
               ))}
             </div>

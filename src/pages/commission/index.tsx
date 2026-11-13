@@ -56,6 +56,7 @@ import {
   ArrowUpRight,
   Sparkles,
   ChevronLeft,
+  BadgeDollarSign,
 } from "lucide-react";
 import { useToast } from "../../components/ui/use-toast";
 import {
@@ -969,7 +970,23 @@ export const CommissionManagementPage = () => {
         <div className='cm-shell'>
           {/* ── Desktop Header ── */}
           <div className='cm-desktop-header'>
-            <div>
+            <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
+              <div
+                style={{
+                  width: 40,
+                  height: 40,
+                  borderRadius: 10,
+                  background: "#5b52f0",
+                  color: "#fff",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  boxShadow: "0 4px 14px rgba(91,82,240,.28)",
+                  flexShrink: 0,
+                }}>
+                <BadgeDollarSign size={20} />
+              </div>
+              <div>
               <div
                 style={{
                   display: "flex",
@@ -1006,6 +1023,7 @@ export const CommissionManagementPage = () => {
               <p style={{ margin: "4px 0 0", fontSize: 13, color: "#8b90a7" }}>
                 {dateRangeLabel}
               </p>
+              </div>
             </div>
 
             <div style={{ display: "flex", gap: 8 }}>
@@ -1088,7 +1106,22 @@ export const CommissionManagementPage = () => {
               <Sparkles size={11} /> Commission Report
             </div>
             <div className='flex justify-between items-center'>
-              <div>
+              <div className='flex items-center gap-3 min-w-0'>
+                <div
+                  style={{
+                    width: 40,
+                    height: 40,
+                    borderRadius: 12,
+                    background: "rgba(91,82,240,.1)",
+                    color: "#5b52f0",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    flexShrink: 0,
+                  }}>
+                  <BadgeDollarSign size={20} />
+                </div>
+                <div className='min-w-0'>
                 <h1 className='cm-hero-title'>
                   {viewMode === "product-wise" ? (
                     <>
@@ -1105,6 +1138,7 @@ export const CommissionManagementPage = () => {
                   )}
                 </h1>
                 <p className='cm-hero-sub'>{dateRangeLabel}</p>
+                </div>
               </div>
 
               {/* Mobile Action Bar */}
@@ -1496,6 +1530,9 @@ export const CommissionManagementPage = () => {
               </div>
             )}
           </div>
+
+          {/* ── Space for the global fixed bottom tab bar (mobile only) ── */}
+          <div className='mobile:block hidden h-[calc(4rem+env(safe-area-inset-bottom))]' />
         </div>
       </div>
 

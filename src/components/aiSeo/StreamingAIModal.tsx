@@ -344,7 +344,7 @@ export default function StreamingAIModal({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl bg-[#FAF9F6] border-slate-200 p-0 gap-0 overflow-hidden">
+      <DialogContent className="max-w-2xl bg-white border-slate-200 p-0 gap-0 overflow-hidden">
         <DialogHeader className="px-6 pt-6 pb-4 border-b border-slate-200">
           <div className="flex items-center gap-3">
             {isBusy && (

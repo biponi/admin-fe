@@ -31,7 +31,8 @@ import {
   TableHeader,
   TableRow,
 } from "../../components/ui/table";
-import { useProductList } from "./hooks/useProductList";
+import { useProductList, EMPTY_META_FILTER } from "./hooks/useProductList";
+import MetaFilterPopover from "./components/MetaFilterPopover";
 import SingleItem from "./components/singleProductList";
 import EmptyView from "../../coreComponents/emptyView";
 import {
@@ -64,16 +65,6 @@ import { getProductSummary } from "../../api/product";
 import { errorToast } from "../../utils/toast";
 import { Progress } from "../../components/ui/progress";
 import {
-  Drawer,
-  DrawerClose,
-  DrawerContent,
-  DrawerDescription,
-  DrawerFooter,
-  DrawerHeader,
-  DrawerTitle,
-  DrawerTrigger,
-} from "../../components/ui/drawer";
-import {
   Sheet as SheetContainer,
   SheetContent,
   SheetDescription,
@@ -85,10 +76,12 @@ import useRoleCheck from "../auth/hooks/useRoleCheck";
 import CategoryFilterDropdown from "./components/FilterByCategory";
 import MobileProductCard from "./components/MobileProductCard";
 import { MobileProductSortSheet } from "./components/MobileProductSortSheet";
+import { MobileMetaFilterSheet } from "./components/MobileMetaFilterSheet";
 import { MobileProductBottomNav } from "./components/MobileProductBottomNav";
 import { MobileStatusDrawer } from "./components/MobileStatusDrawer";
+import { MobileCategoryDrawer } from "./components/MobileCategoryDrawer";
 import type { SortField, SortOrder } from "./hooks/useProductList";
-import { MobileKeyboardSearch } from "../order/components/MobileKeyboardSearch";
+import { MobileProductSearch } from "./components/MobileProductSearch";
 import { cn } from "@/lib/utils";
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
@@ -414,7 +407,15 @@ const MobilePagination: React.FC<{
   onPrev: () => void;
   onNext: () => void;
   onLimitChange: (limit: number) => void;
-}> = ({ currentPageNum, totalPages, totalProducts, limit, onPrev, onNext, onLimitChange }) => (
+}> = ({
+  currentPageNum,
+  totalPages,
+  totalProducts,
+  limit,
+  onPrev,
+  onNext,
+  onLimitChange,
+}) => (
   <div className='bg-white border-t border-zinc-100 px-4 py-3'>
     <div className='flex items-center justify-between'>
       <button
@@ -441,7 +442,9 @@ const MobilePagination: React.FC<{
     </div>
     <div className='flex items-center justify-center mt-2 pt-2 border-t border-zinc-100'>
       <span className='text-[10px] text-zinc-400 mr-1.5'>Per page</span>
-      <Select value={`${limit}`} onValueChange={(v) => onLimitChange(parseInt(v, 10))}>
+      <Select
+        value={`${limit}`}
+        onValueChange={(v) => onLimitChange(parseInt(v, 10))}>
         <SelectTrigger className='h-6 w-[60px] text-[10px] rounded-md border-zinc-200'>
           <SelectValue />
         </SelectTrigger>
@@ -496,6 +499,7 @@ const ProductList: React.FC<Props> = ({ handleEditProduct }) => {
     refreshList,
     totalProducts,
     setSearchQuery,
+    searchQuery,
     updateCurrentPage,
     selectedCategory,
     deleteProductData,
@@ -506,6 +510,11 @@ const ProductList: React.FC<Props> = ({ handleEditProduct }) => {
     setSortOrder,
     activeOnly,
     setActiveOnly,
+    metaFilter,
+    setMetaFilter,
+    metaSearch,
+    setMetaSearch,
+    hasMetaFilter,
   } = useProductList();
 
   const navigate = useNavigate();
@@ -519,6 +528,7 @@ const ProductList: React.FC<Props> = ({ handleEditProduct }) => {
   const [selectedTab, setSelectedTab] = useState<TabKey>("all");
   const [mobileSelectedTab, setMobileSelectedTab] = useState<TabKey>("all");
   const [showKeyboardSearch, setShowKeyboardSearch] = useState(false);
+  const [showMetaSheet, setShowMetaSheet] = useState(false);
   const [showCategoryDrawer, setShowCategoryDrawer] = useState(false);
   const [showSortSheet, setShowSortSheet] = useState(false);
   const [showStatusDrawer, setShowStatusDrawer] = useState(false);
@@ -574,7 +584,8 @@ const ProductList: React.FC<Props> = ({ handleEditProduct }) => {
   }, [mobileSelectedTab]);
 
   // Whether the inactive tab is active (desktop or mobile)
-  const isInactiveView = selectedTab === "inactive" || mobileSelectedTab === "inactive";
+  const isInactiveView =
+    selectedTab === "inactive" || mobileSelectedTab === "inactive";
 
   // Wrap page-change to use table-only loading state
   const handlePageChange = useCallback(
@@ -817,13 +828,74 @@ const ProductList: React.FC<Props> = ({ handleEditProduct }) => {
     (() => true);
   const mobileFilteredProducts = products.filter(mobileTabFilter);
 
+  // Active filters surfaced as clearable chips on the mobile bottom nav
+  const mobileActiveFilters = [
+    ...(inputValue
+      ? [
+          {
+            key: "search",
+            label: `"${inputValue}"`,
+            onClear: () => setInputValue(""),
+          },
+        ]
+      : []),
+    ...(mobileSelectedTab !== "all"
+      ? [
+          {
+            key: "status",
+            label:
+              TAB_CONFIG.find((t) => t.value === mobileSelectedTab)?.label ??
+              "Status",
+            onClear: () => setMobileSelectedTab("all"),
+          },
+        ]
+      : []),
+    ...(selectedCategory
+      ? [
+          {
+            key: "category",
+            label:
+              categories.find((c) => c.id === selectedCategory)?.name ??
+              "Category",
+            onClear: () => setSelectedCategory(""),
+          },
+        ]
+      : []),
+    ...(sortBy !== "priority"
+      ? [
+          {
+            key: "sort",
+            label: `${SORT_FIELD_LABELS[sortBy]} ${sortOrder === "asc" ? "↑" : "↓"}`,
+            onClear: () => {
+              setSortBy("priority");
+              setSortOrder("desc");
+            },
+          },
+        ]
+      : []),
+    ...(hasMetaFilter
+      ? [
+          {
+            key: "meta",
+            label: metaSearch.trim()
+              ? `Meta: ${metaSearch.trim()}`
+              : `Meta: ${metaFilter.key.trim()}`,
+            onClear: () => {
+              setMetaFilter(EMPTY_META_FILTER);
+              setMetaSearch("");
+            },
+          },
+        ]
+      : []),
+  ];
+
   // ─── INITIAL full-page loading ─────────────────────────────────────────────
 
   if (productFetching && products.length === 0) {
     return (
       <>
         {/* Mobile loading */}
-        <div className='sm:hidden bg-gray-50 min-h-screen'>
+        <div className='md:hidden bg-gray-50 min-h-screen'>
           <div className='bg-white border-b border-zinc-200 px-4 py-3 flex items-center justify-between'>
             <div className='space-y-1'>
               <div className='h-5 w-24 bg-zinc-200 rounded animate-pulse' />
@@ -845,7 +917,7 @@ const ProductList: React.FC<Props> = ({ handleEditProduct }) => {
           <MobileLoadingSkeleton />
         </div>
         {/* Desktop loading */}
-        <div className='hidden sm:block space-y-3'>
+        <div className='hidden md:block space-y-3'>
           <div className='flex items-center justify-between'>
             <div className='flex items-center gap-2.5'>
               <div className='w-8 h-8 rounded-lg bg-zinc-200 animate-pulse' />
@@ -901,14 +973,14 @@ const ProductList: React.FC<Props> = ({ handleEditProduct }) => {
   ) {
     return (
       <>
-        <div className='sm:hidden'>
+        <div className='md:hidden'>
           <MobileEmptyState
             type='no-products'
             hasCreatePermission={hasRequiredPermission("product", "create")}
             onCreateProduct={() => navigate("/products/create")}
           />
         </div>
-        <div className='hidden sm:block'>
+        <div className='hidden md:block'>
           {hasRequiredPermission("product", "create") ? (
             <EmptyView
               title='No products yet'
@@ -934,16 +1006,25 @@ const ProductList: React.FC<Props> = ({ handleEditProduct }) => {
       {/* ══════════════════════════════════════════════════════════════════════
           MOBILE VIEW (< sm)
       ═══════════════════════════════════════════════════════════════════════ */}
-      <div className='sm:hidden bg-zinc-50 min-h-screen flex flex-col'>
+      <div className='md:hidden bg-zinc-50 min-h-screen flex flex-col'>
         {/* Sticky top bar */}
         <div className='sticky top-0 z-30 bg-white border-b border-zinc-200 shadow-sm'>
           {/* Header row */}
-          <div className={`flex items-center justify-between px-4 py-3 bg-gradient-to-r ${isInactiveView ? "from-orange-500 to-amber-500" : "from-red-500 to-orange-500"}`}>
+          <div
+            className={`flex items-center justify-between px-4 py-3 bg-gradient-to-r ${isInactiveView ? "from-orange-500 to-amber-500" : "from-white to-white"}`}>
             <div>
-              <h1 className='text-lg font-bold text-white leading-tight'>
+              <h1
+                className={cn(
+                  "text-lg font-bold  leading-tight",
+                  isInactiveView && "text-white",
+                )}>
                 Products
               </h1>
-              <p className='text-[11px] text-white'>
+              <p
+                className={cn(
+                  "text-[11px]",
+                  isInactiveView ? "text-white" : "text-zinc-500",
+                )}>
                 {totalProducts.toLocaleString()} total
               </p>
             </div>
@@ -965,17 +1046,19 @@ const ProductList: React.FC<Props> = ({ handleEditProduct }) => {
         </div> */}
 
         {/* Product grid */}
-        <div className='flex-1 px-4 pb-4'>
+        <div className='flex-1 px-1 pt-1 pb-4'>
           {isTableLoading && products.length > 0 ? (
             <MobileLoadingSkeleton />
           ) : mobileFilteredProducts.length === 0 ? (
-            inputValue || selectedCategory ? (
+            inputValue || selectedCategory || hasMetaFilter ? (
               <MobileEmptyState
                 type='no-results'
                 searchQuery={inputValue}
                 onClearFilters={() => {
                   setInputValue("");
                   setSelectedCategory("");
+                  setMetaFilter(EMPTY_META_FILTER);
+                  setMetaSearch("");
                 }}
               />
             ) : (
@@ -1008,6 +1091,7 @@ const ProductList: React.FC<Props> = ({ handleEditProduct }) => {
                       : ["No Variant"]
                   }
                   variationList={product.variation}
+                  meta={product.meta}
                   imageGroups={product.imageGroups}
                   updatedAt={
                     product.timestamps?.updatedAt || new Date().toISOString()
@@ -1042,19 +1126,24 @@ const ProductList: React.FC<Props> = ({ handleEditProduct }) => {
           onStatusClick={() => setShowStatusDrawer(true)}
           onCategoryClick={() => setShowCategoryDrawer(true)}
           onSortClick={() => setShowSortSheet(true)}
+          onMetaClick={() => setShowMetaSheet(true)}
           hasActiveStatus={mobileSelectedTab !== "all"}
           hasActiveCategory={!!selectedCategory}
           hasActiveSort={sortBy !== "priority"}
+          hasActiveMeta={hasMetaFilter}
           isInactiveView={isInactiveView}
+          activeFilters={mobileActiveFilters}
         />
       </div>
 
-      {/* Mobile keyboard search */}
-      <MobileKeyboardSearch
+      {/* Mobile product search */}
+      <MobileProductSearch
         open={showKeyboardSearch}
         searchValue={inputValue}
         onSearchChange={setInputValue}
         onClose={() => setShowKeyboardSearch(false)}
+        resultCount={mobileFilteredProducts.length}
+        isSearching={inputValue !== searchQuery}
       />
 
       {/* Mobile sort sheet */}
@@ -1064,6 +1153,17 @@ const ProductList: React.FC<Props> = ({ handleEditProduct }) => {
         onSort={handleMobileSort}
         initialField={sortBy}
         initialOrder={sortOrder}
+      />
+
+      {/* Mobile meta search/filter sheet */}
+      <MobileMetaFilterSheet
+        open={showMetaSheet}
+        onOpenChange={setShowMetaSheet}
+        metaFilter={metaFilter}
+        onMetaFilterChange={setMetaFilter}
+        metaSearch={metaSearch}
+        onMetaSearchChange={setMetaSearch}
+        isInactiveView={isInactiveView}
       />
 
       {/* Mobile status drawer */}
@@ -1082,78 +1182,27 @@ const ProductList: React.FC<Props> = ({ handleEditProduct }) => {
       />
 
       {/* Mobile category drawer */}
-      <Drawer open={showCategoryDrawer} onOpenChange={setShowCategoryDrawer}>
-        <DrawerContent className='rounded-t-2xl max-h-[70vh]'>
-          <DrawerHeader className='pb-2'>
-            <DrawerTitle className='text-base font-semibold'>
-              Filter by Category
-            </DrawerTitle>
-            <DrawerDescription className='text-xs'>
-              Select a category to filter products
-            </DrawerDescription>
-          </DrawerHeader>
-          <div className='px-4 pb-4 overflow-y-auto max-h-[55vh]'>
-            <div className='space-y-1'>
-              <button
-                onClick={() => {
-                  setSelectedCategory("");
-                  setShowCategoryDrawer(false);
-                }}
-                className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-colors ${!selectedCategory ? "bg-indigo-50 text-indigo-700 border border-indigo-200" : "text-zinc-600 hover:bg-zinc-50"}`}>
-                <div
-                  className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${!selectedCategory ? "border-indigo-500 bg-indigo-500" : "border-zinc-300"}`}>
-                  {!selectedCategory && (
-                    <div className='w-2 h-2 rounded-full bg-white' />
-                  )}
-                </div>
-                All Categories
-              </button>
-              {categories.map((cat) => (
-                <button
-                  key={cat.id}
-                  onClick={() => {
-                    setSelectedCategory(cat.id);
-                    setShowCategoryDrawer(false);
-                  }}
-                  className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-colors ${selectedCategory === cat.id ? "bg-indigo-50 text-indigo-700 border border-indigo-200" : "text-zinc-600 hover:bg-zinc-50"}`}>
-                  <div
-                    className={`w-5 h-5 rounded-full border-2 flex items-center justify-center shrink-0 ${selectedCategory === cat.id ? "border-indigo-500 bg-indigo-500" : "border-zinc-300"}`}>
-                    {selectedCategory === cat.id && (
-                      <div className='w-2 h-2 rounded-full bg-white' />
-                    )}
-                  </div>
-                  <span className='truncate'>{cat.name}</span>
-                  {cat.totalProducts > 0 && (
-                    <span className='ml-auto text-xs text-zinc-400 shrink-0'>
-                      {cat.totalProducts}
-                    </span>
-                  )}
-                </button>
-              ))}
-            </div>
-          </div>
-          <DrawerFooter className='pt-0 pb-6'>
-            <DrawerClose asChild>
-              <Button variant='outline' className='w-full'>
-                Close
-              </Button>
-            </DrawerClose>
-          </DrawerFooter>
-        </DrawerContent>
-      </Drawer>
+      <MobileCategoryDrawer
+        open={showCategoryDrawer}
+        onOpenChange={setShowCategoryDrawer}
+        categories={categories}
+        selectedCategory={selectedCategory}
+        onSelect={(id) => setSelectedCategory(id)}
+      />
 
       {/* ══════════════════════════════════════════════════════════════════════
           DESKTOP VIEW (≥ sm)
       ═══════════════════════════════════════════════════════════════════════ */}
       <div
         className={cn(
-          "hidden sm:block space-y-3",
+          "hidden md:block space-y-3",
           viewType === "tree" ? "mx-6" : "container",
         )}>
         {/* Page header */}
         <div className='flex items-center justify-between'>
           <div className='flex items-center gap-2.5'>
-            <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${isInactiveView ? "bg-orange-500" : "bg-indigo-600"}`}>
+            <div
+              className={`w-8 h-8 rounded-lg flex items-center justify-center ${isInactiveView ? "bg-orange-500" : "bg-indigo-600"}`}>
               <ShoppingBag className='h-4 w-4 text-white' />
             </div>
             <div>
@@ -1213,6 +1262,15 @@ const ProductList: React.FC<Props> = ({ handleEditProduct }) => {
               setSelectedCategory={setSelectedCategory}
               selectedCategory={selectedCategory}
             />
+            {/* Admin meta-data filter (key/value/range + free text) */}
+            <MetaFilterPopover
+              metaFilter={metaFilter}
+              onMetaFilterChange={setMetaFilter}
+              metaSearch={metaSearch}
+              onMetaSearchChange={setMetaSearch}
+              hasActiveMetaFilter={hasMetaFilter}
+              inactiveView={isInactiveView}
+            />
             {/* Sort controls */}
             <Select
               value={sortBy}
@@ -1245,13 +1303,15 @@ const ProductList: React.FC<Props> = ({ handleEditProduct }) => {
                 <ArrowDown className='h-3.5 w-3.5' />
               )}
             </Button>
-            {(inputValue || selectedCategory) && (
+            {(inputValue || selectedCategory || hasMetaFilter) && (
               <Button
                 variant='ghost'
                 size='sm'
                 onClick={() => {
                   setInputValue("");
                   setSelectedCategory("");
+                  setMetaFilter(EMPTY_META_FILTER);
+                  setMetaSearch("");
                 }}
                 className='h-8 text-xs text-red-500 hover:text-red-600 hover:bg-red-50 px-2.5'>
                 Clear
@@ -1352,6 +1412,7 @@ const ProductList: React.FC<Props> = ({ handleEditProduct }) => {
                   <Table divClass='relative'>
                     <TableHeader className='sticky top-0 z-10'>
                       <TableRow className='bg-zinc-50 border-b border-zinc-200 hover:bg-zinc-50'>
+                        <TableHead className='w-8 bg-zinc-50 py-2.5' />
                         <TableHead className='w-12 bg-zinc-50 text-zinc-400 py-2.5'>
                           <Image className='h-3.5 w-3.5' />
                         </TableHead>
@@ -1388,6 +1449,7 @@ const ProductList: React.FC<Props> = ({ handleEditProduct }) => {
                               : ["No Variant"]) as string[]
                           }
                           variationList={product?.variation}
+                          meta={product?.meta}
                           hasVariation={product?.hasVariation}
                           imageGroups={product?.imageGroups}
                           handleUpdateProduct={handleEditProduct}

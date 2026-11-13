@@ -160,7 +160,7 @@ const QueueStats = ({ type }: QueueStatsProps) => {
       </div>
 
       {/* Stat cards */}
-      <div className='grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3'>
+      <div className='grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3'>
         {STATS_CONFIG.map(
           ({ key, label, description, icon: Icon, color, bg, ring }) => {
             const value = queueStats[key] ?? 0;
@@ -205,7 +205,7 @@ const QueueStats = ({ type }: QueueStatsProps) => {
       </div>
 
       {/* Summary row */}
-      <div className='grid grid-cols-2 sm:grid-cols-4 gap-3'>
+      <div className='grid grid-cols-2 md:grid-cols-4 gap-3'>
         {[
           {
             label: "Total Jobs",
@@ -347,7 +347,7 @@ const QueueStats = ({ type }: QueueStatsProps) => {
             Status definitions
           </span>
         </div>
-        <dl className='grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-1.5'>
+        <dl className='grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-1.5'>
           {LEGEND.map(({ label, detail }) => (
             <div key={label} className='flex gap-2 text-xs text-slate-600'>
               <dt className='font-semibold text-slate-700 shrink-0'>

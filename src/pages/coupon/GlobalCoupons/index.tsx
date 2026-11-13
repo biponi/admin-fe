@@ -18,7 +18,30 @@ import {
   TableRow,
 } from "../../../components/ui/table";
 import { Badge } from "../../../components/ui/badge";
-import { Plus, Search, Edit, Trash2, Power, Ticket } from "lucide-react";
+import {
+  MobilePage,
+  MobileFab,
+  MobileStatRow,
+  MobileStatTile,
+  MobileFilterSheet,
+  MobileFilterTrigger,
+  MobileListCard,
+  MobileStaggeredList,
+  MobileEmptyState,
+  MobileActionSheet,
+  MobileSkeletonList,
+} from "../../../components/mobile";
+import { PageHeader } from "../../../components/PageHeader";
+import {
+  Plus,
+  Search,
+  Edit,
+  Trash2,
+  Power,
+  Ticket,
+  ChevronRight,
+  Percent,
+} from "lucide-react";
 import Swal from "sweetalert2";
 import * as couponAPI from "../../../api/coupon";
 import type { GlobalCoupon, FilterOptions } from "../interface";
@@ -32,6 +55,13 @@ export default function GlobalCouponsPage() {
     discountType: "all",
   });
   const [searchQuery, setSearchQuery] = useState("");
+  const [filterSheetOpen, setFilterSheetOpen] = useState(false);
+  const [draftFilters, setDraftFilters] = useState<FilterOptions>(filters);
+  const [actionCoupon, setActionCoupon] = useState<GlobalCoupon | null>(null);
+
+  const activeFilterCount =
+    (filters.status !== "all" ? 1 : 0) +
+    (filters.discountType !== "all" ? 1 : 0);
 
   useEffect(() => {
     fetchCoupons();
@@ -166,48 +196,87 @@ export default function GlobalCouponsPage() {
   const expiredCoupons = coupons.filter((c) => c.status === "expired").length;
   const totalUsed = coupons.reduce((sum, c) => sum + c.usedCount, 0);
 
+  const formatDiscount = (coupon: GlobalCoupon) =>
+    coupon.discountType === "fixed"
+      ? `${coupon.discountValue} BDT`
+      : `${coupon.discountValue}%`;
+
   if (loading) {
     return (
       <MainView title="Global Coupons">
-        <div className="min-h-screen bg-slate-50/60 flex items-center justify-center">
-          <div className="text-slate-500">Loading...</div>
-        </div>
+        <MobilePage
+          icon={<Ticket className="h-5 w-5 text-primary" />}
+          title="Global Coupons"
+          subtitle="Manage public coupons available to all customers"
+          back
+          onBack={() => navigate("/coupons")}
+        >
+          <div className="min-h-screen bg-slate-50/60">
+            <div className="max-w-7xl mx-auto px-4 md:px-6 lg:px-8 py-6 space-y-6">
+              <div className="mobile:block hidden">
+                <MobileSkeletonList count={6} />
+              </div>
+              <div className="hidden md:flex min-h-[50vh] items-center justify-center">
+                <div className="text-slate-500">Loading...</div>
+              </div>
+            </div>
+          </div>
+        </MobilePage>
       </MainView>
     );
   }
 
   return (
     <MainView title="Global Coupons">
+      <MobilePage
+        icon={<Ticket className="h-5 w-5 text-primary" />}
+        title="Global Coupons"
+        subtitle="Manage public coupons available to all customers"
+        back
+        onBack={() => navigate("/coupons")}
+        actions={
+          <MobileFilterTrigger
+            onClick={() => {
+              setDraftFilters(filters);
+              setFilterSheetOpen(true);
+            }}
+            className='bg-primary/10 text-primary active:scale-95 transition-transform'
+            activeCount={activeFilterCount}
+          />
+        }
+        fab={
+          <MobileFab
+            icon={<Plus className="h-5 w-5" />}
+            label="Create"
+            onClick={() => navigate("/coupons/global/create")}
+          />
+        }>
       <div className="min-h-screen bg-slate-50/60">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
+        <div className="max-w-7xl mx-auto px-4 md:px-6 lg:px-8 py-6 space-y-6">
           {/* Page Header */}
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-            <div className="flex items-center gap-3">
-              <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-indigo-600 shadow-sm shadow-indigo-200">
-                <Ticket className="h-5 w-5 text-white" />
-              </div>
-              <div>
-                <h1 className="text-xl font-semibold text-slate-900 leading-tight">
-                  Global Coupons
-                </h1>
-                <p className="text-sm text-slate-500 mt-0.5">
-                  Manage public coupons available to all customers
-                </p>
-              </div>
-            </div>
-
-            <div className="flex items-center gap-2">
-              <button
-                onClick={() => navigate("/coupons/global/create")}
-                className="inline-flex items-center gap-1.5 px-4 py-2 text-sm font-medium text-white bg-indigo-600 rounded-lg hover:bg-indigo-700 active:bg-indigo-800 transition-all duration-150 shadow-sm shadow-indigo-200">
-                <Plus className="h-4 w-4" />
-                Create Coupon
-              </button>
-            </div>
+          <div className="hidden md:block">
+            <PageHeader
+              icon={<Ticket className="h-5 w-5" />}
+              title="Global Coupons"
+              subtitle="Manage public coupons available to all customers"
+              count={
+                <span className="rounded-md px-2.5 py-1 text-base font-semibold text-slate-500 tabular-nums">
+                  {totalCoupons} total
+                </span>
+              }
+              actions={
+                <button
+                  onClick={() => navigate("/coupons/global/create")}
+                  className="inline-flex items-center gap-1.5 px-4 py-2 text-sm font-medium text-white bg-indigo-600 rounded-lg hover:bg-indigo-700 active:bg-indigo-800 transition-all duration-150 shadow-sm shadow-indigo-200">
+                  <Plus className="h-4 w-4" />
+                  Create Coupon
+                </button>
+              }
+            />
           </div>
 
           {/* Summary Strip */}
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+          <div className="hidden md:grid grid-cols-2 md:grid-cols-4 gap-3">
             {[
               {
                 label: "Total Coupons",
@@ -253,9 +322,48 @@ export default function GlobalCouponsPage() {
             ))}
           </div>
 
+          {/* Mobile stat row */}
+          <MobileStatRow>
+            <MobileStatTile
+              label="Total"
+              value={totalCoupons}
+              icon={<Ticket className="h-4 w-4" />}
+              tone="bg-indigo-50 text-indigo-600"
+            />
+            <MobileStatTile
+              label="Active"
+              value={activeCoupons}
+              icon={<Ticket className="h-4 w-4" />}
+              tone="bg-emerald-50 text-emerald-600"
+            />
+            <MobileStatTile
+              label="Expired"
+              value={expiredCoupons}
+              icon={<Ticket className="h-4 w-4" />}
+              tone="bg-amber-50 text-amber-600"
+            />
+            <MobileStatTile
+              label="Used"
+              value={totalUsed}
+              icon={<Percent className="h-4 w-4" />}
+              tone="bg-rose-50 text-rose-600"
+            />
+          </MobileStatRow>
+
+          {/* Mobile search */}
+          <div className="mobile:block hidden relative">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-slate-400" />
+            <Input
+              placeholder="Search by code or name..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="pl-10"
+            />
+          </div>
+
           {/* Filters */}
-          <div className="bg-white rounded-xl border border-slate-100 shadow-sm p-4 sm:p-5">
-            <div className="flex flex-col sm:flex-row gap-4">
+          <div className="hidden md:block bg-white rounded-xl border border-slate-100 shadow-sm p-4 md:p-5">
+            <div className="flex flex-col md:flex-row gap-4">
               <div className="flex-1">
                 <label className="text-sm font-medium text-slate-700 mb-1.5 block">
                   Status
@@ -316,7 +424,7 @@ export default function GlobalCouponsPage() {
           </div>
 
           {/* Table */}
-          <div className="bg-white rounded-xl border border-slate-100 shadow-sm overflow-hidden">
+          <div className="hidden md:block bg-white rounded-xl border border-slate-100 shadow-sm overflow-hidden">
             <div className="overflow-x-auto">
               <Table>
                 <TableHeader>
@@ -469,8 +577,157 @@ export default function GlobalCouponsPage() {
               </Table>
             </div>
           </div>
+
+          {/* Mobile coupon list */}
+          <div className="mobile:block hidden">
+            {filteredCoupons.length === 0 ? (
+              <MobileEmptyState
+                icon={<Ticket className="h-7 w-7" />}
+                title="No coupons found"
+                description="Create your first coupon to get started."
+                action={
+                  <button
+                    onClick={() => navigate("/coupons/global/create")}
+                    className="m3-ripple inline-flex items-center gap-1.5 h-10 px-5 text-sm font-medium text-white bg-indigo-600 rounded-full">
+                    <Plus className="h-4 w-4" />
+                    Create Coupon
+                  </button>
+                }
+              />
+            ) : (
+              <MobileStaggeredList>
+                {filteredCoupons.map((coupon) => (
+                  <MobileListCard
+                    key={coupon._id}
+                    onClick={() => setActionCoupon(coupon)}
+                    leading={
+                      <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-indigo-50">
+                        <Ticket className="h-5 w-5 text-indigo-600" />
+                      </div>
+                    }
+                    title={
+                      <span className="font-mono tracking-wide">{coupon.code}</span>
+                    }
+                    subtitle={coupon.name}
+                    badge={
+                      <Badge className={getStatusColor(coupon.status)} variant="outline">
+                        {coupon.status}
+                      </Badge>
+                    }
+                    trailing={<ChevronRight className="h-5 w-5 text-slate-400" />}>
+                    <div className="mt-2 flex flex-wrap items-center gap-1.5 text-[11px] text-muted-foreground">
+                      <span className="inline-flex items-center rounded-full bg-muted px-2 py-0.5 font-medium text-slate-700">
+                        {formatDiscount(coupon)}
+                      </span>
+                      <span className="inline-flex items-center rounded-full bg-muted px-2 py-0.5">
+                        {coupon.usedCount} used
+                        {coupon.totalUsageLimit
+                          ? ` / ${coupon.totalUsageLimit}`
+                          : ""}
+                      </span>
+                      <span className="inline-flex items-center rounded-full bg-muted px-2 py-0.5">
+                        Until {new Date(coupon.validUntil).toLocaleDateString()}
+                      </span>
+                      {coupon.autoApply && (
+                        <span className="inline-flex items-center rounded-full bg-emerald-50 px-2 py-0.5 text-emerald-700">
+                          Auto-apply
+                        </span>
+                      )}
+                    </div>
+                  </MobileListCard>
+                ))}
+              </MobileStaggeredList>
+            )}
+          </div>
         </div>
       </div>
+
+      {/* Mobile row actions */}
+      <MobileActionSheet
+        open={!!actionCoupon}
+        onOpenChange={(open) => {
+          if (!open) setActionCoupon(null);
+        }}
+        title={actionCoupon?.code}
+        description={actionCoupon?.name}
+        actions={[
+          {
+            icon: <Edit className="h-4 w-4" />,
+            label: "Edit coupon",
+            onClick: () => navigate(`/coupons/global/edit/${actionCoupon?.code}`),
+          },
+          ...(actionCoupon?.status === "active"
+            ? [
+                {
+                  icon: <Power className="h-4 w-4" />,
+                  label: "Disable coupon",
+                  onClick: () => handleDisable(actionCoupon!.code),
+                },
+              ]
+            : []),
+          {
+            icon: <Trash2 className="h-4 w-4" />,
+            label: "Delete coupon",
+            destructive: true,
+            onClick: () => handleDelete(actionCoupon!.code),
+          },
+        ]}
+      />
+
+      {/* Mobile filters */}
+      <MobileFilterSheet
+        open={filterSheetOpen}
+        onOpenChange={setFilterSheetOpen}
+        onApply={() => setFilters(draftFilters)}
+        onReset={() => {
+          setDraftFilters({ status: "all", discountType: "all" });
+          setFilters({ status: "all", discountType: "all" });
+        }}>
+        <div className="space-y-4 py-1">
+          <div>
+            <label className="text-sm font-medium text-slate-700 mb-1.5 block">
+              Status
+            </label>
+            <Select
+              value={draftFilters.status}
+              onValueChange={(value) =>
+                setDraftFilters({ ...draftFilters, status: value as any })
+              }>
+              <SelectTrigger className="w-full">
+                <SelectValue placeholder="Select status" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Statuses</SelectItem>
+                <SelectItem value="active">Active</SelectItem>
+                <SelectItem value="expired">Expired</SelectItem>
+                <SelectItem value="disabled">Disabled</SelectItem>
+                <SelectItem value="scheduled">Scheduled</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div>
+            <label className="text-sm font-medium text-slate-700 mb-1.5 block">
+              Discount Type
+            </label>
+            <Select
+              value={draftFilters.discountType}
+              onValueChange={(value) =>
+                setDraftFilters({ ...draftFilters, discountType: value as any })
+              }>
+              <SelectTrigger className="w-full">
+                <SelectValue placeholder="Select type" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Types</SelectItem>
+                <SelectItem value="fixed">Fixed Amount</SelectItem>
+                <SelectItem value="percentage">Percentage</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
+      </MobileFilterSheet>
+      </MobilePage>
     </MainView>
   );
 }

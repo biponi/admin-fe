@@ -154,7 +154,10 @@ export const useInventoryReport = (
 export const usePaginatedInventoryReport = (
   baseParams: Omit<InventoryReportParams, "page" | "limit">,
   initialPage: number = 1,
-  initialLimit: number = 20
+  initialLimit: number = 20,
+  options?: {
+    enabled?: boolean;
+  }
 ) => {
   const [page, setPage] = useState(initialPage);
   const [limit, setLimit] = useState(initialLimit);
@@ -165,7 +168,9 @@ export const usePaginatedInventoryReport = (
     limit,
   };
 
-  const { data, loading, error, refetch } = useInventoryReport(params);
+  const { data, loading, error, refetch } = useInventoryReport(params, {
+    enabled: options?.enabled ?? true,
+  });
 
   const pagination = data?.data?.pagination;
 

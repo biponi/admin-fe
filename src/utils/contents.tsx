@@ -1,10 +1,16 @@
 import { BoxesIcon, Home, ShirtIcon, ShoppingCart } from "lucide-react";
 import { BRAND_CONFIG } from "../config/brand";
-import mainLogo from "../assets/Biponi.svg";
-import mainPngLogo from "../assets/Biponi-lg.png";
+import mainLogo from "../assets/brand/logo-md.png";
+import mainPngLogo from "../assets/brand/logo.png";
+import mainSvgLogo from "../assets/brand/logo.svg";
 
-// Logo exports (assets will be renamed in future updates)
-export const BiponiLogo = mainLogo;
+// Modern Brand logo exports
+export const BrandLogo = mainPngLogo;
+export const BrandLogoSvg = mainSvgLogo;
+export const BrandLogoSm = mainLogo;
+
+// Backwards-compatible aliases for legacy imports
+export const BiponiLogo = mainSvgLogo;
 export const BiponiMainLogo = mainPngLogo;
 
 // Brand configuration exports

@@ -14,6 +14,7 @@ import {
   CardTitle,
 } from "../../components/ui/card";
 import { Badge } from "../../components/ui/badge";
+import { PageHeader } from "../../components/PageHeader";
 import {
   Table,
   TableBody,
@@ -26,6 +27,7 @@ import { Separator } from "../../components/ui/separator";
 import MainView from "../../coreComponents/mainView";
 import {
   ArrowLeft,
+  FileText,
   RefreshCw,
   Package,
   User,
@@ -41,16 +43,26 @@ import {
   XCircle,
 } from "lucide-react";
 import { getOrderDetails } from "../../api/order";
+import RiskBadge from "../../components/fraud/RiskBadge";
+import BlockedBadge from "../../components/fraud/BlockedBadge";
 import { IOrder } from "./interface";
 import { useToast } from "../../components/ui/use-toast";
 import { format } from "date-fns";
 import DefaultLoading from "../../coreComponents/defaultLoading";
 import { Alert, AlertDescription } from "../../components/ui/alert";
+import {
+  MobilePage,
+  MobileListCard,
+  MobileSkeletonList,
+  rippleProps,
+} from "../../components/mobile";
+import { useIsMobile } from "../../hooks/use-mobile";
 
 const OrderDetails = () => {
   const { orderId } = useParams<{ orderId: string }>();
   const navigate = useNavigate();
   const { toast } = useToast();
+  const isMobile = useIsMobile();
 
   const [order, setOrder] = useState<IOrder | null>(null);
   const [loading, setLoading] = useState(true);
@@ -141,12 +153,12 @@ const OrderDetails = () => {
   };
 
   const getRiskLevelColor = (riskLevel: string) => {
-    switch (riskLevel.toLowerCase()) {
-      case "low":
+    switch (riskLevel?.toLowerCase()) {
+      case "green":
         return "default";
-      case "medium":
+      case "yellow":
         return "secondary";
-      case "high":
+      case "red":
         return "destructive";
       default:
         return "outline";
@@ -154,6 +166,13 @@ const OrderDetails = () => {
   };
 
   if (loading) {
+    if (isMobile) {
+      return (
+        <div className='p-3'>
+          <MobileSkeletonList count={5} />
+        </div>
+      );
+    }
     return <DefaultLoading title='Loading Order Details...' />;
   }
 
@@ -175,34 +194,530 @@ const OrderDetails = () => {
     );
   }
 
+  /* ────────────────────────────────────────────────────────────────────────
+     Mobile (Material) presentation — the desktop tree below is untouched.
+     ──────────────────────────────────────────────────────────────────────── */
+  if (isMobile) {
+    const pricingTotal =
+      order.totalPrice - order.discount + order.deliveryCharge;
+
+    return (
+      <MobilePage
+        title={`Order #${order.orderNumber}`}
+        icon={<FileText className='h-5 w-5 text-primary' />}
+        subtitle={`${order.status} · ${format(
+          new Date(order.timestamps.createdAt),
+          "MMM dd, yyyy HH:mm",
+        )}`}
+        back
+        onBack={() => navigate("/order")}
+        actions={
+          <button
+            onClick={handleRefresh}
+            disabled={refreshing}
+            aria-label='Refresh order'
+            className='m3-ripple grid h-10 w-10 place-items-center rounded-full active:bg-muted disabled:opacity-50'
+            {...rippleProps()}>
+            <RefreshCw
+              className={`h-5 w-5 ${refreshing ? "animate-spin" : ""}`}
+            />
+          </button>
+        }>
+        <div className='px-3 pt-3 pb-4 space-y-3'>
+          {/* Order summary */}
+          <div className='rounded-2xl border bg-card px-4 py-3.5 space-y-2'>
+            <div className='flex items-start justify-between gap-2'>
+              <p className='text-lg font-semibold tracking-tight leading-tight'>
+                Order #{order.orderNumber}
+              </p>
+              <div className='flex flex-col items-end gap-1'>
+                <Badge
+                  variant={getStatusColor(order.status)}
+                  className='gap-1 text-xs'>
+                  {getStatusIcon(order.status)}
+                  <span>{order.status}</span>
+                </Badge>
+                {order.isReturn && (
+                  <Badge variant='destructive' className='text-xs'>
+                    Returned
+                  </Badge>
+                )}
+              </div>
+            </div>
+            <p className='text-xs text-muted-foreground'>
+              {format(new Date(order.timestamps.createdAt), "MMM dd, yyyy HH:mm")}
+            </p>
+            <div className='flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-foreground'>
+              <span>ID: {order.id}</span>
+              <span>Created by: {order.orderCreatedBy}</span>
+              {order.courier?.provider && <span>Courier: {order.courier.provider}</span>}
+            </div>
+          </div>
+
+          {/* Blocked customer banner */}
+          {order.fraudDetection?.blocked && (
+            <Alert className='border-rose-600 bg-rose-600 text-white'>
+              <AlertCircle className='h-4 w-4' />
+              <AlertDescription>
+                <strong>Customer blocked:</strong> this customer is in the fraud
+                group — new orders for them will be rejected.
+                {order.fraudDetection.lastAnalyzedAt
+                  ? ` Risk level: ${order.fraudDetection.riskLevel} (score ${order.fraudDetection.riskScore}).`
+                  : null}
+              </AlertDescription>
+            </Alert>
+          )}
+
+          {/* Fraud detection warning */}
+          {order.requiresManualReview &&
+            order.fraudFlags &&
+            order.fraudFlags.length > 0 && (
+              <Alert variant='destructive'>
+                <AlertCircle className='h-4 w-4' />
+                <AlertDescription>
+                  <strong>Fraud Detection Alert:</strong> This order requires
+                  manual review. Risk Level:{" "}
+                  <RiskBadge
+                    level={
+                      order.fraudDetection?.riskLevel ?? order.customerRiskLevel
+                    }
+                    className='align-middle'
+                  />{" "}
+                  (Score:{" "}
+                  {order.fraudDetection?.riskScore ?? order.customerRiskScore})
+                  <ul className='mt-2 list-disc list-inside'>
+                    {order.fraudFlags.map((flag, idx) => (
+                      <li key={idx}>{flag}</li>
+                    ))}
+                  </ul>
+                </AlertDescription>
+              </Alert>
+            )}
+
+          <Tabs defaultValue='overview' className='w-full'>
+            <TabsList className='grid w-full grid-cols-5 h-9'>
+              <TabsTrigger value='overview' className='text-[11px] px-1'>
+                Overview
+              </TabsTrigger>
+              <TabsTrigger value='products' className='text-[11px] px-1'>
+                Products
+              </TabsTrigger>
+              <TabsTrigger value='payment' className='text-[11px] px-1'>
+                Payment
+              </TabsTrigger>
+              <TabsTrigger value='timeline' className='text-[11px] px-1'>
+                Timeline
+              </TabsTrigger>
+              <TabsTrigger value='audit' className='text-[11px] px-1'>
+                Audit
+              </TabsTrigger>
+            </TabsList>
+
+            {/* Overview */}
+            <TabsContent value='overview' className='mt-3 space-y-2.5'>
+              <MobileListCard
+                static
+                leading={<User className='h-5 w-5 text-muted-foreground' />}
+                title={order.customer.name}
+                subtitle={
+                  [
+                    order.customer.phoneNumber,
+                    order.customer.email,
+                  ]
+                    .filter(Boolean)
+                    .join(" · ") || undefined
+                }
+              />
+              <MobileListCard
+                static
+                leading={<MapPin className='h-5 w-5 text-muted-foreground' />}
+                title={`${order.shipping.division} · ${order.shipping.district}`}
+                subtitle={order.shipping.address}
+              />
+              {order.courier &&
+                (order.courier.provider ||
+                  order.courier.trackingCode ||
+                  order.courier.consignmentId) && (
+                  <MobileListCard
+                    static
+                    leading={<Truck className='h-5 w-5 text-muted-foreground' />}
+                    title={order.courier.provider || "Courier"}
+                    subtitle={
+                      [
+                        order.courier.consignmentId,
+                        order.courier.trackingCode,
+                        order.estimatedDeliveryDate
+                          ? `ETA ${format(
+                              new Date(order.estimatedDeliveryDate),
+                              "MMM dd, yyyy",
+                            )}`
+                          : null,
+                      ]
+                        .filter(Boolean)
+                        .join(" · ") || undefined
+                    }
+                  />
+                )}
+              {order.notes && (
+                <MobileListCard
+                  static
+                  title='Order Notes'
+                  subtitle={order.notes}
+                />
+              )}
+            </TabsContent>
+
+            {/* Products */}
+            <TabsContent value='products' className='mt-3 space-y-2.5'>
+              {order.products.map((product, idx) => (
+                <MobileListCard
+                  key={idx}
+                  static
+                  leading={
+                    product.thumbnail ? (
+                      <img
+                        src={product.thumbnail}
+                        alt={product.name}
+                        className='w-12 h-12 object-cover rounded-xl border'
+                      />
+                    ) : (
+                      <div className='grid h-12 w-12 place-items-center rounded-xl border bg-muted'>
+                        <Package className='h-5 w-5 text-muted-foreground' />
+                      </div>
+                    )
+                  }
+                  title={product.name}
+                  subtitle={
+                    product.hasVariation && product.variation
+                      ? [
+                          product.variation.color,
+                          product.variation.size,
+                        ]
+                          .filter(Boolean)
+                          .join(" / ")
+                      : undefined
+                  }
+                  trailing={
+                    <div className='text-right'>
+                      <p className='text-sm font-semibold'>
+                        ৳{product.totalPrice.toLocaleString()}
+                      </p>
+                      <p className='text-[11px] text-muted-foreground'>
+                        {product.quantity} × ৳
+                        {product.unitPrice.toLocaleString()}
+                      </p>
+                    </div>
+                  }
+                />
+              ))}
+            </TabsContent>
+
+            {/* Payment */}
+            <TabsContent value='payment' className='mt-3 space-y-2.5'>
+              <div className='rounded-2xl border bg-card px-4 py-3.5 space-y-2.5'>
+                <div className='flex items-center justify-between text-sm'>
+                  <span className='text-muted-foreground'>Subtotal</span>
+                  <span className='font-medium'>
+                    ৳{order.totalPrice.toLocaleString()}
+                  </span>
+                </div>
+                {order.discount > 0 && (
+                  <div className='flex items-center justify-between text-sm text-green-600'>
+                    <span>Discount</span>
+                    <span className='font-medium'>
+                      -৳{order.discount.toLocaleString()}
+                    </span>
+                  </div>
+                )}
+                <div className='flex items-center justify-between text-sm'>
+                  <span className='text-muted-foreground'>Delivery Charge</span>
+                  <span className='font-medium'>
+                    ৳{order.deliveryCharge.toLocaleString()}
+                  </span>
+                </div>
+                <Separator />
+                <div className='flex items-center justify-between text-base font-bold'>
+                  <span>Total</span>
+                  <span>৳{pricingTotal.toLocaleString()}</span>
+                </div>
+              </div>
+
+              <div className='rounded-2xl border bg-card px-4 py-3.5 space-y-2.5'>
+                <div className='flex items-center gap-2 text-sm font-medium'>
+                  <CreditCard className='h-4 w-4 text-muted-foreground' />
+                  Payment Status
+                </div>
+                <div className='flex items-center justify-between text-sm'>
+                  <span className='text-muted-foreground'>Paid</span>
+                  <span className='font-medium text-green-600'>
+                    ৳{order.paid.toLocaleString()}
+                  </span>
+                </div>
+                {order.remaining > 0 && (
+                  <div className='flex items-center justify-between text-sm'>
+                    <span className='text-muted-foreground'>Remaining</span>
+                    <span className='font-medium text-red-600'>
+                      ৳{order.remaining.toLocaleString()}
+                    </span>
+                  </div>
+                )}
+                {order.remaining === 0 && (
+                  <div className='flex items-center justify-between text-sm'>
+                    <span className='text-muted-foreground'>Status</span>
+                    <Badge>Fully Paid</Badge>
+                  </div>
+                )}
+              </div>
+
+              {order.payment && order.payment.length > 0 && (
+                <div className='rounded-2xl border bg-card px-4 py-3.5 space-y-2.5'>
+                  <p className='text-sm font-medium'>Payment History</p>
+                  {order.payment.map((payment, idx) => (
+                    <div
+                      key={idx}
+                      className='flex items-start justify-between gap-2 border-b pb-2 last:border-0 last:pb-0'>
+                      <div className='min-w-0'>
+                        <p className='text-sm font-medium'>
+                          ৳{payment.amount?.toLocaleString() || 0}
+                        </p>
+                        <p className='text-[11px] text-muted-foreground truncate'>
+                          {payment.paymentType || "-"} ·{" "}
+                          {payment.paymentBy || "-"}
+                        </p>
+                        <p className='text-[11px] text-muted-foreground'>
+                          {payment.date
+                            ? format(new Date(payment.date), "MMM dd, yyyy HH:mm")
+                            : "-"}
+                          {payment.transectionId
+                            ? ` · ${payment.transectionId}`
+                            : ""}
+                        </p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </TabsContent>
+
+            {/* Timeline */}
+            <TabsContent value='timeline' className='mt-3 space-y-2.5'>
+              <MobileListCard
+                static
+                leading={<Clock className='h-5 w-5 text-muted-foreground' />}
+                title='Order Created'
+                subtitle={format(
+                  new Date(order.timestamps.createdAt),
+                  "MMM dd, yyyy HH:mm",
+                )}
+              />
+              {order.timestamps.updatedAt && (
+                <MobileListCard
+                  static
+                  leading={<Clock className='h-5 w-5 text-muted-foreground' />}
+                  title='Last Updated'
+                  subtitle={format(
+                    new Date(order.timestamps.updatedAt),
+                    "MMM dd, yyyy HH:mm",
+                  )}
+                />
+              )}
+              {order.courier?.createdAt && (
+                <MobileListCard
+                  static
+                  leading={<Truck className='h-5 w-5 text-muted-foreground' />}
+                  title='Courier Assigned'
+                  subtitle={format(
+                    new Date(order.courier.createdAt),
+                    "MMM dd, yyyy HH:mm",
+                  )}
+                />
+              )}
+              {order.isReturn && order.returnedAt && (
+                <MobileListCard
+                  static
+                  danger
+                  leading={<AlertCircle className='h-5 w-5' />}
+                  title='Order Returned'
+                  subtitle={format(
+                    new Date(order.returnedAt),
+                    "MMM dd, yyyy HH:mm",
+                  )}
+                />
+              )}
+              {order.deliveryTimeline && order.deliveryTimeline.length > 0 && (
+                <p className='pt-1 text-[11px] font-medium uppercase tracking-widest text-muted-foreground'>
+                  Delivery tracking
+                </p>
+              )}
+              {order.deliveryTimeline?.map((event, idx) => (
+                <MobileListCard
+                  key={idx}
+                  static
+                  leading={
+                    <div
+                      className={`grid h-9 w-9 place-items-center rounded-full ${
+                        event.status === "delivered"
+                          ? "bg-green-100 text-green-700"
+                          : "bg-blue-100 text-blue-700"
+                      }`}>
+                      <Truck className='h-4 w-4' />
+                    </div>
+                  }
+                  title={event.status}
+                  subtitle={
+                    [
+                      event.remarks,
+                      event.timestamp
+                        ? format(
+                            new Date(event.timestamp),
+                            "MMM dd, yyyy HH:mm",
+                          )
+                        : null,
+                    ]
+                      .filter(Boolean)
+                      .join(" · ") || undefined
+                  }
+                  trailing={
+                    event.location ? (
+                      <Badge variant='outline' className='text-[11px]'>
+                        {event.location}
+                      </Badge>
+                    ) : undefined
+                  }
+                />
+              ))}
+            </TabsContent>
+
+            {/* Audit */}
+            <TabsContent value='audit' className='mt-3 space-y-3'>
+              {order.customer?.phoneNumber && (
+                <Card>
+                  <CardHeader>
+                    <CardTitle className='flex items-center text-base'>
+                      <AlertCircle className='mr-2 h-5 w-5' />
+                      Fraud Detection Analysis
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <FraudDetailPanel
+                      phoneNumber={order.customer.phoneNumber}
+                      customerName={order.customer.name}
+                      onChanged={handleRefresh}
+                    />
+                  </CardContent>
+                </Card>
+              )}
+
+              {order.isReturn && (
+                <div className='rounded-2xl border bg-card px-4 py-3.5 space-y-2.5'>
+                  <p className='text-sm font-medium'>Return Information</p>
+                  {order.returnReason && (
+                    <div>
+                      <p className='text-xs text-muted-foreground'>
+                        Return Reason
+                      </p>
+                      <p className='text-sm font-medium'>
+                        {order.returnReason}
+                      </p>
+                    </div>
+                  )}
+                  {order.returnReasonDetails && (
+                    <div>
+                      <p className='text-xs text-muted-foreground'>Details</p>
+                      <p className='text-sm font-medium'>
+                        {order.returnReasonDetails}
+                      </p>
+                    </div>
+                  )}
+                  {order.returnedAt && (
+                    <div>
+                      <p className='text-xs text-muted-foreground'>Returned At</p>
+                      <p className='text-sm font-medium'>
+                        {format(
+                          new Date(order.returnedAt),
+                          "MMM dd, yyyy HH:mm",
+                        )}
+                      </p>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              <div className='rounded-2xl border bg-card px-4 py-3.5 space-y-2.5'>
+                <p className='text-sm font-medium'>System Information</p>
+                <div>
+                  <p className='text-xs text-muted-foreground'>Created At</p>
+                  <p className='text-sm font-medium'>
+                    {format(
+                      new Date(order.timestamps.createdAt),
+                      "MMM dd, yyyy HH:mm:ss",
+                    )}
+                  </p>
+                </div>
+                <div>
+                  <p className='text-xs text-muted-foreground'>Updated At</p>
+                  <p className='text-sm font-medium'>
+                    {format(
+                      new Date(order.timestamps.updatedAt),
+                      "MMM dd, yyyy HH:mm:ss",
+                    )}
+                  </p>
+                </div>
+                <Separator />
+                <div>
+                  <p className='text-xs text-muted-foreground'>Order ID</p>
+                  <p className='font-mono text-sm'>
+                    {order.id || order._id}
+                  </p>
+                </div>
+                {order.active !== undefined && (
+                  <div className='flex items-center justify-between'>
+                    <p className='text-xs text-muted-foreground'>Status</p>
+                    <Badge variant={order.active ? "default" : "secondary"}>
+                      {order.active ? "Active" : "Inactive"}
+                    </Badge>
+                  </div>
+                )}
+              </div>
+            </TabsContent>
+          </Tabs>
+        </div>
+      </MobilePage>
+    );
+  }
+
   return (
     <MainView title={`Order #${order.orderNumber}`}>
       <div className='space-y-6'>
-        {/* Header Actions */}
-        <div className='flex items-center justify-between'>
-          <Button variant='outline' onClick={() => navigate("/order")}>
-            <ArrowLeft className='mr-2 h-4 w-4' />
-            Back to Orders
-          </Button>
-          <Button
-            variant='outline'
-            onClick={handleRefresh}
-            disabled={refreshing}>
-            <RefreshCw
-              className={`mr-2 h-4 w-4 ${refreshing ? "animate-spin" : ""}`}
-            />
-            Refresh
-          </Button>
-        </div>
+        {/* Page Header */}
+        <PageHeader
+          icon={<FileText className='h-5 w-5' />}
+          title={`Order #${order.orderNumber}`}
+          subtitle={order.status}
+          actions={
+            <>
+              <Button variant='outline' onClick={() => navigate("/order")}>
+                <ArrowLeft className='mr-2 h-4 w-4' />
+                Back to Orders
+              </Button>
+              <Button
+                variant='outline'
+                onClick={handleRefresh}
+                disabled={refreshing}>
+                <RefreshCw
+                  className={`mr-2 h-4 w-4 ${refreshing ? "animate-spin" : ""}`}
+                />
+                Refresh
+              </Button>
+            </>
+          }
+        />
 
         {/* Order Header */}
         <Card>
           <CardHeader>
             <div className='flex items-center justify-between'>
               <div className='flex items-center space-x-4'>
-                <CardTitle className='text-2xl'>
-                  Order #{order.orderNumber}
-                </CardTitle>
                 <Badge
                   variant={getStatusColor(order.status)}
                   className='text-sm'>
@@ -238,6 +753,20 @@ const OrderDetails = () => {
           </CardContent>
         </Card>
 
+        {/* Blocked customer banner */}
+        {order.fraudDetection?.blocked && (
+          <Alert className='border-rose-600 bg-rose-600 text-white'>
+            <AlertCircle className='h-4 w-4' />
+            <AlertDescription>
+              <strong>Customer blocked:</strong> this customer is in the fraud
+              group — new orders for them will be rejected.
+              {order.fraudDetection.lastAnalyzedAt
+                ? ` Risk level: ${order.fraudDetection.riskLevel} (score ${order.fraudDetection.riskScore}).`
+                : null}
+            </AlertDescription>
+          </Alert>
+        )}
+
         {/* Fraud Detection Warning */}
         {order.requiresManualReview &&
           order.fraudFlags &&
@@ -247,12 +776,13 @@ const OrderDetails = () => {
               <AlertDescription>
                 <strong>Fraud Detection Alert:</strong> This order requires
                 manual review. Risk Level:{" "}
-                <Badge
-                  variant={getRiskLevelColor(order.customerRiskLevel)}
-                  className='ml-1'>
-                  {order.customerRiskLevel}
-                </Badge>{" "}
-                (Score: {order.customerRiskScore})
+                <RiskBadge
+                  level={
+                    order.fraudDetection?.riskLevel ?? order.customerRiskLevel
+                  }
+                  className='align-middle'
+                />{" "}
+                (Score: {order.fraudDetection?.riskScore ?? order.customerRiskScore})
                 <ul className='mt-2 list-disc list-inside'>
                   {order.fraudFlags.map((flag, idx) => (
                     <li key={idx}>{flag}</li>
@@ -721,8 +1251,8 @@ const OrderDetails = () => {
 
           {/* Audit Tab */}
           <TabsContent value='audit' className='space-y-6'>
-            {/* Fraud Detection Details */}
-            {order.fraudDetection && (
+            {/* Fraud Detection Details — live profile with admin actions */}
+            {order.customer?.phoneNumber && (
               <Card>
                 <CardHeader>
                   <CardTitle className='flex items-center text-lg'>
@@ -730,38 +1260,12 @@ const OrderDetails = () => {
                     Fraud Detection Analysis
                   </CardTitle>
                 </CardHeader>
-                <CardContent className='space-y-4'>
-                  <div className='grid grid-cols-2 gap-4'>
-                    <div>
-                      <p className='text-sm text-gray-500'>Risk Level</p>
-                      <Badge
-                        variant={getRiskLevelColor(order.customerRiskLevel)}
-                        className='mt-1'>
-                        {order.customerRiskLevel}
-                      </Badge>
-                    </div>
-                    <div>
-                      <p className='text-sm text-gray-500'>Risk Score</p>
-                      <p className='font-medium mt-1'>
-                        {order.customerRiskScore}/100
-                      </p>
-                    </div>
-                  </div>
-                  {order.fraudFlags && order.fraudFlags.length > 0 && (
-                    <div>
-                      <p className='text-sm text-gray-500 mb-2'>Flags</p>
-                      <div className='space-y-1'>
-                        {order.fraudFlags.map((flag, idx) => (
-                          <Badge
-                            key={idx}
-                            variant='destructive'
-                            className='mr-2'>
-                            {flag}
-                          </Badge>
-                        ))}
-                      </div>
-                    </div>
-                  )}
+                <CardContent>
+                  <FraudDetailPanel
+                    phoneNumber={order.customer.phoneNumber}
+                    customerName={order.customer.name}
+                    onChanged={handleRefresh}
+                  />
                 </CardContent>
               </Card>
             )}

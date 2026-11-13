@@ -372,8 +372,8 @@ const CategoryForm: React.FC<CategoryFormProps> = ({
   const metaDescLength = formData.metaDescription.length;
 
   return (
-    <div className='min-h-screen bg-[#FAF9F6]'>
-      <div className='max-w-full mx-auto px-4 sm:px-6 lg:px-8 py-6'>
+    <div className='min-h-screen bg-white'>
+      <div className='max-w-full mx-auto px-4 md:px-6 lg:px-8 py-6'>
         {/* Page Header */}
         <div className='flex items-center justify-between gap-3 mb-6'>
           <div className='flex items-center gap-3'>
@@ -381,7 +381,7 @@ const CategoryForm: React.FC<CategoryFormProps> = ({
               variant='outline'
               size='sm'
               onClick={() => navigate("/category")}
-              className='border-slate-300 text-slate-600 hover:bg-slate-50 rounded-md hidden sm:inline-flex'>
+              className='border-slate-300 text-slate-600 hover:bg-slate-50 rounded-md hidden md:inline-flex'>
               <ArrowLeft className='h-4 w-4 mr-2' />
               Back
             </Button>
@@ -790,8 +790,8 @@ const CategoryForm: React.FC<CategoryFormProps> = ({
             icon={<Settings2 className='h-3.5 w-3.5' />}
             title='Settings & media'
           />
-          <div className='flex flex-col sm:flex-row items-start gap-6'>
-            <div className='grid w-full sm:w-auto gap-1.5 flex-1'>
+          <div className='flex flex-col md:flex-row items-start gap-6'>
+            <div className='grid w-full md:w-auto gap-1.5 flex-1'>
               <Label
                 htmlFor='picture'
                 className='flex items-center gap-2 text-[13px] font-medium text-slate-600'>
@@ -855,19 +855,19 @@ const CategoryForm: React.FC<CategoryFormProps> = ({
         />
 
         {/* Action Bar */}
-        <div className='sticky bottom-0 bg-[#FAF9F6] border-t border-slate-200 py-4  sm:-mx-6 lg:-mx-8 px-4 sm:px-6 lg:px-8'>
+        <div className='sticky bottom-0 mobile:bottom-[calc(4rem+env(safe-area-inset-bottom))] bg-white border-t border-slate-200 py-4 sm:-mx-6 lg:-mx-8 px-4 md:px-6 lg:px-8'>
           <div className='flex items-center justify-end gap-3'>
             <Button
               type='button'
               variant='outline'
               onClick={() => navigate("/category")}
-              className='border-slate-300 text-slate-600 hover:bg-slate-50 rounded-md w-full sm:w-auto'>
+              className='border-slate-300 text-slate-600 hover:bg-slate-50 rounded-md w-full md:w-auto'>
               Cancel
             </Button>
             <Button
               disabled={!formData.name || loading}
               onClick={handleSubmit}
-              className='bg-[#141413] hover:bg-[#2a2a2a] active:bg-black w-full sm:w-auto text-white rounded-md'>
+              className='bg-[#141413] hover:bg-[#2a2a2a] active:bg-black w-full md:w-auto text-white rounded-md'>
               {loading ? (
                 <>
                   <Loader2 className='h-4 w-4 mr-2 animate-spin' />

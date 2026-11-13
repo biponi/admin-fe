@@ -145,20 +145,24 @@ export const requestNotificationPermission = async (): Promise<
 };
 
 /**
- * Handle foreground messages
+ * Subscribe to foreground messages.
+ * Returns an unsubscribe function — call it on cleanup. Registering a
+ * single listener (instead of re-registering per poll) prevents listener
+ * leaks.
  */
-export const onMessageListener = async () => {
+export const onForegroundMessage = async (
+  callback: (payload: any) => void
+): Promise<(() => void) | null> => {
   await ensureFirebaseInitialized();
 
-  return new Promise((resolve) => {
-    if (!messaging) {
-      return;
-    }
+  if (!messaging) {
+    console.warn("Firebase messaging not initialized; no foreground listener");
+    return null;
+  }
 
-    onMessage(messaging, (payload) => {
-      console.log("Message received:", payload);
-      resolve(payload);
-    });
+  return onMessage(messaging, (payload) => {
+    console.log("Message received:", payload);
+    callback(payload);
   });
 };
 

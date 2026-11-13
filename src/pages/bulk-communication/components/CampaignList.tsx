@@ -32,7 +32,17 @@ import {
   ChevronRight,
   Ban,
   Inbox,
+  MessageSquare,
+  Mail,
 } from "lucide-react";
+import {
+  MobileListCard,
+  MobileStaggeredList,
+  MobilePagination,
+  MobileEmptyState,
+  MobileActionSheet,
+  MobileSkeletonList,
+} from "@/components/mobile";
 import { useBulkCommunication } from "../hooks/useBulkCommunication";
 import { StatusBadge, ProgressBar } from "./shared";
 import {
@@ -67,6 +77,9 @@ const CampaignList = ({ type }: CampaignListProps) => {
   const [searchQuery, setSearchQuery] = useState("");
   const [campaignToDelete, setCampaignToDelete] = useState<string | null>(null);
   const [campaignToCancel, setCampaignToCancel] = useState<
+    SMSCampaign | EmailCampaign | null
+  >(null);
+  const [actionCampaign, setActionCampaign] = useState<
     SMSCampaign | EmailCampaign | null
   >(null);
   const [params, setParams] = useState<CampaignQueryParams>({
@@ -131,13 +144,24 @@ const CampaignList = ({ type }: CampaignListProps) => {
   const rangeStart = (currentPage - 1) * pageSize + 1;
   const rangeEnd = Math.min(currentPage * pageSize, totalItems);
   const hasFilters = statusFilter !== "all" || searchQuery !== "";
+  // Mirror the desktop pager, where "Next" stays enabled past a full page
+  const mobileTotalPages =
+    totalItems === 0
+      ? 1
+      : Math.max(Math.ceil(totalItems / pageSize), currentPage + 1);
+
+  const goToPage = (page: number) => {
+    const p = { ...params, page };
+    setParams(p);
+    fetchCampaigns(p);
+  };
 
   return (
     <div className='space-y-4'>
       {/* Filter Bar */}
-      <div className='flex flex-col sm:flex-row gap-3'>
+      <div className='flex flex-col md:flex-row gap-3'>
         {/* Search */}
-        <div className='relative flex-1 max-w-xs'>
+        <div className='relative flex-1 mobile:max-w-none max-w-xs'>
           <Search className='absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-slate-400 pointer-events-none' />
           <Input
             placeholder='Search campaigns...'
@@ -150,7 +174,7 @@ const CampaignList = ({ type }: CampaignListProps) => {
 
         {/* Status */}
         <Select value={statusFilter} onValueChange={setStatusFilter}>
-          <SelectTrigger className='w-full sm:w-44 h-9 text-sm border-slate-200 bg-white focus:ring-indigo-500'>
+          <SelectTrigger className='w-full md:w-44 h-9 text-sm border-slate-200 bg-white focus:ring-indigo-500'>
             <SelectValue placeholder='All statuses' />
           </SelectTrigger>
           <SelectContent>
@@ -180,8 +204,8 @@ const CampaignList = ({ type }: CampaignListProps) => {
         )}
       </div>
 
-      {/* Table Card */}
-      <div className='rounded-xl border border-slate-100 bg-white shadow-sm overflow-hidden'>
+      {/* Table Card (desktop) */}
+      <div className='hidden md:block rounded-xl border border-slate-100 bg-white shadow-sm overflow-hidden'>
         {loading && !campaigns ? (
           <div className='flex flex-col items-center justify-center h-64 gap-3'>
             <div className='w-8 h-8 border-2 border-indigo-600 border-t-transparent rounded-full animate-spin' />
@@ -314,8 +338,8 @@ const CampaignList = ({ type }: CampaignListProps) => {
 
             {/* Pagination */}
             {totalItems > 0 && (
-              <div className='flex flex-col sm:flex-row items-center justify-between gap-3 px-4 py-3 border-t border-slate-100 bg-slate-50/50'>
-                <p className='text-xs text-slate-500 order-2 sm:order-1'>
+              <div className='hidden md:flex flex-col md:flex-row items-center justify-between gap-3 px-4 py-3 border-t border-slate-100 bg-slate-50/50'>
+                <p className='text-xs text-slate-500 order-2 md:order-1'>
                   Showing{" "}
                   <span className='font-medium text-slate-700'>
                     {rangeStart}–{rangeEnd}
@@ -326,14 +350,10 @@ const CampaignList = ({ type }: CampaignListProps) => {
                   </span>{" "}
                   campaigns
                 </p>
-                <div className='flex items-center gap-1 order-1 sm:order-2'>
+                <div className='flex items-center gap-1 order-1 md:order-2'>
                   <button
                     disabled={currentPage === 1}
-                    onClick={() => {
-                      const p = { ...params, page: currentPage - 1 };
-                      setParams(p);
-                      fetchCampaigns(p);
-                    }}
+                    onClick={() => goToPage(currentPage - 1)}
                     className='inline-flex items-center gap-1 px-3 py-1.5 text-xs font-medium text-slate-600 bg-white border border-slate-200 rounded-lg hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors'>
                     <ChevronLeft className='h-3.5 w-3.5' />
                     Previous
@@ -342,11 +362,7 @@ const CampaignList = ({ type }: CampaignListProps) => {
                     Page {currentPage}
                   </span>
                   <button
-                    onClick={() => {
-                      const p = { ...params, page: currentPage + 1 };
-                      setParams(p);
-                      fetchCampaigns(p);
-                    }}
+                    onClick={() => goToPage(currentPage + 1)}
                     className='inline-flex items-center gap-1 px-3 py-1.5 text-xs font-medium text-slate-600 bg-white border border-slate-200 rounded-lg hover:bg-slate-50 transition-colors'>
                     Next
                     <ChevronRight className='h-3.5 w-3.5' />
@@ -357,6 +373,117 @@ const CampaignList = ({ type }: CampaignListProps) => {
           </>
         )}
       </div>
+
+      {/* Mobile card list */}
+      <div className='mobile:block hidden'>
+        {loading && !campaigns ? (
+          <MobileSkeletonList count={5} />
+        ) : filteredCampaigns.length === 0 ? (
+          <MobileEmptyState
+            icon={<Inbox className='h-7 w-7 opacity-40' />}
+            title='No campaigns found'
+            description={
+              hasFilters
+                ? "Try adjusting your search or filters"
+                : "Create your first campaign to get started"
+            }
+            action={
+              hasFilters ? (
+                <button
+                  onClick={handleReset}
+                  className='text-sm font-medium text-indigo-600 hover:underline'>
+                  Clear filters
+                </button>
+              ) : undefined
+            }
+          />
+        ) : (
+          <>
+            <MobileStaggeredList
+              key={campaigns?.map((c) => c.id).join("|") ?? "empty"}>
+              {filteredCampaigns.map((campaign) => (
+                <MobileListCard
+                  key={campaign.id}
+                  onClick={() => setActionCampaign(campaign)}
+                  leading={
+                    <div className='grid h-10 w-10 place-items-center rounded-xl bg-indigo-50 text-indigo-600'>
+                      {type === "sms" ? (
+                        <MessageSquare className='h-4.5 w-4.5' />
+                      ) : (
+                        <Mail className='h-4.5 w-4.5' />
+                      )}
+                    </div>
+                  }
+                  title={campaign.name}
+                  subtitle={
+                    <span className='flex flex-wrap items-center gap-x-2 gap-y-0.5'>
+                      <span>
+                        {campaign.totalRecipients.toLocaleString()}{" "}
+                        recipients
+                      </span>
+                      <span>·</span>
+                      <span>
+                        {format(new Date(campaign.createdAt), "MMM d, yyyy")}
+                      </span>
+                    </span>
+                  }
+                  badge={<StatusBadge status={campaign.status} />}
+                  trailing={
+                    <span className='text-xs font-medium tabular-nums text-slate-500'>
+                      {campaign.progress}%
+                    </span>
+                  }
+                />
+              ))}
+            </MobileStaggeredList>
+
+            <MobilePagination
+              page={currentPage}
+              totalPages={mobileTotalPages}
+              onChange={goToPage}
+            />
+          </>
+        )}
+      </div>
+
+      {/* Mobile row actions */}
+      <MobileActionSheet
+        open={!!actionCampaign}
+        onOpenChange={() => setActionCampaign(null)}
+        title={actionCampaign?.name}
+        actions={[
+          {
+            icon: <Eye className='h-4 w-4 text-slate-500' />,
+            label: "View details",
+            onClick: () => handleViewCampaign(actionCampaign!.id),
+          },
+          ...(actionCampaign &&
+          (actionCampaign.status === "queued" ||
+            actionCampaign.status === "processing")
+            ? [
+                {
+                  icon: <Ban className='h-4 w-4 text-amber-600' />,
+                  label: "Cancel campaign",
+                  onClick: () => {
+                    if (actionCampaign) setCampaignToCancel(actionCampaign);
+                  },
+                },
+              ]
+            : []),
+          ...(actionCampaign && actionCampaign.status !== "processing"
+            ? [
+                {
+                  icon: <Trash2 className='h-4 w-4' />,
+                  label: "Delete",
+                  destructive: true,
+                  onClick: () => {
+                    if (actionCampaign) setCampaignToDelete(actionCampaign.id);
+                  },
+                },
+              ]
+            : []),
+        ]}
+      />
 
       {/* Cancel Dialog */}
       <AlertDialog

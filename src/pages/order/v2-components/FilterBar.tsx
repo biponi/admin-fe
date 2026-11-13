@@ -1,6 +1,18 @@
-import { useRef, useState, useEffect, useCallback, memo } from "react";
-import { Search, X, SlidersHorizontal } from "lucide-react";
+import { useRef, useState, useEffect, useCallback, memo, useMemo } from "react";
+import { Search, X, SlidersHorizontal, ArrowUp, ArrowDown, ArrowUpDown } from "lucide-react";
 import CategoryFilterDropdown from "../../product/components/FilterByCategory";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  ORDER_SORT_FIELDS,
+  getSortFieldLabel,
+} from "../createOrderLayoutStore";
+import type { OrderSortField, OrderSortOrder } from "../createOrderLayoutStore";
 import type { ICategory } from "../../product/interface";
 
 interface FilterBarProps {
@@ -10,6 +22,10 @@ interface FilterBarProps {
   onCategoryChange: (categoryId: string) => void;
   selectedBrand: string;
   onBrandChange: (brandId: string) => void;
+  sortBy: OrderSortField;
+  onSortChange: (field: OrderSortField) => void;
+  sortOrder: OrderSortOrder;
+  onSortOrderChange: (order: OrderSortOrder) => void;
   categories: ICategory[];
   brands: Array<{ id: string; name: string }>;
   isLoading?: boolean;
@@ -81,13 +97,13 @@ const SearchInput = memo(
     }, []);
 
     return (
-      <div className='relative flex-1 group'>
+      <div className='relative flex-1 min-w-[12rem] group'>
         <div className='absolute inset-y-0 left-0 flex items-center pl-3.5 pointer-events-none'>
           <Search
             className={`h-4 w-4 transition-colors duration-150 ${
               value
-                ? "text-blue-500"
-                : "text-gray-400 group-focus-within:text-blue-500"
+                ? "text-primary"
+                : "text-muted-foreground/70 group-focus-within:text-primary"
             }`}
           />
         </div>
@@ -100,10 +116,10 @@ const SearchInput = memo(
           placeholder='Search by name or SKU...'
           // NO disabled prop — disabling causes browser focus drop
           className='
-            w-full h-10 pl-10 pr-9 text-sm rounded-lg border outline-none
-            bg-gray-50 border-gray-200 placeholder:text-gray-400
+            w-full h-9 pl-10 pr-9 text-sm rounded-md border outline-none
+            bg-background border-border placeholder:text-muted-foreground/70 text-foreground
             transition-all duration-150
-            focus:bg-white focus:border-blue-400 focus:ring-2 focus:ring-blue-400/15
+            focus:bg-background focus:border-ring focus:ring-2 focus:ring-ring/20
           '
         />
 
@@ -114,7 +130,7 @@ const SearchInput = memo(
             // before onClick fires
             onMouseDown={(e) => e.preventDefault()}
             onClick={handleClear}
-            className='absolute inset-y-0 right-0 flex items-center pr-3 text-gray-400 hover:text-gray-600 transition-colors'
+            className='absolute inset-y-0 right-0 flex items-center pr-3 text-muted-foreground/70 hover:text-muted-foreground transition-colors'
             tabIndex={-1}>
             <X className='h-3.5 w-3.5' />
           </button>
@@ -137,6 +153,10 @@ export const FilterBar = memo(
     onCategoryChange,
     selectedBrand,
     onBrandChange,
+    sortBy,
+    onSortChange,
+    sortOrder,
+    onSortOrderChange,
     categories,
     isLoading = false,
   }: FilterBarProps) => {
@@ -146,6 +166,14 @@ export const FilterBar = memo(
 
     const hasActiveFilters =
       hasLocalSearch || !!(selectedCategory && selectedCategory !== "all");
+
+    // Known sort fields + the env default (if it's a custom value) so the
+    // selected option always has a matching entry in the dropdown.
+    const sortOptions = useMemo(() => {
+      const fields = [...ORDER_SORT_FIELDS];
+      if (sortBy && !fields.includes(sortBy)) fields.push(sortBy);
+      return fields;
+    }, [sortBy]);
 
     // Wrap onSearchChange to also track local search presence
     const handleSearchChange = useCallback(
@@ -168,9 +196,13 @@ export const FilterBar = memo(
       setHasLocalSearch(false);
     }, [onCategoryChange, onBrandChange, onSearchChange]);
 
+    const toggleSortOrder = useCallback(() => {
+      onSortOrderChange(sortOrder === "asc" ? "desc" : "asc");
+    }, [onSortOrderChange, sortOrder]);
+
     return (
-      <div className='sticky top-0 z-20 bg-white/95 backdrop-blur-sm border-gray-100 px-0 md:px-1 py-1.5 md:py-3'>
-        <div className='flex items-center gap-2.5 px-1 md:px-0'>
+      <div className='sticky top-0 z-20 bg-background/95 backdrop-blur-sm border-b border-border px-0 md:px-1 py-2 md:py-3'>
+        <div className='flex flex-wrap items-center gap-2 md:gap-2.5'>
           {/* Fully isolated search input — survives any parent re-render */}
           <SearchInput
             initialValue={searchQuery}
@@ -178,23 +210,67 @@ export const FilterBar = memo(
             onClear={handleClearSearch}
           />
 
-          {/* Category dropdown */}
-          <div className='shrink-0'>
+          {/* Category dropdown — shows selected category on trigger */}
+          <div className='shrink-0 w-full sm:w-auto'>
             <CategoryFilterDropdown
               categories={categories}
               selectedCategory={selectedCategory || "all"}
               setSelectedCategory={onCategoryChange}
-              filterLabel='Category'
+              filterLabel='Filter by Category'
               showSearch={true}
               showProductCounts={true}
+              showSelectionOnTrigger={true}
             />
           </div>
+
+          {/* Sort field select */}
+          <div className='shrink-0 w-[calc(50%-0.3125rem)] sm:w-auto'>
+            <Select
+              value={sortBy}
+              onValueChange={(val) => onSortChange(val as OrderSortField)}>
+              <SelectTrigger
+                className='h-9 rounded-md border-border bg-background text-sm font-medium text-foreground focus-visible:ring-ring sm:w-[11.5rem]'
+                title='Sort products by'>
+                <ArrowUpDown className='h-4 w-4 shrink-0 text-muted-foreground/70' />
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {sortOptions.map((value) => (
+                  <SelectItem key={value} value={value} className='text-sm'>
+                    {getSortFieldLabel(value)}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          {/* Sort order toggle */}
+          <button
+            type='button'
+            onClick={toggleSortOrder}
+            title={
+              sortOrder === "asc"
+                ? "Ascending — click for descending"
+                : "Descending — click for ascending"
+            }
+            className='
+              shrink-0 flex items-center justify-center h-9 w-9 rounded-md
+              border border-border bg-background text-muted-foreground
+              hover:bg-muted/50 hover:border-border hover:text-foreground
+              transition-all duration-150
+            '>
+            {sortOrder === "asc" ? (
+              <ArrowUp className='h-4 w-4' />
+            ) : (
+              <ArrowDown className='h-4 w-4' />
+            )}
+          </button>
 
           {/* Loading indicator — spinner near filter, far from input */}
           {isLoading && (
             <div className='shrink-0 flex items-center justify-center h-10 w-10'>
               <svg
-                className='animate-spin h-4 w-4 text-blue-400'
+                className='animate-spin h-4 w-4 text-primary'
                 xmlns='http://www.w3.org/2000/svg'
                 fill='none'
                 viewBox='0 0 24 24'>
@@ -221,9 +297,9 @@ export const FilterBar = memo(
               type='button'
               onClick={handleClearAll}
               className='
-                shrink-0 flex items-center gap-1.5 px-3 h-10 text-xs font-medium rounded-lg
-                text-red-500 bg-red-50 border border-red-100
-                hover:bg-red-100 hover:border-red-200 transition-all duration-150
+                shrink-0 flex items-center gap-1.5 px-3 h-9 text-xs font-medium rounded-md
+                text-muted-foreground bg-background border border-border
+                hover:bg-muted/50 hover:border-border hover:text-rose-500 transition-all duration-150
               '>
               <SlidersHorizontal className='h-3.5 w-3.5' />
               Clear

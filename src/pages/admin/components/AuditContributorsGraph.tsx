@@ -13,6 +13,7 @@ import { Badge } from "../../../components/ui/badge";
 import { BarChart, Bar, XAxis, Tooltip, ResponsiveContainer, Cell } from "recharts";
 import { Users, ShoppingCart, Package } from "lucide-react";
 import dayjs from "dayjs";
+import { claude } from "../../../lib/claude";
 
 interface AuditContributorsGraphProps {
   startDate: string;
@@ -33,7 +34,7 @@ interface ContributorData {
 const CustomTooltip = ({ active, payload, label }: any) => {
   if (!active || !payload?.length) return null;
   return (
-    <div className="bg-slate-900 text-white text-xs px-3 py-2 rounded-lg shadow-lg">
+    <div className={claude.tooltip + " px-3 py-2"}>
       <p className="font-semibold mb-1">{dayjs(label).format("MMM D")}</p>
       {payload.map((entry: any, i: number) => (
         <div key={i} className="flex items-center gap-2">
@@ -41,7 +42,7 @@ const CustomTooltip = ({ active, payload, label }: any) => {
             className="w-2 h-2 rounded-sm"
             style={{ background: entry.fill || entry.color }}
           />
-          <span className="text-slate-300">{entry.name}:</span>
+          <span className="text-white/70">{entry.name}:</span>
           <span className="font-medium">{entry.value}</span>
         </div>
       ))}
@@ -51,12 +52,12 @@ const CustomTooltip = ({ active, payload, label }: any) => {
 
 const ContributorCard: React.FC<{ contributor: ContributorData }> = ({ contributor }) => {
   return (
-    <div className="bg-white rounded-xl border border-slate-100 shadow-sm p-4 hover:shadow-md hover:border-slate-200 transition-all">
+    <div className={claude.card + " p-4 hover:border-[#D8D3C8] transition-all duration-200"}>
       {/* Header: Avatar + Name + Total */}
       <div className="flex items-center gap-3 mb-3">
-        <Avatar className="h-10 w-10 ring-2 ring-slate-100 shrink-0">
+        <Avatar className="h-10 w-10 rounded-md ring-1 ring-[#E8E4DC] shrink-0">
           <AvatarImage src={contributor.userAvatar} />
-          <AvatarFallback className="bg-indigo-50 text-indigo-600 text-xs font-semibold">
+          <AvatarFallback className="rounded-md bg-[#FAF9F6] text-[#B85A3D] text-xs font-semibold">
             {contributor.userName
               .split(" ")
               .map((n) => n[0])
@@ -67,32 +68,32 @@ const ContributorCard: React.FC<{ contributor: ContributorData }> = ({ contribut
         </Avatar>
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2">
-            <h4 className="text-sm font-semibold text-slate-900 truncate">
+            <h4 className="text-[13px] font-semibold text-[#141413] truncate">
               {contributor.userName}
             </h4>
             {contributor.userType && (
               <Badge
                 variant="outline"
-                className="text-[9px] px-1.5 py-0 h-4 bg-slate-50 border-slate-200 text-slate-500 shrink-0"
+                className="rounded-md text-[9px] px-1.5 py-0 h-4 bg-[#FAF9F6] border-[#E8E4DC] text-[#57554D] shrink-0"
               >
                 {contributor.userType}
               </Badge>
             )}
           </div>
-          <p className="text-lg font-bold text-indigo-600 leading-tight">
+          <p className="text-lg font-semibold text-[#141413] tabular-nums leading-tight">
             {contributor.totalActions.toLocaleString()}
-            <span className="text-xs font-normal text-slate-400 ml-1">actions</span>
+            <span className="text-[10px] font-normal text-[#8A877D] ml-1">actions</span>
           </p>
         </div>
       </div>
 
       {/* Stats row */}
-      <div className="flex items-center gap-3 mb-3 text-xs text-slate-500">
-        <span className="flex items-center gap-1.5 bg-indigo-50 text-indigo-600 px-2 py-1 rounded-md font-medium">
+      <div className="flex items-center gap-2 mb-3 text-[11px] text-[#8A877D]">
+        <span className="flex items-center gap-1.5 bg-[#D97757]/10 border border-[#D97757]/20 text-[#B85A3D] px-2 py-1 rounded-md font-medium tabular-nums">
           <ShoppingCart className="h-3 w-3" />
           {contributor.orderActions}
         </span>
-        <span className="flex items-center gap-1.5 bg-emerald-50 text-emerald-600 px-2 py-1 rounded-md font-medium">
+        <span className="flex items-center gap-1.5 bg-[#FAF9F6] border border-[#E8E4DC] text-[#57554D] px-2 py-1 rounded-md font-medium tabular-nums">
           <Package className="h-3 w-3" />
           {contributor.productAdjustments}
         </span>
@@ -109,19 +110,19 @@ const ContributorCard: React.FC<{ contributor: ContributorData }> = ({ contribut
               />
               <Tooltip
                 content={<CustomTooltip />}
-                cursor={{ fill: "rgba(99,102,241,0.05)" }}
+                cursor={{ fill: "rgba(87,85,77,0.06)" }}
               />
               <Bar
                 dataKey="orders"
                 name="Orders"
-                fill="#6366f1"
+                fill="#D97757"
                 radius={[2, 2, 0, 0]}
                 stackId="stack"
               />
               <Bar
                 dataKey="adjustments"
                 name="Adjustments"
-                fill="#10b981"
+                fill="#57554D"
                 radius={[2, 2, 0, 0]}
                 stackId="stack"
               />
@@ -129,7 +130,7 @@ const ContributorCard: React.FC<{ contributor: ContributorData }> = ({ contribut
           </ResponsiveContainer>
         </div>
       ) : (
-        <div className="h-16 flex items-center justify-center text-xs text-slate-400 bg-slate-50 rounded-lg">
+        <div className="h-16 flex items-center justify-center text-xs text-[#8A877D] bg-[#FAF9F6] rounded-lg">
           No daily data
         </div>
       )}
@@ -200,13 +201,10 @@ export const AuditContributorsGraph: React.FC<AuditContributorsGraphProps> = ({
 
   if (isLoading && contributors.length === 0) {
     return (
-      <div className="bg-white rounded-xl border border-slate-100 shadow-sm p-8">
+      <div className={claude.card + " p-8"}>
         <div className="flex flex-col items-center gap-4">
-          <div className="relative">
-            <div className="w-12 h-12 border-4 border-slate-200 rounded-full" />
-            <div className="absolute top-0 left-0 w-12 h-12 border-4 border-indigo-600 rounded-full border-t-transparent animate-spin" />
-          </div>
-          <p className="text-sm text-slate-500">Loading contributors...</p>
+          <div className={claude.spinner} />
+          <p className="text-[13px] text-[#8A877D]">Loading contributors...</p>
         </div>
       </div>
     );
@@ -215,25 +213,25 @@ export const AuditContributorsGraph: React.FC<AuditContributorsGraphProps> = ({
   if (contributors.length === 0) return null;
 
   return (
-    <div className="bg-white rounded-xl border border-slate-100 shadow-sm overflow-hidden">
-      <div className="p-5 border-b border-slate-100">
-        <div className="flex items-center justify-between">
-          <div>
-            <h3 className="text-lg font-semibold text-slate-900 flex items-center gap-2">
-              <Users className="h-5 w-5 text-indigo-600" />
-              Contributors
-            </h3>
-            <p className="text-sm text-slate-500 mt-1">
-              Individual activity breakdown — {contributors.length} contributors
-            </p>
-          </div>
-          {loadingDetails && (
-            <div className="flex items-center gap-2 text-xs text-slate-500">
-              <div className="w-3.5 h-3.5 border-2 border-indigo-600 border-t-transparent rounded-full animate-spin" />
-              Loading...
-            </div>
-          )}
+    <div className={claude.card + " overflow-hidden"}>
+      <div className={`flex items-center gap-2.5 px-4 py-3 ${claude.cardHeader}`}>
+        <span className='flex h-6 w-6 shrink-0 items-center justify-center rounded-md border border-[#D97757]/20 bg-[#D97757]/10 text-[#D97757]'>
+          <Users className='h-3.5 w-3.5' />
+        </span>
+        <div>
+          <h3 className='text-[13px] font-semibold text-[#141413] leading-tight'>
+            Contributors
+          </h3>
+          <p className='text-[11px] text-[#8A877D] mt-0.5'>
+            Individual activity breakdown — {contributors.length} contributors
+          </p>
         </div>
+        {loadingDetails && (
+          <div className='ml-auto flex items-center gap-2 text-[11px] text-[#8A877D]'>
+            <div className='w-3.5 h-3.5 border-2 border-[#D97757] border-t-transparent rounded-full animate-spin' />
+            Loading...
+          </div>
+        )}
       </div>
 
       <div className="p-5">

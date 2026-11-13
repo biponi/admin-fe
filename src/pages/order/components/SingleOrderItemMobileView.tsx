@@ -34,6 +34,7 @@ interface Props {
   updatedAt: string;
   remaining: number;
   isBulkAdded: boolean;
+  order?: { createdByUserId?: string | null };
   handleViewDetails: () => void;
   handleUpdateOrder: () => void;
   handleModifyProduct: () => void;
@@ -54,6 +55,7 @@ const SingleItemMobileView: React.FC<Props> = ({
   remaining,
   updatedAt,
   isBulkAdded,
+  order,
   handleBulkCheck,
   handleViewDetails,
   handleUpdateOrder,
@@ -61,7 +63,7 @@ const SingleItemMobileView: React.FC<Props> = ({
   deleteExistingOrder,
   handleReturnProducts,
 }) => {
-  const { hasRequiredPermission, hasSomePermissionsForPage } = useRoleCheck();
+  const { canModifyOrder, hasSomePermissionsForPage } = useRoleCheck();
   const dialogBtn = useRef(null);
 
   const discardDialog = () => {
@@ -87,6 +89,9 @@ const SingleItemMobileView: React.FC<Props> = ({
             "edit",
             "delete",
             "documents",
+            "cancel",
+            "modify",
+            "update_status",
           ]) &&
             !status.includes("return") && (
               <input
@@ -161,7 +166,7 @@ const SingleItemMobileView: React.FC<Props> = ({
         <Button variant={"outline"} onClick={() => handleViewDetails()}>
           Details
         </Button>
-        {hasSomePermissionsForPage("order", ["edit", "delete"]) && (
+        {hasSomePermissionsForPage("order", ["edit", "delete", "cancel", "modify", "update_status"]) && (
           <Drawer>
             <DrawerTrigger asChild>
               <Button>
@@ -177,7 +182,7 @@ const SingleItemMobileView: React.FC<Props> = ({
                 </DrawerDescription>
               </DrawerHeader>
               <div className='p-4 space-y-2'>
-                {hasRequiredPermission("order", "edit") && (
+                {canModifyOrder("order", "edit", order) && (
                   <Button
                     variant='outline'
                     className='w-full'
@@ -185,7 +190,7 @@ const SingleItemMobileView: React.FC<Props> = ({
                     Edit
                   </Button>
                 )}
-                {hasRequiredPermission("order", "edit") &&
+                {canModifyOrder("order", "modify", order) &&
                   status.includes("processing") && (
                     <Button
                       variant='outline'
@@ -194,7 +199,7 @@ const SingleItemMobileView: React.FC<Props> = ({
                       Modify Product
                     </Button>
                   )}
-                {hasRequiredPermission("order", "edit") &&
+                {canModifyOrder("order", "modify", order) &&
                   status.includes("shipped") && (
                     <Button
                       variant='outline'
@@ -203,7 +208,7 @@ const SingleItemMobileView: React.FC<Props> = ({
                       Return Product
                     </Button>
                   )}
-                {hasRequiredPermission("order", "delete") && (
+                {canModifyOrder("order", "delete", order) && (
                   <Button
                     variant='destructive'
                     className='w-full'
@@ -215,7 +220,7 @@ const SingleItemMobileView: React.FC<Props> = ({
                   </Button>
                 )}
               </div>
-              {hasRequiredPermission("order", "edit") && (
+              {canModifyOrder("order", "edit", order) && (
                 <DrawerFooter>
                   <DrawerClose asChild>
                     <Button variant='outline'>Close</Button>

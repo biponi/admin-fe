@@ -1,14 +1,15 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState } from "react";
 import {
   ChevronDown,
+  ChevronLeft,
+  ChevronRight,
   Filter,
   RefreshCw,
   Search,
-  AlertCircle,
-  Loader2,
+  Calendar,
+  Check,
 } from "lucide-react";
 import { Button } from "../../../../components/ui/button";
-import { Badge } from "../../../../components/ui/badge";
 import { Input } from "../../../../components/ui/input";
 import {
   Collapsible,
@@ -16,335 +17,328 @@ import {
   CollapsibleTrigger,
 } from "../../../../components/ui/collapsible";
 import {
-  REPORT_TYPES,
-  REPORT_CATEGORIES,
-} from "../../../../utils/inventoryReportUtils";
-import { ReportType } from "../../../../api/inventoryReport";
-import { ScrollArea } from "../../../../components/ui/scroll-area";
-import {
-  useInventoryReport,
-  invalidateInventoryReportCache,
-} from "../../../../hooks/useInventoryReport";
-import { InventorySummaryCards } from "./reports/InventorySummaryCards";
-import { LowStockTable } from "./reports/LowStockTable";
-import { OutOfStockTable } from "./reports/OutOfStockTable";
-import { InventoryDistributionChart } from "./reports/InventoryDistributionChart";
-import { TopSellingTable } from "./reports/TopSellingTable";
-import { SalesActivityTable } from "./reports/SalesActivityTable";
-import { ReturnRateTable } from "./reports/ReturnRateTable";
-import { DeadStockTable } from "./reports/DeadStockTable";
-import { TopRatedTable } from "./reports/TopRatedTable";
-import { RatingDistributionChart } from "./reports/RatingDistributionChart";
-import { DiscountedProductsTable } from "./reports/DiscountedProductsTable";
-import { HighestDiscountTable } from "./reports/HighestDiscountTable";
-import { PriceDistributionChart } from "./reports/PriceDistributionChart";
-import { CategoryPerformanceTable } from "./reports/CategoryPerformanceTable";
-import { ManufacturerReportTable } from "./reports/ManufacturerReportTable";
-import { RecentlyAddedTable } from "./reports/RecentlyAddedTable";
-import { RecentlyUpdatedTable } from "./reports/RecentlyUpdatedTable";
-import {
-  InventorySummary,
-  LowStockProduct,
-  OutOfStockProduct,
-  InventoryDistribution,
-  TopSellingProduct,
-  SalesActivityProduct,
-  ReturnRateProduct,
-  DeadStockProduct,
-  TopRatedProduct,
-  RatingDistribution,
-  DiscountedProduct,
-  HighestDiscountProduct,
-  PriceDistribution,
-  CategoryPerformance,
-  ManufacturerReport,
-  RecentlyAddedProduct,
-  RecentlyUpdatedProduct,
-} from "../../../../api/inventoryReport";
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "../../../../components/ui/select";
+import { claude } from "../../../../lib/claude";
+import { cn } from "../../../../lib/utils";
+import { useInventoryReportsState } from "./useInventoryReportsState";
+import { renderReportContent } from "./renderReportContent";
+import type { ReportType } from "../../../../api/inventoryReport";
 
-// ─── Empty / Error States ─────────────────────────────────────────────────────
+// ─── Pagination footer (shared by both layouts) ──────────────────────────────
 
-const ReportLoading = () => (
-  <div className='flex flex-col items-center justify-center h-full py-16'>
-    <Loader2 className='h-8 w-8 text-indigo-500 animate-spin mb-3' />
-    <p className='text-sm text-slate-500'>Loading report…</p>
-  </div>
-);
-
-const ReportError = ({
-  message,
-  onRetry,
+const ReportPagination = ({
+  pagination,
+  currentPage,
+  pageSize,
+  onPageChange,
+  onPageSizeChange,
 }: {
-  message: string;
-  onRetry: () => void;
-}) => (
-  <div className='flex flex-col items-center justify-center h-full py-16 text-center px-6'>
-    <div className='w-10 h-10 rounded-xl bg-red-50 flex items-center justify-center mb-3'>
-      <AlertCircle className='h-5 w-5 text-red-500' />
-    </div>
-    <h3 className='text-sm font-semibold text-slate-900 mb-1'>
-      Failed to load report
-    </h3>
-    <p className='text-xs text-slate-400 mb-4 max-w-xs'>{message}</p>
-    <button
-      onClick={onRetry}
-      className='inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-slate-600 bg-white border border-slate-200 rounded-lg hover:bg-slate-50 transition-colors'>
-      <RefreshCw className='h-3.5 w-3.5' />
-      Try again
-    </button>
-  </div>
-);
+  pagination?: {
+    currentPage: number;
+    totalPages: number;
+    totalItems: number;
+    hasNextPage: boolean;
+    hasPreviousPage: boolean;
+  } | null;
+  currentPage: number;
+  pageSize: number;
+  onPageChange: (page: number) => void;
+  onPageSizeChange: (size: number) => void;
+}) => {
+  if (!pagination || pagination.totalItems === 0) return null;
 
-const ReportEmpty = () => (
-  <div className='flex flex-col items-center justify-center h-full py-16 text-center px-6'>
-    <div className='w-10 h-10 rounded-xl bg-slate-50 flex items-center justify-center mb-3'>
-      <Filter className='h-5 w-5 text-slate-400' />
-    </div>
-    <h3 className='text-sm font-semibold text-slate-900 mb-1'>
-      No data available
-    </h3>
-    <p className='text-xs text-slate-400'>
-      Unable to load report data. Please try again.
-    </p>
-  </div>
-);
+  const from = (currentPage - 1) * pageSize + 1;
+  const to = Math.min(currentPage * pageSize, pagination.totalItems);
 
-const ReportComingSoon = ({
-  reportKey,
-  label,
+  return (
+    <div className='flex items-center justify-between px-1 pt-3 flex-wrap gap-2'>
+      <p className='text-xs text-[#8A877D]'>
+        Showing {from}–{to} of{" "}
+        <span className='font-medium text-[#57554D]'>
+          {pagination.totalItems.toLocaleString()}
+        </span>
+      </p>
+      <div className='flex items-center gap-2'>
+        <Select
+          value={String(pageSize)}
+          onValueChange={(v) => onPageSizeChange(Number(v))}>
+          <SelectTrigger className='h-8 w-[104px] text-xs rounded-lg border-[#E8E4DC] bg-white'>
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            {[20, 50, 100].map((size) => (
+              <SelectItem key={size} value={String(size)}>
+                {size} / page
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+        <Button
+          variant='outline'
+          size='sm'
+          onClick={() => onPageChange(currentPage - 1)}
+          disabled={!pagination.hasPreviousPage}
+          className={cn(claude.btnOutline, "h-8 text-xs")}>
+          <ChevronLeft className='h-3.5 w-3.5 mr-0.5' />
+          Prev
+        </Button>
+        <span className='text-xs text-[#57554D] px-1'>
+          Page {pagination.currentPage} of {pagination.totalPages}
+        </span>
+        <Button
+          variant='outline'
+          size='sm'
+          onClick={() => onPageChange(currentPage + 1)}
+          disabled={!pagination.hasNextPage}
+          className={cn(claude.btnOutline, "h-8 text-xs")}>
+          Next
+          <ChevronRight className='h-3.5 w-3.5 ml-0.5' />
+        </Button>
+      </div>
+    </div>
+  );
+};
+
+// ─── Date range filter (visible at all breakpoints) ──────────────────────────
+
+const DateRangeFilter = ({
+  startDate,
+  endDate,
+  onStartChange,
+  onEndChange,
+  onClear,
 }: {
-  reportKey: string;
-  label: string;
+  startDate: string;
+  endDate: string;
+  onStartChange: (v: string) => void;
+  onEndChange: (v: string) => void;
+  onClear: () => void;
 }) => (
-  <div className='flex flex-col items-center justify-center h-full py-16 text-center px-6'>
-    <div className='w-10 h-10 rounded-xl bg-indigo-50 flex items-center justify-center mb-3'>
-      <Filter className='h-5 w-5 text-indigo-500' />
-    </div>
-    <h3 className='text-sm font-semibold text-slate-900 mb-1'>Coming soon</h3>
-    <p className='text-xs text-slate-400 mb-3 max-w-xs'>
-      The <span className='font-medium text-slate-600'>{label}</span> report is
-      being built.
-    </p>
-    <span className='text-xs font-mono bg-slate-100 text-slate-500 px-2.5 py-1 rounded-full'>
-      {reportKey}
-    </span>
+  <div className='flex items-center flex-wrap gap-1.5 text-xs text-[#57554D]'>
+    <Calendar className='h-3.5 w-3.5 text-[#8A877D] shrink-0' />
+    <Input
+      type='date'
+      value={startDate}
+      onChange={(e) => onStartChange(e.target.value)}
+      className={cn(claude.input, 'h-8 w-[142px] px-2 text-xs rounded-lg')}
+      aria-label='Start date'
+    />
+    <span className='text-[#D8D3C8]'>–</span>
+    <Input
+      type='date'
+      value={endDate}
+      onChange={(e) => onEndChange(e.target.value)}
+      className={cn(claude.input, 'h-8 w-[142px] px-2 text-xs rounded-lg')}
+      aria-label='End date'
+    />
+    {(startDate || endDate) && (
+      <button
+        onClick={onClear}
+        className='text-xs font-medium text-[#9A4B2E] hover:text-[#B85A3D] px-1.5 py-1 rounded-md hover:bg-[#F5F1EA] transition-colors'>
+        All time
+      </button>
+    )}
   </div>
 );
 
-// ─── Main Component ───────────────────────────────────────────────────────────
+// ─── Report picker items ─────────────────────────────────────────────────────
+
+const ReportNavList = ({
+  groupedReports,
+  selectedReport,
+  onSelect,
+}: {
+  groupedReports: ReturnType<typeof useInventoryReportsState>["groupedReports"];
+  selectedReport: ReportType;
+  onSelect: (key: ReportType) => void;
+}) => (
+  <div className='space-y-1.5 pb-2'>
+    {groupedReports.map(({ catKey, category, reports }) => (
+      <div key={catKey} className='space-y-0.5'>
+        <div className='flex items-center gap-2 px-2.5 pt-2.5 pb-1'>
+          <category.icon className='h-3.5 w-3.5 text-[#D97757]' />
+          <span className='text-[11px] font-semibold uppercase tracking-wider text-[#8A877D]'>
+            {category.label}
+          </span>
+          <span className='text-[10px] text-[#8A877D] bg-[#F5F1EA] rounded-full px-1.5 py-0.5 leading-none'>
+            {reports.length}
+          </span>
+        </div>
+        {reports.map(({ key, meta }) => {
+          const isActive = selectedReport === key;
+          const Icon = meta.icon;
+          return (
+            <button
+              key={key}
+              onClick={() => onSelect(key)}
+              className={cn(
+                "w-full text-left pl-3 pr-2.5 py-2 rounded-lg text-[13px] transition-colors duration-150 flex items-start gap-2",
+                isActive
+                  ? "bg-[#D97757]/[0.08] hover:bg-[#D97757]/[0.12]"
+                  : "hover:bg-[#F5F1EA]",
+              )}>
+              <span
+                className={cn(
+                  "mt-0.5 h-4 w-0.5 rounded-full shrink-0",
+                  isActive ? "bg-[#D97757]" : "bg-transparent",
+                )}
+              />
+              <Icon
+                className={cn(
+                  "h-3.5 w-3.5 mt-0.5 shrink-0",
+                  isActive ? "text-[#C96442]" : "text-[#8A877D]",
+                )}
+              />
+              <span className='min-w-0'>
+                <span
+                  className={cn(
+                    "block text-xs font-medium leading-tight",
+                    isActive ? "text-[#9A4B2E]" : "text-[#141413]",
+                  )}>
+                  {meta.label}
+                </span>
+                <span className='block text-[11px] mt-0.5 leading-tight text-[#8A877D]'>
+                  {meta.description}
+                </span>
+              </span>
+            </button>
+          );
+        })}
+      </div>
+    ))}
+  </div>
+);
+
+/** Compact report picker for < lg widths (category select + report select). */
+const CompactReportPicker = ({
+  groupedReports,
+  selectedReport,
+  onSelect,
+}: {
+  groupedReports: ReturnType<typeof useInventoryReportsState>["groupedReports"];
+  selectedReport: ReportType;
+  onSelect: (key: ReportType) => void;
+}) => (
+  <div className='lg:hidden space-y-2'>
+    <Select
+      value={selectedReport}
+      onValueChange={(v) => onSelect(v as ReportType)}>
+      <SelectTrigger className={cn(claude.input, 'w-full rounded-lg')}>
+        <SelectValue placeholder='Choose a report' />
+      </SelectTrigger>
+      <SelectContent>
+        {groupedReports.map(({ catKey, category, reports }) => (
+          <div key={catKey}>
+            <div className='flex items-center gap-1.5 px-2 pt-2 pb-1 text-[10px] font-semibold uppercase tracking-wider text-[#8A877D]'>
+              <category.icon className='h-3 w-3 text-[#D97757]' />
+              {category.label}
+            </div>
+            {reports.map(({ key, meta }) => (
+              <SelectItem key={key} value={key}>
+                <span className='flex items-center gap-2'>
+                  {selectedReport === key && (
+                    <Check className='h-3.5 w-3.5 text-[#C96442]' />
+                  )}
+                  {meta.label}
+                </span>
+              </SelectItem>
+            ))}
+          </div>
+        ))}
+      </SelectContent>
+    </Select>
+  </div>
+);
+
+// ─── Main Component ──────────────────────────────────────────────────────────
 
 export const InventoryReportsSection = () => {
   const [isOpen, setIsOpen] = useState(false);
-  const [selectedReport, setSelectedReport] =
-    useState<ReportType>("inventory-summary");
-  const [searchQuery, setSearchQuery] = useState("");
-  const [expandedCategories, setExpandedCategories] = useState<Set<string>>(
-    new Set(["INVENTORY_HEALTH"]),
-  );
-  const [isTransitioning, setIsTransitioning] = useState(false);
-  const [previousReportType, setPreviousReportType] =
-    useState<ReportType>("inventory-summary");
+  const state = useInventoryReportsState({ enabled: isOpen });
+  const {
+    selectedReport,
+    setSelectedReport,
+    searchQuery,
+    setSearchQuery,
+    startDate,
+    endDate,
+    setStartDate,
+    setEndDate,
+    clearDates,
+    meta,
+    supportsDateRange,
+    isPaginated,
+    data,
+    loading,
+    error,
+    refetch,
+    pagination,
+    currentPage,
+    pageSize,
+    goToPage,
+    changePageSize,
+    groupedReports,
+  } = state;
 
-  const reportParams = useMemo(
-    () => ({ type: selectedReport, page: 1, limit: 20 }),
-    [selectedReport],
-  );
+  const SelectedIcon = meta?.icon ?? Filter;
 
-  const { data, loading, error, refetch } = useInventoryReport(reportParams, {
-    enabled: isOpen,
-  });
-
-  useEffect(() => {
-    if (isOpen && selectedReport !== previousReportType) {
-      setIsTransitioning(true);
-      invalidateInventoryReportCache(selectedReport);
-      invalidateInventoryReportCache(previousReportType);
-      refetch().finally(() => {
-        setPreviousReportType(selectedReport);
-        setIsTransitioning(false);
-      });
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedReport, isOpen]);
-
-  const toggleCategory = (categoryKey: string) => {
-    setExpandedCategories((prev) => {
-      const next = new Set(prev);
-      next.has(categoryKey) ? next.delete(categoryKey) : next.add(categoryKey);
-      return next;
-    });
-  };
-
-  const filteredReportTypes = Object.entries(REPORT_TYPES).filter(
-    ([_, report]) => {
-      if (!searchQuery) return true;
-      return (
-        report.label.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        report.description.toLowerCase().includes(searchQuery.toLowerCase())
-      );
-    },
+  // ── Report body (shared by both layouts) ──────────────────────────────────
+  const reportBody = (
+    <div key={selectedReport}>
+      {renderReportContent({
+        selectedReport,
+        label: meta?.label ?? selectedReport,
+        data,
+        loading,
+        error,
+        refetch,
+      })}
+    </div>
   );
 
-  const allCategoryKeys = Object.keys(REPORT_CATEGORIES);
-  const allExpanded = expandedCategories.size === allCategoryKeys.length;
-
-  const toggleAllCategories = () => {
-    setExpandedCategories(allExpanded ? new Set() : new Set(allCategoryKeys));
-  };
-
-  // ── Report renderer ────────────────────────────────────────────────────────
-
-  const renderReportContent = () => {
-    if (loading || isTransitioning) return <ReportLoading />;
-    if (error) return <ReportError message={error} onRetry={refetch} />;
-    if (!data?.data) return <ReportEmpty />;
-
-    const reportData = data.data;
-
-    switch (previousReportType) {
-      case "inventory-summary":
-        return (
-          <InventorySummaryCards
-            data={reportData?.summary as unknown as InventorySummary}
-          />
-        );
-      case "low-stock":
-        return (
-          <LowStockTable
-            data={reportData?.data as unknown as LowStockProduct[]}
-          />
-        );
-      case "out-of-stock":
-        return (
-          <OutOfStockTable
-            data={reportData?.data as unknown as OutOfStockProduct[]}
-          />
-        );
-      case "inventory-distribution":
-        return (
-          <InventoryDistributionChart
-            data={reportData?.data as unknown as InventoryDistribution[]}
-          />
-        );
-      case "top-selling":
-        return (
-          <TopSellingTable
-            data={reportData?.data as unknown as TopSellingProduct[]}
-          />
-        );
-      case "sales-activity":
-        return (
-          <SalesActivityTable
-            data={reportData?.data as unknown as SalesActivityProduct[]}
-          />
-        );
-      case "return-rate":
-        return (
-          <ReturnRateTable
-            data={reportData?.data as unknown as ReturnRateProduct[]}
-          />
-        );
-      case "dead-stock":
-        return (
-          <DeadStockTable
-            data={reportData?.data as unknown as DeadStockProduct[]}
-          />
-        );
-      case "top-rated":
-        return (
-          <TopRatedTable
-            data={reportData?.data as unknown as TopRatedProduct[]}
-          />
-        );
-      case "rating-distribution":
-        return (
-          <RatingDistributionChart
-            data={reportData?.data as unknown as RatingDistribution[]}
-          />
-        );
-      case "discounted-products":
-        return (
-          <DiscountedProductsTable
-            data={reportData?.data as unknown as DiscountedProduct[]}
-          />
-        );
-      case "highest-discount":
-        return (
-          <HighestDiscountTable
-            data={reportData?.data as unknown as HighestDiscountProduct[]}
-          />
-        );
-      case "price-distribution":
-        return (
-          <PriceDistributionChart
-            data={reportData?.data as unknown as PriceDistribution[]}
-          />
-        );
-      case "category-performance":
-        return (
-          <CategoryPerformanceTable
-            data={reportData?.data as unknown as CategoryPerformance[]}
-          />
-        );
-      case "manufacturer-report":
-        return (
-          <ManufacturerReportTable
-            data={reportData?.data as unknown as ManufacturerReport[]}
-          />
-        );
-      case "recently-added":
-        return (
-          <RecentlyAddedTable
-            data={reportData?.data as unknown as RecentlyAddedProduct[]}
-          />
-        );
-      case "recently-updated":
-        return (
-          <RecentlyUpdatedTable
-            data={reportData?.data as unknown as RecentlyUpdatedProduct[]}
-          />
-        );
-      default:
-        return (
-          <ReportComingSoon
-            reportKey={previousReportType}
-            label={
-              (REPORT_TYPES as any)[selectedReport]?.label ?? selectedReport
-            }
-          />
-        );
-    }
-  };
-
-  // ── Render ─────────────────────────────────────────────────────────────────
+  const paginationFooter = isPaginated ? (
+    <ReportPagination
+      pagination={pagination}
+      currentPage={currentPage}
+      pageSize={pageSize}
+      onPageChange={goToPage}
+      onPageSizeChange={changePageSize}
+    />
+  ) : null;
 
   return (
     <Collapsible open={isOpen} onOpenChange={setIsOpen}>
       {/* Trigger */}
       <CollapsibleTrigger asChild>
         <button className='w-full text-left group'>
-          <div className='flex items-center justify-between px-1 py-0.5'>
-            <div className='flex items-center gap-3'>
-              <div className='w-8 h-8 rounded-lg bg-indigo-50 flex items-center justify-center group-hover:bg-indigo-100 transition-colors'>
-                <Filter className='h-4 w-4 text-indigo-500' />
+          <div className='flex items-center justify-between px-1 py-0.5 gap-3'>
+            <div className='flex items-center gap-3 min-w-0'>
+              <div className='h-8 w-8 rounded-lg border border-[#D97757]/20 bg-[#D97757]/10 flex items-center justify-center shrink-0 group-hover:bg-[#D97757]/[0.16] transition-colors'>
+                <Filter className='h-4 w-4 text-[#D97757]' />
               </div>
-              <div>
-                <p className='text-sm font-semibold text-slate-900'>
+              <div className='min-w-0'>
+                <p className={cn(claude.title, "truncate")}>
                   Advanced inventory reports
                 </p>
-                <p className='text-xs text-slate-400'>
+                <p className='text-xs text-[#8A877D]'>
                   17 report types with filtering
                 </p>
               </div>
             </div>
-            <div className='flex items-center gap-2'>
-              <span className='text-xs font-medium text-slate-500 bg-slate-100 px-2.5 py-1 rounded-full hidden sm:block'>
-                {REPORT_TYPES[selectedReport]?.label}
+            <div className='flex items-center gap-2 shrink-0'>
+              <span className='hidden md:inline-flex text-xs font-medium text-[#9A4B2E] bg-[#D97757]/10 border border-[#D97757]/30 px-2.5 py-1 rounded-full'>
+                {meta?.label}
               </span>
               <ChevronDown
-                className={`h-4 w-4 text-slate-400 transition-transform duration-200 ${
-                  isOpen ? "rotate-180" : ""
-                }`}
+                className={cn(
+                  "h-4 w-4 text-[#8A877D] transition-transform duration-200",
+                  isOpen && "rotate-180",
+                )}
               />
             </div>
           </div>
@@ -353,142 +347,96 @@ export const InventoryReportsSection = () => {
 
       {/* Content */}
       <CollapsibleContent>
-        <div className='mt-5 grid grid-cols-1 lg:grid-cols-12 gap-4 h-[780px] lg:h-[680px]'>
-          {/* LEFT — Report list */}
-          <div className='lg:col-span-4 flex flex-col bg-white rounded-2xl border border-slate-100 overflow-hidden'>
-            {/* List header */}
-            <div className='p-4 border-b border-slate-100 space-y-3 flex-shrink-0'>
-              <p className='text-sm font-semibold text-slate-900'>
-                Report types
-              </p>
-
+        <div className='mt-4 grid grid-cols-1 lg:grid-cols-12 gap-4 items-start'>
+          {/* ── Sidebar nav (lg+) ──────────────────────────────────────────── */}
+          <div className='hidden lg:flex lg:col-span-4 flex-col rounded-xl border border-[#E8E4DC] bg-white overflow-hidden lg:max-h-[70vh]'>
+            <div className='p-3.5 border-b border-[#E8E4DC] space-y-2.5 shrink-0'>
+              <p className={claude.microLabel}>Report types</p>
               <div className='relative'>
-                <Search className='absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-slate-400' />
+                <Search className='absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-[#8A877D]' />
                 <Input
                   type='text'
                   placeholder='Search reports…'
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className='pl-8 h-8 text-sm rounded-xl border-slate-200 bg-slate-50 focus:bg-white'
+                  className={cn(claude.input, 'pl-8 h-8 rounded-lg')}
                 />
               </div>
-
-              <button
-                onClick={toggleAllCategories}
-                className='w-full text-xs font-medium text-slate-500 hover:text-slate-700 py-1 transition-colors text-left'>
-                {allExpanded ? "Collapse all" : "Expand all"}
-              </button>
             </div>
-
-            {/* Scrollable list */}
-            <ScrollArea className='flex-1 px-3 py-3'>
-              <div className='space-y-2 pb-2'>
-                {Object.entries(REPORT_CATEGORIES).map(([catKey, category]) => {
-                  const categoryReports = filteredReportTypes.filter(
-                    ([_, report]) => report.category === catKey,
-                  );
-                  if (categoryReports.length === 0) return null;
-
-                  const isExpanded = expandedCategories.has(catKey);
-
-                  return (
-                    <div key={catKey}>
-                      {/* Category row */}
-                      <button
-                        onClick={() => toggleCategory(catKey)}
-                        className='w-full flex items-center justify-between px-2.5 py-2 rounded-xl hover:bg-slate-50 transition-colors group'>
-                        <div className='flex items-center gap-2'>
-                          <span className='text-base leading-none'>
-                            {category.icon}
-                          </span>
-                          <span className='text-xs font-semibold text-slate-700'>
-                            {category.label}
-                          </span>
-                          <span className='text-xs text-slate-400 bg-slate-100 rounded-full px-1.5 py-0.5 leading-none'>
-                            {categoryReports.length}
-                          </span>
-                        </div>
-                        <ChevronDown
-                          className={`h-3.5 w-3.5 text-slate-400 transition-transform ${
-                            isExpanded ? "rotate-180" : ""
-                          }`}
-                        />
-                      </button>
-
-                      {/* Report items */}
-                      {isExpanded && (
-                        <div className='ml-3 mt-1 mb-1 border-l border-slate-100 pl-3 space-y-0.5'>
-                          {categoryReports.map(([reportKey, report]) => {
-                            const isActive = selectedReport === reportKey;
-                            return (
-                              <button
-                                key={reportKey}
-                                onClick={() =>
-                                  setSelectedReport(reportKey as ReportType)
-                                }
-                                className={`w-full text-left px-2.5 py-2 rounded-xl text-sm transition-all duration-150 ${
-                                  isActive
-                                    ? "bg-indigo-600 shadow-sm"
-                                    : "hover:bg-slate-50"
-                                }`}>
-                                <p
-                                  className={`text-xs font-medium leading-tight ${
-                                    isActive ? "text-white" : "text-slate-800"
-                                  }`}>
-                                  {report.label}
-                                </p>
-                                <p
-                                  className={`text-xs mt-0.5 leading-tight ${
-                                    isActive
-                                      ? "text-indigo-200"
-                                      : "text-slate-400"
-                                  }`}>
-                                  {report.description}
-                                </p>
-                              </button>
-                            );
-                          })}
-                        </div>
-                      )}
-                    </div>
-                  );
-                })}
-              </div>
-            </ScrollArea>
+            <div
+              className='flex-1 min-h-0 overflow-y-auto px-2 py-1'
+              style={{ scrollbarWidth: "thin", scrollbarColor: "#D8D3C8 transparent" }}>
+              <ReportNavList
+                groupedReports={groupedReports}
+                selectedReport={selectedReport}
+                onSelect={setSelectedReport}
+              />
+            </div>
           </div>
 
-          {/* RIGHT — Report display */}
-          <div className='lg:col-span-8 flex flex-col bg-white rounded-2xl border border-slate-100 overflow-hidden'>
+          {/* ── Compact picker (< lg) ──────────────────────────────────────── */}
+          <div className='lg:hidden'>
+            <CompactReportPicker
+              groupedReports={groupedReports}
+              selectedReport={selectedReport}
+              onSelect={setSelectedReport}
+            />
+          </div>
+
+          {/* ── Report display ─────────────────────────────────────────────── */}
+          <div
+            className={cn(
+              "flex flex-col rounded-xl border border-[#E8E4DC] bg-white overflow-hidden",
+              "lg:col-span-8 lg:col-start-5",
+            )}>
             {/* Report header */}
-            <div className='flex items-center justify-between px-5 py-4 border-b border-slate-100 flex-shrink-0'>
-              <div className='flex items-center gap-3 min-w-0'>
-                <div className='w-8 h-8 rounded-lg bg-indigo-50 flex items-center justify-center flex-shrink-0'>
-                  <Filter className='h-4 w-4 text-indigo-500' />
+            <div className='flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2.5 px-4 md:px-5 py-3.5 border-b border-[#E8E4DC] shrink-0'>
+              <div className='flex items-center gap-2.5 min-w-0'>
+                <div className='h-8 w-8 rounded-lg border border-[#D97757]/20 bg-[#D97757]/10 flex items-center justify-center shrink-0'>
+                  <SelectedIcon className='h-4 w-4 text-[#D97757]' />
                 </div>
                 <div className='min-w-0'>
-                  <p className='text-sm font-semibold text-slate-900 truncate'>
-                    {REPORT_TYPES[selectedReport]?.label}
-                  </p>
-                  <p className='text-xs text-slate-400 truncate'>
-                    {REPORT_TYPES[selectedReport]?.description}
+                  <p className={cn(claude.title, "truncate")}>{meta?.label}</p>
+                  <p className='text-xs text-[#8A877D] truncate'>
+                    {meta?.description}
                   </p>
                 </div>
               </div>
-              <button
-                onClick={refetch}
-                disabled={loading}
-                className='inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-slate-600 bg-slate-50 border border-slate-200 rounded-lg hover:bg-slate-100 disabled:opacity-50 transition-colors flex-shrink-0 ml-3'>
-                <RefreshCw
-                  className={`h-3.5 w-3.5 ${loading ? "animate-spin" : ""}`}
-                />
-                Refresh
-              </button>
+              <div className='flex items-center gap-2 shrink-0 flex-wrap'>
+                {supportsDateRange && (
+                  <DateRangeFilter
+                    startDate={startDate}
+                    endDate={endDate}
+                    onStartChange={setStartDate}
+                    onEndChange={setEndDate}
+                    onClear={clearDates}
+                  />
+                )}
+                <Button
+                  variant='outline'
+                  size='sm'
+                  onClick={refetch}
+                  disabled={loading}
+                  className={cn(claude.btnOutline, "h-8 text-xs shrink-0")}>
+                  <RefreshCw
+                    className={cn("h-3.5 w-3.5 mr-1", loading && "animate-spin")}
+                  />
+                  Refresh
+                </Button>
+              </div>
             </div>
 
-            {/* Report body */}
-            <div className='flex-1 overflow-auto px-5 py-4'>
-              <div key={selectedReport}>{renderReportContent()}</div>
+            {/* Report body — scrolls internally; tables handle their own x-scroll */}
+            <div className='flex-1 min-w-0 px-4 md:px-5 py-4'>
+              {reportBody}
             </div>
+
+            {/* Pagination footer */}
+            {paginationFooter && (
+              <div className='px-4 md:px-5 pb-3.5 shrink-0 border-t border-[#E8E4DC]'>
+                {paginationFooter}
+              </div>
+            )}
           </div>
         </div>
       </CollapsibleContent>

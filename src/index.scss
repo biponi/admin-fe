@@ -200,6 +200,123 @@
   }
 }
 
+/* ─── Sidebar surface belongs to the weather theme ────────────────────────────
+   When a weather background (image or animated) is selected, the sidebar must
+   show the weather art with NO colour from the selected theme colour. The
+   theme-* classes above may repaint --sidebar-* at :root for other surfaces —
+   here we re-pin the defaults directly on the sidebar container (a value set
+   on the element always beats an inherited one) and make the surface itself
+   transparent so the art sits on nothing but itself. */
+/* ─── Header weather background ──────────────────────────────────────────────
+   The desktop header shows the same weather art as the sidebar (settings
+   toggle). When the art is dark (data-light-text, same rule the sidebar
+   uses), header text tokens flip to white so breadcrumbs and triggers stay
+   readable. */
+header[data-light-text="true"] {
+  --foreground: 0 0% 100%;
+  --muted-foreground: 0 0% 65%;
+}
+
+/* The date/time/weather pill swaps to dark glass over dark art — white text
+   on white glass would vanish */
+header[data-light-text="true"] .header-weather-pill {
+  background: rgb(8 12 24 / 0.35);
+  border-color: rgb(255 255 255 / 0.15);
+}
+
+div[data-sidebar="sidebar"] {
+  --sidebar-background: 0 0% 98%;
+  --sidebar-foreground: 240 5.3% 26.1%;
+  --sidebar-primary: 240 5.9% 10%;
+  --sidebar-primary-foreground: 0 0% 98%;
+  --sidebar-accent: 240 4.8% 95.9%;
+  --sidebar-accent-foreground: 240 5.9% 10%;
+  --sidebar-border: 220 13% 91%;
+  --sidebar-ring: 217.2 91.2% 59.8%;
+
+  /* Transparent while weather art is rendered inside (scene = animated,
+     backdrop = image). Falls back to the plain --sidebar-background while
+     weather data is loading. Covers the desktop panel and the mobile Sheet,
+     which both carry data-sidebar='sidebar'. */
+  &:has(.weather-scene),
+  &:has(.weather-backdrop) {
+    background-color: transparent;
+  }
+
+  /* Sidebar text follows the weather art, not the theme colour: the rendered
+     scene/backdrop emits data-light-text="true" when its background is dark
+     (measured from the image art, or the sky + scrim + tint) and the text
+     flips to white. Driving --sidebar-foreground keeps every
+     text-sidebar-foreground token (nav, header, footer info block) in sync
+     automatically. */
+  &:has(.weather-scene[data-light-text="true"]),
+  &:has(.weather-backdrop[data-light-text="true"]) {
+    --sidebar-foreground: 0 0% 100%;
+  }
+
+  /* Morning/day image art sits on a light backdrop wash, so every sidebar
+     option renders pure black (the default token above is dark gray). The
+     animated scene never emits "false" — its scrim keeps the composite dark. */
+  &:has(.weather-scene[data-light-text="false"]),
+  &:has(.weather-backdrop[data-light-text="false"]) {
+    --sidebar-foreground: 0 0% 0%;
+  }
+
+  /* Mobile sheet nav sits on a dark slate base even before weather data
+     loads (no backdrop/scene mounted yet, so the :has rules above can't
+     match) — default its token ink to white. Once a backdrop or scene mounts,
+     those higher-specificity rules take over, exactly as they do for the
+     desktop sidebar. */
+  &[data-mobile-sheet] {
+    --sidebar-foreground: 0 0% 100%;
+  }
+
+  /* ── Animated scene contrast rules ──────────────────────────────────────
+     The scene's scrim guarantees a dark composite in every period/condition,
+     so nav chrome flips to dark translucent chips with a subtle inset ring
+     instead of the light --sidebar-accent tint (white-on-white was
+     unreadable). Image-backdrop mode is untouched. */
+  &:has(.weather-scene) {
+    /* Hover / open / active states → dark translucent, not the accent tint */
+    [data-sidebar='menu-button'],
+    [data-sidebar='menu-sub-button'],
+    [data-sidebar='menu-action'] {
+      &:hover,
+      &[data-state='open'] {
+        background-color: rgb(0 0 0 / 0.22);
+        color: hsl(var(--sidebar-foreground));
+      }
+
+      &[data-active='true'] {
+        background-color: rgb(0 0 0 / 0.28);
+        box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.18);
+        color: hsl(var(--sidebar-foreground));
+
+        &:hover {
+          background-color: rgb(0 0 0 / 0.34);
+        }
+      }
+    }
+
+    /* Section labels ≥90% opacity (AA at 11px uppercase) */
+    [data-sidebar='group-label'] {
+      color: hsl(var(--sidebar-foreground) / 0.9);
+    }
+
+    /* Text shadow on every text-bearing sidebar surface so labels lift off
+       bright art details behind the scrim */
+    [data-sidebar='menu-button'],
+    [data-sidebar='menu-sub-button'],
+    [data-sidebar='menu-badge'],
+    [data-sidebar='group-label'],
+    [data-sidebar='footer'] {
+      text-shadow:
+        0 1px 2px rgb(0 0 0 / 0.45),
+        0 0 12px rgb(0 0 0 / 0.3);
+    }
+  }
+}
+
 @layer base {
   * {
     @apply border-border;
@@ -209,14 +326,381 @@
   }
 }
 
-@media (max-width: 639px) {
+@media (max-width: 767px) {
   body {
     background: #dfe6e9;
   }
 }
 
-@media (min-width: 640px) {
+@media (min-width: 768px) {
   body {
     background: white;
   }
+}
+
+@layer utilities {
+  /* Thin, minimal scrollbar — used by the sidebar content */
+  .glass-scrollbar {
+    /* Firefox */
+    scrollbar-width: thin;
+    scrollbar-color: hsl(var(--sidebar-foreground) / 0.25) transparent;
+
+    /* Chrome / Edge / Safari */
+    &::-webkit-scrollbar {
+      width: 5px;
+      height: 5px;
+    }
+    &::-webkit-scrollbar-track {
+      background: transparent;
+    }
+    &::-webkit-scrollbar-thumb {
+      background: hsl(var(--sidebar-foreground) / 0.25);
+      border-radius: 9999px;
+    }
+    &::-webkit-scrollbar-thumb:hover {
+      background: hsl(var(--sidebar-foreground) / 0.45);
+    }
+  }
+}
+
+/* ─── Rain warning banner layout offset ─────────────────────────────────────
+   While the rain warning banner is active (body[data-rain-banner]), in-flow
+   content is shifted via body padding-top (set from HeaderDateTimeWeather).
+   The desktop sidebar is position:fixed inset-y-0, so it needs an explicit
+   offset by the same height (--rain-banner-h is set on body). */
+body[data-rain-banner="true"] div:has(> [data-sidebar="sidebar"]) {
+  top: var(--rain-banner-h, 36px);
+  height: calc(100svh - var(--rain-banner-h, 36px));
+}
+
+/* ─── Animated weather scene (sidebar backdrop) ─────────────────────────────
+   Pure-CSS ambient scene driven by data-tod / data-weather attributes on the
+   .weather-scene root (see components/weather/weather-scene.tsx). Deliberately
+   calm: skies at ~40% opacity over bg-sidebar, few particles, transform and
+   opacity animation only. Illustration colors are literal; everything that
+   holds text stays on theme tokens. */
+.weather-scene {
+  /* Sky strength — full opacity; readability comes from the ws-scrim layer
+     on top of the composite, not from thinning the art */
+  --ws-sky-opacity: 1;
+
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+  isolation: isolate;
+  /* Size container so the cqh/cqw particle animations work at any sidebar
+     height (desktop panel, collapsed rail, mobile sheet) */
+  container-type: size;
+}
+
+/* White-text surfaces (mobile sheet nav): no fog allowed there either —
+   just render the scene quieter over the sheet's dark base */
+.weather-scene-dark {
+  --ws-sky-opacity: 0.5;
+}
+
+/* One sky per time of day, always mounted and cross-faded by opacity.
+   Morning/day stops are capped (#e8a977 / #7fbbe8 ceilings) so white text
+   over the scrim still clears WCAG AA in every weather condition. */
+.weather-scene .ws-sky {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  transition: opacity 0.8s ease;
+}
+.weather-scene .ws-sky-morning {
+  background: linear-gradient(180deg, #4a8ecf 0%, #d89a63 58%, #c97a3e 100%);
+}
+.weather-scene .ws-sky-day {
+  background: linear-gradient(180deg, #2a72c2 0%, #4a97d8 55%, #7fbbe8 100%);
+}
+.weather-scene .ws-sky-evening {
+  background: linear-gradient(180deg, #2c1e5c 0%, #ad3e6f 55%, #e07a3e 100%);
+}
+.weather-scene .ws-sky-night {
+  background: linear-gradient(180deg, #04081a 0%, #0d1531 55%, #1b2450 100%);
+}
+.weather-scene[data-tod="morning"] .ws-sky-morning,
+.weather-scene[data-tod="day"] .ws-sky-day,
+.weather-scene[data-tod="evening"] .ws-sky-evening,
+.weather-scene[data-tod="night"] .ws-sky-night {
+  opacity: var(--ws-sky-opacity);
+}
+
+/* Stars — night only, dimmed in rain, hidden in storms */
+.weather-scene .ws-stars {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  transition: opacity 0.8s ease;
+}
+.weather-scene[data-tod="night"] .ws-stars {
+  opacity: 1;
+}
+.weather-scene[data-tod="night"][data-weather="rain"] .ws-stars {
+  opacity: 0.3;
+}
+.weather-scene[data-tod="night"][data-weather="storm"] .ws-stars {
+  opacity: 0;
+}
+.weather-scene .ws-stars i {
+  position: absolute;
+  background: #fff;
+  border-radius: 9999px;
+}
+
+/* Low silhouette hills along the bottom — morning/evening orbs sink behind
+   them, keeping the bright disc out of the nav area */
+.weather-scene .ws-hills {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 15%;
+  background:
+    radial-gradient(
+      120% 100% at 18% 100%,
+      rgb(31 41 55 / 0.55) 0 60%,
+      transparent 61%
+    ),
+    radial-gradient(
+      110% 100% at 82% 100%,
+      rgb(31 41 55 / 0.4) 0 55%,
+      transparent 56%
+    );
+}
+
+/* Sun / moon orb — position per time of day, dimmed in rain, hidden in storm */
+.weather-scene .ws-orb {
+  position: absolute;
+  font-size: 2.1rem;
+  line-height: 1;
+  transition:
+    left 0.8s ease,
+    top 0.8s ease,
+    opacity 0.8s ease;
+}
+/* Orbs sit out of the nav area: top-right for day/night, sunk low behind
+   the hills for morning/evening */
+.weather-scene[data-tod="morning"] .ws-orb {
+  left: 22%;
+  top: 78%;
+}
+.weather-scene[data-tod="day"] .ws-orb {
+  left: 72%;
+  top: 8%;
+}
+.weather-scene[data-tod="evening"] .ws-orb {
+  left: 66%;
+  top: 80%;
+  filter: saturate(1.3) hue-rotate(-12deg);
+}
+.weather-scene[data-tod="night"] .ws-orb {
+  left: 74%;
+  top: 9%;
+}
+.weather-scene[data-weather="rain"] .ws-orb {
+  opacity: 0.35;
+}
+.weather-scene[data-weather="storm"] .ws-orb {
+  opacity: 0;
+}
+
+/* Clouds — greyed in bad weather, tinted by time of day; the third cloud only
+   drifts through when the weather is not clear */
+.weather-scene .ws-cloud {
+  position: absolute;
+  left: 0;
+  line-height: 1;
+  transition:
+    opacity 0.6s ease,
+    filter 0.6s ease;
+}
+.weather-scene .ws-cloud-c3 {
+  opacity: 0;
+}
+.weather-scene:not([data-weather="clear"]) .ws-cloud-c3 {
+  opacity: 1;
+}
+.weather-scene[data-tod="evening"] .ws-cloud {
+  filter: sepia(0.5) saturate(2.2) hue-rotate(-25deg);
+}
+.weather-scene[data-tod="night"] .ws-cloud {
+  filter: brightness(0.55);
+}
+.weather-scene:not([data-weather="clear"]) .ws-cloud {
+  filter: grayscale(1) brightness(0.72);
+}
+.weather-scene[data-tod="night"]:not([data-weather="clear"]) .ws-cloud {
+  filter: grayscale(1) brightness(0.4);
+}
+
+/* Weather tint, rain streaks, storm slant and lightning */
+.weather-scene .ws-tint {
+  position: absolute;
+  inset: 0;
+  background: #1a2332;
+  opacity: 0;
+  transition: opacity 0.7s ease;
+}
+.weather-scene[data-weather="rain"] .ws-tint {
+  opacity: 0.25;
+}
+.weather-scene[data-weather="storm"] .ws-tint {
+  opacity: 0.4;
+}
+.theme-dark .weather-scene[data-weather="rain"] .ws-tint,
+.dark .weather-scene[data-weather="rain"] .ws-tint {
+  opacity: 0.32;
+}
+.theme-dark .weather-scene[data-weather="storm"] .ws-tint,
+.dark .weather-scene[data-weather="storm"] .ws-tint {
+  opacity: 0.48;
+}
+
+.weather-scene .ws-rain {
+  position: absolute;
+  inset: -15%;
+  transition: transform 0.6s ease;
+}
+.weather-scene .ws-rain i {
+  position: absolute;
+  top: 0;
+  width: 1.5px;
+  background: linear-gradient(
+    to bottom,
+    rgba(200, 225, 255, 0),
+    rgba(200, 225, 255, 0.9)
+  );
+}
+.weather-scene[data-weather="storm"] .ws-rain {
+  transform: rotate(12deg) scale(1.15);
+}
+
+.weather-scene .ws-flash,
+.weather-scene .ws-bolt {
+  display: none;
+  position: absolute;
+}
+.weather-scene[data-weather="storm"] .ws-flash,
+.weather-scene[data-weather="storm"] .ws-bolt {
+  display: block;
+}
+.weather-scene .ws-flash {
+  inset: 0;
+  background: #fff;
+}
+.weather-scene .ws-bolt {
+  left: 58%;
+  top: 26%;
+  font-size: 1.6rem;
+  line-height: 1;
+}
+
+/* Vertical readability scrim — the scene's topmost layer (rendered last in
+   weather-scene.tsx), identical in light and dark themes. Keeps white nav
+   text above WCAG AA over every sky/weather combination. */
+.weather-scene .ws-scrim {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    180deg,
+    rgb(0 0 0 / 0.28) 0%,
+    rgb(0 0 0 / 0.36) 50%,
+    rgb(0 0 0 / 0.5) 100%
+  );
+}
+
+/* Reduced motion: static sky, orb and emoji only */
+@media (prefers-reduced-motion: reduce) {
+  .weather-scene,
+  .weather-scene * {
+    animation: none !important;
+    transition: none !important;
+  }
+}
+
+/* ============================================================
+   Mobile (Android/Material) layer — only applies below 768px
+   ============================================================ */
+@media (max-width: 767px) {
+  /* Kill the grey tap flash Android browsers draw over tappable elements;
+     kit components provide their own ripple instead. */
+  * {
+    -webkit-tap-highlight-color: transparent;
+  }
+}
+
+/* Safe-area utilities — viewport-fit=cover is set in index.html */
+@layer utilities {
+  .pt-safe {
+    padding-top: env(safe-area-inset-top);
+  }
+  .pb-safe {
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+  .px-safe {
+    padding-left: env(safe-area-inset-left);
+    padding-right: env(safe-area-inset-right);
+  }
+}
+
+/* Material-style ripple. A useRipple() hook stamps --ripple-x/--ripple-y at
+   the tap point and toggles .is-rippling; the ripple itself is a ::after
+   scaling out from that point. Honors prefers-reduced-motion. */
+.m3-ripple {
+  position: relative;
+  overflow: hidden;
+
+  &::after {
+    content: "";
+    position: absolute;
+    left: var(--ripple-x, 50%);
+    top: var(--ripple-y, 50%);
+    width: 10px;
+    height: 10px;
+    border-radius: 9999px;
+    background: currentColor;
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(0);
+    pointer-events: none;
+  }
+
+  &.is-rippling::after {
+    animation: m3-ripple-out 500ms ease-out forwards;
+  }
+}
+
+@keyframes m3-ripple-out {
+  0% {
+    opacity: 0.18;
+    transform: translate(-50%, -50%) scale(0);
+  }
+  100% {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(24);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .m3-ripple.is-rippling::after {
+    animation: none;
+  }
+}
+
+/* Bottom-sheet bodies shouldn't rubber-band the page behind them */
+.m3-sheet-body {
+  overscroll-behavior-y: contain;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Material 3 elevation levels (cold shadows on light surfaces) */
+:root {
+  --m3-elevation-1:
+    0 1px 2px rgba(0, 0, 0, 0.3), 0 1px 3px 1px rgba(0, 0, 0, 0.15);
+  --m3-elevation-2:
+    0 1px 2px rgba(0, 0, 0, 0.3), 0 2px 6px 2px rgba(0, 0, 0, 0.15);
+  --m3-elevation-3:
+    0 4px 8px 3px rgba(0, 0, 0, 0.15), 0 1px 3px rgba(0, 0, 0, 0.3);
 }

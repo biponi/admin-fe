@@ -31,6 +31,14 @@ import {
 } from "lucide-react";
 import { toast } from "react-hot-toast";
 import { format, formatDistanceToNow } from "date-fns";
+import {
+  MobilePage,
+  MobileListCard,
+  MobileStaggeredList,
+  MobileEmptyState,
+  MobileSkeletonList,
+} from "../../components/mobile";
+import { useIsMobile } from "../../hooks/use-mobile";
 
 interface ProductLike {
   productId?: string;
@@ -262,6 +270,7 @@ const buildNarrative = (
 const ModificationHistory = () => {
   const { orderId } = useParams<{ orderId: string }>();
   const navigate = useNavigate();
+  const isMobile = useIsMobile();
   const [loading, setLoading] = useState(true);
   const [historyData, setHistoryData] = useState<any>(null);
   const [expanded, setExpanded] = useState<Set<string>>(new Set());
@@ -344,76 +353,12 @@ const ModificationHistory = () => {
     );
     const narrative = buildNarrative(productDiff, oldTotalPrice, newTotalPrice);
 
-    return (
-      <li key={entry.id} className='relative pl-12'>
-        {!isLast && (
-          <span
-            className='absolute left-[19px] top-10 bottom-[-16px] w-px bg-slate-200'
-            aria-hidden
-          />
-        )}
-        <span
-          className={`absolute left-0 top-1 flex h-10 w-10 items-center justify-center rounded-full text-[12px] font-semibold ring-4 ring-slate-50 transition-colors ${
-            isOpen
-              ? "bg-indigo-600 text-white"
-              : "bg-white text-indigo-600 border border-slate-200"
-          }`}>
-          {stepNumber}
-        </span>
+    // Shared detail content (used by both the desktop timeline card and
+    // the mobile Material card) — extracted verbatim so the desktop output
+    // stays byte-identical.
+    const stepDetails = (
+      <>
 
-        <div
-          className={`rounded-2xl border bg-white transition-shadow ${
-            isOpen
-              ? "border-indigo-200 shadow-md shadow-indigo-100/50"
-              : "border-slate-200 shadow-sm hover:shadow-md hover:border-slate-300"
-          }`}>
-          <button
-            type='button'
-            onClick={() => toggleExpanded(entry.id)}
-            className='w-full flex items-center gap-3 px-4 py-3.5 text-left'>
-            <div className='min-w-0 flex-1'>
-              <div className='flex items-center flex-wrap gap-x-2 gap-y-0.5'>
-                <span className='text-sm font-semibold text-slate-900 tracking-tight truncate'>
-                  {entry.performedBy.userName}
-                </span>
-                <span className='text-[11px] text-slate-400 truncate'>
-                  {entry.performedBy.userEmail}
-                </span>
-              </div>
-              <p className='text-xs text-slate-500 mt-0.5 truncate'>
-                {summarizeStep(productDiff, nonProductChanges.length)}
-              </p>
-            </div>
-
-            <div className='flex items-center gap-2 shrink-0'>
-              {priceDiff !== 0 && (
-                <span
-                  className={`inline-flex h-6 items-center gap-1 rounded-full px-2.5 text-[11px] font-semibold ${
-                    priceDiff > 0
-                      ? "bg-emerald-50 text-emerald-700"
-                      : "bg-red-50 text-red-700"
-                  }`}>
-                  {priceDiff > 0 ? (
-                    <ArrowUpRight className='w-3 h-3' />
-                  ) : (
-                    <ArrowDownRight className='w-3 h-3' />
-                  )}
-                  ৳{Math.abs(priceDiff)}
-                </span>
-              )}
-              <span className='hidden sm:block text-[11px] text-slate-400 w-24 text-right'>
-                {formatDistanceToNow(modifiedDate, { addSuffix: true })}
-              </span>
-              <ChevronDown
-                className={`w-4 h-4 text-slate-400 transition-transform ${
-                  isOpen ? "rotate-180 text-indigo-600" : ""
-                }`}
-              />
-            </div>
-          </button>
-
-          {isOpen && (
-            <div className='border-t border-slate-100 px-4 py-4 space-y-5'>
               {/* {entry.reason && (
                 <div className='rounded-xl bg-indigo-50/60 border border-indigo-100 px-3.5 py-2.5 text-sm text-indigo-900'>
                   {entry.reason}
@@ -615,6 +560,139 @@ const ModificationHistory = () => {
                   No detailed field changes recorded for this step.
                 </p>
               )}
+            
+      </>
+    );
+
+    // ── Mobile (Material) step card ──
+    if (isMobile) {
+      return (
+        <MobileListCard
+          key={entry.id}
+          onClick={() => toggleExpanded(entry.id)}
+          leading={
+            <span
+              className={`grid h-9 w-9 shrink-0 place-items-center rounded-full text-xs font-semibold ${
+                isOpen
+                  ? "bg-indigo-600 text-white"
+                  : "border border-indigo-100 bg-indigo-50 text-indigo-600"
+              }`}>
+              {stepNumber}
+            </span>
+          }
+          title={
+            <span className='flex items-center gap-x-2'>
+              <span className='truncate'>{entry.performedBy.userName}</span>
+              <span className='text-[11px] font-normal text-slate-400 truncate'>
+                {formatDistanceToNow(modifiedDate, { addSuffix: true })}
+              </span>
+            </span>
+          }
+          subtitle={summarizeStep(productDiff, nonProductChanges.length)}
+          trailing={
+            <div className='flex flex-col items-end gap-1'>
+              {priceDiff !== 0 && (
+                <span
+                  className={`inline-flex h-6 items-center gap-1 rounded-full px-2 text-[11px] font-semibold ${
+                    priceDiff > 0
+                      ? "bg-emerald-50 text-emerald-700"
+                      : "bg-red-50 text-red-700"
+                  }`}>
+                  {priceDiff > 0 ? (
+                    <ArrowUpRight className='w-3 h-3' />
+                  ) : (
+                    <ArrowDownRight className='w-3 h-3' />
+                  )}
+                  ৳{Math.abs(priceDiff)}
+                </span>
+              )}
+              <ChevronDown
+                className={`w-4 h-4 ${
+                  isOpen ? "rotate-180 text-indigo-600" : "text-slate-400"
+                }`}
+              />
+            </div>
+          }>
+          {isOpen && (
+            <div className='mt-3 space-y-4 border-t border-slate-100 pt-3'>
+              {stepDetails}
+            </div>
+          )}
+        </MobileListCard>
+      );
+    }
+
+    return (
+      <li key={entry.id} className='relative pl-12'>
+        {!isLast && (
+          <span
+            className='absolute left-[19px] top-10 bottom-[-16px] w-px bg-slate-200'
+            aria-hidden
+          />
+        )}
+        <span
+          className={`absolute left-0 top-1 flex h-10 w-10 items-center justify-center rounded-full text-[12px] font-semibold ring-4 ring-slate-50 transition-colors ${
+            isOpen
+              ? "bg-indigo-600 text-white"
+              : "bg-white text-indigo-600 border border-slate-200"
+          }`}>
+          {stepNumber}
+        </span>
+
+        <div
+          className={`rounded-2xl border bg-white transition-shadow ${
+            isOpen
+              ? "border-indigo-200 shadow-md shadow-indigo-100/50"
+              : "border-slate-200 shadow-sm hover:shadow-md hover:border-slate-300"
+          }`}>
+          <button
+            type='button'
+            onClick={() => toggleExpanded(entry.id)}
+            className='w-full flex items-center gap-3 px-4 py-3.5 text-left'>
+            <div className='min-w-0 flex-1'>
+              <div className='flex items-center flex-wrap gap-x-2 gap-y-0.5'>
+                <span className='text-sm font-semibold text-slate-900 tracking-tight truncate'>
+                  {entry.performedBy.userName}
+                </span>
+                <span className='text-[11px] text-slate-400 truncate'>
+                  {entry.performedBy.userEmail}
+                </span>
+              </div>
+              <p className='text-xs text-slate-500 mt-0.5 truncate'>
+                {summarizeStep(productDiff, nonProductChanges.length)}
+              </p>
+            </div>
+
+            <div className='flex items-center gap-2 shrink-0'>
+              {priceDiff !== 0 && (
+                <span
+                  className={`inline-flex h-6 items-center gap-1 rounded-full px-2.5 text-[11px] font-semibold ${
+                    priceDiff > 0
+                      ? "bg-emerald-50 text-emerald-700"
+                      : "bg-red-50 text-red-700"
+                  }`}>
+                  {priceDiff > 0 ? (
+                    <ArrowUpRight className='w-3 h-3' />
+                  ) : (
+                    <ArrowDownRight className='w-3 h-3' />
+                  )}
+                  ৳{Math.abs(priceDiff)}
+                </span>
+              )}
+              <span className='hidden md:block text-[11px] text-slate-400 w-24 text-right'>
+                {formatDistanceToNow(modifiedDate, { addSuffix: true })}
+              </span>
+              <ChevronDown
+                className={`w-4 h-4 text-slate-400 transition-transform ${
+                  isOpen ? "rotate-180 text-indigo-600" : ""
+                }`}
+              />
+            </div>
+          </button>
+
+          {isOpen && (
+            <div className='border-t border-slate-100 px-4 py-4 space-y-5'>
+              {stepDetails}
             </div>
           )}
         </div>
@@ -623,6 +701,13 @@ const ModificationHistory = () => {
   };
 
   if (loading) {
+    if (isMobile) {
+      return (
+        <div className='p-3'>
+          <MobileSkeletonList count={4} />
+        </div>
+      );
+    }
     return (
       <div className='min-h-screen bg-slate-50 flex items-center justify-center'>
         <div className='text-center'>
@@ -647,106 +732,184 @@ const ModificationHistory = () => {
   }
 
   return (
-    <div className='min-h-screen bg-slate-50'>
-      {/* Top bar */}
-      <div className='sticky top-0 z-10 bg-white/90 backdrop-blur border-b border-slate-200'>
-        <div className='max-w-3xl mx-auto px-4 sm:px-6 h-16 flex items-center gap-4'>
-          <Button
-            variant='outline'
-            onClick={() => navigate("/order")}
-            className='h-9 px-3 text-sm font-medium border-slate-200 rounded-lg shrink-0'>
-            <ArrowLeft className='w-4 h-4 mr-1.5' />
-            Orders
-          </Button>
-          <div className='h-6 w-px bg-slate-200 shrink-0' />
-          <div className='flex items-center gap-2.5 min-w-0'>
-            <div className='w-8 h-8 bg-indigo-600 rounded-lg flex items-center justify-center shrink-0'>
-              <History className='w-4 h-4 text-white' />
+    <MobilePage
+      title='Modification History'
+      icon={<History className='h-5 w-5 text-primary' />}
+      subtitle={`Order #${modifications[0]?.orderNumber || "N/A"}`}
+      back
+      onBack={() => navigate("/order")}>
+      <div className='min-h-screen bg-slate-50'>
+        {/* Top bar (desktop only — mobile uses the MobilePage sub app bar) */}
+        <div className='mobile:hidden sticky top-0 z-10 bg-white/90 backdrop-blur border-b border-slate-200'>
+          <div className='max-w-3xl mx-auto px-4 sm:px-6 h-16 flex items-center gap-4'>
+            <Button
+              variant='outline'
+              onClick={() => navigate("/order")}
+              className='h-9 px-3 text-sm font-medium border-slate-200 rounded-lg shrink-0'>
+              <ArrowLeft className='w-4 h-4 mr-1.5' />
+              Orders
+            </Button>
+            <div className='h-6 w-px bg-slate-200 shrink-0' />
+            <div className='flex items-center gap-2.5 min-w-0 flex-1'>
+              <div className='h-9 w-9 bg-primary text-primary-foreground rounded-lg shadow-sm flex items-center justify-center shrink-0'>
+                <History className='w-4 h-4' />
+              </div>
+              <div className='min-w-0'>
+                <h1 className='text-sm font-semibold text-slate-900 truncate'>
+                  Modification History
+                </h1>
+                <p className='text-[11px] text-slate-500 truncate'>
+                  Order #{modifications[0]?.orderNumber || "N/A"}
+                </p>
+              </div>
             </div>
-            <div className='min-w-0'>
-              <h1 className='text-sm font-semibold text-slate-900 truncate'>
-                Modification History
-              </h1>
-              <p className='text-[11px] text-slate-500 truncate'>
-                Order #{modifications[0]?.orderNumber || "N/A"}
-              </p>
-            </div>
+            <span className='shrink-0 rounded-md px-2.5 py-1 text-sm font-semibold text-slate-500 tabular-nums'>
+              {total} {total === 1 ? "change" : "changes"}
+            </span>
           </div>
         </div>
+
+        {/* ── Mobile — Material list ── */}
+        <div className='mobile:block hidden px-3 pt-3 pb-2'>
+          {total === 0 ? (
+            <MobileEmptyState
+              icon={<History className='h-7 w-7' />}
+              title='No modifications yet'
+              description='Changes to this order will appear here as steps.'
+            />
+          ) : (
+            <>
+              {/* Compact stats row */}
+              <div className='grid grid-cols-3 gap-2 mb-3'>
+                <div className='rounded-2xl border border-slate-200 bg-white px-3 py-2.5'>
+                  <div className='text-[10px] uppercase tracking-widest text-slate-400 font-medium'>
+                    Steps
+                  </div>
+                  <div className='text-base font-semibold text-slate-900'>
+                    {total}
+                  </div>
+                </div>
+                <div className='rounded-2xl border border-slate-200 bg-white px-3 py-2.5'>
+                  <div className='text-[10px] uppercase tracking-widest text-slate-400 font-medium'>
+                    Net
+                  </div>
+                  <div
+                    className={`text-base font-semibold ${
+                      netChange > 0
+                        ? "text-emerald-600"
+                        : netChange < 0
+                          ? "text-red-600"
+                          : "text-slate-900"
+                    }`}>
+                    {netChange > 0 ? "+" : netChange < 0 ? "−" : ""}৳
+                    {Math.abs(netChange)}
+                  </div>
+                </div>
+                <div className='rounded-2xl border border-slate-200 bg-white px-3 py-2.5'>
+                  <div className='text-[10px] uppercase tracking-widest text-slate-400 font-medium'>
+                    Last
+                  </div>
+                  <div className='text-base font-semibold text-slate-900 truncate'>
+                    {lastModified
+                      ? formatDistanceToNow(lastModified, { addSuffix: true })
+                      : "—"}
+                  </div>
+                </div>
+              </div>
+
+              <div className='flex justify-end mb-2'>
+                <button
+                  type='button'
+                  onClick={toggleAll}
+                  className='inline-flex items-center gap-1.5 text-xs font-medium text-slate-500 hover:text-indigo-600 transition-colors'>
+                  <ChevronsUpDown className='w-3.5 h-3.5' />
+                  {allExpanded ? "Collapse all" : "Expand all"}
+                </button>
+              </div>
+
+              <MobileStaggeredList key={`${total}-${modifications.length}`}>
+                {modifications.map((entry, index) =>
+                  renderStep(entry, index, index === modifications.length - 1),
+                )}
+              </MobileStaggeredList>
+            </>
+          )}
+        </div>
+
+        {/* ── Desktop timeline ── */}
+        <div className='mobile:hidden max-w-3xl mx-auto px-4 sm:px-6 py-8'>
+          {total === 0 ? (
+            <div className='rounded-2xl border-2 border-dashed border-slate-200 bg-white py-14 text-center'>
+              <div className='w-12 h-12 rounded-full bg-slate-100 flex items-center justify-center mx-auto mb-3'>
+                <History className='w-6 h-6 text-slate-400' />
+              </div>
+              <h3 className='text-base font-semibold text-slate-700 mb-1'>
+                No modifications yet
+              </h3>
+              <p className='text-sm text-slate-500'>
+                Changes to this order will appear here as steps.
+              </p>
+            </div>
+          ) : (
+            <>
+              {/* Stats strip */}
+              <div className='grid grid-cols-3 gap-3 mb-6'>
+                <div className='rounded-xl border border-slate-200 bg-white px-4 py-3'>
+                  <div className='text-[11px] uppercase tracking-widest text-slate-400 font-medium mb-1'>
+                    Steps
+                  </div>
+                  <div className='text-lg font-semibold text-slate-900'>
+                    {total}
+                  </div>
+                </div>
+                <div className='rounded-xl border border-slate-200 bg-white px-4 py-3'>
+                  <div className='text-[11px] uppercase tracking-widest text-slate-400 font-medium mb-1'>
+                    Net change
+                  </div>
+                  <div
+                    className={`text-lg font-semibold ${
+                      netChange > 0
+                        ? "text-emerald-600"
+                        : netChange < 0
+                          ? "text-red-600"
+                          : "text-slate-900"
+                    }`}>
+                    {netChange > 0 ? "+" : netChange < 0 ? "−" : ""}৳
+                    {Math.abs(netChange)}
+                  </div>
+                </div>
+                <div className='rounded-xl border border-slate-200 bg-white px-4 py-3'>
+                  <div className='text-[11px] uppercase tracking-widest text-slate-400 font-medium mb-1'>
+                    Last modified
+                  </div>
+                  <div className='text-lg font-semibold text-slate-900 truncate'>
+                    {lastModified
+                      ? formatDistanceToNow(lastModified, { addSuffix: true })
+                      : "—"}
+                  </div>
+                </div>
+              </div>
+
+              <div className='flex justify-end mb-3'>
+                <button
+                  type='button'
+                  onClick={toggleAll}
+                  className='inline-flex items-center gap-1.5 text-xs font-medium text-slate-500 hover:text-indigo-600 transition-colors'>
+                  <ChevronsUpDown className='w-3.5 h-3.5' />
+                  {allExpanded ? "Collapse all" : "Expand all"}
+                </button>
+              </div>
+
+              <ol className='space-y-4'>
+                {modifications.map((entry, index) =>
+                  renderStep(entry, index, index === modifications.length - 1),
+                )}
+              </ol>
+            </>
+          )}
+        </div>
       </div>
-
-      <div className='max-w-3xl mx-auto px-4 sm:px-6 py-8'>
-        {total === 0 ? (
-          <div className='rounded-2xl border-2 border-dashed border-slate-200 bg-white py-14 text-center'>
-            <div className='w-12 h-12 rounded-full bg-slate-100 flex items-center justify-center mx-auto mb-3'>
-              <History className='w-6 h-6 text-slate-400' />
-            </div>
-            <h3 className='text-base font-semibold text-slate-700 mb-1'>
-              No modifications yet
-            </h3>
-            <p className='text-sm text-slate-500'>
-              Changes to this order will appear here as steps.
-            </p>
-          </div>
-        ) : (
-          <>
-            {/* Stats strip */}
-            <div className='grid grid-cols-3 gap-3 mb-6'>
-              <div className='rounded-xl border border-slate-200 bg-white px-4 py-3'>
-                <div className='text-[11px] uppercase tracking-widest text-slate-400 font-medium mb-1'>
-                  Steps
-                </div>
-                <div className='text-lg font-semibold text-slate-900'>
-                  {total}
-                </div>
-              </div>
-              <div className='rounded-xl border border-slate-200 bg-white px-4 py-3'>
-                <div className='text-[11px] uppercase tracking-widest text-slate-400 font-medium mb-1'>
-                  Net change
-                </div>
-                <div
-                  className={`text-lg font-semibold ${
-                    netChange > 0
-                      ? "text-emerald-600"
-                      : netChange < 0
-                        ? "text-red-600"
-                        : "text-slate-900"
-                  }`}>
-                  {netChange > 0 ? "+" : netChange < 0 ? "−" : ""}৳
-                  {Math.abs(netChange)}
-                </div>
-              </div>
-              <div className='rounded-xl border border-slate-200 bg-white px-4 py-3'>
-                <div className='text-[11px] uppercase tracking-widest text-slate-400 font-medium mb-1'>
-                  Last modified
-                </div>
-                <div className='text-lg font-semibold text-slate-900 truncate'>
-                  {lastModified
-                    ? formatDistanceToNow(lastModified, { addSuffix: true })
-                    : "—"}
-                </div>
-              </div>
-            </div>
-
-            <div className='flex justify-end mb-3'>
-              <button
-                type='button'
-                onClick={toggleAll}
-                className='inline-flex items-center gap-1.5 text-xs font-medium text-slate-500 hover:text-indigo-600 transition-colors'>
-                <ChevronsUpDown className='w-3.5 h-3.5' />
-                {allExpanded ? "Collapse all" : "Expand all"}
-              </button>
-            </div>
-
-            <ol className='space-y-4'>
-              {modifications.map((entry, index) =>
-                renderStep(entry, index, index === modifications.length - 1),
-              )}
-            </ol>
-          </>
-        )}
-      </div>
-    </div>
+    </MobilePage>
   );
 };
 

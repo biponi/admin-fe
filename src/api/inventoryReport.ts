@@ -111,17 +111,22 @@ export interface InventoryDistribution {
 }
 
 export interface TopSellingProduct {
+  productId?: string;
   name: string;
-  sku: string;
-  categoryId: string;
+  sku: string | null;
+  categoryId: string | null;
+  categoryName?: string | null;
   totalSold: number;
-  totalStock: number;
-  active: boolean;
+  /** Net revenue (line totalPrice minus line discount) in BDT */
+  netRevenue?: number;
+  totalStock?: number;
+  active: boolean | null;
 }
 
 export interface SalesActivityProduct {
   name: string;
-  lastPurchasedAt: string;
+  /** Date of the most recent customer order containing this product */
+  lastSaleAt: string;
   totalSold: number;
   sku: string;
   active: boolean;
@@ -140,8 +145,10 @@ export interface DeadStockProduct {
   name: string;
   sku: string;
   totalStock: number;
-  lastPurchasedAt: string;
+  /** Null when the product has never sold */
+  lastSaleAt: string | null;
   daysSinceLastSale: number;
+  neverSold?: boolean;
   active: boolean;
 }
 
@@ -163,14 +170,21 @@ export interface DiscountedProduct {
   originalPrice: number;
   discount: number;
   discountType: string;
+  /** Effective discount as a percentage of original price (both types) */
+  discountPercent?: number;
   finalPrice: number;
 }
 
 export interface HighestDiscountProduct {
   name: string;
+  sku?: string | null;
   unitPrice: number;
   discount: number;
   discountType: string;
+  /** Raw discount converted to BDT amount (percent × unitPrice) */
+  effectiveDiscountAmount?: number;
+  /** Raw discount expressed as a percentage of unitPrice (both types) */
+  discountPercent?: number;
   active: boolean;
 }
 
@@ -185,6 +199,7 @@ export interface CategoryPerformance {
   productCount: number;
   unitsSold: number;
   stockUnits: number;
+  netRevenue?: number;
 }
 
 export interface ManufacturerReport {
@@ -282,6 +297,61 @@ export const fetchInventoryReport = async (
     }
   } catch (error: any) {
     console.error("Error fetching inventory report:", error);
+    return handleApiError(error);
+  }
+};
+
+// ============================================================================
+// INVENTORY HEALTH OVERVIEW
+// ============================================================================
+
+export interface InventoryHealthResponse {
+  threshold: number;
+  deadStockDays: number;
+  healthy: number;
+  lowStock: number;
+  outOfStock: number;
+  fastMovers: number;
+  slowMovers: number;
+  deadStock: number;
+  trackedProducts: number;
+  percentages: {
+    healthy: number;
+    lowStock: number;
+    outOfStock: number;
+    fastMovers: number;
+    slowMovers: number;
+    deadStock: number;
+  };
+  generatedAt: string;
+}
+
+/**
+ * Fetch the inventory health overview (admin analytics dashboard grid).
+ * Counts and percentages are computed server-side over active,
+ * non-deleted products.
+ */
+export interface InventoryHealthApiResponse {
+  success: boolean;
+  data?: InventoryHealthResponse;
+  error?: string;
+}
+
+export const getInventoryHealth = async (): Promise<InventoryHealthApiResponse> => {
+  try {
+    const response = await axios.get<any>(`/api/v1/product/inventory-health`);
+    if (response.status === 200 && response.data?.success) {
+      return {
+        success: true,
+        data: response.data.data,
+      };
+    }
+    return {
+      success: false,
+      error: response.data?.error || "Failed to fetch inventory health",
+    };
+  } catch (error: any) {
+    console.error("Error fetching inventory health:", error);
     return handleApiError(error);
   }
 };

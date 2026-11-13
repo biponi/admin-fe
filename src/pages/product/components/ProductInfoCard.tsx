@@ -186,7 +186,7 @@ const ProductInfoCard = ({ product }: ProductInfoCardProps) => {
                 <ChevronDownIcon className='ml-auto group-data-[state=open]:rotate-180' />
               </PopoverTrigger>
               <PopoverContent className='w-full max-w-2xl p-2 border-0 bg-gray-100'>
-                <div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-4'>
+                <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-4'>
                   {product.variation.map((variant, index) => (
                     <div
                       key={index}

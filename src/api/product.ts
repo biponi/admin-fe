@@ -77,7 +77,9 @@ export const searchActiveProducts = async (
   categoryId?: string,
   includeSubcategories?: boolean,
   page: number = 1,
-  limit: number = 20
+  limit: number = 20,
+  sortBy?: string,
+  sortOrder?: string
 ): Promise<ApiResponse<any>> => {
   try {
     const params: any = { query, page, limit };
@@ -89,6 +91,9 @@ export const searchActiveProducts = async (
     if (includeSubcategories !== undefined) {
       params.includeSubcategories = includeSubcategories;
     }
+
+    if (sortBy) params.sortBy = sortBy;
+    if (sortOrder) params.sortOrder = sortOrder;
 
     const response = await axios.get<any>(
       config.product.searchActiveProduct(),

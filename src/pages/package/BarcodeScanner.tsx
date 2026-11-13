@@ -10,9 +10,12 @@ import { CameraScanner } from "../../components/package/CameraScanner";
 import { ScanResultDialog } from "../../components/package/ScanResultDialog";
 import { ScanHistory } from "../../components/package/ScanHistory";
 import { usePackageStore } from "../../store/packageStore";
+import { useIsMobile } from "@/hooks/use-mobile";
+import { MobilePage } from "@/components/mobile";
 
 export function BarcodeScannerPage() {
   const navigate = useNavigate();
+  const isMobile = useIsMobile();
   const {
     scanHistory,
     scanResult,
@@ -159,6 +162,97 @@ export function BarcodeScannerPage() {
   const packedCount = scanHistory.filter(
     (entry) => entry.success && entry.status === "packed"
   ).length;
+
+  if (isMobile) {
+    return (
+      <MobilePage title="Scan Barcode" back onBack={() => navigate(-1)}>
+        <div className="space-y-3 p-3 pb-4">
+          {/* Scanner Mode Toggle */}
+          <div className="flex rounded-full border bg-card p-1">
+            <button
+              onClick={() => setUseCamera(false)}
+              className={
+                !useCamera
+                  ? "m3-ripple flex-1 rounded-full bg-primary py-2 text-sm font-semibold text-primary-foreground"
+                  : "m3-ripple flex-1 rounded-full py-2 text-sm font-medium text-muted-foreground"
+              }>
+              <Barcode className="mr-1.5 inline h-4 w-4" />
+              Manual
+            </button>
+            <button
+              onClick={() => setUseCamera(true)}
+              className={
+                useCamera
+                  ? "m3-ripple flex-1 rounded-full bg-primary py-2 text-sm font-semibold text-primary-foreground"
+                  : "m3-ripple flex-1 rounded-full py-2 text-sm font-medium text-muted-foreground"
+              }>
+              Camera
+            </button>
+          </div>
+
+          {/* Scanner Section — full-bleed on mobile, no card chrome */}
+          {useCamera ? (
+            <div className="-mx-3">
+              <CameraScanner
+                onScan={handleCameraScan}
+                onError={(error) => toast.error(error)}
+              />
+            </div>
+          ) : (
+            <div className="flex gap-2">
+              <div className="relative flex-1">
+                <Barcode className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+                <Input
+                  placeholder="Enter barcode or order number"
+                  value={barcodeInput}
+                  onChange={(e) => setBarcodeInput(e.target.value)}
+                  onKeyDown={(e) => e.key === "Enter" && handleManualScan()}
+                  className="h-11 rounded-2xl pl-10"
+                  autoFocus
+                  disabled={loading}
+                />
+              </div>
+              <Button
+                onClick={handleManualScan}
+                disabled={loading || !barcodeInput.trim()}
+                className="h-11 rounded-2xl px-5">
+                {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                Scan
+              </Button>
+            </div>
+          )}
+
+          {/* Bulk Shipping Button */}
+          {packedCount > 0 && (
+            <Button
+              onClick={handleBulkShipping}
+              className="h-12 w-full rounded-full"
+              size="lg">
+              Request Shipping for {packedCount} Packed Package
+              {packedCount > 1 ? "s" : ""}
+            </Button>
+          )}
+
+          {/* Scan History */}
+          <ScanHistory
+            scans={scanHistory}
+            onRescan={handleRescan}
+            onClear={clearScanHistory}
+            maxDisplay={20}
+          />
+
+          {/* Scan Result Dialog */}
+          <ScanResultDialog
+            open={showResultDialog}
+            onOpenChange={setShowResultDialog}
+            package={scanResult}
+            onConfirm={handleConfirm}
+            onCancel={handleCancel}
+          />
+        </div>
+      </MobilePage>
+    );
+  }
 
   return (
     <div className="max-w-4xl mx-auto space-y-6">

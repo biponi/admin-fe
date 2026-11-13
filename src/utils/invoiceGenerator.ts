@@ -5,6 +5,7 @@ import JSZip from "jszip";
 import { saveAs } from "file-saver";
 import axiosInstance from "../api/axios";
 import config from "./config";
+import { BRAND_CONFIG } from "../config/brand";
 import { generateReactPdfInvoice, generateReactPdfInvoiceBlob } from "./reactPdfInvoice";
 import {
   generateReactPdfPackingSlip,
@@ -55,9 +56,9 @@ export const generatePurchageOrder = (order: IOrder) => {
   const wrappedAddress = (text: string) =>
     doc.splitTextToSize(text, maxTextWidth);
 
-  // Add an image
+  // Add company logo
   const imageURL =
-    "https://res.cloudinary.com/emerging-it/image/upload/v1723971522/logo_guswtt.png";
+    BRAND_CONFIG.invoiceLogoUrl || BRAND_CONFIG.logoUrl || "/pwa-512x512.png";
   doc.addImage(imageURL, "JPEG", 10, 5, 100, 32);
 
   // Split the text into multiple lines if it exceeds the maximum width
@@ -266,7 +267,7 @@ const generateInvoiceBlob = (order: IOrder) => {
 
   // Add company logo with better positioning
   const imageURL =
-    "https://res.cloudinary.com/emerging-it/image/upload/v1723971522/logo_guswtt.png";
+    BRAND_CONFIG.invoiceLogoUrl || BRAND_CONFIG.logoUrl || "/pwa-512x512.png";
   doc.addImage(imageURL, "PNG", -10, 8, 100, 30);
 
   // // Company name and branding

@@ -11,6 +11,8 @@ import {
   UserCheck,
   Loader2,
   Calendar,
+  MoreVertical,
+  ShieldCheck,
 } from "lucide-react";
 import { Button } from "../../components/ui/button";
 import { Input } from "../../components/ui/input";
@@ -43,6 +45,19 @@ import { Checkbox } from "../../components/ui/checkbox";
 import { useRoles } from "./hooks/useRoleHook";
 import useRoleCheck from "../auth/hooks/useRoleCheck";
 import { cn } from "../../lib/utils";
+import {
+  MobilePage,
+  MobileListCard,
+  MobileStaggeredList,
+  MobileStatTile,
+  MobileStatRow,
+  MobileEmptyState,
+  MobileSkeletonList,
+  MobilePagination,
+  MobileActionSheet,
+  rippleProps,
+} from "../../components/mobile";
+import { PageHeader } from "../../components/PageHeader";
 
 const RolesListPage: React.FC = () => {
   const navigate = useNavigate();
@@ -70,6 +85,10 @@ const RolesListPage: React.FC = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(12);
   const [deletingRoleId, setDeletingRoleId] = useState<string | null>(null);
+  const [actionRole, setActionRole] = useState<(typeof roles)[number] | null>(
+    null,
+  );
+  const [actionSheetOpen, setActionSheetOpen] = useState(false);
 
   // Search and filter handler
   const handleSearch = () => {
@@ -201,35 +220,33 @@ const RolesListPage: React.FC = () => {
   const stats = getRoleStats();
 
   return (
-    <div className='min-h-screen bg-slate-50/60'>
+    <div>
+      {/* ═══════════ DESKTOP — unchanged ═══════════ */}
+      <div className='hidden md:block'>
       <div className='max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6'>
         {/* Page Header */}
-        <div className='flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4'>
-          <div className='flex items-center gap-3'>
-            <div className='flex items-center justify-center w-10 h-10 rounded-xl bg-indigo-600 shadow-sm shadow-indigo-200'>
-              <Shield className='h-5 w-5 text-white' />
-            </div>
-            <div>
-              <h1 className='text-xl font-semibold text-slate-900 leading-tight'>
-                Role Management
-              </h1>
-              <p className='text-sm text-slate-500 mt-0.5'>
-                Manage user roles and permissions
-              </p>
-            </div>
-          </div>
-
-          <div className='flex items-center gap-2'>
-            {hasRequiredPermission("role", "create") && (
-              <button
-                onClick={() => navigate("/roles/create")}
-                className='inline-flex items-center gap-1.5 px-4 py-2 text-sm font-medium text-white bg-indigo-600 rounded-lg hover:bg-indigo-700 active:bg-indigo-800 transition-all duration-150 shadow-sm shadow-indigo-200'>
-                <Plus className='h-4 w-4' />
-                Create Role
-              </button>
-            )}
-          </div>
-        </div>
+        <PageHeader
+          icon={<ShieldCheck className='h-5 w-5 text-white' />}
+          title='Roles'
+          subtitle='Manage user roles and permissions'
+          count={
+            <span className='text-base font-semibold text-slate-500 tabular-nums'>
+              {stats.total} total
+            </span>
+          }
+          actions={
+            <>
+              {hasRequiredPermission("role", "create") && (
+                <button
+                  onClick={() => navigate("/roles/create")}
+                  className='inline-flex items-center gap-1.5 px-4 py-2 text-sm font-medium text-primary-foreground bg-primary rounded-md hover:bg-primary/90 transition-colors duration-150'>
+                  <Plus className='h-4 w-4' />
+                  Create Role
+                </button>
+              )}
+            </>
+          }
+        />
 
         {/* Summary Strip */}
         <div className='grid grid-cols-2 sm:grid-cols-4 gap-3'>
@@ -237,40 +254,29 @@ const RolesListPage: React.FC = () => {
             {
               label: "Total Roles",
               value: stats.total,
-              accent: "text-indigo-600",
-              bg: "bg-indigo-50",
             },
             {
               label: "Active",
               value: stats.active,
-              accent: "text-emerald-600",
-              bg: "bg-emerald-50",
             },
             {
               label: "Inactive",
               value: stats.inactive,
-              accent: "text-slate-600",
-              bg: "bg-slate-50",
             },
             {
               label: "Admin Roles",
               value: stats.admin,
-              accent: "text-rose-600",
-              bg: "bg-rose-50",
             },
           ].map((stat) => (
             <div
               key={stat.label}
-              className='flex items-center gap-3 bg-white rounded-xl border border-slate-100 px-4 py-3 shadow-sm'>
-              <div
-                className={`w-2 h-2 rounded-full ${stat.bg.replace("bg-", "bg-").replace("50", "400")}`}
-              />
+              className='flex items-center gap-3 bg-white rounded-xl border border-slate-200 px-4 py-3 shadow-[0_1px_2px_rgba(20,20,19,0.04)]'>
+              <div className='w-2 h-2 rounded-full bg-primary/50' />
               <div className='min-w-0'>
-                <p
-                  className={`text-lg font-semibold ${stat.accent} leading-none`}>
+                <p className='text-lg font-semibold text-foreground tabular-nums leading-none'>
                   {stat.value}
                 </p>
-                <p className='text-xs text-slate-500 mt-0.5 truncate'>
+                <p className='text-[10px] font-semibold uppercase tracking-wider text-slate-400 mt-1 truncate'>
                   {stat.label}
                 </p>
               </div>
@@ -286,34 +292,34 @@ const RolesListPage: React.FC = () => {
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             onKeyPress={handleKeyPress}
-            className='pl-10 h-10 bg-white border border-slate-200 focus:border-indigo-400 rounded-lg text-sm shadow-sm'
+            className='pl-10 h-10 bg-white border border-slate-200 focus:border-zinc-400 rounded-md text-sm shadow-sm'
           />
         </div>
 
         {/* Tabs */}
-        <div className='bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden'>
+        <div className='bg-white rounded-xl border border-slate-200 shadow-[0_1px_2px_rgba(20,20,19,0.04)] overflow-hidden'>
           <Tabs
             value={activeTab}
             onValueChange={(value) => setActiveTab(value as typeof activeTab)}
             className='w-full'>
             {/* Tab Bar */}
-            <div className='border-b border-slate-100'>
+            <div className='border-b border-slate-200'>
               <TabsList className='h-auto bg-transparent p-0 gap-0 rounded-none flex justify-start'>
                 <TabsTrigger
                   value='all'
-                  className='relative flex items-center gap-2 px-4 py-4 text-sm font-medium rounded-none border-b-2 border-transparent text-slate-500 hover:text-slate-700 data-[state=active]:text-indigo-600 data-[state=active]:border-indigo-600 data-[state=active]:bg-transparent transition-all duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2'>
+                  className='relative flex items-center gap-2 px-4 py-4 text-sm font-medium rounded-none border-b-2 border-transparent text-slate-500 hover:text-foreground data-[state=active]:text-foreground data-[state=active]:border-primary data-[state=active]:bg-transparent transition-all duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2'>
                   <Shield className='h-4 w-4' />
                   All Roles ({stats.total})
                 </TabsTrigger>
                 <TabsTrigger
                   value='active'
-                  className='relative flex items-center gap-2 px-4 py-4 text-sm font-medium rounded-none border-b-2 border-transparent text-slate-500 hover:text-slate-700 data-[state=active]:text-indigo-600 data-[state=active]:border-indigo-600 data-[state=active]:bg-transparent transition-all duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2'>
+                  className='relative flex items-center gap-2 px-4 py-4 text-sm font-medium rounded-none border-b-2 border-transparent text-slate-500 hover:text-foreground data-[state=active]:text-foreground data-[state=active]:border-primary data-[state=active]:bg-transparent transition-all duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2'>
                   <UserCheck className='h-4 w-4' />
                   Active ({stats.active})
                 </TabsTrigger>
                 <TabsTrigger
                   value='inactive'
-                  className='relative flex items-center gap-2 px-4 py-4 text-sm font-medium rounded-none border-b-2 border-transparent text-slate-500 hover:text-slate-700 data-[state=active]:text-indigo-600 data-[state=active]:border-indigo-600 data-[state=active]:bg-transparent transition-all duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2'>
+                  className='relative flex items-center gap-2 px-4 py-4 text-sm font-medium rounded-none border-b-2 border-transparent text-slate-500 hover:text-foreground data-[state=active]:text-foreground data-[state=active]:border-primary data-[state=active]:bg-transparent transition-all duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2'>
                   <Crown className='h-4 w-4' />
                   Inactive ({stats.inactive})
                 </TabsTrigger>
@@ -323,7 +329,7 @@ const RolesListPage: React.FC = () => {
             {/* Bulk Actions */}
             {hasRequiredPermission("role", "delete") &&
               selectedRoles?.length > 0 && (
-                <div className='bg-slate-50 border-b border-slate-100 px-4 py-3'>
+                <div className='bg-muted/50 border-b border-slate-200 px-4 py-3'>
                   <div className='flex items-center justify-between'>
                     <div className='flex items-center gap-3'>
                       <Checkbox
@@ -353,15 +359,15 @@ const RolesListPage: React.FC = () => {
               {loading ? (
                 <div className='flex flex-col items-center justify-center py-20 px-4'>
                   <div className='relative'>
-                    <div className='absolute inset-0 bg-indigo-500/20 rounded-full animate-ping' />
-                    <div className='relative h-16 w-16 rounded-full bg-indigo-600 flex items-center justify-center shadow-lg'>
-                      <Loader2 className='h-8 w-8 text-white animate-spin' />
+                    <div className='absolute inset-0 bg-primary/20 rounded-full animate-ping' />
+                    <div className='relative h-16 w-16 rounded-full bg-primary flex items-center justify-center shadow-sm'>
+                      <Loader2 className='h-8 w-8 text-primary-foreground animate-spin' />
                     </div>
                   </div>
-                  <p className='mt-6 text-lg font-semibold text-slate-900'>
+                  <p className='mt-6 text-lg font-semibold text-foreground'>
                     Loading roles...
                   </p>
-                  <p className='text-sm text-slate-500 mt-1'>
+                  <p className='text-[13px] text-slate-400 mt-1'>
                     Please wait while we fetch the data
                   </p>
                 </div>
@@ -384,14 +390,14 @@ const RolesListPage: React.FC = () => {
                   </div>
                 </div>
               ) : filteredRoles.length === 0 ? (
-                <div className='py-20 px-4 text-center bg-white rounded-2xl'>
-                  <div className='mx-auto h-20 w-20 rounded-2xl bg-slate-100 flex items-center justify-center mb-6'>
+                <div className='py-20 px-4 text-center bg-white'>
+                  <div className='mx-auto h-20 w-20 rounded-xl bg-muted ring-1 ring-border flex items-center justify-center mb-6'>
                     <Shield className='h-10 w-10 text-slate-400' />
                   </div>
-                  <p className='text-xl font-bold text-slate-900 mb-2'>
+                  <p className='text-base font-semibold text-foreground mb-2'>
                     No roles found
                   </p>
-                  <p className='text-sm text-slate-500 mb-6 max-w-sm mx-auto'>
+                  <p className='text-[13px] text-slate-500 mb-6 max-w-sm mx-auto'>
                     {searchTerm
                       ? "Try adjusting your search criteria"
                       : "Get started by creating your first role"}
@@ -399,7 +405,7 @@ const RolesListPage: React.FC = () => {
                   {!searchTerm && hasRequiredPermission("role", "create") && (
                     <Button
                       onClick={() => navigate("/roles/create")}
-                      className='bg-indigo-600 hover:bg-indigo-700 text-white shadow-sm shadow-indigo-200'>
+                      className='bg-primary text-primary-foreground hover:bg-primary/90 rounded-md'>
                       <Plus className='mr-2 h-4 w-4' />
                       Create First Role
                     </Button>
@@ -416,12 +422,12 @@ const RolesListPage: React.FC = () => {
                         <Card
                           key={role.id}
                           className={cn(
-                            "group relative p-0 overflow-hidden rounded-xl border border-slate-200 bg-white transition-all duration-300 hover:border-indigo-200 hover:shadow-lg hover:shadow-indigo-500/5",
+                            "group relative p-0 overflow-hidden rounded-xl border border-slate-200 bg-white shadow-[0_1px_2px_rgba(20,20,19,0.04)] transition-all duration-300 hover:border-zinc-400",
                             isDeleting && "opacity-50 pointer-events-none",
                           )}>
                           <div className='bg-slate-50/70'>
                             {/* Header with checkbox */}
-                            <div className='flex items-start justify-between gap-2 border-b border-slate-100 p-4 bg-white'>
+                            <div className='flex items-start justify-between gap-2 border-b border-slate-200 p-4 bg-white'>
                               <div className='flex flex-1 items-start gap-3 min-w-0'>
                                 {/* {hasRequiredPermission("role", "delete") && (
                                   <Checkbox
@@ -435,7 +441,7 @@ const RolesListPage: React.FC = () => {
 
                                 <div className='min-w-0 flex-1 pt-0.5'>
                                   <div className='mb-1 flex items-center gap-1.5'>
-                                    <h3 className='truncate text-[15px] font-semibold leading-tight text-slate-900 uppercase'>
+                                    <h3 className='truncate text-[15px] font-semibold leading-tight text-foreground uppercase'>
                                       {role.name}
                                     </h3>
                                     {role.name
@@ -481,7 +487,7 @@ const RolesListPage: React.FC = () => {
                                 {role.permissions.length > 3 && (
                                   <Badge
                                     variant='outline'
-                                    className='rounded-md border-indigo-100 bg-indigo-50 px-2 py-0.5 text-[11px] font-medium text-indigo-600'>
+                                    className='rounded-md border-border bg-muted px-2 py-0.5 text-[11px] font-medium text-slate-500'>
                                     +{role.permissions.length - 3}
                                   </Badge>
                                 )}
@@ -489,7 +495,7 @@ const RolesListPage: React.FC = () => {
                             </div>
 
                             {/* Footer */}
-                            <div className=' flex items-center justify-between gap-3 rounded-xl m-1.5 bg-white shadow-sm  border border-gray-100 px-3 py-2'>
+                            <div className=' flex items-center justify-between gap-3 rounded-xl m-1.5 bg-white shadow-sm  border border-slate-100 px-3 py-2'>
                               <div className='flex items-center gap-1.5 text-[11px] text-slate-400'>
                                 <Calendar className='h-3 w-3' />
                                 <span className='truncate'>
@@ -507,7 +513,7 @@ const RolesListPage: React.FC = () => {
                                     size='icon'
                                     onClick={() => navigate(`/role/${role.id}`)}
                                     title='View'
-                                    className='h-7 w-7 rounded-lg text-slate-500 hover:bg-white hover:text-slate-900 hover:shadow-sm'>
+                                    className='h-7 w-7 rounded-md text-slate-500 hover:bg-white hover:text-foreground hover:shadow-sm'>
                                     <Eye className='h-3.5 w-3.5' />
                                   </Button>
                                   {hasRequiredPermission("role", "edit") && (
@@ -518,7 +524,7 @@ const RolesListPage: React.FC = () => {
                                         navigate(`/roles/${role.id}/edit`)
                                       }
                                       title='Edit'
-                                      className='h-7 w-7 rounded-lg text-indigo-600 hover:bg-white hover:text-indigo-700 hover:shadow-sm'>
+                                      className='h-7 w-7 rounded-md text-slate-500 hover:bg-white hover:text-foreground hover:shadow-sm'>
                                       <Edit className='h-3.5 w-3.5' />
                                     </Button>
                                   )}
@@ -561,7 +567,7 @@ const RolesListPage: React.FC = () => {
                           size='sm'
                           onClick={() => handlePageChange(currentPage - 1)}
                           disabled={!pagination.hasPrev}
-                          className='h-8 text-xs'>
+                          className='h-8 rounded-md text-xs border-slate-300 text-slate-600 hover:bg-accent hover:text-foreground hover:border-zinc-400'>
                           Previous
                         </Button>
                         <div className='flex items-center gap-1'>
@@ -580,9 +586,10 @@ const RolesListPage: React.FC = () => {
                                   size='sm'
                                   onClick={() => handlePageChange(pageNum)}
                                   className={cn(
-                                    "h-8 w-8 text-xs",
-                                    currentPage === pageNum &&
-                                      "bg-indigo-600 hover:bg-indigo-700 text-white",
+                                    "h-8 w-8 rounded-md text-xs",
+                                    currentPage === pageNum
+                                      ? "border-primary bg-primary text-primary-foreground hover:bg-primary/90 hover:text-primary-foreground"
+                                      : "border-slate-300 text-slate-600 hover:bg-accent hover:text-foreground hover:border-zinc-400",
                                   )}>
                                   {pageNum}
                                 </Button>
@@ -595,7 +602,7 @@ const RolesListPage: React.FC = () => {
                           size='sm'
                           onClick={() => handlePageChange(currentPage + 1)}
                           disabled={!pagination.hasNext}
-                          className='h-8 text-xs'>
+                          className='h-8 rounded-md text-xs border-slate-300 text-slate-600 hover:bg-accent hover:text-foreground hover:border-zinc-400'>
                           Next
                         </Button>
                       </div>
@@ -628,6 +635,266 @@ const RolesListPage: React.FC = () => {
           </div>
         )}
       </div>
+      </div>
+
+      {/* ═══════════ MOBILE — Material list + FAB + action sheet ═══════════ */}
+      <div className='md:hidden'>
+        <MobilePage
+          title='Roles'
+          icon={<ShieldCheck className='h-5 w-5' />}
+          subtitle='Manage user roles and permissions'
+          actions={
+            hasRequiredPermission("role", "create") ? (
+              <button
+                onClick={() => navigate("/roles/create")}
+                aria-label='Create role'
+                className='m3-ripple grid h-10 w-10 shrink-0 place-items-center rounded-full bg-primary text-primary-foreground shadow-sm active:scale-95 transition-transform'
+                {...rippleProps()}>
+                <Plus className='h-5 w-5' />
+              </button>
+            ) : undefined
+          }>
+          <div className='px-4 pt-4 pb-2 space-y-4'>
+            {/* Stat strip */}
+            <MobileStatRow>
+              <MobileStatTile label='Roles' value={stats.total} />
+              <MobileStatTile
+                label='Active'
+                value={stats.active}
+                icon={<UserCheck className='h-4 w-4' />}
+                tone='bg-emerald-100 text-emerald-700'
+              />
+              <MobileStatTile
+                label='Inactive'
+                value={stats.inactive}
+                tone='bg-slate-200 text-slate-600'
+              />
+              <MobileStatTile
+                label='Admin'
+                value={stats.admin}
+                icon={<Crown className='h-4 w-4' />}
+                tone='bg-amber-100 text-amber-700'
+              />
+            </MobileStatRow>
+
+            {/* Search */}
+            <div className='relative'>
+              <Search className='absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground' />
+              <Input
+                placeholder='Search roles…'
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                onKeyPress={handleKeyPress}
+                className='pl-10 h-10 rounded-full bg-card'
+              />
+            </div>
+
+            {/* Tabs */}
+            <Tabs
+              value={activeTab}
+              onValueChange={(value) => setActiveTab(value as typeof activeTab)}>
+              <TabsList className='w-full flex'>
+                <TabsTrigger value='all' className='flex-1'>
+                  All ({stats.total})
+                </TabsTrigger>
+                <TabsTrigger value='active' className='flex-1'>
+                  Active ({stats.active})
+                </TabsTrigger>
+                <TabsTrigger value='inactive' className='flex-1'>
+                  Inactive ({stats.inactive})
+                </TabsTrigger>
+              </TabsList>
+            </Tabs>
+
+            {error && (
+              <div className='rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-600'>
+                {error}
+              </div>
+            )}
+
+            {/* Role list */}
+            {loading ? (
+              <MobileSkeletonList count={5} />
+            ) : filteredRoles.length === 0 ? (
+              <MobileEmptyState
+                icon={<Shield className='h-7 w-7' />}
+                title='No roles found'
+                description={
+                  searchTerm
+                    ? "Try adjusting your search criteria"
+                    : "Get started by creating your first role"
+                }
+                action={
+                  !searchTerm && hasRequiredPermission("role", "create") ? (
+                    <Button
+                      className='rounded-full'
+                      onClick={() => navigate("/roles/create")}>
+                      <Plus className='mr-2 h-4 w-4' /> Create role
+                    </Button>
+                  ) : undefined
+                }
+              />
+            ) : (
+              <MobileStaggeredList key={`${activeTab}-${currentPage}`}>
+                {filteredRoles.map((role) => {
+                  const isDeleting = deletingRoleId === role.id;
+                  const isAdminRole = role.name
+                    .toLowerCase()
+                    .includes("admin");
+
+                  return (
+                    <MobileListCard
+                      key={role.id}
+                      className={cn(
+                        isDeleting && "opacity-50 pointer-events-none",
+                      )}
+                      onClick={() => navigate(`/role/${role.id}`)}
+                      leading={
+                        <div className='grid h-10 w-10 place-items-center rounded-full bg-primary/10 text-primary'>
+                          {isAdminRole ? (
+                            <Crown className='h-5 w-5 text-amber-500' />
+                          ) : (
+                            <Shield className='h-5 w-5' />
+                          )}
+                        </div>
+                      }
+                      title={
+                        <span className='uppercase'>{role.name}</span>
+                      }
+                      subtitle={role.description || "No description"}
+                      badge={
+                        <Badge
+                          variant={role.active ? "default" : "secondary"}
+                          className={cn(
+                            "rounded-full border px-2.5 py-0.5 text-[10px] font-medium uppercase tracking-wide",
+                            role.active
+                              ? "border-emerald-200 bg-emerald-50 text-emerald-700"
+                              : "border-slate-200 bg-slate-50 text-slate-500",
+                          )}>
+                          {role.active ? "Active" : "Inactive"}
+                        </Badge>
+                      }
+                      trailing={
+                        <div className='flex items-center gap-1'>
+                          <span className='text-[11px] text-muted-foreground'>
+                            {role.permissions.length} perms
+                          </span>
+                          {hasSomePermissionsForPage("role", [
+                            "edit",
+                            "delete",
+                          ]) && (
+                            <button
+                              onClick={() => {
+                                setActionRole(role);
+                                setActionSheetOpen(true);
+                              }}
+                              aria-label={`Actions for ${role.name}`}
+                              className='m3-ripple grid h-9 w-9 place-items-center rounded-full text-muted-foreground'
+                              {...rippleProps()}>
+                              <MoreVertical className='h-4 w-4' />
+                            </button>
+                          )}
+                        </div>
+                      }>
+                      <div className='mt-2 flex flex-wrap gap-1.5'>
+                        {role.permissions.slice(0, 3).map((permission, i) => (
+                          <Badge
+                            key={i}
+                            variant='outline'
+                            className='rounded-md px-2 py-0.5 text-[11px] font-normal text-muted-foreground'>
+                            {permission.page}
+                          </Badge>
+                        ))}
+                        {role.permissions.length > 3 && (
+                          <Badge
+                            variant='outline'
+                            className='rounded-md px-2 py-0.5 text-[11px] font-medium text-muted-foreground'>
+                            +{role.permissions.length - 3}
+                          </Badge>
+                        )}
+                      </div>
+                      <div className='mt-1.5 flex items-center gap-1 text-[11px] text-muted-foreground'>
+                        <Calendar className='h-3 w-3' />
+                        {formatDate(role.createdAt)}
+                      </div>
+                    </MobileListCard>
+                  );
+                })}
+              </MobileStaggeredList>
+            )}
+
+            {/* Pagination */}
+            {!loading && !error && pagination && pagination.totalPages > 1 && (
+              <MobilePagination
+                page={currentPage}
+                totalPages={pagination.totalPages}
+                onChange={handlePageChange}
+              />
+            )}
+
+            {/* Page size */}
+            {!loading && !error && filteredRoles.length > 0 && (
+              <div className='flex items-center justify-center gap-2 text-sm text-muted-foreground'>
+                <span>Show</span>
+                <Select
+                  value={pageSize.toString()}
+                  onValueChange={handlePageSizeChange}>
+                  <SelectTrigger className='w-16 h-8 rounded-full'>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value='6'>6</SelectItem>
+                    <SelectItem value='12'>12</SelectItem>
+                    <SelectItem value='24'>24</SelectItem>
+                    <SelectItem value='48'>48</SelectItem>
+                  </SelectContent>
+                </Select>
+                <span>per page</span>
+              </div>
+            )}
+          </div>
+        </MobilePage>
+      </div>
+
+      {/* Row actions (mobile) */}
+      <MobileActionSheet
+        open={actionSheetOpen}
+        onOpenChange={setActionSheetOpen}
+        title={actionRole?.name}
+        description={actionRole?.description || undefined}
+        actions={[
+          {
+            icon: <Eye className='h-5 w-5' />,
+            label: "View role",
+            onClick: () => actionRole && navigate(`/role/${actionRole.id}`),
+          },
+          ...(hasRequiredPermission("role", "edit")
+            ? [
+                {
+                  icon: <Edit className='h-5 w-5' />,
+                  label: "Edit role",
+                  onClick: () =>
+                    actionRole && navigate(`/roles/${actionRole.id}/edit`),
+                },
+              ]
+            : []),
+          ...(hasRequiredPermission("role", "delete")
+            ? [
+                {
+                  icon: <Trash2 className='h-5 w-5' />,
+                  label: "Delete role",
+                  destructive: true,
+                  onClick: () => {
+                    if (actionRole) {
+                      setRoleToDelete(actionRole.id);
+                      setDeleteDialogOpen(true);
+                    }
+                  },
+                },
+              ]
+            : []),
+        ]}
+      />
 
       {/* Delete Confirmation Dialog */}
       <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
@@ -638,7 +905,7 @@ const RolesListPage: React.FC = () => {
                 <Trash2 className='h-6 w-6 text-white' />
               </div>
               <div>
-                <AlertDialogTitle className='text-xl font-semibold text-slate-900'>
+                <AlertDialogTitle className='text-base font-semibold text-foreground'>
                   Delete Role
                 </AlertDialogTitle>
               </div>
@@ -674,7 +941,7 @@ const RolesListPage: React.FC = () => {
                 <Trash2 className='h-6 w-6 text-white' />
               </div>
               <div>
-                <AlertDialogTitle className='text-xl font-semibold text-slate-900'>
+                <AlertDialogTitle className='text-base font-semibold text-foreground'>
                   Delete Multiple Roles
                 </AlertDialogTitle>
               </div>

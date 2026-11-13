@@ -25,6 +25,7 @@ export interface ITransection {
 
 export interface FraudDetection {
   isFraud: boolean;
+  blocked?: boolean; // customer is in the manual fraud group (order-blocked)
   riskLevel: "green" | "yellow" | "red";
   riskScore: number; // 0–100
   fraudProbability: number; // percentage (0–100)
@@ -39,6 +40,60 @@ export interface FraudDetection {
   } | null;
   fraudFlags: string[]; // e.g. ["suspicious_returns", "multiple_cancellations"]
   lastAnalyzedAt: string | Date; // ISO string or Date object
+}
+
+// Admin-managed fraud group entry on a customer risk profile
+export interface ManualFraud {
+  flagged: boolean;
+  reason: string;
+  addedBy: string;
+  addedById: string;
+  addedAt: string | null;
+  expiresAt: string | null; // null = permanent
+}
+
+// Full risk profile returned by /api/v1/fraud/customer/:phoneNumber
+export interface CustomerRiskProfile {
+  _id?: string;
+  phoneNumber: string;
+  customerName: string;
+  email: string;
+  riskLevel: "green" | "yellow" | "red";
+  riskScore: number;
+  totalOrders: number;
+  completedOrders: number;
+  cancelledOrders: number;
+  returnedOrders: number;
+  totalSpent: number;
+  totalRefunded: number;
+  averageOrderValue: number;
+  cancellationRate: number;
+  returnRate: number;
+  completionRate: number;
+  fraudFlags: string[];
+  redFlags?: Record<string, boolean>;
+  manualRiskOverride?: {
+    enabled: boolean;
+    level?: "green" | "yellow" | "red";
+    reason: string;
+    overriddenBy: string;
+    overriddenAt: string | null;
+  };
+  manualFraud?: ManualFraud;
+  lastOrderDate?: string | null;
+  firstOrderDate?: string | null;
+  accountAge?: number;
+  notes?: string;
+  lastAnalyzedAt: string | Date;
+  // surfaced by GET /customer/:phoneNumber
+  riskGroupSource?: "manual" | "computed";
+  blocked?: boolean;
+}
+
+// Lightweight fraud-group list item from GET /api/v1/fraud/fraud-group
+export interface FraudGroupItem extends CustomerRiskProfile {
+  isExpired?: boolean;
+  currentlyBlocked?: boolean;
 }
 
 export type ProductListResponse = {
@@ -208,6 +263,8 @@ export interface IOrder {
   notes?: string;
   creatorAvatar?: string;
   orderCreatedBy: string;
+  /** Sequelize user id of the panel user who created the order (null for customer orders) */
+  createdByUserId?: string | null;
   orderNumber: number;
   customer: ICustomer;
   status: OrderStatus | string;

@@ -60,7 +60,7 @@ export const MobileBulkCommissionActions: React.FC<
   return (
     <div className="fixed bottom-0 left-0 right-0 z-50 md:hidden">
       {/* Selection Bar */}
-      <div className="bg-background border-t shadow-lg rounded-t-xl">
+      <div className="bg-background border-t shadow-lg rounded-t-xl pb-[env(safe-area-inset-bottom)]">
         {/* Progress Section (when processing) */}
         {processing && (
           <div className="px-4 pt-3">

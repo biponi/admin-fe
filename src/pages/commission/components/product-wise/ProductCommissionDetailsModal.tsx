@@ -69,7 +69,7 @@ export const ProductCommissionDetailsModal: React.FC<CommissionDetailsModalProps
             variant="ghost"
             size="sm"
             onClick={handleCopyId}
-            className="hidden sm:flex"
+            className="hidden md:flex"
             title="Copy commission ID"
           >
             {copied ? (
@@ -81,7 +81,7 @@ export const ProductCommissionDetailsModal: React.FC<CommissionDetailsModalProps
         </div>
       </SheetHeader>
 
-      <ScrollArea className="h-[calc(100vh-200px)] sm:h-[calc(90vh-200px)] pr-4">
+      <ScrollArea className="h-[calc(100vh-200px)] md:h-[calc(90vh-200px)] pr-4">
         <div className="space-y-4 mt-4">
           {/* Commission Overview */}
           <div className="bg-gradient-to-br from-blue-50 to-blue-100 rounded-xl p-4 shadow-sm border border-blue-200">
@@ -89,7 +89,7 @@ export const ProductCommissionDetailsModal: React.FC<CommissionDetailsModalProps
               <DollarSign className="h-4 w-4" />
               Commission Summary
             </h3>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <p className="text-xs text-blue-700">Commission Amount</p>
                 <p className="text-xl font-bold text-blue-900">
@@ -120,7 +120,7 @@ export const ProductCommissionDetailsModal: React.FC<CommissionDetailsModalProps
                 <img
                   src={commission.productImage}
                   alt={commission.productName}
-                  className="w-12 h-12 sm:w-16 sm:h-16 object-cover rounded-lg border"
+                  className="w-12 h-12 md:w-16 md:h-16 object-cover rounded-lg border"
                 />
               )}
               <div className="flex-1">
@@ -223,7 +223,7 @@ export const ProductCommissionDetailsModal: React.FC<CommissionDetailsModalProps
       </ScrollArea>
 
       {/* Footer */}
-      <div className="mt-4 pt-4 border-t flex flex-col sm:flex-row gap-2">
+      <div className="mt-4 pt-4 border-t flex flex-col md:flex-row gap-2">
         <Button
           variant="outline"
           className="flex-1"
@@ -233,7 +233,7 @@ export const ProductCommissionDetailsModal: React.FC<CommissionDetailsModalProps
         </Button>
         {onEdit && (
           <Button
-            className="flex-1 sm:flex-none"
+            className="flex-1 md:flex-none"
             onClick={() => {
               onEdit(commission);
               onOpenChange(false);
@@ -248,7 +248,7 @@ export const ProductCommissionDetailsModal: React.FC<CommissionDetailsModalProps
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent className="w-full sm:max-w-xl overflow-y-auto">
+      <SheetContent className="w-full sm:max-w-full md:max-w-xl overflow-y-auto">
         {Content}
       </SheetContent>
     </Sheet>

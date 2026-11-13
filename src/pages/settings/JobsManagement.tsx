@@ -37,9 +37,12 @@ import {
   ChevronRight,
   Info,
   Truck,
+  ShieldAlert,
 } from "lucide-react";
 import { toast } from "sonner";
 import axiosInstance from "../../api/axios";
+import { useNavigate } from "react-router-dom";
+import { PageHeader } from "../../components/PageHeader";
 
 interface JobStatus {
   isRunning: boolean;
@@ -151,6 +154,7 @@ const StatBlock = ({
 };
 
 const JobsManagement = () => {
+  const navigate = useNavigate();
   const [loading, setLoading] = useState({
     salesStats: false,
     initStats: false,
@@ -493,29 +497,21 @@ const JobsManagement = () => {
   };
 
   return (
-    <div className='min-h-screen bg-slate-50 pb-10'>
+    <div className='min-h-screen bg-slate-50 pb-10 mobile:pb-[calc(5rem+env(safe-area-inset-bottom))]'>
       {/* Sticky mobile-style header */}
-      <div className='sticky top-0 z-10 border-b border-slate-100 bg-white/90 backdrop-blur-md'>
-        <div className='mx-auto max-w-6xl px-4 py-4 sm:px-6'>
-          <div className='flex items-center gap-3'>
-            <IconAvatar className='h-11 w-11 bg-indigo-600 text-white shadow-sm shadow-indigo-200'>
-              <Activity className='h-5 w-5' />
-            </IconAvatar>
-            <div className='min-w-0'>
-              <h1 className='truncate text-lg font-bold text-slate-900 sm:text-2xl'>
-                System Jobs & Cache
-              </h1>
-              <p className='truncate text-xs text-slate-500 sm:text-sm'>
-                Background jobs, cache warmup & maintenance
-              </p>
-            </div>
-          </div>
+      <div className='sticky top-0 z-10 border-b border-slate-100 bg-white/90 backdrop-blur-md mobile:top-16'>
+        <div className='mx-auto max-w-6xl px-4 py-4 md:px-6'>
+          <PageHeader
+            icon={<Activity className='h-5 w-5' />}
+            title='System Jobs & Cache'
+            subtitle='Background jobs, cache warmup & maintenance'
+          />
         </div>
       </div>
 
-      <div className='mx-auto max-w-6xl space-y-5 px-4 py-5 sm:px-6'>
+      <div className='mx-auto max-w-6xl space-y-5 px-4 py-5 md:px-6'>
         {/* Status Bar */}
-        <div className='grid gap-3 sm:grid-cols-2'>
+        <div className='grid gap-3 md:grid-cols-2'>
           {/* Job Status */}
           {jobStatus && (
             <div className='flex items-center gap-3 rounded-xl border border-slate-100 bg-white p-4 shadow-sm'>
@@ -613,8 +609,8 @@ const JobsManagement = () => {
 
         {/* Trigger All Jobs */}
         <Card className='overflow-hidden rounded-2xl border-slate-100 bg-gradient-to-br from-indigo-600 to-indigo-700 text-white shadow-md shadow-indigo-200/50'>
-          <CardContent className='p-4 sm:p-5'>
-            <div className='flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between'>
+          <CardContent className='p-4 md:p-5'>
+            <div className='flex flex-col gap-4 md:flex-row md:items-center md:justify-between'>
               <div className='flex items-center gap-3'>
                 <IconAvatar className='h-11 w-11 bg-white/15 text-white'>
                   <PlayCircle className='h-5 w-5' />
@@ -630,7 +626,7 @@ const JobsManagement = () => {
                 <Button
                   disabled={loading.allJobs || jobStatus?.isRunning}
                   size='lg'
-                  className='w-full rounded-xl bg-white text-indigo-700 hover:bg-indigo-50 sm:w-auto'>
+                  className='w-full rounded-xl bg-white text-indigo-700 hover:bg-indigo-50 md:w-auto'>
                   {loading.allJobs ? (
                     <>
                       <RefreshCw className='mr-2 h-4 w-4 animate-spin' />
@@ -658,7 +654,7 @@ const JobsManagement = () => {
                   <Package className='h-4.5 w-4.5' />
                 </IconAvatar>
                 <div className='min-w-0'>
-                  <CardTitle className='text-sm font-semibold sm:text-base'>
+                  <CardTitle className='text-sm font-semibold md:text-base'>
                     Product Sales Statistics
                   </CardTitle>
                   <CardDescription className='text-xs'>
@@ -729,7 +725,7 @@ const JobsManagement = () => {
                   <Shield className='h-4.5 w-4.5' />
                 </IconAvatar>
                 <div className='min-w-0'>
-                  <CardTitle className='text-sm font-semibold sm:text-base'>
+                  <CardTitle className='text-sm font-semibold md:text-base'>
                     Fraud Detection Analysis
                   </CardTitle>
                   <CardDescription className='text-xs'>
@@ -754,6 +750,14 @@ const JobsManagement = () => {
                     Run Fraud Detection
                   </>
                 )}
+              </Button>
+
+              <Button
+                variant='outline'
+                onClick={() => navigate('/fraud')}
+                className='h-9 w-full rounded-lg border-slate-200 text-slate-600 hover:bg-slate-50'>
+                <ShieldAlert className='mr-2 h-4 w-4' />
+                Open Fraud Dashboard
               </Button>
 
               {fraudStats && (
@@ -806,7 +810,7 @@ const JobsManagement = () => {
                   <Truck className='h-4.5 w-4.5' />
                 </IconAvatar>
                 <div className='min-w-0'>
-                  <CardTitle className='text-sm font-semibold sm:text-base'>
+                  <CardTitle className='text-sm font-semibold md:text-base'>
                     Delivery Status Sync
                   </CardTitle>
                   <CardDescription className='text-xs'>
@@ -855,7 +859,7 @@ const JobsManagement = () => {
         <div className='space-y-3'>
           <div className='flex items-center gap-2 px-1'>
             <Zap className='h-4.5 w-4.5 text-indigo-600' />
-            <h2 className='text-base font-bold text-slate-900 sm:text-lg'>
+            <h2 className='text-base font-bold text-slate-900 md:text-lg'>
               Cache Management
             </h2>
           </div>
@@ -867,7 +871,7 @@ const JobsManagement = () => {
                   <Flame className='h-4.5 w-4.5' />
                 </IconAvatar>
                 <div className='min-w-0'>
-                  <CardTitle className='text-sm font-semibold sm:text-base'>
+                  <CardTitle className='text-sm font-semibold md:text-base'>
                     Cache Warmup
                   </CardTitle>
                   <CardDescription className='text-xs'>
@@ -907,7 +911,7 @@ const JobsManagement = () => {
                   <SectionLabel>
                     Select targets (leave empty for all)
                   </SectionLabel>
-                  <div className='grid grid-cols-2 gap-2 sm:grid-cols-3'>
+                  <div className='grid grid-cols-2 gap-2 md:grid-cols-3'>
                     {CACHE_TARGETS.map((target) => (
                       <div
                         key={target.value}
@@ -935,7 +939,7 @@ const JobsManagement = () => {
               </div>
 
               {/* Actions */}
-              <div className='grid grid-cols-1 gap-2 sm:flex'>
+              <div className='grid grid-cols-1 gap-2 md:flex'>
                 <Button
                   onClick={triggerCacheWarmup}
                   disabled={
@@ -994,7 +998,7 @@ const JobsManagement = () => {
                       }
                     />
                   </div>
-                  <div className='mt-2 grid grid-cols-2 gap-1.5 sm:grid-cols-3'>
+                  <div className='mt-2 grid grid-cols-2 gap-1.5 md:grid-cols-3'>
                     {Object.entries(cacheWarmupResult.details).map(
                       ([key, value], index: number) => (
                         <div

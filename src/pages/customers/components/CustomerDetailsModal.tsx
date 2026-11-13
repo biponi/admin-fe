@@ -30,12 +30,17 @@ import {
   Calendar,
   ShoppingBag,
   DollarSign,
+  Tag,
+  TrendingUp,
   X,
   Loader2,
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { useCustomerAnalytics } from '../hooks/useCustomerAnalytics';
 import { showOrderModal } from '../../../utils/orderModal';
+import { claude } from '../../../lib/claude';
+import { useIsMobile } from '../../../hooks/use-mobile';
+import { MobileDetailSheet, MobileSkeletonList } from '../../../components/mobile';
 
 interface CustomerDetailsModalProps {
   open: boolean;
@@ -95,12 +100,28 @@ const CustomerDetailsModal = ({
     }
   };
 
+  const isMobile = useIsMobile();
+
+  // API may send numerics as strings — coerce before any math/format
+  const safeNum = (value: number | string | undefined | null) => {
+    const n = Number(value);
+    return (Number.isNaN(n) ? 0 : n).toLocaleString();
+  };
+
+
   if (loading) {
+    if (isMobile) {
+      return (
+        <MobileDetailSheet open={open} onOpenChange={handleClose} title="Customer details">
+          <MobileSkeletonList count={4} />
+        </MobileDetailSheet>
+      );
+    }
     return (
       <Dialog open={open} onOpenChange={handleClose}>
-        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto bg-[#FAF9F6] border-[#E8E4DC]">
           <div className="flex items-center justify-center h-64">
-            <Loader2 className="h-8 w-8 animate-spin text-gray-500" />
+            <Loader2 className="h-8 w-8 animate-spin text-[#D97757]" />
           </div>
         </DialogContent>
       </Dialog>
@@ -111,24 +132,8 @@ const CustomerDetailsModal = ({
     return null;
   }
 
-  return (
-    <Dialog open={open} onOpenChange={handleClose}>
-      <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
-          <div className="flex items-center justify-between">
-            <div>
-              <DialogTitle className="text-2xl">{selectedCustomer.customerName}</DialogTitle>
-              <DialogDescription className="mt-1">
-                Customer since {safeFormatDate(selectedCustomer.firstOrderDate)}
-              </DialogDescription>
-            </div>
-            <Button variant="ghost" size="icon" onClick={handleClose}>
-              <X className="h-4 w-4" />
-            </Button>
-          </div>
-        </DialogHeader>
-
-        <Tabs defaultValue="overview" className="mt-4">
+  const customerContent = (
+    <Tabs defaultValue="overview" className="mt-4">
           <TabsList className="grid w-full grid-cols-3">
             <TabsTrigger value="overview">Overview</TabsTrigger>
             <TabsTrigger value="orders">Order History</TabsTrigger>
@@ -137,49 +142,51 @@ const CustomerDetailsModal = ({
 
           {/* Overview Tab */}
           <TabsContent value="overview" className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-              <Card>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4">
+              <Card className="bg-white border-[#E8E4DC]">
                 <CardContent className="p-4">
                   <div className="flex items-center space-x-2">
-                    <ShoppingBag className="h-5 w-5 text-blue-600" />
+                    <ShoppingBag className="h-5 w-5 text-[#B85A3D]" />
                     <div>
-                      <p className="text-sm text-gray-600">Total Orders</p>
-                      <p className="text-xl font-bold">{selectedCustomer.totalOrderCount}</p>
+                      <p className="text-sm text-[#57554D]">Total Orders</p>
+                      <p className="text-xl font-bold text-[#141413] tabular-nums">{safeNum(selectedCustomer.totalOrderCount)}</p>
                     </div>
                   </div>
                 </CardContent>
               </Card>
 
-              <Card>
+              <Card className="bg-white border-[#E8E4DC]">
                 <CardContent className="p-4">
                   <div className="flex items-center space-x-2">
-                    <DollarSign className="h-5 w-5 text-green-600" />
+                    <DollarSign className="h-5 w-5 text-[#B85A3D]" />
                     <div>
-                      <p className="text-sm text-gray-600">Total Spent</p>
-                      <p className="text-xl font-bold">৳{selectedCustomer.totalSpent.toLocaleString()}</p>
+                      <p className="text-sm text-[#57554D]">Total Spent</p>
+                      <p className="text-xl font-bold text-[#141413] tabular-nums">৳{safeNum(selectedCustomer.totalSpent)}</p>
                     </div>
                   </div>
                 </CardContent>
               </Card>
 
-              <Card>
+              <Card className="bg-white border-[#E8E4DC]">
                 <CardContent className="p-4">
                   <div className="flex items-center space-x-2">
-                    <DollarSign className="h-5 w-5 text-purple-600" />
+                    <TrendingUp className="h-5 w-5 text-[#B85A3D]" />
                     <div>
-                      <p className="text-sm text-gray-600">Avg. Order Value</p>
-                      <p className="text-xl font-bold">৳{selectedCustomer.averageOrderValue.toLocaleString()}</p>
+                      <p className="text-sm text-[#57554D]">Avg. Order Value</p>
+                      <p className="text-xl font-bold text-[#141413] tabular-nums">৳{safeNum(selectedCustomer.averageOrderValue)}</p>
                     </div>
                   </div>
                 </CardContent>
               </Card>
 
-              <Card>
+              <Card className="bg-white border-[#E8E4DC]">
                 <CardContent className="p-4">
                   <div className="flex items-center space-x-2">
-                    <Badge variant="default" className="text-sm">
-                      Active
-                    </Badge>
+                    <Tag className="h-5 w-5 text-[#B85A3D]" />
+                    <div>
+                      <p className="text-sm text-[#57554D]">Total Discount</p>
+                      <p className="text-xl font-bold text-[#141413] tabular-nums">৳{safeNum(selectedCustomer.totalDiscount)}</p>
+                    </div>
                   </div>
                 </CardContent>
               </Card>
@@ -191,27 +198,27 @@ const CustomerDetailsModal = ({
               </CardHeader>
               <CardContent className="space-y-3">
                 <div className="flex items-center space-x-3">
-                  <Phone className="h-4 w-4 text-gray-500" />
-                  <span className="font-medium">{selectedCustomer.customerPhone}</span>
+                  <Phone className="h-4 w-4 text-[#8A877D]" />
+                  <span className="font-medium text-[#141413]">{selectedCustomer.customerPhone}</span>
                 </div>
                 {selectedCustomer.customerEmail && (
                   <div className="flex items-center space-x-3">
-                    <Mail className="h-4 w-4 text-gray-500" />
-                    <span className="font-medium">{selectedCustomer.customerEmail}</span>
+                    <Mail className="h-4 w-4 text-[#8A877D]" />
+                    <span className="font-medium text-[#141413]">{selectedCustomer.customerEmail}</span>
                   </div>
                 )}
                 {selectedCustomer.firstOrderDate && (
                   <div className="flex items-center space-x-3">
-                    <Calendar className="h-4 w-4 text-gray-500" />
-                    <span className="text-sm">
+                    <Calendar className="h-4 w-4 text-[#8A877D]" />
+                    <span className="text-sm text-[#57554D]">
                       First order: {safeFormatDate(selectedCustomer.firstOrderDate)}
                     </span>
                   </div>
                 )}
                 {selectedCustomer.lastOrderDate && (
                   <div className="flex items-center space-x-3">
-                    <Calendar className="h-4 w-4 text-gray-500" />
-                    <span className="text-sm">
+                    <Calendar className="h-4 w-4 text-[#8A877D]" />
+                    <span className="text-sm text-[#57554D]">
                       Last order: {safeFormatDate(selectedCustomer.lastOrderDate)}
                     </span>
                   </div>
@@ -226,20 +233,20 @@ const CustomerDetailsModal = ({
               <CardContent>
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                   <div>
-                    <p className="text-sm text-gray-600">Total Amount</p>
-                    <p className="text-lg font-semibold">৳{selectedCustomer.totalOrderAmount?.toLocaleString() || 0}</p>
+                    <p className="text-sm text-[#57554D]">Total Amount</p>
+                    <p className="text-lg font-semibold text-[#141413] tabular-nums">৳{safeNum(selectedCustomer.totalOrderAmount)}</p>
                   </div>
                   <div>
-                    <p className="text-sm text-gray-600">Total Paid</p>
-                    <p className="text-lg font-semibold text-green-600">৳{selectedCustomer.totalPaid?.toLocaleString() || 0}</p>
+                    <p className="text-sm text-[#57554D]">Total Paid</p>
+                    <p className="text-lg font-semibold text-[#1A7F37] tabular-nums">৳{safeNum(selectedCustomer.totalPaid)}</p>
                   </div>
                   <div>
-                    <p className="text-sm text-gray-600">Total Remaining</p>
-                    <p className="text-lg font-semibold text-red-600">৳{selectedCustomer.totalRemaining?.toLocaleString() || 0}</p>
+                    <p className="text-sm text-[#57554D]">Total Remaining</p>
+                    <p className="text-lg font-semibold text-[#B3365B] tabular-nums">৳{safeNum(selectedCustomer.totalRemaining)}</p>
                   </div>
                   <div>
-                    <p className="text-sm text-gray-600">Delivery Charge</p>
-                    <p className="text-lg font-semibold">৳{selectedCustomer.totalDeliveryCharge?.toLocaleString() || 0}</p>
+                    <p className="text-sm text-[#57554D]">Delivery Charge</p>
+                    <p className="text-lg font-semibold text-[#141413] tabular-nums">৳{safeNum(selectedCustomer.totalDeliveryCharge)}</p>
                   </div>
                 </div>
               </CardContent>
@@ -253,24 +260,24 @@ const CustomerDetailsModal = ({
                 <CardContent className="p-0">
                   <div className="max-h-[500px] overflow-y-auto">
                     <Table divClass="relative">
-                      <TableHeader className="sticky top-0 bg-white border-b z-10">
-                        <TableRow className="bg-sidebar">
-                          <TableHead>Order #</TableHead>
-                          <TableHead>Date</TableHead>
-                          <TableHead>Total Price</TableHead>
-                          <TableHead>Discount</TableHead>
-                          <TableHead>Paid</TableHead>
-                          <TableHead>Remaining</TableHead>
-                          <TableHead>Status</TableHead>
+                      <TableHeader className="sticky top-0 bg-[#FAF9F6] border-b border-[#E8E4DC] z-10">
+                        <TableRow className="bg-[#FAF9F6]">
+                          <TableHead className={claude.microLabel}>Order #</TableHead>
+                          <TableHead className={claude.microLabel}>Date</TableHead>
+                          <TableHead className={claude.microLabel}>Total Price</TableHead>
+                          <TableHead className={claude.microLabel}>Discount</TableHead>
+                          <TableHead className={claude.microLabel}>Paid</TableHead>
+                          <TableHead className={claude.microLabel}>Remaining</TableHead>
+                          <TableHead className={claude.microLabel}>Status</TableHead>
                         </TableRow>
                       </TableHeader>
                       <TableBody>
                         {selectedCustomer.orders.map((order) => (
-                          <TableRow key={order.orderNumber} className="hover:bg-gray-50">
+                          <TableRow key={order.orderNumber} className="hover:bg-[#F5F1EA]">
                             <TableCell className="font-medium">
                               <button
                                 onClick={() => showOrderModal(order.orderNumber)}
-                                className="text-blue-600 hover:underline cursor-pointer font-medium"
+                                className="text-[#B85A3D] hover:underline cursor-pointer font-medium"
                               >
                                 #{order.orderNumber}
                               </button>
@@ -278,13 +285,13 @@ const CustomerDetailsModal = ({
                             <TableCell>
                               {safeFormatDate(order.orderDate)}
                             </TableCell>
-                            <TableCell>৳{order.totalPrice.toLocaleString()}</TableCell>
-                            <TableCell>৳{order.discount.toLocaleString()}</TableCell>
-                            <TableCell className="text-green-600">
-                              ৳{order.paid.toLocaleString()}
+                            <TableCell className="tabular-nums">৳{safeNum(order.totalPrice)}</TableCell>
+                            <TableCell className="tabular-nums">৳{safeNum(order.discount)}</TableCell>
+                            <TableCell className="text-[#1A7F37] tabular-nums">
+                              ৳{safeNum(order.paid)}
                             </TableCell>
-                            <TableCell className="text-red-600">
-                              ৳{order.remaining.toLocaleString()}
+                            <TableCell className="text-[#B3365B] tabular-nums">
+                              ৳{safeNum(order.remaining)}
                             </TableCell>
                             <TableCell>
                               <Badge variant={getOrderStatusColor(order.status)}>
@@ -300,7 +307,7 @@ const CustomerDetailsModal = ({
               </Card>
             ) : (
               <Card>
-                <CardContent className="py-8 text-center text-gray-500">
+                <CardContent className="py-8 text-center text-[#8A877D]">
                   No orders found for this customer
                 </CardContent>
               </Card>
@@ -313,19 +320,19 @@ const CustomerDetailsModal = ({
               <Card>
                 <CardHeader>
                   <div className="flex items-center space-x-2">
-                    <MapPin className="h-4 w-4 text-gray-500" />
-                    <CardTitle className="text-lg">Shipping Address</CardTitle>
+                    <MapPin className="h-4 w-4 text-[#8A877D]" />
+                    <CardTitle className="text-lg text-[#141413]">Shipping Address</CardTitle>
                   </div>
                 </CardHeader>
                 <CardContent>
-                  <p className="text-sm">{selectedCustomer.shippingAddress}</p>
+                  <p className="text-sm text-[#141413]">{selectedCustomer.shippingAddress}</p>
                   {selectedCustomer.shippingDistrict && selectedCustomer.shippingDivision && (
-                    <p className="text-sm text-gray-600 mt-1">
+                    <p className="text-sm text-[#57554D] mt-1">
                       {selectedCustomer.shippingDistrict}, {selectedCustomer.shippingDivision}
                     </p>
                   )}
                   {selectedCustomer.fullAddress && (
-                    <p className="text-xs text-gray-500 mt-2">
+                    <p className="text-xs text-[#8A877D] mt-2">
                       {selectedCustomer.fullAddress}
                     </p>
                   )}
@@ -333,13 +340,46 @@ const CustomerDetailsModal = ({
               </Card>
             ) : (
               <Card>
-                <CardContent className="py-8 text-center text-gray-500">
+                <CardContent className="py-8 text-center text-[#8A877D]">
                   No address information available
                 </CardContent>
               </Card>
             )}
           </TabsContent>
         </Tabs>
+  );
+
+  if (isMobile) {
+    return (
+      <MobileDetailSheet
+        open={open}
+        onOpenChange={handleClose}
+        title={selectedCustomer.customerName}
+        description={`Customer since ${safeFormatDate(selectedCustomer.firstOrderDate)}`}
+      >
+        {customerContent}
+      </MobileDetailSheet>
+    );
+  }
+
+  return (
+    <Dialog open={open} onOpenChange={handleClose}>
+      <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto bg-[#FAF9F6] border-[#E8E4DC]">
+        <DialogHeader>
+          <div className="flex items-center justify-between">
+            <div>
+              <DialogTitle className="text-2xl text-[#141413]">{selectedCustomer.customerName}</DialogTitle>
+              <DialogDescription className="mt-1 text-[#57554D]">
+                Customer since {safeFormatDate(selectedCustomer.firstOrderDate)}
+              </DialogDescription>
+            </div>
+            <Button variant="ghost" size="icon" onClick={handleClose}>
+              <X className="h-4 w-4" />
+            </Button>
+          </div>
+        </DialogHeader>
+
+        {customerContent}
       </DialogContent>
     </Dialog>
   );

@@ -1,6 +1,6 @@
 {
   "name": "prior-admin-fe",
-  "version": "3.6.1",
+  "version": "4.0.0",
   "private": true,
   "engines": {
     "node": ">=22.0.0"

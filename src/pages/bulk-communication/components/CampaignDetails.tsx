@@ -19,6 +19,12 @@ import {
   AlertDialogTitle,
 } from '../../../components/ui/alert-dialog';
 import { useToast } from '../../../components/ui/use-toast';
+import {
+  MobilePage,
+  MobileListCard,
+  MobileEmptyState,
+  rippleProps,
+} from '@/components/mobile';
 import { useBulkCommunication } from '../hooks/useBulkCommunication';
 import {
   StatusBadge,
@@ -35,12 +41,12 @@ import {
   Eye,
   MousePointerClick,
   Target,
-  MessageSquare,
-  Mail,
   Paperclip,
   Inbox,
   Activity,
+  Megaphone,
 } from 'lucide-react';
+import { PageHeader } from '@/components/PageHeader';
 import { BulkMessageType } from '../interface';
 import { format } from 'date-fns';
 
@@ -275,80 +281,120 @@ const CampaignDetails = () => {
 
   if (loading || !selectedCampaign) {
     return (
-      <div className='min-h-screen bg-slate-50/60 flex items-center justify-center'>
-        <div className='flex flex-col items-center gap-3'>
-          <div className='w-8 h-8 border-2 border-indigo-600 border-t-transparent rounded-full animate-spin' />
-          <p className='text-sm text-slate-500'>Loading campaign…</p>
+      <MobilePage
+        icon={<Megaphone className='h-5 w-5 text-primary' />}
+        title='Campaign Details'
+        subtitle='Loading…'
+        back
+        onBack={() => navigate(`/bulk-communication/${type}`)}
+      >
+        <div className='min-h-screen bg-slate-50/60 flex items-center justify-center'>
+          <div className='flex flex-col items-center gap-3'>
+            <div className='w-8 h-8 border-2 border-indigo-600 border-t-transparent rounded-full animate-spin' />
+            <p className='text-sm text-slate-500'>Loading campaign…</p>
+          </div>
         </div>
-      </div>
+      </MobilePage>
     );
   }
 
   return (
-    <div className='min-h-screen bg-slate-50/60'>
-      <div className='max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6'>
-        {/* Breadcrumb */}
-        <button
-          onClick={() => navigate(`/bulk-communication/${type}`)}
-          className='inline-flex items-center gap-1.5 text-sm text-slate-500 hover:text-slate-800 transition-colors'>
-          <ArrowLeft className='h-4 w-4' />
-          Back to {CAMPAIGN_TYPE_LABEL[type || 'sms']} Campaigns
-        </button>
-
-        {/* Header */}
-        <div className='flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4'>
-          <div className='flex items-start gap-3 min-w-0'>
-            <div className='w-10 h-10 rounded-xl bg-indigo-600 flex items-center justify-center shadow-sm shadow-indigo-200 shrink-0'>
-              {isSMS ? (
-                <MessageSquare className='h-5 w-5 text-white' />
-              ) : (
-                <Mail className='h-5 w-5 text-white' />
-              )}
-            </div>
-            <div className='min-w-0'>
-              <div className='flex items-center gap-2 flex-wrap'>
-                <h1 className='text-xl font-semibold text-slate-900 leading-tight truncate max-w-xl'>
-                  {campaign.name}
-                </h1>
-                <StatusBadge status={campaign.status} />
-                <span className='inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-indigo-50 text-indigo-700 ring-1 ring-indigo-100 uppercase'>
-                  {CAMPAIGN_TYPE_LABEL[type || 'sms']}
-                </span>
-              </div>
-              <p className='text-sm text-slate-500 mt-0.5 flex items-center gap-1.5 flex-wrap'>
-                <span>Created {formatDateTime(campaign.createdAt)}</span>
-                {campaign.createdBy && (
-                  <>
-                    <span className='text-slate-300'>·</span>
-                    <span>by {campaign.createdBy}</span>
-                  </>
-                )}
-                <span className='text-slate-300'>·</span>
-                <span className='font-mono text-xs'>{campaign.id}</span>
-              </p>
-            </div>
-          </div>
-          <div className='flex items-center gap-2 shrink-0'>
+    <MobilePage
+      icon={<Megaphone className='h-5 w-5 text-primary' />}
+      title='Campaign Details'
+      subtitle={campaign.name}
+      back
+      onBack={() => navigate(`/bulk-communication/${type}`)}
+      actions={
+        <>
+          {campaign.status === 'queued' || campaign.status === 'processing' ? (
+            <button
+              onClick={() => setShowCancelDialog(true)}
+              aria-label='Cancel Campaign'
+              className='m3-ripple grid h-10 w-10 shrink-0 place-items-center rounded-full bg-destructive/10 text-destructive active:scale-95 transition-transform'
+              {...rippleProps()}>
+              <Ban className='h-5 w-5' />
+            </button>
+          ) : null}
+          <button
+            onClick={handleRefresh}
+            disabled={refreshing}
+            aria-label='Refresh'
+            className='m3-ripple grid h-10 w-10 shrink-0 place-items-center rounded-full bg-primary/10 text-primary active:scale-95 transition-transform disabled:opacity-50'
+            {...rippleProps()}>
+            <RefreshCw className={`h-5 w-5 ${refreshing ? 'animate-spin' : ''}`} />
+          </button>
+        </>
+      }
+      stickyActions={
+        <div className='flex items-center gap-2'>
             {campaign.status === 'queued' || campaign.status === 'processing' ? (
               <button
                 onClick={() => setShowCancelDialog(true)}
-                className='inline-flex items-center gap-1.5 px-3 py-2 text-sm font-medium text-amber-700 bg-white border border-amber-200 rounded-lg hover:bg-amber-50 transition-colors shadow-sm'>
-                <Ban className='h-3.5 w-3.5' />
+                className='m3-ripple flex-1 h-11 inline-flex items-center justify-center gap-1.5 text-sm font-medium text-amber-700 bg-white border border-amber-200 rounded-full active:bg-amber-50 transition-colors'>
+                <Ban className='h-4 w-4' />
                 Cancel Campaign
               </button>
             ) : null}
             <button
               onClick={handleRefresh}
               disabled={refreshing}
-              className='inline-flex items-center gap-1.5 px-3 py-2 text-sm font-medium text-slate-600 bg-white border border-slate-200 rounded-lg hover:bg-slate-50 transition-colors shadow-sm disabled:opacity-50'>
-              <RefreshCw className={`h-3.5 w-3.5 ${refreshing ? 'animate-spin' : ''}`} />
+              className='m3-ripple flex-1 h-11 inline-flex items-center justify-center gap-1.5 text-sm font-medium text-slate-600 bg-white border border-slate-200 rounded-full active:bg-slate-50 transition-colors disabled:opacity-50'>
+              <RefreshCw className={`h-4 w-4 ${refreshing ? 'animate-spin' : ''}`} />
               Refresh
             </button>
           </div>
+      }>
+      <div className='min-h-screen bg-slate-50/60'>
+        <div className='max-w-7xl mx-auto px-4 md:px-6 lg:px-8 py-4 md:py-6 space-y-4 md:space-y-6'>
+        {/* Breadcrumb */}
+        <button
+          onClick={() => navigate(`/bulk-communication/${type}`)}
+          className='hidden md:inline-flex items-center gap-1.5 text-sm text-slate-500 hover:text-slate-800 transition-colors'>
+          <ArrowLeft className='h-4 w-4' />
+          Back to {CAMPAIGN_TYPE_LABEL[type || 'sms']} Campaigns
+        </button>
+
+        {/* Header */}
+        <div className='hidden md:block'>
+          <PageHeader
+            icon={<Megaphone className='h-5 w-5' />}
+            title='Campaign Details'
+            subtitle={`${campaign.name} · Created ${formatDateTime(campaign.createdAt)}${
+              campaign.createdBy ? ` by ${campaign.createdBy}` : ''
+            }`}
+            count={
+              <div className='flex items-center gap-2'>
+                <StatusBadge status={campaign.status} />
+                <span className='inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-indigo-50 text-indigo-700 ring-1 ring-indigo-100 uppercase'>
+                  {CAMPAIGN_TYPE_LABEL[type || 'sms']}
+                </span>
+              </div>
+            }
+            actions={
+              <div className='flex items-center gap-2'>
+                {campaign.status === 'queued' || campaign.status === 'processing' ? (
+                  <button
+                    onClick={() => setShowCancelDialog(true)}
+                    className='inline-flex items-center gap-1.5 px-3 py-2 text-sm font-medium text-amber-700 bg-white border border-amber-200 rounded-lg hover:bg-amber-50 transition-colors shadow-sm'>
+                    <Ban className='h-3.5 w-3.5' />
+                    Cancel Campaign
+                  </button>
+                ) : null}
+                <button
+                  onClick={handleRefresh}
+                  disabled={refreshing}
+                  className='inline-flex items-center gap-1.5 px-3 py-2 text-sm font-medium text-slate-600 bg-white border border-slate-200 rounded-lg hover:bg-slate-50 transition-colors shadow-sm disabled:opacity-50'>
+                  <RefreshCw className={`h-3.5 w-3.5 ${refreshing ? 'animate-spin' : ''}`} />
+                  Refresh
+                </button>
+              </div>
+            }
+          />
         </div>
 
         {/* Stat cards */}
-        <div className='grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3'>
+        <div className='grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3'>
           {statCards.map(
             ({ key, label, description, icon: Icon, color, bg, ring, bar, value, pct }) => (
               <div
@@ -384,7 +430,7 @@ const CampaignDetails = () => {
 
         {/* Email engagement summary */}
         {!isSMS && (
-          <div className='grid grid-cols-2 sm:grid-cols-3 gap-3'>
+          <div className='grid grid-cols-2 md:grid-cols-3 gap-3'>
             {[
               {
                 label: 'Open Rate',
@@ -543,6 +589,8 @@ const CampaignDetails = () => {
                   </span>
                 </div>
               </div>
+              {/* Recipients table (desktop) */}
+              <div className='hidden md:block'>
               <Table divClass='relative max-h-[600px] overflow-y-auto'>
                 <TableHeader className='sticky top-0 z-10 bg-slate-50 [&_tr]:border-b [&_tr:hover]:bg-slate-50'>
                   <TableRow>
@@ -645,6 +693,61 @@ const CampaignDetails = () => {
                   )}
                 </TableBody>
               </Table>
+              </div>
+
+              {/* Recipient cards (mobile) */}
+              <div className='mobile:block hidden p-3 space-y-2.5'>
+                {campaign.recipients?.map((recipient: any, index: number) => (
+                  <MobileListCard
+                    key={index}
+                    static
+                    title={
+                      <span className='font-mono text-sm'>
+                        {isSMS ? recipient.phoneNumber : recipient.email}
+                      </span>
+                    }
+                    badge={<RecipientStatusBadge status={recipient.status} />}
+                    className='rounded-xl'>
+                    <div className='mt-1.5 space-y-0.5 text-xs'>
+                      <p className='text-slate-500 tabular-nums'>
+                        Attempts: {recipient.attempts || 0}
+                      </p>
+                      {recipient.sentAt && (
+                        <p className='text-slate-500 tabular-nums'>
+                          Sent {format(new Date(recipient.sentAt), 'MMM d, HH:mm')}
+                        </p>
+                      )}
+                      {isSMS && recipient.deliveredAt && (
+                        <p className='text-slate-500 tabular-nums'>
+                          Delivered{' '}
+                          {format(new Date(recipient.deliveredAt), 'MMM d, HH:mm')}
+                        </p>
+                      )}
+                      {!isSMS && recipient.openedAt && (
+                        <p className='text-slate-500 tabular-nums'>
+                          Opened {format(new Date(recipient.openedAt), 'MMM d, HH:mm')}
+                        </p>
+                      )}
+                      {!isSMS && recipient.clickedAt && (
+                        <p className='text-slate-500 tabular-nums'>
+                          Clicked {format(new Date(recipient.clickedAt), 'MMM d, HH:mm')}
+                        </p>
+                      )}
+                      {recipient.failedReason && (
+                        <p className='text-rose-600' title={recipient.failedReason}>
+                          {recipient.failedReason}
+                        </p>
+                      )}
+                    </div>
+                  </MobileListCard>
+                ))}
+                {(!campaign.recipients || campaign.recipients.length === 0) && (
+                  <MobileEmptyState
+                    icon={<Inbox className='h-7 w-7 opacity-40' />}
+                    title='No recipients yet'
+                  />
+                )}
+              </div>
             </div>
           </div>
 
@@ -773,6 +876,7 @@ const CampaignDetails = () => {
           </div>
         </div>
       </div>
+      </div>
 
       {/* Cancel confirmation */}
       <AlertDialog
@@ -798,7 +902,7 @@ const CampaignDetails = () => {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-    </div>
+    </MobilePage>
   );
 };
 

@@ -8,7 +8,8 @@ import {
   TabsList,
   TabsTrigger,
 } from "../../components/ui/tabs";
-import { User, Activity, History, Calendar, DollarSign } from "lucide-react";
+import { User, Activity, History, Calendar, DollarSign, User2 } from "lucide-react";
+import { PageHeader, MobilePageHeader } from "../../components/PageHeader";
 import { getUserProfile } from "../../api/user";
 import useLoginAuth from "../auth/hooks/useLoginAuth";
 import useRoleCheck from "../auth/hooks/useRoleCheck";
@@ -104,8 +105,21 @@ const ProfilePage = () => {
   }
 
   return (
-    <div className='min-h-screen bg-slate-50/60 py-4 sm:py-8 px-4 w-full'>
+    <div className='min-h-screen bg-slate-50/60 py-4 sm:py-8 px-4 w-full mobile:pb-[calc(5rem+env(safe-area-inset-bottom))]'>
       <div className='max-w-7xl mx-auto space-y-6'>
+        {/* Page Header */}
+        <PageHeader
+          icon={<User2 className='h-5 w-5 text-white' />}
+          title='My Profile'
+          subtitle='Manage your personal information and account activity'
+          className='hidden md:flex mt-2'
+        />
+        <MobilePageHeader
+          icon={<User2 className='h-5 w-5 text-primary' />}
+          title='My Profile'
+          subtitle='Manage your personal information and account activity'
+        />
+
         {/* Profile Header */}
         <Card className='shadow-none bg-transparent border-0 mt-6 md:mt-0'>
           <UserProfileHeader
@@ -126,19 +140,19 @@ const ProfilePage = () => {
               value='information'
               className='flex items-center gap-2 data-[state=active]:bg-white data-[state=active]:shadow-sm data-[state=active]:text-indigo-600 transition-all duration-150 rounded-lg'>
               <User className='w-4 h-4' />
-              <span className='hidden sm:inline'>Information</span>
+              <span className='hidden md:inline'>Information</span>
             </TabsTrigger>
             <TabsTrigger
               value='performance'
               className='flex items-center gap-2 data-[state=active]:bg-white data-[state=active]:shadow-sm data-[state=active]:text-indigo-600 transition-all duration-150 rounded-lg'>
               <Activity className='w-4 h-4' />
-              <span className='hidden sm:inline'>Performance</span>
+              <span className='hidden md:inline'>Performance</span>
             </TabsTrigger>
             <TabsTrigger
               value='activity'
               className='flex items-center gap-2 data-[state=active]:bg-white data-[state=active]:shadow-sm data-[state=active]:text-indigo-600 transition-all duration-150 rounded-lg'>
               <History className='w-4 h-4' />
-              <span className='hidden sm:inline'>Activity</span>
+              <span className='hidden md:inline'>Activity</span>
             </TabsTrigger>
           </TabsList>
 

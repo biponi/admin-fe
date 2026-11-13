@@ -1,7 +1,7 @@
-import { Code, Menu, Settings } from "lucide-react";
+import { Bell, BellRing, Code, Menu, Settings, Wallet } from "lucide-react";
 import { Button } from "./ui/button";
 import { BRAND_CONFIG } from "../config/brand";
-import BrandLogo from "../assets/Biponi-lg.png";
+import { BrandLogoSm as BrandLogo } from "../assets/brand";
 import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
 import {
   DropdownMenu,
@@ -13,73 +13,79 @@ import { getInitialsWord } from "../utils/functions";
 import { useNavigate } from "react-router-dom";
 import useLoginAuth from "../pages/auth/hooks/useLoginAuth";
 import useRoleCheck from "../pages/auth/hooks/useRoleCheck";
-import {
-  Sheet,
-  SheetClose,
-  SheetContent,
-  SheetDescription,
-  SheetHeader,
-  SheetTitle,
-  SheetTrigger,
-} from "./ui/sheet";
-import { ScrollArea } from "./ui/scroll-area";
-import { useSettings } from "../contexts/SettingsContext";
-import { useState, useEffect } from "react";
-import { cn } from "../lib/utils";
-import { Card } from "./ui/card";
-import { CardContent, CardDescription, CardHeader, CardTitle } from "./ui/card";
-import { Label } from "./ui/label";
-import { RadioGroup, RadioGroupItem } from "./ui/radio-group";
-import { Sparkles, ShoppingCart, Layers } from "lucide-react";
+import { useState } from "react";
+import { rippleProps } from "./mobile/use-ripple";
+import { useNotifications } from "../notification/useNotifications";
 import { Badge } from "./ui/badge";
+import { SettingsPanel } from "./settings-panel";
+import { TopBarWeatherOverlay } from "./weather/TopBarWeatherOverlay";
 
 interface MobileTopbarProps {
   onMenuClick: () => void;
 }
 
-const ORDER_VIEW_PREFERENCE_KEY = "order_view_preference";
-
 export function MobileTopbar({ onMenuClick }: MobileTopbarProps) {
   const { user } = useLoginAuth();
   const navigate = useNavigate();
   const { signOut } = useLoginAuth();
-  const { createOrderLayoutType, setCreateOrderLayoutType } = useSettings();
-  const [orderView] = useState<"v1" | "v2">(() => {
-    const saved = localStorage.getItem(ORDER_VIEW_PREFERENCE_KEY);
-    return (saved as "v1" | "v2") || "v2";
-  });
-
-  useEffect(() => {
-    localStorage.setItem(ORDER_VIEW_PREFERENCE_KEY, orderView);
-  }, [orderView]);
+  const { unreadCount } = useNotifications();
+  const [settingsOpen, setSettingsOpen] = useState(false);
 
   return (
-    <header className='sticky top-0 z-30 flex h-16 items-center gap-4 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 px-4 sm:hidden'>
+    <header className='sticky top-0 z-30 flex h-16 items-center gap-3 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 px-4 md:hidden'>
+      {/* Weather-themed animated background; renders nothing until data loads */}
+      <TopBarWeatherOverlay />
+
       {/* Hamburger Menu Button */}
       <Button
-        variant='secondary'
+        variant='ghost'
         size='icon'
         onClick={onMenuClick}
-        className='shrink-0'>
+        className='m3-ripple shrink-0 h-10 w-10 rounded-full hover:bg-muted'
+        {...rippleProps()}>
         <Menu className='h-5 w-5' />
         <span className='sr-only'>Toggle navigation menu</span>
       </Button>
 
       {/* Brand Logo */}
-      <div className='flex items-center gap-2 flex-1'>
+      <div className='flex items-center gap-2 flex-1 min-w-0'>
         <img
           src={BrandLogo}
-          className='h-8 w-auto'
+          className='h-8 w-auto shrink-0'
           alt={`${BRAND_CONFIG.shortName} Logo`}
         />
-        <span className='font-semibold text-lg'>{BRAND_CONFIG.shortName}</span>
+        <span className='font-semibold text-lg truncate'>{BRAND_CONFIG.shortName}</span>
       </div>
 
-      {/* User Avatar with Dropdown */}
-      <div className='flex items-center gap-2'>
+      {/* Right Actions: Notification Bell + User Avatar */}
+      <div className='flex items-center gap-2 shrink-0'>
+        {/* Bell Icon Button -> takes to /notifications on click */}
+        <Button
+          variant='ghost'
+          size='icon'
+          onClick={() => navigate("/notifications")}
+          className='m3-ripple relative h-10 w-10 rounded-full hover:bg-muted text-foreground'
+          aria-label='Notifications'
+          {...rippleProps()}>
+          {unreadCount > 0 ? (
+            <BellRing className='h-5 w-5 text-primary' />
+          ) : (
+            <Bell className='h-5 w-5 text-muted-foreground' />
+          )}
+
+          {unreadCount > 0 && (
+            <Badge
+              variant='destructive'
+              className='absolute -top-0.5 -right-0.5 h-4 min-w-4 px-1 p-0 flex items-center justify-center text-[10px] font-bold rounded-full shadow-sm'>
+              {unreadCount > 99 ? "99+" : unreadCount}
+            </Badge>
+          )}
+        </Button>
+
+        {/* User Avatar with Dropdown */}
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Avatar className='h-10 w-10 border border-border cursor-pointer '>
+            <Avatar className='h-10 w-10 border border-border cursor-pointer'>
               {user?.avatar ? (
                 <AvatarImage src={user?.avatar} alt={user.name} />
               ) : null}
@@ -92,155 +98,52 @@ export function MobileTopbar({ onMenuClick }: MobileTopbarProps) {
             <DropdownMenuItem onClick={() => navigate("/profile")}>
               My Profile
             </DropdownMenuItem>
-            <Sheet>
-              <SheetTrigger asChild>
-                <DropdownMenuItem
-                  className='cursor-pointer'
-                  onSelect={(e) => e.preventDefault()}>
-                  <Settings className='mr-2 h-4 w-4' />
-                  Settings
-                </DropdownMenuItem>
-              </SheetTrigger>
-              <SheetContent
-                side='right'
-                className='w-[400px] sm:w-[480px] p-0 flex flex-col'>
-                {/* Fixed Header */}
-                <div className='px-6 py-5 border-b bg-gradient-to-r from-slate-50 to-gray-50'>
-                  <SheetHeader>
-                    <SheetTitle className='flex items-center gap-2 text-xl'>
-                      <div className='p-2 rounded-lg bg-gradient-to-br from-blue-500 to-purple-600 text-white'>
-                        <Settings className='h-5 w-5' />
-                      </div>
-                      Settings
-                    </SheetTitle>
-                    <SheetDescription className='text-sm'>
-                      Customize your dashboard experience
-                    </SheetDescription>
-                  </SheetHeader>
-                </div>
 
-                {/* Scrollable Content */}
-                <ScrollArea className='flex-1 px-6'>
-                  <div className='py-6 space-y-6'>
-                    {/* Create Order Layout Section */}
-                    <section>
-                      <Card className='border-2 border-green-100 bg-gradient-to-br from-green-50/50 to-emerald-50/50 shadow-sm'>
-                        <CardHeader className='pb-4'>
-                          <CardTitle className='text-base flex items-center gap-2'>
-                            <div className='p-1.5 rounded-md bg-gradient-to-br from-green-500 to-emerald-500'>
-                              <ShoppingCart className='h-4 w-4 text-white' />
-                            </div>
-                            Create Order Layout
-                          </CardTitle>
-                          <CardDescription>
-                            Choose your preferred create order interface
-                          </CardDescription>
-                        </CardHeader>
-                        <CardContent className='space-y-4'>
-                          <RadioGroup
-                            value={createOrderLayoutType}
-                            onValueChange={(value) =>
-                              setCreateOrderLayoutType(
-                                value as "wizard" | "product-first",
-                              )
-                            }
-                            className='space-y-3'>
-                            <div
-                              className={cn(
-                                "flex items-center space-x-3 rounded-xl border-2 p-4 transition-all duration-200",
-                                createOrderLayoutType === "product-first"
-                                  ? "border-green-400 bg-gradient-to-r from-green-50 to-emerald-50 shadow-sm"
-                                  : "border-green-200 hover:bg-green-50/50",
-                              )}>
-                              <RadioGroupItem
-                                value='product-first'
-                                id='create-order-product-first-mobile'
-                              />
-                              <div className='flex-1'>
-                                <Label
-                                  htmlFor='create-order-product-first-mobile'
-                                  className='cursor-pointer'>
-                                  <div className='flex items-center gap-2'>
-                                    <Sparkles className='h-4 w-4 text-green-600' />
-                                    <span className='font-semibold'>
-                                      Product-First View
-                                    </span>
-                                    <span className='px-2 py-0.5 text-[10px] font-medium bg-gradient-to-r from-green-600 to-emerald-600 text-white rounded-full'>
-                                      New
-                                    </span>
-                                  </div>
-                                  <p className='text-xs text-muted-foreground mt-2 leading-relaxed'>
-                                    ✨ Modern single-screen layout for faster
-                                    order creation
-                                  </p>
-                                </Label>
-                              </div>
-                            </div>
+            <DropdownMenuItem
+              className='cursor-pointer'
+              onClick={() => setSettingsOpen(true)}>
+              <Settings className='mr-2 h-4 w-4' />
+              Settings
+            </DropdownMenuItem>
 
-                            <div
-                              className={cn(
-                                "flex items-center space-x-3 rounded-xl border-2 p-4 transition-all duration-200",
-                                createOrderLayoutType === "wizard"
-                                  ? "border-gray-400 bg-gray-50 shadow-sm"
-                                  : "border-gray-200 hover:bg-accent",
-                              )}>
-                              <RadioGroupItem
-                                value='wizard'
-                                id='create-order-wizard-mobile'
-                              />
-                              <div className='flex-1'>
-                                <Label
-                                  htmlFor='create-order-wizard-mobile'
-                                  className='cursor-pointer'>
-                                  <div className='flex items-center gap-2'>
-                                    <Layers className='h-4 w-4 text-gray-600' />
-                                    <span className='font-medium'>
-                                      Step-by-Step Wizard
-                                    </span>
-                                  </div>
-                                  <p className='text-xs text-muted-foreground mt-2'>
-                                    Classic multi-step wizard for guided order
-                                    creation
-                                  </p>
-                                </Label>
-                              </div>
-                            </div>
-                          </RadioGroup>
-                        </CardContent>
-                      </Card>
-                    </section>
-
-                    {/* Bottom padding for scroll */}
-                    <div className='h-4' />
-                  </div>
-                </ScrollArea>
-
-                {/* Fixed Footer */}
-                <div className='px-6 py-4 border-t bg-gray-50/80 backdrop-blur-sm'>
-                  <p className='text-xs text-center text-muted-foreground'>
-                    Changes are saved automatically{" "}
-                    <SheetClose className='ml-2'>
-                      <Badge variant={"destructive"}> Close </Badge>
-                    </SheetClose>
-                  </p>
-                </div>
-              </SheetContent>
-            </Sheet>
             {useRoleCheck().hasRequiredPermission(
               "settings",
               "jobs_management",
             ) && (
               <DropdownMenuItem onClick={() => navigate("/settings/jobs")}>
-                <Code />
+                <Code className='mr-2 h-4 w-4' />
                 Actions
               </DropdownMenuItem>
             )}
+
+            {useRoleCheck().hasRequiredPermission(
+              "settings",
+              "locations_management",
+            ) && (
+              <DropdownMenuItem onClick={() => navigate("/settings/locations")}>
+                Locations
+              </DropdownMenuItem>
+            )}
+
+            {useRoleCheck().hasRequiredPermission(
+              "settings",
+              "prepayment_management",
+            ) && (
+              <DropdownMenuItem onClick={() => navigate("/settings/prepayment-rules")}>
+                <Wallet className='mr-2 h-4 w-4' />
+                Prepayment Rules
+              </DropdownMenuItem>
+            )}
+
             <DropdownMenuItem onClick={() => signOut()}>
               Logout
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
       </div>
+
+      {/* Settings Modal Dialog */}
+      <SettingsPanel open={settingsOpen} onOpenChange={setSettingsOpen} />
     </header>
   );
 }

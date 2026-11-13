@@ -1,8 +1,10 @@
 import React from "react";
 import { Input } from "../ui/input";
 import { Hash, Trash2, Package, Tag, Palette, Ruler, Box } from "lucide-react";
-import { IVariation } from "../../pages/product/interface";
+import { IMetaEntry, IVariation } from "../../pages/product/interface";
 import { VariantImageUploader } from "./VariantImageUploader";
+import MetaEntriesEditor from "./MetaEntriesEditor";
+import BulkVariantMetaPanel from "./BulkVariantMetaPanel";
 import { cn } from "@/lib/utils";
 
 interface V1VariationManagerProps {
@@ -19,6 +21,11 @@ interface V1VariationManagerProps {
   ) => void;
   onDeleteVariation: (index: number) => void;
   onVariantImagesChange: (variantId: string, images: (File | string)[]) => void;
+  /** Show the per-variant meta (key-value) editor — create/edit forms only */
+  showMeta?: boolean;
+  onVariantMetaChange?: (index: number, meta: IMetaEntry[]) => void;
+  /** Bulk meta panel (write meta for a size/color once, fan out to matches) */
+  onBulkMetaApply?: (updated: IVariation[]) => void;
   productImages?: (File | string)[];
   imageGroups?: Array<{ id: string; attribute?: string; value?: string; images?: (File | string)[]; variantOverrides?: Array<{ variantId: string; images?: (File | string)[] }> }>;
 }
@@ -57,6 +64,9 @@ const V1VariationManager: React.FC<V1VariationManagerProps> = ({
   onUpdateVariation,
   onDeleteVariation,
   onVariantImagesChange,
+  showMeta = false,
+  onVariantMetaChange,
+  onBulkMetaApply,
   productImages = [],
   imageGroups = [],
 }) => {
@@ -88,11 +98,18 @@ const V1VariationManager: React.FC<V1VariationManagerProps> = ({
   }
 
   return (
-    <div
-      className={cn(
-        "grid gap-3 grid-cols-1 sm:grid-cols-2",
-        gridColumns.lg === "3" ? "lg:grid-cols-3" : "lg:grid-cols-2",
-      )}>
+    <>
+      {/* Bulk meta — write once per size/color, apply to all matching variants */}
+      {showMeta && onBulkMetaApply && (
+        <div className='mb-3'>
+          <BulkVariantMetaPanel variations={variations} onApply={onBulkMetaApply} />
+        </div>
+      )}
+      <div
+        className={cn(
+          "grid gap-3 grid-cols-1 sm:grid-cols-2",
+          gridColumns.lg === "3" ? "lg:grid-cols-3" : "lg:grid-cols-2",
+        )}>
       {variations.map((variation: IVariation, index: number) => (
         <div
           key={variation.id || index}
@@ -217,9 +234,25 @@ const V1VariationManager: React.FC<V1VariationManagerProps> = ({
             onImagesChange={onVariantImagesChange}
             fallbackImages={getFallbackImages(variation)}
           />
+
+          {/* Per-variant meta data (admin search only) */}
+          {showMeta && onVariantMetaChange && (
+            <div className='space-y-1.5'>
+              <div className='text-[10px] font-semibold uppercase tracking-wider text-muted-foreground'>
+                Meta data
+              </div>
+              <MetaEntriesEditor
+                value={variation.meta || []}
+                onChange={(meta) => onVariantMetaChange(index, meta)}
+                compact
+                addLabel='Add meta'
+              />
+            </div>
+          )}
         </div>
       ))}
-    </div>
+      </div>
+    </>
   );
 };
 

@@ -40,7 +40,7 @@ interface CardType {
 export const CommissionSummaryCards: React.FC<CommissionSummaryCardsProps> = ({
   type,
   summary,
-  className = "grid gap-4 grid-cols-2 sm:grid-cols-3 lg:grid-cols-4",
+  className = "grid gap-4 grid-cols-2 md:grid-cols-3 lg:grid-cols-4",
 }) => {
   if (!summary) return null;
 
@@ -233,7 +233,7 @@ export const CommissionSummaryCards: React.FC<CommissionSummaryCardsProps> = ({
             </div>
           </CardHeader>
           <CardContent>
-            <div className="text-xl sm:text-2xl font-bold">
+            <div className="text-xl md:text-2xl font-bold">
               {card.isCount ? card.amount : formatCurrency(card.amount as number)}
             </div>
             {card.showPercentage && type === "user" && (

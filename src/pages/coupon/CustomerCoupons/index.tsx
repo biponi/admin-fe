@@ -1,6 +1,19 @@
 import { useNavigate } from "react-router-dom";
 import MainView from "../../../coreComponents/mainView";
-import { UserPlus, Users, UserSearch, ArrowLeft } from "lucide-react";
+import {
+  MobilePage,
+  MobileListCard,
+  MobileStaggeredList,
+} from "../../../components/mobile";
+import { PageHeader } from "../../../components/PageHeader";
+import {
+  UserPlus,
+  Users,
+  UserSearch,
+  ArrowLeft,
+  ChevronRight,
+  Ticket,
+} from "lucide-react";
 
 export default function CustomerCouponsPage() {
   const navigate = useNavigate();
@@ -33,36 +46,33 @@ export default function CustomerCouponsPage() {
 
   return (
     <MainView title="Customer Coupons">
+      <MobilePage
+        title="Customer Coupons"
+        icon={<Ticket className="h-5 w-5 text-primary" />}
+        subtitle="Assign personalized coupons to specific customers"
+        back
+        onBack={() => navigate("/coupons")}>
       <div className="min-h-screen bg-slate-50/60">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
+        <div className="max-w-7xl mx-auto px-4 md:px-6 lg:px-8 py-6 space-y-6">
           {/* Page Header */}
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-            <div className="flex items-center gap-3">
-              <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-indigo-600 shadow-sm shadow-indigo-200">
-                <Users className="h-5 w-5 text-white" />
-              </div>
-              <div>
-                <h1 className="text-xl font-semibold text-slate-900 leading-tight">
-                  Customer Coupons
-                </h1>
-                <p className="text-sm text-slate-500 mt-0.5">
-                  Assign personalized coupons to specific customers
-                </p>
-              </div>
-            </div>
-
-            <div className="flex items-center gap-2">
-              <button
-                onClick={() => navigate("/coupons")}
-                className="inline-flex items-center gap-1.5 px-4 py-2 text-sm font-medium text-slate-600 bg-white border border-slate-200 rounded-lg hover:bg-slate-50 hover:border-slate-300 transition-all duration-150 shadow-sm">
-                <ArrowLeft className="h-4 w-4" />
-                Back to Dashboard
-              </button>
-            </div>
+          <div className="hidden md:block">
+            <PageHeader
+              icon={<Ticket className="h-5 w-5" />}
+              title="Customer Coupons"
+              subtitle="Assign personalized coupons to specific customers"
+              actions={
+                <button
+                  onClick={() => navigate("/coupons")}
+                  className="inline-flex items-center gap-1.5 px-4 py-2 text-sm font-medium text-slate-600 bg-white border border-slate-200 rounded-lg hover:bg-slate-50 hover:border-slate-300 transition-all duration-150 shadow-sm">
+                  <ArrowLeft className="h-4 w-4" />
+                  Back to Dashboard
+                </button>
+              }
+            />
           </div>
 
           {/* Summary Strip */}
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
             {[
               {
                 label: "Total Assigned",
@@ -119,7 +129,7 @@ export default function CustomerCouponsPage() {
           </div>
 
           {/* Assignment Cards */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="hidden md:grid grid-cols-1 md:grid-cols-3 gap-4">
             {assignmentOptions.map((option) => {
               const Icon = option.icon;
               return (
@@ -143,8 +153,31 @@ export default function CustomerCouponsPage() {
             })}
           </div>
 
+          {/* Mobile assignment list */}
+          <div className="mobile:block hidden">
+            <MobileStaggeredList>
+              {assignmentOptions.map((option) => {
+                const Icon = option.icon;
+                return (
+                  <MobileListCard
+                    key={option.title}
+                    onClick={() => navigate(option.path)}
+                    leading={
+                      <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-indigo-50">
+                        <Icon className="h-5 w-5 text-indigo-600" />
+                      </div>
+                    }
+                    title={option.title}
+                    subtitle={option.description}
+                    trailing={<ChevronRight className="h-5 w-5 text-slate-400" />}
+                  />
+                );
+              })}
+            </MobileStaggeredList>
+          </div>
+
           {/* Customer Lookup Section */}
-          <div>
+          <div className="hidden md:block">
             <div className="bg-white rounded-xl border border-slate-100 shadow-sm p-5">
               <div className="flex items-start justify-between mb-4">
                 <div>
@@ -168,8 +201,25 @@ export default function CustomerCouponsPage() {
               </button>
             </div>
           </div>
+
+          {/* Mobile lookup card */}
+          <div className="mobile:block hidden">
+            <MobileListCard
+              static
+              onClick={handleSearchCustomer}
+              leading={
+                <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-indigo-50">
+                  <UserSearch className="h-5 w-5 text-indigo-600" />
+                </div>
+              }
+              title="Customer Coupon Lookup"
+              subtitle="Search for a customer to view their assigned coupons and usage history"
+              trailing={<ChevronRight className="h-5 w-5 text-slate-400" />}
+            />
+          </div>
         </div>
       </div>
+      </MobilePage>
     </MainView>
   );
 }

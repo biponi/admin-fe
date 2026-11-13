@@ -4,6 +4,7 @@ import { Input } from "../../../components/ui/input";
 import { Textarea } from "../../../components/ui/textarea";
 import { Label } from "../../../components/ui/label";
 import { useToast } from "../../../components/ui/use-toast";
+import { MobilePage, MobileStickyActions } from "@/components/mobile";
 import { useBulkCommunication } from "../hooks/useBulkCommunication";
 import {
   ArrowLeft,
@@ -12,10 +13,11 @@ import {
   Users,
   Plus,
   X,
-  MessageSquare,
   CalendarClock,
   Zap,
+  Megaphone,
 } from "lucide-react";
+import { PageHeader } from "@/components/PageHeader";
 
 const CreateSMSCampaign = () => {
   const navigate = useNavigate();
@@ -182,34 +184,38 @@ const CreateSMSCampaign = () => {
   const charOverLimit = charCount > 160;
 
   return (
-    <div className='min-h-screen bg-slate-50/60'>
-      <div className='max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6'>
+    <MobilePage
+      icon={<Megaphone className='h-5 w-5 text-primary' />}
+      title='Create SMS Campaign'
+      subtitle='Compose a bulk SMS campaign and choose recipients'
+      back
+      onBack={() => navigate("/bulk-communication/sms")}
+    >
+      <div className='min-h-screen bg-slate-50/60'>
+        <div className='max-w-6xl mx-auto px-4 md:px-6 lg:px-8 py-4 md:py-6 space-y-4 md:space-y-6'>
         {/* Page header */}
-        <div className='flex items-center gap-3'>
-          <button
-            type='button'
-            onClick={() => navigate("/bulk-communication/sms")}
-            className='inline-flex items-center gap-1.5 text-sm text-slate-500 hover:text-slate-800 transition-colors'>
-            <ArrowLeft className='h-4 w-4' />
-            Back
-          </button>
-          <span className='text-slate-300'>/</span>
-          <div className='flex items-center gap-2'>
-            <div className='w-8 h-8 rounded-lg bg-indigo-600 flex items-center justify-center shadow-sm'>
-              <MessageSquare className='h-4 w-4 text-white' />
-            </div>
-            <h1 className='text-lg font-semibold text-slate-900'>
-              New SMS Campaign
-            </h1>
-          </div>
+        <div className='hidden md:block'>
+          <PageHeader
+            icon={<Megaphone className='h-5 w-5' />}
+            title='Create SMS Campaign'
+            subtitle='Compose a bulk SMS campaign and choose recipients'
+            actions={
+              <button
+                type='button'
+                onClick={() => navigate("/bulk-communication/sms")}
+                className='inline-flex items-center gap-1.5 px-3 py-2 text-sm font-medium text-slate-600 bg-white border border-slate-200 rounded-lg hover:bg-slate-50 hover:border-slate-300 transition-all duration-150 shadow-sm'>
+                <ArrowLeft className='h-4 w-4' />
+                Back
+              </button>
+            }
+          />
         </div>
-
         <form onSubmit={handleSubmit}>
-          <div className='grid grid-cols-1 lg:grid-cols-3 gap-5'>
+          <div className='grid grid-cols-1 lg:grid-cols-3 gap-4 md:gap-5'>
             {/* ── Left / Main ── */}
             <div className='lg:col-span-2 space-y-5'>
               {/* Campaign info */}
-              <div className='bg-white rounded-2xl border border-slate-100 shadow-sm p-5 space-y-5'>
+              <div className='bg-white rounded-2xl border border-slate-100 shadow-sm p-4 md:p-5 space-y-5'>
                 <h2 className='text-sm font-semibold text-slate-700'>
                   Campaign details
                 </h2>
@@ -280,7 +286,7 @@ const CreateSMSCampaign = () => {
               </div>
 
               {/* Recipients */}
-              <div className='bg-white rounded-2xl border border-slate-100 shadow-sm p-5 space-y-4'>
+              <div className='bg-white rounded-2xl border border-slate-100 shadow-sm p-4 md:p-5 space-y-4'>
                 <div className='flex items-center justify-between'>
                   <h2 className='text-sm font-semibold text-slate-700'>
                     Recipients
@@ -294,7 +300,7 @@ const CreateSMSCampaign = () => {
                 </div>
 
                 {/* Input row */}
-                <div className='flex gap-2'>
+                <div className='flex flex-wrap gap-2'>
                   <Input
                     placeholder='+880171234567 — or paste multiple, comma-separated'
                     value={recipientInput}
@@ -305,7 +311,7 @@ const CreateSMSCampaign = () => {
                         handleBulkImport();
                       }
                     }}
-                    className='h-9 text-sm border-slate-200 focus-visible:ring-indigo-500 font-mono'
+                    className='h-9 text-sm border-slate-200 focus-visible:ring-indigo-500 font-mono mobile:min-w-full'
                   />
                   <button
                     type='button'
@@ -368,7 +374,7 @@ const CreateSMSCampaign = () => {
             {/* ── Right / Sidebar ── */}
             <div className='space-y-4'>
               {/* Schedule toggle */}
-              <div className='bg-white rounded-2xl border border-slate-100 shadow-sm p-5 space-y-4'>
+              <div className='bg-white rounded-2xl border border-slate-100 shadow-sm p-4 md:p-5 space-y-4'>
                 <h2 className='text-sm font-semibold text-slate-700 flex items-center gap-2'>
                   <Clock className='h-4 w-4 text-slate-400' />
                   Delivery
@@ -423,7 +429,7 @@ const CreateSMSCampaign = () => {
               </div>
 
               {/* Summary */}
-              <div className='bg-white rounded-2xl border border-slate-100 shadow-sm p-5 space-y-3'>
+              <div className='bg-white rounded-2xl border border-slate-100 shadow-sm p-4 md:p-5 space-y-3'>
                 <h2 className='text-sm font-semibold text-slate-700'>
                   Summary
                 </h2>
@@ -478,11 +484,11 @@ const CreateSMSCampaign = () => {
                 </dl>
               </div>
 
-              {/* Submit */}
+              {/* Submit (desktop) */}
               <button
                 type='submit'
                 disabled={loading}
-                className='w-full h-11 flex items-center justify-center gap-2 text-sm font-semibold text-white bg-indigo-600 rounded-xl hover:bg-indigo-700 active:bg-indigo-800 disabled:opacity-60 disabled:cursor-not-allowed transition-all shadow-sm shadow-indigo-200'>
+                className='mobile:hidden w-full h-11 flex items-center justify-center gap-2 text-sm font-semibold text-white bg-indigo-600 rounded-xl hover:bg-indigo-700 active:bg-indigo-800 disabled:opacity-60 disabled:cursor-not-allowed transition-all shadow-sm shadow-indigo-200'>
                 {loading ? (
                   <span className='flex items-center gap-2'>
                     <span className='w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin' />
@@ -497,9 +503,30 @@ const CreateSMSCampaign = () => {
               </button>
             </div>
           </div>
+
+          {/* Submit (mobile sticky bar) */}
+          <MobileStickyActions>
+            <button
+              type='submit'
+              disabled={loading}
+              className='m3-ripple w-full h-12 flex items-center justify-center gap-2 text-sm font-semibold text-white bg-indigo-600 rounded-full active:bg-indigo-800 disabled:opacity-60 disabled:cursor-not-allowed transition-all shadow-sm shadow-indigo-200'>
+              {loading ? (
+                <span className='flex items-center gap-2'>
+                  <span className='w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin' />
+                  Creating…
+                </span>
+              ) : (
+                <>
+                  <Send className='h-4 w-4' />
+                  {isScheduling ? "Schedule Campaign" : "Send Now"}
+                </>
+              )}
+            </button>
+          </MobileStickyActions>
         </form>
+        </div>
       </div>
-    </div>
+    </MobilePage>
   );
 };
 

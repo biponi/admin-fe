@@ -13,6 +13,8 @@ import {
   Send,
 } from "lucide-react";
 import { Button } from "../../components/ui/button";
+import { MobileStickyActions } from "../../components/mobile";
+import { PageHeader } from "../../components/PageHeader";
 import {
   Card,
   CardContent,
@@ -371,45 +373,42 @@ const BlogForm = () => {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 mobile:pb-[calc(5rem+env(safe-area-inset-bottom))]">
       {/* Header */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => navigate("/blog")}
-          >
-            <ArrowLeft className="h-4 w-4" />
-          </Button>
-          <div>
-            <h2 className="text-2xl font-bold tracking-tight">
-              {isEdit ? "Edit Blog Post" : "Create Blog Post"}
-            </h2>
-            <p className="text-muted-foreground">
-              {isEdit
-                ? "Update your blog post and SEO settings"
-                : "Write a new blog post with SEO optimization"}
-            </p>
+      <PageHeader
+        icon={<FileText className="h-5 w-5 text-white" />}
+        title={isEdit ? "Edit Post" : "Create Post"}
+        subtitle={
+          isEdit
+            ? "Update your blog post and SEO settings"
+            : "Write a new blog post with SEO optimization"
+        }
+        actions={
+          <div className="flex items-center gap-2">
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => navigate("/blog")}
+            >
+              <ArrowLeft className="h-4 w-4" />
+            </Button>
+            <Button
+              variant="outline"
+              onClick={() => handleSubmit("draft")}
+              disabled={saving}
+            >
+              Save as Draft
+            </Button>
+            <Button onClick={() => handleSubmit("published")} disabled={saving}>
+              <Send className="h-4 w-4 mr-2" />
+              Publish
+            </Button>
           </div>
-        </div>
-        <div className="flex items-center gap-2">
-          <Button
-            variant="outline"
-            onClick={() => handleSubmit("draft")}
-            disabled={saving}
-          >
-            Save as Draft
-          </Button>
-          <Button onClick={() => handleSubmit("published")} disabled={saving}>
-            <Send className="h-4 w-4 mr-2" />
-            Publish
-          </Button>
-        </div>
-      </div>
+        }
+      />
 
       <Tabs defaultValue="content" className="space-y-4">
-        <TabsList>
+        <TabsList className="mobile:flex mobile:w-full mobile:overflow-x-auto">
           <TabsTrigger value="content" className="gap-2">
             <FileText className="h-4 w-4" />
             Content
@@ -951,6 +950,28 @@ const BlogForm = () => {
           </Card>
         </TabsContent>
       </Tabs>
+
+      {/* Mobile sticky save bar */}
+      <MobileStickyActions>
+        <div className="flex items-center gap-2">
+          <Button
+            variant="outline"
+            className="flex-1 h-10 rounded-full"
+            onClick={() => handleSubmit("draft")}
+            disabled={saving}
+          >
+            Save as Draft
+          </Button>
+          <Button
+            className="flex-[2] h-10 rounded-full"
+            onClick={() => handleSubmit("published")}
+            disabled={saving}
+          >
+            <Send className="h-4 w-4 mr-2" />
+            Publish
+          </Button>
+        </div>
+      </MobileStickyActions>
     </div>
   );
 };

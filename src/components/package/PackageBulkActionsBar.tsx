@@ -48,7 +48,7 @@ export function PackageBulkActionsBar({
 
   return (
     <div
-      className={`fixed bottom-0 left-0 right-0 z-50 border-t bg-white shadow-2xl md:bottom-6 md:left-1/2 md:-translate-x-1/2 md:w-auto md:min-w-[600px] md:max-w-3xl md:rounded-lg md:border ${className}`}
+      className={`fixed bottom-[calc(4.25rem+env(safe-area-inset-bottom))] left-3 right-3 z-50 rounded-2xl border bg-white shadow-2xl md:bottom-6 md:left-1/2 md:right-auto md:-translate-x-1/2 md:w-auto md:min-w-[600px] md:max-w-3xl md:rounded-lg ${className}`}
     >
       {/* Progress Bar */}
       {progress?.inProgress && (
@@ -57,7 +57,7 @@ export function PackageBulkActionsBar({
         </div>
       )}
 
-      <div className="p-4 space-y-4">
+      <div className="p-3 space-y-3 md:p-4 md:space-y-4">
         {/* Header */}
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
@@ -91,7 +91,7 @@ export function PackageBulkActionsBar({
               disabled={progress?.inProgress}
             >
               <Eye className="h-4 w-4 mr-1.5 text-blue-600" />
-              <span className="text-blue-600 font-medium hidden sm:inline">View List</span>
+              <span className="text-blue-600 font-medium hidden md:inline">View List</span>
             </Button>
             <Button
               variant="ghost"
@@ -122,28 +122,28 @@ export function PackageBulkActionsBar({
 
         {/* Actions */}
         {!progress?.inProgress && (
-          <div className="flex flex-wrap items-center gap-2">
+          <div className="flex flex-nowrap items-center gap-2 overflow-x-auto pb-0.5 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden md:flex-wrap md:overflow-visible md:pb-0">
             {/* Mark as Packed */}
-            <Button variant="default" size="sm" onClick={onMarkPacked} className="h-9 bg-purple-600 hover:bg-purple-700">
+            <Button variant="default" size="sm" onClick={onMarkPacked} className="h-9 shrink-0 bg-purple-600 hover:bg-purple-700">
               <Package className="mr-2 h-4 w-4" />
-              <span className="hidden sm:inline">Mark as Packed</span>
-              <span className="sm:hidden">Packed</span>
+              <span className="hidden md:inline">Mark as Packed</span>
+              <span className="md:hidden">Packed</span>
             </Button>
 
             {/* Request Shipping */}
-            <Button variant="default" size="sm" onClick={onRequestShipping} className="h-9 bg-blue-600 hover:bg-blue-700">
+            <Button variant="default" size="sm" onClick={onRequestShipping} className="h-9 shrink-0 bg-blue-600 hover:bg-blue-700">
               <Ship className="mr-2 h-4 w-4" />
-              <span className="hidden sm:inline">Request Shipping</span>
-              <span className="sm:hidden">Ship</span>
+              <span className="hidden md:inline">Request Shipping</span>
+              <span className="md:hidden">Ship</span>
             </Button>
 
             {/* Print Slips */}
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="outline" size="sm" className="h-9">
+                <Button variant="outline" size="sm" className="h-9 shrink-0">
                   <Printer className="mr-2 h-4 w-4" />
-                  <span className="hidden sm:inline">Print</span>
-                  <span className="sm:hidden">Print</span>
+                  <span className="hidden md:inline">Print</span>
+                  <span className="md:hidden">Print</span>
                   <ChevronDown className="ml-1.5 h-3.5 w-3.5" />
                 </Button>
               </DropdownMenuTrigger>

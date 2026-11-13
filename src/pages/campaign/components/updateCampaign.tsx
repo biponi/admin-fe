@@ -33,6 +33,9 @@ import { useParams } from "react-router-dom";
 import { ICampaign, ICampaingProducts } from "../interface";
 import dayjs from "dayjs";
 import { Badge } from "../../../components/ui/badge";
+import { MobilePage, MobileStickyActions } from "@/components/mobile";
+import { PageHeader } from "@/components/PageHeader";
+import { Zap } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 // ─── Section wrapper ──────────────────────────────────────────────────────────
@@ -45,7 +48,7 @@ const Section: React.FC<{
 }> = ({ icon, title, description, children, className = "" }) => (
   <div
     className={`bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden ${className}`}>
-    <div className='px-6 py-5 border-b border-gray-100 flex items-center gap-3'>
+    <div className='px-4 py-4 md:px-6 md:py-5 border-b border-gray-100 flex items-center gap-3'>
       <span className='flex items-center justify-center w-9 h-9 rounded-xl bg-indigo-50 text-indigo-600'>
         {icon}
       </span>
@@ -56,7 +59,7 @@ const Section: React.FC<{
         )}
       </div>
     </div>
-    <div className='px-6 py-5'>{children}</div>
+    <div className='px-4 py-4 md:px-6 md:py-5'>{children}</div>
   </div>
 );
 
@@ -97,7 +100,7 @@ const StepIndicator: React.FC<{ step: number }> = ({ step }) => (
             {step > n ? <CheckCircle2 className='w-4 h-4' /> : n}
           </span>
           <span
-            className={`text-sm font-medium hidden sm:block ${step === n ? "text-gray-900" : "text-gray-400"}`}>
+            className={`text-sm font-medium hidden md:block ${step === n ? "text-gray-900" : "text-gray-400"}`}>
             {label}
           </span>
         </div>
@@ -300,16 +303,21 @@ const UpdateCampaignForm: React.FC = () => {
 
   return (
     <MainView title='Update Campaign'>
-      <div className='bg-gray-50/60 px-4 py-6 sm:px-6 lg:px-8'>
+      <MobilePage
+        icon={<Zap className='h-5 w-5 text-primary' />}
+        title='Update Campaign'
+        subtitle='Edit campaign details, discounts, and product selections.'
+        back
+      >
+      <div className='bg-gray-50/60 px-4 py-6 md:px-6 lg:px-8 pb-[calc(4rem+env(safe-area-inset-bottom))] md:pb-6'>
         <div className='max-w-6xl mx-auto'>
           {/* Header */}
-          <div className='mb-8'>
-            <h1 className='text-2xl font-bold text-gray-900 tracking-tight'>
-              Update Campaign
-            </h1>
-            <p className='text-sm text-gray-500 mt-1'>
-              Edit campaign details, discounts, and product selections.
-            </p>
+          <div className='hidden md:block mb-8'>
+            <PageHeader
+              icon={<Zap className='h-5 w-5' />}
+              title='Update Campaign'
+              subtitle='Edit campaign details, discounts, and product selections.'
+            />
           </div>
 
           <StepIndicator step={step} />
@@ -393,7 +401,7 @@ const UpdateCampaignForm: React.FC = () => {
                     icon={<Tag className='w-4 h-4' />}
                     title='Discount'
                     description='Applied to all campaign products'>
-                    <div className='grid grid-cols-2 gap-4'>
+                    <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
                       <Field label='Type' htmlFor='discount-type'>
                         <Select
                           value={discountType}
@@ -434,7 +442,7 @@ const UpdateCampaignForm: React.FC = () => {
                     title='Pre-payment'
                     description='Require upfront payment from customers'>
                     <div className='flex flex-col gap-4'>
-                      <div className='grid grid-cols-2 gap-4'>
+                      <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
                         <Field label='Payment Type'>
                           <Select
                             value={prepaymentType}
@@ -477,7 +485,7 @@ const UpdateCampaignForm: React.FC = () => {
                           </Field>
                         )}
                       </div>
-                      <div className='grid grid-cols-2 gap-4'>
+                      <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
                         <Field label='Min Order'>
                           <Input
                             type='text'
@@ -517,7 +525,7 @@ const UpdateCampaignForm: React.FC = () => {
                     title='Delivery Discount'
                     description='Reduce or waive delivery fees'>
                     <div className='flex flex-col gap-4'>
-                      <div className='grid grid-cols-2 gap-4'>
+                      <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
                         <Field label='Discount Type'>
                           <Select
                             value={deliveryDiscountType}
@@ -652,16 +660,27 @@ const UpdateCampaignForm: React.FC = () => {
                     </Field>
                   </Section>
 
-                  {/* CTA */}
+                  {/* CTA — inline on desktop only; mobile uses the sticky bar below */}
                   <Button
                     type='submit'
                     disabled={loading}
-                    className='w-full h-11 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-sm font-semibold gap-2 shadow-md shadow-indigo-100 transition-all'>
+                    className='hidden md:inline-flex w-full h-11 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-sm font-semibold gap-2 shadow-md shadow-indigo-100 transition-all'>
                     Continue to Products
                     <ChevronRight className='w-4 h-4' />
                   </Button>
                 </div>
               </div>
+
+              {/* Mobile sticky action bar — sits above the global bottom tab bar */}
+              <MobileStickyActions className='bottom-[calc(4rem+env(safe-area-inset-bottom))] -mx-4'>
+                <Button
+                  type='submit'
+                  disabled={loading}
+                  className='m3-ripple w-full h-11 rounded-full bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold gap-2'>
+                  Continue to Products
+                  <ChevronRight className='w-4 h-4' />
+                </Button>
+              </MobileStickyActions>
             </form>
           )}
 
@@ -676,7 +695,7 @@ const UpdateCampaignForm: React.FC = () => {
                       Step 2 / 2
                     </span>
                   </div>
-                  <div className='flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4'>
+                  <div className='flex flex-col md:flex-row md:items-start md:justify-between gap-4'>
                     <div>
                       <h3 className='text-base font-semibold text-gray-900 leading-snug'>
                         Select Products
@@ -699,7 +718,7 @@ const UpdateCampaignForm: React.FC = () => {
                         onClick={handleSubmit}
                         disabled={loading || products.length < 3}
                         className={cn(
-                          "gap-2 rounded-lg font-medium transition-all",
+                          "hidden md:inline-flex gap-2 rounded-lg font-medium transition-all",
                           products.length >= 3
                             ? "bg-indigo-600 hover:bg-indigo-700 text-white shadow-sm shadow-indigo-100"
                             : "bg-gray-100 text-gray-400 cursor-not-allowed"
@@ -768,8 +787,8 @@ const UpdateCampaignForm: React.FC = () => {
                 </div>
               </div>
 
-              {/* ─── Bottom action row (sticky-feel alternative) ─── */}
-              <div className='flex items-center justify-between px-1'>
+              {/* ─── Bottom action row (desktop) — mobile uses the sticky bar ─── */}
+              <div className='hidden md:flex items-center justify-between px-1'>
                 <p className='text-xs text-gray-400'>
                   {products.length >= 3
                     ? "Ready to update your campaign."
@@ -797,10 +816,36 @@ const UpdateCampaignForm: React.FC = () => {
                   )}
                 </Button>
               </div>
+
+              {/* ─── Mobile sticky save bar — sits above the global bottom tab bar ─── */}
+              <MobileStickyActions className='bottom-[calc(4rem+env(safe-area-inset-bottom))] -mx-4'>
+                <Button
+                  onClick={handleSubmit}
+                  disabled={loading || products.length < 3}
+                  className={cn(
+                    "m3-ripple w-full h-11 rounded-full font-semibold gap-2 transition-all",
+                    products.length >= 3
+                      ? "bg-indigo-600 hover:bg-indigo-700 text-white"
+                      : "bg-gray-100 text-gray-400 cursor-not-allowed"
+                  )}>
+                  {loading ? (
+                    <>
+                      <span className='w-4 h-4 rounded-full border-2 border-white border-t-transparent animate-spin' />
+                      Updating…
+                    </>
+                  ) : (
+                    <>
+                      <CheckCircle2 className='w-4 h-4' />
+                      Update Campaign
+                    </>
+                  )}
+                </Button>
+              </MobileStickyActions>
             </div>
           )}
         </div>
       </div>
+      </MobilePage>
     </MainView>
   );
 };

@@ -14,9 +14,6 @@ import {
   Clock,
   Truck,
   XCircle,
-  Shield,
-  AlertTriangle,
-  ShieldCheck,
   MessageCircle,
   ChevronRight,
   Image as ImageIcon,
@@ -40,6 +37,8 @@ import { cn } from "../../../utils/functions";
 import useRoleCheck from "../../auth/hooks/useRoleCheck";
 import { FraudDetection } from "../interface";
 import FraudDetectionDrawer from "./FraudDetectionDrawer";
+import RiskBadge from "../../../components/fraud/RiskBadge";
+import BlockedBadge from "../../../components/fraud/BlockedBadge";
 import { MobileOrderProductDrawer } from "./MobileOrderProductDrawer";
 
 interface OrderProduct {
@@ -80,6 +79,7 @@ interface Props {
   isBulkAdded: boolean;
   fraudDetection?: FraudDetection;
   products?: OrderProduct[];
+  order?: { createdByUserId?: string | null };
   handleViewDetails: () => void;
   handleUpdateOrder: () => void;
   handleModifyProduct: () => void;
@@ -103,6 +103,7 @@ const MobileOrderCard: React.FC<Props> = ({
   isBulkAdded,
   fraudDetection,
   products = [],
+  order,
   handleBulkCheck,
   handleViewDetails,
   handleUpdateOrder,
@@ -110,7 +111,7 @@ const MobileOrderCard: React.FC<Props> = ({
   deleteExistingOrder,
   handleReturnProducts,
 }) => {
-  const { hasRequiredPermission, hasSomePermissionsForPage } = useRoleCheck();
+  const { canModifyOrder, hasSomePermissionsForPage } = useRoleCheck();
   const [showProductDrawer, setShowProductDrawer] = useState(false);
 
   // Get relative time (e.g., "2h ago")
@@ -135,34 +136,6 @@ const MobileOrderCard: React.FC<Props> = ({
   const getWhatsAppLink = (phone: string) => {
     const cleanPhone = phone.replace(/[^0-9]/g, "");
     return `https://wa.me/${cleanPhone}`;
-  };
-
-  const getFraudButtonConfig = (riskLevel?: string) => {
-    switch (riskLevel) {
-      case "red":
-        return {
-          icon: AlertTriangle,
-          className: "bg-red-50 hover:bg-red-100 text-red-600 border-red-200",
-        };
-      case "yellow":
-        return {
-          icon: Shield,
-          className:
-            "bg-yellow-50 hover:bg-yellow-100 text-yellow-600 border-yellow-200",
-        };
-      case "green":
-        return {
-          icon: ShieldCheck,
-          className:
-            "bg-green-50 hover:bg-green-100 text-green-600 border-green-200",
-        };
-      default:
-        return {
-          icon: Shield,
-          className:
-            "bg-gray-50 hover:bg-gray-100 text-gray-400 border-gray-200",
-        };
-    }
   };
 
   const getStatusConfig = (status: string) => {
@@ -232,6 +205,9 @@ const MobileOrderCard: React.FC<Props> = ({
               "edit",
               "delete",
               "documents",
+              "cancel",
+              "modify",
+              "update_status",
             ]) &&
               !status.includes("return") && (
                 <div className='relative'>
@@ -266,7 +242,7 @@ const MobileOrderCard: React.FC<Props> = ({
               {statusConfig.label}
             </Badge>
 
-            {hasSomePermissionsForPage("order", ["edit", "delete"]) && (
+            {hasSomePermissionsForPage("order", ["edit", "delete", "cancel", "modify", "update_status"]) && (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button
@@ -282,14 +258,14 @@ const MobileOrderCard: React.FC<Props> = ({
                     View Details
                   </DropdownMenuItem>
 
-                  {hasRequiredPermission("order", "edit") && (
+                  {canModifyOrder("order", "edit", order) && (
                     <DropdownMenuItem onClick={handleUpdateOrder}>
                       <Edit className='h-4 w-4 mr-2' />
                       Edit Order
                     </DropdownMenuItem>
                   )}
 
-                  {hasRequiredPermission("order", "edit") &&
+                  {canModifyOrder("order", "modify", order) &&
                     status === "processing" && (
                       <DropdownMenuItem onClick={handleModifyProduct}>
                         <Package className='h-4 w-4 mr-2' />
@@ -297,7 +273,7 @@ const MobileOrderCard: React.FC<Props> = ({
                       </DropdownMenuItem>
                     )}
 
-                  {hasRequiredPermission("order", "edit") &&
+                  {canModifyOrder("order", "modify", order) &&
                     status === "shipped" && (
                       <DropdownMenuItem onClick={handleReturnProducts}>
                         <RefreshCw className='h-4 w-4 mr-2' />
@@ -305,7 +281,7 @@ const MobileOrderCard: React.FC<Props> = ({
                       </DropdownMenuItem>
                     )}
 
-                  {hasRequiredPermission("order", "delete") && (
+                  {canModifyOrder("order", "delete", order) && (
                     <>
                       <DropdownMenuSeparator />
                       <DropdownMenuItem
@@ -429,24 +405,9 @@ const MobileOrderCard: React.FC<Props> = ({
                     <Button
                       variant='outline'
                       size='sm'
-                      className={cn(
-                        "h-8 px-2 border rounded-lg text-xs",
-                        getFraudButtonConfig(fraudDetection.riskLevel)
-                          .className,
-                      )}>
-                      {React.createElement(
-                        getFraudButtonConfig(fraudDetection.riskLevel).icon,
-                        {
-                          className: "h-3.5 w-3.5",
-                        },
-                      )}
-                      <span className='ml-1'>
-                        {fraudDetection.riskLevel === "red"
-                          ? "High Risk"
-                          : fraudDetection.riskLevel === "yellow"
-                            ? "Medium"
-                            : "Safe"}
-                      </span>
+                      className='h-8 px-2 border rounded-lg text-xs'>
+                      <RiskBadge level={fraudDetection.riskLevel} compact />
+                      {fraudDetection.blocked ? <BlockedBadge /> : null}
                     </Button>
                   }
                 />

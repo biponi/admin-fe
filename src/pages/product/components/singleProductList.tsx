@@ -1,6 +1,7 @@
 import {
   EditIcon,
   BarChart2,
+  ChevronRight,
   SlidersHorizontal,
   History,
   Trash2,
@@ -25,7 +26,9 @@ import useRoleCheck from "../../auth/hooks/useRoleCheck";
 import { ProductAdjustmentDialog } from "./ProductAdjustmentDialog";
 import { ProductAdjustmentHistory } from "./ProductAdjustmentHistory";
 import DeleteRequestDialog from "./DeleteRequestDialog";
-import type { IVariation } from "../interface";
+import type { IMetaEntry, IVariation } from "../interface";
+import { ProductMetaDetail, hasAnyMeta } from "./ProductMetaDetail";
+import { cn } from "../../../lib/utils";
 import PlaceHolderImage from "../../../assets/placeholder.svg";
 import {
   getVariationImageUrl,
@@ -186,7 +189,11 @@ function VariationDisplayGrid({
       {rows.map((row, rowIdx) => (
         <div key={rowIdx} className='flex gap-1.5'>
           {row.map((v, i) => (
-            <VariationChip key={v.id || `${rowIdx}-${i}`} variation={v} imageGroups={imageGroups} />
+            <VariationChip
+              key={v.id || `${rowIdx}-${i}`}
+              variation={v}
+              imageGroups={imageGroups}
+            />
           ))}
         </div>
       ))}
@@ -297,6 +304,7 @@ interface Props {
   categoryName: string;
   variations: string[];
   variationList?: IVariation[];
+  meta?: IMetaEntry[];
   hasVariation?: boolean;
   imageGroups?: any[];
   totalReturned: number;
@@ -321,6 +329,7 @@ const SingleItem: React.FC<Props> = ({
   updatedAt,
   totalSold,
   variationList,
+  meta,
   hasVariation,
   imageGroups,
   categoryName,
@@ -336,6 +345,8 @@ const SingleItem: React.FC<Props> = ({
   const [adjustDialogOpen, setAdjustDialogOpen] = useState(false);
   const [historyDialogOpen, setHistoryDialogOpen] = useState(false);
   const [isVariationPopoverOpen, setIsVariationPopoverOpen] = useState(false);
+  const [metaExpanded, setMetaExpanded] = useState(false);
+  const hasMeta = hasAnyMeta({ meta, variation: variationList });
   const [thumbLightboxImages, setThumbLightboxImages] = useState<string[]>([]);
   const [thumbLightboxIndex, setThumbLightboxIndex] = useState(0);
 
@@ -353,182 +364,233 @@ const SingleItem: React.FC<Props> = ({
 
   return (
     <>
-    <TableRow className='group border-b border-zinc-100 transition-colors hover:bg-zinc-50/60 align-top rounded-md'>
-      {/* Image + active dot */}
-      <TableCell className='pt-3 pl-3 pr-2 w-20'>
-        <div className='relative inline-block'>
-          <img
-            src={image || PlaceHolderImage}
-            alt={title}
-            className={`h-16 w-20 rounded-lg object-cover border border-zinc-200 cursor-pointer ${
-              !active ? "opacity-50" : ""
-            }`}
-            onClick={handleThumbnailClick}
-            onError={(e) => {
-              (e.target as HTMLImageElement).src = PlaceHolderImage;
-            }}
-          />
-          <span
-            className={`absolute bottom-0.5 right-0.5 h-1.5 w-1.5 rounded-full ring-2 ring-white ${
-              active ? "bg-emerald-500" : "bg-zinc-300"
-            }`}
-          />
-        </div>
-      </TableCell>
-
-      {/* Name + SKU */}
-      <TableCell className='pt-3 min-w-[140px] max-w-[180px]'>
-        <p className='truncate text-[13px] font-bold text-zinc-900 leading-tight'>
-          {title}
-        </p>
-        <p className='mt-0.5 font-mono text-[11px] font-semibold text-zinc-500'>
-          {sku}
-        </p>
-      </TableCell>
-
-      {/* Category */}
-      <TableCell className='pt-3 whitespace-nowrap text-[12px] font-semibold text-zinc-600'>
-        {categoryName}
-      </TableCell>
-
-      {/* Price */}
-      <TableCell className='pt-3'>
-        <span
-          className='text-[15px] font-bold text-zinc-900 leading-none'
-          style={{ fontFamily: "'Cormorant Garamond', 'Georgia', serif" }}>
-          ৳{unitPrice.toLocaleString()}
-        </span>
-      </TableCell>
-
-      {/* Variations — different displays based on mode */}
-      <TableCell className='pt-3 pb-3'>
-        {variationDisplayMode === "list" ? (
-          <Popover
-            open={isVariationPopoverOpen}
-            onOpenChange={setIsVariationPopoverOpen}>
-            <PopoverTrigger asChild>
-              <div className='cursor-pointer'>
-                <VariationDisplayList
-                  variationList={variationList}
-                  onExpand={() => setIsVariationPopoverOpen(true)}
-                  imageGroups={imageGroups}
-                />
-              </div>
-            </PopoverTrigger>
-            <PopoverContent className='w-96' side='bottom' align='start'>
-              <VariationPopoverContent variationList={variationList} imageGroups={imageGroups} />
-            </PopoverContent>
-          </Popover>
-        ) : (
-          <VariationDisplayGrid variationList={variationList} imageGroups={imageGroups} />
-        )}
-      </TableCell>
-
-      {/* Total stock */}
-      <TableCell className='pt-3'>
-        <StockBadge quantity={quantity} />
-      </TableCell>
-
-      {/* Sold / Returned */}
-      <TableCell className='pt-3'>
-        <SoldReturnedStat totalSold={totalSold} totalReturned={totalReturned} />
-      </TableCell>
-
-      {/* Updated at */}
-      <TableCell className='pt-3 hidden md:table-cell'>
-        <p className='text-[12px] font-semibold text-zinc-600 whitespace-nowrap leading-relaxed'>
-          {dayjs(updatedAt).format("DD MMM YYYY")}
-          <br />
-          <span className='text-[11px] font-medium text-zinc-400'>
-            {dayjs(updatedAt).format("hh:mm A")}
-          </span>
-        </p>
-      </TableCell>
-
-      {/* Actions */}
-      {hasSomePermissionsForPage("product", ["edit", "delete"]) && (
-        <TableCell className='pt-3 pr-3'>
-          <div className='flex items-center justify-end gap-1'>
-            {hasRequiredPermission("product", "edit") && (
-              <ActionButton
-                label='Edit'
-                icon={EditIcon}
-                onClick={() => handleUpdateProduct(id)}
+      <TableRow className='group border-b border-zinc-100 transition-colors hover:bg-zinc-50/60 align-top rounded-md'>
+        {/* Meta expander — only rows that actually have meta get the affordance */}
+        <TableCell className='pt-3 pl-3 pr-0 w-8 align-middle'>
+          {hasMeta && (
+            <button
+              onClick={() => setMetaExpanded((v) => !v)}
+              aria-expanded={metaExpanded}
+              aria-label={metaExpanded ? "Hide meta data" : "Show meta data"}
+              className='flex h-6 w-6 items-center justify-center rounded-md text-zinc-400 transition-colors hover:bg-zinc-100 hover:text-zinc-700'>
+              <ChevronRight
+                className={cn(
+                  "h-3.5 w-3.5 transition-transform duration-200",
+                  metaExpanded && "rotate-90",
+                )}
               />
-            )}
-            {hasRequiredPermission("product", "analytics") && (
-              <ActionButton
-                label='View details'
-                icon={BarChart2}
-                onClick={() => handleViewProductDetails(id)}
-              />
-            )}
-            <ActionButton
-              label='Adjust stock'
-              icon={SlidersHorizontal}
-              onClick={() => setAdjustDialogOpen(true)}
+            </button>
+          )}
+        </TableCell>
+
+        {/* Image + active dot */}
+        <TableCell className='pt-3 pl-3 pr-2 w-20'>
+          <div className='relative inline-block'>
+            <img
+              src={image || PlaceHolderImage}
+              alt={title}
+              className={`h-16 w-20 rounded-lg object-cover border border-zinc-200 cursor-pointer ${
+                !active ? "opacity-50" : ""
+              }`}
+              onClick={handleThumbnailClick}
+              onError={(e) => {
+                (e.target as HTMLImageElement).src = PlaceHolderImage;
+              }}
             />
-            <ActionButton
-              label='View history'
-              icon={History}
-              onClick={() => setHistoryDialogOpen(true)}
+            <span
+              className={`absolute bottom-0.5 right-0.5 h-1.5 w-1.5 rounded-full ring-2 ring-white ${
+                active ? "bg-emerald-500" : "bg-zinc-300"
+              }`}
             />
-            <div className='mx-0.5 h-4 w-px bg-zinc-200' />
-            {hasRequiredPermission("product", "delete") && (
-              <ActionButton
-                label='Delete'
-                icon={Trash2}
-                danger
-                onClick={() => dialogBtn.current?.click()}
-              />
-            )}
           </div>
         </TableCell>
-      )}
 
-      {/* Hidden delete request trigger */}
-      <DeleteRequestDialog
-        productId={id}
-        productName={title}
-        onSuccess={refreshProductList}>
-        <button className='hidden' ref={dialogBtn} />
-      </DeleteRequestDialog>
+        {/* Name + SKU */}
+        <TableCell className='pt-3 min-w-[140px] max-w-[180px]'>
+          <p className='truncate text-[13px] font-bold text-zinc-900 leading-tight'>
+            {title}
+          </p>
+          <p className='mt-0.5 font-mono text-[11px] font-semibold text-zinc-500'>
+            {sku}
+          </p>
+        </TableCell>
 
-      {adjustDialogOpen && (
-        <ProductAdjustmentDialog
-          open={adjustDialogOpen}
-          onOpenChange={setAdjustDialogOpen}
+        {/* Category */}
+        <TableCell className='pt-3 whitespace-nowrap text-[12px] font-semibold text-zinc-600'>
+          {categoryName}
+        </TableCell>
+
+        {/* Price */}
+        <TableCell className='pt-3'>
+          <span
+            className='text-[15px] font-bold text-zinc-900 leading-none'
+            style={{ fontFamily: "'Cormorant Garamond', 'Georgia', serif" }}>
+            ৳{unitPrice.toLocaleString()}
+          </span>
+        </TableCell>
+
+        {/* Variations — different displays based on mode */}
+        <TableCell className='pt-3 pb-3'>
+          {variationDisplayMode === "list" ? (
+            <Popover
+              open={isVariationPopoverOpen}
+              onOpenChange={setIsVariationPopoverOpen}>
+              <PopoverTrigger asChild>
+                <div className='cursor-pointer'>
+                  <VariationDisplayList
+                    variationList={variationList}
+                    onExpand={() => setIsVariationPopoverOpen(true)}
+                    imageGroups={imageGroups}
+                  />
+                </div>
+              </PopoverTrigger>
+              <PopoverContent className='w-96' side='bottom' align='start'>
+                <VariationPopoverContent
+                  variationList={variationList}
+                  imageGroups={imageGroups}
+                />
+              </PopoverContent>
+            </Popover>
+          ) : (
+            <VariationDisplayGrid
+              variationList={variationList}
+              imageGroups={imageGroups}
+            />
+          )}
+        </TableCell>
+
+        {/* Total stock */}
+        <TableCell className='pt-3'>
+          <StockBadge quantity={quantity} />
+        </TableCell>
+
+        {/* Sold / Returned */}
+        {hasRequiredPermission("product", "analytics") ? (
+          <TableCell className='pt-3'>
+            <SoldReturnedStat
+              totalSold={totalSold}
+              totalReturned={totalReturned}
+            />
+          </TableCell>
+        ) : (
+          <TableCell className='pt-3'>
+            <span className='text-[12px] font-medium text-zinc-400'>N/A</span>
+          </TableCell>
+        )}
+
+        {/* Updated at */}
+        <TableCell className='pt-3 hidden md:table-cell'>
+          <p className='text-[12px] font-semibold text-zinc-600 whitespace-nowrap leading-relaxed'>
+            {dayjs(updatedAt).format("DD MMM YYYY")}
+            <br />
+            <span className='text-[11px] font-medium text-zinc-400'>
+              {dayjs(updatedAt).format("hh:mm A")}
+            </span>
+          </p>
+        </TableCell>
+
+        {/* Actions */}
+        {hasSomePermissionsForPage("product", ["edit", "delete"]) && (
+          <TableCell className='pt-3 pr-3'>
+            <div className='flex items-center justify-end gap-1'>
+              {hasRequiredPermission("product", "edit") && (
+                <ActionButton
+                  label='Edit'
+                  icon={EditIcon}
+                  onClick={() => handleUpdateProduct(id)}
+                />
+              )}
+              {hasRequiredPermission("product", "analytics") && (
+                <ActionButton
+                  label='View details'
+                  icon={BarChart2}
+                  onClick={() => handleViewProductDetails(id)}
+                />
+              )}
+              {hasSomePermissionsForPage("product", [
+                "stock_increase",
+                "stock_decrease",
+              ]) && (
+                <ActionButton
+                  label='Adjust stock'
+                  icon={SlidersHorizontal}
+                  onClick={() => setAdjustDialogOpen(true)}
+                />
+              )}
+              {hasRequiredPermission("product", "analytics") && (
+                <ActionButton
+                  label='View history'
+                  icon={History}
+                  onClick={() => setHistoryDialogOpen(true)}
+                />
+              )}
+              <div className='mx-0.5 h-4 w-px bg-zinc-200' />
+              {hasRequiredPermission("product", "delete") && (
+                <ActionButton
+                  label='Delete'
+                  icon={Trash2}
+                  danger
+                  onClick={() => dialogBtn.current?.click()}
+                />
+              )}
+            </div>
+          </TableCell>
+        )}
+
+        {/* Hidden delete request trigger */}
+        <DeleteRequestDialog
           productId={id}
           productName={title}
-          productSku={sku}
-          productThumbnail={image}
-          currentStock={quantity}
-          hasVariation={hasVariation}
-          variations={variationList}
-          onSuccess={() => refreshProductList?.()}
-        />
+          onSuccess={refreshProductList}>
+          <button className='hidden' ref={dialogBtn} />
+        </DeleteRequestDialog>
+
+        {adjustDialogOpen && (
+          <ProductAdjustmentDialog
+            open={adjustDialogOpen}
+            onOpenChange={setAdjustDialogOpen}
+            productId={id}
+            productName={title}
+            productSku={sku}
+            productThumbnail={image}
+            currentStock={quantity}
+            hasVariation={hasVariation}
+            variations={variationList}
+            onSuccess={() => refreshProductList?.()}
+          />
+        )}
+
+        {historyDialogOpen && (
+          <ProductAdjustmentHistory
+            open={historyDialogOpen}
+            onOpenChange={setHistoryDialogOpen}
+            productId={id}
+            productName={title}
+          />
+        )}
+      </TableRow>
+
+      {/* Expanded meta detail row (product-level + per-variant entries) */}
+      {metaExpanded && hasMeta && (
+        <TableRow className='border-b border-zinc-100 bg-zinc-50/50 hover:bg-zinc-50/50'>
+          <TableCell colSpan={10} className='px-0 py-0'>
+            <div className='animate-in fade-in slide-in-from-top-1 duration-200 border-l-2 border-indigo-200'>
+              <ProductMetaDetail meta={meta} variationList={variationList} />
+            </div>
+          </TableCell>
+        </TableRow>
       )}
 
-      {historyDialogOpen && (
-        <ProductAdjustmentHistory
-          open={historyDialogOpen}
-          onOpenChange={setHistoryDialogOpen}
-          productId={id}
-          productName={title}
+      {/* Thumbnail image lightbox */}
+      {thumbLightboxImages.length > 0 && (
+        <ImageLightbox
+          images={thumbLightboxImages}
+          initialIndex={thumbLightboxIndex}
+          open={thumbLightboxImages.length > 0}
+          onClose={() => setThumbLightboxImages([])}
+          alt={title}
         />
       )}
-    </TableRow>
-
-    {/* Thumbnail image lightbox */}
-    {thumbLightboxImages.length > 0 && (
-      <ImageLightbox
-        images={thumbLightboxImages}
-        initialIndex={thumbLightboxIndex}
-        open={thumbLightboxImages.length > 0}
-        onClose={() => setThumbLightboxImages([])}
-        alt={title}
-      />
-    )}
     </>
   );
 };

@@ -60,12 +60,12 @@ export function ProductPagination({
     <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 py-4 px-2 sm:px-4">
       {/* Left side: Items range info - simplified on mobile */}
       <div className="flex items-center gap-2 sm:gap-4">
-        <p className="text-sm text-gray-600 hidden sm:inline">
-          Showing <span className="font-medium text-gray-900">{startItem}</span> to{" "}
-          <span className="font-medium text-gray-900">{endItem}</span> of{" "}
-          <span className="font-medium text-gray-900">{totalItems}</span> products
+        <p className="text-xs text-muted-foreground hidden sm:inline">
+          Showing <span className="font-medium text-foreground">{startItem}</span> to{" "}
+          <span className="font-medium text-foreground">{endItem}</span> of{" "}
+          <span className="font-medium text-foreground">{totalItems}</span> products
         </p>
-        <p className="text-sm font-medium text-gray-900 sm:hidden">
+        <p className="text-xs font-medium text-foreground sm:hidden">
           Page {currentPage} of {totalPages}
         </p>
       </div>
@@ -74,11 +74,11 @@ export function ProductPagination({
       <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4 w-full sm:w-auto">
         {/* Page Size Selector - hidden on mobile/tablet */}
         <div className="flex items-center gap-2 hidden md:flex">
-          <span className="text-sm text-gray-600">Per page:</span>
+          <span className="text-xs text-muted-foreground">Per page:</span>
           <select
             value={pageSize.toString()}
             onChange={(e) => onPageSizeChange(parseInt(e.target.value))}
-            className="h-9 w-[80px] rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:cursor-not-allowed disabled:opacity-50"
+            className="h-8 w-[70px] rounded-md border border-border bg-background px-2 py-1 text-xs text-foreground focus:border-ring focus:outline-none focus:ring-2 focus:ring-ring/20 disabled:cursor-not-allowed disabled:opacity-50"
             disabled={isLoading}
           >
             <option value="10">10</option>
@@ -96,7 +96,7 @@ export function ProductPagination({
             size="sm"
             onClick={() => onPageChange(currentPage - 1)}
             disabled={currentPage === 1 || isLoading}
-            className="h-10 w-10 sm:h-8 sm:w-8 p-0"
+            className="h-10 w-10 sm:h-8 sm:w-8 p-0 border-border"
             aria-label="Previous page"
           >
             <ChevronLeft className="h-4 w-4" />
@@ -107,7 +107,7 @@ export function ProductPagination({
             page === "..." ? (
               <span
                 key={`ellipsis-${index}`}
-                className="px-2 text-sm text-gray-500"
+                className="px-2 text-xs text-muted-foreground/70"
               >
                 ...
               </span>
@@ -120,8 +120,8 @@ export function ProductPagination({
                 disabled={isLoading}
                 className={`h-10 w-10 sm:h-8 sm:w-8 ${
                   currentPage === page
-                    ? "bg-blue-600 hover:bg-blue-700 text-white"
-                    : ""
+                    ? "bg-primary hover:bg-primary/90 text-primary-foreground"
+                    : "border-border text-muted-foreground hover:text-foreground"
                 }`}
               >
                 {page}
@@ -135,7 +135,7 @@ export function ProductPagination({
             size="sm"
             onClick={() => onPageChange(currentPage + 1)}
             disabled={currentPage === totalPages || isLoading}
-            className="h-10 w-10 sm:h-8 sm:w-8 p-0"
+            className="h-10 w-10 sm:h-8 sm:w-8 p-0 border-border"
             aria-label="Next page"
           >
             <ChevronRight className="h-4 w-4" />

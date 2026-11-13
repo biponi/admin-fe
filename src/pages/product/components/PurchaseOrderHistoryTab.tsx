@@ -102,7 +102,7 @@ const PurchaseOrderHistoryTab = ({
   return (
     <div className='space-y-6'>
       {/* Summary Cards */}
-      <div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4'>
+      <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4'>
         <div className='bg-white rounded-lg border border-slate-100 p-4 hover:border-slate-200 transition-colors'>
           <div className='flex items-start justify-between'>
             <div className='space-y-1'>
@@ -535,7 +535,7 @@ const PurchaseOrderHistoryTab = ({
         </Drawer>
       ) : (
         <Sheet open={showDetails} onOpenChange={setShowDetails}>
-          <SheetContent className='w-full sm:max-w-2xl'>
+          <SheetContent className='w-full md:max-w-2xl'>
             <SheetHeader>
               <SheetTitle>
                 Purchase #{selectedPurchase?.purchaseNumber}

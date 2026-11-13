@@ -206,25 +206,6 @@ export const getDivisions = async (): Promise<
   }
 };
 
-/**
- * Create a new district (backend "division"). Areas can then be added to it
- * via createDistrict.
- */
-export const createDivision = async (payload: {
-  division: string;
-  bnName?: string;
-}): Promise<
-  ApiResponse<{ divisionId: string; division: string; bnName: string }>
-> => {
-  try {
-    const response = await axiosInstance.post(`${baseURL}/divisions`, payload);
-    return { success: true, data: response.data.data.division };
-  } catch (error: any) {
-    console.error("Error creating division:", error.message);
-    return handleApiError(error);
-  }
-};
-
 // ---------------------------------------------------------- Courier sync
 
 export const syncCourierMappings = async (

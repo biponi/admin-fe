@@ -21,6 +21,10 @@ import ViewRolePage from "../../pages/role/viewRolePage";
 import ChatPage from "../../pages/chat";
 import { JobsManagement } from "../../pages/settings";
 import LocationSettings from "../../pages/settings/LocationSettings";
+import PrepaymentSettings from "../../pages/settings/PrepaymentSettings";
+import FraudManagementPage from "../../pages/fraud";
+import BkashTransactionsPage from "../../pages/bkash-transactions";
+import PendingOrdersPage from "../../pages/pending-orders";
 import ReportPage from "../../pages/report";
 import DailyReportPage from "../../pages/report/DailyReport";
 import ReportsV2 from "../../pages/reports-v2";
@@ -102,6 +106,30 @@ export const ProtectedRoutes = () => {
         element={
           <ProtectedRoute page='activity' requiredAction='view'>
             <ActivityLogPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path='/fraud'
+        element={
+          <ProtectedRoute page='fraud' requiredAction='view'>
+            <FraudManagementPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path='/bkash-transactions'
+        element={
+          <ProtectedRoute page='bkashtransaction' requiredAction='view'>
+            <BkashTransactionsPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path='/pending-orders'
+        element={
+          <ProtectedRoute page='pendingorder' requiredAction='view'>
+            <PendingOrdersPage />
           </ProtectedRoute>
         }
       />
@@ -291,6 +319,18 @@ export const ProtectedRoutes = () => {
           <ProtectedRoute page='settings' requiredAction='locations_management'>
             <MainViewComponent title='Location Settings'>
               <LocationSettings />
+            </MainViewComponent>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path='/settings/prepayment-rules'
+        element={
+          <ProtectedRoute
+            page='settings'
+            requiredAction='prepayment_management'>
+            <MainViewComponent title='Prepayment Rules'>
+              <PrepaymentSettings />
             </MainViewComponent>
           </ProtectedRoute>
         }

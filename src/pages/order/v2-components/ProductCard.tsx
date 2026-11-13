@@ -1,4 +1,4 @@
-import { ShoppingCart, Palette } from "lucide-react";
+import { ShoppingCart, Palette, Check } from "lucide-react";
 import PlaceHolderImage from "../../../assets/placeholder.svg";
 import type { IProduct } from "../../product/interface";
 
@@ -7,18 +7,24 @@ interface ProductCardProps {
   onAddToCart: (product: IProduct) => void;
   onProductClick: (product: IProduct) => void;
   isLoading?: boolean;
+  /** Total quantity of this product already in the cart (all variations). */
+  cartQuantity?: number;
 }
+
+const LOW_STOCK_THRESHOLD = 5;
 
 export function ProductCard({
   product,
   onAddToCart,
   onProductClick,
   isLoading = false,
+  cartQuantity = 0,
 }: ProductCardProps) {
   const hasVariations =
     product.hasVariation === true ||
     (product.variation && product.variation.length > 0);
   const inStock = product.quantity > 0;
+  const lowStock = inStock && product.quantity <= LOW_STOCK_THRESHOLD;
   const hasDiscount = product.discount > 0;
 
   const discountPercent =
@@ -48,132 +54,122 @@ export function ProductCard({
   return (
     <div
       className={`
-        group relative overflow-hidden rounded-md border border-zinc-200
-        bg-white transition-all duration-300
+        group relative md:shadow  overflow-hidden rounded-md border bg-background transition-colors duration-200
         ${
           inStock
-            ? "cursor-pointer hover:-translate-y-0.5 hover:border-zinc-400 hover:shadow-[0_8px_32px_-8px_rgba(0,0,0,0.12)]"
-            : "opacity-55 cursor-default"
+            ? "border-border hover:border-border hover:shadow-sm cursor-pointer"
+            : "border-border opacity-60 cursor-default"
         }
       `}
       onClick={handleCardClick}>
       {/* Image */}
-      <div className='relative aspect-square w-full overflow-hidden bg-zinc-50'>
+      <div className='relative aspect-square w-full overflow-hidden bg-gray-50 md:p-1.5'>
         <img
           src={getImageUrl()}
           alt={product.name}
           loading='lazy'
-          className='h-full w-full object-cover transition-transform duration-500 group-hover:scale-105'
+          className={
+            inStock
+              ? "h-full  w-full object-cover rounded-md"
+              : "h-full  w-full object-cover opacity-60 grayscale rounded-md"
+          }
           onError={(e) => {
             (e.target as HTMLImageElement).src = PlaceHolderImage;
           }}
         />
 
-        {/* Badges */}
-        <div className='absolute left-2.5 top-2.5 z-10 flex flex-col gap-1.5'>
-          {hasVariations && (
-            <span className='rounded-sm bg-white/95 px-2 py-0.5 text-[10px] font-medium uppercase tracking-widest text-zinc-700 shadow-sm'>
-              Variations
-            </span>
-          )}
+        {/* Stock pill — quiet when healthy, amber when low, dark when out */}
+        <div className='absolute left-2 top-2 z-10 flex flex-col gap-1 items-start'>
           {!inStock && (
-            <span className='rounded-sm bg-zinc-800 px-2 py-0.5 text-[10px] font-medium uppercase tracking-widest text-zinc-300'>
-              Out of Stock
+            <span className='rounded-full bg-foreground/85 px-2 py-0.5 text-[10px] font-medium text-background backdrop-blur-sm'>
+              Sold out
             </span>
           )}
-          {hasDiscount && (
-            <span className='rounded-sm bg-emerald-600 px-2 py-0.5 text-[10px] font-medium uppercase tracking-widest text-emerald-50'>
-              {discountPercent}
-              {product.discountType === "%" ? "%" : "tk"} off
+          {lowStock && (
+            <span className='rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-medium text-amber-700'>
+              {product.quantity} left
             </span>
           )}
         </div>
 
-        {/* Stock pill */}
-        {inStock && (
-          <div className='absolute bottom-2.5 right-2.5 rounded-sm bg-black/60 px-2 py-1 text-[10px] tracking-wide text-white backdrop-blur-sm'>
-            {product.quantity} left
-          </div>
-        )}
-
-        {/* Hover CTA */}
-        {inStock && (
-          <div className='absolute inset-0 flex items-center justify-center bg-black/0 transition-all duration-300 group-hover:bg-black/8'>
-            <div className='flex h-10 w-10 scale-75 items-center justify-center rounded-full bg-white opacity-0 shadow-md transition-all duration-300 group-hover:scale-100 group-hover:opacity-100'>
-              {hasVariations ? (
-                <Palette className='h-4 w-4 text-zinc-700' />
-              ) : (
-                <ShoppingCart className='h-4 w-4 text-zinc-700' />
-              )}
-            </div>
-          </div>
+        {/* Discount pill */}
+        {hasDiscount && (
+          <span className='absolute right-2 top-2 z-10 rounded-full bg-emerald-100 px-2 py-0.5 text-[10px] font-semibold text-emerald-700'>
+            {discountPercent}
+            {product.discountType === "%" ? "%" : "tk"} off
+          </span>
         )}
       </div>
 
       {/* Info */}
-      <div className='p-3.5'>
-        {/* Categories */}
-        {product.categoryNames && product.categoryNames.length > 0 && (
-          <div className='mb-1.5 flex gap-1.5'>
-            {product.categoryNames.slice(0, 2).map((name, i) => (
-              <span
-                key={name}
-                className='text-[9px] uppercase tracking-[0.08em] text-zinc-400 font-light'>
-                {i > 0 && <span className='mr-1.5 opacity-40'>·</span>}
-                {name}
-              </span>
-            ))}
-          </div>
-        )}
-
+      <div className='p-2.5'>
         {/* Name */}
-        <h3 className='font-serif text-[15px] font-normal leading-snug tracking-[0.01em] text-zinc-900'>
+        <h3 className='uppercase  line-clamp-2  text-[13px] font-medium leading-snug text-foreground'>
           {product.name}
         </h3>
 
-        {/* SKU */}
-        <p className='mt-1 text-[10px] font-light tracking-wide text-zinc-400'>
-          SKU: {product.sku}
+        {/* Meta */}
+        <p className='truncate text-[11px] text-muted-foreground/70'>
+          {product.sku}
+          {product.categoryNames && product.categoryNames.length > 0 && (
+            <> · {product.categoryNames[0]}</>
+          )}
+          {hasVariations && <> · {product.variation.length} options</>}
         </p>
 
-        {/* Divider */}
-        <div className='my-2.5 h-px bg-zinc-100' />
-
         {/* Price + action */}
-        <div className='flex items-end justify-between'>
-          <div className='flex items-baseline gap-1.5'>
+        <div className='mt-1 flex items-center justify-between gap-2'>
+          <div className='flex items-baseline gap-1.5 min-w-0'>
             <span
-              className={`font-serif text-[19px] font-medium leading-none ${
-                hasDiscount ? "text-emerald-700" : "text-zinc-900"
+              className={`text-sm font-semibold leading-none tabular-nums ${
+                hasDiscount ? "text-emerald-700" : "text-foreground"
               }`}>
               ৳{displayPrice}
             </span>
             {hasDiscount && (
-              <span className='text-[11px] font-light text-zinc-400 line-through'>
+              <span className='text-[11px] text-muted-foreground/70 line-through tabular-nums'>
                 ৳{product.unitPrice.toFixed(2)}
               </span>
             )}
           </div>
-        </div>
 
-        {/* Action label */}
-        <button
-          disabled={!inStock || isLoading}
-          className='mt-2 hidden w-full items-center gap-1.5 text-[10px] uppercase tracking-[0.07em] font-medium text-zinc-400 transition-colors duration-200 group-hover:text-zinc-800 disabled:cursor-not-allowed disabled:opacity-50'
-          onClick={(e) => {
-            e.stopPropagation();
-            handleCardClick(e);
-          }}>
-          {hasVariations ? (
-            <>
-              <Palette className='h-3 w-3' /> Select variation
-            </>
-          ) : (
-            <>
-              <ShoppingCart className='h-3 w-3' /> Add to cart
-            </>
-          )}
-        </button>
+          {/* Add / select variation — always visible, not hover-only */}
+          <div className='relative shrink-0'>
+            <button
+              type='button'
+              disabled={!inStock || isLoading}
+              title={
+                !inStock
+                  ? "Out of stock"
+                  : hasVariations
+                    ? "Select variation"
+                    : "Add to cart"
+              }
+              className={`flex h-8 w-8 items-center justify-center rounded-md transition-all duration-200 disabled:cursor-not-allowed disabled:opacity-50 ${
+                inStock
+                  ? "bg-primary text-primary-foreground hover:bg-primary/90 shadow-sm"
+                  : "border border-border bg-muted/50 text-muted-foreground/70"
+              }`}
+              onClick={(e) => {
+                e.stopPropagation();
+                handleCardClick(e);
+              }}>
+              {hasVariations ? (
+                <Palette className='h-4 w-4' />
+              ) : (
+                <ShoppingCart className='h-4 w-4' />
+              )}
+            </button>
+
+            {/* In-cart chip — emerald "applied" feedback */}
+            {cartQuantity > 0 && (
+              <span className='absolute -top-1.5 -right-1.5 flex items-center gap-0.5 rounded-full bg-emerald-500 px-1.5 py-0.5 text-[9px] font-semibold text-white shadow-sm'>
+                <Check className='h-2.5 w-2.5' />
+                {cartQuantity}
+              </span>
+            )}
+          </div>
+        </div>
       </div>
     </div>
   );

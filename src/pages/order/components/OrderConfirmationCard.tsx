@@ -4,6 +4,7 @@ import { Button } from "../../../components/ui/button";
 import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "sonner";
 import {
+  Ban,
   Phone,
   MapPin,
   Package,
@@ -28,6 +29,7 @@ import {
 } from "../../../components/ui/popover";
 import EditCustomerInformation from "../../order/editOrderCustomer";
 import { ModifyOrderModal } from "../../../components/order/ModifyOrderModal";
+import useRoleCheck from "../../auth/hooks/useRoleCheck";
 import { cn } from "../../../lib/utils";
 
 interface OrderConfirmationCardProps {
@@ -48,10 +50,17 @@ export const OrderConfirmationCard: React.FC<OrderConfirmationCardProps> = ({
   const [showModifyModal, setShowModifyModal] = useState(false);
   const [showFullDetails, setShowFullDetails] = useState(false);
   const [localOrder, setLocalOrder] = useState(order);
+  const { canModifyOrder } = useRoleCheck();
+
+  const canConfirm = canModifyOrder("orderconfirmation", "confirm", order);
+  const canCancel = canModifyOrder("orderconfirmation", "cancel", order);
+  const canEdit =
+    canModifyOrder("order", "edit", order) ||
+    canModifyOrder("order", "modify", order);
 
   const fraudRisk = order.fraudDetection;
   const hasInventoryIssues = order.products.some((p) => p.quantity <= 0);
-  const hasAlerts = fraudRisk?.isFraud || hasInventoryIssues;
+  const hasAlerts = fraudRisk?.isFraud || fraudRisk?.blocked || hasInventoryIssues;
 
   const formatDate = (dateString: string) => {
     try {
@@ -80,6 +89,14 @@ export const OrderConfirmationCard: React.FC<OrderConfirmationCardProps> = ({
           <div className='flex items-center gap-2 px-4 py-2 bg-red-50 border-b border-red-100'>
             <AlertTriangle className='w-3.5 h-3.5 text-red-500 shrink-0' />
             <div className='flex items-center gap-2 flex-wrap'>
+              {fraudRisk?.blocked && (
+                <span className='text-[11px] font-semibold text-rose-700'>
+                  Customer blocked
+                </span>
+              )}
+              {fraudRisk?.blocked && (fraudRisk?.isFraud || hasInventoryIssues) && (
+                <span className='text-red-300'>·</span>
+              )}
               {fraudRisk?.isFraud && (
                 <span className='text-[11px] font-semibold text-red-600'>
                   Fraud risk detected
@@ -391,32 +408,38 @@ export const OrderConfirmationCard: React.FC<OrderConfirmationCardProps> = ({
 
         {/* ─── Action footer ─── */}
         <div className='px-4 py-3 mt-auto border-t border-gray-100 flex items-center gap-2'>
-          <button
-            onClick={() => setShowEditSheet(true)}
-            className='flex items-center justify-center gap-1.5 flex-1 h-9 rounded-lg
-                       border border-gray-200 bg-white hover:bg-gray-50 text-xs font-semibold
-                       text-gray-600 transition-colors'>
-            <Edit className='w-3.5 h-3.5' />
-            <span className='hidden sm:inline'>Edit</span>
-          </button>
+          {canEdit && (
+            <button
+              onClick={() => setShowEditSheet(true)}
+              className='flex items-center justify-center gap-1.5 flex-1 h-9 rounded-lg
+                         border border-gray-200 bg-white hover:bg-gray-50 text-xs font-semibold
+                         text-gray-600 transition-colors'>
+              <Edit className='w-3.5 h-3.5' />
+              <span className='hidden sm:inline'>Edit</span>
+            </button>
+          )}
 
-          <button
-            onClick={() => onCancel(order)}
-            className='flex items-center justify-center gap-1.5 flex-1 h-9 rounded-lg
-                       border border-red-200 bg-red-50 hover:bg-red-100 text-xs font-semibold
-                       text-red-600 transition-colors'>
-            <XCircle className='w-3.5 h-3.5' />
-            <span className='hidden sm:inline'>Cancel</span>
-          </button>
+          {canCancel && (
+            <button
+              onClick={() => onCancel(order)}
+              className='flex items-center justify-center gap-1.5 flex-1 h-9 rounded-lg
+                         border border-red-200 bg-red-50 hover:bg-red-100 text-xs font-semibold
+                         text-red-600 transition-colors'>
+              <XCircle className='w-3.5 h-3.5' />
+              <span className='hidden sm:inline'>Cancel</span>
+            </button>
+          )}
 
-          <button
-            onClick={() => onConfirm(order)}
-            className='flex items-center justify-center gap-1.5 flex-[2] h-9 rounded-lg
-                       bg-indigo-600 hover:bg-indigo-700 text-xs font-bold text-white
-                       transition-colors shadow-sm shadow-indigo-100'>
-            <CheckCircle2 className='w-3.5 h-3.5' />
-            Confirm order
-          </button>
+          {canConfirm && (
+            <button
+              onClick={() => onConfirm(order)}
+              className='flex items-center justify-center gap-1.5 flex-[2] h-9 rounded-lg
+                         bg-indigo-600 hover:bg-indigo-700 text-xs font-bold text-white
+                         transition-colors shadow-sm shadow-indigo-100'>
+              <CheckCircle2 className='w-3.5 h-3.5' />
+              Confirm order
+            </button>
+          )}
         </div>
       </div>
 

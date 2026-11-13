@@ -17,7 +17,7 @@ const MainView: React.FC<Props> = ({ title, children }) => {
   return (
     <div className='flex flex-1 flex-col gap-4'>
       {/* Title is now handled by SiteHeader with breadcrumbs */}
-      <main className='gap-2 overflow-auto w-full md:w-[98%] md:mx-2'>
+      <main className='gap-2 w-full md:px-2'>
         {children}
       </main>
     </div>

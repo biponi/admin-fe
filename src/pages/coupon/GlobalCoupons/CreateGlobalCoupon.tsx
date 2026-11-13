@@ -1,6 +1,8 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Input } from "../../../components/ui/input";
+import { MobilePage } from "../../../components/mobile";
+import { PageHeader } from "../../../components/PageHeader";
 import {
   ArrowLeft,
   Calendar,
@@ -9,6 +11,7 @@ import {
   BadgeDollarSign,
   Settings2,
   Zap,
+  Ticket,
 } from "lucide-react";
 import Swal from "sweetalert2";
 import * as couponAPI from "../../../api/coupon";
@@ -251,34 +254,63 @@ export default function CreateGlobalCoupon() {
   };
 
   return (
-    <div className='min-h-screen bg-slate-50/60'>
-      <div className='max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6'>
-        {/* Page header */}
+    <MobilePage
+      title='Create Global Coupon'
+      icon={<Ticket className='h-4 w-4 text-primary' />}
+      subtitle='Public coupon available to all customers'
+      back
+      onBack={() => navigate("/coupons/global")}
+      stickyActions={
         <div className='flex items-center gap-3'>
           <button
             type='button'
             onClick={() => navigate("/coupons/global")}
-            className='inline-flex items-center gap-1.5 text-sm text-slate-500 hover:text-slate-800 transition-colors'>
-            <ArrowLeft className='h-4 w-4' />
-            Back
+            className='m3-ripple h-10 flex-1 text-sm font-medium text-slate-600 bg-white border border-slate-200 rounded-full transition-colors'>
+            Cancel
           </button>
-          <span className='text-slate-300'>/</span>
-          <div className='flex items-center gap-2'>
-            <div className='w-8 h-8 rounded-lg bg-indigo-600 flex items-center justify-center shadow-sm'>
-              <Tag className='h-4 w-4 text-white' />
-            </div>
-            <div>
-              <h1 className='text-lg font-semibold text-slate-900 leading-tight'>
-                Create Global Coupon
-              </h1>
-              <p className='text-xs text-slate-500'>
-                Public coupon available to all customers
-              </p>
-            </div>
-          </div>
+          <button
+            type='submit'
+            form='create-global-coupon-form'
+            disabled={loading}
+            className='m3-ripple h-10 flex-[2] flex items-center justify-center gap-2 text-sm font-semibold text-white bg-indigo-600 rounded-full active:bg-indigo-800 disabled:opacity-60 disabled:cursor-not-allowed transition-all shadow-sm shadow-indigo-200'>
+            {loading ? (
+              <>
+                <span className='w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin' />
+                Creating…
+              </>
+            ) : (
+              <>
+                <Zap className='h-4 w-4' />
+                Create Coupon
+              </>
+            )}
+          </button>
+        </div>
+      }>
+    <div className='min-h-screen bg-slate-50/60'>
+      <div className='max-w-4xl mx-auto px-4 md:px-6 lg:px-8 py-6 space-y-6'>
+        {/* Page header */}
+        <div className='hidden md:block'>
+          <PageHeader
+            icon={<Ticket className='h-5 w-5' />}
+            title='Create Global Coupon'
+            subtitle='Public coupon available to all customers'
+            actions={
+              <button
+                type='button'
+                onClick={() => navigate("/coupons/global")}
+                className='inline-flex items-center gap-1.5 px-3 py-2 text-sm font-medium text-slate-600 bg-white border border-slate-200 rounded-lg hover:bg-slate-50 hover:border-slate-300 transition-all duration-150 shadow-sm'>
+                <ArrowLeft className='h-4 w-4' />
+                Back
+              </button>
+            }
+          />
         </div>
 
-        <form onSubmit={handleSubmit} className='space-y-5'>
+        <form
+          id='create-global-coupon-form'
+          onSubmit={handleSubmit}
+          className='space-y-5'>
           {/* Basic info */}
           <div className='bg-white rounded-2xl border border-slate-100 shadow-sm p-6 space-y-5'>
             <Section icon={Tag} title='Basic information'>
@@ -504,7 +536,7 @@ export default function CreateGlobalCoupon() {
           </div>
 
           {/* Actions */}
-          <div className='flex items-center justify-end gap-3 pt-1'>
+          <div className='hidden md:flex items-center justify-end gap-3 pt-1'>
             <button
               type='button'
               onClick={() => navigate("/coupons/global")}
@@ -531,5 +563,6 @@ export default function CreateGlobalCoupon() {
         </form>
       </div>
     </div>
+    </MobilePage>
   );
 }

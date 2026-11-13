@@ -1,6 +1,13 @@
 import { useState, useEffect } from "react";
 import MainView from "../../../coreComponents/mainView";
 import {
+  MobilePage,
+  MobileStatRow,
+  MobileStatTile,
+  MobileListCard,
+  MobileStaggeredList,
+} from "../../../components/mobile";
+import {
   Tabs,
   TabsContent,
   TabsList,
@@ -15,7 +22,18 @@ import {
   TableHeader,
   TableRow,
 } from "../../../components/ui/table";
-import { TrendingUp, Users, Target, Award } from "lucide-react";
+import { PageHeader } from "../../../components/PageHeader";
+import {
+  TrendingUp,
+  BarChart3,
+  Users,
+  Target,
+  Award,
+  Ticket,
+  ChevronRight,
+  ShoppingBag,
+  Calendar,
+} from "lucide-react";
 import * as couponAPI from "../../../api/coupon";
 import { SegmentSummary, GlobalCouponStats } from "../../../api/coupon";
 
@@ -57,22 +75,28 @@ export default function CouponAnalyticsPage() {
   if (loading) {
     return (
       <MainView title="Coupon Analytics">
-        <div className="min-h-screen bg-slate-50/60 flex items-center justify-center">
-          <div className="flex flex-col items-center gap-4">
-            <div className="relative">
-              <div className="w-16 h-16 border-4 border-indigo-200 rounded-full"></div>
-              <div className="absolute top-0 left-0 w-16 h-16 border-4 border-indigo-600 rounded-full border-t-transparent animate-spin"></div>
-            </div>
-            <div className="text-center">
-              <h3 className="text-lg font-semibold text-slate-900">
-                Loading Analytics
-              </h3>
-              <p className="text-sm text-slate-500 mt-1">
-                Please wait while we gather your data...
-              </p>
+        <MobilePage
+          title="Coupon Analytics"
+          icon={<BarChart3 className="h-5 w-5 text-primary" />}
+          subtitle="Track coupon performance and customer segments"
+          back>
+          <div className="min-h-screen bg-slate-50/60 flex items-center justify-center">
+            <div className="flex flex-col items-center gap-4">
+              <div className="relative">
+                <div className="w-16 h-16 border-4 border-indigo-200 rounded-full"></div>
+                <div className="absolute top-0 left-0 w-16 h-16 border-4 border-indigo-600 rounded-full border-t-transparent animate-spin"></div>
+              </div>
+              <div className="hidden md:block text-center">
+                <h3 className="text-lg font-semibold text-slate-900">
+                  Loading Analytics
+                </h3>
+                <p className="text-sm text-slate-500 mt-1">
+                  Please wait while we gather your data...
+                </p>
+              </div>
             </div>
           </div>
-        </div>
+        </MobilePage>
       </MainView>
     );
   }
@@ -106,28 +130,25 @@ export default function CouponAnalyticsPage() {
 
   return (
     <MainView title="Coupon Analytics">
+      <MobilePage
+        title="Coupon Analytics"
+        icon={<BarChart3 className="h-5 w-5 text-primary" />}
+        subtitle="Track coupon performance and customer segments"
+        back>
       <div className="min-h-screen bg-slate-50/60">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
+        <div className="max-w-7xl mx-auto px-4 md:px-6 lg:px-8 py-6 space-y-6">
           {/* Page Header */}
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-            <div className="flex items-center gap-3">
-              <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-indigo-600 shadow-sm shadow-indigo-200">
-                <TrendingUp className="h-5 w-5 text-white" />
-              </div>
-              <div>
-                <h1 className="text-xl font-semibold text-slate-900 leading-tight">
-                  Coupon Analytics
-                </h1>
-                <p className="text-sm text-slate-500 mt-0.5">
-                  Track coupon performance and customer segments
-                </p>
-              </div>
-            </div>
+          <div className="hidden md:block">
+            <PageHeader
+              icon={<BarChart3 className="h-5 w-5" />}
+              title="Coupon Analytics"
+              subtitle="Track coupon performance and customer segments"
+            />
           </div>
 
           {/* Global Statistics */}
           {globalStats && (
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+            <div className="hidden md:grid grid-cols-2 md:grid-cols-4 gap-3">
               {[
                 {
                   label: "Total Coupons",
@@ -174,10 +195,40 @@ export default function CouponAnalyticsPage() {
             </div>
           )}
 
+          {/* Mobile stat row */}
+          {globalStats && (
+            <MobileStatRow>
+              <MobileStatTile
+                label="Total"
+                value={globalStats.totalCoupons}
+                icon={<Ticket className="h-4 w-4" />}
+                tone="bg-indigo-50 text-indigo-600"
+              />
+              <MobileStatTile
+                label="Active"
+                value={globalStats.activeCoupons}
+                icon={<Ticket className="h-4 w-4" />}
+                tone="bg-emerald-50 text-emerald-600"
+              />
+              <MobileStatTile
+                label="Expired"
+                value={globalStats.expiredCoupons}
+                icon={<Ticket className="h-4 w-4" />}
+                tone="bg-slate-100 text-slate-600"
+              />
+              <MobileStatTile
+                label="Disabled"
+                value={globalStats.disabledCoupons}
+                icon={<Ticket className="h-4 w-4" />}
+                tone="bg-rose-50 text-rose-600"
+              />
+            </MobileStatRow>
+          )}
+
           {/* Most Used Coupons */}
           {globalStats && globalStats.mostUsed.length > 0 && (
             <div className="bg-white rounded-xl border border-slate-100 shadow-sm overflow-hidden">
-              <div className="p-5 border-b border-slate-100">
+              <div className="p-4 md:p-5 border-b border-slate-100">
                 <h2 className="text-lg font-semibold text-slate-900">
                   Most Used Coupons
                 </h2>
@@ -185,22 +236,22 @@ export default function CouponAnalyticsPage() {
                   Top performing coupons by usage count
                 </p>
               </div>
-              <div className="p-5">
+              <div className="p-4 md:p-5">
                 <div className="space-y-3">
                   {globalStats.mostUsed.map((coupon, index) => (
                     <div
                       key={index}
                       className="flex items-center justify-between p-4 bg-slate-50 rounded-lg border border-slate-100">
-                      <div className="flex-1">
-                        <div className="font-mono font-semibold text-lg text-slate-900">
+                      <div className="flex-1 min-w-0">
+                        <div className="font-mono font-semibold text-base md:text-lg text-slate-900 truncate">
                           {coupon.code}
                         </div>
-                        <div className="text-sm text-slate-500">
+                        <div className="text-xs md:text-sm text-slate-500">
                           Total Discount: {coupon.totalDiscount} BDT
                         </div>
                       </div>
                       <div className="text-right">
-                        <div className="text-2xl font-bold text-indigo-600">
+                        <div className="text-xl md:text-2xl font-bold text-indigo-600">
                           {coupon.usageCount}
                         </div>
                         <div className="text-xs text-slate-500">uses</div>
@@ -214,7 +265,7 @@ export default function CouponAnalyticsPage() {
 
           {/* Customer Segments */}
           <div className="bg-white rounded-xl border border-slate-100 shadow-sm overflow-hidden">
-            <div className="p-5 border-b border-slate-100">
+            <div className="p-4 md:p-5 border-b border-slate-100">
               <h2 className="text-lg font-semibold text-slate-900">
                 Customer Segments
               </h2>
@@ -223,8 +274,8 @@ export default function CouponAnalyticsPage() {
                 behavior
               </p>
             </div>
-            <div className="p-5">
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div className="p-4 md:p-5">
+              <div className="hidden md:grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                 {segmentCards.map((segment) => {
                   const Icon = segment.icon;
                   return (
@@ -265,12 +316,51 @@ export default function CouponAnalyticsPage() {
                   );
                 })}
               </div>
+
+              {/* Mobile segment list */}
+              <div className="mobile:block hidden">
+                <MobileStaggeredList>
+                  {segmentCards.map((segment) => {
+                    const Icon = segment.icon;
+                    return (
+                      <MobileListCard
+                        key={segment.title}
+                        static
+                        leading={
+                          <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-indigo-50">
+                            <Icon className="h-5 w-5 text-indigo-600" />
+                          </div>
+                        }
+                        title={segment.title}
+                        subtitle={`${segment.count} ${segment.title.toLowerCase()}`}
+                        badge={
+                          <Badge
+                            variant="secondary"
+                            className="text-sm font-semibold bg-white border border-slate-200">
+                            {segment.count}
+                          </Badge>
+                        }
+                        trailing={<ChevronRight className="h-5 w-5 text-slate-400" />}>
+                        {segment.customers.slice(0, 3).length > 0 && (
+                          <div className="mt-2 space-y-1 text-xs text-muted-foreground">
+                            {segment.customers.slice(0, 3).map((customer, idx) => (
+                              <div key={idx} className="font-mono">
+                                {customer.phoneNumber}
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </MobileListCard>
+                    );
+                  })}
+                </MobileStaggeredList>
+              </div>
             </div>
           </div>
 
           {/* Segment Details Tabs */}
           <div className="bg-white rounded-xl border border-slate-100 shadow-sm overflow-hidden">
-            <div className="border-b border-slate-100">
+            <div className="border-b border-slate-100 mobile:overflow-x-auto">
               <Tabs defaultValue="new" className="w-full">
                 <TabsList className="h-auto bg-transparent p-0 gap-0 rounded-none">
                   <TabsTrigger
@@ -301,10 +391,11 @@ export default function CouponAnalyticsPage() {
 
                 <TabsContent
                   value="new"
-                  className="p-4 sm:p-6 mt-0 focus-visible:outline-none">
+                  className="p-4 md:p-6 mt-0 focus-visible:outline-none">
                   {segmentSummary &&
                   segmentSummary.newCustomers.customers.length > 0 ? (
-                    <div className="overflow-x-auto">
+                    <>
+                    <div className="hidden md:block overflow-x-auto">
                       <Table>
                         <TableHeader>
                           <TableRow className="border-slate-100 hover:bg-slate-50/50">
@@ -348,6 +439,42 @@ export default function CouponAnalyticsPage() {
                         </TableBody>
                       </Table>
                     </div>
+
+                    {/* Mobile customer list */}
+                    <div className="mobile:block hidden">
+                      <MobileStaggeredList>
+                        {segmentSummary.newCustomers.customers
+                          .slice(0, 10)
+                          .map((customer, idx) => (
+                            <MobileListCard
+                              key={idx}
+                              static
+                              title={customer.phoneNumber}
+                              subtitle={
+                                <span className="inline-flex items-center gap-1.5">
+                                  <Calendar className="h-3 w-3" />
+                                  First order:{" "}
+                                  {new Date(
+                                    customer.firstOrderDate,
+                                  ).toLocaleDateString()}
+                                </span>
+                              }
+                              trailing={
+                                <span className="text-sm font-semibold text-slate-900">
+                                  {customer.totalSpent} BDT
+                                </span>
+                              }>
+                              <div className="mt-2 flex items-center gap-1.5 text-[11px] text-muted-foreground">
+                                <span className="inline-flex items-center gap-1 rounded-full bg-muted px-2 py-0.5">
+                                  <ShoppingBag className="h-3 w-3" />
+                                  {customer.orderCount} orders
+                                </span>
+                              </div>
+                            </MobileListCard>
+                          ))}
+                      </MobileStaggeredList>
+                    </div>
+                    </>
                   ) : (
                     <div className="text-center py-12 text-slate-500">
                       <Users className="w-12 h-12 mx-auto mb-3 text-slate-300" />
@@ -358,10 +485,11 @@ export default function CouponAnalyticsPage() {
 
                 <TabsContent
                   value="inactive"
-                  className="p-4 sm:p-6 mt-0 focus-visible:outline-none">
+                  className="p-4 md:p-6 mt-0 focus-visible:outline-none">
                   {segmentSummary &&
                   segmentSummary.inactiveCustomers.customers.length > 0 ? (
-                    <div className="overflow-x-auto">
+                    <>
+                    <div className="hidden md:block overflow-x-auto">
                       <Table>
                         <TableHeader>
                           <TableRow className="border-slate-100 hover:bg-slate-50/50">
@@ -405,6 +533,42 @@ export default function CouponAnalyticsPage() {
                         </TableBody>
                       </Table>
                     </div>
+
+                    {/* Mobile customer list */}
+                    <div className="mobile:block hidden">
+                      <MobileStaggeredList>
+                        {segmentSummary.inactiveCustomers.customers
+                          .slice(0, 10)
+                          .map((customer, idx) => (
+                            <MobileListCard
+                              key={idx}
+                              static
+                              title={customer.phoneNumber}
+                              subtitle={
+                                <span className="inline-flex items-center gap-1.5">
+                                  <Calendar className="h-3 w-3" />
+                                  Last order:{" "}
+                                  {new Date(
+                                    customer.lastOrderDate,
+                                  ).toLocaleDateString()}
+                                </span>
+                              }
+                              trailing={
+                                <span className="text-sm font-semibold text-slate-900">
+                                  {customer.totalSpent} BDT
+                                </span>
+                              }>
+                              <div className="mt-2 flex items-center gap-1.5 text-[11px] text-muted-foreground">
+                                <span className="inline-flex items-center gap-1 rounded-full bg-muted px-2 py-0.5">
+                                  <ShoppingBag className="h-3 w-3" />
+                                  {customer.orderCount} orders
+                                </span>
+                              </div>
+                            </MobileListCard>
+                          ))}
+                      </MobileStaggeredList>
+                    </div>
+                    </>
                   ) : (
                     <div className="text-center py-12 text-slate-500">
                       <Target className="w-12 h-12 mx-auto mb-3 text-slate-300" />
@@ -415,10 +579,11 @@ export default function CouponAnalyticsPage() {
 
                 <TabsContent
                   value="highValue"
-                  className="p-4 sm:p-6 mt-0 focus-visible:outline-none">
+                  className="p-4 md:p-6 mt-0 focus-visible:outline-none">
                   {segmentSummary &&
                   segmentSummary.highValueCustomers.customers.length > 0 ? (
-                    <div className="overflow-x-auto">
+                    <>
+                    <div className="hidden md:block overflow-x-auto">
                       <Table>
                         <TableHeader>
                           <TableRow className="border-slate-100 hover:bg-slate-50/50">
@@ -468,6 +633,45 @@ export default function CouponAnalyticsPage() {
                         </TableBody>
                       </Table>
                     </div>
+
+                    {/* Mobile customer list */}
+                    <div className="mobile:block hidden">
+                      <MobileStaggeredList>
+                        {segmentSummary.highValueCustomers.customers
+                          .slice(0, 10)
+                          .map((customer, idx) => (
+                            <MobileListCard
+                              key={idx}
+                              static
+                              title={customer.phoneNumber}
+                              subtitle={
+                                <span className="inline-flex items-center gap-1.5">
+                                  <Calendar className="h-3 w-3" />
+                                  Last order:{" "}
+                                  {new Date(
+                                    customer.lastOrderDate,
+                                  ).toLocaleDateString()}
+                                </span>
+                              }
+                              trailing={
+                                <span className="text-sm font-semibold text-slate-900">
+                                  {customer.totalSpent} BDT
+                                </span>
+                              }>
+                              <div className="mt-2 flex flex-wrap items-center gap-1.5 text-[11px] text-muted-foreground">
+                                <span className="inline-flex items-center gap-1 rounded-full bg-muted px-2 py-0.5">
+                                  <ShoppingBag className="h-3 w-3" />
+                                  {customer.orderCount} orders
+                                </span>
+                                <span className="inline-flex items-center rounded-full bg-muted px-2 py-0.5">
+                                  AOV: {customer.avgOrderValue} BDT
+                                </span>
+                              </div>
+                            </MobileListCard>
+                          ))}
+                      </MobileStaggeredList>
+                    </div>
+                    </>
                   ) : (
                     <div className="text-center py-12 text-slate-500">
                       <Award className="w-12 h-12 mx-auto mb-3 text-slate-300" />
@@ -478,10 +682,11 @@ export default function CouponAnalyticsPage() {
 
                 <TabsContent
                   value="frequent"
-                  className="p-4 sm:p-6 mt-0 focus-visible:outline-none">
+                  className="p-4 md:p-6 mt-0 focus-visible:outline-none">
                   {segmentSummary &&
                   segmentSummary.frequentCustomers.customers.length > 0 ? (
-                    <div className="overflow-x-auto">
+                    <>
+                    <div className="hidden md:block overflow-x-auto">
                       <Table>
                         <TableHeader>
                           <TableRow className="border-slate-100 hover:bg-slate-50/50">
@@ -533,6 +738,48 @@ export default function CouponAnalyticsPage() {
                         </TableBody>
                       </Table>
                     </div>
+
+                    {/* Mobile customer list */}
+                    <div className="mobile:block hidden">
+                      <MobileStaggeredList>
+                        {segmentSummary.frequentCustomers.customers
+                          .slice(0, 10)
+                          .map((customer, idx) => (
+                            <MobileListCard
+                              key={idx}
+                              static
+                              title={customer.phoneNumber}
+                              subtitle={
+                                <span className="inline-flex items-center gap-1.5">
+                                  <Calendar className="h-3 w-3" />
+                                  First order:{" "}
+                                  {new Date(
+                                    customer.firstOrderDate,
+                                  ).toLocaleDateString()}
+                                </span>
+                              }
+                              trailing={
+                                <span className="text-sm font-semibold text-slate-900">
+                                  {customer.totalSpent} BDT
+                                </span>
+                              }>
+                              <div className="mt-2 flex flex-wrap items-center gap-1.5 text-[11px] text-muted-foreground">
+                                <span className="inline-flex items-center gap-1 rounded-full bg-muted px-2 py-0.5">
+                                  <ShoppingBag className="h-3 w-3" />
+                                  {customer.orderCount} orders
+                                </span>
+                                <span className="inline-flex items-center rounded-full bg-muted px-2 py-0.5">
+                                  Last:{" "}
+                                  {new Date(
+                                    customer.lastOrderDate,
+                                  ).toLocaleDateString()}
+                                </span>
+                              </div>
+                            </MobileListCard>
+                          ))}
+                      </MobileStaggeredList>
+                    </div>
+                    </>
                   ) : (
                     <div className="text-center py-12 text-slate-500">
                       <TrendingUp className="w-12 h-12 mx-auto mb-3 text-slate-300" />
@@ -545,6 +792,7 @@ export default function CouponAnalyticsPage() {
           </div>
         </div>
       </div>
+      </MobilePage>
     </MainView>
   );
 }

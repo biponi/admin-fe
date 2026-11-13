@@ -135,10 +135,23 @@ const UpdateProduct = () => {
       setLoading(true);
       // Tags go as one JSON string — buildFormDataFromObject would emit
       // tags[0], tags[1], ... keys which the backend can't reassemble.
-      const { tags, ...rest } = productData as any;
+      // Meta (admin-defined key-value data) needs the same treatment. Always
+      // send it: the form state mirrors the loaded product, so an empty array
+      // means the admin cleared all meta (omitting would preserve it).
+      const { tags, meta, ...rest } = productData as any;
       const formData = buildFormDataFromObject(rest);
       if (tags && tags.length > 0)
         formData.append("tags", JSON.stringify(tags));
+      // Drop half-filled rows (blank key) — the backend ignores them anyway,
+      // but sending them keeps the payload honest about what the admin meant.
+      formData.append(
+        "meta",
+        JSON.stringify(
+          (meta || []).filter(
+            (entry: any) => entry && entry.key && String(entry.key).trim() !== ""
+          )
+        )
+      );
       const response = await editProduct(formData);
       setLoading(false);
       if (response?.success) {

@@ -146,7 +146,7 @@ const ReturnOrdersView: React.FC<ReturnOrdersViewProps> = ({
 
   return (
     <div className='flex flex-col h-full bg-white'>
-      <div className='flex-1 overflow-auto px-3 sm:px-6 lg:px-8 py-3 sm:py-5'>
+      <div className='flex-1 overflow-auto px-3 sm:px-6 lg:px-8 py-3 sm:py-5 pb-[calc(4rem+env(safe-area-inset-bottom))]'>
         {/* Stats */}
         {hasRequiredPermission("report", "view") && (
           <div className='mb-3 sm:mb-4'>

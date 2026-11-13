@@ -120,7 +120,7 @@ const CustomerHistoryTab = ({
   return (
     <div className='space-y-6'>
       {/* Summary Cards */}
-      <div className='grid grid-cols-1 sm:grid-cols-2 gap-4'>
+      <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
         <div className='bg-white rounded-lg border border-slate-100 p-4 hover:border-slate-200 transition-colors'>
           <div className='flex items-start justify-between'>
             <div className='space-y-1'>

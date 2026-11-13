@@ -178,17 +178,33 @@ export const editProduct = async (
 };
 
 // Function to search for products
+// metaFilter: single admin meta filter { key, value?, min?, max? } — matches one
+//   meta entry (product or variant level). metaSearch: free text across all
+//   meta keys/values. `query` becomes optional when either is provided.
 export const searchProducts = async (
   searchQuery: any,
   categoryId?: string,
   sortBy?: string,
   sortOrder?: string,
+  metaFilter?: { key: string; value?: string; min?: string; max?: string } | null,
+  metaSearch?: string,
 ): Promise<ApiResponse<any>> => {
   try {
-    const requestBody: any = { query: searchQuery };
+    const requestBody: any = {};
+    if (searchQuery && String(searchQuery).trim()) requestBody.query = searchQuery;
     if (categoryId) requestBody.categoryId = categoryId;
     if (sortBy) requestBody.sortBy = sortBy;
     if (sortOrder) requestBody.sortOrder = sortOrder;
+    if (metaFilter && metaFilter.key && metaFilter.key.trim()) {
+      const filter: any = { key: metaFilter.key.trim() };
+      if (metaFilter.value && metaFilter.value.trim()) filter.value = metaFilter.value.trim();
+      if (metaFilter.min && metaFilter.min.trim()) filter.min = metaFilter.min.trim();
+      if (metaFilter.max && metaFilter.max.trim()) filter.max = metaFilter.max.trim();
+      requestBody.metaFilters = [filter];
+    }
+    if (metaSearch && metaSearch.trim()) requestBody.metaSearch = metaSearch.trim();
+    // NOTE: the backend 400s when none of query/metaFilters/metaSearch is set —
+    // callers should fall back to the plain product list in that case.
 
     const response = await axios.post<any>(
       config.product.searchProduct(),

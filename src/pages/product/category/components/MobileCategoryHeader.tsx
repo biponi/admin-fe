@@ -64,7 +64,7 @@ const MobileCategoryHeader: React.FC<MobileCategoryHeaderProps> = ({
   ];
 
   return (
-    <div className='bg-gradient-to-br from-gray-50 to-white sm:hidden'>
+    <div className='bg-gradient-to-br from-gray-50 to-white md:hidden'>
       {/* Header Section */}
       <div className='hidden md:block px-4 pt-0 pb-4'>
         <div className=' items-center justify-between mb-6 hidden'>

@@ -3,6 +3,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import { usePackageStore } from "../../store/packageStore";
 import { PackageStatusBadge } from "../../components/package/PackageStatusBadge";
 import { BarcodeDisplay } from "../../components/package/BarcodeDisplay";
+import { PageHeader } from "../../components/PageHeader";
 import { ActivityTimeline } from "../../components/package/ActivityTimeline";
 import { CourierForm } from "../../components/package/CourierForm";
 import { Button } from "../../components/ui/button";
@@ -46,10 +47,18 @@ import config from "../../utils/config";
 import PlaceHolderImage from "../../assets/placeholder.svg";
 import { EditOrderSheet } from "../../components/package/EditOrderSheet";
 import { cn } from "../../lib/utils";
+import { useIsMobile } from "@/hooks/use-mobile";
+import {
+  MobilePage,
+  MobileDetailSheet,
+  MobileEmptyState,
+  MobileSkeletonList,
+} from "@/components/mobile";
 
 export function PackageDetailsPage() {
   const { orderNumber } = useParams<{ orderNumber: string }>();
   const navigate = useNavigate();
+  const isMobile = useIsMobile();
   const {
     currentPackage,
     activities,
@@ -150,6 +159,18 @@ export function PackageDetailsPage() {
   };
 
   if (loading) {
+    if (isMobile) {
+      return (
+        <MobilePage
+          title="Package Details"
+          back
+          onBack={() => navigate("/packages")}>
+          <div className="p-3">
+            <MobileSkeletonList count={6} />
+          </div>
+        </MobilePage>
+      );
+    }
     return (
       <div className="min-h-screen bg-slate-50/60">
         <div className="flex flex-col items-center justify-center py-20 px-4">
@@ -171,6 +192,29 @@ export function PackageDetailsPage() {
   }
 
   if (!currentPackage) {
+    if (isMobile) {
+      return (
+        <MobilePage
+          title="Package Details"
+          back
+          onBack={() => navigate("/packages")}>
+          <MobileEmptyState
+            icon={<PackageIcon className="h-7 w-7" />}
+            title="Package not found"
+            description="The package you're looking for doesn't exist or has been removed."
+            action={
+              <Button
+                variant="outline"
+                className="rounded-full"
+                onClick={() => navigate("/packages")}>
+                <ArrowLeft className="mr-2 h-4 w-4" />
+                Back to Packages
+              </Button>
+            }
+          />
+        </MobilePage>
+      );
+    }
     return (
       <div className="min-h-screen bg-slate-50/60">
         <div className="flex flex-col items-center justify-center py-20 px-4">
@@ -201,12 +245,437 @@ export function PackageDetailsPage() {
     currentPackage.status,
   );
 
+  if (isMobile) {
+    return (
+      <MobilePage
+        title={`Package #${currentPackage.orderNumber}`}
+        icon={<PackageIcon className="h-5 w-5 text-primary" />}
+        subtitle={currentPackage.packageCode}
+        back
+        onBack={() => navigate("/packages")}
+        stickyActions={
+          <div className="flex items-center gap-2">
+            <Button
+              variant="outline"
+              className="h-10 flex-1 rounded-full"
+              onClick={() => setShowProductsSheet(true)}>
+              <PackageIcon className="h-4 w-4" />
+              Products ({orderProducts.length})
+            </Button>
+            {canDownloadSlip && (
+              <Button
+                className="h-10 flex-1 rounded-full bg-indigo-600 hover:bg-indigo-700"
+                onClick={handleDownloadSlip}>
+                <Download className="h-4 w-4" />
+                Slip
+              </Button>
+            )}
+            {canMarkAsPacked && (
+              <Button
+                className="h-10 flex-1 rounded-full bg-emerald-600 hover:bg-emerald-700"
+                onClick={handleMarkAsPacked}
+                disabled={submitting}>
+                {submitting && (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                )}
+                Mark Packed
+              </Button>
+            )}
+            {canRequestShipping && (
+              <Button
+                className="h-10 flex-1 rounded-full bg-blue-600 hover:bg-blue-700"
+                onClick={() => setShowCourierDialog(true)}>
+                <Ship className="h-4 w-4" />
+                Shipping
+              </Button>
+            )}
+            {canCancel && (
+              <Button
+                variant="destructive"
+                className="h-10 rounded-full px-4"
+                onClick={handleCancel}
+                disabled={submitting}>
+                <X className="h-4 w-4" />
+                Cancel
+              </Button>
+            )}
+          </div>
+        }>
+        <div className="space-y-3 p-3">
+          {/* Header */}
+          <div className="flex items-center justify-between gap-2 px-1">
+            <span className="font-mono text-sm text-muted-foreground">
+              {currentPackage.packageCode}
+            </span>
+            <PackageStatusBadge status={currentPackage.status} />
+          </div>
+
+          {/* Package Information */}
+          <div className="rounded-2xl border bg-card">
+            <div className="border-b px-4 py-3">
+              <h2 className="flex items-center gap-2 text-sm font-semibold">
+                <span className="grid h-7 w-7 place-items-center rounded-lg bg-indigo-100">
+                  <PackageIcon className="h-3.5 w-3.5 text-indigo-600" />
+                </span>
+                Package Information
+              </h2>
+            </div>
+            <div className="grid grid-cols-2 gap-x-4 gap-y-4 p-4">
+              <div>
+                <p className="mb-1 text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
+                  Order Number
+                </p>
+                <p className="font-semibold">
+                  #{currentPackage.orderNumber}
+                </p>
+              </div>
+              <div>
+                <p className="mb-1 text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
+                  Package Code
+                </p>
+                <p className="font-mono font-semibold">
+                  {currentPackage.packageCode}
+                </p>
+              </div>
+              <div>
+                <p className="mb-1 text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
+                  Status
+                </p>
+                <PackageStatusBadge status={currentPackage.status} />
+              </div>
+              <div>
+                <p className="mb-1 text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
+                  Age
+                </p>
+                <p className="flex items-center gap-1.5 font-semibold">
+                  <Calendar className="h-3.5 w-3.5 text-muted-foreground" />
+                  {currentPackage.ageInDays || 0} days
+                </p>
+              </div>
+              <div>
+                <p className="mb-1 text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
+                  Total Amount
+                </p>
+                <p className="font-semibold">
+                  {currentPackage.order?.totalPrice || 0}
+                  <span className="ml-0.5 text-xs font-normal text-muted-foreground">
+                    BDT
+                  </span>
+                </p>
+              </div>
+              <div>
+                <p className="mb-1 text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
+                  COD Amount
+                </p>
+                <p className="flex items-center gap-1.5 font-semibold text-emerald-600">
+                  <DollarSign className="h-3.5 w-3.5" />
+                  {currentPackage.order?.remaining || 0}
+                  <span className="ml-0.5 text-xs font-normal text-muted-foreground">
+                    BDT
+                  </span>
+                </p>
+              </div>
+            </div>
+
+            {currentPackage.order?.notes && (
+              <div className="border-t p-4">
+                <p className="mb-2 text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
+                  Special Instructions
+                </p>
+                <div className="rounded-xl border border-amber-200 bg-amber-50 p-3">
+                  <p className="text-sm italic text-amber-800">
+                    {currentPackage.order.notes}
+                  </p>
+                </div>
+              </div>
+            )}
+
+            {currentPackage.courier?.provider && (
+              <div className="space-y-2 border-t p-4">
+                <p className="mb-1 text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
+                  Courier Information
+                </p>
+                <div className="space-y-2 rounded-xl border bg-muted/40 p-3">
+                  <div className="flex items-center gap-2">
+                    <Truck className="h-3.5 w-3.5 text-muted-foreground" />
+                    <p className="text-sm">
+                      <span className="font-medium">Provider:</span>{" "}
+                      {currentPackage.courier.provider}
+                    </p>
+                  </div>
+                  {currentPackage.courier.consignmentId && (
+                    <div className="flex items-center gap-2">
+                      <FileText className="h-3.5 w-3.5 text-muted-foreground" />
+                      <p className="text-sm">
+                        <span className="font-medium">Consignment:</span>{" "}
+                        <span className="font-mono">
+                          {currentPackage.courier.consignmentId}
+                        </span>
+                      </p>
+                    </div>
+                  )}
+                  {currentPackage.courier.trackingCode && (
+                    <div className="flex items-center gap-2">
+                      <MapPin className="h-3.5 w-3.5 text-muted-foreground" />
+                      <p className="text-sm">
+                        <span className="font-medium">Tracking:</span>{" "}
+                        <span className="font-mono">
+                          {currentPackage.courier.trackingCode}
+                        </span>
+                      </p>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Order Information */}
+          {currentPackage.order && (
+            <div className="rounded-2xl border bg-card">
+              <div className="flex items-center justify-between border-b px-4 py-3">
+                <h2 className="flex items-center gap-2 text-sm font-semibold">
+                  <span className="grid h-7 w-7 place-items-center rounded-lg bg-indigo-100">
+                    <FileText className="h-3.5 w-3.5 text-indigo-600" />
+                  </span>
+                  Order Information
+                </h2>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setShowEditOrderSheet(true)}
+                  className="h-8 rounded-full text-xs">
+                  <Edit className="h-3.5 w-3.5" />
+                  Edit
+                </Button>
+              </div>
+              <div className="space-y-4 p-4">
+                <div>
+                  <p className="mb-1 text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
+                    Customer Name
+                  </p>
+                  <p className="flex items-center gap-2 font-semibold">
+                    <User className="h-3.5 w-3.5 text-muted-foreground" />
+                    {currentPackage.order.customer.name || "N/A"}
+                  </p>
+                </div>
+                <div>
+                  <p className="mb-1 text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
+                    Phone Number
+                  </p>
+                  <p className="flex items-center gap-2 font-semibold">
+                    <Phone className="h-3.5 w-3.5 text-muted-foreground" />
+                    {currentPackage.order.customer.phoneNumber || "N/A"}
+                  </p>
+                </div>
+                <div>
+                  <p className="mb-1 text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
+                    Shipping Address
+                  </p>
+                  <div className="flex items-start gap-2">
+                    <MapPin className="mt-0.5 h-3.5 w-3.5 shrink-0 text-muted-foreground" />
+                    <div>
+                      <p className="font-semibold">
+                        {currentPackage.order.shipping.address || "N/A"}
+                      </p>
+                      {currentPackage.order.shipping.division && (
+                        <p className="mt-0.5 text-sm text-muted-foreground">
+                          {currentPackage.order.shipping.division}
+                          {currentPackage.order.shipping.district &&
+                            `, ${currentPackage.order.shipping.district}`}
+                          {currentPackage.order.shipping.postalCode &&
+                            ` - ${currentPackage.order.shipping.postalCode}`}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Activity Timeline */}
+          <ActivityTimeline activities={activities} />
+
+          {/* Barcode */}
+          <BarcodeDisplay
+            orderNumber={currentPackage.orderNumber}
+            packageCode={currentPackage.packageCode}
+          />
+        </div>
+
+        {/* Products Sheet */}
+        <Sheet open={showProductsSheet} onOpenChange={setShowProductsSheet}>
+          <SheetContent className="w-full sm:max-w-md">
+            <SheetHeader>
+              <SheetTitle className="flex items-center gap-2 text-base font-semibold">
+                <span className="inline-flex h-7 w-7 items-center justify-center rounded-md bg-indigo-100">
+                  <PackageIcon className="h-3.5 w-3.5 text-indigo-600" />
+                </span>
+                Order Products
+              </SheetTitle>
+              <p className="text-sm text-slate-500">
+                Order #{currentPackage.orderNumber} &bull;{" "}
+                {orderProducts.length} items
+              </p>
+            </SheetHeader>
+
+            <div className="mt-6">
+              {loadingProducts ? (
+                <div className="flex items-center justify-center py-12">
+                  <div className="flex flex-col items-center gap-3 text-center">
+                    <Loader2 className="h-8 w-8 animate-spin text-indigo-600" />
+                    <p className="text-sm font-medium text-slate-700">
+                      Loading products...
+                    </p>
+                  </div>
+                </div>
+              ) : orderProducts.length === 0 ? (
+                <div className="px-4 py-16 text-center">
+                  <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-slate-100">
+                    <PackageIcon className="h-8 w-8 text-slate-400" />
+                  </div>
+                  <p className="mb-1 text-lg font-bold text-slate-900">
+                    No products found
+                  </p>
+                  <p className="text-sm text-slate-500">
+                    No products associated with this order
+                  </p>
+                </div>
+              ) : (
+                <ScrollArea className="h-[calc(100vh-200px)]">
+                  <div className="space-y-3 pr-4">
+                    {orderProducts.map((product) => (
+                      <Card
+                        key={product.id}
+                        className="border border-slate-200 overflow-hidden">
+                        <CardContent className="p-3">
+                          <div className="flex gap-3">
+                            <div className="flex-shrink-0">
+                              <img
+                                src={product.thumbnail || PlaceHolderImage}
+                                alt={product.name}
+                                className="w-16 h-16 object-cover rounded-lg border border-slate-200"
+                                onError={(e) => {
+                                  e.currentTarget.src = PlaceHolderImage;
+                                }}
+                              />
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <p className="font-medium text-sm text-slate-900 line-clamp-2 mb-1">
+                                {product.name}
+                              </p>
+
+                              {product.variation &&
+                                (product.variation.color ||
+                                  product.variation.size) && (
+                                  <Badge
+                                    variant="outline"
+                                    className="text-[10px] bg-rose-50 text-rose-600 border-rose-200 rounded-md mb-1.5">
+                                    (
+                                    {product.variation.color && (
+                                      <span className="capitalize">
+                                        {product.variation.color}
+                                      </span>
+                                    )}
+                                    {product.variation.color &&
+                                      product.variation.size && (
+                                        <span> . </span>
+                                      )}
+                                    {product.variation.size && (
+                                      <span>{product.variation.size}</span>
+                                    )}
+                                    )
+                                  </Badge>
+                                )}
+
+                              <div className="flex items-center justify-between">
+                                <div>
+                                  <p className="text-sm font-semibold text-slate-900">
+                                    {product.quantity}x {product.unitPrice}
+                                    <span className="text-xs font-normal text-slate-400 ml-0.5">
+                                      BDT
+                                    </span>
+                                  </p>
+                                  <p className="text-xs text-slate-500">
+                                    Total: {product.totalPrice}
+                                    <span className="text-slate-400 ml-0.5">
+                                      BDT
+                                    </span>
+                                  </p>
+                                </div>
+                                <Badge
+                                  variant="secondary"
+                                  className="text-[10px] bg-slate-100 text-slate-600 rounded-md">
+                                  Qty: {product.quantity}
+                                </Badge>
+                              </div>
+
+                              {product.discount && product.discount > 0 && (
+                                <p className="text-xs text-emerald-600 mt-1 font-medium">
+                                  Discount: -{product.discount}
+                                  <span className="text-slate-400 ml-0.5">
+                                    BDT
+                                  </span>
+                                </p>
+                              )}
+                            </div>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    ))}
+                  </div>
+                </ScrollArea>
+              )}
+            </div>
+          </SheetContent>
+        </Sheet>
+
+        {/* Edit Order Sheet */}
+        <EditOrderSheet
+          order={currentPackage.order || null}
+          open={showEditOrderSheet}
+          onOpenChange={setShowEditOrderSheet}
+          onOrderUpdated={async () => {
+            if (orderNumber) {
+              await loadPackage(parseInt(orderNumber));
+              await loadActivities(parseInt(orderNumber));
+            }
+          }}
+        />
+
+        {/* Courier form (mobile sheet instead of desktop dialog) */}
+        <MobileDetailSheet
+          open={showCourierDialog}
+          onOpenChange={setShowCourierDialog}
+          title={
+            <span className="flex items-center gap-2">
+              <span className="grid h-7 w-7 place-items-center rounded-md bg-blue-100">
+                <Truck className="h-3.5 w-3.5 text-blue-600" />
+              </span>
+              Request Shipping
+            </span>
+          }>
+          <CourierForm
+            onSubmit={handleCourierSubmit}
+            isLoading={submitting}
+            defaultValues={currentPackage.courier}
+          />
+        </MobileDetailSheet>
+      </MobilePage>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-slate-50/60">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
         {/* Header */}
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-          <div className="flex items-center gap-3">
+        <PageHeader
+          icon={<PackageIcon className="h-5 w-5 text-white" />}
+          title={`Package #${currentPackage.orderNumber}`}
+          subtitle={currentPackage.packageCode}
+          count={<PackageStatusBadge status={currentPackage.status} />}
+          actions={
             <Button
               variant="ghost"
               size="sm"
@@ -214,22 +683,8 @@ export function PackageDetailsPage() {
               className="h-9 w-9 p-0 text-slate-500 hover:bg-slate-100 hover:text-slate-900 rounded-lg">
               <ArrowLeft className="h-4 w-4" />
             </Button>
-            <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-indigo-600 shadow-sm shadow-indigo-200">
-              <PackageIcon className="h-5 w-5 text-white" />
-            </div>
-            <div>
-              <div className="flex items-center gap-2.5">
-                <h1 className="text-xl font-semibold text-slate-900 leading-tight">
-                  Package #{currentPackage.orderNumber}
-                </h1>
-                <PackageStatusBadge status={currentPackage.status} />
-              </div>
-              <p className="text-sm text-slate-500 mt-0.5 font-mono">
-                {currentPackage.packageCode}
-              </p>
-            </div>
-          </div>
-        </div>
+          }
+        />
 
         {/* Actions Bar */}
         <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-4">

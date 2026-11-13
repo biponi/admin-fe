@@ -7,6 +7,7 @@ import {
   BreadcrumbSeparator,
 } from "./ui/breadcrumb";
 import { Separator } from "./ui/separator";
+import { ButtonGroup, ButtonGroupSeparator } from "./ui/button-group";
 import { SidebarTrigger } from "./ui/sidebar";
 import { navItems } from "../utils/navItem";
 import { useLocation } from "react-router-dom";
@@ -16,6 +17,14 @@ import { usePageTitle } from "../contexts/PageContext";
 import { hasPagePermission } from "../utils/helperFunction";
 import { useSelector } from "react-redux";
 import NotificationBell from "../notification/NotificationBell";
+import { useState } from "react";
+import { Settings } from "lucide-react";
+import { Button } from "./ui/button";
+import { SettingsPanel } from "./settings-panel";
+import { HeaderDateTimeWeather } from "./HeaderDateTimeWeather";
+import { Oneko, getOnekoCritter } from "./oneko";
+import { useSettings } from "../contexts/SettingsContext";
+//import topBarBg from "../assets/top-bar-bg.jpg";
 
 interface SiteHeaderProps {
   title?: string;
@@ -23,6 +32,9 @@ interface SiteHeaderProps {
 
 export function SiteHeader({ title }: SiteHeaderProps) {
   const { pageTitle } = usePageTitle();
+  const [settingsOpen, setSettingsOpen] = useState(false);
+  const { onekoEnabled, setOnekoEnabled, onekoCat, onekoSpeed, onekoFriend } =
+    useSettings();
 
   const pathName = useLocation().pathname;
   const userState = useSelector((state: any) => state?.user);
@@ -40,7 +52,7 @@ export function SiteHeader({ title }: SiteHeaderProps) {
 
     // Find matching nav item
     const currentNavItem = navItems.find((item) =>
-      pathName.includes(item.link)
+      pathName.includes(item.link),
     );
     if (currentNavItem) {
       breadcrumbs.push({ title: "Dashboard", href: "/dashboard" });
@@ -69,19 +81,38 @@ export function SiteHeader({ title }: SiteHeaderProps) {
 
   return (
     <>
-      {/* Desktop Header */}
-      <header className='hidden sm:flex h-16 shrink-0 items-center gap-2 transition-[width,height] ease-linear group-has-[[data-collapsible=icon]]/sidebar-wrapper:h-12 '>
-        <div className='flex items-center gap-2 px-4'>
-          <SidebarTrigger className='-ml-1' />
-          <Separator orientation='vertical' className='mr-2 h-4' />
-          <Breadcrumb>
+      {/* ── Desktop header bar ── */}
+      <header
+        data-light-text='true'
+        className={`hidden md:flex sticky  top-0 z-40 h-16 shrink-0 items-center gap-2 border-b shadow-sm
+                         border-white/20 bg-white overflow-hidden
+                         transition-[width,height] ease-linear
+                         group-has-[[data-collapsible=icon]]/sidebar-wrapper:h-12 md:mb-2 `}>
+        {/* Static night-landscape backdrop — replaces the animated weather
+            scene on desktop; no animation by design. */}
+        {/* <div
+          aria-hidden='true'
+          className='absolute inset-0 z-0 bg-cover bg-center'
+          style={{ backgroundImage: `url(${topBarBg})` }}
+        /> */}
+
+        {/* Left: sidebar trigger + breadcrumbs (above the backdrop) */}
+        <div className='relative z-10 flex flex-1 items-center gap-2 px-4 overflow-hidden'>
+          <SidebarTrigger className='-ml-1 shrink-0 text-gray-900' />
+          <Separator
+            orientation='vertical'
+            className='mr-2 h-4 hidden sm:block text-gray-900'
+          />
+
+          {/* Breadcrumbs */}
+          <Breadcrumb className='hidden sm:flex bg-white/20  overflow-hidden text-xs px-6 py-2  rounded-2xl border border-white/20'>
             <BreadcrumbList>
               {breadcrumbs.map((breadcrumb, index) => (
                 <div key={breadcrumb.href} className='flex items-center gap-2'>
                   {index > 0 && (
                     <BreadcrumbSeparator className='hidden md:block' />
                   )}
-                  <BreadcrumbItem className='hidden md:block'>
+                  <BreadcrumbItem className='hidden text-gray-800 md:block'>
                     {index === breadcrumbs.length - 1 ? (
                       <BreadcrumbPage>{breadcrumb.title}</BreadcrumbPage>
                     ) : (
@@ -96,20 +127,77 @@ export function SiteHeader({ title }: SiteHeaderProps) {
           </Breadcrumb>
         </div>
 
-        {/* Notification Button with glass effect */}
-        {hasPagePermission("notifications", "view", userState?.permissions) && (
-          <div className='relative group/bell ml-auto mr-6'>
-            {/* Button glow on hover */}
-            <div className='absolute inset-0 bg-primary/20 rounded-xl blur-md opacity-0 group-hover/bell:opacity-100 transition-opacity' />
+        {/* Right: date/time/weather + settings + notification (above the
+            backdrop) */}
+        <div className='relative z-10 flex items-center gap-1.5 px-3'>
+          {/* Date, Time & Temperature badge */}
+          <HeaderDateTimeWeather />
 
-            <NotificationBell
-              size='sm'
-              variant='ghost'
-              className='relative h-9 w-9 rounded-xl bg-transparent  text-gray-700 hover:text-primary '
-            />
+          <div className='relative group/settings'>
+            <div className='absolute inset-0 bg-primary/20 rounded-xl blur-md opacity-0 group-hover/settings:opacity-100 transition-opacity' />
+            {/* Settings trigger */}
+            <ButtonGroup className=' shadow rounded-2xl border border-gray-200'>
+              {/* Oneko cat toggle — spawns the cursor-chasing cat */}
+              <Button
+                variant='secondary'
+                size='icon'
+                onClick={() => setOnekoEnabled(!onekoEnabled)}
+                aria-pressed={onekoEnabled}
+                className='relative h-9 w-9 rounded-2xl text-muted-foreground bg-transparent hover:text-gray-500 hover:bg-white/20'>
+                <span
+                  aria-hidden='true'
+                  className='pointer-events-none block h-5 w-5'
+                  style={{
+                    backgroundImage: `url(${getOnekoCritter(onekoCat).sprite})`,
+                    backgroundSize: "160px 80px",
+                    backgroundPosition: onekoEnabled
+                      ? "-140px -60px" // alert frame while chasing
+                      : "-60px -60px", // idle sitting frame
+                    imageRendering: "pixelated",
+                    filter: getOnekoCritter(onekoCat).filter ?? "none",
+                  }}
+                />
+                <span className='sr-only'>
+                  {onekoEnabled ? "Dismiss the cat" : "Release the cat"}
+                </span>
+              </Button>
+              <ButtonGroupSeparator className='bg-gray-100' />
+              <Button
+                variant='secondary'
+                size='icon'
+                onClick={() => setSettingsOpen(true)}
+                className='relative h-9 w-9 rounded-2xl text-gray-900/80 bg-transparent hover:text-gray-500 hover:bg-white/20'>
+                <Settings className='h-[18px] w-[18px] ' />
+                <span className='sr-only'>Open settings</span>
+              </Button>
+              <ButtonGroupSeparator className='bg-gray-100' />
+              {/* Notification bell (renders its own button + portaled panel) */}
+              {hasPagePermission(
+                "notifications",
+                "view",
+                userState?.permissions,
+              ) && (
+                <NotificationBell
+                  size='md'
+                  variant='ghost'
+                  className='rounded-2xl text-gray-900/80'
+                />
+              )}
+            </ButtonGroup>
           </div>
-        )}
+        </div>
       </header>
+
+      {/* Settings Modal */}
+      <SettingsPanel open={settingsOpen} onOpenChange={setSettingsOpen} />
+
+      {/* The critter(s) themselves (fixed-position, appended to body when active) */}
+      <Oneko
+        active={onekoEnabled}
+        cat={onekoCat}
+        speed={onekoSpeed}
+        friend={onekoFriend}
+      />
     </>
   );
 }

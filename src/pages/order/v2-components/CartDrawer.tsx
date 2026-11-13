@@ -9,11 +9,10 @@ import {
 import { ScrollArea } from "../../../components/ui/scroll-area";
 import { Button } from "../../../components/ui/button";
 import { Badge } from "../../../components/ui/badge";
-import { Separator } from "../../../components/ui/separator";
 import { CartTable } from "./CartTable";
 import { CustomerSelector } from "./CustomerSelector";
 import { ShippingForm } from "./ShippingForm";
-import { OrderSummary } from "./OrderSummary";
+import { OrderAdjustments, CheckoutBar } from "./OrderSummary";
 import type { CartItem } from "../createOrderLayoutStore";
 import type {
   ICustomer,
@@ -72,19 +71,19 @@ export function CartDrawer({
           and collapses after any child interaction. */}
       <DrawerContent className='h-[92vh] max-h-[900px] rounded-t-2xl flex flex-col'>
         {/* Header — fixed height, does not grow */}
-        <DrawerHeader className='px-4 py-4 border-b bg-white flex-shrink-0'>
+        <DrawerHeader className='px-4 py-3.5 border-b border-border bg-background flex-shrink-0'>
           <div className='flex items-center justify-between'>
             <div className='flex items-center gap-3'>
-              <div className='h-10 w-10 rounded-full bg-gradient-to-br from-blue-100 to-purple-100 flex items-center justify-center'>
-                <ShoppingCart className='h-5 w-5 text-blue-600' />
+              <div className='flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-primary'>
+                <ShoppingCart className='h-4 w-4 text-primary-foreground' />
               </div>
               <div>
-                <DrawerTitle className='text-lg font-semibold text-gray-900'>
-                  Cart & Checkout
+                <DrawerTitle className='text-sm font-semibold text-foreground leading-tight'>
+                  Cart &amp; Checkout
                 </DrawerTitle>
-                <p className='text-xs text-gray-600'>
-                  {cartItemCount} {cartItemCount === 1 ? "item" : "items"} in
-                  cart
+                <p className='mt-0.5 text-xs text-muted-foreground'>
+                  {cartItemCount} {cartItemCount === 1 ? "item" : "items"} · ৳
+                  {cartSubtotal.toFixed(2)}
                 </p>
               </div>
             </div>
@@ -92,8 +91,8 @@ export function CartDrawer({
               <Button
                 variant='ghost'
                 size='icon'
-                className='h-9 w-9 text-gray-600 hover:bg-gray-100'>
-                <X className='h-5 w-5' />
+                className='h-8 w-8 rounded-lg text-muted-foreground hover:bg-muted/50 hover:text-foreground'>
+                <X className='h-4 w-4' />
               </Button>
             </DrawerClose>
           </div>
@@ -105,21 +104,12 @@ export function CartDrawer({
               which otherwise prevents the ScrollArea from shrinking and causes
               the container to overflow invisibly (white screen, no scroll). */}
         <ScrollArea className='flex-1 min-h-0 px-3 sm:px-4 overflow-x-hidden'>
-          <div className='py-5 space-y-5 px-1'>
-            {/* Cart Items */}
-            <div className='space-y-3'>
-              <h3 className='font-semibold text-base flex items-center gap-2'>
-                <ShoppingCart className='h-4 w-4 text-blue-600' />
-                Cart Items
-              </h3>
-              <CartTable
-                cart={cart}
-                onUpdateQuantity={onUpdateQuantity}
-                onRemove={onRemove}
-              />
-            </div>
-
-            <Separator className='bg-gradient-to-r from-transparent via-gray-200 to-transparent' />
+          <div className='py-4 space-y-5 px-1'>
+            <CartTable
+              cart={cart}
+              onUpdateQuantity={onUpdateQuantity}
+              onRemove={onRemove}
+            />
 
             {/* Customer & Shipping Information */}
             <div className='space-y-5'>
@@ -138,31 +128,36 @@ export function CartDrawer({
               <ShippingForm
                 shipping={shippingInfo}
                 onChange={onShippingChange}
+                // FIX: send only { deliveryCharge } — the store merges
+                // internally; spreading `transaction` here caused a loop
+                // (same fix as CartPanel's stable-callback pattern).
                 onDeliveryChargeChange={(charge) => {
-                  onTransactionChange({
-                    ...transaction,
-                    deliveryCharge: charge,
-                  });
+                  onTransactionChange({ deliveryCharge: charge });
                 }}
                 validationErrors={validationErrors}
               />
             </div>
 
-            <Separator className='bg-gradient-to-r from-transparent via-gray-200 to-transparent' />
-
-            {/* Order Summary */}
-            <OrderSummary
+            <OrderAdjustments
               transaction={transaction}
               notes={notes}
               onTransactionChange={onTransactionChange}
               onNotesChange={onNotesChange}
-              onSubmit={onSubmit}
-              isSubmitting={isSubmitting}
-              cartItemCount={cartItemCount}
-              cartSubtotal={cartSubtotal}
             />
           </div>
         </ScrollArea>
+
+        {/* Checkout footer — outside the ScrollArea so totals + submit
+            stay reachable without scrolling. */}
+        <div className='flex-shrink-0 border-t border-border bg-background px-4 pt-3 pb-[max(0.75rem,env(safe-area-inset-bottom))]'>
+          <CheckoutBar
+            transaction={transaction}
+            onSubmit={onSubmit}
+            isSubmitting={isSubmitting}
+            cartItemCount={cartItemCount}
+            cartSubtotal={cartSubtotal}
+          />
+        </div>
       </DrawerContent>
     </Drawer>
   );
@@ -182,10 +177,10 @@ export function CartTriggerButton({
     <Button
       onClick={onClick}
       size='lg'
-      className='fixed bottom-20 sm:bottom-24 right-4 z-40 h-14 px-6 rounded-full shadow-xl bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 transition-all duration-300 hover:scale-105 hover:shadow-2xl'>
-      <ShoppingCart className='h-8 w-8' />
+      className='fixed bottom-20 sm:bottom-24 right-4 z-40 h-14 px-6 rounded-full shadow-lg bg-primary hover:bg-primary/90 text-primary-foreground transition-all duration-300 hover:scale-105 hover:shadow-xl'>
+      <ShoppingCart className='h-5 w-5' />
       {itemCount > 0 && (
-        <Badge className='ml-2 bg-white text-blue-600 hover:bg-white shadow-md animate-pulse'>
+        <Badge className='ml-2 bg-background text-primary hover:bg-background shadow-sm'>
           {itemCount}
         </Badge>
       )}

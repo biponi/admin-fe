@@ -1,5 +1,14 @@
 import React, { useState, useEffect } from "react";
-import { ArrowLeft, Edit, Shield, Calendar, User, Loader2, Eye } from "lucide-react";
+import {
+  ArrowLeft,
+  Edit,
+  Shield,
+  Calendar,
+  User,
+  Loader2,
+  Eye,
+  ShieldCheck,
+} from "lucide-react";
 import { Button } from "../../components/ui/button";
 import {
   Card,
@@ -16,6 +25,7 @@ import { useRole } from "./hooks/useRoleHook";
 import { useNavigate, useParams } from "react-router-dom";
 import { pagePermissions } from "../../utils/permissions";
 import useRoleCheck from "../auth/hooks/useRoleCheck";
+import { PageHeader } from "../../components/PageHeader";
 
 const ViewRolePage: React.FC = () => {
   const navigate = useNavigate();
@@ -64,19 +74,19 @@ const ViewRolePage: React.FC = () => {
 
   if (loading) {
     return (
-      <div className='min-h-screen bg-slate-50/60'>
+      <div>
         <div className='max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6'>
           <div className='flex flex-col items-center justify-center py-20'>
             <div className='relative'>
-              <div className='absolute inset-0 bg-indigo-500/20 rounded-full animate-ping' />
-              <div className='relative h-16 w-16 rounded-full bg-indigo-600 flex items-center justify-center shadow-lg'>
-                <Loader2 className='h-8 w-8 text-white animate-spin' />
+              <div className='absolute inset-0 bg-primary/20 rounded-full animate-ping' />
+              <div className='relative h-16 w-16 rounded-full bg-primary flex items-center justify-center shadow-sm'>
+                <Loader2 className='h-8 w-8 text-primary-foreground animate-spin' />
               </div>
             </div>
-            <p className='mt-6 text-lg font-semibold text-slate-900'>
+            <p className='mt-6 text-lg font-semibold text-foreground'>
               Loading role...
             </p>
-            <p className='text-sm text-slate-500 mt-1'>
+            <p className='text-[13px] text-slate-400 mt-1'>
               Please wait while we fetch the data
             </p>
           </div>
@@ -87,14 +97,14 @@ const ViewRolePage: React.FC = () => {
 
   if (error || !role) {
     return (
-      <div className='min-h-screen bg-slate-50/60'>
+      <div>
         <div className='max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6'>
           <div className='flex flex-col items-center justify-center py-20'>
             <div className='bg-rose-50 border border-rose-200 rounded-xl p-6 mb-4'>
               <p className='text-rose-600 mb-4'>{error || "Role not found"}</p>
               <Button
                 onClick={() => navigate("/roles")}
-                className='border-slate-200'>
+                className='rounded-md border-slate-300 text-slate-600 hover:bg-accent hover:text-foreground hover:border-zinc-400'>
                 <ArrowLeft className='h-4 w-4 mr-2' />
                 Back to Roles
               </Button>
@@ -108,42 +118,39 @@ const ViewRolePage: React.FC = () => {
   const totalPermissions = getTotalPermissions(role.permissions);
 
   return (
-    <div className='min-h-screen bg-slate-50/60'>
-      <div className='max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6'>
+    <div>
+      <div className='max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6 mobile:px-3 mobile:pb-[calc(5rem+env(safe-area-inset-bottom))]'>
         {/* Page Header */}
-        <div className='flex items-center justify-between gap-4'>
-          <div className='flex items-center gap-3'>
-            <Button
-              variant='outline'
-              size='sm'
-              onClick={() => navigate("/roles")}
-              className='border-slate-200'>
-              <ArrowLeft className='h-4 w-4 mr-2' />
-              Back
-            </Button>
-            <div className='flex items-center gap-3'>
-              <div className='flex items-center justify-center w-10 h-10 rounded-xl bg-indigo-600 shadow-sm shadow-indigo-200'>
-                <Eye className='h-5 w-5 text-white' />
-              </div>
-              <div>
-                <h1 className='text-xl font-semibold text-slate-900 leading-tight'>
-                  Role Details
-                </h1>
-                <p className='text-sm text-slate-500 mt-0.5'>
-                  View role permissions and settings
-                </p>
-              </div>
-            </div>
-          </div>
-          {hasRequiredPermission("role", "edit") && (
-            <Button
-              onClick={() => navigate(`/roles/${role.id}/edit`)}
-              className='bg-indigo-600 hover:bg-indigo-700 text-white shadow-sm shadow-indigo-200'>
-              <Edit className='h-4 w-4 mr-2' />
-              Edit Role
-            </Button>
-          )}
-        </div>
+        <PageHeader
+          icon={<ShieldCheck className='h-5 w-5 text-white' />}
+          title='Role Details'
+          subtitle='View role permissions and settings'
+          count={
+            <span className='rounded-md px-2.5 py-1 text-base font-semibold text-slate-500 tabular-nums'>
+              #{role.roleNumber}
+            </span>
+          }
+          actions={
+            <>
+              <Button
+                variant='outline'
+                size='sm'
+                onClick={() => navigate("/roles")}
+                className='rounded-md border-slate-300 text-slate-600 hover:bg-accent hover:text-foreground hover:border-zinc-400'>
+                <ArrowLeft className='h-4 w-4 mr-2' />
+                Back
+              </Button>
+              {hasRequiredPermission("role", "edit") && (
+                <Button
+                  onClick={() => navigate(`/roles/${role.id}/edit`)}
+                  className='bg-primary text-primary-foreground hover:bg-primary/90 rounded-md'>
+                  <Edit className='h-4 w-4 mr-2' />
+                  Edit Role
+                </Button>
+              )}
+            </>
+          }
+        />
 
         {/* Summary Strip */}
         <div className='grid grid-cols-2 sm:grid-cols-4 gap-3'>
@@ -151,40 +158,29 @@ const ViewRolePage: React.FC = () => {
             {
               label: "Pages",
               value: role.permissions.length,
-              accent: "text-indigo-600",
-              bg: "bg-indigo-50",
             },
             {
               label: "Permissions",
               value: totalPermissions,
-              accent: "text-emerald-600",
-              bg: "bg-emerald-50",
             },
             {
               label: "Status",
               value: role.active ? "Active" : "Inactive",
-              accent: role.active ? "text-emerald-600" : "text-slate-600",
-              bg: role.active ? "bg-emerald-50" : "bg-slate-50",
             },
             {
               label: "Role #",
               value: `#${role.roleNumber}`,
-              accent: "text-rose-600",
-              bg: "bg-rose-50",
             },
           ].map((stat) => (
             <div
               key={stat.label}
-              className='flex items-center gap-3 bg-white rounded-xl border border-slate-100 px-4 py-3 shadow-sm'>
-              <div
-                className={`w-2 h-2 rounded-full ${stat.bg.replace("bg-", "bg-").replace("50", "400")}`}
-              />
+              className='flex items-center gap-3 bg-white rounded-xl border border-slate-200 px-4 py-3 shadow-[0_1px_2px_rgba(20,20,19,0.04)]'>
+              <div className='w-2 h-2 rounded-full bg-primary/50' />
               <div className='min-w-0'>
-                <p
-                  className={`text-lg font-semibold ${stat.accent} leading-none`}>
+                <p className='text-lg font-semibold text-foreground tabular-nums leading-none'>
                   {stat.value}
                 </p>
-                <p className='text-xs text-slate-500 mt-0.5 truncate'>
+                <p className='text-[10px] font-semibold uppercase tracking-wider text-slate-400 mt-1 truncate'>
                   {stat.label}
                 </p>
               </div>
@@ -196,35 +192,37 @@ const ViewRolePage: React.FC = () => {
         <div className='grid grid-cols-1 lg:grid-cols-3 gap-6'>
           <div className='lg:col-span-2 space-y-6'>
             {/* Role Information Card */}
-            <Card className='border-slate-100 shadow-sm'>
-              <CardHeader>
-                <CardTitle className='flex items-center gap-2 text-lg'>
-                  <Shield className='h-5 w-5 text-indigo-600' />
+            <Card className='rounded-lg border border-slate-200 bg-white shadow-[0_1px_2px_rgba(20,20,19,0.04)] overflow-hidden'>
+              <CardHeader className='px-4 py-3 border-b border-slate-200 bg-muted/50 space-y-0.5'>
+                <CardTitle className='flex items-center gap-2 text-[13px] font-semibold text-foreground'>
+                  <span className='flex h-6 w-6 shrink-0 items-center justify-center rounded-md bg-primary text-primary-foreground'>
+                    <Shield className='h-3.5 w-3.5' />
+                  </span>
                   Role Information
                 </CardTitle>
               </CardHeader>
               <CardContent className='space-y-4'>
                 <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
                   <div>
-                    <Label className='text-sm font-medium text-slate-500'>
+                    <Label className='text-[10px] font-semibold uppercase tracking-wider text-slate-400'>
                       Role Name
                     </Label>
-                    <p className='text-base font-semibold text-slate-900 mt-1'>
+                    <p className='text-base font-semibold text-foreground mt-1'>
                       {role.name}
                     </p>
                   </div>
                   <div>
-                    <Label className='text-sm font-medium text-slate-500'>
+                    <Label className='text-[10px] font-semibold uppercase tracking-wider text-slate-400'>
                       Role Number
                     </Label>
-                    <p className='text-base font-semibold text-slate-900 mt-1'>
+                    <p className='text-base font-semibold text-foreground mt-1'>
                       #{role.roleNumber}
                     </p>
                   </div>
                 </div>
                 <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
                   <div>
-                    <Label className='text-sm font-medium text-slate-500'>
+                    <Label className='text-[10px] font-semibold uppercase tracking-wider text-slate-400'>
                       Role ID
                     </Label>
                     <p className='text-sm font-mono text-slate-400 mt-1'>
@@ -232,7 +230,7 @@ const ViewRolePage: React.FC = () => {
                     </p>
                   </div>
                   <div>
-                    <Label className='text-sm font-medium text-slate-500'>
+                    <Label className='text-[10px] font-semibold uppercase tracking-wider text-slate-400'>
                       Status
                     </Label>
                     <div className='mt-1'>
@@ -246,37 +244,37 @@ const ViewRolePage: React.FC = () => {
                   </div>
                 </div>
                 <div>
-                  <Label className='text-sm font-medium text-slate-500'>
+                  <Label className='text-[10px] font-semibold uppercase tracking-wider text-slate-400'>
                     Description
                   </Label>
-                  <p className='text-sm text-slate-700 mt-1'>
+                  <p className='text-sm text-slate-600 mt-1'>
                     {role.description || "No description provided"}
                   </p>
                 </div>
                 <Separator className='my-4' />
                 <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
                   <div className='flex items-center gap-3'>
-                    <div className='h-8 w-8 rounded-lg bg-indigo-50 flex items-center justify-center'>
-                      <Calendar className='h-4 w-4 text-indigo-600' />
+                    <div className='h-8 w-8 rounded-lg bg-primary/10 border border-primary flex items-center justify-center'>
+                      <Calendar className='h-4 w-4 text-primary' />
                     </div>
                     <div>
-                      <Label className='text-sm font-medium text-slate-500'>
+                      <Label className='text-[10px] font-semibold uppercase tracking-wider text-slate-400'>
                         Created
                       </Label>
-                      <p className='text-sm text-slate-700'>
+                      <p className='text-sm text-slate-600'>
                         {role.createdAt ? formatDate(role.createdAt) : "N/A"}
                       </p>
                     </div>
                   </div>
                   <div className='flex items-center gap-3'>
-                    <div className='h-8 w-8 rounded-lg bg-indigo-50 flex items-center justify-center'>
-                      <Calendar className='h-4 w-4 text-indigo-600' />
+                    <div className='h-8 w-8 rounded-lg bg-primary/10 border border-primary flex items-center justify-center'>
+                      <Calendar className='h-4 w-4 text-primary' />
                     </div>
                     <div>
-                      <Label className='text-sm font-medium text-slate-500'>
+                      <Label className='text-[10px] font-semibold uppercase tracking-wider text-slate-400'>
                         Last Updated
                       </Label>
-                      <p className='text-sm text-slate-700'>
+                      <p className='text-sm text-slate-600'>
                         {role.updatedAt ? formatDate(role.updatedAt) : "N/A"}
                       </p>
                     </div>
@@ -286,38 +284,38 @@ const ViewRolePage: React.FC = () => {
             </Card>
 
             {/* Permissions Card */}
-            <Card className='border-slate-100 shadow-sm'>
-              <CardHeader>
-                <CardTitle className='flex items-center gap-2 text-lg'>
-                  <User className='h-5 w-5 text-indigo-600' />
+            <Card className='rounded-lg border border-slate-200 bg-white shadow-[0_1px_2px_rgba(20,20,19,0.04)] overflow-hidden'>
+              <CardHeader className='px-4 py-3 border-b border-slate-200 bg-muted/50 space-y-0.5'>
+                <CardTitle className='flex items-center gap-2 text-[13px] font-semibold text-foreground'>
+                  <span className='flex h-6 w-6 shrink-0 items-center justify-center rounded-md bg-primary text-primary-foreground'>
+                    <User className='h-3.5 w-3.5' />
+                  </span>
                   Permissions
                   <Badge
                     variant='outline'
-                    className='ml-2 border-indigo-200 text-indigo-600'>
+                    className='ml-2 rounded-md border-border bg-muted text-[10px] font-medium text-slate-500 tabular-nums'>
                     {totalPermissions} total
                   </Badge>
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <div className='space-y-3'>
+                <div className='space-y-2'>
                   {role.permissions.map((permission) => (
                     <div
                       key={permission._id || permission.page}
-                      className='border border-slate-200 rounded-xl p-4 hover:border-slate-300 transition-colors'>
-                      <div className='flex items-center justify-between mb-3'>
-                        <h3 className='font-semibold text-slate-900'>{permission.page}</h3>
-                        <Badge
-                          variant='outline'
-                          className='text-xs border-slate-200 text-slate-600'>
+                      className='rounded-md border border-slate-200 bg-white overflow-hidden'>
+                      <div className='flex items-center justify-between px-3 py-2.5 border-b border-slate-100 bg-slate-50/70'>
+                        <h3 className='text-[11px] font-semibold uppercase tracking-wider text-slate-500'>{permission.page}</h3>
+                        <span className='text-[11px] text-slate-400 tabular-nums'>
                           {permission.actions.length} /{" "}
                           {pagePermissions[permission.page]?.length || 0}
-                        </Badge>
+                        </span>
                       </div>
-                      <div className='flex flex-wrap gap-2'>
+                      <div className='flex flex-wrap gap-1.5 px-3 py-2.5'>
                         {permission.actions.map((action) => (
                           <Badge
                             key={action}
-                            className='text-xs bg-indigo-50 text-indigo-700 border-indigo-200'>
+                            className='rounded-md border-border bg-muted text-[10px] font-medium text-slate-500'>
                             {action.replace("_", " ")}
                           </Badge>
                         ))}
@@ -337,47 +335,54 @@ const ViewRolePage: React.FC = () => {
           {/* Sidebar */}
           <div className='space-y-6'>
             {/* Quick Stats Card */}
-            <Card className='border-slate-100 shadow-sm'>
-              <CardHeader>
-                <CardTitle className='text-base'>Quick Stats</CardTitle>
+            <Card className='rounded-lg border border-slate-200 bg-white shadow-[0_1px_2px_rgba(20,20,19,0.04)] overflow-hidden'>
+              <CardHeader className='px-4 py-3 border-b border-slate-200 bg-muted/50'>
+                <CardTitle className='flex items-center gap-2 text-[13px] font-semibold text-foreground'>
+                  <span className='flex h-6 w-6 shrink-0 items-center justify-center rounded-md bg-primary text-primary-foreground'>
+                    <Shield className='h-3.5 w-3.5' />
+                  </span>
+                  Quick Stats
+                </CardTitle>
               </CardHeader>
               <CardContent className='space-y-4'>
-                <div className='bg-slate-50 rounded-lg p-4'>
+                <div className='bg-muted/40 rounded-lg p-4'>
                   <div className='text-center'>
-                    <div className='text-2xl font-bold text-indigo-600'>
+                    <div className='text-2xl font-semibold text-foreground tabular-nums'>
                       {role.permissions.length}
                     </div>
-                    <p className='text-sm text-slate-500 mt-1'>Pages with access</p>
+                    <p className='text-[10px] font-semibold uppercase tracking-wider text-slate-400 mt-1'>Pages with access</p>
                   </div>
                 </div>
                 <Separator />
-                <div className='bg-slate-50 rounded-lg p-4'>
+                <div className='bg-muted/40 rounded-lg p-4'>
                   <div className='text-center'>
-                    <div className='text-2xl font-bold text-emerald-600'>
+                    <div className='text-2xl font-semibold text-foreground tabular-nums'>
                       {totalPermissions}
                     </div>
-                    <p className='text-sm text-slate-500 mt-1'>Total permissions</p>
+                    <p className='text-[10px] font-semibold uppercase tracking-wider text-slate-400 mt-1'>Total permissions</p>
                   </div>
                 </div>
                 <Separator />
-                <div className='bg-slate-50 rounded-lg p-4'>
+                <div className='bg-muted/40 rounded-lg p-4'>
                   <div className='text-center'>
-                    <div
-                      className={`text-2xl font-bold ${
-                        role.active ? "text-emerald-600" : "text-slate-600"
-                      }`}>
+                    <div className='text-2xl font-semibold text-foreground tabular-nums'>
                       {role.active ? "Active" : "Inactive"}
                     </div>
-                    <p className='text-sm text-slate-500 mt-1'>Current status</p>
+                    <p className='text-[10px] font-semibold uppercase tracking-wider text-slate-400 mt-1'>Current status</p>
                   </div>
                 </div>
               </CardContent>
             </Card>
 
             {/* Available Pages Card */}
-            <Card className='border-slate-100 shadow-sm'>
-              <CardHeader>
-                <CardTitle className='text-base'>Available Pages</CardTitle>
+            <Card className='rounded-lg border border-slate-200 bg-white shadow-[0_1px_2px_rgba(20,20,19,0.04)] overflow-hidden'>
+              <CardHeader className='px-4 py-3 border-b border-slate-200 bg-muted/50'>
+                <CardTitle className='flex items-center gap-2 text-[13px] font-semibold text-foreground'>
+                  <span className='flex h-6 w-6 shrink-0 items-center justify-center rounded-md bg-primary text-primary-foreground'>
+                    <Eye className='h-3.5 w-3.5' />
+                  </span>
+                  Available Pages
+                </CardTitle>
               </CardHeader>
               <CardContent>
                 <div className='space-y-2'>
@@ -389,8 +394,8 @@ const ViewRolePage: React.FC = () => {
                     return (
                       <div
                         key={pageName}
-                        className='flex items-center justify-between p-2 rounded-lg hover:bg-slate-50 transition-colors'>
-                        <span className='text-sm text-slate-700'>{pageName}</span>
+                        className='flex items-center justify-between p-2 rounded-md hover:bg-slate-50 transition-colors'>
+                        <span className='text-[13px] text-slate-600'>{pageName}</span>
                         <Badge
                           className={permission
                             ? "bg-emerald-100 text-emerald-700 border-emerald-200"

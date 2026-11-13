@@ -21,7 +21,6 @@ import {
   Card,
   CardHeader,
   CardTitle,
-  CardDescription,
   CardContent,
 } from "../../../components/ui/card";
 import { calculateDeliveryCharge } from "../../../utils/deliveryCharge";
@@ -153,25 +152,22 @@ export function ShippingForm({
   }, [districtOptions, selectedDivision, districtSearch]);
 
   return (
-    <Card className='border shadow-sm'>
-      <CardHeader className='bg-gradient-to-r from-green-50 to-blue-50 border-b p-3 rounded-xl mx-2 mt-2 shadow'>
-        <CardTitle className='flex items-center gap-2 text-base text-gray-800'>
-          <Truck className='w-5 h-5 text-green-600' />
+    <Card className='rounded-xl border-border shadow-none overflow-hidden'>
+      <CardHeader className='flex flex-row items-center gap-2 border-b border-border/60 bg-muted/50 px-4 py-2.5 rounded-none m-0'>
+        <Truck className='h-3.5 w-3.5 text-muted-foreground/70' />
+        <CardTitle className='text-[10px] font-semibold uppercase tracking-wider text-muted-foreground/70'>
           Shipping Information
         </CardTitle>
-        <CardDescription className='text-xs text-gray-600'>
-          Select delivery location and address details
-        </CardDescription>
       </CardHeader>
 
-      <CardContent className='p-3 space-y-4'>
+      <CardContent className='p-4 space-y-4'>
         <div className='space-y-3.5'>
           {/* Division / District */}
           <div className='space-y-1.5'>
             <Label
               htmlFor='division'
-              className='flex items-center gap-1.5 font-medium text-sm'>
-              <MapPin className='w-3.5 h-3.5 text-green-600' />
+              className='flex items-center gap-1.5 font-medium text-xs text-foreground'>
+              <MapPin className='w-3.5 h-3.5 text-muted-foreground/70' />
               District *
             </Label>
             <Popover open={divisionOpen} onOpenChange={setDivisionOpen}>
@@ -179,7 +175,7 @@ export function ShippingForm({
                 <Button
                   id='division'
                   variant='outline'
-                  className='w-full justify-start h-9 border-gray-200 focus:border-green-500 transition-all font-normal'>
+                  className='w-full justify-start h-9 border-border hover:bg-muted/50 transition-all font-normal text-foreground'>
                   {shipping.division || "Select division"}
                 </Button>
               </PopoverTrigger>
@@ -220,8 +216,8 @@ export function ShippingForm({
           <div className='space-y-1.5'>
             <Label
               htmlFor='district'
-              className='flex items-center gap-1.5 font-medium text-sm'>
-              <Home className='w-3.5 h-3.5 text-green-600' />
+              className='flex items-center gap-1.5 font-medium text-xs text-foreground'>
+              <Home className='w-3.5 h-3.5 text-muted-foreground/70' />
               Area *
             </Label>
             <Popover open={districtPopoverOpen} onOpenChange={setDistrictPopoverOpen}>
@@ -229,7 +225,7 @@ export function ShippingForm({
                 <Button
                   id='district'
                   variant='outline'
-                  className='w-full justify-start h-9 border-gray-200 focus:border-green-500 transition-all font-normal'>
+                  className='w-full justify-start h-9 border-border hover:bg-muted/50 transition-all font-normal text-foreground'>
                   {shipping.district ||
                     (selectedDivision
                       ? "Select district"
@@ -272,17 +268,19 @@ export function ShippingForm({
 
           {/* Location summary */}
           {shipping.division && shipping.district && (
-            <div className='mt-4 p-3 bg-green-50 rounded-lg border border-green-200'>
-              <h4 className='font-medium text-green-800 text-sm flex items-center gap-2'>
-                <CheckCircle2 className='w-4 h-4' />
+            <div className='p-2.5 bg-amber-50/60 rounded-md border border-amber-100'>
+              <h4 className='font-medium text-foreground text-xs flex items-center gap-1.5'>
+                <CheckCircle2 className='w-3.5 h-3.5 text-primary' />
                 Selected Delivery Location
               </h4>
-              <div className='text-sm text-green-700 mt-2 space-y-0.5'>
+              <div className='text-xs text-muted-foreground mt-1.5 space-y-0.5'>
                 <p>
-                  <strong>District:</strong> {shipping.division}
+                  <span className='text-muted-foreground/70'>District:</span>{" "}
+                  {shipping.division}
                 </p>
                 <p>
-                  <strong>Area:</strong> {shipping.district}
+                  <span className='text-muted-foreground/70'>Area:</span>{" "}
+                  {shipping.district}
                 </p>
               </div>
             </div>
@@ -292,8 +290,8 @@ export function ShippingForm({
           <div className='space-y-1.5'>
             <Label
               htmlFor='address'
-              className='flex items-center gap-1.5 font-medium text-sm'>
-              <MapPin className='w-3.5 h-3.5 text-green-600' />
+              className='flex items-center gap-1.5 font-medium text-xs text-foreground'>
+              <MapPin className='w-3.5 h-3.5 text-muted-foreground/70' />
               Full Address *
             </Label>
             <Textarea
@@ -301,15 +299,15 @@ export function ShippingForm({
               placeholder='Enter detailed address including house number, road, area, landmarks, etc.'
               value={shipping.address ?? ""}
               onChange={handleAddressChange}
-              className='min-h-24 resize-none text-sm border-gray-200 focus:border-green-500 transition-all'
+              className='min-h-24 resize-none text-sm border-border focus-visible:ring-ring transition-all'
               rows={3}
               maxLength={500}
             />
             <div className='flex items-center justify-between'>
-              <p className='text-xs text-gray-500'>
+              <p className='text-[11px] text-muted-foreground/70'>
                 Be specific to ensure successful delivery
               </p>
-              <span className='text-xs text-gray-400'>
+              <span className='text-[11px] text-muted-foreground/70'>
                 {(shipping.address ?? "").length}/500
               </span>
             </div>

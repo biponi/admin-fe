@@ -13,9 +13,71 @@ import type {
 } from "../order/interface.d";
 import type { IProduct, IVariation, IImageGroup } from "../product/interface.d";
 import { isValidBangladeshiMobileNumber } from "../../utils/helperFunction";
+import type { PrepaymentEvaluation } from "../../api/prepaymentRule";
 
 const generateCartItemId = (): string =>
   `cart_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
+
+// ─── Product sort options ────────────────────────────────────────────────────
+// Known fields get first-class labels; a custom VITE_DEFAULT_PRODUCT_SORT value
+// (any other raw sortBy string accepted by the API) is also allowed and is
+// appended to the dropdown with a humanized label by the FilterBar.
+export type OrderSortField =
+  | "priority"
+  | "lastPurchased"
+  | "createdAt"
+  | "name"
+  | "price"
+  | "quantity"
+  | (string & {});
+export type OrderSortOrder = "asc" | "desc";
+
+export const ORDER_SORT_FIELDS: readonly OrderSortField[] = [
+  "priority",
+  "lastPurchased",
+  "createdAt",
+  "name",
+  "price",
+  "quantity",
+];
+
+export const ORDER_SORT_FIELD_LABELS: Record<string, string> = {
+  priority: "Priority",
+  lastPurchased: "Recently Purchased",
+  createdAt: "Created",
+  name: "Name",
+  price: "Price",
+  quantity: "Stock",
+};
+
+const SORT_FIELD_DEFAULT_ORDER: Record<string, OrderSortOrder> = {
+  priority: "desc",
+  lastPurchased: "desc",
+  createdAt: "desc",
+  updatedAt: "desc",
+  name: "asc",
+  price: "asc",
+  quantity: "asc",
+};
+
+// Humanize raw sortBy keys for display (e.g. "updatedAt_desc" → "Updated At Desc")
+export const humanizeSortLabel = (value: string): string =>
+  value
+    .replace(/_/g, " ")
+    .replace(/([a-z0-9])([A-Z])/g, "$1 $2")
+    .replace(/\b\w/g, (c) => c.toUpperCase())
+    .trim();
+
+export const getSortFieldLabel = (field: string): string =>
+  ORDER_SORT_FIELD_LABELS[field] ?? humanizeSortLabel(field);
+
+// Default sort field comes from env (VITE_DEFAULT_PRODUCT_SORT); falls back to
+// "priority" when unset/empty.
+const envDefaultSort = (import.meta.env.VITE_DEFAULT_PRODUCT_SORT || "").trim();
+export const DEFAULT_SORT_BY: OrderSortField = envDefaultSort || "priority";
+
+export const getDefaultSortOrder = (field: OrderSortField): OrderSortOrder =>
+  SORT_FIELD_DEFAULT_ORDER[field] ?? "desc";
 
 export interface CartItem extends IOrderProduct {
   cartItemId: string;
@@ -31,6 +93,8 @@ interface CreateOrderLayoutState {
   searchQuery: string;
   selectedCategory: string;
   selectedBrand: string;
+  sortBy: OrderSortField;
+  sortOrder: OrderSortOrder;
   isLoadingProducts: boolean;
   currentPage: number;
   totalPages: number;
@@ -50,6 +114,10 @@ interface CreateOrderLayoutState {
   draftId: string | null;
   lastSaved: Date | null;
   isDirty: boolean;
+  // Advisory prepayment-rules suggestion (required advance + winning rule)
+  prepaymentSuggestion: PrepaymentEvaluation | null;
+
+  setPrepaymentSuggestion: (suggestion: PrepaymentEvaluation | null) => void;
 
   setProducts: (products: IProduct[]) => void;
   setProductsResponse: (payload: {
@@ -60,6 +128,8 @@ interface CreateOrderLayoutState {
   setSearchQuery: (query: string) => void;
   setSelectedCategory: (categoryId: string) => void;
   setSelectedBrand: (brandId: string) => void;
+  setSortBy: (field: OrderSortField) => void;
+  setSortOrder: (order: OrderSortOrder) => void;
   filterProducts: () => void;
   setLoadingProducts: (isLoading: boolean) => void;
   setCurrentPage: (page: number) => void;
@@ -102,6 +172,8 @@ const initialState = {
   searchQuery: "",
   selectedCategory: "",
   selectedBrand: "",
+  sortBy: DEFAULT_SORT_BY,
+  sortOrder: getDefaultSortOrder(DEFAULT_SORT_BY),
   isLoadingProducts: false,
   currentPage: 1,
   totalPages: 1,
@@ -127,6 +199,7 @@ const initialState = {
   draftId: null,
   lastSaved: null,
   isDirty: false,
+  prepaymentSuggestion: null,
 };
 
 export const useCreateOrderLayoutStore = create<CreateOrderLayoutState>()(
@@ -136,6 +209,10 @@ export const useCreateOrderLayoutStore = create<CreateOrderLayoutState>()(
         ...initialState,
 
         // ── Products ───────────────────────────────────────────────────────
+
+        setPrepaymentSuggestion: (suggestion) => {
+          set({ prepaymentSuggestion: suggestion });
+        },
 
         setProducts: (products) => {
           set({ products, filteredProducts: products });
@@ -166,6 +243,22 @@ export const useCreateOrderLayoutStore = create<CreateOrderLayoutState>()(
         setSelectedBrand: (brandId) => {
           if (get().selectedBrand === brandId) return;
           set({ selectedBrand: brandId });
+        },
+
+        setSortBy: (field) => {
+          if (get().sortBy === field) return;
+          // Changing the field resets order to that field's default and
+          // restarts pagination so the new sort is visible on page 1.
+          set({
+            sortBy: field,
+            sortOrder: getDefaultSortOrder(field),
+            currentPage: 1,
+          });
+        },
+
+        setSortOrder: (order) => {
+          if (get().sortOrder === order) return;
+          set({ sortOrder: order, currentPage: 1 });
         },
 
         filterProducts: () => {

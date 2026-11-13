@@ -30,6 +30,9 @@ import PurchaseOrderHistoryTab from "./components/PurchaseOrderHistoryTab";
 import AdjustmentHistoryTab from "./components/AdjustmentHistoryTab";
 import StoreReserveHistoryTab from "./components/StoreReserveHistoryTab";
 import QuantityTimelineTab from "./components/QuantityTimelineTab";
+import { MobilePage } from "../../components/mobile";
+import { PageHeader } from "../../components/PageHeader";
+import { rippleProps } from "../../components/mobile/use-ripple";
 
 const ProductDetails = () => {
   const { toast } = useToast();
@@ -105,29 +108,55 @@ const ProductDetails = () => {
 
   return (
     <MainView title='Product Details'>
-      <div className='mx-2 min-w-0 space-y-6'>
-        {/* Header with Back Button and Refresh */}
-        <div className='flex items-center justify-between'>
-          <Button
-            variant='ghost'
-            size='sm'
-            onClick={() => navigate("/products")}
-            className='text-slate-600 hover:text-slate-900 hover:bg-slate-100'>
-            <ArrowLeft className='mr-2 h-4 w-4' />
-            Back to Products
-          </Button>
-          <Button
-            variant='outline'
-            size='sm'
+      <MobilePage
+        title='Product Details'
+        icon={<Package className='h-5 w-5 text-primary' />}
+        subtitle={productData.name}
+        back
+        onBack={() => navigate("/products")}
+        actions={
+          <button
             onClick={handleRefresh}
             disabled={refreshing}
-            className='border-slate-200 text-slate-600 hover:text-slate-900 hover:bg-slate-50'>
+            aria-label='Refresh'
+            className='m3-ripple h-10 w-10 rounded-full grid place-items-center text-slate-600 disabled:opacity-50'
+            {...rippleProps()}>
             <RefreshCw
-              className={`mr-2 h-4 w-4 ${refreshing ? "animate-spin" : ""}`}
+              className={`h-5 w-5 ${refreshing ? "animate-spin" : ""}`}
             />
-            Refresh
-          </Button>
-        </div>
+          </button>
+        }>
+      <div className='mx-2 min-w-0 space-y-6 mobile:pb-4'>
+        {/* Header with Back Button and Refresh (desktop only — mobile uses the sub-app-bar) */}
+        <PageHeader
+          className='hidden md:flex'
+          icon={<Package className='h-5 w-5' />}
+          title='Product Details'
+          subtitle={productData.name}
+          actions={
+            <>
+              <Button
+                variant='ghost'
+                size='sm'
+                onClick={() => navigate("/products")}
+                className='text-slate-600 hover:text-slate-900 hover:bg-slate-100'>
+                <ArrowLeft className='mr-2 h-4 w-4' />
+                Back to Products
+              </Button>
+              <Button
+                variant='outline'
+                size='sm'
+                onClick={handleRefresh}
+                disabled={refreshing}
+                className='border-slate-200 text-slate-600 hover:text-slate-900 hover:bg-slate-50'>
+                <RefreshCw
+                  className={`mr-2 h-4 w-4 ${refreshing ? "animate-spin" : ""}`}
+                />
+                Refresh
+              </Button>
+            </>
+          }
+        />
 
         {/* Product Information Card (Read-only) */}
         <ProductInfoCard product={productData} />
@@ -200,6 +229,7 @@ const ProductDetails = () => {
           </TabsContent>
         </Tabs>
       </div>
+      </MobilePage>
     </MainView>
   );
 };

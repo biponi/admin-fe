@@ -40,7 +40,7 @@ import { OrderDetailsSheet } from "./components/OrderDetailsSheet";
 import { StatusBadge } from "./components/StatusBadge";
 import { FloatingHelpButton } from "./components/FloatingHelpButton";
 import { OnboardingTour } from "./components/OnboardingTour";
-import { FraudDetectionContent } from "./components/FraudDetectionContent";
+import FraudDetailPanel from "../../components/fraud/FraudDetailPanel";
 import { ReturnOrderSheet } from "./components/ReturnOrderSheet";
 import { ReturnOrdersView } from "./components/ReturnOrdersView";
 import { InvoicePreviewModal } from "./components/InvoicePreviewModal";
@@ -68,6 +68,8 @@ import { cn, formatCurrency } from "./lib/utils";
 import { fadeIn } from "./lib/animations";
 import { useKeyboardShortcuts } from "./hooks/useKeyboardShortcuts";
 import { orderBulkAction } from "../../api/order";
+import useRoleCheck from "../auth/hooks/useRoleCheck";
+import { selectionHasForeignOrders } from "../../utils/orderPermission";
 import { useToast } from "../../components/ui/use-toast";
 import {
   generateMultipleModernInvoicesAndDownloadZip,
@@ -134,6 +136,53 @@ export const OrderListV2: React.FC = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const { editOrderData } = useOrder();
+  const { userStore, hasRequiredPermission, canModifyOrder, isOwnOnlyForPage } =
+    useRoleCheck();
+
+  // Maps a bulk action to the order permission it requires (mirrors the
+  // backend's resolveAction mapping in routes/v1/order/routes.js)
+  const BULK_ACTION_PERMISSION: Record<string, string> = {
+    shipped: "update_status",
+    complete: "update_status",
+    processing: "update_status",
+    cancel: "cancel",
+    delete: "delete",
+  };
+
+  const bulkOwnOnlyBlocked = (action: string) =>
+    selectionHasForeignOrders(
+      userStore?.permissions,
+      userStore?.id,
+      "order",
+      action,
+      getSelectedOrders(),
+    );
+
+  /** Permission + own-only guard applied when a bulk action is executed */
+  const guardBulkAction = (actionType: string): boolean => {
+    const requiredAction =
+      BULK_ACTION_PERMISSION[actionType] ?? "update_status";
+    if (!hasRequiredPermission("order", requiredAction)) {
+      toast({
+        variant: "destructive",
+        title: "Permission denied",
+        description: `You don't have the "${requiredAction.replace("_", " ")}" permission on orders.`,
+      });
+      return false;
+    }
+    if (
+      bulkOwnOnlyBlocked(requiredAction) ||
+      bulkOwnOnlyBlocked("bulk_action")
+    ) {
+      toast({
+        variant: "destructive",
+        title: "Own-only restriction",
+        description: "Deselect orders you didn't create.",
+      });
+      return false;
+    }
+    return true;
+  };
 
   // Zustand stores
   const {
@@ -359,6 +408,7 @@ export const OrderListV2: React.FC = () => {
       key: "d",
       meta: true,
       description: "Download invoices",
+      enabled: hasRequiredPermission("order", "documents"),
       action: () =>
         selection.selectedIds.size > 0 && handleBulkInvoiceDownload(),
     },
@@ -455,6 +505,8 @@ export const OrderListV2: React.FC = () => {
       return;
     }
 
+    if (!guardBulkAction(actionType)) return;
+
     try {
       const response = await orderBulkAction(ids, actionType, courierProvider);
       if (response.success) {
@@ -491,6 +543,7 @@ export const OrderListV2: React.FC = () => {
   };
 
   const handleBulkShipped = () => {
+    if (!guardBulkAction("shipped")) return;
     setPendingBulkAction("shipped");
     setCourierSelectorOpen(true);
   };
@@ -501,14 +554,24 @@ export const OrderListV2: React.FC = () => {
     setPendingBulkAction(null);
   };
   const handleBulkComplete = () => {
+    if (!guardBulkAction("complete")) return;
     setPendingBulkActionType("complete");
     setBulkConfirmDialogOpen(true);
   };
   const handleBulkCancel = () => {
+    if (!guardBulkAction("cancel")) return;
     setPendingBulkActionType("cancel");
     setBulkConfirmDialogOpen(true);
   };
   const handleBulkInvoiceDownload = () => {
+    if (!hasRequiredPermission("order", "documents")) {
+      toast({
+        variant: "destructive",
+        title: "Permission denied",
+        description: 'You don\'t have the "documents" permission on orders.',
+      });
+      return;
+    }
     setPendingBulkActionType("invoice");
     setBulkConfirmDialogOpen(true);
   };
@@ -686,12 +749,27 @@ export const OrderListV2: React.FC = () => {
       });
       return;
     }
+    if (!canModifyOrder("order", "cancel", order)) {
+      toast({
+        variant: "destructive",
+        title: isOwnOnlyForPage("order", "cancel")
+          ? "You can only cancel orders you created yourself"
+          : "Permission denied",
+        description: `You don't have permission to cancel order #${order.orderNumber}.`,
+      });
+      return;
+    }
     setSelectedOrder(order);
     setCancelDialogOpen(true);
   };
 
   const confirmCancelOrder = async () => {
     if (!selectedOrder) return;
+    if (
+      !guardBulkAction("cancel") ||
+      !canModifyOrder("order", "cancel", selectedOrder)
+    )
+      return;
     try {
       const response = await orderBulkAction([selectedOrder.id], "cancel");
       if (response.success) {
@@ -886,7 +964,7 @@ export const OrderListV2: React.FC = () => {
               </div>
 
               {/* Mobile */}
-              <div className='md:hidden'>
+              <div className='md:hidden pb-[calc(4rem+env(safe-area-inset-bottom))]'>
                 <MobileOrderList
                   key='mobile-order-list'
                   orders={orders}
@@ -968,6 +1046,7 @@ export const OrderListV2: React.FC = () => {
           selectedCount={selection.selectedIds.size}
           totalCount={orders.length}
           isAllSelected={selection.isAllSelected}
+          selectedOrders={getSelectedOrders()}
           onClearSelection={handleClearSelection}
           onSelectAll={handleSelectAll}
           onShipped={handleBulkShipped}
@@ -1021,38 +1100,46 @@ export const OrderListV2: React.FC = () => {
 
       {/* ── Fraud detection sheet ─────────────────────────── */}
       <Sheet open={fraudDialogOpen} onOpenChange={setFraudDialogOpen}>
-        <SheetContent className='sm:max-w-[600px]'>
-          <SheetHeader>
-            <SheetTitle className='flex items-center gap-2 text-base font-semibold'>
-              <span className='inline-flex h-7 w-7 items-center justify-center rounded-md bg-rose-100'>
-                <Shield className='h-3.5 w-3.5 text-rose-600' />
+        <SheetContent className='w-full sm:max-w-[460px] p-0 flex flex-col gap-0 overflow-hidden'>
+          <SheetHeader className='px-4 py-3 border-b border-slate-200 bg-gradient-to-r from-rose-50 to-red-50 flex flex-row items-center justify-between space-y-0'>
+            <div className='flex items-center gap-2.5'>
+              <span className='inline-flex h-7 w-7 items-center justify-center rounded-lg bg-gradient-to-br from-rose-500 to-red-600 shadow-sm'>
+                <Shield className='h-3.5 w-3.5 text-white' />
               </span>
-              Fraud risk analysis
-            </SheetTitle>
-            <SheetDescription>
-              {selectedOrder?.customer?.name || "Unknown"} ·{" "}
-              {selectedOrder?.customer?.phoneNumber || "—"}
-            </SheetDescription>
-          </SheetHeader>
-          <div className='mt-5'>
-            {selectedOrder?.fraudDetection ? (
-              <FraudDetectionContent
-                fraudDetection={selectedOrder.fraudDetection}
-              />
-            ) : (
-              <div className='flex flex-col items-center justify-center h-64 text-center gap-3'>
-                <div className='h-14 w-14 rounded-2xl bg-gray-100 flex items-center justify-center'>
-                  <Shield className='h-7 w-7 text-gray-400' />
-                </div>
-                <p className='text-sm font-medium text-gray-700'>
-                  No fraud data
-                </p>
-                <p className='text-xs text-gray-500 max-w-[200px]'>
-                  This order hasn't been analysed for fraud risk yet.
-                </p>
+              <div>
+                <SheetTitle className='text-sm font-semibold'>
+                  Fraud risk analysis
+                </SheetTitle>
+                <SheetDescription className='text-[11px]'>
+                  {selectedOrder?.customer?.name || "Unknown"} ·{" "}
+                  {selectedOrder?.customer?.phoneNumber || "—"}
+                </SheetDescription>
               </div>
-            )}
-          </div>
+            </div>
+          </SheetHeader>
+          <ScrollArea className='flex-1 h-[calc(100vh-110px)]'>
+            <div className='px-4 py-4'>
+              {selectedOrder?.customer?.phoneNumber ? (
+                <FraudDetailPanel
+                  phoneNumber={selectedOrder.customer.phoneNumber}
+                  customerName={selectedOrder.customer.name}
+                  onChanged={refreshOrders}
+                />
+              ) : (
+                <div className='flex flex-col items-center justify-center h-64 text-center gap-3'>
+                  <div className='h-14 w-14 rounded-2xl bg-gray-100 flex items-center justify-center'>
+                    <Shield className='h-7 w-7 text-gray-400' />
+                  </div>
+                  <p className='text-sm font-medium text-gray-700'>
+                    No customer phone number
+                  </p>
+                  <p className='text-xs text-gray-500 max-w-[200px]'>
+                    Fraud risk is tracked by phone number — this order has none.
+                  </p>
+                </div>
+              )}
+            </div>
+          </ScrollArea>
         </SheetContent>
       </Sheet>
 

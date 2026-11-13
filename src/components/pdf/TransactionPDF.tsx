@@ -1,4 +1,5 @@
 import React, { FC } from "react";
+import { BRAND_CONFIG } from "../../config/brand";
 import {
   Document,
   Page,
@@ -289,7 +290,7 @@ export const TransactionPDFDocument: FC<TransactionPDFDocumentProps> = ({
 
         {/* Footer */}
         <View style={styles.footer} fixed>
-          <Text>Biponi Transaction Management System</Text>
+          <Text>{BRAND_CONFIG.name} Transaction Management System</Text>
           <Text
             render={({ pageNumber, totalPages }) =>
               `Page ${pageNumber} of ${totalPages}`

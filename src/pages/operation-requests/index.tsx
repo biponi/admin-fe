@@ -12,6 +12,7 @@ import { Button } from "@/components/ui/button";
 import {
   AlertCircle,
   ClipboardList,
+  ClipboardCheck,
   RefreshCw,
   User,
   Users,
@@ -19,6 +20,8 @@ import {
 import { toast } from "sonner";
 import useRoleCheck from "../auth/hooks/useRoleCheck";
 import MainView from "@/coreComponents/mainView";
+import { PageHeader } from "../../components/PageHeader";
+import { MobilePage, rippleProps } from "@/components/mobile";
 
 const OperationRequestsPage = () => {
   const user = useSelector((state: any) => state?.user);
@@ -133,32 +136,46 @@ const OperationRequestsPage = () => {
 
   return (
     <MainView title='Operation Requests'>
+      <MobilePage
+        title={
+          viewingMyRequests ? "My Deletion Requests" : "Operation Requests"
+        }
+        icon={<ClipboardCheck className='h-5 w-5' />}
+        noBottomNav
+        actions={
+          <button
+            onClick={handleRefresh}
+            disabled={loading}
+            aria-label='Refresh'
+            className='m3-ripple grid h-10 w-10 shrink-0 place-items-center rounded-full bg-primary/10 text-primary active:scale-95 transition-transform disabled:opacity-50'
+            {...rippleProps()}>
+            <RefreshCw
+              className={`h-4.5 w-4.5 ${loading ? "animate-spin" : ""}`}
+            />
+          </button>
+        }>
       <div className='min-h-screen bg-slate-50/60'>
-        <div className='max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6'>
+        <div className='max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6 mobile:px-3 mobile:py-4 mobile:pb-[calc(5rem+env(safe-area-inset-bottom))]'>
           {/* Header */}
-          <div className='bg-white rounded-xl border border-slate-100 shadow-sm px-5 py-4'>
-            <div className='flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3'>
-              <div className='flex items-center gap-3'>
-                <div className='flex items-center justify-center w-10 h-10 rounded-xl bg-indigo-600 shadow-sm shadow-indigo-200'>
-                  <ClipboardList
-                    className='h-5 w-5 text-white'
-                    strokeWidth={2}
-                  />
-                </div>
-                <div>
-                  <h1 className='text-xl font-semibold text-slate-900 leading-tight'>
-                    {viewingMyRequests
-                      ? "My Deletion Requests"
-                      : "Operation Requests"}
-                  </h1>
-                  <p className='text-sm text-slate-500 mt-0.5'>
-                    {canViewStatistics && !viewingMyRequests
-                      ? "Manage and approve deletion requests"
-                      : "View and track your deletion requests"}
-                  </p>
-                </div>
-              </div>
-
+          <PageHeader
+            className='mobile:hidden'
+            icon={<ClipboardCheck className='h-5 w-5 text-white' />}
+            title={
+              viewingMyRequests ? "My Deletion Requests" : "Operation Requests"
+            }
+            subtitle={
+              canViewStatistics && !viewingMyRequests
+                ? "Manage and approve deletion requests"
+                : "View and track your deletion requests"
+            }
+            count={
+              pagination?.total != null ? (
+                <span className='rounded-md px-2.5 py-1 text-base font-semibold text-slate-500 tabular-nums'>
+                  {pagination.total} total
+                </span>
+              ) : undefined
+            }
+            actions={
               <div className='flex items-center gap-2 shrink-0'>
                 {canViewStatistics &&
                   (viewingMyRequests ? (
@@ -192,8 +209,8 @@ const OperationRequestsPage = () => {
                   Refresh
                 </Button>
               </div>
-            </div>
-          </div>
+            }
+          />
 
           {/* Error banner */}
           {error && (
@@ -268,7 +285,7 @@ const OperationRequestsPage = () => {
               </div>
             </div>
           ) : (
-            <div className='grid gap-3 sm:grid-cols-2 lg:grid-cols-3'>
+            <div className='grid gap-3 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3'>
               {requests.map((request) => (
                 <RequestCard
                   key={request.id}
@@ -369,6 +386,7 @@ const OperationRequestsPage = () => {
           />
         </div>
       </div>
+      </MobilePage>
     </MainView>
   );
 };

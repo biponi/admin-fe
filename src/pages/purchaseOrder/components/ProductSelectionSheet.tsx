@@ -104,7 +104,7 @@ export function ProductSelectionSheet({
           "flex flex-col p-0 gap-0",
           isMobile
             ? "h-[92vh] w-full max-w-none rounded-t-3xl rounded-b-none"
-            : "w-full sm:max-w-2xl overflow-y-auto"
+            : "w-full md:max-w-2xl overflow-y-auto"
         )}
       >
         {/* Mobile drag handle */}
@@ -315,10 +315,10 @@ export function ProductSelectionSheet({
         {/* Pagination */}
         {totalPages > 1 && (
           <div className="border-t px-4 py-3">
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+            <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
               {/* Page info */}
               <div className="flex items-center gap-2">
-                <p className="text-sm text-gray-600 hidden sm:inline">
+                <p className="text-sm text-gray-600 hidden md:inline">
                   Page <span className="font-medium">{currentPage}</span> of <span className="font-medium">{totalPages}</span>
                 </p>
               </div>
@@ -390,7 +390,12 @@ export function ProductSelectionSheet({
         )}
 
         {/* Footer */}
-        <SheetFooter className="gap-2 px-5 py-4 border-t">
+        <SheetFooter
+          className={cn(
+            "gap-2 px-5 py-4 border-t",
+            isMobile && "pb-[calc(1rem+env(safe-area-inset-bottom))]"
+          )}
+        >
           <Button
             variant="outline"
             onClick={() => onOpenChange(false)}

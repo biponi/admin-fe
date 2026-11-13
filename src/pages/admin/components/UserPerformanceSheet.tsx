@@ -1,4 +1,4 @@
-import React, { useMemo } from "react";
+import React from "react";
 import { UserPerformanceDetailResponse } from "../../../api/adminAudit";
 import {
   Sheet,
@@ -20,6 +20,7 @@ import {
 } from "lucide-react";
 import dayjs from "dayjs";
 import relativeTime from "dayjs/plugin/relativeTime";
+import { ActivityPillGrid } from "./ActivityPillGrid";
 
 dayjs.extend(relativeTime);
 
@@ -34,76 +35,14 @@ interface UserPerformanceSheetProps {
   endDate: string;
 }
 
-const ContributionHeatmap: React.FC<{ activityTrend: { date: string; orderActions: number; productAdjustments: number }[] }> = ({ activityTrend }) => {
-  const heatmapData = useMemo(() => {
-    const data: Record<string, number> = {};
-    activityTrend.forEach((t) => {
-      data[t.date] = t.orderActions + t.productAdjustments;
-    });
-    return data;
-  }, [activityTrend]);
-
-  const totalDays = 90;
-  const today = dayjs();
-  const startDate = today.subtract(totalDays - 1, "day");
-
-  const weeks: { date: dayjs.Dayjs; count: number }[][] = [];
-  let currentWeek: { date: dayjs.Dayjs; count: number }[] = [];
-
-  for (let i = 0; i < totalDays; i++) {
-    const date = startDate.add(i, "day");
-    const dateStr = date.format("YYYY-MM-DD");
-    const count = heatmapData[dateStr] || 0;
-
-    if (i > 0 && date.day() === 0) {
-      weeks.push(currentWeek);
-      currentWeek = [];
-    }
-    currentWeek.push({ date, count });
-  }
-  if (currentWeek.length > 0) {
-    weeks.push(currentWeek);
-  }
-
-  const getColor = (count: number) => {
-    if (count === 0) return "bg-slate-100";
-    if (count <= 2) return "bg-emerald-200";
-    if (count <= 5) return "bg-emerald-400";
-    if (count <= 10) return "bg-emerald-600";
-    return "bg-emerald-800";
-  };
-
-  const maxCount = Math.max(...Object.values(heatmapData), 1);
-
-  return (
-    <div className="space-y-2">
-      <div className="flex gap-0.5 overflow-x-auto pb-1">
-        {weeks.map((week, wi) => (
-          <div key={wi} className="flex flex-col gap-0.5">
-            {week.map((day, di) => (
-              <div
-                key={di}
-                title={`${day.date.format("MMM DD, YYYY")}: ${day.count} activities`}
-                className={`w-2.5 h-2.5 rounded-sm ${getColor(day.count)} hover:ring-1 hover:ring-slate-300 transition-all cursor-default`}
-              />
-            ))}
-          </div>
-        ))}
-      </div>
-      <div className="flex items-center gap-2 text-xs text-slate-500">
-        <span>Less</span>
-        <div className="flex gap-0.5">
-          <div className="w-2.5 h-2.5 rounded-sm bg-slate-100" />
-          <div className="w-2.5 h-2.5 rounded-sm bg-emerald-200" />
-          <div className="w-2.5 h-2.5 rounded-sm bg-emerald-400" />
-          <div className="w-2.5 h-2.5 rounded-sm bg-emerald-600" />
-          <div className="w-2.5 h-2.5 rounded-sm bg-emerald-800" />
-        </div>
-        <span>More</span>
-      </div>
-    </div>
-  );
-};
+const ContributionHeatmap: React.FC<{ activityTrend: { date: string; orderActions: number; productAdjustments: number }[] }> = ({ activityTrend }) => (
+  <ActivityPillGrid
+    days={activityTrend.map((t) => ({
+      date: t.date,
+      count: t.orderActions + t.productAdjustments,
+    }))}
+  />
+);
 
 export const UserPerformanceSheet: React.FC<UserPerformanceSheetProps> = ({
   open,

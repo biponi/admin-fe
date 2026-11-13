@@ -49,7 +49,7 @@ export const BulkCommissionActionsBar: React.FC<
   if (selectedCount === 0) return null;
 
   return (
-    <div className="fixed bottom-4 left-1/2 transform -translate-x-1/2 z-50">
+    <div className="hidden md:block fixed bottom-4 left-1/2 transform -translate-x-1/2 z-50">
       <div
         className={cn(
           "bg-background border shadow-lg rounded-lg p-3",

@@ -1,23 +1,6 @@
-import axios from "axios";
+import axiosInstance from "../api/axios";
 
-const API_URL = import.meta.env.VITE_API_URL || "http://localhost:7001";
-
-// Create axios instance with auth token
-const api = axios.create({
-  baseURL: API_URL,
-  headers: {
-    "Access-Control-Allow-Origin": "*",
-  },
-});
-
-// Add auth token to requests
-api.interceptors.request.use((config) => {
-  const token = localStorage.getItem("token");
-  if (token && config.headers) {
-    config.headers.set("x-access-token", token);
-  }
-  return config;
-});
+const BASE = "/api/v1/notification";
 
 interface DeviceInfo {
   platform: string;
@@ -32,7 +15,8 @@ interface NotificationResponse {
 }
 
 /**
- * Register FCM token with backend
+ * Register FCM token with backend (targeting is automatic for logged-in
+ * admin users — no topic subscriptions)
  */
 export const registerFCMToken = async (
   token: string
@@ -47,23 +31,9 @@ export const registerFCMToken = async (
       os: navigator.platform,
     };
 
-    // Subscribe to all relevant topics by default
-    const topics = [
-      "order_created",
-      "order_status_changed",
-      "courier_shipped",
-      "courier_delivered",
-      "payment_received",
-      "payment_failed",
-      "low_stock",
-      "user_registered",
-      "system_alert",
-    ];
-
-    const response = await api.post("/notification/register-token", {
+    const response = await axiosInstance.post(`${BASE}/register-token`, {
       token,
       deviceInfo,
-      topics,
     });
 
     return response.data;
@@ -82,7 +52,7 @@ export const getNotifications = async (
   unreadOnly: boolean = false
 ): Promise<NotificationResponse> => {
   try {
-    const response = await api.get("/notification/list", {
+    const response = await axiosInstance.get(`${BASE}/list`, {
       params: { page, limit, unreadOnly },
     });
     return response.data;
@@ -93,13 +63,19 @@ export const getNotifications = async (
 };
 
 /**
- * Get unread notification count
+ * Get unread notification count.
+ * Accepts an optional AbortSignal so an in-flight request can be cancelled
+ * (e.g. on logout, when the polling instance is destroyed).
  */
-export const getUnreadCount = async (): Promise<number> => {
+export const getUnreadCount = async (signal?: AbortSignal): Promise<number> => {
   try {
-    const response = await api.get("/notification/unread-count");
+    const response = await axiosInstance.get(`${BASE}/unread-count`, { signal });
     return response.data.data.count;
-  } catch (error) {
+  } catch (error: any) {
+    // Aborted request (logout / instance teardown) — fail silently
+    if (error?.name === "CanceledError" || error?.code === "ERR_CANCELED") {
+      return 0;
+    }
     console.error("Error fetching unread count:", error);
     return 0;
   }
@@ -112,7 +88,9 @@ export const markAsRead = async (
   notificationId: string
 ): Promise<NotificationResponse> => {
   try {
-    const response = await api.put(`/notification/${notificationId}/read`);
+    const response = await axiosInstance.put(
+      `${BASE}/${notificationId}/read`
+    );
     return response.data;
   } catch (error) {
     console.error("Error marking notification as read:", error);
@@ -121,54 +99,16 @@ export const markAsRead = async (
 };
 
 /**
- * Delete notification
+ * Delete notification (hides it for the current user)
  */
 export const deleteNotification = async (
   notificationId: string
 ): Promise<NotificationResponse> => {
   try {
-    const response = await api.delete(`/notification/${notificationId}`);
+    const response = await axiosInstance.delete(`${BASE}/${notificationId}`);
     return response.data;
   } catch (error) {
     console.error("Error deleting notification:", error);
-    throw error;
-  }
-};
-
-/**
- * Subscribe to topic
- */
-export const subscribeTopic = async (
-  token: string,
-  topic: string
-): Promise<NotificationResponse> => {
-  try {
-    const response = await api.post("/notification/subscribe-topic", {
-      token,
-      topic,
-    });
-    return response.data;
-  } catch (error) {
-    console.error("Error subscribing to topic:", error);
-    throw error;
-  }
-};
-
-/**
- * Unsubscribe from topic
- */
-export const unsubscribeTopic = async (
-  token: string,
-  topic: string
-): Promise<NotificationResponse> => {
-  try {
-    const response = await api.post("/notification/unsubscribe-topic", {
-      token,
-      topic,
-    });
-    return response.data;
-  } catch (error) {
-    console.error("Error unsubscribing from topic:", error);
     throw error;
   }
 };
@@ -178,7 +118,7 @@ export const unsubscribeTopic = async (
  */
 export const markAllAsRead = async (): Promise<NotificationResponse> => {
   try {
-    const response = await api.put("/notification/mark-all-read");
+    const response = await axiosInstance.put(`${BASE}/mark-all-read`);
     return response.data;
   } catch (error) {
     console.error("Error marking all notifications as read:", error);

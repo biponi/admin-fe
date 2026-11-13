@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { ArrowLeft, Edit, Loader2 } from "lucide-react";
+import { ArrowLeft, Edit, Loader2, Store as StoreIcon } from "lucide-react";
 import { Button } from "../../components/ui/button";
 import MainView from "../../coreComponents/mainView";
 import toast from "react-hot-toast";
@@ -9,6 +9,9 @@ import RecordForm from "./common/recordForm";
 import { distinctProducts } from "./utils/functions";
 import ErrorAlertDialog from "../../components/common/ErrorAlertDialog";
 import { IRecord } from "./interface";
+import { useIsMobile } from "../../hooks/use-mobile";
+import { MobilePage, MobileSkeletonList } from "../../components/mobile";
+import { PageHeader } from "../../components/PageHeader";
 
 const EditRecord: React.FC = () => {
   const { storeId, recordId } = useParams<{
@@ -16,6 +19,7 @@ const EditRecord: React.FC = () => {
     recordId: string;
   }>();
   const navigate = useNavigate();
+  const isMobile = useIsMobile();
 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isLoadingRecord, setIsLoadingRecord] = useState(true);
@@ -92,25 +96,79 @@ const EditRecord: React.FC = () => {
 
   const handleCancel = () => navigate(`/store/${storeId}`);
 
-  return (
-    <MainView title='Edit Record'>
-      <div className='px-4 py-5 sm:px-6 space-y-4 max-w-7xl mx-auto'>
-        {/* Header */}
-        <div className='bg-white rounded-2xl border border-gray-100 shadow-sm px-5 py-4'>
-          <div className='flex items-center justify-between gap-3'>
+  // ─── Mobile presentation ──────────────────────────────────────────────────────
+  if (isMobile) {
+    return (
+      <MobilePage
+        title='Edit Record'
+        icon={<StoreIcon className='h-5 w-5 text-primary' />}
+        subtitle='Modify products and quantities for this record'
+        back
+        onBack={handleCancel}>
+        <div className='space-y-4 p-4'>
+          {/* Header info */}
+          <div className='rounded-2xl border bg-card px-4 py-3'>
             <div className='flex items-center gap-3'>
-              <div className='w-11 h-11 rounded-xl bg-violet-600 flex items-center justify-center shrink-0 shadow-sm shadow-violet-200'>
-                <Edit className='w-5 h-5 text-white' strokeWidth={2} />
+              <div className='grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-violet-600 text-white shadow-sm shadow-violet-200'>
+                <Edit className='h-5 w-5' strokeWidth={2} />
               </div>
-              <div>
-                <h1 className='text-base font-bold text-gray-900 leading-tight'>
+              <div className='min-w-0'>
+                <p className='text-sm font-semibold text-foreground leading-tight'>
                   Edit Record
-                </h1>
-                <p className='text-xs text-gray-400 mt-0.5'>
+                </p>
+                <p className='mt-0.5 text-xs text-muted-foreground'>
                   Modify products and quantities for this inventory record
                 </p>
               </div>
             </div>
+          </div>
+
+          {isLoadingRecord ? (
+            <MobileSkeletonList />
+          ) : (
+            /* Form card */
+            <div className='overflow-hidden rounded-2xl border bg-card'>
+              <div className='border-b px-4 py-3'>
+                <p className='text-sm font-semibold text-foreground'>
+                  Record Details
+                </p>
+                <p className='mt-0.5 text-xs text-muted-foreground'>
+                  Update products or quantities, then save your changes
+                </p>
+              </div>
+              <div className='p-4'>
+                <RecordForm
+                  storeId={storeId || ""}
+                  mode='edit'
+                  recordId={recordId}
+                  initialProducts={initialProducts}
+                  onSubmit={handleSubmit}
+                  onCancel={handleCancel}
+                  isSubmitting={isSubmitting}
+                />
+              </div>
+            </div>
+          )}
+        </div>
+
+        <ErrorAlertDialog
+          isOpen={errorDialog.isOpen}
+          onClose={() => setErrorDialog({ isOpen: false, message: "" })}
+          message={errorDialog.message}
+        />
+      </MobilePage>
+    );
+  }
+
+  return (
+    <MainView title='Edit Record'>
+      <div className='px-4 py-5 sm:px-6 space-y-4 max-w-7xl mx-auto'>
+        {/* Header */}
+        <PageHeader
+          icon={<StoreIcon className='w-5 h-5 text-white' strokeWidth={2} />}
+          title='Edit Record'
+          subtitle='Modify products and quantities for this inventory record'
+          actions={
             <Button
               variant='outline'
               size='sm'
@@ -119,8 +177,8 @@ const EditRecord: React.FC = () => {
               <ArrowLeft className='w-3.5 h-3.5' />
               Back
             </Button>
-          </div>
-        </div>
+          }
+        />
 
         {/* Loading state */}
         {isLoadingRecord ? (

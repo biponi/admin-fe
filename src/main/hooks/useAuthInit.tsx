@@ -3,17 +3,13 @@ import { useNavigate } from "react-router-dom";
 import useLoginAuth from "../../pages/auth/hooks/useLoginAuth";
 import { TokenManager } from "../services/auth/tokenManager";
 import { AuthService } from "../services/auth/authService";
-import { useNotifications } from "../../notification";
+import {
+  ensureNotificationInit,
+  destroyNotificationInstance,
+} from "../../notification/useNotifications";
 import { useSelector } from "react-redux";
-import { setTopicsForNotifications } from "../../utils/helperFunction";
 
 export const useAuthInit = () => {
-  const {
-    initializeFCM,
-    fetchUnreadCount,
-    fetchNotifications,
-    setupMessageListener,
-  } = useNotifications();
   const lastInitializedUserId = useRef<string | null>(null);
   const user = useSelector((state: any) => state?.user);
   const [isLoading, setIsLoading] = useState(true);
@@ -36,6 +32,9 @@ export const useAuthInit = () => {
 
         // No tokens at all - redirect to login
         if (!authToken && !refreshTokenValue) {
+          // Logged out — fully stop the notification instance (interval,
+          // listener, in-flight request)
+          destroyNotificationInstance();
           setIsAuth(false);
           navigate("/login");
           setIsLoading(false);
@@ -73,11 +72,13 @@ export const useAuthInit = () => {
         }
 
         // Both tokens failed - sign out and redirect
+        destroyNotificationInstance();
         authService.handleAuthFailure();
         setIsAuth(false);
         setIsLoading(false);
       } catch (error) {
         console.error("Error during authentication initialization:", error);
+        destroyNotificationInstance();
         authService.handleAuthFailure();
         setIsAuth(false);
         setIsLoading(false);
@@ -95,15 +96,9 @@ export const useAuthInit = () => {
     // Skip if we've already initialized for this specific user
     if (lastInitializedUserId.current === user.id) return;
 
-    const init = () => {
-      const topics = setTopicsForNotifications(user?.permissions || []);
-      initializeFCM(topics);
-      fetchUnreadCount();
-      fetchNotifications();
-      setupMessageListener();
-    };
-
-    init();
+    // Single app-wide init: one interval, one listener, initial fetches.
+    // Destroys any previous instance first so only one can ever be live.
+    ensureNotificationInit();
     lastInitializedUserId.current = user.id;
 
     //eslint-disable-next-line

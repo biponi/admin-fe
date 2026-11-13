@@ -18,6 +18,7 @@ import {
 } from "../../../components/ui/collapsible";
 import { cn } from "../../../lib/utils";
 import {
+    Ban,
   Phone,
   MapPin,
   Package,
@@ -150,6 +151,22 @@ export const CustomerVerificationDialog: React.FC<
         </DialogHeader>
 
         <div className='px-6 py-5 space-y-4'>
+          {/* Blocked Customer Warning */}
+          {fraudRisk && fraudRisk.blocked && (
+            <div className='flex items-start gap-2.5 p-3 bg-rose-600 border border-rose-600 rounded-lg text-white'>
+              <Ban className='h-4 w-4 mt-0.5 flex-shrink-0' />
+              <div className='flex-1 space-y-0.5'>
+                <p className='text-sm font-semibold'>
+                  Customer blocked from ordering
+                </p>
+                <p className='text-sm opacity-90'>
+                  This customer is in the manual fraud group — new orders for
+                  them will be rejected.
+                </p>
+              </div>
+            </div>
+          )}
+
           {/* Fraud Risk Warning */}
           {fraudRisk && fraudRisk.isFraud && (
             <div className='flex items-start gap-2.5 p-3 bg-red-50 border border-red-200 rounded-lg dark:bg-red-950/30 dark:border-red-900'>

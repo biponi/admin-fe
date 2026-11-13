@@ -15,7 +15,6 @@ import {
   Card,
   CardHeader,
   CardTitle,
-  CardDescription,
   CardContent,
 } from "../../../components/ui/card";
 import { Badge } from "../../../components/ui/badge";
@@ -188,12 +187,12 @@ export function CustomerSelector({
       <div className='space-y-1.5'>
         <Label
           htmlFor='customer-phone'
-          className='flex items-center gap-1.5 font-medium text-sm'>
-          <Phone className='w-3.5 h-3.5 text-blue-600' />
+          className='flex items-center gap-1.5 font-medium text-xs text-foreground'>
+          <Phone className='w-3.5 h-3.5 text-muted-foreground/70' />
           Phone Number *
         </Label>
         <div className='relative w-full'>
-          <Phone className='absolute left-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 pointer-events-none' />
+          <Phone className='absolute left-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground/70 pointer-events-none' />
           <Input
             id='customer-phone'
             type='text'
@@ -208,14 +207,14 @@ export function CustomerSelector({
             className={cn(
               "pl-9 pr-9 h-9 text-sm transition-all",
               phoneIsValid === true &&
-                "border-green-500 focus:border-green-500",
+                "border-emerald-500 focus:border-emerald-500",
               phoneIsValid === false && "border-red-400 focus:border-red-400",
-              phoneIsValid === null && "border-gray-200 focus:border-blue-500",
+              phoneIsValid === null && "border-border",
             )}
           />
           {/* Right icon: valid / invalid / empty */}
           {phoneIsValid === true && (
-            <CheckCircle2 className='absolute right-2.5 top-1/2 -translate-y-1/2 w-4 h-4 text-green-500 pointer-events-none' />
+            <CheckCircle2 className='absolute right-2.5 top-1/2 -translate-y-1/2 w-4 h-4 text-emerald-500 pointer-events-none' />
           )}
           {phoneIsValid === false && (
             <XCircle className='absolute right-2.5 top-1/2 -translate-y-1/2 w-4 h-4 text-red-400 pointer-events-none' />
@@ -232,27 +231,24 @@ export function CustomerSelector({
   };
 
   return (
-    <Card className='border shadow-sm'>
-      <CardHeader className='bg-gradient-to-r from-blue-50 to-purple-50 border-b p-3 rounded-xl mx-2 mt-2 shadow'>
-        <CardTitle className='flex items-center gap-2 text-base text-gray-800'>
-          <User className='w-5 h-5 text-blue-600' />
+    <Card className='rounded-xl border-border shadow-none overflow-hidden'>
+      <CardHeader className='flex flex-row items-center gap-2 border-b border-border/60 bg-muted/50 px-4 py-2.5 rounded-none m-0'>
+        <User className='h-3.5 w-3.5 text-muted-foreground/70' />
+        <CardTitle className='text-[10px] font-semibold uppercase tracking-wider text-muted-foreground/70'>
           Customer Information
         </CardTitle>
-        <CardDescription className='text-xs text-gray-600'>
-          Enter customer details for order processing
-        </CardDescription>
       </CardHeader>
 
-      <CardContent className='p-3 space-y-4'>
+      <CardContent className='p-4 space-y-4'>
         <div className='space-y-3.5'>
           <CustomerSearchCollapsible onSelect={handleCustomerSelect} />
 
-          <div className='relative py-2'>
+          <div className='relative py-1'>
             <div className='absolute inset-0 flex items-center'>
-              <div className='w-full border-t border-gray-200' />
+              <div className='w-full border-t border-border/60' />
             </div>
             <div className='relative flex justify-center'>
-              <span className='bg-white px-2 text-xs text-gray-500'>
+              <span className='bg-background px-2 text-[11px] text-muted-foreground/70'>
                 Or enter manually
               </span>
             </div>
@@ -262,22 +258,22 @@ export function CustomerSelector({
           <div className='space-y-1.5'>
             <Label
               htmlFor='customer-name'
-              className='flex items-center gap-1.5 font-medium text-sm'>
-              <UserCheck className='w-3.5 h-3.5 text-blue-600' />
+              className='flex items-center gap-1.5 font-medium text-xs text-foreground'>
+              <UserCheck className='w-3.5 h-3.5 text-muted-foreground/70' />
               Customer Name *
             </Label>
             <div className='relative w-full'>
-              <User className='absolute left-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 pointer-events-none' />
+              <User className='absolute left-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground/70 pointer-events-none' />
               <Input
                 id='customer-name'
                 type='text'
                 placeholder='Enter customer name'
                 value={customer.name || ""}
                 onChange={handleNameChange}
-                className='pl-9 h-9 text-sm border-gray-200 focus:border-blue-500 transition-all'
+                className='pl-9 h-9 text-sm border-border focus-visible:ring-ring transition-all'
               />
               {customer.name && (
-                <CheckCircle2 className='absolute right-2.5 top-1/2 -translate-y-1/2 w-4 h-4 text-green-500 pointer-events-none' />
+                <CheckCircle2 className='absolute right-2.5 top-1/2 -translate-y-1/2 w-4 h-4 text-emerald-500 pointer-events-none' />
               )}
             </div>
             {/* Name error */}
@@ -299,26 +295,28 @@ export function CustomerSelector({
             <div className='flex items-center gap-2'>
               <Label
                 htmlFor='customer-email'
-                className='flex items-center gap-1.5 font-medium text-sm'>
-                <Mail className='w-3.5 h-3.5 text-blue-600' />
+                className='flex items-center gap-1.5 font-medium text-xs text-foreground'>
+                <Mail className='w-3.5 h-3.5 text-muted-foreground/70' />
                 Email
               </Label>
-              <Badge variant='outline' className='text-xs px-1.5 py-0'>
+              <Badge
+                variant='outline'
+                className='text-[10px] px-1.5 py-0 border-border text-muted-foreground/70'>
                 Optional
               </Badge>
             </div>
             <div className='relative w-full'>
-              <Mail className='absolute left-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 pointer-events-none' />
+              <Mail className='absolute left-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground/70 pointer-events-none' />
               <Input
                 id='customer-email'
                 type='email'
                 placeholder='Enter email address'
                 value={customer.email || ""}
                 onChange={handleEmailChange}
-                className='pl-9 h-9 text-sm border-gray-200 focus:border-blue-500 transition-all'
+                className='pl-9 h-9 text-sm border-border focus-visible:ring-ring transition-all'
               />
               {customer.email && (
-                <CheckCircle2 className='absolute right-2.5 top-1/2 -translate-y-1/2 w-4 h-4 text-green-500 pointer-events-none' />
+                <CheckCircle2 className='absolute right-2.5 top-1/2 -translate-y-1/2 w-4 h-4 text-emerald-500 pointer-events-none' />
               )}
             </div>
           </div>

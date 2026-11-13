@@ -671,7 +671,7 @@ const AdjustmentHistoryTab = ({ productId }: AdjustmentHistoryTabProps) => {
         </Drawer>
       ) : (
         <Sheet open={showDetails} onOpenChange={setShowDetails}>
-          <SheetContent className='w-full sm:max-w-2xl'>
+          <SheetContent className='w-full md:max-w-2xl'>
             <SheetHeader>
               <SheetTitle className='flex items-center space-x-2'>
                 <Badge

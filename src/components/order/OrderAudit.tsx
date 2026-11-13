@@ -2,6 +2,8 @@ import { Card, CardContent, CardHeader, CardTitle } from '../ui/card';
 import { Badge } from '../ui/badge';
 import { Alert, AlertDescription } from '../ui/alert';
 import { AlertTriangle, Info, Shield, RotateCcw } from 'lucide-react';
+import RiskBadge from '../fraud/RiskBadge';
+import BlockedBadge from '../fraud/BlockedBadge';
 import { IOrder } from '../../pages/order/interface';
 import { format } from 'date-fns';
 
@@ -9,41 +11,18 @@ interface OrderAuditProps {
   order: IOrder;
 }
 
-const getRiskLevelColor = (riskLevel: string) => {
-  switch (riskLevel.toLowerCase()) {
-    case 'green':
-      return 'default';
-    case 'yellow':
-      return 'secondary';
-    case 'red':
-      return 'destructive';
-    default:
-      return 'outline';
-  }
-};
-
-const getRiskLevelLabel = (riskLevel: string) => {
-  switch (riskLevel.toLowerCase()) {
-    case 'green':
-      return 'Low Risk';
-    case 'yellow':
-      return 'Medium Risk';
-    case 'red':
-      return 'High Risk';
-    default:
-      return 'Unknown';
-  }
-};
-
 export const OrderAudit = ({ order }: OrderAuditProps) => {
   return (
     <div className="space-y-6">
       {/* Fraud Detection Analysis - Conditional */}
-      {order.requiresManualReview && order.fraudFlags && order.fraudFlags.length > 0 && (
-        <Alert variant="destructive">
+      {(order.fraudDetection?.blocked || (order.requiresManualReview && order.fraudFlags && order.fraudFlags.length > 0)) && (
+        <Alert variant={order.fraudDetection?.blocked ? "default" : "destructive"}
+          className={order.fraudDetection?.blocked ? "border-rose-600 bg-rose-600 text-white" : undefined}>
           <AlertTriangle className="h-4 w-4" />
           <AlertDescription>
-            This order requires manual review due to potential fraud indicators.
+            {order.fraudDetection?.blocked
+              ? "This customer is blocked from ordering — they are in the manual fraud group."
+              : "This order requires manual review due to potential fraud indicators."}
           </AlertDescription>
         </Alert>
       )}
@@ -60,9 +39,10 @@ export const OrderAudit = ({ order }: OrderAuditProps) => {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <p className="text-sm text-gray-600">Risk Level</p>
-                <Badge variant={getRiskLevelColor(order.fraudDetection.riskLevel)} className="mt-1">
-                  {getRiskLevelLabel(order.fraudDetection.riskLevel)}
-                </Badge>
+                <div className="mt-1 flex items-center gap-2">
+                  <RiskBadge level={order.fraudDetection.riskLevel} />
+                  {order.fraudDetection.blocked ? <BlockedBadge /> : null}
+                </div>
               </div>
               <div>
                 <p className="text-sm text-gray-600">Risk Score</p>

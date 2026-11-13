@@ -48,7 +48,6 @@ import { toast } from "sonner";
 import {
   bulkUpdateDistricts,
   createDistrict,
-  createDivision,
   createZone,
   deleteZone,
   getCourierSyncStatus,
@@ -62,6 +61,15 @@ import {
   type DeliveryZone,
   type LocationDistrict,
 } from "../../api/location";
+import { useIsMobile } from "../../hooks/use-mobile";
+import {
+  MobileEmptyState,
+  MobileListCard,
+  MobilePagination,
+  MobileSkeletonList,
+  MobileStaggeredList,
+} from "../../components/mobile";
+import { PageHeader } from "../../components/PageHeader";
 
 /**
  * Location Settings — admin-configurable delivery charge groups,
@@ -463,32 +471,33 @@ export default function LocationSettings() {
   return (
     <div className='space-y-3 p-3 sm:p-4'>
       {/* ── Page header ─────────────────────────────────────────────── */}
-      <div className='flex flex-col justify-between gap-2 sm:flex-row sm:items-center'>
-        <div className='flex flex-wrap items-baseline gap-x-3 gap-y-1'>
-          <h1 className='text-lg font-bold tracking-tight'>Location &amp; Delivery Charges</h1>
-          <p className='text-xs text-muted-foreground'>
-            Changes are live for new orders immediately.
-          </p>
-          <Badge variant='outline' className='gap-1 rounded-full px-2 py-0.5 text-[11px]'>
-            <Layers className='h-3 w-3 text-primary' />
-            {zones.length} groups
-          </Badge>
-          <Badge variant='outline' className='gap-1 rounded-full px-2 py-0.5 text-[11px]'>
-            <MapPin className='h-3 w-3 text-primary' />
-            {totalAreas} areas
-          </Badge>
-        </div>
-        <p className='flex items-center gap-1.5 text-xs text-muted-foreground'>
-          <Sparkles className='h-3.5 w-3.5 shrink-0 text-primary' />
-          <span>
-            Each <strong className='font-medium text-foreground'>area</strong> inherits its
-            group's charge unless it has an override — drag areas between groups to reprice.
-          </span>
-        </p>
-      </div>
+      <PageHeader
+        icon={<MapPin className='h-5 w-5' />}
+        title='Location Settings'
+        subtitle='Delivery charge groups, areas & courier mappings'
+        count={
+          <div className='flex flex-wrap items-center gap-1.5'>
+            <Badge variant='outline' className='gap-1 rounded-full px-2 py-0.5 text-[11px]'>
+              <Layers className='h-3 w-3 text-primary' />
+              {zones.length} groups
+            </Badge>
+            <Badge variant='outline' className='gap-1 rounded-full px-2 py-0.5 text-[11px]'>
+              <MapPin className='h-3 w-3 text-primary' />
+              {totalAreas} areas
+            </Badge>
+          </div>
+        }
+      />
+      <p className='flex items-center gap-1.5 text-xs text-muted-foreground'>
+        <Sparkles className='h-3.5 w-3.5 shrink-0 text-primary' />
+        <span>
+          Each <strong className='font-medium text-foreground'>area</strong> inherits its
+          group's charge unless it has an override — drag areas between groups to reprice.
+        </span>
+      </p>
 
       <Tabs defaultValue='groups' className='space-y-3'>
-        <TabsList className='h-8 rounded-lg bg-muted/60 p-0.5'>
+        <TabsList className='h-8 rounded-lg bg-muted/60 p-0.5 mobile:flex mobile:w-full mobile:overflow-x-auto'>
           <TabsTrigger
             value='groups'
             className='gap-1.5 rounded-md px-3 text-xs data-[state=active]:bg-background data-[state=active]:shadow-sm'
@@ -690,7 +699,7 @@ export default function LocationSettings() {
 
         {/* ───────────────────────────────────────────── Districts tab */}
         <TabsContent value='districts'>
-          <DistrictsTab onChanged={() => { loadDistricts(); loadData(); }} />
+          <DistrictsTab zones={zones} onChanged={() => { loadDistricts(); loadData(); }} />
         </TabsContent>
 
         {/* ──────────────────────────────────────── Courier mappings tab */}
@@ -756,6 +765,152 @@ function AreasTable({ zones, onChanged }: { zones: DeliveryZone[]; onChanged: ()
   };
 
   const totalPages = Math.ceil(total / 50);
+
+  const isMobile = useIsMobile();
+
+  // ── Mobile: card list instead of the horizontal-scroll table ──
+  if (isMobile) {
+    return (
+      <div className='space-y-2'>
+        {/* Filters — stacked full-width */}
+        <div className='flex flex-col gap-1.5 rounded-lg border bg-card px-2.5 py-2 shadow-sm'>
+          <div className='flex items-center gap-1.5'>
+            <CardTitle className='text-sm'>Areas</CardTitle>
+            <span className='ml-auto text-[11px] text-muted-foreground'>
+              {total} total
+            </span>
+          </div>
+          <Select value={division} onValueChange={(v) => { setDivision(v); setPage(1); }}>
+            <SelectTrigger className='h-9 w-full bg-background text-xs'>
+              <SelectValue placeholder='District' />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value='all'>All districts</SelectItem>
+              {divisions.map((d) => (
+                <SelectItem key={d.divisionId} value={d.division}>{d.division}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <Select value={zoneFilter} onValueChange={(v) => { setZoneFilter(v); setPage(1); }}>
+            <SelectTrigger className='h-9 w-full bg-background text-xs'>
+              <SelectValue placeholder='Group' />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value='all'>All groups</SelectItem>
+              {zones.map((z) => (
+                <SelectItem key={z._id} value={z._id}>{z.label || z.name}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <div className='relative'>
+            <Search className='absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground' />
+            <Input
+              className='h-9 w-full bg-background pl-8 text-xs'
+              placeholder='Search area…'
+              value={search}
+              onChange={(e) => { setSearch(e.target.value); setPage(1); }}
+            />
+          </div>
+        </div>
+
+        {loading ? (
+          <MobileSkeletonList count={5} />
+        ) : districts.length === 0 ? (
+          <MobileEmptyState
+            icon={<MapPin className='h-7 w-7' />}
+            title='No areas'
+            description='No areas match the current filters'
+          />
+        ) : (
+          <MobileStaggeredList>
+            {districts.map((d) => (
+              <MobileListCard
+                key={d._id}
+                title={
+                  <span className='flex items-center gap-1.5'>
+                    {d.name}
+                    {d.chargeOverride !== null && (
+                      <Badge variant='secondary' className='rounded-full px-1.5 text-[10px]'>
+                        override
+                      </Badge>
+                    )}
+                  </span>
+                }
+                subtitle={d.division}
+                trailing={
+                  <span className='text-sm font-semibold'>৳{d.effectiveCharge}</span>
+                }
+                badge={
+                  (d.courierMappings?.pathao?.needsReview ||
+                    d.courierMappings?.carrybee?.needsReview) ? (
+                    <Badge variant='destructive' className='gap-1 rounded-full text-[10px]'>
+                      <AlertCircle className='h-3 w-3' /> mapping
+                    </Badge>
+                  ) : (
+                    <span className='inline-flex items-center gap-1 text-[10px] text-muted-foreground'>
+                      <CheckCircle2 className='h-3 w-3 text-emerald-500' /> ok
+                    </span>
+                  )
+                }
+              >
+                <div className='mt-2.5 grid grid-cols-2 gap-1.5'>
+                  <Select
+                    value={d.divisionId}
+                    onValueChange={(v) => handleUpdate(d, { divisionId: v })}
+                  >
+                    <SelectTrigger className='h-8 w-full text-xs text-muted-foreground'>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {divisions.map((dv) => (
+                        <SelectItem key={dv.divisionId} value={dv.divisionId}>
+                          {dv.division}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <Select
+                    value={d.zone?._id ?? "none"}
+                    onValueChange={(v) => handleUpdate(d, { zone: v === "none" ? null : v })}
+                  >
+                    <SelectTrigger className='h-8 w-full text-xs'>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value='none'>No group</SelectItem>
+                      {zones.map((z) => (
+                        <SelectItem key={z._id} value={z._id}>{z.label || z.name}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className='mt-1.5 flex items-center gap-1.5'>
+                  <Input
+                    className='h-8 w-24 text-xs'
+                    type='number'
+                    placeholder='Override ৳'
+                    defaultValue={d.chargeOverride ?? ""}
+                    onBlur={(e) => {
+                      const raw = e.target.value;
+                      const val = raw === "" ? null : Number(raw);
+                      if (val !== d.chargeOverride && (val === null || (!isNaN(val) && val >= 0))) {
+                        handleUpdate(d, { chargeOverride: val });
+                      }
+                    }}
+                  />
+                  {savingId === d._id && (
+                    <Loader2 className='h-3.5 w-3.5 animate-spin text-muted-foreground' />
+                  )}
+                </div>
+              </MobileListCard>
+            ))}
+          </MobileStaggeredList>
+        )}
+
+        <MobilePagination page={page} totalPages={totalPages} onChange={setPage} />
+      </div>
+    );
+  }
 
   return (
     <Card className='overflow-hidden shadow-sm'>
@@ -950,7 +1105,13 @@ function AreasTable({ zones, onChanged }: { zones: DeliveryZone[]; onChanged: ()
  * expandable underneath. Areas can be moved to a different district here —
  * e.g. one added under the wrong district by mistake.
  */
-function DistrictsTab({ onChanged }: { onChanged: () => void }) {
+function DistrictsTab({
+  zones,
+  onChanged,
+}: {
+  zones: DeliveryZone[];
+  onChanged: () => void;
+}) {
   const [divisions, setDivisions] = useState<DivisionInfo[]>([]);
   const [loading, setLoading] = useState(true);
   const [expanded, setExpanded] = useState<string | null>(null);
@@ -960,10 +1121,10 @@ function DistrictsTab({ onChanged }: { onChanged: () => void }) {
   const [loadingAreas, setLoadingAreas] = useState<string | null>(null);
   const [movingId, setMovingId] = useState<string | null>(null);
   const [filter, setFilter] = useState("");
-  const [newOpen, setNewOpen] = useState(false);
-  const [newName, setNewName] = useState("");
-  const [newBnName, setNewBnName] = useState("");
-  const [newSaving, setNewSaving] = useState(false);
+  // inline add-area (inside an expanded district card)
+  const [areaName, setAreaName] = useState("");
+  const [areaZoneId, setAreaZoneId] = useState<string>("none");
+  const [areaSaving, setAreaSaving] = useState(false);
 
   const loadDivisions = useCallback(async () => {
     setLoading(true);
@@ -1016,24 +1177,30 @@ function DistrictsTab({ onChanged }: { onChanged: () => void }) {
     }
   };
 
-  const handleCreateDistrict = async () => {
-    const name = newName.trim();
+  // Add an area directly inside an expanded district card
+  const handleAddArea = async (division: DivisionInfo) => {
+    const name = areaName.trim();
     if (!name) {
-      toast.error("Enter a district name");
+      toast.error("Enter an area name");
       return;
     }
-    setNewSaving(true);
-    const res = await createDivision({ division: name, bnName: newBnName.trim() });
-    setNewSaving(false);
+    setAreaSaving(true);
+    const res = await createDistrict({
+      name,
+      divisionId: division.divisionId,
+      division: division.division,
+      zone: areaZoneId === "none" ? null : areaZoneId,
+    });
+    setAreaSaving(false);
     if (res.success) {
-      toast.success(`District "${name}" created`);
-      setNewName("");
-      setNewBnName("");
-      setNewOpen(false);
-      loadDivisions();
+      toast.success(`Area "${name}" added under ${division.division}`);
+      setAreaName("");
+      setAreaZoneId("none");
+      loadAreas(division.division);
+      loadDivisions(); // refresh counts
       onChanged();
     } else {
-      toast.error(res.error || "Failed to create district");
+      toast.error(res.error || "Failed to create area");
     }
   };
 
@@ -1043,6 +1210,8 @@ function DistrictsTab({ onChanged }: { onChanged: () => void }) {
       d.division.toLowerCase().includes(filter.toLowerCase()),
   );
 
+  const isMobile = useIsMobile();
+
   return (
     <div className='space-y-2'>
       {/* Toolbar */}
@@ -1050,56 +1219,16 @@ function DistrictsTab({ onChanged }: { onChanged: () => void }) {
         <span className='mr-auto text-xs text-muted-foreground'>
           {divisions.length} districts · expand a district to view and manage its areas
         </span>
-        <div className='relative'>
+        <div className='relative mobile:w-full'>
           <Search className='absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground' />
           <Input
-            className='h-8 w-[200px] bg-muted/40 pl-8 text-xs shadow-none'
+            className='h-8 w-[200px] bg-muted/40 pl-8 text-xs shadow-none mobile:h-9 mobile:w-full'
             placeholder='Filter districts…'
             value={filter}
             onChange={(e) => setFilter(e.target.value)}
           />
         </div>
-        {newOpen ? (
-          <Button size='sm' variant='ghost' className='h-8 gap-1 text-xs' onClick={() => setNewOpen(false)}>
-            <X className='h-3.5 w-3.5' /> Cancel
-          </Button>
-        ) : (
-          <Button size='sm' className='h-8 gap-1 rounded-lg text-xs' onClick={() => setNewOpen(true)}>
-            <Plus className='h-3.5 w-3.5' /> New district
-          </Button>
-        )}
       </div>
-
-      {/* New-district inline form */}
-      {newOpen && (
-        <Card className='border-primary/30 shadow-sm'>
-          <CardContent className='flex flex-wrap items-center gap-2 p-2.5'>
-            <Input
-              className='h-8 w-52 text-xs'
-              placeholder='District name — e.g. Faridpur'
-              value={newName}
-              onChange={(e) => setNewName(e.target.value)}
-            />
-            <Input
-              className='h-8 w-44 text-xs'
-              placeholder='Bangla name (optional)'
-              value={newBnName}
-              onChange={(e) => setNewBnName(e.target.value)}
-            />
-            <Button size='sm' className='h-8 gap-1 text-xs' onClick={handleCreateDistrict} disabled={newSaving}>
-              {newSaving ? (
-                <Loader2 className='h-3.5 w-3.5 animate-spin' />
-              ) : (
-                <Plus className='h-3.5 w-3.5' />
-              )}
-              Create district
-            </Button>
-            <span className='text-[11px] text-muted-foreground'>
-              Add areas to it from the Charge Groups tab or the "+ Add area" action.
-            </span>
-          </CardContent>
-        </Card>
-      )}
 
       {/* District cards — two-column grid */}
       {loading ? (
@@ -1142,9 +1271,54 @@ function DistrictsTab({ onChanged }: { onChanged: () => void }) {
                         <Loader2 className='h-4 w-4 animate-spin text-muted-foreground' />
                       </div>
                     ) : !areas || areas.length === 0 ? (
-                      <p className='px-4 py-4 text-xs text-muted-foreground'>
-                        No areas yet — add one from the Charge Groups tab.
+                      <p className='px-4 py-3 text-xs text-muted-foreground'>
+                        No areas yet — add the first one below.
                       </p>
+                    ) : isMobile ? (
+                      <div className='flex flex-col gap-2 px-2.5 py-2'>
+                        {areas.map((area) => (
+                          <div
+                            key={area._id}
+                            className='rounded-xl border border-border/60 bg-background px-3 py-2.5'
+                          >
+                            <div className='flex items-center gap-1.5'>
+                              <span className='text-[13px] font-medium'>{area.name}</span>
+                              {area.chargeOverride !== null && (
+                                <Badge variant='secondary' className='rounded-[2px] px-1.5 text-[10px]'>
+                                  ৳{area.chargeOverride}
+                                </Badge>
+                              )}
+                              <span className='ml-auto text-[13px] font-semibold'>
+                                ৳{area.effectiveCharge}
+                              </span>
+                            </div>
+                            <div className='mt-0.5 flex items-center gap-1 text-[11px] text-muted-foreground'>
+                              <Layers className='h-3 w-3' />
+                              {area.zone ? area.zone.label || area.zone.name : "No group"}
+                            </div>
+                            <Select
+                              value={area.divisionId}
+                              onValueChange={(v) => handleMove(area, v)}
+                              disabled={movingId === area._id}
+                            >
+                              <SelectTrigger className='mt-1.5 h-8 w-full text-xs'>
+                                <SelectValue />
+                              </SelectTrigger>
+                              <SelectContent>
+                                {divisions.map((d) => (
+                                  <SelectItem key={d.divisionId} value={d.divisionId}>
+                                    {d.division}
+                                    {d.division === area.division ? " (current)" : ""}
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                            {movingId === area._id && (
+                              <Loader2 className='mt-1 h-3 w-3 animate-spin text-muted-foreground' />
+                            )}
+                          </div>
+                        ))}
+                      </div>
                     ) : (
                       <table className='w-full text-[13px]'>
                         <thead>
@@ -1204,6 +1378,48 @@ function DistrictsTab({ onChanged }: { onChanged: () => void }) {
                         </tbody>
                       </table>
                     )}
+
+                    {/* Inline add-area form — scoped to this district */}
+                    <div className='flex flex-wrap items-center gap-1.5 border-t border-border/50 px-3 py-2 mobile:flex-col mobile:items-stretch'>
+                      <Plus className='h-3.5 w-3.5 shrink-0 text-primary' />
+                      <Input
+                        className='h-7 w-40 text-xs mobile:h-9 mobile:w-full'
+                        placeholder='New area name'
+                        value={areaName}
+                        onChange={(e) => setAreaName(e.target.value)}
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter") handleAddArea(division);
+                        }}
+                      />
+                      <Select value={areaZoneId} onValueChange={setAreaZoneId}>
+                        <SelectTrigger className='h-7 w-[170px] text-xs mobile:h-9 mobile:w-full'>
+                          <SelectValue placeholder='Charge group' />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value='none'>No group</SelectItem>
+                          {zones
+                            .filter((z) => z.active)
+                            .map((z) => (
+                              <SelectItem key={z._id} value={z._id}>
+                                {z.label || z.name} — ৳{z.charge}
+                              </SelectItem>
+                            ))}
+                        </SelectContent>
+                      </Select>
+                      <Button
+                        size='sm'
+                        className='h-7 gap-1 text-xs mobile:h-9 mobile:w-full'
+                        onClick={() => handleAddArea(division)}
+                        disabled={areaSaving}
+                      >
+                        {areaSaving ? (
+                          <Loader2 className='h-3 w-3 animate-spin' />
+                        ) : (
+                          <Plus className='h-3 w-3' />
+                        )}
+                        Add area
+                      </Button>
+                    </div>
                   </div>
                 )}
               </Card>

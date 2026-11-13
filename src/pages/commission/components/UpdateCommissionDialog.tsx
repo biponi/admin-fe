@@ -53,7 +53,7 @@ export const UpdateCommissionDialog: React.FC<UpdateCommissionDialogProps> = ({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[425px] max-w-[95vw]">
+      <DialogContent className="md:max-w-[425px] max-w-[95vw]">
         <DialogHeader>
           <DialogTitle>Update Commission Status</DialogTitle>
           <DialogDescription>
@@ -102,11 +102,11 @@ export const UpdateCommissionDialog: React.FC<UpdateCommissionDialogProps> = ({
           </div>
         </div>
 
-        <DialogFooter className="flex-col sm:flex-row gap-2">
-          <Button variant="outline" onClick={() => onOpenChange(false)} className="w-full sm:w-auto">
+        <DialogFooter className="flex-col md:flex-row gap-2">
+          <Button variant="outline" onClick={() => onOpenChange(false)} className="w-full md:w-auto">
             Cancel
           </Button>
-          <Button onClick={handleSubmit} disabled={isSubmitting} className="w-full sm:w-auto">
+          <Button onClick={handleSubmit} disabled={isSubmitting} className="w-full md:w-auto">
             {isSubmitting ? "Updating..." : "Update Status"}
           </Button>
         </DialogFooter>

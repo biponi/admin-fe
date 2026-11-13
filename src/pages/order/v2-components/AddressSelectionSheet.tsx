@@ -51,8 +51,8 @@ export function AddressSelectionSheet({
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent side="right" className="w-full sm:max-w-md overflow-y-auto">
         <SheetHeader>
-          <SheetTitle className="text-xl font-semibold flex items-center gap-2">
-            <MapPin className="h-5 w-5 text-purple-600" />
+          <SheetTitle className="text-base font-semibold flex items-center gap-2 text-foreground">
+            <MapPin className="h-4 w-4 text-primary" />
             Select Delivery Address
           </SheetTitle>
           <SheetDescription className="text-base">
@@ -81,8 +81,8 @@ export function AddressSelectionSheet({
                       transition-all hover:shadow-md
                       ${
                         selectedAddressIndex === index.toString()
-                          ? 'border-purple-500 bg-purple-50 shadow-sm'
-                          : 'border-gray-200 bg-white hover:border-purple-300'
+                          ? 'border-primary bg-primary/5 shadow-sm'
+                          : 'border-border bg-background hover:border-border'
                       }
                     `}
                   >
@@ -91,8 +91,8 @@ export function AddressSelectionSheet({
                       <div className="flex items-start justify-between">
                         <div className="flex-1">
                           <div className="flex items-center gap-2 mb-2">
-                            <Home className="h-4 w-4 text-purple-600" />
-                            <p className="font-semibold text-sm text-gray-900">
+                            <Home className="h-4 w-4 text-muted-foreground/70" />
+                            <p className="font-semibold text-sm text-foreground">
                               {address.address}
                             </p>
                           </div>
@@ -102,7 +102,7 @@ export function AddressSelectionSheet({
                         </div>
 
                         {index === 0 && (
-                          <Badge className="bg-blue-100 text-blue-700 text-xs shrink-0">
+                          <Badge className="bg-muted text-muted-foreground text-xs shrink-0 hover:bg-muted">
                             Most Recent
                           </Badge>
                         )}
@@ -111,17 +111,17 @@ export function AddressSelectionSheet({
                       {/* Address Stats */}
                       <div className="flex items-center gap-4 text-xs text-muted-foreground ml-6">
                         <span className="flex items-center gap-1">
-                          <MapPin className="h-3 w-3 text-purple-600" />
+                          <MapPin className="h-3 w-3 text-muted-foreground/70" />
                           {address.orderCount} order{address.orderCount > 1 ? 's' : ''}
                         </span>
 
                         <span className="flex items-center gap-1">
-                          <DollarSign className="h-3 w-3 text-green-600" />
+                          <DollarSign className="h-3 w-3 text-emerald-600" />
                           {formatCurrency(address.totalSpent)}
                         </span>
 
                         <span className="flex items-center gap-1">
-                          <Calendar className="h-3 w-3 text-blue-600" />
+                          <Calendar className="h-3 w-3 text-muted-foreground/70" />
                           {formatDate(address.lastOrderDate)}
                         </span>
                       </div>
@@ -134,13 +134,13 @@ export function AddressSelectionSheet({
                         h-5 w-5 rounded-full border-2 flex items-center justify-center
                         ${
                           selectedAddressIndex === index.toString()
-                            ? 'border-purple-600 bg-purple-600'
-                            : 'border-gray-300 bg-white peer-checked:border-purple-600'
+                            ? 'border-primary bg-primary'
+                            : 'border-muted-foreground/50 bg-background peer-checked:border-primary'
                         }
                       `}
                       >
                         {selectedAddressIndex === index.toString() && (
-                          <div className="h-2.5 w-2.5 rounded-full bg-white" />
+                          <div className="h-2.5 w-2.5 rounded-full bg-background" />
                         )}
                       </div>
                     </div>
@@ -163,7 +163,7 @@ export function AddressSelectionSheet({
           <Button
             type="button"
             onClick={handleConfirm}
-            className="flex-1 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700"
+            className="flex-1 bg-primary hover:bg-primary/90 text-primary-foreground"
           >
             Confirm Selection
           </Button>

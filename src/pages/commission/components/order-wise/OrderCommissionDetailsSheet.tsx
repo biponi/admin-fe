@@ -53,7 +53,7 @@ export const OrderCommissionDetailsSheet: React.FC<
     <Sheet open={open} onOpenChange={onClose}>
       <SheetContent
         className={cn(
-          "w-full sm:max-w-md md:max-w-2xl lg:max-w-3xl",
+          "w-full sm:max-w-full md:max-w-2xl lg:max-w-3xl",
           "flex flex-col p-0 gap-0",
         )}>
         {/* Header */}

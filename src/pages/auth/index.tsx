@@ -12,9 +12,9 @@ import { Input } from "../../components/ui/input";
 import { Label } from "../../components/ui/label";
 import useLoginAuth from "./hooks/useLoginAuth";
 import { ReloadIcon } from "@radix-ui/react-icons";
-import { BiponiMainLogo } from "../../utils/contents";
+import { BrandLogo } from "../../assets/brand";
 import { BRAND_CONFIG } from "../../config/brand";
-import { Eye, EyeOff } from "lucide-react";
+import { Eye, EyeOff, LogIn } from "lucide-react";
 
 const SignIn = () => {
   const [username, setUserName] = useState("");
@@ -23,7 +23,7 @@ const SignIn = () => {
   const { login, loading } = useLoginAuth();
 
   return (
-    <div className='min-h-screen w-full bg-gray-100 dark:bg-gray-950 flex items-center justify-center p-4 relative overflow-hidden'>
+    <div className='min-h-screen w-full bg-gray-100 dark:bg-gray-950 flex items-center justify-center p-4 relative overflow-hidden mobile:items-start mobile:pt-[max(3rem,env(safe-area-inset-top))]'>
       {/* Subtle animated background pattern */}
       <div className='absolute inset-0 bg-[linear-gradient(to_right,#f0f0f0_1px,transparent_1px),linear-gradient(to_bottom,#f0f0f0_1px,transparent_1px)] dark:bg-[linear-gradient(to_right,#1f1f1f_1px,transparent_1px),linear-gradient(to_bottom,#1f1f1f_1px,transparent_1px)] bg-[size:24px_24px] opacity-20 animate-pulse-slow'></div>
 
@@ -43,19 +43,24 @@ const SignIn = () => {
 
       <div className='relative z-10 w-full max-w-md'>
         {/* Logo */}
-        <div className='flex justify-center mb-12 animate-fade-in-down'>
+        <div className='flex justify-center mb-12 animate-fade-in-down mobile:mb-8'>
           <div className='relative'>
             <img
               className='h-12 w-12 object-contain transition-transform duration-300 hover:scale-105'
-              src={BiponiMainLogo}
+              src={BrandLogo}
               alt={`${BRAND_CONFIG.shortName} Logo`}
             />
           </div>
         </div>
 
         {/* Main Card */}
-        <Card className='border border-gray-200 dark:border-gray-800 shadow-sm bg-white dark:bg-gray-900/80 backdrop-blur-sm animate-fade-in-up'>
+        <Card className='border border-gray-200 dark:border-gray-800 shadow-sm bg-white dark:bg-gray-900/80 backdrop-blur-sm animate-fade-in-up mobile:rounded-3xl mobile:shadow-lg'>
           <CardHeader className='space-y-1 pb-8'>
+            <div className='flex justify-center mb-3'>
+              <div className='flex items-center justify-center h-10 w-10 rounded-lg bg-primary text-primary-foreground shadow-sm'>
+                <LogIn className='h-5 w-5' />
+              </div>
+            </div>
             <CardTitle className='text-2xl font-semibold tracking-tight text-center text-gray-900 dark:text-white'>
               Sign in
             </CardTitle>

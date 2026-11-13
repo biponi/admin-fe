@@ -29,11 +29,15 @@ import {
   DropdownMenuTrigger,
 } from '../../../components/ui/dropdown-menu';
 import type { BulkActionProgress } from '../types';
+import useRoleCheck from '../../auth/hooks/useRoleCheck';
+import { selectionHasForeignOrders } from '../../../utils/orderPermission';
 
 interface BulkActionsBarProps {
   selectedCount: number;
   totalCount: number;
   isAllSelected?: boolean;
+  /** Full selected order objects — required for own-only permission gating */
+  selectedOrders?: Array<{ createdByUserId?: string | null }>;
   onClearSelection: () => void;
   onSelectAll: () => void;
   onShipped: () => void;
@@ -52,6 +56,7 @@ export const BulkActionsBar: React.FC<BulkActionsBarProps> = ({
   selectedCount,
   totalCount,
   isAllSelected = false,
+  selectedOrders = [],
   onClearSelection,
   onSelectAll,
   onShipped,
@@ -65,6 +70,19 @@ export const BulkActionsBar: React.FC<BulkActionsBarProps> = ({
   progress,
   className,
 }) => {
+
+  const { userStore, hasRequiredPermission } = useRoleCheck();
+
+  // Own-only restriction: block bulk actions when the selection contains
+  // orders the current user didn't create
+  const bulkOwnOnlyBlocked = (action: string) =>
+    selectionHasForeignOrders(
+      userStore?.permissions,
+      userStore?.id,
+      'order',
+      action,
+      selectedOrders,
+    );
 
   const progressPercentage = progress
     ? Math.round(((progress.completed + progress.failed) / progress.total) * 100)
@@ -165,92 +183,113 @@ export const BulkActionsBar: React.FC<BulkActionsBarProps> = ({
             {!progress?.inProgress && (
               <div className="flex flex-wrap items-center gap-2">
                 {/* Mark as Shipped */}
-                <Button
-                  variant="default"
-                  size="sm"
-                  onClick={onShipped}
-                  className="h-9 bg-blue-600 hover:bg-blue-700"
-                >
-                  <Truck className="mr-2 h-4 w-4" />
-                  <span className="hidden sm:inline">Mark as Shipped</span>
-                  <span className="sm:hidden">Shipped</span>
-                </Button>
+                {hasRequiredPermission('order', 'update_status') && (
+                  <Button
+                    variant="default"
+                    size="sm"
+                    onClick={onShipped}
+                    disabled={bulkOwnOnlyBlocked('update_status') || bulkOwnOnlyBlocked('bulk_action')}
+                    className="h-9 bg-blue-600 hover:bg-blue-700"
+                  >
+                    <Truck className="mr-2 h-4 w-4" />
+                    <span className="hidden sm:inline">Mark as Shipped</span>
+                    <span className="sm:hidden">Shipped</span>
+                  </Button>
+                )}
 
                 {/* Mark as Complete */}
-                <Button
-                  variant="default"
-                  size="sm"
-                  onClick={onComplete}
-                  className="h-9 bg-green-600 hover:bg-green-700"
-                >
-                  <CheckCircle className="mr-2 h-4 w-4" />
-                  <span className="hidden sm:inline">Mark as Complete</span>
-                  <span className="sm:hidden">Complete</span>
-                </Button>
+                {hasRequiredPermission('order', 'update_status') && (
+                  <Button
+                    variant="default"
+                    size="sm"
+                    onClick={onComplete}
+                    disabled={bulkOwnOnlyBlocked('update_status') || bulkOwnOnlyBlocked('bulk_action')}
+                    className="h-9 bg-green-600 hover:bg-green-700"
+                  >
+                    <CheckCircle className="mr-2 h-4 w-4" />
+                    <span className="hidden sm:inline">Mark as Complete</span>
+                    <span className="sm:hidden">Complete</span>
+                  </Button>
+                )}
 
                 {/* Generate Invoices - Dropdown with Print and Download */}
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className="h-9"
-                    >
-                      <Download className="mr-2 h-4 w-4" />
-                      <span className="hidden sm:inline">Invoices</span>
-                      <span className="sm:hidden">Inv</span>
-                      <ChevronDown className="ml-1.5 h-3.5 w-3.5" />
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="start" className="w-48">
-                    <DropdownMenuItem onClick={onPrintInvoices}>
-                      <Printer className="mr-2 h-4 w-4" />
-                      Print with Preview
-                    </DropdownMenuItem>
-                    <DropdownMenuItem onClick={onGenerateInvoices}>
-                      <Download className="mr-2 h-4 w-4" />
-                      Download as ZIP
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
+                {hasRequiredPermission('order', 'documents') && (
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="h-9"
+                      >
+                        <Download className="mr-2 h-4 w-4" />
+                        <span className="hidden sm:inline">Invoices</span>
+                        <span className="sm:hidden">Inv</span>
+                        <ChevronDown className="ml-1.5 h-3.5 w-3.5" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="start" className="w-48">
+                      <DropdownMenuItem onClick={onPrintInvoices}>
+                        <Printer className="mr-2 h-4 w-4" />
+                        Print with Preview
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={onGenerateInvoices}>
+                        <Download className="mr-2 h-4 w-4" />
+                        Download as ZIP
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                )}
 
                 {/* Generate Packing Slips - Dropdown with Print and Download */}
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className="h-9"
-                    >
-                      <Package className="mr-2 h-4 w-4" />
-                      <span className="hidden sm:inline">Packing Slips</span>
-                      <span className="sm:hidden">Slip</span>
-                      <ChevronDown className="ml-1.5 h-3.5 w-3.5" />
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="start" className="w-48">
-                    <DropdownMenuItem onClick={onPrintPackingSlips}>
-                      <Printer className="mr-2 h-4 w-4" />
-                      Print with Preview
-                    </DropdownMenuItem>
-                    <DropdownMenuItem onClick={onGeneratePackingSlips}>
-                      <Download className="mr-2 h-4 w-4" />
-                      Download as ZIP
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
+                {hasRequiredPermission('order', 'documents') && (
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="h-9"
+                      >
+                        <Package className="mr-2 h-4 w-4" />
+                        <span className="hidden sm:inline">Packing Slips</span>
+                        <span className="sm:hidden">Slip</span>
+                        <ChevronDown className="ml-1.5 h-3.5 w-3.5" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="start" className="w-48">
+                      <DropdownMenuItem onClick={onPrintPackingSlips}>
+                        <Printer className="mr-2 h-4 w-4" />
+                        Print with Preview
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={onGeneratePackingSlips}>
+                        <Download className="mr-2 h-4 w-4" />
+                        Download as ZIP
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                )}
 
                 {/* Cancel Orders */}
-                <Button
-                  variant="destructive"
-                  size="sm"
-                  onClick={onCancel}
-                  className="h-9 ml-auto"
-                >
-                  <XCircle className="mr-2 h-4 w-4" />
-                  <span className="hidden sm:inline">Cancel Orders</span>
-                  <span className="sm:hidden">Cancel</span>
-                </Button>
+                {hasRequiredPermission('order', 'cancel') && (
+                  <Button
+                    variant="destructive"
+                    size="sm"
+                    onClick={onCancel}
+                    disabled={bulkOwnOnlyBlocked('cancel') || bulkOwnOnlyBlocked('bulk_action')}
+                    className="h-9 ml-auto"
+                  >
+                    <XCircle className="mr-2 h-4 w-4" />
+                    <span className="hidden sm:inline">Cancel Orders</span>
+                    <span className="sm:hidden">Cancel</span>
+                  </Button>
+                )}
+
+                {(bulkOwnOnlyBlocked('update_status') ||
+                  bulkOwnOnlyBlocked('cancel') ||
+                  bulkOwnOnlyBlocked('bulk_action')) && (
+                  <p className="text-xs text-amber-600 w-full">
+                    Own-only restriction: deselect orders you didn&apos;t create.
+                  </p>
+                )}
               </div>
             )}
 

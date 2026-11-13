@@ -67,6 +67,7 @@ const statusConfig: Record<string, { label: string; variant: "default" | "second
   published: { label: "Published", variant: "default" },
   archived: { label: "Archived", variant: "outline" },
 };
+import { PageHeader } from "../../components/PageHeader";
 
 const BlogList = () => {
   const navigate = useNavigate();
@@ -110,20 +111,26 @@ const BlogList = () => {
   return (
     <div className="space-y-4">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <div>
-          <h2 className="text-2xl font-bold tracking-tight">Blog Posts</h2>
-          <p className="text-muted-foreground">
-            Manage your blog content and SEO settings
-          </p>
-        </div>
-        {canCreate && (
-          <Button onClick={() => navigate("/blog/create")} className="gap-2">
-            <PlusCircle className="h-4 w-4" />
-            New Post
-          </Button>
-        )}
-      </div>
+      <PageHeader
+        icon={<FileText className="h-5 w-5 text-white" />}
+        title="Blog Posts"
+        subtitle="Manage your blog content and SEO settings"
+        count={
+          <span className="text-base font-semibold text-muted-foreground tabular-nums">
+            {pagination.total} total
+          </span>
+        }
+        actions={
+          <>
+            {canCreate && (
+              <Button onClick={() => navigate("/blog/create")} className="gap-2">
+                <PlusCircle className="h-4 w-4" />
+                New Post
+              </Button>
+            )}
+          </>
+        }
+      />
 
       {/* Filters */}
       <div className="flex flex-col sm:flex-row gap-3">

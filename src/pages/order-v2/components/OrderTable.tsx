@@ -15,9 +15,6 @@ import {
   Truck,
   RefreshCcw,
   RotateCcw,
-  ShieldAlert,
-  ShieldCheck,
-  Shield,
   MinusSquare,
 } from "lucide-react";
 import {
@@ -46,6 +43,9 @@ import {
   TableRow,
 } from "../../../components/ui/table";
 import { Button } from "../../../components/ui/button";
+import useRoleCheck from "../../auth/hooks/useRoleCheck";
+import RiskBadge from "../../../components/fraud/RiskBadge";
+import BlockedBadge from "../../../components/fraud/BlockedBadge";
 import type { IOrder } from "../types";
 import { listItem } from "../lib/animations";
 import {
@@ -92,14 +92,16 @@ export const OrderTable: React.FC<OrderTableProps> = ({
   onViewReturnDetails,
   className,
 }) => {
+  const { canModifyOrder } = useRoleCheck();
+
   return (
     <div
       className={cn(
-        "rounded-lg border bg-white shadow-sm overflow-hidden",
+        "rounded-lg border bg-white shadow-sm overflow-hidden ",
         className,
       )}>
-      <Table>
-        <TableHeader>
+      <Table className=' relative' divClass='max-h-[68vh] overflow-y-auto'>
+        <TableHeader className='bg-gray-50 sticky top-0 z-10'>
           <TableRow className='bg-gradient-to-r from-gray-50 to-gray-100 hover:from-gray-50 hover:to-gray-100'>
             <TableHead className='w-12'>
               {onSelectAll && (
@@ -123,10 +125,10 @@ export const OrderTable: React.FC<OrderTableProps> = ({
             <TableHead className='w-12'></TableHead>
           </TableRow>
         </TableHeader>
-        <TableBody>
+        <TableBody className='divide-y max-h-[50vh] overflow-y-auto bg-white'>
           {orders.length === 0 ? (
-            <TableRow>
-              <TableCell colSpan={13} className='h-32 text-center'>
+            <TableRow className='bg-white'>
+              <TableCell colSpan={13} className='h-32 text-center bg-white'>
                 <div className='flex flex-col items-center justify-center text-gray-500'>
                   <Package className='h-12 w-12 mb-2 text-gray-300' />
                   <p className='text-sm'>No orders found</p>
@@ -140,7 +142,9 @@ export const OrderTable: React.FC<OrderTableProps> = ({
               const isSelected = selectedIds.has(orderId);
               const paymentStatus = getPaymentStatus(order);
               const hasHighRisk =
-                order.customerRiskLevel === "red" || order.requiresManualReview;
+                order.customerRiskLevel === "red" ||
+                order.requiresManualReview ||
+                order.fraudDetection?.blocked;
 
               return (
                 <motion.tr
@@ -148,7 +152,7 @@ export const OrderTable: React.FC<OrderTableProps> = ({
                   variants={listItem}
                   custom={index}
                   className={cn(
-                    "group transition-colors hover:bg-blue-50/50 cursor-pointer",
+                    "group bg-white hover:bg-blue-50/50 cursor-pointer",
                     isSelected && "bg-blue-50",
                     hasHighRisk && "border-l-4 border-l-red-500",
                   )}>
@@ -292,43 +296,16 @@ export const OrderTable: React.FC<OrderTableProps> = ({
                     {order.fraudDetection ? (
                       <motion.div
                         whileHover={{ scale: 1.05 }}
-                        className={cn(
-                          "inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full cursor-pointer transition-all",
-                          order.fraudDetection.riskLevel === "green" &&
-                            "bg-green-50 hover:bg-green-100 border border-green-200",
-                          order.fraudDetection.riskLevel === "yellow" &&
-                            "bg-yellow-50 hover:bg-yellow-100 border border-yellow-200",
-                          order.fraudDetection.riskLevel === "red" &&
-                            "bg-red-50 hover:bg-red-100 border border-red-200",
-                        )}
+                        className='inline-flex items-center gap-1.5 cursor-pointer'
                         onClick={(e) => {
                           e.stopPropagation();
                           onViewFraud?.(order);
                         }}>
-                        {order.fraudDetection.riskLevel === "green" && (
-                          <ShieldCheck className='h-3.5 w-3.5 text-green-600' />
-                        )}
-                        {order.fraudDetection.riskLevel === "yellow" && (
-                          <Shield className='h-3.5 w-3.5 text-yellow-600' />
-                        )}
-                        {order.fraudDetection.riskLevel === "red" && (
-                          <ShieldAlert className='h-3.5 w-3.5 text-red-600 animate-pulse' />
-                        )}
-                        <span
-                          className={cn(
-                            "text-xs font-semibold",
-                            order.fraudDetection.riskLevel === "green" &&
-                              "text-green-700",
-                            order.fraudDetection.riskLevel === "yellow" &&
-                              "text-yellow-700",
-                            order.fraudDetection.riskLevel === "red" &&
-                              "text-red-700",
-                          )}>
-                          {order.fraudDetection.riskLevel === "green" && "Low"}
-                          {order.fraudDetection.riskLevel === "yellow" &&
-                            "Medium"}
-                          {order.fraudDetection.riskLevel === "red" && "High"}
-                        </span>
+                        <RiskBadge
+                          level={order.fraudDetection.riskLevel}
+                          compact
+                        />
+                        {order.fraudDetection.blocked ? <BlockedBadge /> : null}
                       </motion.div>
                     ) : (
                       <span className='text-xs text-gray-400'>-</span>
@@ -390,16 +367,19 @@ export const OrderTable: React.FC<OrderTableProps> = ({
                           <Eye className='mr-2 h-4 w-4' />
                           View Details
                         </DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => onEdit?.(order)}>
-                          <Edit className='mr-2 h-4 w-4' />
-                          Edit Order
-                        </DropdownMenuItem>
-                        {order.status === "processing" && (
-                          <DropdownMenuItem onClick={() => onModify?.(order)}>
-                            <RefreshCcw className='mr-2 h-4 w-4' />
-                            Modify Product
+                        {canModifyOrder("order", "edit", order) && (
+                          <DropdownMenuItem onClick={() => onEdit?.(order)}>
+                            <Edit className='mr-2 h-4 w-4' />
+                            Edit Order
                           </DropdownMenuItem>
                         )}
+                        {order.status === "processing" &&
+                          canModifyOrder("order", "modify", order) && (
+                            <DropdownMenuItem onClick={() => onModify?.(order)}>
+                              <RefreshCcw className='mr-2 h-4 w-4' />
+                              Modify Product
+                            </DropdownMenuItem>
+                          )}
                         {order.courier?.trackingCode && (
                           <DropdownMenuItem
                             onClick={() => onViewTracking?.(order)}>
@@ -407,13 +387,14 @@ export const OrderTable: React.FC<OrderTableProps> = ({
                             Track Delivery
                           </DropdownMenuItem>
                         )}
-                        {order.status === "shipped" && (
-                          <DropdownMenuItem
-                            onClick={() => onReturnOrder?.(order)}>
-                            <RefreshCcw className='mr-2 h-4 w-4' />
-                            Return Products
-                          </DropdownMenuItem>
-                        )}
+                        {order.status === "shipped" &&
+                          canModifyOrder("order", "modify", order) && (
+                            <DropdownMenuItem
+                              onClick={() => onReturnOrder?.(order)}>
+                              <RefreshCcw className='mr-2 h-4 w-4' />
+                              Return Products
+                            </DropdownMenuItem>
+                          )}
                         {order.isReturn && (
                           <DropdownMenuItem
                             onClick={() => onViewReturnDetails?.(order)}>
@@ -421,20 +402,24 @@ export const OrderTable: React.FC<OrderTableProps> = ({
                             View Return Details
                           </DropdownMenuItem>
                         )}
-                        {hasHighRisk && (
+                        {(order.fraudDetection || hasHighRisk) && (
                           <DropdownMenuItem
                             onClick={() => onViewFraud?.(order)}>
                             <AlertTriangle className='mr-2 h-4 w-4' />
                             Fraud Details
                           </DropdownMenuItem>
                         )}
-                        <DropdownMenuSeparator />
-                        <DropdownMenuItem
-                          onClick={() => onDelete?.(order)}
-                          className='text-red-600 focus:text-red-600'>
-                          <Trash2 className='mr-2 h-4 w-4' />
-                          Cancel
-                        </DropdownMenuItem>
+                        {canModifyOrder("order", "cancel", order) && (
+                          <>
+                            <DropdownMenuSeparator />
+                            <DropdownMenuItem
+                              onClick={() => onDelete?.(order)}
+                              className='text-red-600 focus:text-red-600'>
+                              <Trash2 className='mr-2 h-4 w-4' />
+                              Cancel
+                            </DropdownMenuItem>
+                          </>
+                        )}
                       </DropdownMenuContent>
                     </DropdownMenu>
                   </TableCell>

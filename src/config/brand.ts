@@ -42,16 +42,19 @@ export const BRAND_CONFIG = {
   phone: import.meta.env.VITE_BRAND_PHONE || '+880 1700-534317',
 
   /** Main logo URL for general use */
-  logoUrl: import.meta.env.VITE_BRAND_LOGO_URL || 'https://res.cloudinary.com/emerging-it/image/upload/v1755976159/2193d5ff-ffb3-4fb7-ae67-c7a79e89c3f6__1_-removebg-preview_sobjwy.png',
+  logoUrl: import.meta.env.VITE_BRAND_LOGO_URL || '/pwa-512x512.png',
+
+  /** Standard logo property used in reporting and exports */
+  logo: import.meta.env.VITE_BRAND_LOGO_URL || '/pwa-512x512.png',
 
   /** High-resolution logo URL for PDF invoices */
-  invoiceLogoUrl: import.meta.env.VITE_BRAND_INVOICE_LOGO_URL || 'https://res.cloudinary.com/emerging-it/image/upload/v1755976159/2193d5ff-ffb3-4fb7-ae67-c7a79e89c3f6__1_-removebg-preview_sobjwy.png',
+  invoiceLogoUrl: import.meta.env.VITE_BRAND_INVOICE_LOGO_URL || '/pwa-512x512.png',
 
   /** Compact logo URL for thermal printer packing slips */
-  packingLogoUrl: import.meta.env.VITE_BRAND_PACKING_LOGO_URL || 'https://res.cloudinary.com/emerging-it/image/upload/v1755976159/2193d5ff-ffb3-4fb7-ae67-c7a79e89c3f6__1_-removebg-preview_sobjwy.png',
+  packingLogoUrl: import.meta.env.VITE_BRAND_PACKING_LOGO_URL || '/pwa-192x192.png',
 
   /** Small icon URL for favicons and compact displays */
-  iconUrl: import.meta.env.VITE_BRAND_ICON_URL || 'https://res.cloudinary.com/emerging-it/image/upload/v1755976159/2193d5ff-ffb3-4fb7-ae67-c7a79e89c3f6__1_-removebg-preview_sobjwy.png',
+  iconUrl: import.meta.env.VITE_BRAND_ICON_URL || '/favicon-32x32.png',
 
   /** Order tracking URL template */
   trackingUrl: (orderNumber: string) =>

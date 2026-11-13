@@ -1,6 +1,13 @@
 import { useNavigate } from "react-router-dom";
 import MainView from "../../coreComponents/mainView";
-import { Ticket, Users, BarChart3, Plus } from "lucide-react";
+import {
+  MobilePage,
+  MobileListCard,
+  MobileStaggeredList,
+  rippleProps,
+} from "../../components/mobile";
+import { PageHeader } from "../../components/PageHeader";
+import { Ticket, Users, BarChart3, Plus, ChevronRight } from "lucide-react";
 
 export default function CouponDashboard() {
   const navigate = useNavigate();
@@ -34,37 +41,42 @@ export default function CouponDashboard() {
   };
 
   return (
-    <MainView title="Coupon Management">
+    <MainView title="Coupons">
+      <MobilePage
+        title="Coupons"
+        icon={<Ticket className="h-5 w-5 text-primary" />}
+        subtitle="Create, manage, and track coupons for your customers"
+        actions={
+          <button
+            onClick={handleCreateCoupon}
+            aria-label="Create coupon"
+            className="m3-ripple grid h-10 w-10 shrink-0 place-items-center rounded-full bg-primary text-primary-foreground shadow-sm active:scale-95 transition-transform"
+            {...rippleProps()}
+          >
+            <Plus className="h-5 w-5" />
+          </button>
+        }>
       <div className="min-h-screen bg-slate-50/60">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
+        <div className="max-w-7xl mx-auto px-4 md:px-6 lg:px-8 py-6 space-y-6">
           {/* Page Header */}
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-            <div className="flex items-center gap-3">
-              <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-indigo-600 shadow-sm shadow-indigo-200">
-                <Ticket className="h-5 w-5 text-white" />
-              </div>
-              <div>
-                <h1 className="text-xl font-semibold text-slate-900 leading-tight">
-                  Coupon Management
-                </h1>
-                <p className="text-sm text-slate-500 mt-0.5">
-                  Create, manage, and track coupons for your customers
-                </p>
-              </div>
-            </div>
-
-            <div className="flex items-center gap-2">
-              <button
-                onClick={handleCreateCoupon}
-                className="inline-flex items-center gap-1.5 px-4 py-2 text-sm font-medium text-white bg-indigo-600 rounded-lg hover:bg-indigo-700 active:bg-indigo-800 transition-all duration-150 shadow-sm shadow-indigo-200">
-                <Plus className="h-4 w-4" />
-                Create Coupon
-              </button>
-            </div>
+          <div className="hidden md:block">
+            <PageHeader
+              icon={<Ticket className="h-5 w-5" />}
+              title="Coupons"
+              subtitle="Create, manage, and track coupons for your customers"
+              actions={
+                <button
+                  onClick={handleCreateCoupon}
+                  className="inline-flex items-center gap-1.5 px-4 py-2 text-sm font-medium text-white bg-indigo-600 rounded-lg hover:bg-indigo-700 active:bg-indigo-800 transition-all duration-150 shadow-sm shadow-indigo-200">
+                  <Plus className="h-4 w-4" />
+                  Create Coupon
+                </button>
+              }
+            />
           </div>
 
           {/* Summary Strip */}
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
             {[
               {
                 label: "Global Coupons",
@@ -111,7 +123,7 @@ export default function CouponDashboard() {
           </div>
 
           {/* Feature Cards */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="hidden md:grid grid-cols-1 md:grid-cols-3 gap-4">
             {features.map((feature) => {
               const Icon = feature.icon;
               return (
@@ -134,8 +146,32 @@ export default function CouponDashboard() {
               );
             })}
           </div>
+
+          {/* Mobile feature list */}
+          <div className="mobile:block hidden">
+            <MobileStaggeredList>
+              {features.map((feature) => {
+                const Icon = feature.icon;
+                return (
+                  <MobileListCard
+                    key={feature.title}
+                    onClick={() => navigate(feature.path)}
+                    leading={
+                      <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-indigo-50">
+                        <Icon className="h-5 w-5 text-indigo-600" />
+                      </div>
+                    }
+                    title={feature.title}
+                    subtitle={feature.description}
+                    trailing={<ChevronRight className="h-5 w-5 text-slate-400" />}
+                  />
+                );
+              })}
+            </MobileStaggeredList>
+          </div>
         </div>
       </div>
+      </MobilePage>
     </MainView>
   );
 }

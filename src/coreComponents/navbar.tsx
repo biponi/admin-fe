@@ -20,7 +20,8 @@ import {
 } from "../components/ui/drawer";
 import { navItems } from "../utils/navItem";
 import { useLocation, useNavigate } from "react-router-dom";
-import { BiponiMainLogo } from "../utils/contents";
+import { BrandLogo } from "../assets/brand";
+import { BRAND_CONFIG } from "../config/brand";
 import useLoginAuth from "../pages/auth/hooks/useLoginAuth";
 import { Avatar, AvatarFallback, AvatarImage } from "../components/ui/avatar";
 import { getInitialsWord } from "../utils/functions";
@@ -39,10 +40,10 @@ const Navbar = () => {
 
   return (
     <>
-      <aside className='inset-y fixed left-0 z-20 hidden sm:flex h-full flex-col border-r'>
+      <aside className='inset-y fixed left-0 z-20 hidden md:flex h-full flex-col border-r'>
         <div className='border-b p-2'>
           <Button variant='outline' size='icon' aria-label='Home'>
-            <img src={BiponiMainLogo} className='size-5' alt='main-logo' />
+            <img src={BrandLogo} className='size-5 object-contain' alt={`${BRAND_CONFIG.shortName} logo`} />
           </Button>
         </div>
         <nav className='grid gap-1 p-2'>
@@ -117,7 +118,7 @@ const Navbar = () => {
           </DropdownMenu>
         </nav>
       </aside>
-      <header className='sticky top-0 z-30 flex h-16 items-center gap-4 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 px-4 sm:hidden'>
+      <header className='sticky top-0 z-30 flex h-16 items-center gap-4 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 px-4 md:hidden'>
         <Drawer>
           <DrawerTrigger asChild>
             <Button size='icon' variant='outline'>
@@ -130,14 +131,14 @@ const Navbar = () => {
               <div className='flex justify-center items-center gap-3 py-2'>
                 <div className='h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center'>
                   <img
-                    src={BiponiMainLogo}
-                    className='size-6'
-                    alt='main-logo'
+                    src={BrandLogo}
+                    className='size-6 object-contain'
+                    alt={`${BRAND_CONFIG.shortName} logo`}
                   />
                 </div>
                 <div>
                   <span className='text-xl font-bold text-primary block'>
-                    Prior Admin
+                    {BRAND_CONFIG.name}
                   </span>
                   <span className='text-sm text-muted-foreground'>
                     Management Dashboard

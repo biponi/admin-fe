@@ -11,6 +11,7 @@ import {
   Warehouse,
   Search,
   XCircle,
+  Store as StoreIcon,
 } from "lucide-react";
 import {
   Dialog,
@@ -39,6 +40,8 @@ import { useNavigate } from "react-router-dom";
 import toast from "react-hot-toast";
 import useRoleCheck from "../auth/hooks/useRoleCheck";
 import { cn } from "../../lib/utils";
+import { PageHeader } from "../../components/PageHeader";
+import { MobilePage, rippleProps } from "../../components/mobile";
 
 interface Store {
   id: number;
@@ -145,38 +148,34 @@ const ReserveStoresList: React.FC = () => {
 
   return (
     <div className='min-h-screen bg-slate-50/60'>
-      <div className='max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6'>
-        {/* ─── Page header ─── */}
-        <div className='flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4'>
-          <div className='flex items-center gap-3'>
-            <div className='flex items-center justify-center w-10 h-10 rounded-xl bg-indigo-600 shadow-sm shadow-indigo-200'>
-              <Warehouse className='h-5 w-5 text-white' />
-            </div>
-            <div>
-              <h1 className='text-xl font-semibold text-slate-900 leading-tight'>
-                Reserve Stores
-              </h1>
-              <p className='text-sm text-slate-500 mt-0.5'>
-                {isLoading
-                  ? "Loading…"
-                  : `${stores.length} store${stores.length !== 1 ? "s" : ""} total`}
-              </p>
-            </div>
-          </div>
-
-        <div className='flex items-center gap-2'>
-          {/* Search */}
+      <MobilePage
+        title='Reserve Stores'
+        icon={<StoreIcon className='h-5 w-5 text-primary' />}
+        subtitle={isLoading ? "Loading…" : "Reserve store locations & stock"}
+        actions={
+          hasRequiredPermission("ReserveStore", "create") ? (
+            <button
+              onClick={() => setIsDialogOpen(true)}
+              aria-label='New store'
+              className='m3-ripple grid h-10 w-10 shrink-0 place-items-center rounded-full bg-primary text-primary-foreground shadow-sm active:scale-95 transition-transform'
+              {...rippleProps()}>
+              <Plus className='h-5 w-5' />
+            </button>
+          ) : undefined
+        }>
+        <div className='max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6'>
+          {/* Mobile search */}
           {stores.length > 0 && (
-            <div className='relative'>
+            <div className='mobile:block hidden relative'>
               <Search className='absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-400' />
               <input
                 type='text'
                 placeholder='Search stores…'
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className='pl-9 pr-8 py-2 text-sm rounded-xl border border-slate-200 bg-white
-                           focus:border-indigo-300 focus:ring-2 focus:ring-indigo-50 outline-none
-                           placeholder:text-slate-400 transition-all w-48'
+                className='pl-9 pr-8 py-2 text-sm rounded-xl border border-slate-200 bg-white w-full
+                         focus:border-indigo-300 focus:ring-2 focus:ring-indigo-50 outline-none
+                         placeholder:text-slate-400 transition-all'
               />
               {searchQuery && (
                 <button
@@ -187,180 +186,224 @@ const ReserveStoresList: React.FC = () => {
               )}
             </div>
           )}
-
-          {hasRequiredPermission("ReserveStore", "create") && (
-            <button
-              onClick={() => setIsDialogOpen(true)}
-              className='inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 active:bg-indigo-800
-                         text-sm font-medium text-white transition-all duration-150 shadow-sm shadow-indigo-200'>
-              <Plus className='w-4 h-4' />
-              <span className='hidden sm:inline'>New store</span>
-              <span className='sm:hidden'>New</span>
-            </button>
-          )}
-        </div>
-      </div>
-
-      {/* ─── Content ─── */}
-      {isLoading ? (
-        <div className='grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4'>
-          {[...Array(4)].map((_, i) => (
-            <StoreCardSkeleton key={i} />
-          ))}
-        </div>
-      ) : stores.length === 0 ? (
-        /* Empty state */
-        <div className='flex flex-col items-center justify-center py-20 gap-3 rounded-2xl border border-dashed border-slate-200 bg-slate-50/50'>
-          <div className='w-14 h-14 rounded-2xl bg-white border border-slate-100 shadow-sm flex items-center justify-center'>
-            <Package className='w-6 h-6 text-slate-300' />
-          </div>
-          <div className='text-center'>
-            <p className='text-sm font-semibold text-slate-700'>No stores yet</p>
-            <p className='text-xs text-slate-500 mt-1 max-w-xs'>
-              Create your first reserve store to start managing inventory across
-              locations.
-            </p>
-          </div>
-          {hasRequiredPermission("ReserveStore", "create") && (
-            <button
-              onClick={() => setIsDialogOpen(true)}
-              className='mt-1 inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 active:bg-indigo-800
-                         text-sm font-medium text-white transition-all duration-150 shadow-sm shadow-indigo-200'>
-              <Plus className='w-3.5 h-3.5' />
-              Create first store
-            </button>
-          )}
-        </div>
-      ) : filteredStores.length === 0 ? (
-        /* Search no results */
-        <div className='flex flex-col items-center justify-center py-16 gap-2 rounded-2xl border border-dashed border-slate-200 bg-slate-50/50'>
-          <Search className='w-6 h-6 text-slate-300' />
-          <p className='text-sm font-semibold text-slate-600'>
-            No stores match "{searchQuery}"
-          </p>
-          <button
-            onClick={() => setSearchQuery("")}
-            className='text-xs text-indigo-600 hover:text-indigo-700 font-medium'>
-            Clear search
-          </button>
-        </div>
-      ) : (
-        <div className='grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4'>
-          {filteredStores.map((store) => (
-            <StoreCard
-              key={store.id}
-              store={store}
-              deletingId={deletingId}
-              onView={(slug) => navigate(`/store/${slug}`)}
-              onDelete={handleDelete}
-              hasViewPermission={hasRequiredPermission(
-                "ReserveStore",
-                "store_access",
-              )}
-              hasDeletePermission={hasRequiredPermission(
-                "ReserveStore",
-                "delete",
-              )}
-              hasSomePermission={hasSomePermissionsForPage("ReserveStore", [
-                "store_access",
-                "delete",
-              ])}
-            />
-          ))}
-        </div>
-      )}
-
-      {/* ─── Create store dialog ─── */}
-      <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogContent className='max-w-sm p-0 gap-0 rounded-2xl border-slate-100 overflow-hidden'>
-          <DialogHeader className='px-5 pt-5 pb-4 border-b border-slate-100'>
-            <div className='flex items-center gap-3'>
-              <div className='w-9 h-9 rounded-xl bg-indigo-50 border border-indigo-100 flex items-center justify-center shrink-0'>
-                <Building2 className='w-4 h-4 text-indigo-600' />
-              </div>
-              <div>
-                <DialogTitle className='text-sm font-semibold text-slate-900 leading-none'>
-                  New reserve store
-                </DialogTitle>
-                <DialogDescription className='text-xs text-slate-500 mt-0.5'>
-                  Fill in the details below to create a new location.
-                </DialogDescription>
-              </div>
-            </div>
-          </DialogHeader>
-
-          <div className='px-5 py-5 space-y-4'>
-            <div className='space-y-1.5'>
-              <label className='text-xs font-semibold text-slate-600'>
-                Store name <span className='text-red-400'>*</span>
-              </label>
-              <input
-                placeholder='e.g. Downtown Warehouse'
-                value={newStore.name}
-                onChange={(e) =>
-                  setNewStore({ ...newStore, name: e.target.value })
-                }
-                disabled={isCreating}
-                className='w-full px-3 py-2 text-sm rounded-xl border border-slate-200 bg-slate-50
-                           focus:bg-white focus:border-indigo-300 focus:ring-2 focus:ring-indigo-50
-                           outline-none placeholder:text-slate-400 transition-all disabled:opacity-50'
-              />
-            </div>
-            <div className='space-y-1.5'>
-              <label className='text-xs font-semibold text-slate-600'>
-                Location <span className='text-red-400'>*</span>
-              </label>
-              <input
-                placeholder='e.g. 123 Main St, Dhaka'
-                value={newStore.location}
-                onChange={(e) =>
-                  setNewStore({ ...newStore, location: e.target.value })
-                }
-                disabled={isCreating}
-                onKeyDown={(e) => e.key === "Enter" && handleCreateStore()}
-                className='w-full px-3 py-2 text-sm rounded-xl border border-slate-200 bg-slate-50
-                           focus:bg-white focus:border-indigo-300 focus:ring-2 focus:ring-indigo-50
-                           outline-none placeholder:text-slate-400 transition-all disabled:opacity-50'
-              />
-            </div>
-          </div>
-
-          <div className='px-5 pb-5 flex gap-2'>
-            <button
-              onClick={() => {
-                setIsDialogOpen(false);
-                setNewStore({ name: "", location: "" });
-              }}
-              disabled={isCreating}
-              className='flex-1 h-9 rounded-xl border border-slate-200 bg-white hover:bg-slate-50
-                         text-sm font-medium text-slate-600 transition-colors disabled:opacity-50'>
-              Cancel
-            </button>
-            <button
-              onClick={handleCreateStore}
-              disabled={
-                isCreating || !newStore.name.trim() || !newStore.location.trim()
+          {/* ─── Page header (desktop) ─── */}
+          <div className='hidden md:flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 w-full'>
+            <PageHeader
+              icon={<StoreIcon className='h-5 w-5 text-white' />}
+              title='Reserve Stores'
+              subtitle='Manage reserve store locations & stock'
+              count={
+                isLoading ? undefined : (
+                  <span className='rounded-md px-2.5 py-1 text-base font-semibold text-slate-500 tabular-nums'>
+                    {stores.length} store{stores.length !== 1 ? "s" : ""} total
+                  </span>
+                )
               }
-              className='flex-[2] h-9 rounded-xl bg-indigo-600 hover:bg-indigo-700 active:bg-indigo-800
+              actions={
+                <div className='flex items-center gap-2'>
+                  {/* Search */}
+                  {stores.length > 0 && (
+                    <div className='relative'>
+                      <Search className='absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-400' />
+                      <input
+                        type='text'
+                        placeholder='Search stores…'
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                        className='pl-9 pr-8 py-2 text-sm rounded-xl border border-slate-200 bg-white
+                                 focus:border-indigo-300 focus:ring-2 focus:ring-indigo-50 outline-none
+                                 placeholder:text-slate-400 transition-all w-48'
+                      />
+                      {searchQuery && (
+                        <button
+                          onClick={() => setSearchQuery("")}
+                          className='absolute right-2.5 top-1/2 -translate-y-1/2'>
+                          <XCircle className='w-3.5 h-3.5 text-slate-400 hover:text-slate-600 transition-colors' />
+                        </button>
+                      )}
+                    </div>
+                  )}
+
+                  {hasRequiredPermission("ReserveStore", "create") && (
+                    <button
+                      onClick={() => setIsDialogOpen(true)}
+                      className='inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 active:bg-indigo-800
+                               text-sm font-medium text-white transition-all duration-150 shadow-sm shadow-indigo-200'>
+                      <Plus className='w-4 h-4' />
+                      <span className='hidden sm:inline'>New store</span>
+                      <span className='sm:hidden'>New</span>
+                    </button>
+                  )}
+                </div>
+              }
+            />
+          </div>
+
+          {/* ─── Content ─── */}
+          {isLoading ? (
+            <div className='grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4'>
+              {[...Array(4)].map((_, i) => (
+                <StoreCardSkeleton key={i} />
+              ))}
+            </div>
+          ) : stores.length === 0 ? (
+            /* Empty state */
+            <div className='flex flex-col items-center justify-center py-20 gap-3 rounded-2xl border border-dashed border-slate-200 bg-slate-50/50'>
+              <div className='w-14 h-14 rounded-2xl bg-white border border-slate-100 shadow-sm flex items-center justify-center'>
+                <Package className='w-6 h-6 text-slate-300' />
+              </div>
+              <div className='text-center'>
+                <p className='text-sm font-semibold text-slate-700'>
+                  No stores yet
+                </p>
+                <p className='text-xs text-slate-500 mt-1 max-w-xs'>
+                  Create your first reserve store to start managing inventory
+                  across locations.
+                </p>
+              </div>
+              {hasRequiredPermission("ReserveStore", "create") && (
+                <button
+                  onClick={() => setIsDialogOpen(true)}
+                  className='mt-1 inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 active:bg-indigo-800
+                         text-sm font-medium text-white transition-all duration-150 shadow-sm shadow-indigo-200'>
+                  <Plus className='w-3.5 h-3.5' />
+                  Create first store
+                </button>
+              )}
+            </div>
+          ) : filteredStores.length === 0 ? (
+            /* Search no results */
+            <div className='flex flex-col items-center justify-center py-16 gap-2 rounded-2xl border border-dashed border-slate-200 bg-slate-50/50'>
+              <Search className='w-6 h-6 text-slate-300' />
+              <p className='text-sm font-semibold text-slate-600'>
+                No stores match "{searchQuery}"
+              </p>
+              <button
+                onClick={() => setSearchQuery("")}
+                className='text-xs text-indigo-600 hover:text-indigo-700 font-medium'>
+                Clear search
+              </button>
+            </div>
+          ) : (
+            <div className='grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4'>
+              {filteredStores.map((store) => (
+                <StoreCard
+                  key={store.id}
+                  store={store}
+                  deletingId={deletingId}
+                  onView={(slug) => navigate(`/store/${slug}`)}
+                  onDelete={handleDelete}
+                  hasViewPermission={hasRequiredPermission(
+                    "ReserveStore",
+                    "store_access",
+                  )}
+                  hasDeletePermission={hasRequiredPermission(
+                    "ReserveStore",
+                    "delete",
+                  )}
+                  hasSomePermission={hasSomePermissionsForPage("ReserveStore", [
+                    "store_access",
+                    "delete",
+                  ])}
+                />
+              ))}
+            </div>
+          )}
+
+          {/* ─── Create store dialog ─── */}
+          <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+            <DialogContent className='max-w-sm p-0 gap-0 rounded-2xl border-slate-100 overflow-hidden'>
+              <DialogHeader className='px-5 pt-5 pb-4 border-b border-slate-100'>
+                <div className='flex items-center gap-3'>
+                  <div className='w-9 h-9 rounded-xl bg-indigo-50 border border-indigo-100 flex items-center justify-center shrink-0'>
+                    <Building2 className='w-4 h-4 text-indigo-600' />
+                  </div>
+                  <div>
+                    <DialogTitle className='text-sm font-semibold text-slate-900 leading-none'>
+                      New reserve store
+                    </DialogTitle>
+                    <DialogDescription className='text-xs text-slate-500 mt-0.5'>
+                      Fill in the details below to create a new location.
+                    </DialogDescription>
+                  </div>
+                </div>
+              </DialogHeader>
+
+              <div className='px-5 py-5 space-y-4'>
+                <div className='space-y-1.5'>
+                  <label className='text-xs font-semibold text-slate-600'>
+                    Store name <span className='text-red-400'>*</span>
+                  </label>
+                  <input
+                    placeholder='e.g. Downtown Warehouse'
+                    value={newStore.name}
+                    onChange={(e) =>
+                      setNewStore({ ...newStore, name: e.target.value })
+                    }
+                    disabled={isCreating}
+                    className='w-full px-3 py-2 text-sm rounded-xl border border-slate-200 bg-slate-50
+                           focus:bg-white focus:border-indigo-300 focus:ring-2 focus:ring-indigo-50
+                           outline-none placeholder:text-slate-400 transition-all disabled:opacity-50'
+                  />
+                </div>
+                <div className='space-y-1.5'>
+                  <label className='text-xs font-semibold text-slate-600'>
+                    Location <span className='text-red-400'>*</span>
+                  </label>
+                  <input
+                    placeholder='e.g. 123 Main St, Dhaka'
+                    value={newStore.location}
+                    onChange={(e) =>
+                      setNewStore({ ...newStore, location: e.target.value })
+                    }
+                    disabled={isCreating}
+                    onKeyDown={(e) => e.key === "Enter" && handleCreateStore()}
+                    className='w-full px-3 py-2 text-sm rounded-xl border border-slate-200 bg-slate-50
+                           focus:bg-white focus:border-indigo-300 focus:ring-2 focus:ring-indigo-50
+                           outline-none placeholder:text-slate-400 transition-all disabled:opacity-50'
+                  />
+                </div>
+              </div>
+
+              <div className='px-5 pb-5 flex gap-2'>
+                <button
+                  onClick={() => {
+                    setIsDialogOpen(false);
+                    setNewStore({ name: "", location: "" });
+                  }}
+                  disabled={isCreating}
+                  className='flex-1 h-9 rounded-xl border border-slate-200 bg-white hover:bg-slate-50
+                         text-sm font-medium text-slate-600 transition-colors disabled:opacity-50'>
+                  Cancel
+                </button>
+                <button
+                  onClick={handleCreateStore}
+                  disabled={
+                    isCreating ||
+                    !newStore.name.trim() ||
+                    !newStore.location.trim()
+                  }
+                  className='flex-[2] h-9 rounded-xl bg-indigo-600 hover:bg-indigo-700 active:bg-indigo-800
                          text-sm font-semibold text-white flex items-center justify-center gap-2
                          transition-all duration-150 shadow-sm shadow-indigo-200
                          disabled:opacity-50 disabled:cursor-not-allowed'>
-              {isCreating ? (
-                <>
-                  <Loader2 className='w-3.5 h-3.5 animate-spin' />
-                  Creating…
-                </>
-              ) : (
-                <>
-                  <Plus className='w-3.5 h-3.5' />
-                  Create store
-                </>
-              )}
-            </button>
-          </div>
-        </DialogContent>
-      </Dialog>
-      </div>
+                  {isCreating ? (
+                    <>
+                      <Loader2 className='w-3.5 h-3.5 animate-spin' />
+                      Creating…
+                    </>
+                  ) : (
+                    <>
+                      <Plus className='w-3.5 h-3.5' />
+                      Create store
+                    </>
+                  )}
+                </button>
+              </div>
+            </DialogContent>
+          </Dialog>
+        </div>
+      </MobilePage>
     </div>
   );
 };

@@ -1,10 +1,4 @@
 import { useEffect, useState } from "react";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from "../../../components/ui/card";
 import { Checkbox } from "../../../components/ui/checkbox";
 import { Button } from "../../../components/ui/button";
 import {
@@ -13,7 +7,6 @@ import {
   DollarSign,
   Wallet,
   ChevronDown,
-  ChevronUp,
   Megaphone,
   X,
   Trophy,
@@ -21,7 +14,9 @@ import {
 import { useCustomerAnalytics } from "../hooks/useCustomerAnalytics";
 import { CustomerStatsTopCustomer } from "../interface";
 import useRoleCheck from "../../auth/hooks/useRoleCheck";
+import { claude } from "../../../lib/claude";
 import { useIsMobile } from "../../../hooks/use-mobile";
+import { cn } from "../../../lib/utils";
 
 interface CustomerStatsProps {
   onBulkCommunicate?: (customers: CustomerStatsTopCustomer[]) => void;
@@ -41,9 +36,10 @@ const CustomerStats = ({ onBulkCommunicate }: CustomerStatsProps) => {
     //eslint-disable-next-line
   }, []);
 
-  // Helper function to safely format numbers
-  const safeNumber = (value: number | undefined, fallback: number = 0) => {
-    return Number(value?.toFixed(2)).toLocaleString() ?? fallback;
+  // Safely format numbers — the API may send numerics as strings ("1250.5")
+  const safeNumber = (value: number | string | undefined, fallback: number = 0) => {
+    const n = Number(value);
+    return (Number.isNaN(n) ? fallback : n).toLocaleString();
   };
 
   // Handlers for bulk selection
@@ -89,119 +85,131 @@ const CustomerStats = ({ onBulkCommunicate }: CustomerStatsProps) => {
 
   if (loading || !stats) {
     return (
-      <div className='grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4'>
+      <div className='grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4'>
         {[1, 2, 3, 4].map((i) => (
-          <Card key={i} className='border-slate-200/80 shadow-sm'>
-            <CardContent className='p-4 md:p-6'>
-              <div className='animate-pulse'>
-                <div className='h-3 bg-slate-200 rounded w-2/3 mb-3'></div>
-                <div className='h-6 bg-slate-200 rounded w-3/4'></div>
-              </div>
-            </CardContent>
-          </Card>
+          <div
+            key={i}
+            className='bg-white border border-[#E8E4DC] rounded-xl p-4 md:p-5 animate-pulse'>
+            <div className='h-8 w-8 bg-[#EDE4D6] rounded-lg mb-3'></div>
+            <div className='h-2.5 bg-[#EDE4D6] rounded w-2/3 mb-2'></div>
+            <div className='h-6 bg-[#EDE4D6] rounded w-3/4'></div>
+          </div>
         ))}
       </div>
     );
   }
 
+  const topCustomers = Array.isArray(stats.topCustomers) ? stats.topCustomers : [];
+  // Revenue share bars are relative to the #1 customer on the list
+  const topSpent = Math.max(
+    ...topCustomers.map((c) => Number(c.totalSpent) || 0),
+    0,
+  );
+
   const statCards = [
     {
-      title: "Total Customers",
-      value: safeNumber(stats.summary?.totalCustomers).toLocaleString(),
-      icon: <Users className='h-4 w-4 md:h-5 md:w-5' />,
-      iconColor: "text-indigo-600",
-      iconBg: "bg-indigo-50",
-      change: `${safeNumber(stats.summary?.totalOrders).toLocaleString()} total orders`,
+      title: "Total customers",
+      value: safeNumber(stats.summary?.totalCustomers),
+      note: `${safeNumber(stats.summary?.totalOrders)} total orders`,
+      icon: <Users className='h-4 w-4' />,
     },
     {
-      title: "Total Revenue",
-      value: `৳${safeNumber(stats.summary?.totalRevenue).toLocaleString()}`,
-      icon: <DollarSign className='h-4 w-4 md:h-5 md:w-5' />,
-      iconColor: "text-violet-600",
-      iconBg: "bg-violet-50",
-      change: "All time",
+      title: "Total revenue",
+      value: `৳${safeNumber(stats.summary?.totalRevenue)}`,
+      note: "All time",
+      icon: <DollarSign className='h-4 w-4' />,
     },
     {
-      title: "Total Paid",
-      value: `৳${safeNumber(stats.summary?.totalPaid).toLocaleString()}`,
-      icon: <Wallet className='h-4 w-4 md:h-5 md:w-5' />,
-      iconColor: "text-emerald-600",
-      iconBg: "bg-emerald-50",
-      change: `৳${safeNumber(stats.summary?.totalPending).toLocaleString()} pending`,
+      title: "Total paid",
+      value: `৳${safeNumber(stats.summary?.totalPaid)}`,
+      note: `৳${safeNumber(stats.summary?.totalPending)} pending`,
+      icon: <Wallet className='h-4 w-4' />,
     },
     {
-      title: "Avg. Spent/Customer",
-      value: `৳${safeNumber(stats.summary?.avgSpentPerCustomer).toLocaleString()}`,
-      icon: <TrendingUp className='h-4 w-4 md:h-5 md:w-5' />,
-      iconColor: "text-amber-600",
-      iconBg: "bg-amber-50",
-      change: `${safeNumber(stats.summary?.avgOrdersPerCustomer)} avg orders/customer`,
+      title: "Avg. spent / customer",
+      value: `৳${safeNumber(stats.summary?.avgSpentPerCustomer)}`,
+      note: `${safeNumber(stats.summary?.avgOrdersPerCustomer)} avg orders / customer`,
+      icon: <TrendingUp className='h-4 w-4' />,
     },
   ];
 
   return (
-    <div className='space-y-5'>
-      {/* Stats Cards */}
-      <div className='grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4'>
+    <div className='space-y-4'>
+      {/* ── Stat tiles ───────────────────────────────────────────── */}
+      <div className='grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4'>
         {statCards.map((stat, index) => (
-          <Card
+          <div
             key={index}
-            className='border-slate-200/80 shadow-sm hover:shadow-md hover:border-slate-300 transition-all'>
-            <CardContent className='p-4 md:p-6'>
-              <div className='flex items-start justify-between gap-2'>
-                <div className='min-w-0'>
-                  <p className='text-xs md:text-sm font-medium text-slate-500 truncate'>
-                    {stat.title}
-                  </p>
-                  <p className='text-lg md:text-2xl font-semibold text-slate-900 mt-1 truncate'>
-                    {stat.value}
-                  </p>
-                  <p className='text-[11px] md:text-xs text-slate-400 mt-1 truncate'>
-                    {stat.change}
-                  </p>
-                </div>
-                <div
-                  className={`p-2 md:p-3 rounded-xl shrink-0 ${stat.iconBg} ${stat.iconColor}`}>
-                  {stat.icon}
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+            className={cn(
+              claude.card,
+              "p-4 md:p-5 hover:border-[#D8D3C8] transition-colors flex flex-col gap-3",
+            )}>
+            <div className='flex items-start justify-between gap-2'>
+              <span className={claude.microLabel + " leading-snug"}>
+                {stat.title}
+              </span>
+              <span className={claude.iconTile + " shrink-0"}>{stat.icon}</span>
+            </div>
+            <div className='min-w-0'>
+              <p className='text-xl md:text-2xl font-semibold text-[#141413] tabular-nums truncate'>
+                {stat.value}
+              </p>
+              <p className='text-[11px] md:text-xs text-[#8A877D] mt-0.5 truncate'>
+                {stat.note}
+              </p>
+            </div>
+          </div>
         ))}
       </div>
 
-      {/* Top Customers */}
-      {stats.topCustomers && stats.topCustomers.length > 0 && (
-        <Card className='border-slate-200/80 shadow-sm overflow-hidden'>
-          <CardHeader
-            className='cursor-pointer hover:bg-slate-50 transition-colors py-4'
-            onClick={() => setIsTopCustomersExpanded(!isTopCustomersExpanded)}>
-            <div className='flex items-center justify-between'>
-              <CardTitle className='flex items-center gap-2 text-base font-medium text-slate-800'>
-                <Trophy className='h-4 w-4 text-amber-500' />
-                Top Customers by Revenue
-              </CardTitle>
-              {isTopCustomersExpanded ? (
-                <ChevronUp className='h-4 w-4 text-slate-400' />
-              ) : (
-                <ChevronDown className='h-4 w-4 text-slate-400' />
-              )}
+      {/* ── Top customers by revenue ─────────────────────────────── */}
+      {topCustomers.length > 0 && (
+        <div className={claude.card + " overflow-hidden"}>
+          <button
+            onClick={() => setIsTopCustomersExpanded(!isTopCustomersExpanded)}
+            className={cn(
+              claude.cardHeader,
+              "w-full flex items-center justify-between gap-2 px-5 py-3.5 hover:bg-[#F5F1EA] transition-colors text-left",
+            )}>
+            <div className='flex items-center gap-2.5 min-w-0'>
+              <span className={claude.iconTile}>
+                <Trophy className='h-4 w-4' />
+              </span>
+              <span className='min-w-0'>
+                <span className='block text-sm font-semibold text-[#141413] truncate'>
+                  Top customers by revenue
+                </span>
+                <span className='block text-xs text-[#8A877D]'>
+                  {topCustomers.length} highest spenders · tap to{" "}
+                  {isTopCustomersExpanded ? "collapse" : "expand"}
+                </span>
+              </span>
             </div>
-          </CardHeader>
+            <div className='flex items-center gap-2 shrink-0'>
+              <span className={claude.badge}>{topCustomers.length}</span>
+              <ChevronDown
+                className={cn(
+                  "h-4 w-4 text-[#8A877D] transition-transform",
+                  isTopCustomersExpanded && "rotate-180",
+                )}
+              />
+            </div>
+          </button>
+
           {isTopCustomersExpanded && (
-            <CardContent className='pt-0'>
+            <div className='p-4 md:p-5 pt-4'>
               {/* Bulk Actions Panel */}
               {selectedTopCustomers.size > 0 && (
-                <div className='mb-4 p-3 bg-indigo-50/70 border border-indigo-100 rounded-xl'>
+                <div className='mb-4 p-3 bg-[#D97757]/[0.06] border border-[#D97757]/25 rounded-xl'>
                   <div className='flex items-center justify-between gap-2 flex-wrap'>
                     <div className='flex items-center gap-2 flex-1 min-w-0 flex-wrap'>
-                      <div className='bg-indigo-600 text-white px-3 py-1 rounded-full text-xs font-medium shrink-0'>
+                      <div className='bg-[#B85A3D] text-white px-3 py-1 rounded-full text-xs font-medium shrink-0'>
                         {selectedTopCustomers.size} selected
                       </div>
                       {hasRequiredPermission("BulkCommunication", "create") && (
                         <Button
                           onClick={handleBulkCommunicateClick}
-                          className='bg-slate-900 hover:bg-slate-800 text-sm'
+                          className='bg-[#141413] hover:bg-[#57554D] text-sm'
                           size='sm'>
                           <Megaphone className='h-3.5 w-3.5 mr-1.5' />
                           {isMobile ? "Send campaign" : "Send bulk SMS/Email"}
@@ -212,7 +220,7 @@ const CustomerStats = ({ onBulkCommunicate }: CustomerStatsProps) => {
                       variant='ghost'
                       size='sm'
                       onClick={handleClearTopCustomerSelection}
-                      className='text-slate-500 hover:text-slate-900 shrink-0'>
+                      className='text-[#57554D] hover:text-[#141413] shrink-0'>
                       <X className='h-4 w-4' />
                     </Button>
                   </div>
@@ -223,33 +231,35 @@ const CustomerStats = ({ onBulkCommunicate }: CustomerStatsProps) => {
               <div className='mb-3 flex items-center gap-2 px-0.5'>
                 <Checkbox
                   checked={
-                    !!stats.topCustomers &&
-                    stats.topCustomers.length > 0 &&
-                    selectedTopCustomers.size === stats.topCustomers.length
+                    topCustomers.length > 0 &&
+                    selectedTopCustomers.size === topCustomers.length
                   }
                   onCheckedChange={handleSelectAllTopCustomers}
                   aria-label='Select all top customers'
                 />
-                <span className='text-sm text-slate-500'>Select all</span>
+                <span className='text-sm text-[#57554D]'>Select all</span>
               </div>
 
-              <div className='space-y-2 grid grid-cols-1 md:grid-cols-3 gap-2 md:gap-3'>
-                {stats.topCustomers.map((customer, index) => {
+              <div className='grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-2 md:gap-3'>
+                {topCustomers.map((customer, index) => {
                   const isSelected = selectedTopCustomers.has(
                     customer.customerPhone,
                   );
+                  const spent = Number(customer.totalSpent) || 0;
+                  const share = topSpent > 0 ? (spent / topSpent) * 100 : 0;
                   return (
                     <div
                       key={customer.customerPhone}
                       onClick={() =>
                         handleSelectTopCustomer(customer.customerPhone)
                       }
-                      className={`flex items-center justify-between gap-3 p-3 md:p-4 border rounded-xl transition-colors cursor-pointer ${
+                      className={cn(
+                        "flex items-start justify-between gap-3 p-3 md:p-3.5 border rounded-xl transition-colors cursor-pointer",
                         isSelected
-                          ? "bg-indigo-50/60 border-indigo-200"
-                          : "border-slate-200 hover:bg-slate-50"
-                      }`}>
-                      <div className='flex items-center gap-3 min-w-0'>
+                          ? "bg-[#D97757]/[0.06] border-[#D97757]/30"
+                          : "border-[#E8E4DC] hover:bg-[#F5F1EA]",
+                      )}>
+                      <div className='flex items-center gap-3 min-w-0 flex-1'>
                         <Checkbox
                           checked={isSelected}
                           onCheckedChange={() =>
@@ -260,31 +270,35 @@ const CustomerStats = ({ onBulkCommunicate }: CustomerStatsProps) => {
                           className='shrink-0'
                         />
                         <div
-                          className={`w-9 h-9 md:w-10 md:h-10 shrink-0 rounded-full flex items-center justify-center font-semibold text-sm ${
+                          className={cn(
+                            "h-9 w-9 shrink-0 rounded-full grid place-items-center font-semibold text-sm",
                             index === 0
-                              ? "bg-amber-100 text-amber-700"
-                              : index === 1
-                                ? "bg-slate-200 text-slate-600"
-                                : index === 2
-                                  ? "bg-orange-100 text-orange-700"
-                                  : "bg-indigo-50 text-indigo-600"
-                          }`}>
+                              ? "bg-[#D97757] text-white"
+                              : "bg-[#F5F1EA] text-[#57554D]",
+                          )}>
                           {index + 1}
                         </div>
-                        <div className='min-w-0'>
-                          <p className='font-medium text-slate-800 truncate'>
+                        <div className='min-w-0 flex-1'>
+                          <p className='font-medium text-sm text-[#141413] truncate'>
                             {customer.customerName}
                           </p>
-                          <p className='text-xs md:text-sm text-slate-400 truncate'>
+                          <p className='text-xs text-[#8A877D] truncate'>
                             {customer.customerPhone}
                           </p>
+                          {/* Revenue share bar — relative to #1 */}
+                          <div className='mt-1.5 h-1.5 rounded-full bg-[#F5F1EA] overflow-hidden'>
+                            <div
+                              className='h-full rounded-full bg-[#C96442]'
+                              style={{ width: `${share}%` }}
+                            />
+                          </div>
                         </div>
                       </div>
                       <div className='text-right shrink-0'>
-                        <p className='font-semibold text-sm md:text-lg text-slate-900'>
-                          ৳{safeNumber(customer.totalSpent).toLocaleString()}
+                        <p className='font-semibold text-sm md:text-base text-[#141413] tabular-nums whitespace-nowrap'>
+                          ৳{safeNumber(customer.totalSpent)}
                         </p>
-                        <p className='text-[11px] md:text-xs text-slate-400'>
+                        <p className='text-[11px] md:text-xs text-[#8A877D] whitespace-nowrap'>
                           {safeNumber(customer.orderCount)} orders
                         </p>
                       </div>
@@ -292,9 +306,9 @@ const CustomerStats = ({ onBulkCommunicate }: CustomerStatsProps) => {
                   );
                 })}
               </div>
-            </CardContent>
+            </div>
           )}
-        </Card>
+        </div>
       )}
     </div>
   );

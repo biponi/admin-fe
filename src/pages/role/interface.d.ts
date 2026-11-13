@@ -2,6 +2,8 @@
 export interface Permission {
   page: string;
   actions: string[];
+  /** Actions restricted to resources the user created themselves (subset of `actions`) */
+  ownOnly?: string[];
   _id?: string;
 }
 

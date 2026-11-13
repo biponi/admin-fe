@@ -24,6 +24,9 @@ import {
   FileText,
   RotateCcw,
   History,
+  ShieldAlert,
+  CreditCard,
+  Hourglass,
 } from "lucide-react";
 
 export const navItems = [
@@ -192,6 +195,30 @@ export const navItems = [
     link: "/users",
     active: true,
     id: "user",
+    roles: ["admin"],
+  },
+  {
+    icon: <ShieldAlert className='w-5 h-5' />,
+    title: "Fraud",
+    link: "/fraud",
+    active: true,
+    id: "fraud",
+    roles: ["admin", "manager"],
+  },
+  {
+    icon: <CreditCard className='w-5 h-5' />,
+    title: "bKash Transactions",
+    link: "/bkash-transactions",
+    active: true,
+    id: "bkashtransaction",
+    roles: ["admin"],
+  },
+  {
+    icon: <Hourglass className='w-5 h-5' />,
+    title: "Pending Orders",
+    link: "/pending-orders",
+    active: true,
+    id: "pendingorder",
     roles: ["admin"],
   },
   {

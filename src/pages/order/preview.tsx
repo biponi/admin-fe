@@ -33,6 +33,8 @@ import {
 } from "lucide-react";
 import { Alert, AlertDescription } from "../../components/ui/alert";
 import { toast } from "react-hot-toast";
+import { useCreateOrderLayoutStore } from "./createOrderLayoutStore";
+import PrepaymentWarningModal from "./components/PrepaymentWarningModal";
 import {
   Tabs,
   TabsContent,
@@ -60,6 +62,17 @@ const OrderPreview: React.FC<Props> = ({
   customerInformation,
 }) => {
   const [isCreating, setIsCreating] = useState(false);
+  // Advisory prepayment suggestion (written by the customer-information step);
+  // a required advance that isn't collected opens the typed-"yes" modal
+  const prepaymentSuggestion = useCreateOrderLayoutStore(
+    (state) => state.prepaymentSuggestion,
+  );
+  const [skipAdvanceOpen, setSkipAdvanceOpen] = useState(false);
+  const requiredAdvance = prepaymentSuggestion?.required
+    ? prepaymentSuggestion.amount
+    : 0;
+  const advanceMissing =
+    requiredAdvance > 0 && (transection?.paid ?? 0) < requiredAdvance;
 
   const handleCreateOrderWithLoading = () => {
     setIsCreating(true);
@@ -71,6 +84,14 @@ const OrderPreview: React.FC<Props> = ({
     } finally {
       setIsCreating(false);
     }
+  };
+
+  const handleCreateOrderClick = () => {
+    if (advanceMissing) {
+      setSkipAdvanceOpen(true);
+      return;
+    }
+    handleCreateOrderWithLoading();
   };
 
   const renderSelectedProduct = (product: IOrderProduct, index: number) => {
@@ -481,7 +502,7 @@ const OrderPreview: React.FC<Props> = ({
                     disabled={
                       !orderProducts || orderProducts.length < 1 || isCreating
                     }
-                    onClick={handleCreateOrderWithLoading}
+                    onClick={handleCreateOrderClick}
                     className='flex-1 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white shadow-md h-9 text-sm'>
                     {isCreating ? (
                       <>
@@ -505,11 +526,39 @@ const OrderPreview: React.FC<Props> = ({
                     </AlertDescription>
                   </Alert>
                 )}
+
+                {advanceMissing && (
+                  <Alert className='mt-2 border-amber-200 bg-amber-50 py-1.5 px-2.5'>
+                    <AlertCircle className='h-3.5 w-3.5 text-amber-600' />
+                    <AlertDescription className='text-amber-800 text-xs'>
+                      Prepayment rule{" "}
+                      {prepaymentSuggestion?.appliedRule?.name
+                        ? `“${prepaymentSuggestion.appliedRule.name}”`
+                        : ""}{" "}
+                      requires an advance of ৳{requiredAdvance} — paid amount is ৳
+                      {transection?.paid ?? 0}. Creating the order will ask for
+                      confirmation.
+                    </AlertDescription>
+                  </Alert>
+                )}
               </div>
             </Card>
           </div>
         </div>
       </div>
+
+      <PrepaymentWarningModal
+        open={skipAdvanceOpen}
+        onOpenChange={setSkipAdvanceOpen}
+        ruleName={prepaymentSuggestion?.appliedRule?.name}
+        amount={requiredAdvance}
+        paid={transection?.paid ?? 0}
+        isBusy={isCreating}
+        onConfirm={() => {
+          setSkipAdvanceOpen(false);
+          handleCreateOrderWithLoading();
+        }}
+      />
     </div>
   );
 };

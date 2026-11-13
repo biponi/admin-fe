@@ -7,9 +7,7 @@ import React, {
 } from "react";
 import { socketService } from "../services/socketService";
 import {
-  ensureFirebaseInitialized,
   requestNotificationPermission as requestFCMPermission,
-  onMessageListener,
 } from "../config/firebase";
 import { registerFCMToken } from "../notification/notificationService";
 
@@ -355,47 +353,10 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({
 
     socketService.setCallbacks(socketCallbacks);
 
-    // Initialize Firebase and setup foreground message listener
-    const initializeFirebase = async () => {
-      try {
-        await ensureFirebaseInitialized();
-        console.log("✅ Firebase initialized in NotificationContext");
-
-        // Listen for foreground messages from Firebase (continuous listener)
-        const handleFCMMessage = async () => {
-          try {
-            while (true) {
-              const payload: any = await onMessageListener();
-              console.log("📬 Foreground FCM message received:", payload);
-
-              // Convert FCM payload to Notification format
-              const notification: Notification = {
-                _id: payload.data?.notificationId || Date.now().toString(),
-                type: payload.data?.type || "system",
-                title: payload.notification?.title || payload.data?.subject || "New Notification",
-                message: payload.notification?.body || payload.data?.message || "",
-                priority: payload.data?.priority || "normal",
-                read: false,
-                createdAt: new Date(),
-                relatedData: payload.data?.relatedData ? JSON.parse(payload.data.relatedData) : undefined,
-              };
-
-              handleNewNotification(notification);
-            }
-          } catch (error) {
-            console.error("Error in FCM listener loop:", error);
-          }
-        };
-
-        // Start listening
-        handleFCMMessage();
-
-      } catch (error) {
-        console.error("Failed to initialize Firebase:", error);
-      }
-    };
-
-    initializeFirebase();
+    // Note: foreground FCM messages are handled by useNotifications
+    // (src/notification/useNotifications.ts) — the admin notification
+    // bell/panel. This context only handles socket (chat/ticket) events,
+    // so we don't subscribe to Firebase here (would double-handle pushes).
 
     // Request browser notification permission only if supported and enabled via feature flag
     if (

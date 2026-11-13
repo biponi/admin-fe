@@ -166,7 +166,7 @@ const CreateOrder = () => {
         return (
           <>
             {/* Mobile Product Search - Optimized for touch */}
-            <div className='sm:hidden'>
+            <div className='md:hidden'>
               <div className='space-y-4'>
                 <MobileOrderProductSearch
                   onProductsSubmit={handleProductDataSubmit}
@@ -176,7 +176,7 @@ const CreateOrder = () => {
               </div>
             </div>
             {/* Desktop Product List */}
-            <div className='hidden sm:block'>
+            <div className='hidden md:block'>
               <OrderProductList
                 handleProductDataSubmit={handleProductDataSubmit}
                 initialProducts={orderProducts}
@@ -193,6 +193,7 @@ const CreateOrder = () => {
               handleCustomerDataChange={handleCustomerDataChange}
               initialTransaction={transectionData}
               orderTotal={transectionData?.totalPrice || 0}
+              orderProducts={orderProducts}
             />
           </div>
         );
@@ -307,12 +308,12 @@ const CreateOrder = () => {
     return (
       <>
         {/* Mobile Loading */}
-        <div className='sm:hidden'>
+        <div className='md:hidden'>
           <MobileCreateLoading />
         </div>
 
         {/* Desktop Loading */}
-        <div className='hidden sm:flex min-h-screen bg-gradient-to-br from-gray-50 via-blue-50 to-purple-50 items-center justify-center'>
+        <div className='hidden md:flex min-h-screen bg-gradient-to-br from-gray-50 via-blue-50 to-purple-50 items-center justify-center'>
           <div className='max-w-md mx-auto p-8'>
             <Card className='border-2 border-blue-200 shadow-2xl bg-white'>
               <CardContent className='p-8 text-center'>
@@ -373,7 +374,7 @@ const CreateOrder = () => {
   return (
     <>
       {/* Mobile View */}
-      <div className='min-h-screen bg-gray-50 sm:hidden'>
+      <div className='min-h-screen bg-gray-50 md:hidden'>
         {/* Mobile Header with better safe area */}
         <div className='relative z-50'>
           <MobileCreateHeader
@@ -400,7 +401,7 @@ const CreateOrder = () => {
       </div>
 
       {/* Desktop View - Medusa Style */}
-      <div className='hidden sm:block min-h-screen bg-gray-50'>
+      <div className='hidden md:block min-h-screen bg-gray-50'>
         <div className='max-w-[1600px] mx-auto px-6 py-8'>
           {/* Header - Medusa style */}
           <div className='mb-8'>

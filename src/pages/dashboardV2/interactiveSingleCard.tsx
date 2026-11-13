@@ -1,52 +1,34 @@
 "use client";
 
-import { Area, AreaChart, CartesianGrid, XAxis } from "recharts";
-
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "../../components/ui/card";
+import { useMemo, useState } from "react";
+import { Area, AreaChart, CartesianGrid, XAxis, YAxis } from "recharts";
 import {
   ChartConfig,
   ChartContainer,
-  ChartLegend,
-  ChartLegendContent,
   ChartTooltip,
   ChartTooltipContent,
 } from "../../components/ui/chart";
+import { DASHBOARD_THEME, pillClass } from "./dashboardTheme";
 
 const chartConfig = {
-  visitors: {
-    label: "Visitors",
-  },
-  processing: {
-    label: "Processing: ",
-    color: "hsl(var(--chart-1))",
-  },
-  completed: {
-    label: "Completed: ",
-    color: "hsl(var(--chart-2))",
-  },
-  cancel: {
-    label: "Cancelled: ",
-    color: "hsl(var(--chart-3))",
-  },
-  delete: {
-    label: "Deleted: ",
-    color: "hsl(var(--chart-4))",
-  },
-  shipped: {
-    label: "Shipped: ",
-    color: "hsl(var(--chart-5))",
-  },
-  failed: {
-    label: "Failed: ",
-    color: "hsl(var(--chart-5))",
-  },
+  processing: { label: "Processing: ", color: "#F2A992" },
+  completed: { label: "Completed: ", color: "#E1573F" },
+  shipped: { label: "Shipped: ", color: "#C98A76" },
+  cancel: { label: "Cancelled: ", color: "#9A9A98" },
+  failed: { label: "Failed: ", color: "#1A1A1A" },
+  delete: { label: "Deleted: ", color: "#D9D7D4" },
 } satisfies ChartConfig;
+
+const STATUS_COLORS: Record<string, string> = {
+  processing: chartConfig.processing.color,
+  completed: chartConfig.completed.color,
+  shipped: chartConfig.shipped.color,
+  cancel: chartConfig.cancel.color,
+  failed: chartConfig.failed.color,
+  delete: chartConfig.delete.color,
+};
+
+const STATUS_KEYS = Object.keys(STATUS_COLORS);
 
 interface Props {
   title: string;
@@ -54,105 +36,75 @@ interface Props {
   data: any[];
 }
 
+/**
+ * Order-status daily timeline in the reference design language: compact
+ * smooth area chart with white status filter pills (All / Processing / …)
+ * toggling which series render. Replaces the previous single hardcoded
+ * gradient defs block (which repeated the same `fillMobile` id six times).
+ */
 const InteractiveSingleCardComponent: React.FC<Props> = ({
   title,
   subTitle,
   data,
 }) => {
+  const availableStatuses = useMemo(() => {
+    if (!data?.length) return [];
+    return STATUS_KEYS.filter((key) =>
+      data.some((row) => Number(row[key] ?? 0) > 0)
+    );
+  }, [data]);
+
+  const [selected, setSelected] = useState<string>("all");
+
+  const activeStatuses =
+    selected === "all"
+      ? availableStatuses
+      : availableStatuses.filter((s) => s === selected);
+
   return (
-    <Card>
-      <CardHeader className='flex flex-col items-stretch space-y-0 border-b p-0 sm:flex-row'>
-        <div className='flex flex-1 flex-col justify-center gap-1 px-6 py-5 sm:py-6'>
-          <CardTitle>Bar Chart - {title}</CardTitle>
-          <CardDescription>{subTitle}</CardDescription>
-        </div>
-      </CardHeader>
-      <CardContent className='px-2 pt-4 sm:px-6 sm:pt-6'>
+    <div className='bg-[#EFEDEB] rounded-3xl p-4 sm:p-5 flex flex-col gap-3 h-full'>
+      <div className='min-w-0'>
+        <p className='text-base font-semibold text-[#1A1A1A]'>{title}</p>
+        <p className='text-xs text-[#9A9A98] mt-0.5 truncate'>{subTitle}</p>
+      </div>
+
+      <div className='flex items-center gap-2 flex-wrap'>
+        <button
+          onClick={() => setSelected("all")}
+          className={`${pillClass} px-3 h-7 text-xs font-medium transition-colors ${
+            selected === "all"
+              ? "bg-[#111111] text-white"
+              : "text-[#1A1A1A] hover:bg-[#F7D9D2]/50"
+          }`}>
+          All
+        </button>
+        {availableStatuses.map((status) => (
+          <button
+            key={status}
+            onClick={() => setSelected(status)}
+            className={`${pillClass} px-3 h-7 text-xs font-medium capitalize transition-colors ${
+              selected === status
+                ? "bg-[#111111] text-white"
+                : "text-[#1A1A1A] hover:bg-[#F7D9D2]/50"
+            }`}>
+            {status}
+          </button>
+        ))}
+      </div>
+
+      <div className='bg-white rounded-2xl p-2 sm:p-3'>
         <ChartContainer
           config={chartConfig}
-          className='aspect-auto h-[250px] w-full'>
+          className='aspect-auto h-[190px] sm:h-[220px] w-full'>
           <AreaChart data={data}>
-            <defs>
-              <linearGradient id='fillDesktop' x1='0' y1='0' x2='0' y2='1'>
-                <stop
-                  offset='5%'
-                  stopColor='var(--color-processing)'
-                  stopOpacity={0.8}
-                />
-                <stop
-                  offset='95%'
-                  stopColor='var(--color-processing)'
-                  stopOpacity={0.1}
-                />
-              </linearGradient>
-              <linearGradient id='fillMobile' x1='0' y1='0' x2='0' y2='1'>
-                <stop
-                  offset='5%'
-                  stopColor='var(--color-completed)'
-                  stopOpacity={0.8}
-                />
-                <stop
-                  offset='95%'
-                  stopColor='var(--color-completed)'
-                  stopOpacity={0.1}
-                />
-              </linearGradient>
-              <linearGradient id='fillMobile' x1='0' y1='0' x2='0' y2='1'>
-                <stop
-                  offset='5%'
-                  stopColor='var(--color-cancel)'
-                  stopOpacity={0.8}
-                />
-                <stop
-                  offset='95%'
-                  stopColor='var(--color-cancel)'
-                  stopOpacity={0.1}
-                />
-              </linearGradient>
-              <linearGradient id='fillMobile' x1='0' y1='0' x2='0' y2='1'>
-                <stop
-                  offset='5%'
-                  stopColor='var(--color-failed)'
-                  stopOpacity={0.8}
-                />
-                <stop
-                  offset='95%'
-                  stopColor='var(--color-failed)'
-                  stopOpacity={0.1}
-                />
-              </linearGradient>
-              <linearGradient id='fillMobile' x1='0' y1='0' x2='0' y2='1'>
-                <stop
-                  offset='5%'
-                  stopColor='var(--color-delete)'
-                  stopOpacity={0.8}
-                />
-                <stop
-                  offset='95%'
-                  stopColor='var(--color-delete)'
-                  stopOpacity={0.1}
-                />
-              </linearGradient>
-              <linearGradient id='fillMobile' x1='0' y1='0' x2='0' y2='1'>
-                <stop
-                  offset='5%'
-                  stopColor='var(--color-shipped)'
-                  stopOpacity={0.8}
-                />
-                <stop
-                  offset='95%'
-                  stopColor='var(--color-shipped)'
-                  stopOpacity={0.1}
-                />
-              </linearGradient>
-            </defs>
-            <CartesianGrid vertical={false} />
+            <CartesianGrid vertical={false} stroke='#EFEDEB' />
             <XAxis
               dataKey='_id'
               tickLine={false}
               axisLine={false}
               tickMargin={8}
               minTickGap={32}
+              tick={{ fill: DASHBOARD_THEME.label, fontSize: 12 }}
               tickFormatter={(value) => {
                 const date = new Date(value);
                 return date.toLocaleDateString("en-US", {
@@ -161,67 +113,43 @@ const InteractiveSingleCardComponent: React.FC<Props> = ({
                 });
               }}
             />
+            <YAxis
+              width={32}
+              tickLine={false}
+              axisLine={false}
+              tick={{ fill: DASHBOARD_THEME.label, fontSize: 11 }}
+              allowDecimals={false}
+            />
             <ChartTooltip
               cursor={false}
               content={
                 <ChartTooltipContent
-                  labelFormatter={(value) => {
-                    return new Date(value).toLocaleDateString("en-US", {
+                  labelFormatter={(value) =>
+                    new Date(value).toLocaleDateString("en-US", {
                       month: "short",
                       day: "numeric",
-                    });
-                  }}
+                    })
+                  }
                   indicator='dot'
                 />
               }
             />
-            <Area
-              dataKey='processing'
-              type='natural'
-              fill='url(#fillMobile)'
-              stroke='var(--color-processing)'
-              stackId='a'
-            />
-            <Area
-              dataKey='completed'
-              type='natural'
-              fill='url(#fillDesktop)'
-              stroke='var(--color-completed)'
-              stackId='a'
-            />
-            <Area
-              dataKey='shipped'
-              type='natural'
-              fill='url(#fillMobile)'
-              stroke='var(--color-shipped)'
-              stackId='a'
-            />
-            <Area
-              dataKey='cancel'
-              type='natural'
-              fill='url(#fillDesktop)'
-              stroke='var(--color-cancel)'
-              stackId='a'
-            />
-            <Area
-              dataKey='delete'
-              type='natural'
-              fill='url(#fillMobile)'
-              stroke='var(--color-delete)'
-              stackId='a'
-            />
-            <Area
-              dataKey='failed'
-              type='natural'
-              fill='url(#fillDesktop)'
-              stroke='var(--color-failed)'
-              stackId='a'
-            />
-            <ChartLegend content={<ChartLegendContent payload={[]} />} />
+            {activeStatuses.map((status) => (
+              <Area
+                key={status}
+                dataKey={status}
+                type='monotone'
+                fill={STATUS_COLORS[status]}
+                fillOpacity={0.15}
+                stroke={STATUS_COLORS[status]}
+                strokeWidth={2}
+                dot={false}
+              />
+            ))}
           </AreaChart>
         </ChartContainer>
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   );
 };
 

@@ -5,6 +5,7 @@ import { Toaster as Toaster2 } from "sonner";
 import { SettingsProvider } from "./contexts/SettingsContext";
 import { PageProvider } from "./contexts/PageContext";
 import { NotificationProvider } from "./contexts/NotificationContext";
+import { WeatherProvider } from "./contexts/WeatherContext";
 import IOSErrorBoundary from "./components/IOSErrorBoundary";
 import { AuthGuard } from "./main/components/auth/AuthGuard";
 import { AppRoutes } from "./main/routes/AppRoutes";
@@ -18,9 +19,13 @@ const App = () => {
         <PageProvider>
           <NotificationProvider>
             <AuthGuard>
-              <Suspense fallback={<LoadingScreen />}>
-                <AppRoutes />
-              </Suspense>
+              {/* Inside AuthGuard: weather requests use the authenticated
+                  axios instance and must not fire pre-login */}
+              <WeatherProvider>
+                <Suspense fallback={<LoadingScreen />}>
+                  <AppRoutes />
+                </Suspense>
+              </WeatherProvider>
             </AuthGuard>
             <GlobalOrderModal />
             <Toaster />

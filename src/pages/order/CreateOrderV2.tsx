@@ -1,4 +1,4 @@
-import { useEffect, useCallback, memo } from "react";
+import { useEffect, useCallback, useMemo, memo } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-hot-toast";
 import { useCreateOrderLayoutStore } from "./createOrderLayoutStore";
@@ -11,21 +11,24 @@ import { CartDrawer, CartTriggerButton } from "./v2-components/CartDrawer";
 import { getProducts, searchActiveProducts } from "../../api/product";
 import { createOrder } from "../../api/order";
 import type { IProduct, IVariation } from "../product/interface";
-import { Package, ShoppingBag } from "lucide-react";
+import { Package } from "lucide-react";
 import useCategory from "../product/hooks/useCategory";
 import useDebounce from "../../customHook/useDebounce";
 import { getVariationImageUrl } from "../../utils/functions";
 
 // ─── Header (stable — no props that change on every render) ───────────────────
-const OrderHeader = memo(() => (
-  <div className='px-5 py-4 mb-3 bg-gradient-to-r from-rose-500 via-red-500 to-orange-500 text-white md:rounded-xl shadow-sm'>
+const OrderHeader = memo(({ totalProducts }: { totalProducts: number }) => (
+  <div className='px-5 py-[15px] border-b border-border'>
     <div className='flex items-center gap-3'>
-      <div className='h-9 w-9 rounded-lg bg-white/20 flex items-center justify-center backdrop-blur-sm shrink-0'>
-        <Package className='h-4.5 w-4.5' />
+      <div className='flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-primary shadow-sm'>
+        <Package className='h-4 w-4 text-primary-foreground' />
       </div>
       <div className='min-w-0'>
-        <h2 className='font-semibold text-base leading-tight'>Create Order</h2>
-        <p className='text-xs text-white/75 mt-0.5'>
+        <h2 className='text-base font-semibold leading-tight text-foreground'>
+          Create Order
+        </h2>
+        <p className='mt-0.5 text-xs text-muted-foreground'>
+          {totalProducts} {totalProducts === 1 ? "product" : "products"} ·
           Select products · Fill customer details · Submit
         </p>
       </div>
@@ -43,6 +46,8 @@ const CreateOrderV2 = () => {
     searchQuery,
     selectedCategory,
     selectedBrand,
+    sortBy,
+    sortOrder,
     isLoadingProducts,
     currentPage,
     totalPages,
@@ -62,6 +67,8 @@ const CreateOrderV2 = () => {
     setSearchQuery,
     setSelectedCategory,
     setSelectedBrand,
+    setSortBy,
+    setSortOrder,
     setLoadingProducts,
     setCurrentPage,
     setPageSize,
@@ -113,6 +120,8 @@ const CreateOrderV2 = () => {
           true, // includeSubcategories
           currentPage,
           pageSize,
+          sortBy,
+          sortOrder,
         );
       } else {
         // Use getProducts API for regular listing/pagination
@@ -122,6 +131,8 @@ const CreateOrderV2 = () => {
           selectedCategory && selectedCategory !== "all"
             ? selectedCategory
             : undefined,
+          sortBy,
+          sortOrder,
         );
       }
 
@@ -141,7 +152,14 @@ const CreateOrderV2 = () => {
       setLoadingProducts(false);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [debouncedSearch, selectedCategory, currentPage, pageSize]);
+  }, [
+    debouncedSearch,
+    selectedCategory,
+    currentPage,
+    pageSize,
+    sortBy,
+    sortOrder,
+  ]);
 
   useEffect(() => {
     fetchProducts();
@@ -198,7 +216,7 @@ const CreateOrderV2 = () => {
           // Try variation images → image groups for thumbnail
           const variantImageUrl = getVariationImageUrl(
             item.selectedVariant,
-            item.imageGroups
+            item.imageGroups,
           );
           if (variantImageUrl) {
             transformed.thumbnail = variantImageUrl;
@@ -263,6 +281,19 @@ const CreateOrderV2 = () => {
 
   const cartItemCount = getCartItemCount();
 
+  // Quantity of each product already in the cart (all variations merged) —
+  // lets product cards show an "already picked ×N" chip.
+  const cartQtyByProductId = useMemo(() => {
+    return cart.reduce(
+      (map, item) => {
+        const id = item.productId || item.id;
+        map[id] = (map[id] ?? 0) + item.quantity;
+        return map;
+      },
+      {} as Record<string, number>,
+    );
+  }, [cart]);
+
   // ── Shared cart props (avoids repeating spread in JSX) ───────────────────
   const cartProps = {
     cart,
@@ -282,13 +313,13 @@ const CreateOrderV2 = () => {
   };
 
   return (
-    <div className='flex flex-row h-full bg-white'>
+    <div className='flex flex-row h-full bg-muted md:h-[calc(100dvh-4.5rem)]'>
       {/* ── Product Section ─────────────────────────────────────── */}
-      <div className='flex-1 flex flex-col overflow-hidden  border-gray-200'>
-        <div className='flex-1 overflow-auto md:px-4 bg-white'>
-          <OrderHeader />
+      <div className='flex-1 flex flex-col min-w-0 overflow-hidden'>
+        <div className='flex-1 overflow-y-auto bg-background'>
+          <OrderHeader totalProducts={totalProducts} />
 
-          <div className='max-w-5xl mx-auto space-y-4 px-2 md:px-0'>
+          <div className='max-w-5xl mx-auto space-y-4 px-2 md:px-6'>
             <FilterBar
               searchQuery={searchQuery}
               onSearchChange={setSearchQuery}
@@ -296,18 +327,29 @@ const CreateOrderV2 = () => {
               onCategoryChange={setSelectedCategory}
               selectedBrand={selectedBrand}
               onBrandChange={setSelectedBrand}
+              sortBy={sortBy}
+              onSortChange={setSortBy}
+              sortOrder={sortOrder}
+              onSortOrderChange={setSortOrder}
               categories={categories}
               brands={[]}
               isLoading={isLoadingProducts}
             />
 
-            <ProductGrid
-              products={filteredProducts}
-              onAddToCart={handleAddToCart}
-              onProductClick={handleProductClick}
-              isLoading={isLoadingProducts}
-            />
-
+            <div
+              className='w-full md:max-h-[67dvh] overflow-y-auto '
+              style={{
+                scrollbarWidth: "thin",
+                scrollbarColor: "rgba(0, 0, 0, 0.2) transparent",
+              }}>
+              <ProductGrid
+                products={filteredProducts}
+                onAddToCart={handleAddToCart}
+                onProductClick={handleProductClick}
+                isLoading={isLoadingProducts}
+                cartQtyByProductId={cartQtyByProductId}
+              />
+            </div>
             <ProductPagination
               currentPage={currentPage}
               totalPages={totalPages}
@@ -322,7 +364,7 @@ const CreateOrderV2 = () => {
       </div>
 
       {/* ── Cart Panel (desktop) ────────────────────────────────── */}
-      <div className='hidden md:flex md:w-[45%] md:h-full md:overflow-y-auto md:pr-1 shrink-0 flex-col bg-white shadow-xl'>
+      <div className='hidden md:flex md:w-[42%] xl:w-[38%] min-w-[420px] md:h-full shrink-0 flex-col border-l border-border bg-background'>
         <CartPanel {...cartProps} />
       </div>
 

@@ -58,7 +58,7 @@ export const MobileOrderSummaryCards: React.FC<MobileOrderSummaryCardsProps> = (
             </div>
           </CardHeader>
           <CardContent className='px-4 pb-4'>
-            <div className='text-xl sm:text-2xl font-bold tracking-tight'>
+            <div className='text-xl md:text-2xl font-bold tracking-tight'>
               {card.value}
             </div>
           </CardContent>

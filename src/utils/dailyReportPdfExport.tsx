@@ -29,9 +29,10 @@ export interface ExportResult {
  */
 const fetchLogoAsBase64 = async (): Promise<string | undefined> => {
   try {
-    if (!BRAND_CONFIG.logo) return undefined;
+    const logoSource = BRAND_CONFIG.logo || BRAND_CONFIG.logoUrl;
+    if (!logoSource) return undefined;
 
-    const response = await fetch(BRAND_CONFIG.logo);
+    const response = await fetch(logoSource);
     const blob = await response.blob();
 
     return new Promise((resolve, reject) => {

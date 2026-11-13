@@ -18,6 +18,7 @@ import {
   User,
   ShoppingBag,
   DollarSign,
+  Store as StoreIcon,
 } from "lucide-react";
 import { IRecord } from "./interface";
 import { Button } from "../../components/ui/button";
@@ -56,6 +57,19 @@ import useRoleCheck from "../auth/hooks/useRoleCheck";
 import { generateInventoryPDF } from "../../utils/reactPdfStorerecord";
 import { useReserveRecords } from "./hooks/useReserveRecords";
 import ErrorAlertDialog from "../../components/common/ErrorAlertDialog";
+import { useIsMobile } from "../../hooks/use-mobile";
+import {
+  MobilePage,
+  MobileFab,
+  MobileListCard,
+  MobileStaggeredList,
+  MobileActionSheet,
+  MobileDetailSheet,
+  MobileEmptyState,
+  MobileSkeletonList,
+  MobilePagination,
+} from "../../components/mobile";
+import { PageHeader } from "../../components/PageHeader";
 
 // ─── Skeleton ─────────────────────────────────────────────────────────────────
 const RowSkeleton: React.FC = () => (
@@ -139,6 +153,7 @@ const SingleReserveStore: React.FC = () => {
     refreshRecords,
   } = useReserveRecords(storeId);
 
+  const isMobile = useIsMobile();
   const [deletingRecordId, setDeletingRecordId] = useState<string | null>(null);
   const [errorDialog, setErrorDialog] = useState<{
     isOpen: boolean;
@@ -147,6 +162,11 @@ const SingleReserveStore: React.FC = () => {
     isOpen: false,
     message: "",
   });
+  // Mobile-only sheet state
+  const [actionSheetRecord, setActionSheetRecord] = useState<IRecord | null>(
+    null,
+  );
+  const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
 
   const handleDeleteRecord = async (recordId: string) => {
     if (!recordId || !storeId) return;
@@ -499,38 +519,228 @@ const SingleReserveStore: React.FC = () => {
           </div>
         </div>
       ) : (
-        <div className='flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3'>
-          <div className='flex items-center gap-3'>
-            <div className='w-11 h-11 rounded-xl bg-violet-600 flex items-center justify-center shrink-0 shadow-sm shadow-violet-200'>
-              <Warehouse className='w-5 h-5 text-white' strokeWidth={2} />
-            </div>
-            <div>
-              <h1 className='text-base font-bold text-gray-900 leading-tight'>
-                {storeInfo?.name || "Store"}
-              </h1>
-              {storeInfo?.location && (
-                <p className='flex items-center gap-1 text-xs text-gray-400 mt-0.5'>
-                  <MapPin className='w-3 h-3' />
-                  {storeInfo.location}
-                </p>
-              )}
-            </div>
-          </div>
-
-          {storeInfo && (
-            <div className='flex items-center gap-2'>
-              <div className='inline-flex items-center gap-2 px-3 py-1.5 rounded-xl bg-violet-50 border border-violet-100'>
+        <PageHeader
+          icon={<StoreIcon className='w-5 h-5 text-white' strokeWidth={2} />}
+          title={storeInfo?.name || "Store"}
+          subtitle={storeInfo?.location}
+          count={
+            storeInfo ? (
+              <span className='inline-flex items-center gap-2 px-3 py-1.5 rounded-xl bg-violet-50 border border-violet-100 text-xs font-semibold text-violet-700'>
                 <Package className='w-3.5 h-3.5 text-violet-500' />
-                <span className='text-xs font-semibold text-violet-700'>
-                  {pagination?.totalItems ?? 0} Records
-                </span>
-              </div>
-            </div>
-          )}
-        </div>
+                {pagination?.totalItems ?? 0} Records
+              </span>
+            ) : undefined
+          }
+        />
       )}
     </div>
   );
+
+  // ─── Mobile presentation ──────────────────────────────────────────────────────
+  if (isMobile) {
+    const canCreate = hasRequiredPermission("ReserveRecord", "create");
+    const canEdit = hasRequiredPermission("ReserveRecord", "edit");
+    const canDelete = hasRequiredPermission("ReserveRecord", "delete");
+
+    return (
+      <MobilePage
+        title={storeInfo?.name || "Store"}
+        icon={<StoreIcon className='h-5 w-5 text-primary' />}
+        subtitle={storeInfo?.location}
+        back
+        fab={
+          canCreate ? (
+            <MobileFab
+              icon={<Plus className='h-6 w-6' />}
+              label='Add Record'
+              onClick={() => navigate(`/store/${storeId}/add-record`)}
+            />
+          ) : undefined
+        }>
+        <div className='space-y-4 p-4'>
+          {/* Store header */}
+          {isLoadingStore ? (
+            <MobileSkeletonList count={1} />
+          ) : (
+            <MobileListCard
+              static
+              leading={
+                <div className='grid h-11 w-11 place-items-center rounded-xl bg-violet-600 text-white shadow-sm shadow-violet-200'>
+                  <Warehouse className='h-5 w-5' strokeWidth={2} />
+                </div>
+              }
+              title={storeInfo?.name || "Store"}
+              subtitle={
+                storeInfo?.location ? (
+                  <span className='inline-flex items-center gap-1'>
+                    <MapPin className='h-3 w-3' />
+                    {storeInfo.location}
+                  </span>
+                ) : undefined
+              }
+              badge={
+                <span className='inline-flex items-center gap-1 rounded-full border border-violet-100 bg-violet-50 px-2.5 py-1 text-xs font-semibold text-violet-700'>
+                  <Package className='h-3 w-3' />
+                  {pagination?.totalItems ?? 0}
+                </span>
+              }
+            />
+          )}
+
+          {/* Records list */}
+          {isLoadingStore ? (
+            <MobileSkeletonList />
+          ) : !storeInfo ? (
+            <MobileEmptyState
+              icon={<Package className='h-8 w-8' strokeWidth={1.5} />}
+              title='No records yet'
+              description='Start tracking inventory by adding the first record to this store.'
+            />
+          ) : records && records.length > 0 ? (
+            <>
+              <MobileStaggeredList key={`${currentPage}-${records.length}`}>
+                {records.map((record: IRecord, index: number) => (
+                  <MobileListCard
+                    key={record?._id ?? index}
+                    onClick={() => setActionSheetRecord(record)}
+                    leading={
+                      <div className='grid h-9 w-9 place-items-center rounded-full bg-violet-100 text-xs font-bold text-violet-600'>
+                        {(currentPage - 1) * pageLimit + index + 1}
+                      </div>
+                    }
+                    title={dayjs(record?.created_at).format("DD MMM YYYY")}
+                    subtitle={
+                      <span className='inline-flex items-center gap-1'>
+                        <Clock className='h-3 w-3' />
+                        {dayjs(record?.created_at).format("HH:mm")}
+                        <User className='ml-1 h-3 w-3' />
+                        {record?.created_by}
+                      </span>
+                    }
+                    trailing={
+                      <span className='text-sm font-bold text-foreground'>
+                        ৳{calculateTotalPrice(record?.products)}
+                      </span>
+                    }>
+                    <div className='mt-2 flex flex-wrap gap-1.5'>
+                      {record.products.slice(0, 2).map((val, i) => (
+                        <ProductChip key={i} val={val} />
+                      ))}
+                      {record.products.length > 2 && (
+                        <span className='inline-flex items-center rounded-lg border border-dashed border-violet-300 px-2 py-1 text-xs font-semibold text-violet-600'>
+                          +{record.products.length - 2} more
+                        </span>
+                      )}
+                    </div>
+                  </MobileListCard>
+                ))}
+              </MobileStaggeredList>
+              <MobilePagination
+                page={currentPage}
+                totalPages={pagination?.totalPages ?? 1}
+                onChange={(p) => (p > currentPage ? nextPage() : prevPage())}
+              />
+            </>
+          ) : (
+            <MobileEmptyState
+              icon={<Package className='h-8 w-8' strokeWidth={1.5} />}
+              title='No records yet'
+              description='Start tracking inventory by adding the first record to this store.'
+              action={
+                canCreate ? (
+                  <Button
+                    onClick={() => navigate(`/store/${storeId}/add-record`)}
+                    className='rounded-xl bg-violet-600 gap-2 text-white shadow-sm hover:bg-violet-700'>
+                    <Plus className='h-4 w-4' />
+                    Add First Record
+                  </Button>
+                ) : undefined
+              }
+            />
+          )}
+        </div>
+
+        {/* Row actions */}
+        <MobileActionSheet
+          open={!!actionSheetRecord}
+          onOpenChange={(open) => {
+            if (!open) setActionSheetRecord(null);
+          }}
+          title='Record actions'
+          description={
+            actionSheetRecord
+              ? dayjs(actionSheetRecord.created_at).format("DD MMM YYYY, HH:mm")
+              : undefined
+          }
+          actions={[
+            ...(canEdit && actionSheetRecord
+              ? [
+                  {
+                    icon: <Edit className='h-5 w-5' />,
+                    label: "Edit record",
+                    onClick: () =>
+                      navigate(
+                        `/store/${storeId}/edit-record/${actionSheetRecord?.id}`,
+                      ),
+                  },
+                  {
+                    icon: <DownloadCloud className='h-5 w-5' />,
+                    label: "Download PDF",
+                    onClick: () =>
+                      generateInventoryPDF(
+                        storeInfo?.name || "",
+                        actionSheetRecord?.created_by,
+                        actionSheetRecord?.created_at,
+                        actionSheetRecord?.products,
+                      ),
+                  },
+                ]
+              : []),
+            ...(canDelete
+              ? [
+                  {
+                    icon: <Trash className='h-5 w-5' />,
+                    label: "Delete record",
+                    destructive: true,
+                    disabled: deletingRecordId === actionSheetRecord?._id,
+                    onClick: () =>
+                      setConfirmDeleteId(actionSheetRecord?._id ?? null),
+                  },
+                ]
+              : []),
+          ]}
+        />
+
+        {/* Delete confirmation */}
+        <MobileDetailSheet
+          open={!!confirmDeleteId}
+          onOpenChange={(open) => {
+            if (!open) setConfirmDeleteId(null);
+          }}
+          title='Delete Record'
+          description='This action cannot be undone.'
+          actionLabel='Delete'
+          onAction={() => {
+            const id = confirmDeleteId;
+            setConfirmDeleteId(null);
+            if (id) handleDeleteRecord(id);
+          }}
+          secondaryLabel='Cancel'
+          onSecondary={() => setConfirmDeleteId(null)}>
+          <p className='py-2 text-sm text-muted-foreground'>
+            This record will be permanently removed along with its product
+            entries.
+          </p>
+        </MobileDetailSheet>
+
+        <ErrorAlertDialog
+          isOpen={errorDialog.isOpen}
+          onClose={() => setErrorDialog({ isOpen: false, message: "" })}
+          message={errorDialog.message}
+        />
+      </MobilePage>
+    );
+  }
 
   return (
     <MainView title='Store Information'>

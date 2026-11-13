@@ -105,7 +105,7 @@ const MobileCategoryEmpty: React.FC<MobileCategoryEmptyProps> = ({
   const Icon = config.icon;
 
   return (
-    <div className="flex flex-col items-center justify-center py-16 px-6 text-center min-h-[50vh] sm:hidden">
+    <div className="flex flex-col items-center justify-center py-16 px-6 text-center min-h-[50vh] md:hidden">
       {/* Animated Icon Container */}
       <div className="relative mb-8">
         {/* Background Effects */}

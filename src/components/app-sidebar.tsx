@@ -2,27 +2,34 @@ import * as React from "react";
 
 import { NavMain } from "./nav-main";
 import { NavUser } from "./nav-user";
+import { TeamSwitcher } from "./team-switcher";
 import {
   Sidebar,
   SidebarContent,
   SidebarFooter,
   SidebarHeader,
-  SidebarMenu,
-  SidebarMenuButton,
-  SidebarMenuItem,
+  SidebarRail,
 } from "./ui/sidebar";
 import { navItems } from "../utils/navItem";
-import { Link, useLocation } from "react-router-dom";
-import { BiponiMainLogo } from "../utils/contents";
-import { BRAND_CONFIG } from "../config/brand";
+import { useLocation } from "react-router-dom";
 import useLoginAuth from "../pages/auth/hooks/useLoginAuth";
 import useRoleCheck from "../pages/auth/hooks/useRoleCheck";
-import { SettingsPanel } from "./settings-panel";
+import { SidebarWeatherBackdrop } from "./weather/SidebarWeatherBackdrop";
+import { WeatherScene } from "./weather/weather-scene";
+import { SidebarWeatherInfo } from "./weather/sidebar-weather-info";
+import { useSettings } from "../contexts/SettingsContext";
+import { useWeatherContext } from "../contexts/WeatherContext";
+import { mapSceneWeather } from "../lib/weather-scene";
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const { user } = useLoginAuth();
   const { hasRequiredPermission } = useRoleCheck();
   const pathName = useLocation().pathname;
+  const { sidebarWeatherStyle } = useSettings();
+  const { period, condition } = useWeatherContext();
+
+  const animated = sidebarWeatherStyle === "animated";
+  const sceneWeather = mapSceneWeather(condition);
 
   const filteredNavItems = navItems
     .filter((nav) => nav.active && hasRequiredPermission(nav.id, "view"))
@@ -35,69 +42,62 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
     }));
 
   return (
-    <>
-      <Sidebar
-        variant='inset'
-        {...props}
-        className={`
-    relative
-    overflow-hidden`}>
-        {/* Subtle top highlight line */}
-        <div className='pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-white/40 to-transparent' />
+    <Sidebar collapsible='icon' {...props}>
+      {/* Weather-themed sidebar background. Two selectable styles (settings
+          panel): the default crossfading image theme, or the animated CSS
+          scene. Both render nothing until weather data loads. */}
+      {animated && sceneWeather ? (
+        <WeatherScene timeOfDay={period} weather={sceneWeather} />
+      ) : (
+        !animated && <SidebarWeatherBackdrop />
+      )}
 
-        {/* ── Header ── */}
-        <SidebarHeader className='px-3 py-5 border-b border-white/10'>
-          <SidebarMenu>
-            <SidebarMenuItem>
-              <SidebarMenuButton
-                size='lg'
-                asChild
-                className='bg-white/10 rounded-xl transition-all duration-200 group shadow-lg'>
-                <Link
-                  to='/dashboard'
-                  className='flex items-center gap-3 px-2 py-1.5'>
-                  <div className='flex aspect-square size-9 items-center justify-center rounded-xl bg-white backdrop-blur-sm ring-1 ring-white/30 shadow-lg '>
-                    <img
-                      src={BiponiMainLogo}
-                      className='size-5'
-                      alt='main-logo'
-                    />
-                  </div>
-                  <div className='grid flex-1 text-left leading-tight'>
-                    <span className='truncate font-semibold text-sm text-white drop-shadow-sm'>
-                      {BRAND_CONFIG.name}
-                    </span>
-                    <span className='truncate text-[10px] font-medium text-white/60 uppercase tracking-widest'>
-                      Management
-                    </span>
-                  </div>
-                </Link>
-              </SidebarMenuButton>
-            </SidebarMenuItem>
-          </SidebarMenu>
-        </SidebarHeader>
-
-        {/* ── Content ── */}
-        <SidebarContent className='px-2 py-3'>
-          <NavMain items={filteredNavItems} />
-        </SidebarContent>
-
-        {/* ── Footer ── */}
-        <SidebarFooter className='border-t border-white/10 px-3 pb-4 pt-2 space-y-1'>
-          <div className='rounded-xl overflow-hidden'>
-            <SettingsPanel />
-          </div>
-          <NavUser
-            user={
-              user || {
-                name: "Guest",
-                email: "guest@example.com",
-                avatar: "/default-avatar.png",
-              }
-            }
+      {/* Subtle modern geometric background art pattern (image theme only —
+          the animated scene has its own sky) */}
+      {!animated && (
+        <>
+          <div
+            aria-hidden='true'
+            className='pointer-events-none absolute inset-0 z-0 opacity-[0.035] dark:opacity-[0.06] [background-image:radial-gradient(hsl(var(--sidebar-foreground))_1px,transparent_1px)] [background-size:16px_16px]'
           />
-        </SidebarFooter>
-      </Sidebar>
-    </>
+          {/* Gentle ambient gradient glow in the top corner */}
+          <div
+            aria-hidden='true'
+            className='pointer-events-none absolute -top-16 -left-16 z-0 size-48 rounded-full bg-sidebar-primary/10 blur-3xl'
+          />
+        </>
+      )}
+
+      {/* ── Header ── */}
+      <SidebarHeader className='relative z-10 group-data-[collapsible=icon]:p-2 px-3 py-3'>
+        <TeamSwitcher />
+      </SidebarHeader>
+
+      <div className='w-full flex px-2 justify-center items-center  h-[1px] z-20'>
+        <div className='w-full h-full bg-sidebar-border/40' />
+      </div>
+
+      {/* ── Nav ── */}
+      <SidebarContent className='relative z-10 px-2 py-1'>
+        <NavMain items={filteredNavItems} />
+      </SidebarContent>
+
+      {/* ── Footer ── */}
+      <SidebarFooter className='relative z-10 group-data-[collapsible=icon]:p-2 px-3 py-3 border-t border-sidebar-border/40'>
+        {/* Weather info block (animated scene mode only) */}
+        {/* {animated && <SidebarWeatherInfo className='mb-2' />} */}
+        <NavUser
+          user={
+            user || {
+              name: "Guest",
+              email: "guest@example.com",
+              avatar: "/default-avatar.png",
+            }
+          }
+        />
+      </SidebarFooter>
+
+      {/* Click the edge strip to collapse/expand */}
+    </Sidebar>
   );
 }

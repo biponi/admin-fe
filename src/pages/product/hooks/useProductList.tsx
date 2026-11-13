@@ -6,6 +6,16 @@ import { deleteProduct, searchProducts } from "../../../api";
 export type SortField = "priority" | "name" | "price" | "quantity" | "outofstock" | "createdAt" | "updatedAt";
 export type SortOrder = "asc" | "desc";
 
+// Admin meta filter — key/value/range against product or variant meta entries
+export interface ProductMetaFilter {
+  key: string;
+  value: string;
+  min: string;
+  max: string;
+}
+
+export const EMPTY_META_FILTER: ProductMetaFilter = { key: "", value: "", min: "", max: "" };
+
 export const useProductList = () => {
   const { toast } = useToast();
   const [productFetching, setProductFetching] = useState(false);
@@ -16,13 +26,20 @@ export const useProductList = () => {
   const [currentPageNum, setCurrentPage] = useState(1);
   const [selectedCategory, setSelectedCategory] = useState("all");
   const [searchQuery, setSearchQuery] = useState("");
+  const [metaFilter, setMetaFilter] = useState<ProductMetaFilter>(EMPTY_META_FILTER);
+  const [metaSearch, setMetaSearch] = useState("");
   const [limit, setLimit] = useState(20);
   const [sortBy, setSortBy] = useState<SortField>("priority");
   const [sortOrder, setSortOrder] = useState<SortOrder>("desc");
   const [activeOnly, setActiveOnly] = useState<boolean>(true);
 
+  const hasMetaFilter =
+    !!(metaFilter.key && metaFilter.key.trim()) || !!metaSearch.trim();
+
   const refreshList = () => {
-    if (!selectedCategory || selectedCategory === "all") getProductList();
+    // Meta-filtered results only come from the search endpoint
+    if (hasMetaFilter) searchProductByQuery();
+    else if (!selectedCategory || selectedCategory === "all") getProductList();
     else getProductListByCategoryId();
   };
 
@@ -35,7 +52,7 @@ export const useProductList = () => {
     if (currentPageNum !== 1) setCurrentPage(1);
     else refreshList();
     //eslint-disable-next-line
-  }, [selectedCategory, limit, sortBy, sortOrder, activeOnly]);
+  }, [selectedCategory, limit, sortBy, sortOrder, activeOnly, metaFilter.key, metaFilter.value, metaFilter.min, metaFilter.max, metaSearch]);
 
   useEffect(() => {
     searchProductByQuery();
@@ -97,7 +114,34 @@ export const useProductList = () => {
   const searchProductByQuery = async () => {
     const categoryId =
       selectedCategory !== "all" ? selectedCategory : undefined;
-    const response = await searchProducts(searchQuery, categoryId, sortBy, sortOrder);
+    const trimmedQuery = searchQuery.trim();
+
+    // Nothing to search — fall back to the plain paginated list (the search
+    // endpoint 400s without query/metaFilters/metaSearch)
+    if (!trimmedQuery && !hasMetaFilter) {
+      if (!selectedCategory || selectedCategory === "all") getProductList();
+      else getProductListByCategoryId();
+      return;
+    }
+
+    const metaFilterPayload =
+      metaFilter.key && metaFilter.key.trim()
+        ? {
+            key: metaFilter.key.trim(),
+            value: metaFilter.value.trim() || undefined,
+            min: metaFilter.min.trim() || undefined,
+            max: metaFilter.max.trim() || undefined,
+          }
+        : undefined;
+
+    const response = await searchProducts(
+      trimmedQuery,
+      categoryId,
+      sortBy,
+      sortOrder,
+      metaFilterPayload,
+      metaSearch.trim() || undefined,
+    );
     if (response?.success) {
       //@ts-ignore
       setProducts(response.data);
@@ -154,5 +198,10 @@ export const useProductList = () => {
     setSortOrder,
     activeOnly,
     setActiveOnly,
+    metaFilter,
+    setMetaFilter,
+    metaSearch,
+    setMetaSearch,
+    hasMetaFilter,
   };
 };

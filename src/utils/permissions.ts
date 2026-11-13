@@ -9,6 +9,8 @@ export const pagePermissions: Record<string, string[]> = {
     "view_details",
     "bulk_action",
     "documents",
+    "cancel",
+    "update_status",
   ],
   OrderConfirmation: ["view", "confirm", "cancel"],
   Product: [
@@ -31,7 +33,13 @@ export const pagePermissions: Record<string, string[]> = {
   Role: ["view", "create", "edit", "delete"],
   Report: ["view", "create", "edit", "delete", "download"],
   Chat: ["view", "reply", "attend", "manage", "delete"],
-  Settings: ["view", "edit", "jobs_management", "locations_management"],
+  Settings: [
+    "view",
+    "edit",
+    "jobs_management",
+    "locations_management",
+    "prepayment_management",
+  ],
   Delivery: ["view", "edit", "delete", "create"],
   Notifications: ["view", "edit", "delete", "create"],
   Audit: ["view"],
@@ -44,4 +52,14 @@ export const pagePermissions: Record<string, string[]> = {
   DailyReport: ["view"],
   OperationRequest: ["view", "edit", "approve", "reject"],
   Blog: ["view", "create", "edit", "delete"],
+  Fraud: ["view", "manage", "block"],
+  BkashTransaction: ["view"],
+  PendingOrder: ["view"],
+};
+
+// Pages/actions that support the per-role "own only" restriction: a role
+// member may only perform the action on resources they created themselves.
+export const OWN_ONLY_ELIGIBLE: Record<string, string[]> = {
+  Order: ["edit", "modify", "cancel", "delete", "update_status", "bulk_action"],
+  OrderConfirmation: ["confirm", "cancel"],
 };

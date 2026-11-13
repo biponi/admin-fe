@@ -15,7 +15,6 @@ import {
   Package,
   Calendar,
   DollarSign,
-  Hash,
   Edit,
   Logs,
 } from "lucide-react";
@@ -37,7 +36,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "../../components/ui/popover";
-import { Card, CardContent, CardHeader } from "../../components/ui/card";
+import { Card, CardContent } from "../../components/ui/card";
 import {
   Table,
   TableBody,
@@ -55,6 +54,7 @@ import MobilePurchaseOrderCard from "./components/MobilePurchaseOrderCard";
 import MobilePurchaseOrderHeader from "./components/MobilePurchaseOrderHeader";
 import MobilePurchaseOrderEmpty from "./components/MobilePurchaseOrderEmpty";
 import MobilePurchaseOrderSkeleton from "./components/MobilePurchaseOrderSkeleton";
+import { MobilePagination } from "../../components/mobile";
 
 // Pagination Component
 const Pagination: React.FC<{
@@ -128,20 +128,26 @@ const Pagination: React.FC<{
           variant='outline'
           size='sm'
           disabled={currentPage <= 1 || isLoading}
-          onClick={() => onPageChange(currentPage - 1)}>
+          onClick={() => onPageChange(currentPage - 1)}
+          className='rounded-md border-slate-300 text-slate-600 hover:bg-accent hover:text-foreground hover:border-zinc-400'>
           Previous
         </Button>
 
         {getVisiblePages().map((page, index) => (
           <React.Fragment key={index}>
             {page === "..." ? (
-              <span className='px-2 text-muted-foreground'>...</span>
+              <span className='px-2 text-slate-400'>...</span>
             ) : (
               <Button
-                variant={currentPage === page ? "default" : "outline"}
+                variant='outline'
                 size='sm'
                 disabled={isLoading}
-                onClick={() => onPageChange(page as number)}>
+                onClick={() => onPageChange(page as number)}
+                className={
+                  currentPage === page
+                    ? "rounded-md border-primary bg-primary text-primary-foreground hover:bg-primary/90 hover:text-primary-foreground"
+                    : "rounded-md border-slate-300 text-slate-600 hover:bg-accent hover:text-foreground hover:border-zinc-400"
+                }>
                 {page}
               </Button>
             )}
@@ -152,7 +158,8 @@ const Pagination: React.FC<{
           variant='outline'
           size='sm'
           disabled={currentPage >= totalPages || isLoading}
-          onClick={() => onPageChange(currentPage + 1)}>
+          onClick={() => onPageChange(currentPage + 1)}
+          className='rounded-md border-slate-300 text-slate-600 hover:bg-accent hover:text-foreground hover:border-zinc-400'>
           Next
         </Button>
       </div>
@@ -161,36 +168,37 @@ const Pagination: React.FC<{
 };
 
 // Loading Skeleton Component
+// Loading Skeleton Component — mirrors the table silhouette (chip + rows)
 const PurchaseOrderSkeleton: React.FC = () => (
-  <div className='space-y-4'>
-    {[...Array(5)].map((_, index) => (
-      <Card key={index} className='w-full'>
-        <CardHeader className='pb-3'>
-          <div className='flex justify-between items-start'>
-            <div className='space-y-2'>
-              <Skeleton className='h-4 w-24' />
-              <Skeleton className='h-3 w-32' />
-            </div>
-            <Skeleton className='h-6 w-20' />
+  <div className='rounded-xl border border-slate-200 bg-white shadow-[0_1px_2px_rgba(20,20,19,0.04)] overflow-hidden'>
+    {[...Array(6)].map((_, index) => (
+      <div
+        key={index}
+        className='flex items-center gap-4 border-b border-slate-200/70 px-4 py-4 last:border-b-0'>
+        <Skeleton className='h-10 w-10 rounded-md bg-slate-100' />
+        <div className='flex gap-2'>
+          <Skeleton className='h-10 w-40 rounded-lg bg-slate-100' />
+          <Skeleton className='h-10 w-40 rounded-lg bg-slate-100' />
+        </div>
+        <div className='flex items-center gap-2'>
+          <Skeleton className='h-9 w-9 rounded-lg bg-slate-100' />
+          <div className='space-y-1.5'>
+            <Skeleton className='h-3.5 w-20 bg-slate-100' />
+            <Skeleton className='h-2.5 w-14 bg-slate-100' />
           </div>
-        </CardHeader>
-        <CardContent>
-          <div className='space-y-3'>
-            <div className='flex gap-2'>
-              <Skeleton className='h-8 w-24' />
-              <Skeleton className='h-8 w-24' />
-              <Skeleton className='h-8 w-16' />
-            </div>
-            <div className='flex justify-between items-center'>
-              <Skeleton className='h-4 w-28' />
-              <div className='flex gap-2'>
-                <Skeleton className='h-8 w-8' />
-                <Skeleton className='h-8 w-8' />
-              </div>
-            </div>
+        </div>
+        <div className='ml-auto flex items-center gap-2'>
+          <Skeleton className='h-9 w-9 rounded-lg bg-slate-100' />
+          <div className='space-y-1.5'>
+            <Skeleton className='h-3.5 w-24 bg-slate-100' />
+            <Skeleton className='h-2.5 w-14 bg-slate-100' />
           </div>
-        </CardContent>
-      </Card>
+        </div>
+        <div className='flex gap-1.5'>
+          <Skeleton className='h-8 w-8 rounded-md bg-slate-100' />
+          <Skeleton className='h-8 w-8 rounded-md bg-slate-100' />
+        </div>
+      </div>
     ))}
   </div>
 );
@@ -330,53 +338,55 @@ const ListPurchaseOrders: React.FC = () => {
   };
 
   const renderProductsPopover = (order: PurchaseOrder) => {
-    const remainingProducts = order.products?.slice(2);
+    const remainingProducts = order.products?.slice(3);
     if (!remainingProducts || remainingProducts.length === 0) return null;
 
     return (
       <Popover>
         <PopoverTrigger asChild>
           <Button
-            variant='outline'
+            variant='ghost'
             size='sm'
-            className='h-8 px-3 rounded-lg text-xs font-medium border-indigo-200 dark:border-indigo-800 text-indigo-700 dark:text-indigo-300 hover:bg-indigo-50 dark:hover:bg-indigo-900/30 transition-all duration-200'>
+            className='h-7 rounded-md  px-2.5 text-[11px] font-medium text-slate-500 hover:border-zinc-400 hover:text-foreground transition-colors duration-200'>
             +{remainingProducts.length} more
           </Button>
         </PopoverTrigger>
-        <PopoverContent className='w-96 p-0'>
+        <PopoverContent className='w-96 rounded-lg border border-slate-200 p-0'>
           <div className='space-y-0'>
-            <div className='px-4 py-3 border-b border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50'>
-              <h4 className='font-semibold text-sm text-slate-900 dark:text-white flex items-center gap-2'>
-                <Package className='h-4 w-4 text-indigo-600 dark:text-indigo-400' />
+            <div className='px-4 py-3 border-b border-slate-200/70 bg-muted/50'>
+              <h4 className='font-semibold text-sm text-foreground flex items-center gap-2'>
+                <span className='flex h-6 w-6 items-center justify-center rounded-md bg-primary text-primary-foreground'>
+                  <Package className='h-3.5 w-3.5 text-white' />
+                </span>
                 Additional Products ({remainingProducts.length})
               </h4>
             </div>
-            <div className='max-h-80 overflow-y-auto p-3 space-y-2'>
+            <div className='max-h-80 overflow-y-auto bg-muted/40 p-3 space-y-2'>
               {remainingProducts.map((product, index) => (
                 <div
                   key={index}
-                  className='flex items-center gap-3 p-3 rounded-lg bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:border-indigo-300 dark:hover:border-indigo-600 hover:shadow-sm transition-all duration-200'>
+                  className='flex items-center gap-3 p-3 rounded-lg bg-white border border-slate-200 hover:border-zinc-400 transition-colors duration-200'>
                   {product.image || product.thumbnail ? (
                     <div className='relative shrink-0'>
                       <img
                         src={product.image || product.thumbnail}
                         alt={product.title}
-                        className='h-10 w-10 rounded-lg object-cover border border-slate-200 dark:border-slate-600'
+                        className='h-10 w-10 rounded-lg object-cover border border-slate-200'
                       />
-                      <div className='absolute -top-1 -right-1 h-4 w-4 rounded-full bg-indigo-500 flex items-center justify-center text-[10px] text-white font-bold'>
+                      <div className='absolute -top-1 -right-1 h-4 w-4 rounded-full bg-primary flex items-center justify-center text-[10px] text-primary-foreground font-semibold tabular-nums'>
                         {product.quantity}
                       </div>
                     </div>
                   ) : (
-                    <div className='h-10 w-10 rounded-lg bg-slate-100 dark:bg-slate-700 flex items-center justify-center border border-slate-200 dark:border-slate-600 relative shrink-0'>
+                    <div className='h-10 w-10 rounded-lg bg-muted flex items-center justify-center border border-slate-200 relative shrink-0'>
                       <Package className='h-5 w-5 text-slate-400' />
-                      <div className='absolute -top-1 -right-1 h-4 w-4 rounded-full bg-indigo-500 flex items-center justify-center text-[10px] text-white font-bold'>
+                      <div className='absolute -top-1 -right-1 h-4 w-4 rounded-full bg-primary flex items-center justify-center text-[10px] text-primary-foreground font-semibold tabular-nums'>
                         {product.quantity}
                       </div>
                     </div>
                   )}
                   <div className='flex-1 min-w-0'>
-                    <p className='text-sm font-semibold text-slate-900 dark:text-white truncate leading-tight'>
+                    <p className='text-[13px] font-semibold text-foreground truncate leading-tight'>
                       {!!product.title
                         ? product.title.split(" ")[0]
                         : product.title}
@@ -386,13 +396,13 @@ const ListPurchaseOrders: React.FC = () => {
                         product.title.split(" ").slice(1).join(" ") && (
                           <Badge
                             variant='secondary'
-                            className='text-[10px] px-2 py-0.5 bg-sky-100 dark:bg-sky-900/30 text-sky-700 dark:text-sky-300 font-medium'>
+                            className='rounded-md border border-slate-200 bg-muted text-[10px] px-2 py-0.5 font-medium text-slate-500'>
                             {product.title.split(" ").slice(1).join(" ")}
                           </Badge>
                         )}
                       <Badge
                         variant='outline'
-                        className='text-[10px] px-2 py-0.5 text-slate-600 dark:text-slate-400 font-medium'>
+                        className='rounded-md text-[10px] px-2 py-0.5 text-slate-500 font-medium'>
                         Qty: {product.quantity}
                       </Badge>
                     </div>
@@ -407,18 +417,22 @@ const ListPurchaseOrders: React.FC = () => {
   };
 
   const EmptyState = () => (
-    <Card className='w-full'>
+    <Card className='w-full rounded-xl border border-dashed border-slate-200 bg-white shadow-none'>
       <CardContent className='flex flex-col items-center justify-center py-16'>
-        <div className='rounded-full bg-muted p-4 mb-4'>
-          <Bird className='w-8 h-8 text-muted-foreground' />
+        <div className='rounded-xl bg-muted ring-1 ring-border p-4 mb-4'>
+          <Bird className='w-8 h-8 text-slate-400' />
         </div>
-        <h3 className='text-lg font-semibold mb-2'>No Purchase Orders Found</h3>
-        <p className='text-muted-foreground text-center mb-6 max-w-md'>
+        <h3 className='text-base font-semibold text-foreground mb-2'>
+          No Purchase Orders Found
+        </h3>
+        <p className='text-[13px] text-slate-500 text-center mb-6 max-w-md'>
           You haven't created any purchase orders yet. Get started by creating
           your first purchase order.
         </p>
         {hasRequiredPermission("purchaseorder", "create") && (
-          <Button onClick={() => navigate("/purchase-order/create")}>
+          <Button
+            onClick={() => navigate("/purchase-order/create")}
+            className='bg-primary text-primary-foreground hover:bg-primary/90 rounded-md'>
             <Plus className='w-4 h-4 mr-2' />
             Create Purchase Order
           </Button>
@@ -428,8 +442,8 @@ const ListPurchaseOrders: React.FC = () => {
   );
 
   return (
-    <div className='min-h-screen bg-slate-50/60'>
-      <div className='max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6'>
+    <div className='min-h-screen'>
+      <div className='mx-auto sm:px-6 lg:px-8 md:py-6 space-y-6'>
         {/* Header - Mobile */}
         {isMobile ? (
           <MobilePurchaseOrderHeader totalOrders={totalDocs} />
@@ -437,28 +451,26 @@ const ListPurchaseOrders: React.FC = () => {
           /* Header - Desktop */
           <div className='flex items-center justify-between gap-4'>
             <div className='flex items-center gap-3'>
-              <div className='flex items-center justify-center w-10 h-10 rounded-xl bg-indigo-600 shadow-sm shadow-indigo-200'>
+              <div className='flex items-center justify-center h-10 w-10 rounded-lg bg-primary text-primary-foreground shadow-sm'>
                 <Package className='h-5 w-5 text-white' />
               </div>
               <div>
-                <h1 className='text-xl font-semibold text-slate-900 leading-tight'>
+                <h1 className='text-[18px] font-semibold text-foreground tracking-tight leading-tight'>
                   Purchase Orders
                 </h1>
-                <p className='text-sm text-slate-500 mt-0.5'>
+                <p className='text-[13px] text-slate-400 mt-0.5'>
                   Manage your purchase orders and track inventory
                 </p>
               </div>
             </div>
             <div className='flex items-center gap-3'>
-              <Badge
-                variant={"secondary"}
-                className='text-sm font-medium text-slate-600 bg-slate-100 border-slate-200'>
+              <span className='rounded-md  px-2.5 py-1 text-base font-semibold text-slate-500 tabular-nums'>
                 {totalDocs} total
-              </Badge>
+              </span>
               {hasRequiredPermission("purchaseorder", "create") && (
                 <Button
                   onClick={handleCreateOrder}
-                  className='bg-indigo-600 hover:bg-indigo-700 text-white shadow-sm shadow-indigo-200'>
+                  className='bg-primary text-primary-foreground hover:bg-primary/90 rounded-md'>
                   <Plus className='w-4 h-4 mr-2' />
                   Create Purchase Order
                 </Button>
@@ -493,29 +505,13 @@ const ListPurchaseOrders: React.FC = () => {
                   ))}
                 </div>
 
-                {/* Simplified Mobile Pagination */}
-                {totalPages > 1 && (
-                  <div className='flex items-center justify-between gap-2 pt-4 px-2'>
-                    <Button
-                      variant='outline'
-                      size='sm'
-                      disabled={currentPage <= 1 || isLoading}
-                      onClick={() => handlePageChange(currentPage - 1)}
-                      className='flex-1'>
-                      ← Previous
-                    </Button>
-                    <div className='px-4 py-2 bg-gray-100 rounded-lg text-sm font-medium text-gray-700'>
-                      {currentPage} / {totalPages}
-                    </div>
-                    <Button
-                      variant='outline'
-                      size='sm'
-                      disabled={currentPage >= totalPages || isLoading}
-                      onClick={() => handlePageChange(currentPage + 1)}
-                      className='flex-1'>
-                      Next →
-                    </Button>
-                  </div>
+                {/* Mobile Pagination */}
+                {!isLoading && totalPages > 1 && (
+                  <MobilePagination
+                    page={currentPage}
+                    totalPages={totalPages}
+                    onChange={handlePageChange}
+                  />
                 )}
               </>
             )}
@@ -524,10 +520,13 @@ const ListPurchaseOrders: React.FC = () => {
             {hasRequiredPermission("purchaseorder", "create") && (
               <Button
                 onClick={handleCreateOrder}
-                className='fixed bottom-20 right-4 h-14 w-14 rounded-full bg-indigo-600 hover:bg-indigo-700 text-white z-50 flex items-center justify-center shadow-sm shadow-indigo-200'>
+                className='fixed bottom-[calc(4rem+env(safe-area-inset-bottom)+0.75rem)] right-4 h-14 w-14 rounded-full bg-indigo-600 hover:bg-indigo-700 text-white z-30 flex items-center justify-center shadow-sm shadow-indigo-200'>
                 <Plus className='h-6 w-6' />
               </Button>
             )}
+
+            {/* Clearance for the global bottom tab bar */}
+            <div className='h-[calc(4rem+env(safe-area-inset-bottom))]' />
           </div>
         ) : (
           /* Content - Desktop View */
@@ -537,47 +536,27 @@ const ListPurchaseOrders: React.FC = () => {
             ) : allPurchaseOrders.length === 0 ? (
               <EmptyState />
             ) : (
-              <Card className='border shadow-sm'>
+              <Card className='rounded-xl border border-slate-200 bg-white shadow-[0_1px_2px_rgba(20,20,19,0.04)] overflow-hidden'>
                 <Table>
                   <TableHeader>
-                    <TableRow className='bg-slate-50/80 dark:bg-slate-800/50 border-b border-slate-200 dark:border-slate-700'>
-                      <TableHead className='w-40 text-xs font-bold text-slate-600 dark:text-slate-300 uppercase tracking-wider'>
-                        <div className='flex items-center gap-2'>
-                          <div className='h-6 w-6 rounded-lg bg-indigo-100 dark:bg-indigo-900/30 flex items-center justify-center'>
-                            <Hash className='w-3.5 h-3.5 text-indigo-600 dark:text-indigo-400' />
-                          </div>
-                          Order Number
-                        </div>
+                    <TableRow className='bg-muted/50 border-b border-slate-200 hover:bg-muted/50'>
+                      <TableHead className='w-40 text-[10px] font-semibold text-slate-400 uppercase tracking-wider'>
+                        Order Number
                       </TableHead>
-                      <TableHead className='text-xs font-bold text-slate-600 dark:text-slate-300 uppercase tracking-wider'>
-                        <div className='flex items-center gap-2'>
-                          <div className='h-6 w-6 rounded-lg bg-indigo-100 dark:bg-indigo-900/30 flex items-center justify-center'>
-                            <Package className='w-3.5 h-3.5 text-indigo-600 dark:text-indigo-400' />
-                          </div>
-                          Products
-                        </div>
+                      <TableHead className='text-[10px] font-semibold text-slate-400 uppercase tracking-wider'>
+                        Products
                       </TableHead>
-                      <TableHead className='w-36 text-xs font-bold text-slate-600 dark:text-slate-300 uppercase tracking-wider'>
-                        <div className='flex items-center gap-2'>
-                          <div className='h-6 w-6 rounded-lg bg-indigo-100 dark:bg-indigo-900/30 flex items-center justify-center'>
-                            <DollarSign className='w-3.5 h-3.5 text-indigo-600 dark:text-indigo-400' />
-                          </div>
-                          Total Amount
-                        </div>
+                      <TableHead className='w-36 text-[10px] font-semibold text-slate-400 uppercase tracking-wider'>
+                        Total Amount
                       </TableHead>
-                      <TableHead className='w-44 text-xs font-bold text-slate-600 dark:text-slate-300 uppercase tracking-wider'>
-                        <div className='flex items-center gap-2'>
-                          <div className='h-6 w-6 rounded-lg bg-indigo-100 dark:bg-indigo-900/30 flex items-center justify-center'>
-                            <Calendar className='w-3.5 h-3.5 text-indigo-600 dark:text-indigo-400' />
-                          </div>
-                          Created Date
-                        </div>
+                      <TableHead className='w-44 text-[10px] font-semibold text-slate-400 uppercase tracking-wider'>
+                        Created Date
                       </TableHead>
                       {hasSomePermissionsForPage("purchaseorder", [
                         "edit",
                         "delete",
                       ]) && (
-                        <TableHead className='w-28 text-center text-xs font-bold text-slate-600 dark:text-slate-300 uppercase tracking-wider'>
+                        <TableHead className='w-28 text-center text-[10px] font-semibold text-slate-400 uppercase tracking-wider'>
                           Actions
                         </TableHead>
                       )}
@@ -587,17 +566,14 @@ const ListPurchaseOrders: React.FC = () => {
                     {allPurchaseOrders.map((order, index) => (
                       <TableRow
                         key={order.id}
-                        className='group hover:bg-slate-50 dark:hover:bg-slate-800/30 transition-colors duration-200 border-b border-slate-200 dark:border-slate-700'>
+                        className='group hover:bg-muted/50 transition-colors duration-200 border-b border-slate-200/70'>
                         <TableCell className='py-4 px-4'>
-                          <div className='flex items-center gap-3'>
-                            <div className='h-10 w-10 rounded-lg bg-indigo-500 flex items-center justify-center text-white font-bold text-sm shadow-sm'>
+                          <div className='flex flex-col justify-start items-start gap-0'>
+                            <div className='h-10 w-10  flex items-center justify-center text-primary font-mono font-semibold text-sm'>
                               #{order.purchaseNumber}
                             </div>
                             <div className='hidden lg:block'>
-                              <p className='text-xs text-slate-500 dark:text-slate-400 font-medium'>
-                                Purchase Order
-                              </p>
-                              <p className='text-xs text-slate-400 dark:text-slate-500'>
+                              <p className='text-[10px] text-slate-400 font-mono'>
                                 ID: {order.id.slice(-8)}
                               </p>
                             </div>
@@ -605,15 +581,15 @@ const ListPurchaseOrders: React.FC = () => {
                         </TableCell>
                         <TableCell className='py-4 px-4'>
                           <div className='space-y-2'>
-                            {order.products?.length > 2 ? (
+                            {order.products?.length > 3 ? (
                               <>
-                                <div className='flex flex-wrap gap-2'>
+                                <div className='flex flex-wrap gap-4'>
                                   {order.products
-                                    .slice(0, 2)
+                                    .slice(0, 3)
                                     .map((product, index) => (
                                       <div
                                         key={index}
-                                        className='group/product flex items-center gap-2 px-3 py-2 bg-white dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700 hover:border-indigo-300 dark:hover:border-indigo-500 hover:shadow-sm transition-all duration-200'>
+                                        className='group/product flex items-center gap-3 p-1   transition-colors duration-200'>
                                         {product.image || product.thumbnail ? (
                                           <div className='relative'>
                                             <img
@@ -622,35 +598,35 @@ const ListPurchaseOrders: React.FC = () => {
                                                 product.thumbnail
                                               }
                                               alt={product.title}
-                                              className='h-10 w-10 rounded-lg object-cover border border-slate-200 dark:border-slate-600'
+                                              className='h-12 w-12 rounded-lg object-cover border border-slate-200'
                                             />
-                                            <div className='absolute -top-1 -right-1 h-4 w-4 rounded-full bg-indigo-500 flex items-center justify-center text-[10px] text-white font-bold'>
+                                            <div className='absolute -top-1 -right-1 h-4 w-4 rounded-full bg-primary flex items-center justify-center text-[10px] text-primary-foreground font-semibold tabular-nums'>
                                               {product.quantity}
                                             </div>
                                           </div>
                                         ) : (
-                                          <div className='h-10 w-10 rounded-lg bg-slate-100 dark:bg-slate-700 flex items-center justify-center border border-slate-200 dark:border-slate-600 relative'>
+                                          <div className='h-10 w-10 rounded-lg bg-muted flex items-center justify-center border border-slate-200 relative'>
                                             <Package className='h-5 w-5 text-slate-400' />
-                                            <div className='absolute -top-1 -right-1 h-4 w-4 rounded-full bg-indigo-500 flex items-center justify-center text-[10px] text-white font-bold'>
+                                            <div className='absolute -top-1 -right-1 h-4 w-4 rounded-full bg-primary flex items-center justify-center text-[10px] text-primary-foreground font-semibold tabular-nums'>
                                               {product.quantity}
                                             </div>
                                           </div>
                                         )}
                                         <div className='flex-1 min-w-0 max-w-[200px]'>
-                                          <p className='text-sm font-semibold text-slate-900 dark:text-white truncate leading-tight'>
+                                          <p className='text-[13px] font-semibold uppercase text-foreground truncate leading-tight'>
                                             {!!product.title
                                               ? product.title.split(" ")[0]
                                               : product.title}
                                           </p>
-                                          <div className='flex items-center gap-1.5 mt-1'>
+                                          <div className='flex items-center  mt-1'>
                                             {!!product.title &&
                                               product.title
                                                 .split(" ")
                                                 .slice(1)
                                                 .join(" ") && (
                                                 <Badge
-                                                  variant='secondary'
-                                                  className='text-[10px] px-2 py-0.5 bg-sky-100 dark:bg-sky-900/30 text-sky-700 dark:text-sky-300 font-medium'>
+                                                  variant='default'
+                                                  className='rounded-md hover:bg-transparent border-0 bg-transparent shadow-none italic text-[10px] pr-2 pl-0 py-0.5 font-medium text-slate-500'>
                                                   {product.title
                                                     .split(" ")
                                                     .slice(1)
@@ -669,7 +645,7 @@ const ListPurchaseOrders: React.FC = () => {
                                 {order.products?.map((product, index) => (
                                   <div
                                     key={index}
-                                    className='group/product flex items-center gap-2 px-3 py-2 bg-white dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700 hover:border-indigo-300 dark:hover:border-indigo-500 hover:shadow-sm transition-all duration-200'>
+                                    className='group/product flex items-center gap-2 px-3 py-2 rounded-lg  bg-white hover:border-zinc-400 transition-colors duration-200'>
                                     {product.image || product.thumbnail ? (
                                       <div className='relative'>
                                         <img
@@ -677,27 +653,27 @@ const ListPurchaseOrders: React.FC = () => {
                                             product.image || product.thumbnail
                                           }
                                           alt={product.title}
-                                          className='h-10 w-10 rounded-lg object-cover border border-slate-200 dark:border-slate-600'
+                                          className='h-12 w-12 rounded-lg object-cover border border-slate-200'
                                         />
-                                        <div className='absolute -top-1 -right-1 h-4 w-4 rounded-full bg-indigo-500 flex items-center justify-center text-[10px] text-white font-bold'>
+                                        <div className='absolute -top-1 -right-1 h-4 w-4 rounded-full bg-primary flex items-center justify-center text-[10px] text-primary-foreground font-semibold tabular-nums'>
                                           {product.quantity}
                                         </div>
                                       </div>
                                     ) : (
-                                      <div className='h-10 w-10 rounded-lg bg-slate-100 dark:bg-slate-700 flex items-center justify-center border border-slate-200 dark:border-slate-600 relative'>
+                                      <div className='h-12 w-12  flex items-center justify-center border border-slate-200 relative'>
                                         <Package className='h-5 w-5 text-slate-400' />
-                                        <div className='absolute -top-1 -right-1 h-4 w-4 rounded-full bg-indigo-500 flex items-center justify-center text-[10px] text-white font-bold'>
+                                        <div className='absolute -top-1 -right-1 h-4 w-4 rounded-full bg-primary flex items-center justify-center text-[10px] text-primary-foreground font-semibold tabular-nums'>
                                           {product.quantity}
                                         </div>
                                       </div>
                                     )}
                                     <div className='flex-1 min-w-0 max-w-[200px]'>
-                                      <p className='text-sm font-semibold text-slate-900 dark:text-white truncate leading-tight'>
+                                      <p className='text-[13px] font-semibold text-foreground truncate uppercase leading-tight'>
                                         {!!product.title
                                           ? product.title.split(" ")[0]
                                           : product.title}
                                       </p>
-                                      <div className='flex items-center gap-1.5 mt-1'>
+                                      <div className='flex items-center  mt-1 uppercase'>
                                         {!!product.title &&
                                           product.title
                                             .split(" ")
@@ -705,7 +681,7 @@ const ListPurchaseOrders: React.FC = () => {
                                             .join(" ") && (
                                             <Badge
                                               variant='secondary'
-                                              className='text-[10px] px-2 py-0.5 bg-sky-100 dark:bg-sky-900/30 text-sky-700 dark:text-sky-300 font-medium'>
+                                              className='rounded-md hover:bg-transparent shadow-none border-0 italic bg-transparent text-[10px] px-2 py-0.5 font-medium text-slate-500'>
                                               {product.title
                                                 .split(" ")
                                                 .slice(1)
@@ -722,26 +698,21 @@ const ListPurchaseOrders: React.FC = () => {
                         </TableCell>
                         <TableCell className='py-4 px-4'>
                           <div className='flex items-center gap-2'>
-                            <div className='h-9 w-9 rounded-lg bg-indigo-50 dark:bg-indigo-900/20 flex items-center justify-center border border-indigo-200 dark:border-indigo-800'>
-                              <DollarSign className='h-4 w-4 text-indigo-600 dark:text-indigo-400' />
-                            </div>
                             <div>
-                              <p className='text-sm font-bold text-slate-900 dark:text-white tabular-nums'>
-                                ৳{order.totalAmount?.toLocaleString()}
-                              </p>
-                              <p className='text-[10px] text-slate-500 dark:text-slate-400 font-medium'>
-                                Total Value
+                              <p className='text-sm font-semibold text-foreground tabular-nums'>
+                                <span className='text-primary'>৳</span>
+                                {order.totalAmount?.toLocaleString()}
                               </p>
                             </div>
                           </div>
                         </TableCell>
                         <TableCell className='py-4 px-4'>
                           <div className='flex items-center gap-2'>
-                            <div className='h-9 w-9 rounded-lg bg-indigo-50 dark:bg-indigo-900/20 flex items-center justify-center border border-indigo-200 dark:border-indigo-800'>
-                              <Calendar className='h-4 w-4 text-indigo-600 dark:text-indigo-400' />
+                            <div className='h-9 w-9 rounded-lg flex bg-primary/10 items-center justify-center border border-primary'>
+                              <Calendar className='h-4 w-4  text-primary  ' />
                             </div>
                             <div>
-                              <p className='text-xs font-semibold text-slate-900 dark:text-white'>
+                              <p className='text-[13px] font-semibold text-foreground'>
                                 {new Date(order.createdAt).toLocaleDateString(
                                   "en-US",
                                   {
@@ -751,7 +722,7 @@ const ListPurchaseOrders: React.FC = () => {
                                   },
                                 )}
                               </p>
-                              <p className='text-[10px] text-slate-500 dark:text-slate-400 font-medium'>
+                              <p className='text-[10px] text-slate-400 font-mono tabular-nums'>
                                 {new Date(order.createdAt).toLocaleTimeString(
                                   "en-US",
                                   {
@@ -781,7 +752,7 @@ const ListPurchaseOrders: React.FC = () => {
                                       `/purchase-order/update/${order.id}`,
                                     )
                                   }
-                                  className='h-8 w-8 p-0 rounded-lg hover:bg-emerald-50 hover:text-emerald-700 text-slate-500 transition-all duration-200'
+                                  className='h-8 w-8 p-0 rounded-md hover:bg-accent hover:text-foreground text-slate-400 transition-colors duration-200'
                                   title='Edit Purchase Order'>
                                   <Edit className='w-4 h-4' />
                                 </Button>
@@ -797,7 +768,7 @@ const ListPurchaseOrders: React.FC = () => {
                                       variant='ghost'
                                       size='sm'
                                       disabled={isRestoring === order.id}
-                                      className='h-8 w-8 p-0 rounded-lg hover:bg-blue-50 hover:text-blue-700 text-slate-500 transition-all duration-200'
+                                      className='h-8 w-8 p-0 rounded-md hover:bg-blue-50 hover:text-blue-700 text-slate-400 transition-colors duration-200'
                                       title='Restore Purchase Order'>
                                       <ArchiveRestore className='w-4 h-4' />
                                     </Button>
@@ -837,9 +808,9 @@ const ListPurchaseOrders: React.FC = () => {
                                   size='sm'
                                   disabled={isDeleting === order.id}
                                   onClick={() => handleDelete(order.id)}
-                                  className='h-8 w-8 p-0 rounded-lg hover:bg-red-50 hover:text-red-700 text-slate-500 transition-all duration-200'
+                                  className='h-8 w-8 p-0 rounded-md hover:bg-rose-50 hover:text-rose-600 text-slate-400 transition-colors duration-200'
                                   title='Delete Purchase Order'>
-                                  <Trash2 className='w-4 h-4' />
+                                  <Trash2 className='w-4 h-4 ' />
                                 </Button>
                               )}
                             </div>

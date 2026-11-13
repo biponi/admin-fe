@@ -1,50 +1,57 @@
-// Import Firebase scripts
+// Firebase Messaging service worker
+// Config is NOT hardcoded here — the app posts it via `FIREBASE_CONFIG`
+// (see src/config/firebase.ts). Until the message arrives we stay
+// uninitialized, so a wrong/stale project can never receive pushes.
 importScripts(
-  "https://www.gstatic.com/firebasejs/9.0.0/firebase-app-compat.js"
+  "https://www.gstatic.com/firebasejs/12.5.0/firebase-app-compat.js"
 );
 importScripts(
-  "https://www.gstatic.com/firebasejs/9.0.0/firebase-messaging-compat.js"
+  "https://www.gstatic.com/firebasejs/12.5.0/firebase-messaging-compat.js"
 );
 
-// Firebase config (replace with your actual config values)
-// Note: These values should match your .env file
-const randomConfig = {
-  apiKey: "AIzaSyAXELs62hTNVbpvh0KNWIoLZ_WUWlFjjO8",
-  authDomain: "prior-website.firebaseapp.com",
-  projectId: "prior-website",
-  storageBucket: "prior-website.firebasestorage.app",
-  messagingSenderId: "44621397665",
-  appId: "1:44621397665:web:adc30500e3ce6ee2f3bae0",
-  measurementId: "G-YYGTZPDKPM",
-};
+let messaging = null;
 
-// Initialize Firebase in service worker
-firebase.initializeApp(randomConfig);
+function initializeMessaging(config) {
+  if (messaging) return messaging;
+  try {
+    firebase.initializeApp(config);
+    messaging = firebase.messaging();
 
-// Get messaging instance
-const messaging = firebase.messaging();
+    messaging.onBackgroundMessage((payload) => {
+      console.log("Received background message:", payload);
 
-// Handle background messages
-messaging.onBackgroundMessage((payload) => {
-  console.log("Received background message:", payload);
+      const notificationTitle =
+        payload.notification?.title || payload.data?.subject || "New Notification";
+      const notificationOptions = {
+        body:
+          payload.notification?.body ||
+          payload.data?.message ||
+          "You have a new notification",
+        icon: "/logo192.png",
+        badge: "/logo192.png",
+        tag: payload.data?.notificationId || "notification",
+        data: payload.data,
+        requireInteraction: false,
+        vibrate: [200, 100, 200],
+      };
 
-  const notificationTitle =
-    payload.notification?.title || payload.data?.subject || "New Notification";
-  const notificationOptions = {
-    body:
-      payload.notification?.body ||
-      payload.data?.message ||
-      "You have a new notification",
-    icon: "/logo192.png", // Your app icon
-    badge: "/logo192.png", // Small badge icon
-    tag: payload.data?.notificationId || "notification",
-    data: payload.data,
-    requireInteraction: false,
-    vibrate: [200, 100, 200],
-  };
+      self.registration.showNotification(notificationTitle, notificationOptions);
+    });
 
-  // Show notification
-  self.registration.showNotification(notificationTitle, notificationOptions);
+    console.log("Firebase messaging initialized in service worker");
+    return messaging;
+  } catch (error) {
+    console.error("Failed to initialize Firebase in service worker:", error);
+    return null;
+  }
+}
+
+// Receive config from the app (posted right after SW registration)
+self.addEventListener("message", (event) => {
+  const { type, config } = event.data || {};
+  if (type === "FIREBASE_CONFIG" && config) {
+    initializeMessaging(config);
+  }
 });
 
 // Handle notification click
@@ -53,14 +60,13 @@ self.addEventListener("notificationclick", (event) => {
 
   event.notification.close();
 
-  // Open app or navigate to specific page
-  const urlToOpen = event.notification.data?.actionUrl || "/";
+  const urlToOpen = new URL(event.notification.data?.actionUrl || "/", self.location.origin).href;
 
   event.waitUntil(
     clients
       .matchAll({ type: "window", includeUncontrolled: true })
       .then((clientList) => {
-        // Check if app is already open
+        // Focus an existing window whose origin path matches the target
         for (const client of clientList) {
           if (client.url === urlToOpen && "focus" in client) {
             return client.focus();

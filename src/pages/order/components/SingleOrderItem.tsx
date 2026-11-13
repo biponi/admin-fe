@@ -6,9 +6,6 @@ import {
   MoreHorizontalIcon,
   TimerIcon,
   Truck,
-  Shield,
-  AlertTriangle,
-  ShieldCheck,
 } from "lucide-react";
 import { Badge } from "../../../components/ui/badge";
 import {
@@ -26,6 +23,8 @@ import CustomAlertDialog from "../../../coreComponents/OptionModal";
 import useRoleCheck from "../../auth/hooks/useRoleCheck";
 import { FraudDetection, IOrder } from "../interface";
 import FraudDetectionDrawer from "./FraudDetectionDrawer";
+import RiskBadge from "../../../components/fraud/RiskBadge";
+import BlockedBadge from "../../../components/fraud/BlockedBadge";
 import { DeliveryTimelineBadge } from "../../../components/order/ShippedItem";
 
 interface Props {
@@ -71,21 +70,8 @@ const SingleItem: React.FC<Props> = ({
   deleteExistingOrder,
   handleReturnProducts,
 }) => {
-  const { hasRequiredPermission, hasSomePermissionsForPage } = useRoleCheck();
+  const { canModifyOrder, hasSomePermissionsForPage } = useRoleCheck();
   const dialogBtn = useRef(null);
-
-  const getFraudIcon = (riskLevel?: string) => {
-    switch (riskLevel) {
-      case "red":
-        return <AlertTriangle className='w-4 h-4 text-red-600' />;
-      case "yellow":
-        return <Shield className='w-4 h-4 text-yellow-600' />;
-      case "green":
-        return <ShieldCheck className='w-4 h-4 text-green-600' />;
-      default:
-        return <Shield className='w-4 h-4 text-gray-400' />;
-    }
-  };
 
   const discardDialog = () => {
     return (
@@ -103,7 +89,7 @@ const SingleItem: React.FC<Props> = ({
   };
   return (
     <TableRow className='hover:bg-zinc-300'>
-      {hasSomePermissionsForPage("order", ["edit", "delete", "documents"]) &&
+      {hasSomePermissionsForPage("order", ["edit", "delete", "documents", "cancel", "modify", "update_status"]) &&
         !status.includes("return") && (
           <TableCell className='hidden sm:table-cell'>
             <input
@@ -178,8 +164,13 @@ const SingleItem: React.FC<Props> = ({
           customerName={customerName}
           phoneNumber={CustomerPhoneNumber}
           trigger={
-            <Button variant='ghost' size='sm' className='h-8 w-8 p-0'>
-              {getFraudIcon(fraudDetection?.riskLevel)}
+            <Button
+              variant='ghost'
+              size='sm'
+              className='h-8 px-2 gap-1.5'
+              title='Fraud risk analysis'>
+              <RiskBadge level={fraudDetection?.riskLevel} compact />
+              {fraudDetection?.blocked ? <BlockedBadge /> : null}
             </Button>
           }
         />
@@ -192,14 +183,14 @@ const SingleItem: React.FC<Props> = ({
         onClick={() => handleViewDetails()}>
         <u className=' cursor-pointer'>Details</u>
       </TableCell>
-      {hasRequiredPermission("order", "edit") && (
+      {canModifyOrder("order", "edit", order) && (
         <TableCell
           className=' cursor-pointer'
           onClick={() => handleUpdateOrder()}>
           <Edit className='w-5 h-5' />
         </TableCell>
       )}
-      {hasSomePermissionsForPage("order", ["edit", "delete"]) && (
+      {hasSomePermissionsForPage("order", ["edit", "delete", "cancel", "modify", "update_status"]) && (
         <TableCell>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
@@ -211,19 +202,19 @@ const SingleItem: React.FC<Props> = ({
             <DropdownMenuContent align='end'>
               <DropdownMenuLabel>Actions</DropdownMenuLabel>
 
-              {hasRequiredPermission("order", "edit") &&
+              {canModifyOrder("order", "modify", order) &&
                 status.includes("processing") && (
                   <DropdownMenuItem onClick={() => handleModifyProduct()}>
                     Modify Product
                   </DropdownMenuItem>
                 )}
-              {hasRequiredPermission("order", "edit") &&
+              {canModifyOrder("order", "modify", order) &&
                 status.includes("shipped") && (
                   <DropdownMenuItem onClick={() => handleReturnProducts()}>
                     Return Product
                   </DropdownMenuItem>
                 )}
-              {hasRequiredPermission("order", "delete") && (
+              {canModifyOrder("order", "delete", order) && (
                 <DropdownMenuItem
                   onClick={() => {
                     //@ts-ignore

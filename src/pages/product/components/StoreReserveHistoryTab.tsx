@@ -589,7 +589,7 @@ const StoreReserveHistoryTab = ({ productId }: StoreReserveHistoryTabProps) => {
       {/* Record Details Sheet (Desktop) */}
       {!isMobile && (
         <Sheet open={showDetails} onOpenChange={setShowDetails}>
-          <SheetContent className='w-[600px] sm:w-[700px]'>
+          <SheetContent className='w-full sm:w-[600px] md:w-[700px]'>
             <SheetHeader>
               <SheetTitle>Record Details</SheetTitle>
               <SheetDescription>

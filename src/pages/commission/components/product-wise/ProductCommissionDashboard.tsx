@@ -51,17 +51,17 @@ export const ProductCommissionDashboard: React.FC<CommissionDashboardProps> = ({
   ];
 
   return (
-    <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
+    <div className="grid gap-4 grid-cols-1 md:grid-cols-2 lg:grid-cols-4">
       {cards.map((card) => (
         <Card key={card.title}>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">{card.title}</CardTitle>
             <div className={`p-2 rounded-full ${card.bgColor}`}>
-              <card.icon className={`h-4 w-4 sm:h-5 sm:w-5 ${card.color}`} />
+              <card.icon className={`h-4 w-4 md:h-5 md:w-5 ${card.color}`} />
             </div>
           </CardHeader>
           <CardContent>
-            <div className="text-xl sm:text-2xl font-bold">{formatCurrency(card.amount)}</div>
+            <div className="text-xl md:text-2xl font-bold">{formatCurrency(card.amount)}</div>
             <p className="text-xs text-muted-foreground">{card.count} records</p>
           </CardContent>
         </Card>

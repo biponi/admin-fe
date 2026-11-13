@@ -163,7 +163,7 @@ const OrderHistoryTab = ({ productId }: OrderHistoryTabProps) => {
   return (
     <div className='space-y-6'>
       {/* Summary Cards */}
-      <div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4'>
+      <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4'>
         <div className='bg-white rounded-lg border border-slate-100 p-4 hover:border-slate-200 transition-colors'>
           <div className='flex items-start justify-between'>
             <div className='space-y-1'>
@@ -803,7 +803,7 @@ const OrderHistoryTab = ({ productId }: OrderHistoryTabProps) => {
         </Drawer>
       ) : (
         <Sheet open={showDetails} onOpenChange={setShowDetails}>
-          <SheetContent className='w-full sm:max-w-2xl overflow-hidden'>
+          <SheetContent className='w-full md:max-w-2xl overflow-hidden'>
             <SheetHeader className='border-b pb-4 bg-slate-50 -mx-6 px-6 pt-6'>
               <SheetTitle className='flex items-center gap-3 text-2xl'>
                 <div className='bg-indigo-600 p-2.5 rounded-xl shadow-sm'>

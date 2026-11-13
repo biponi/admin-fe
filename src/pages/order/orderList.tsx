@@ -22,6 +22,7 @@ import {
   Clock,
   MoreVertical,
   ShoppingBag,
+  ShoppingCart,
   Calendar,
   MapPin,
   Phone,
@@ -39,6 +40,7 @@ import {
   PencilLine,
 } from "lucide-react";
 import { Button } from "../../components/ui/button";
+import { PageHeader } from "../../components/PageHeader";
 import { Tabs, TabsList, TabsTrigger } from "../../components/ui/tabs";
 import dayjs from "dayjs";
 import {
@@ -127,6 +129,8 @@ import {
 } from "./components/MobileFilterSheet";
 import { MobileSortSheet, SortOption } from "./components/MobileSortSheet";
 import useRoleCheck from "../auth/hooks/useRoleCheck";
+import { selectionHasForeignOrders } from "../../utils/orderPermission";
+import { useToast } from "../../components/ui/use-toast";
 import {
   Collapsible,
   CollapsibleContent,
@@ -143,6 +147,7 @@ import EditOrderPanelContent from "../order-v2/components/EditCustomerInformatio
 
 const OrderList = () => {
   const isMobile = useIsMobile();
+  const { toast } = useToast();
   const {
     limit,
     refresh,
@@ -181,7 +186,56 @@ const OrderList = () => {
     fetchReturnOrderStats,
   } = useOrderList();
 
-  const { hasRequiredPermission, hasSomePermissionsForPage } = useRoleCheck();
+  const { userStore, hasRequiredPermission, hasSomePermissionsForPage } =
+    useRoleCheck();
+
+  // Selected orders as full objects — used for own-only bulk action gating
+  const selectedBulkOrderObjects =
+    orders?.filter((o: IOrder) => bulkOrders?.includes(o?.id)) ?? [];
+  const bulkOwnOnlyBlocked = (action: string) =>
+    selectionHasForeignOrders(
+      userStore?.permissions,
+      userStore?.id,
+      "order",
+      action,
+      selectedBulkOrderObjects
+    );
+
+  // Maps a bulk action to the order permission it requires (mirrors the
+  // backend's resolveAction mapping in routes/v1/order/routes.js)
+  const BULK_ACTION_PERMISSION: Record<string, string> = {
+    shipped: "update_status",
+    complete: "update_status",
+    processing: "update_status",
+    cancel: "cancel",
+    delete: "delete",
+  };
+
+  // Permission + own-only guard applied when a bulk action is actually
+  // executed (defense in depth behind the gated UI buttons)
+  const runBulkAction = (actionType: string, courierProvider?: string) => {
+    const requiredAction = BULK_ACTION_PERMISSION[actionType] ?? "update_status";
+    if (!hasRequiredPermission("order", requiredAction)) {
+      toast({
+        variant: "destructive",
+        title: "Permission denied",
+        description: `You don't have the "${requiredAction.replace("_", " ")}" permission on orders.`,
+      });
+      return;
+    }
+    if (
+      bulkOwnOnlyBlocked(requiredAction) ||
+      bulkOwnOnlyBlocked("bulk_action")
+    ) {
+      toast({
+        variant: "destructive",
+        title: "Own-only restriction",
+        description: "Deselect orders you didn't create.",
+      });
+      return;
+    }
+    void performOrderBulkUpdate(actionType, courierProvider);
+  };
 
   const { editOrderData, updateOrderStatus } = useOrder();
 
@@ -531,6 +585,7 @@ const OrderList = () => {
                 {orders.map((order: IOrder, index: number) => (
                   <MobileOrderCard
                     key={index}
+                    order={order}
                     orderNumber={order?.orderNumber}
                     id={`${order?.id}`}
                     provider={order?.courier?.provider ?? ""}
@@ -712,24 +767,38 @@ const OrderList = () => {
         <div className='max-w-full mx-auto px-0 sm:px-6 lg:px-8'>
           {/* Header Section */}
           <div className='mb-2 px-4 md:px-0'>
-            <div className='flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6'>
-              <div className='space-y-2'>
-                <div className='flex items-center gap-3'>
-                  <div className=' w-6 h-6 md:w-12 md:h-12 bg-gradient-to-r from-blue-500 to-purple-600 rounded-xl flex items-center justify-center'>
-                    <ShoppingBag className=' w-4 h-4 md:w-6 md:h-6 text-white' />
-                  </div>
-                  <div>
-                    <h1 className=' text-lg md:text-3xl font-bold text-gray-900'>
-                      Order Management
-                    </h1>
-                    <p className='text-gray-600 hidden md:block'>
-                      Manage orders and track sales performance
-                    </p>
-                  </div>
-                </div>
+            <PageHeader
+              icon={<ShoppingCart className='h-5 w-5' />}
+              title='Orders'
+              subtitle='Manage orders and track fulfilment'
+              count={
+                <span className='rounded-md px-2.5 py-1 text-base font-semibold text-muted-foreground tabular-nums'>
+                  {totalOrders} total
+                </span>
+              }
+              actions={
+                <>
+                  <Button
+                    variant='outline'
+                    onClick={() => getOrderList()}
+                    className='border-gray-300 hover:bg-gray-50'>
+                    <RefreshCw className='w-4 h-4 mr-2' />
+                    Refresh
+                  </Button>
+                  {hasRequiredPermission("order", "create") && (
+                    <Button
+                      onClick={() => navigate("/order/create")}
+                      className='bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white shadow-lg'>
+                      <PlusCircle className='w-5 h-5 mr-2' />
+                      Create Order
+                    </Button>
+                  )}
+                </>
+              }
+            />
 
-                {/* Stats Cards */}
-                <div className=' grid-cols-2 lg:grid-cols-4 gap-4 mt-6 hidden'>
+            {/* Stats Cards */}
+            <div className=' grid-cols-2 lg:grid-cols-4 gap-4 mt-6 hidden'>
                   <Card className='bg-gradient-to-r from-blue-500 to-blue-600 text-white border-0'>
                     <CardContent className='p-4'>
                       <div className='flex items-center justify-between'>
@@ -807,28 +876,6 @@ const OrderList = () => {
                     </CardContent>
                   </Card>
                 </div>
-              </div>
-
-              {/* Action Buttons */}
-              <div className='flex items-center gap-3 justify-between md:justify-normal md:hidden'>
-                <Button
-                  variant='outline'
-                  onClick={() => getOrderList()}
-                  className='border-gray-300 hover:bg-gray-50 w-full md:w-auto'>
-                  <RefreshCw className='w-4 h-4 mr-2' />
-                  Refresh
-                </Button>
-                {hasRequiredPermission("order", "create") && (
-                  <Button
-                    onClick={() => navigate("/order/create")}
-                    className='bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white shadow-lg'
-                    size='lg'>
-                    <PlusCircle className='w-5 h-5 mr-2' />
-                    Create Order
-                  </Button>
-                )}
-              </div>
-            </div>
           </div>
 
           {/* Filters Section */}
@@ -855,6 +902,8 @@ const OrderList = () => {
                   "edit",
                   "delete",
                   "documents",
+                  "cancel",
+                  "update_status",
                 ]) &&
                   !selectedStatus.includes("return") &&
                   !!bulkOrders &&
@@ -1756,7 +1805,7 @@ const OrderList = () => {
             )}
 
             {/* Status Changes */}
-            {hasRequiredPermission("order", "edit") && (
+            {hasRequiredPermission("order", "update_status") && (
               <div className='space-y-2'>
                 <div className='text-sm font-medium text-gray-700'>
                   Change Status
@@ -1765,6 +1814,7 @@ const OrderList = () => {
                   <Button
                     variant='default'
                     className='w-full justify-start gap-2 bg-blue-600 hover:bg-blue-700 text-white'
+                    disabled={bulkOwnOnlyBlocked("update_status")}
                     onClick={() => {
                       setPendingBulkAction("shipped");
                       setBulkCourierSelectorOpen(true);
@@ -1775,6 +1825,7 @@ const OrderList = () => {
                   <Button
                     variant='default'
                     className='w-full justify-start gap-2 bg-green-600 hover:bg-green-700 text-white'
+                    disabled={bulkOwnOnlyBlocked("update_status")}
                     onClick={() => setBulkAction("complete")}>
                     <CheckCircle className='w-4 h-4' />
                     Mark as Complete
@@ -1782,10 +1833,17 @@ const OrderList = () => {
                   <Button
                     variant='default'
                     className='w-full justify-start gap-2 bg-orange-600 hover:bg-orange-700 text-white'
+                    disabled={bulkOwnOnlyBlocked("update_status")}
                     onClick={() => setBulkAction("processing")}>
                     <Clock className='w-4 h-4' />
                     Reset to Processing
                   </Button>
+                  {bulkOwnOnlyBlocked("update_status") && (
+                    <p className='text-xs text-amber-600'>
+                      Own-only restriction: deselect orders you didn&apos;t
+                      create.
+                    </p>
+                  )}
                 </div>
               </div>
             )}
@@ -1797,10 +1855,11 @@ const OrderList = () => {
                 Danger Zone
               </div>
               <div className='grid grid-cols-1 gap-2'>
-                {hasRequiredPermission("order", "edit") && (
+                {hasRequiredPermission("order", "cancel") && (
                   <Button
                     variant='outline'
                     className='w-full justify-start gap-2 text-red-600 border-red-200 hover:bg-red-50'
+                    disabled={bulkOwnOnlyBlocked("cancel")}
                     onClick={() => setBulkAction("cancel")}>
                     <XCircle className='w-4 h-4' />
                     Cancel Orders
@@ -1810,10 +1869,18 @@ const OrderList = () => {
                   <Button
                     variant='destructive'
                     className='w-full justify-start gap-2'
+                    disabled={bulkOwnOnlyBlocked("delete")}
                     onClick={() => setBulkAction("delete")}>
                     <Trash2 className='w-4 h-4' />
                     Delete Orders
                   </Button>
+                )}
+                {(bulkOwnOnlyBlocked("cancel") ||
+                  bulkOwnOnlyBlocked("delete")) && (
+                  <p className='text-xs text-amber-600'>
+                    Own-only restriction: deselect orders you didn&apos;t
+                    create.
+                  </p>
                 )}
               </div>
             </div>
@@ -1873,10 +1940,11 @@ const OrderList = () => {
               </Button>
             )}
 
-            {hasRequiredPermission("order", "edit") && (
+            {hasRequiredPermission("order", "update_status") && (
               <Button
                 variant='default'
                 className='w-full bg-blue-700'
+                disabled={bulkOwnOnlyBlocked("update_status")}
                 onClick={() => {
                   setPendingBulkAction("shipped");
                   setBulkCourierSelectorMobile(true);
@@ -1884,26 +1952,29 @@ const OrderList = () => {
                 <TruckIcon className='size-5 text-white mr-2' /> Shipped
               </Button>
             )}
-            {hasRequiredPermission("order", "edit") && (
+            {hasRequiredPermission("order", "update_status") && (
               <Button
                 variant='default'
                 className='w-full bg-green-700'
+                disabled={bulkOwnOnlyBlocked("update_status")}
                 onClick={() => setBulkAction("complete")}>
                 <CheckCircleIcon className='size-5 text-white mr-2' /> Complete
               </Button>
             )}
-            {hasRequiredPermission("order", "edit") && (
+            {hasRequiredPermission("order", "update_status") && (
               <Button
                 variant='default'
                 className='w-full'
+                disabled={bulkOwnOnlyBlocked("update_status")}
                 onClick={() => setBulkAction("processing")}>
                 <TimerReset className='size-5 text-white mr-2' /> Processing
               </Button>
             )}
-            {hasRequiredPermission("order", "edit") && (
+            {hasRequiredPermission("order", "cancel") && (
               <Button
                 variant='outline'
                 className='w-full'
+                disabled={bulkOwnOnlyBlocked("cancel")}
                 onClick={() => setBulkAction("cancel")}>
                 <MinusCircleIcon className='size-5 text-red-600 mr-2' /> Cancel
               </Button>
@@ -1912,9 +1983,17 @@ const OrderList = () => {
               <Button
                 variant='destructive'
                 className='w-full'
+                disabled={bulkOwnOnlyBlocked("delete")}
                 onClick={() => setBulkAction("delete")}>
                 <Trash2 className='size-5 text-white mr-2' /> Delete
               </Button>
+            )}
+            {(bulkOwnOnlyBlocked("cancel") ||
+              bulkOwnOnlyBlocked("delete") ||
+              bulkOwnOnlyBlocked("update_status")) && (
+              <p className='col-span-2 text-xs text-amber-600 text-center'>
+                Own-only restriction: deselect orders you didn&apos;t create.
+              </p>
             )}
           </div>
           <DrawerFooter className='flex flex-row items-center border-t bg-muted/50 px-6 py-3'>
@@ -1946,7 +2025,7 @@ const OrderList = () => {
                 <Button
                   variant='destructive'
                   onClick={() => {
-                    performOrderBulkUpdate(bulkAction);
+                    runBulkAction(bulkAction);
                     setBulkAction("");
                   }}>
                   I'm Sure
@@ -2250,7 +2329,7 @@ const OrderList = () => {
 
   const handleBulkCourierSelection = async (courierProvider: string) => {
     if (pendingBulkAction) {
-      await performOrderBulkUpdate(pendingBulkAction, courierProvider);
+      runBulkAction(pendingBulkAction, courierProvider);
       setPendingBulkAction("");
       setBulkCourierSelectorOpen(false);
       setBulkCourierSelectorMobile(false);

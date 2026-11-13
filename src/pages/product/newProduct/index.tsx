@@ -104,9 +104,19 @@ const CreateNewProduct = () => {
       setLoading(true);
       // Tags go as one JSON string — buildFormDataFromObject would emit
       // tags[0], tags[1], ... keys which the backend can't reassemble.
-      const { tags, ...rest } = productData as any;
+      // Meta (admin-defined key-value data) needs the same treatment.
+      const { tags, meta, ...rest } = productData as any;
       const formData = buildFormDataFromObject(rest);
       if (tags && tags.length > 0) formData.append("tags", JSON.stringify(tags));
+      // Drop half-filled rows (blank key) — the backend ignores them anyway
+      formData.append(
+        "meta",
+        JSON.stringify(
+          (meta || []).filter(
+            (entry: any) => entry && entry.key && String(entry.key).trim() !== ""
+          )
+        )
+      );
       const response = await createProduct(formData);
       setLoading(false);
       if (response?.success) {

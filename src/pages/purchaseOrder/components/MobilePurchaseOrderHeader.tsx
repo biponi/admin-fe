@@ -7,23 +7,21 @@ interface Props {
 
 const MobilePurchaseOrderHeader: React.FC<Props> = ({ totalOrders }) => {
   return (
-    <div className='bg-indigo-600 p-4 shadow-sm shadow-indigo-200 flex items-center justify-between gap-3'>
+    <div className='bg-white p-4 shadow-sm  flex items-center justify-between gap-3'>
       <div>
         <div className='flex items-center gap-3'>
           <div className='h-10 w-10 bg-white/10 rounded-xl flex items-center justify-center backdrop-blur-sm'>
-            <Boxes className='h-5 w-5 text-white' />
+            <Boxes className='h-5 w-5 text-indigo-500' />
           </div>
           <div className='flex-1'>
-            <h3 className='font-semibold text-white'>
-              Purchase Order Management
-            </h3>
-            <p className='text-xs text-indigo-100'>
+            <h3 className='font-semibold '>Purchase Order Management</h3>
+            <p className='text-xs text-gray-500'>
               Organize and manage purchase orders
             </p>
           </div>
         </div>
       </div>
-      <div className='rounded-lg px-4 py-2 text-center bg-white text-indigo-900 font-semibold'>
+      <div className='rounded-lg px-4 py-2 text-center bg-white shadow-md font-semibold'>
         {totalOrders}
       </div>
     </div>

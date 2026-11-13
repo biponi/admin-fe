@@ -27,6 +27,7 @@ import { useChatSocket } from "../../hooks/useChatSocket";
 import { ChatErrorBoundary } from "../../components/ChatErrorBoundary";
 
 import { Sheet, SheetContent, SheetHeader } from "../../components/ui/sheet";
+import { PageHeader } from "../../components/PageHeader";
 
 // Local interface for component props
 interface LocalMessage {
@@ -76,7 +77,7 @@ const MobileEmptyState: React.FC<{
       {/* Top Panel - Always visible header for mobile */}
       <div className='bg-white border-b border-gray-200 p-4 md:hidden shadow-sm'>
         <div className='flex items-center justify-between'>
-          <h1 className='text-lg font-semibold text-gray-900'>Support Chat</h1>
+          <h1 className='text-lg font-semibold text-gray-900'>Live Chat</h1>
           <Button
             onClick={(e) => {
               e.preventDefault();
@@ -506,7 +507,7 @@ const ChatInterface: React.FC<{
       {/* Messages Area - Mobile Optimized */}
       <div
         ref={scrollAreaRef}
-        className='flex-1 overflow-y-auto max-h-[70vh] p-2 sm:p-4 space-y-2 sm:space-y-4 bg-gray-50'>
+        className='flex-1 overflow-y-auto max-h-[70vh] mobile:max-h-none p-2 sm:p-4 space-y-2 sm:space-y-4 bg-gray-50'>
         {ticket.messages.map((msg, index) => {
           const isFromSameUser =
             index > 0 && ticket.messages[index - 1].sender === msg.sender;
@@ -877,8 +878,22 @@ const ChatPage: React.FC = () => {
   }
 
   return (
-    <ChatErrorBoundary>
-      <div className='flex w-full max-h-[88vh] overflow-y-hidden rounded-xl bg-slate-300 border'>
+    <>
+      <PageHeader
+        className='hidden md:flex px-4 pt-4 md:px-6 md:pt-5'
+        icon={<MessageCircle className='h-5 w-5 text-white' />}
+        title='Live Chat'
+        subtitle='Customer support conversations'
+        count={
+          tickets.length > 0 ? (
+            <span className='rounded-md px-2.5 py-1 text-base font-semibold text-slate-500 tabular-nums'>
+              {tickets.length} ticket{tickets.length !== 1 ? "s" : ""}
+            </span>
+          ) : undefined
+        }
+      />
+      <ChatErrorBoundary>
+      <div className='flex w-full max-h-[88vh] overflow-y-hidden rounded-xl bg-slate-300 border mobile:h-[calc(100dvh-10rem)] mobile:max-h-none mobile:rounded-none mobile:border-0 mobile:bg-[#FAF9F6] mobile:pb-[calc(4rem+env(safe-area-inset-bottom))]'>
         {/* Chat content area */}
         <div className='flex-1 flex overflow-y-hidden'>
           {/* Desktop Sidebar - Hidden on mobile */}
@@ -939,6 +954,7 @@ const ChatPage: React.FC = () => {
         />
       </div>
     </ChatErrorBoundary>
+    </>
   );
 };
 

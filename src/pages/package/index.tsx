@@ -8,10 +8,21 @@ import {
   CardTitle,
 } from "../../components/ui/card";
 import { Button } from "../../components/ui/button";
-import { Loader2, Package, Clock, CheckCircle } from "lucide-react";
+import { Loader2, Package, Clock, CheckCircle, Barcode } from "lucide-react";
+import { useIsMobile } from "@/hooks/use-mobile";
+import {
+  MobilePage,
+  MobileListCard,
+  MobileStatTile,
+  MobileStatRow,
+  MobileSkeletonList,
+  rippleProps,
+} from "@/components/mobile";
+import { PageHeader } from "@/components/PageHeader";
 
 export function PackageDashboardPage() {
   const navigate = useNavigate();
+  const isMobile = useIsMobile();
   const { dashboardStats, loading, loadDashboard } = usePackageStore();
 
   useEffect(() => {
@@ -20,6 +31,15 @@ export function PackageDashboardPage() {
   }, []);
 
   if (loading) {
+    if (isMobile) {
+      return (
+        <MobilePage title="Packages">
+          <div className="p-3">
+            <MobileSkeletonList count={5} />
+          </div>
+        </MobilePage>
+      );
+    }
     return (
       <div className='flex items-center justify-center h-64'>
         <Loader2 className='h-8 w-8 animate-spin' />
@@ -58,21 +78,84 @@ export function PackageDashboardPage() {
     },
   ];
 
+  if (isMobile) {
+    return (
+      <MobilePage
+        title="Packages"
+        icon={<Package className="h-5 w-5 text-primary" />}
+        subtitle={`${dashboardStats.total ?? 0} total`}
+        actions={
+          <button
+            aria-label="Scan Barcode"
+            onClick={() => navigate("/packages/scan")}
+            className="m3-ripple grid h-10 w-10 shrink-0 place-items-center rounded-full bg-primary text-primary-foreground shadow-sm active:scale-95 transition-transform"
+            {...rippleProps()}
+          >
+            <Barcode className="h-5 w-5" />
+          </button>
+        }>
+        <div className="space-y-3 p-3">
+          {/* Stats row */}
+          <MobileStatRow>
+            {stats.map((stat) => (
+              <MobileStatTile
+                key={stat.label}
+                label={stat.label}
+                value={stat.value}
+                icon={<stat.icon className="h-4 w-4" />}
+              />
+            ))}
+          </MobileStatRow>
+
+          {/* Status Breakdown */}
+          <div className="rounded-2xl border bg-card p-1.5">
+            <p className="px-3 pt-2 pb-1 text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
+              Package Status Breakdown
+            </p>
+            {Object.entries(dashboardStats).map(([status, count]) => {
+              // Skip total and ensure count is a number
+              if (status === "total" || typeof count !== "number") return null;
+              return (
+                <MobileListCard
+                  static
+                  key={status}
+                  className="border-0"
+                  title={
+                    <span className="capitalize">
+                      {status.replace(/_/g, " ")}
+                    </span>
+                  }
+                  trailing={
+                    <span className="text-[15px] font-semibold">{count}</span>
+                  }
+                />
+              );
+            })}
+          </div>
+        </div>
+      </MobilePage>
+    );
+  }
+
   return (
     <div className='space-y-6'>
       {/* Header */}
-      <div className='flex justify-between items-center'>
-        <div>
-          <h1 className='text-3xl font-bold'>Package Dashboard</h1>
-          <p className='text-gray-500 mt-1'>
-            Manage packaging and shipping operations
-          </p>
-        </div>
-        <Button onClick={() => navigate("/packages/scan")}>
-          <Package className='mr-2 h-4 w-4' />
-          Scan Barcode
-        </Button>
-      </div>
+      <PageHeader
+        icon={<Package className='h-5 w-5 text-white' />}
+        title='Packages'
+        subtitle='Manage packaging and shipping operations'
+        count={
+          <span className='rounded-md px-2.5 py-1 text-base font-semibold text-muted-foreground tabular-nums'>
+            {dashboardStats.total} total
+          </span>
+        }
+        actions={
+          <Button onClick={() => navigate("/packages/scan")}>
+            <Barcode className='mr-2 h-4 w-4' />
+            Scan Barcode
+          </Button>
+        }
+      />
 
       {/* Stats Grid */}
       <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4'>

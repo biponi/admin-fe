@@ -32,11 +32,8 @@ interface NotificationFormData {
   message: string;
   topic: string;
   priority: "low" | "normal" | "high" | "urgent";
-  channels: string[];
-  recipients: string[];
   actionUrl?: string;
   actionText?: string;
-  broadcast: boolean;
 }
 
 const CreateNotificationModal: React.FC<CreateNotificationModalProps> = ({
@@ -51,14 +48,10 @@ const CreateNotificationModal: React.FC<CreateNotificationModalProps> = ({
     message: "",
     topic: "system_alert",
     priority: "normal",
-    channels: ["inapp"],
-    recipients: [],
     actionUrl: "",
     actionText: "",
-    broadcast: false,
   });
 
-  const [recipientInput, setRecipientInput] = useState("");
 
   // Topic options
   const topics = [
@@ -95,16 +88,6 @@ const CreateNotificationModal: React.FC<CreateNotificationModalProps> = ({
       return;
     }
 
-    if (!formData.broadcast && formData.recipients.length === 0) {
-      // toast({
-      //   title: 'Validation Error',
-      //   description: 'Please add at least one recipient or enable broadcast',
-      //   variant: 'destructive',
-      // });
-      // return;
-      formData.recipients = [];
-    }
-
     setLoading(true);
 
     try {
@@ -112,15 +95,12 @@ const CreateNotificationModal: React.FC<CreateNotificationModalProps> = ({
       const apiUrl =
         import.meta.env.VITE_API_BASE_URL || "http://localhost:7001";
 
+      // Notifications always go to all panel users via in-app + push
       const payload = {
         subject: formData.subject,
         message: formData.message,
         topic: formData.topic,
         priority: formData.priority,
-        channels: formData.channels,
-        ...(formData.broadcast
-          ? { broadcast: true }
-          : { recipients: formData.recipients }),
         ...(formData.actionUrl && { actionUrl: formData.actionUrl }),
         ...(formData.actionText && { actionText: formData.actionText }),
         data: {},
@@ -163,47 +143,9 @@ const CreateNotificationModal: React.FC<CreateNotificationModalProps> = ({
       message: "",
       topic: "system_alert",
       priority: "normal",
-      channels: ["inapp"],
-      recipients: [],
       actionUrl: "",
       actionText: "",
-      broadcast: false,
     });
-    setRecipientInput("");
-  };
-
-  const handleAddRecipient = () => {
-    if (
-      recipientInput.trim() &&
-      !formData.recipients.includes(recipientInput.trim())
-    ) {
-      setFormData({
-        ...formData,
-        recipients: [...formData.recipients, recipientInput.trim()],
-      });
-      setRecipientInput("");
-    }
-  };
-
-  const handleRemoveRecipient = (userId: string) => {
-    setFormData({
-      ...formData,
-      recipients: formData.recipients.filter((id) => id !== userId),
-    });
-  };
-
-  const toggleChannel = (channel: string) => {
-    if (formData.channels.includes(channel)) {
-      setFormData({
-        ...formData,
-        channels: formData.channels.filter((c) => c !== channel),
-      });
-    } else {
-      setFormData({
-        ...formData,
-        channels: [...formData.channels, channel],
-      });
-    }
   };
 
   return (
@@ -214,7 +156,7 @@ const CreateNotificationModal: React.FC<CreateNotificationModalProps> = ({
             Create New Notification
           </DialogTitle>
           <DialogDescription>
-            Send notifications to users via multiple channels
+            Send a notification to all panel users (in-app + push)
           </DialogDescription>
         </DialogHeader>
 
@@ -294,110 +236,6 @@ const CreateNotificationModal: React.FC<CreateNotificationModalProps> = ({
             </div>
           </div>
 
-          {/* Channels */}
-          <div>
-            <Label>Channels</Label>
-            <div className='flex gap-3 mt-2'>
-              <label className='flex items-center gap-2 cursor-pointer'>
-                <input
-                  type='checkbox'
-                  checked={formData.channels.includes("inapp")}
-                  onChange={() => toggleChannel("inapp")}
-                  className='rounded border-gray-300'
-                />
-                <span className='text-sm'>In-App</span>
-              </label>
-              <label className='flex items-center gap-2 cursor-pointer'>
-                <input
-                  type='checkbox'
-                  checked={formData.channels.includes("fcm")}
-                  onChange={() => toggleChannel("fcm")}
-                  className='rounded border-gray-300'
-                />
-                <span className='text-sm'>Push (FCM)</span>
-              </label>
-              <label className='flex items-center gap-2 cursor-pointer'>
-                <input
-                  type='checkbox'
-                  checked={formData.channels.includes("email")}
-                  onChange={() => toggleChannel("email")}
-                  className='rounded border-gray-300'
-                />
-                <span className='text-sm'>Email</span>
-              </label>
-              <label className='flex items-center gap-2 cursor-pointer'>
-                <input
-                  type='checkbox'
-                  checked={formData.channels.includes("sms")}
-                  onChange={() => toggleChannel("sms")}
-                  className='rounded border-gray-300'
-                />
-                <span className='text-sm'>SMS</span>
-              </label>
-            </div>
-          </div>
-
-          {/* Broadcast Toggle */}
-          <div>
-            <label className='flex items-center gap-2 cursor-pointer'>
-              <input
-                type='checkbox'
-                checked={formData.broadcast}
-                onChange={(e) =>
-                  setFormData({ ...formData, broadcast: e.target.checked })
-                }
-                className='rounded border-gray-300'
-              />
-              <span className='text-sm font-medium'>
-                Broadcast to all users (ignore specific recipients)
-              </span>
-            </label>
-          </div>
-
-          {/* Recipients */}
-          {!formData.broadcast && (
-            <div>
-              <Label htmlFor='recipients'>Recipients (User IDs)</Label>
-              <div className='flex gap-2 mt-1'>
-                <Input
-                  id='recipients'
-                  placeholder='Enter user ID and press Add'
-                  value={recipientInput}
-                  onChange={(e) => setRecipientInput(e.target.value)}
-                  onKeyPress={(e) => {
-                    if (e.key === "Enter") {
-                      e.preventDefault();
-                      handleAddRecipient();
-                    }
-                  }}
-                />
-                <Button
-                  type='button'
-                  onClick={handleAddRecipient}
-                  variant='outline'>
-                  Add
-                </Button>
-              </div>
-              {formData.recipients.length > 0 && (
-                <div className='flex flex-wrap gap-2 mt-2'>
-                  {formData.recipients.map((userId) => (
-                    <span
-                      key={userId}
-                      className='inline-flex items-center gap-1 bg-blue-100 text-blue-800 px-2 py-1 rounded text-sm'>
-                      {userId}
-                      <button
-                        type='button'
-                        onClick={() => handleRemoveRecipient(userId)}
-                        className='hover:text-blue-900'>
-                        <X className='h-3 w-3' />
-                      </button>
-                    </span>
-                  ))}
-                </div>
-              )}
-            </div>
-          )}
-
           {/* Action URL and Text (Optional) */}
           <div className='grid grid-cols-2 gap-4'>
             <div>
@@ -435,7 +273,7 @@ const CreateNotificationModal: React.FC<CreateNotificationModalProps> = ({
             </Button>
             <Button
               type='submit'
-              disabled={loading || formData.channels.length === 0}>
+              disabled={loading}>
               {loading ? (
                 <>
                   <Loader2 className='mr-2 h-4 w-4 animate-spin' />

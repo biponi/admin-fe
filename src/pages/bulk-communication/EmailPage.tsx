@@ -7,7 +7,9 @@ import {
   TabsTrigger,
 } from "../../components/ui/tabs";
 import MainView from "../../coreComponents/mainView";
-import { Mail, Plus, BarChart3, RefreshCw } from "lucide-react";
+import { MobilePage, rippleProps } from "@/components/mobile";
+import { Mail, Plus, BarChart3, RefreshCw, Megaphone } from "lucide-react";
+import { PageHeader } from "@/components/PageHeader";
 import CampaignList from "./components/CampaignList";
 import QueueStats from "./components/QueueStats";
 import useRoleCheck from "../auth/hooks/useRoleCheck";
@@ -42,48 +44,69 @@ const EmailPage = () => {
 
   return (
     <MainView title='Bulk Email Campaigns'>
-      <div className='min-h-screen bg-slate-50/60'>
-        <div className='max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6'>
-          {/* Page Header */}
-          <div className='flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4'>
-            <div className='flex items-center gap-3'>
-              <div className='flex items-center justify-center w-10 h-10 rounded-xl bg-indigo-600 shadow-sm shadow-indigo-200'>
-                <Mail className='h-5 w-5 text-white' />
-              </div>
-              <div>
-                <h1 className='text-xl font-semibold text-slate-900 leading-tight'>
-                  Email Campaigns
-                </h1>
-                <p className='text-sm text-slate-500 mt-0.5'>
-                  Manage and monitor your bulk email sends
-                </p>
-              </div>
-            </div>
-
-            <div className='flex items-center gap-2'>
+      <MobilePage
+        icon={<Megaphone className='h-5 w-5 text-primary' />}
+        title='Bulk Email'
+        subtitle='Manage and monitor your bulk email sends'
+        actions={
+          <>
+            <button
+              onClick={handleRefresh}
+              disabled={isRefreshing}
+              aria-label='Refresh'
+              className='m3-ripple grid h-10 w-10 shrink-0 place-items-center rounded-full bg-primary/10 text-primary active:scale-95 transition-transform disabled:opacity-50'
+              {...rippleProps()}>
+              <RefreshCw
+                className={`h-5 w-5 ${isRefreshing ? "animate-spin" : ""}`}
+              />
+            </button>
+            {hasRequiredPermission("bulkcommunication", "create") && (
               <button
-                onClick={handleRefresh}
-                disabled={isRefreshing}
-                className='inline-flex items-center gap-1.5 px-3 py-2 text-sm font-medium text-slate-600 bg-white border border-slate-200 rounded-lg hover:bg-slate-50 hover:border-slate-300 transition-all duration-150 disabled:opacity-50 shadow-sm'>
-                <RefreshCw
-                  className={`h-3.5 w-3.5 ${isRefreshing ? "animate-spin" : ""}`}
-                />
-                <span className='hidden sm:inline'>Refresh</span>
+                onClick={handleCreateCampaign}
+                aria-label='New campaign'
+                className='m3-ripple grid h-10 w-10 shrink-0 place-items-center rounded-full bg-primary text-primary-foreground shadow-sm active:scale-95 transition-transform'
+                {...rippleProps()}>
+                <Plus className='h-5 w-5' />
               </button>
+            )}
+          </>
+        }
+      >
+        <div className='min-h-screen bg-slate-50/60'>
+          <div className='max-w-7xl mx-auto px-4 md:px-6 lg:px-8 py-4 md:py-6 space-y-4 md:space-y-6'>
+          {/* Page Header */}
+          <div className='hidden md:block'>
+            <PageHeader
+              icon={<Megaphone className='h-5 w-5' />}
+              title='Bulk Email'
+              subtitle='Manage and monitor your bulk email sends'
+              actions={
+                <div className='flex items-center gap-2'>
+                  <button
+                    onClick={handleRefresh}
+                    disabled={isRefreshing}
+                    className='inline-flex items-center gap-1.5 px-3 py-2 text-sm font-medium text-slate-600 bg-white border border-slate-200 rounded-lg hover:bg-slate-50 hover:border-slate-300 transition-all duration-150 disabled:opacity-50 shadow-sm'>
+                    <RefreshCw
+                      className={`h-3.5 w-3.5 ${isRefreshing ? "animate-spin" : ""}`}
+                    />
+                    <span className='hidden md:inline'>Refresh</span>
+                  </button>
 
-              {hasRequiredPermission("bulkcommunication", "create") && (
-                <button
-                  onClick={handleCreateCampaign}
-                  className='inline-flex items-center gap-1.5 px-4 py-2 text-sm font-medium text-white bg-indigo-600 rounded-lg hover:bg-indigo-700 active:bg-indigo-800 transition-all duration-150 shadow-sm shadow-indigo-200'>
-                  <Plus className='h-4 w-4' />
-                  New Campaign
-                </button>
-              )}
-            </div>
+                  {hasRequiredPermission("bulkcommunication", "create") && (
+                    <button
+                      onClick={handleCreateCampaign}
+                      className='inline-flex items-center gap-1.5 px-4 py-2 text-sm font-medium text-white bg-indigo-600 rounded-lg hover:bg-indigo-700 active:bg-indigo-800 transition-all duration-150 shadow-sm shadow-indigo-200'>
+                      <Plus className='h-4 w-4' />
+                      New Campaign
+                    </button>
+                  )}
+                </div>
+              }
+            />
           </div>
 
           {/* Summary Strip */}
-          <div className='grid grid-cols-2 sm:grid-cols-4 gap-3'>
+          <div className='grid grid-cols-2 md:grid-cols-4 gap-3'>
             {[
               {
                 label: "Active Campaigns",
@@ -150,19 +173,20 @@ const EmailPage = () => {
 
               <TabsContent
                 value='campaigns'
-                className='p-4 sm:p-6 mt-0 focus-visible:outline-none'>
+                className='p-4 md:p-6 mt-0 focus-visible:outline-none'>
                 <CampaignList type='email' key={`email-${refreshKey}`} />
               </TabsContent>
 
               <TabsContent
                 value='queue'
-                className='p-4 sm:p-6 mt-0 focus-visible:outline-none'>
+                className='p-4 md:p-6 mt-0 focus-visible:outline-none'>
                 <QueueStats type='email' key={`email-queue-${refreshKey}`} />
               </TabsContent>
             </Tabs>
           </div>
+          </div>
         </div>
-      </div>
+      </MobilePage>
     </MainView>
   );
 };

@@ -12,6 +12,7 @@ import {
   X,
 } from "lucide-react";
 import { IVariation } from "../../pages/product/interface";
+import BulkVariantMetaPanel from "./BulkVariantMetaPanel";
 import { cn } from "@/lib/utils";
 
 interface V2SimpleVariationManagerProps {
@@ -402,6 +403,14 @@ const V2SimpleVariationManager: React.FC<V2SimpleVariationManagerProps> = ({
             </span>
           </div>
 
+          {/* Bulk meta — write once per size/color, apply to matching variants */}
+          <BulkVariantMetaPanel
+            variations={formData.variation}
+            onApply={(updated: IVariation[]) =>
+              updateFormData({ ...formData, variation: updated })
+            }
+          />
+
           {/* Variation cards grid */}
           <div className='grid gap-2.5 grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5'>
             {formData.variation.map((variation: IVariation, index: number) => (
@@ -503,6 +512,20 @@ const V2SimpleVariationManager: React.FC<V2SimpleVariationManagerProps> = ({
                         {variation.quantity} units
                       </div>
                     </div>
+                  </div>
+                )}
+
+                {/* Applied meta — read-only chips (full editing lives in the
+                    Advanced tab and the bulk panel above) */}
+                {variation.meta && variation.meta.length > 0 && (
+                  <div className='mt-1 pt-2 border-t border-border/40 flex flex-wrap gap-1'>
+                    {variation.meta.map((m, i) => (
+                      <span
+                        key={i}
+                        className='inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded text-[10px] font-mono bg-muted/60 text-muted-foreground truncate max-w-full'>
+                        {m.key}: {m.value}
+                      </span>
+                    ))}
                   </div>
                 )}
               </div>

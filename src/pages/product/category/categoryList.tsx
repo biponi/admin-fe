@@ -1,5 +1,11 @@
 // Updated CategoryList Component
-import { PlusCircle, FolderTree, RefreshCw, Search } from "lucide-react";
+import {
+  PlusCircle,
+  FolderTree,
+  RefreshCw,
+  Search,
+  Package2,
+} from "lucide-react";
 import {
   Tabs,
   TabsContent,
@@ -36,6 +42,7 @@ import MobileCategoryCard from "./components/MobileCategoryCard";
 import MobileCategoryFilters from "./components/MobileCategoryFilters";
 import MobileCategoryEmpty from "./components/MobileCategoryEmpty";
 import MainView from "../../../coreComponents/mainView";
+import { PageHeader } from "../../../components/PageHeader";
 
 const CategoryList = () => {
   const navigate = useNavigate();
@@ -326,42 +333,39 @@ const CategoryList = () => {
         <div className='min-h-screen bg-slate-50/60'>
           <div className='max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6'>
             {/* Page Header */}
-            <div className='flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4'>
-              <div className='flex items-center gap-3'>
-                <div className='flex items-center justify-center w-10 h-10 rounded-xl bg-blue-600 shadow-sm shadow-blue-200'>
-                  <FolderTree className='h-5 w-5 text-white' />
-                </div>
-                <div>
-                  <h1 className='text-xl font-semibold text-slate-900 leading-tight'>
-                    Categories
-                  </h1>
-                  <p className='text-sm text-slate-500 mt-0.5'>
-                    Organize and manage product categories
-                  </p>
-                </div>
-              </div>
-
-              <div className='flex items-center gap-2'>
-                <button
-                  onClick={handleRefresh}
-                  disabled={isRefreshing}
-                  className='inline-flex items-center gap-1.5 px-3 py-2 text-sm font-medium text-slate-600 bg-white border border-slate-200 rounded-lg hover:bg-slate-50 hover:border-slate-300 transition-all duration-150 disabled:opacity-50 shadow-sm'>
-                  <RefreshCw
-                    className={`h-3.5 w-3.5 ${isRefreshing ? "animate-spin" : ""}`}
-                  />
-                  <span className='hidden sm:inline'>Refresh</span>
-                </button>
-
-                {hasRequiredPermission("category", "create") && (
+            <PageHeader
+              className='flex-col md:flex-row'
+              icon={<Package2 className='h-5 w-5' />}
+              title='Category Management'
+              subtitle='Organize and manage product categories'
+              count={
+                <span className='rounded-md px-2.5 py-1 text-base font-semibold text-slate-500 tabular-nums'>
+                  {totalCategories} total
+                </span>
+              }
+              actions={
+                <div className='flex items-center gap-2'>
                   <button
-                    onClick={() => navigate("/category/create")}
-                    className='inline-flex items-center gap-1.5 px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 active:bg-blue-800 transition-all duration-150 shadow-sm shadow-blue-200'>
-                    <PlusCircle className='h-4 w-4' />
-                    Add Category
+                    onClick={handleRefresh}
+                    disabled={isRefreshing}
+                    className='inline-flex items-center gap-1.5 px-3 py-2 text-sm font-medium text-slate-600 bg-white border border-slate-200 rounded-lg hover:bg-slate-50 hover:border-slate-300 transition-all duration-150 disabled:opacity-50 shadow-sm'>
+                    <RefreshCw
+                      className={`h-3.5 w-3.5 ${isRefreshing ? "animate-spin" : ""}`}
+                    />
+                    <span className='hidden md:inline'>Refresh</span>
                   </button>
-                )}
-              </div>
-            </div>
+
+                  {hasRequiredPermission("category", "create") && (
+                    <button
+                      onClick={() => navigate("/category/create")}
+                      className='inline-flex items-center gap-1.5 px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 active:bg-blue-800 transition-all duration-150 shadow-sm shadow-blue-200'>
+                      <PlusCircle className='h-4 w-4' />
+                      Add Category
+                    </button>
+                  )}
+                </div>
+              }
+            />
 
             {/* Summary Stats Strip */}
             <div className='grid grid-cols-2 sm:grid-cols-4 gap-3'>

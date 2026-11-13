@@ -1,3 +1,11 @@
+// Admin-defined meta data — key/value pairs searchable from the admin panel
+// only (backend: biponi-express routes/helper/productMeta.js). Keys are
+// lowercased/deduped server-side; purely-numeric values become range-filterable.
+export interface IMetaEntry {
+  key: string;
+  value: string;
+}
+
 export interface IProduct {
   id: string;
   sku: string;
@@ -38,6 +46,7 @@ export interface IProduct {
   seoDescription?: string;
   tags?: string[];
   brand?: string;
+  meta?: IMetaEntry[]; // Admin-defined key-value data (admin search only)
 }
 
 export interface IOrderProduct extends IProduct {
@@ -56,6 +65,7 @@ export interface IVariation {
   unitPrice: number;
   images?: (File | string)[]; // Variant images (File for new uploads, string for existing URLs)
   imageGroupId?: string; // NEW: Reference to image group this variant belongs to
+  meta?: IMetaEntry[]; // Per-variant admin-defined meta data (e.g. age per size)
 }
 
 // Variant image mapping for upload
@@ -92,6 +102,7 @@ export interface IProductCreateData {
   seoDescription?: string;
   tags?: string[];
   brand?: string;
+  meta?: IMetaEntry[];
 }
 
 export interface IProductUpdateData {
@@ -126,6 +137,7 @@ export interface IProductUpdateData {
   seoDescription?: string;
   tags?: string[];
   brand?: string;
+  meta?: IMetaEntry[];
 }
 // Updated interfaces for hierarchical categories
 
@@ -269,11 +281,14 @@ export interface StockSummaryTotals {
 export interface StockSummaryResponse {
   categories: CategoryStockSummary[];
   totalActiveProductPrice: number;
+  // Count of distinct active products (NOT stock units)
   totalActiveProducts: number;
   totalActiveProductVariations: number;
   totalActiveProductType: number;
   totalActiveProductDiscountedPrice: number;
   totalActiveProductDiscountAmount: number;
+  // Total sellable stock units across all products (variants counted individually)
+  totalStockUnits?: number;
   totals?: StockSummaryTotals;
   appliedCampaign?: AppliedCampaign | null;
 }

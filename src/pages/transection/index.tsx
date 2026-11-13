@@ -53,6 +53,7 @@ import { Separator } from "../../components/ui/separator";
 import { Badge } from "../../components/ui/badge";
 import { Label } from "../../components/ui/label";
 import {
+  BadgeDollarSign,
   Edit2Icon,
   Trash2,
   CreditCard,
@@ -77,6 +78,7 @@ import {
   ShoppingCart,
 } from "lucide-react";
 import config from "../../utils/config";
+import { PageHeader } from "../../components/PageHeader";
 import axios from "../../api/axios";
 import bkashIcon from "../../images/bkash-icon.png";
 import { errorToast, successToast } from "../../utils/toast";
@@ -430,49 +432,53 @@ const TransactionsPage: React.FC = () => {
     <MainView title='Transactions'>
       <div className='container mx-auto p-4 space-y-3'>
         {/* Header */}
-        <div className='flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4'>
-          <div>
-            <h1 className='text-3xl font-bold tracking-tight'>Transactions</h1>
-            <p className='text-muted-foreground'>
-              Manage and monitor all your payment transactions
-            </p>
-          </div>
-          <div className='flex items-center gap-2'>
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant='outline' disabled={exportLoading || loading}>
-                  <Download className='w-4 h-4 mr-2' />
-                  Export
+        <PageHeader
+          icon={<BadgeDollarSign className='h-5 w-5 text-white' />}
+          title='Transactions'
+          subtitle='Manage and monitor all your payment transactions'
+          count={
+            <span className='text-base font-semibold text-muted-foreground tabular-nums'>
+              {totalTransactions} total
+            </span>
+          }
+          actions={
+            <>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant='outline' disabled={exportLoading || loading}>
+                    <Download className='w-4 h-4 mr-2' />
+                    Export
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align='end'>
+                  <DropdownMenuItem
+                    onClick={handleExportCSV}
+                    disabled={exportLoading || loading}>
+                    <FileSpreadsheet className='w-4 h-4 mr-2' />
+                    Export as CSV
+                  </DropdownMenuItem>
+                  <DropdownMenuItem
+                    onClick={handleExportPDF}
+                    disabled={exportLoading || loading}>
+                    <FileDown className='w-4 h-4 mr-2' />
+                    Export as PDF
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+              {hasRequiredPermission("Transaction", "create") && (
+                <Button
+                  onClick={() => {
+                    setEditingId(null);
+                    setFormData({});
+                    setEditModalOpen(true);
+                  }}>
+                  <Plus className='w-4 h-4 mr-2' />
+                  Create Transaction
                 </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align='end'>
-                <DropdownMenuItem
-                  onClick={handleExportCSV}
-                  disabled={exportLoading || loading}>
-                  <FileSpreadsheet className='w-4 h-4 mr-2' />
-                  Export as CSV
-                </DropdownMenuItem>
-                <DropdownMenuItem
-                  onClick={handleExportPDF}
-                  disabled={exportLoading || loading}>
-                  <FileDown className='w-4 h-4 mr-2' />
-                  Export as PDF
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-            {hasRequiredPermission("Transaction", "create") && (
-              <Button
-                onClick={() => {
-                  setEditingId(null);
-                  setFormData({});
-                  setEditModalOpen(true);
-                }}>
-                <Plus className='w-4 h-4 mr-2' />
-                Create Transaction
-              </Button>
-            )}
-          </div>
-        </div>
+              )}
+            </>
+          }
+        />
 
         {/* Filters */}
         <div className='flex flex-col sm:flex-row gap-4 mt-4 p-2 border-2 border-dashed  rounded-lg'>

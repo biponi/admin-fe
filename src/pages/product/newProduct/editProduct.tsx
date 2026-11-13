@@ -10,6 +10,7 @@ import {
   Layers,
   Image,
   Search,
+  Table2,
 } from "lucide-react";
 import {
   Select,
@@ -55,6 +56,9 @@ import { VariantImageUploader } from "../../../components/product/VariantImageUp
 import { ImageGroupManager } from "../../../components/product/ImageGroupManager";
 import V2SimpleVariationManager from "../../../components/product/V2SimpleVariationManager";
 import V1VariationManager from "../../../components/product/V1VariationManager";
+import MetaEntriesEditor from "../../../components/product/MetaEntriesEditor";
+import { MobilePage } from "../../../components/mobile";
+import { PageHeader } from "../../../components/PageHeader";
 import { BRAND_CONFIG } from "../../../config/brand";
 
 interface Props {
@@ -137,6 +141,7 @@ const EditProduct: React.FC<Props> = ({
         seoDescription: productData.seoDescription || "",
         tags: productData.tags || [],
         brand: productData.brand || BRAND_CONFIG.shortName,
+        meta: (productData as any).meta || [],
       };
 
       console.log("Edit Product - Initialized data:", {
@@ -238,6 +243,26 @@ const EditProduct: React.FC<Props> = ({
       setSlugManuallyEdited(true);
     }
     updateFormData({ ...formData, ...patch } as IProductUpdateData);
+  };
+
+  // ── Admin meta data (key-value pairs used for admin search) ──
+  const handleMetaChange = (meta: IProductUpdateData["meta"]) => {
+    updateFormData({ ...formData, meta } as IProductUpdateData);
+  };
+
+  const handleVariantMetaChange = (
+    index: number,
+    variantMeta: IVariation["meta"],
+  ) => {
+    if (!formData?.variation || index >= formData.variation.length) return;
+    const variation = [...formData.variation];
+    variation[index] = { ...variation[index], meta: variantMeta };
+    updateFormData({ ...formData, variation });
+  };
+
+  // Bulk meta panel result — fan out already computed by the panel helper
+  const handleBulkVariantMetaApply = (updated: IVariation[]) => {
+    updateFormData({ ...formData, variation: updated } as IProductUpdateData);
   };
 
   const handleResetSlug = () => {
@@ -523,6 +548,9 @@ const EditProduct: React.FC<Props> = ({
         onUpdateVariation={updateVariationData}
         onDeleteVariation={deleteVariation}
         onVariantImagesChange={handleVariantImagesChange}
+        showMeta={true}
+        onVariantMetaChange={handleVariantMetaChange}
+        onBulkMetaApply={handleBulkVariantMetaApply}
         productImages={formData.images || []}
         imageGroups={imageGroups}
       />
@@ -707,27 +735,23 @@ const EditProduct: React.FC<Props> = ({
   };
 
   return (
+    <MobilePage
+      title='Edit Product'
+      icon={<Package className='h-5 w-5 text-primary' />}
+      subtitle='Update product information and settings'
+    >
     <div className='min-h-screen bg-slate-50/60'>
-      <div className='max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6'>
+      <div className='max-w-7xl mx-auto px-4 md:px-6 lg:px-8 py-6 space-y-6 mobile:pb-[calc(9.5rem+env(safe-area-inset-bottom))]'>
         {/* Header Section */}
-        <div className='flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4'>
-          <div className='flex items-center gap-3'>
-            <div className='flex items-center justify-center w-10 h-10 rounded-xl bg-indigo-600 shadow-sm shadow-indigo-200'>
-              <Package className='h-5 w-5 text-white' />
-            </div>
-            <div>
-              <h1 className='text-xl font-semibold text-slate-900 leading-tight'>
-                Edit Product
-              </h1>
-              <p className='text-sm text-slate-500 mt-0.5'>
-                Update product information and settings
-              </p>
-            </div>
-          </div>
-
-          <div className='flex items-center gap-2'>
-            <AIGenerateButton onClick={() => setIsAISheetOpen(true)} />
-            <div className='hidden sm:flex items-center gap-2'>
+        <PageHeader
+          className='hidden md:flex md:flex-row'
+          icon={<Package className='h-5 w-5' />}
+          title='Edit Product'
+          subtitle='Update product information and settings'
+          actions={
+            <div className='flex items-center gap-2'>
+              <AIGenerateButton onClick={() => setIsAISheetOpen(true)} />
+            <div className='hidden md:flex items-center gap-2'>
               <button
                 onClick={() => {
                   if (dialogBtn?.current) {
@@ -752,7 +776,8 @@ const EditProduct: React.FC<Props> = ({
               </button>
             </div>
           </div>
-        </div>
+        }
+      />
 
         {/* Preview Strip */}
         <div className='flex items-center gap-3 bg-white rounded-xl border border-slate-100 px-4 py-3 shadow-sm'>
@@ -812,13 +837,14 @@ const EditProduct: React.FC<Props> = ({
                   { value: "variations", icon: Layers, label: "Variations" },
                   { value: "images", icon: Image, label: "Images" },
                   { value: "seo", icon: Search, label: "SEO" },
+                  { value: "meta", icon: Table2, label: "Meta Data" },
                 ].map((tab) => (
                   <TabsTrigger
                     key={tab.value}
                     value={tab.value}
                     className='relative flex items-center gap-2 px-4 py-4 text-sm font-medium rounded-none border-b-2 border-transparent text-slate-500 hover:text-slate-700 data-[state=active]:text-indigo-600 data-[state=active]:border-indigo-600 data-[state=active]:bg-transparent transition-all duration-150 focus-visible:outline-none flex-shrink-0'>
                     <tab.icon className='h-4 w-4' />
-                    <span className='hidden sm:inline'>{tab.label}</span>
+                    <span className='whitespace-nowrap'>{tab.label}</span>
                   </TabsTrigger>
                 ))}
               </TabsList>
@@ -827,7 +853,7 @@ const EditProduct: React.FC<Props> = ({
             {/* Tab: Basic Info */}
             <TabsContent
               value='basic'
-              className='p-4 sm:p-6 mt-0 focus-visible:outline-none'>
+              className='p-4 md:p-6 mt-0 focus-visible:outline-none'>
               <div className='grid gap-6 '>
                 <div className='space-y-4'>
                   <div className='space-y-1'>
@@ -875,8 +901,8 @@ const EditProduct: React.FC<Props> = ({
             {/* Tab: Details */}
             <TabsContent
               value='details'
-              className='p-4 sm:p-6 mt-0 focus-visible:outline-none'>
-              <div className='grid gap-6 sm:grid-cols-2'>
+              className='p-4 md:p-6 mt-0 focus-visible:outline-none'>
+              <div className='grid gap-6 md:grid-cols-2'>
                 <div className='space-y-4'>
                   <div className='space-y-1'>
                     <h3 className='text-sm font-medium text-slate-900'>
@@ -1005,8 +1031,8 @@ const EditProduct: React.FC<Props> = ({
             {/* Tab: Pricing */}
             <TabsContent
               value='pricing'
-              className='p-4 sm:p-6 mt-0 focus-visible:outline-none'>
-              <div className='grid gap-6 sm:grid-cols-2'>
+              className='p-4 md:p-6 mt-0 focus-visible:outline-none'>
+              <div className='grid gap-6 md:grid-cols-2'>
                 <div className='space-y-4'>
                   <div className='space-y-1'>
                     <h3 className='text-sm font-medium text-slate-900'>
@@ -1154,7 +1180,7 @@ const EditProduct: React.FC<Props> = ({
             {/* Tab: Variations */}
             <TabsContent
               value='variations'
-              className='p-4 sm:p-6 mt-0 focus-visible:outline-none'>
+              className='p-4 md:p-6 mt-0 focus-visible:outline-none'>
               <div className='space-y-4'>
                 <div className='flex items-center justify-between'>
                   <div className='space-y-1'>
@@ -1173,7 +1199,7 @@ const EditProduct: React.FC<Props> = ({
                   )}
                 </div>
                 <div className='space-y-3 p-3 bg-slate-50 rounded-lg border border-slate-200'>
-                  <div className='flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4'>
+                  <div className='flex flex-col md:flex-row md:items-center md:justify-between gap-4'>
                     <div className='flex items-center gap-4'>
                       <Label
                         htmlFor='variation-toggle'
@@ -1210,7 +1236,7 @@ const EditProduct: React.FC<Props> = ({
                       </div>
                     </div>
                     {hasVariation && (
-                      <div className='flex flex-col sm:flex-row sm:items-center gap-4'>
+                      <div className='flex flex-col md:flex-row md:items-center gap-4'>
                         <Label
                           htmlFor='same-price-toggle'
                           className='text-sm font-medium text-slate-700'>
@@ -1308,8 +1334,8 @@ const EditProduct: React.FC<Props> = ({
             {/* Tab: Images */}
             <TabsContent
               value='images'
-              className='p-4 sm:p-6 mt-0 focus-visible:outline-none'>
-              <div className='grid gap-6 sm:grid-cols-2'>
+              className='p-4 md:p-6 mt-0 focus-visible:outline-none'>
+              <div className='grid gap-6 md:grid-cols-2'>
                 <div className='space-y-4'>
                   <div className='space-y-1'>
                     <h3 className='text-sm font-medium text-slate-900'>
@@ -1401,7 +1427,7 @@ const EditProduct: React.FC<Props> = ({
                                 });
                               }
                             }}
-                            className='absolute top-1 right-1 p-1 bg-red-500 hover:bg-red-600 text-white rounded-full opacity-0 group-hover:opacity-100 transition-all z-10'>
+                            className='absolute top-1 right-1 p-1 bg-red-500 hover:bg-red-600 text-white rounded-full opacity-0 group-hover:opacity-100 mobile:opacity-100 transition-all z-10'>
                             <X className='w-3 h-3' />
                           </button>
                         </div>
@@ -1468,7 +1494,7 @@ const EditProduct: React.FC<Props> = ({
             {/* Tab: SEO */}
             <TabsContent
               value='seo'
-              className='p-4 sm:p-6 mt-0 focus-visible:outline-none'>
+              className='p-4 md:p-6 mt-0 focus-visible:outline-none'>
               <div className='space-y-1 mb-4'>
                 <h3 className='text-sm font-medium text-slate-900'>
                   SEO Settings
@@ -1491,11 +1517,30 @@ const EditProduct: React.FC<Props> = ({
                 slugManuallyEdited={slugManuallyEdited}
               />
             </TabsContent>
+
+            {/* Tab: Meta Data */}
+            <TabsContent
+              value='meta'
+              className='p-4 md:p-6 mt-0 focus-visible:outline-none'>
+              <div className='space-y-1 mb-4'>
+                <h3 className='text-sm font-medium text-slate-900'>
+                  Meta Data
+                </h3>
+                <p className='text-xs text-slate-500'>
+                  Custom key-value data for admin-panel product search (e.g.
+                  age, material). Not shown on the storefront.
+                </p>
+              </div>
+              <MetaEntriesEditor
+                value={formData?.meta || []}
+                onChange={handleMetaChange}
+              />
+            </TabsContent>
           </Tabs>
         </div>
 
         {/* Mobile Bottom Action Bar */}
-        <div className='fixed inset-x-0 bottom-0 z-50 sm:hidden bg-white/95 backdrop-blur-md border-t border-slate-200 px-4 py-3 pb-[calc(env(safe-area-inset-bottom,0px)+12px)]'>
+        <div className='mobile:block hidden fixed inset-x-0 bottom-[calc(4rem+env(safe-area-inset-bottom))] z-40 bg-white/95 backdrop-blur-md border-t border-slate-200 px-4 py-3'>
           <div className='flex gap-3'>
             <button
               className='flex-1 h-11 inline-flex items-center justify-center gap-2 px-4 py-2 text-sm font-medium text-slate-600 bg-white border border-slate-200 rounded-lg'
@@ -1544,6 +1589,7 @@ const EditProduct: React.FC<Props> = ({
       {discardDialog()}
       {updateDiscardDialog()}
     </div>
+    </MobilePage>
   );
 };
 

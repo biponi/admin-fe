@@ -1,96 +1,173 @@
 import {
   Settings,
-  Sun,
   Moon,
   Palette,
-  Sparkles,
-  ArrowLeft,
-  Package,
   Check,
   Paintbrush,
   ShoppingCart,
   Layers,
+  Sparkles,
+  Package,
+  ArrowLeft,
+  Monitor,
+  ImageIcon,
+  CloudSun,
+  Cat,
+  Gauge,
+  Heart,
 } from "lucide-react";
-import { Button } from "./ui/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "./ui/card";
 import { Label } from "./ui/label";
 import { RadioGroup, RadioGroupItem } from "./ui/radio-group";
 import {
-  Sheet,
-  SheetClose,
-  SheetContent,
-  SheetDescription,
-  SheetHeader,
-  SheetTitle,
-  SheetTrigger,
-} from "./ui/sheet";
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from "./ui/dialog";
+import {
+  Drawer,
+  DrawerContent,
+  DrawerHeader,
+  DrawerTitle,
+  DrawerDescription,
+  DrawerFooter,
+  DrawerClose,
+} from "./ui/drawer";
 import { ScrollArea } from "./ui/scroll-area";
-import { Separator } from "./ui/separator";
 import { useSettings } from "../contexts/SettingsContext";
 import { useState, useEffect } from "react";
 import { useLocation } from "react-router-dom";
 import { cn } from "../lib/utils";
-import { Badge } from "./ui/badge";
+import { Button } from "./ui/button";
+import { useIsMobile } from "../hooks/use-mobile";
+import { ONEKO_CRITTERS, ONEKO_SPEEDS } from "./oneko";
 
-const themeOptions = [
+// ─── Types ───────────────────────────────────────────────────────────────────
+
+type ThemeValue = "default" | "dark" | "blue" | "green" | "purple" | "orange";
+
+// Theme colors accent the app UI (--primary, dashboard gradients). They never
+// tint the sidebar surface itself — when a weather background (image or
+// animated) is selected, the sidebar shows the weather art with no color
+// overlay (index.scss re-pins --sidebar-* on the sidebar container).
+const themeOptions: {
+  value: ThemeValue;
+  label: string;
+  icon: typeof Moon;
+  swatch: string;
+}[] = [
+  {
+    value: "default",
+    label: "Default",
+    icon: Monitor,
+    swatch: "bg-zinc-100 border border-zinc-300",
+  },
   {
     value: "dark",
-    label: "Dark",
+    label: "Slate",
     icon: Moon,
-    color: "bg-slate-800 border-slate-600",
-    accent: "text-slate-300",
-    gradient: "from-slate-800 to-slate-900",
+    swatch: "bg-slate-800",
   },
   {
     value: "blue",
     label: "Ocean",
     icon: Palette,
-    color: "bg-cyan-500 border-cyan-400",
-    accent: "text-cyan-100",
-    gradient: "from-cyan-500 to-cyan-500",
+    swatch: "bg-cyan-500",
   },
   {
     value: "green",
     label: "Forest",
     icon: Palette,
-    color: "bg-emerald-500 border-emerald-400",
-    accent: "text-emerald-100",
-    gradient: "from-emerald-500 to-teal-500",
+    swatch: "bg-emerald-500",
   },
   {
     value: "purple",
     label: "Royal",
     icon: Palette,
-    color: "bg-purple-500 border-purple-400",
-    accent: "text-purple-100",
-    gradient: "from-purple-500 to-pink-500",
+    swatch: "bg-violet-600",
   },
   {
     value: "orange",
     label: "Sunset",
     icon: Palette,
-    color: "bg-orange-500 border-orange-400",
-    accent: "text-orange-100",
-    gradient: "from-orange-500 to-red-500",
+    swatch: "bg-orange-500",
   },
-] as const;
+];
 
 const ORDER_VIEW_PREFERENCE_KEY = "order_view_preference";
 
-export function SettingsPanel() {
+// ─── Sub-components ───────────────────────────────────────────────────────────
+
+function SectionLabel({
+  icon: Icon,
+  label,
+}: {
+  icon: typeof Paintbrush;
+  label: string;
+}) {
+  return (
+    <div className='flex items-center gap-2.5 mb-4'>
+      <div className='p-1.5 rounded-lg border border-[#D97757]/20 bg-[#D97757]/10 text-[#D97757]'>
+        <Icon className='h-3.5 w-3.5' />
+      </div>
+      <span className='text-[13px] font-semibold text-[#141413] tracking-tight'>
+        {label}
+      </span>
+    </div>
+  );
+}
+
+function RadioOptionCard({
+  value,
+  currentValue,
+  id,
+  children,
+}: {
+  value: string;
+  currentValue: string;
+  id: string;
+  children: React.ReactNode;
+}) {
+  const isSelected = currentValue === value;
+
+  return (
+    <div
+      className={cn(
+        "flex items-start gap-3 rounded-lg border p-4 transition-colors cursor-pointer",
+        isSelected
+          ? "border-[#D97757] bg-[#D97757]/[0.05]"
+          : "border-[#E8E4DC] hover:border-[#D8D3C8] hover:bg-[#F5F1EA]",
+      )}>
+      <RadioGroupItem value={value} id={id} className='mt-0.5 shrink-0' />
+      <Label htmlFor={id} className='cursor-pointer flex-1 space-y-0'>
+        {children}
+      </Label>
+    </div>
+  );
+}
+
+// ─── Inner Content ────────────────────────────────────────────────────────────
+
+function SettingsContentBody() {
   const {
     layoutType,
     theme,
     setTheme,
     createOrderLayoutType,
     setCreateOrderLayoutType,
+    sidebarWeatherStyle,
+    setSidebarWeatherStyle,
+    onekoEnabled,
+    setOnekoEnabled,
+    onekoCat,
+    setOnekoCat,
+    onekoSpeed,
+    setOnekoSpeed,
+    onekoFriend,
+    setOnekoFriend,
   } = useSettings();
+
   const location = useLocation();
   const isOrderPage = location.pathname.includes("/order");
 
@@ -109,365 +186,485 @@ export function SettingsPanel() {
   }, [orderView, isOrderPage]);
 
   return (
-    <Sheet>
-      <SheetTrigger className='p-0' asChild>
-        <Button className='h-8 p-0 md:pl-[2%] bg-sidebar w-full text-left flex justify-start items-center gap-2'>
-          <Settings className='h-6 w-6' />
-          <span className='hidden md:inline'>Settings</span>
-        </Button>
-      </SheetTrigger>
-      <SheetContent
-        side='right'
-        className='w-[400px] sm:w-[480px] p-0 flex flex-col'>
-        {/* Fixed Header */}
-        <div className='px-6 py-5 border-b bg-gradient-to-r from-slate-50 to-gray-50'>
-          <SheetHeader>
-            <SheetTitle className='flex items-center gap-2 text-xl'>
-              <div className='p-2 rounded-lg bg-gradient-to-br from-blue-500 to-purple-600 text-white'>
-                <Settings className='h-5 w-5' />
-              </div>
-              Settings
-            </SheetTitle>
-            <SheetDescription className='text-sm'>
-              Customize your dashboard experience
-            </SheetDescription>
-          </SheetHeader>
-        </div>
-
-        {/* Scrollable Content */}
-        <ScrollArea className='flex-1 px-6'>
-          <div className='py-6 space-y-6'>
-            {/* Theme Section - Only show for modern layout */}
-            {layoutType === "modern" && (
-              <>
-                <section className='hidden md:block'>
-                  <div className='flex items-center gap-2 mb-4'>
-                    <div className='p-1.5 rounded-md bg-purple-100'>
-                      <Paintbrush className='h-4 w-4 text-purple-600' />
-                    </div>
-                    <h3 className='font-semibold text-sm'>Sidebar Theme</h3>
-                  </div>
-
-                  <div className='grid grid-cols-3 gap-3'>
-                    {themeOptions.map((option) => {
-                      const IconComponent = option.icon;
-                      const isSelected = theme === option.value;
-                      return (
-                        <button
-                          key={option.value}
-                          onClick={() => setTheme(option.value as any)}
-                          className={cn(
-                            "relative flex flex-col items-center p-3 rounded-xl border-2 transition-all duration-200 hover:shadow-md hover:scale-105",
-                            isSelected
-                              ? "border-blue-500 shadow-sm"
-                              : "border-gray-200 hover:border-gray-300",
-                          )}>
-                          {isSelected && (
-                            <div className='absolute -top-1.5 -right-1.5 p-1 rounded-full bg-blue-500 shadow-sm'>
-                              <Check className='h-2.5 w-2.5 text-white' />
-                            </div>
-                          )}
-                          <div
-                            className={cn(
-                              "w-10 h-10 rounded-lg bg-gradient-to-br flex items-center justify-center mb-2 border",
-                              option.color,
-                            )}>
-                            <IconComponent
-                              className={cn("h-5 w-5", option.accent)}
-                            />
-                          </div>
-                          <span className='font-medium text-xs'>
-                            {option.label}
-                          </span>
-                        </button>
-                      );
-                    })}
-                  </div>
-                </section>
-
-                <Separator className='hidden md:block' />
-              </>
-            )}
-
-            {/* Order View Section - Keep original beautiful design */}
-            <section className='hidden md:block'>
-              <Card className='border-2 border-blue-100 bg-gradient-to-br from-blue-50/50 to-purple-50/50 shadow-sm'>
-                <CardHeader className='pb-4'>
-                  <CardTitle className='text-base flex items-center gap-2'>
-                    <div className='p-1.5 rounded-md bg-gradient-to-br from-blue-500 to-purple-500'>
-                      <Package className='h-4 w-4 text-white' />
-                    </div>
-                    Order Management View
-                  </CardTitle>
-                  <CardDescription>
-                    Choose your preferred order management interface
-                  </CardDescription>
-                </CardHeader>
-                <CardContent className='space-y-4'>
-                  <RadioGroup
-                    value={orderView}
-                    onValueChange={(value) =>
-                      setOrderView(value as "v1" | "v2")
-                    }
-                    className='space-y-3'>
-                    {/* V2 Modern View */}
-                    <div
-                      className={cn(
-                        "flex items-center space-x-3 rounded-xl border-2 p-4 transition-all duration-200",
-                        orderView === "v2"
-                          ? "border-blue-400 bg-gradient-to-r from-blue-50 to-purple-50 shadow-sm"
-                          : "border-blue-200 hover:bg-blue-50/50",
-                      )}>
-                      <RadioGroupItem value='v2' id='order-v2' />
-                      <div className='flex-1'>
-                        <Label htmlFor='order-v2' className='cursor-pointer'>
-                          <div className='flex items-center gap-2'>
-                            <Sparkles className='h-4 w-4 text-purple-600' />
-                            <span className='font-semibold'>
-                              Modern View (V2)
-                            </span>
-                            <span className='px-2 py-0.5 text-[10px] font-medium bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-full'>
-                              Recommended
-                            </span>
-                          </div>
-                          <p className='text-xs text-muted-foreground mt-2 leading-relaxed'>
-                            ✨ Beautiful modern interface with advanced features
-                          </p>
-                          <ul className='text-[11px] text-muted-foreground mt-2 space-y-1 ml-1'>
-                            <li className='flex items-center gap-1.5'>
-                              <span className='text-green-600 font-bold'>
-                                ✓
-                              </span>
-                              <span>
-                                Virtual scrolling for better performance
-                              </span>
-                            </li>
-                            <li className='flex items-center gap-1.5'>
-                              <span className='text-green-600 font-bold'>
-                                ✓
-                              </span>
-                              <span>Keyboard shortcuts (⌘K)</span>
-                            </li>
-                            <li className='flex items-center gap-1.5'>
-                              <span className='text-green-600 font-bold'>
-                                ✓
-                              </span>
-                              <span>Smooth animations & modern UI</span>
-                            </li>
-                            <li className='flex items-center gap-1.5'>
-                              <span className='text-green-600 font-bold'>
-                                ✓
-                              </span>
-                              <span>Enhanced bulk actions</span>
-                            </li>
-                          </ul>
-                        </Label>
-                      </div>
-                    </div>
-
-                    {/* V1 Classic View */}
-                    <div
-                      className={cn(
-                        "flex items-center space-x-3 rounded-xl border-2 p-4 transition-all duration-200",
-                        orderView === "v1"
-                          ? "border-gray-400 bg-gray-50 shadow-sm"
-                          : "border-gray-200 hover:bg-accent",
-                      )}>
-                      <RadioGroupItem value='v1' id='order-v1' />
-                      <div className='flex-1'>
-                        <Label htmlFor='order-v1' className='cursor-pointer'>
-                          <div className='flex items-center gap-2'>
-                            <ArrowLeft className='h-4 w-4 text-gray-600' />
-                            <span className='font-medium'>
-                              Classic View (V1)
-                            </span>
-                          </div>
-                          <p className='text-xs text-muted-foreground mt-2'>
-                            Traditional interface with all existing features
-                          </p>
-                          <ul className='text-[11px] text-muted-foreground mt-2 space-y-1 ml-1'>
-                            <li className='flex items-center gap-1.5'>
-                              <span className='text-blue-600'>•</span>
-                              <span>Familiar layout you're used to</span>
-                            </li>
-                            <li className='flex items-center gap-1.5'>
-                              <span className='text-blue-600'>•</span>
-                              <span>All V1 features available</span>
-                            </li>
-                          </ul>
-                        </Label>
-                      </div>
-                    </div>
-                  </RadioGroup>
-
-                  {/* Info message */}
-                  <div className='bg-blue-50 border border-blue-200 rounded-lg p-3 mt-3'>
-                    <p className='text-xs text-blue-800 flex items-start gap-2'>
-                      <span className='text-base'>ℹ️</span>
-                      <span>
-                        Your preference is saved and will apply when you visit
-                        the Orders page. You can switch anytime!
-                      </span>
-                    </p>
-                  </div>
-                </CardContent>
-              </Card>
-            </section>
-
-            <Separator className='hidden md:block' />
-
-            {/* Create Order Layout Section */}
-            <section className='hidden md:block'>
-              <Card className='border-2 border-green-100 bg-gradient-to-br from-green-50/50 to-emerald-50/50 shadow-sm'>
-                <CardHeader className='pb-4'>
-                  <CardTitle className='text-base flex items-center gap-2'>
-                    <div className='p-1.5 rounded-md bg-gradient-to-br from-green-500 to-emerald-500'>
-                      <ShoppingCart className='h-4 w-4 text-white' />
-                    </div>
-                    Create Order Layout
-                  </CardTitle>
-                  <CardDescription>
-                    Choose your preferred create order interface
-                  </CardDescription>
-                </CardHeader>
-                <CardContent className='space-y-4'>
-                  <RadioGroup
-                    value={createOrderLayoutType}
-                    onValueChange={(value) =>
-                      setCreateOrderLayoutType(
-                        value as "wizard" | "product-first",
-                      )
-                    }
-                    className='space-y-3'>
-                    {/* Product-First View - New Layout */}
-                    <div
-                      className={cn(
-                        "flex items-center space-x-3 rounded-xl border-2 p-4 transition-all duration-200",
-                        createOrderLayoutType === "product-first"
-                          ? "border-green-400 bg-gradient-to-r from-green-50 to-emerald-50 shadow-sm"
-                          : "border-green-200 hover:bg-green-50/50",
-                      )}>
-                      <RadioGroupItem
-                        value='product-first'
-                        id='create-order-product-first'
+    <div className='space-y-7'>
+      {/* ── Theme Colour (modern only) ── */}
+      {layoutType === "modern" && (
+        <section>
+          <SectionLabel icon={Paintbrush} label='Theme Colour' />
+          <div className='grid grid-cols-3 sm:grid-cols-6 gap-2'>
+            {themeOptions.map((option) => {
+              const isSelected = theme === option.value;
+              return (
+                <button
+                  key={option.value}
+                  onClick={() => setTheme(option.value)}
+                  className={cn(
+                    "group relative flex flex-col items-center gap-2 p-3 rounded-lg transition-colors",
+                    " focus-visible:ring-[#D97757]/40",
+                    isSelected
+                      ? "border-[#D97757] ring-1 ring-[#D97757] bg-[#D97757]/[0.04]"
+                      : "border-[#E8E4DC] hover:border-[#D8D3C8] bg-transparent",
+                  )}>
+                  {/* Swatch */}
+                  <div
+                    className={cn(
+                      "w-9 h-9 rounded-full flex items-center justify-center",
+                      option.swatch,
+                    )}>
+                    {isSelected && (
+                      <Check
+                        className={cn(
+                          "h-4 w-4",
+                          option.value === "default"
+                            ? "text-zinc-800"
+                            : "text-white",
+                        )}
                       />
-                      <div className='flex-1'>
-                        <Label
-                          htmlFor='create-order-product-first'
-                          className='cursor-pointer'>
-                          <div className='flex items-center gap-2'>
-                            <Sparkles className='h-4 w-4 text-green-600' />
-                            <span className='font-semibold'>
-                              Product-First View
-                            </span>
-                            <span className='px-2 py-0.5 text-[10px] font-medium bg-gradient-to-r from-green-600 to-emerald-600 text-white rounded-full'>
-                              New
-                            </span>
-                          </div>
-                          <p className='text-xs text-muted-foreground mt-2 leading-relaxed'>
-                            ✨ Modern single-screen layout for faster order
-                            creation
-                          </p>
-                          <ul className='text-[11px] text-muted-foreground mt-2 space-y-1 ml-1'>
-                            <li className='flex items-center gap-1.5'>
-                              <span className='text-green-600 font-bold'>
-                                ✓
-                              </span>
-                              <span>Side-by-side product & cart view</span>
-                            </li>
-                            <li className='flex items-center gap-1.5'>
-                              <span className='text-green-600 font-bold'>
-                                ✓
-                              </span>
-                              <span>Grid-based product display</span>
-                            </li>
-                            <li className='flex items-center gap-1.5'>
-                              <span className='text-green-600 font-bold'>
-                                ✓
-                              </span>
-                              <span>No step navigation needed</span>
-                            </li>
-                            <li className='flex items-center gap-1.5'>
-                              <span className='text-green-600 font-bold'>
-                                ✓
-                              </span>
-                              <span>Mobile-friendly cart drawer</span>
-                            </li>
-                          </ul>
-                        </Label>
-                      </div>
-                    </div>
-
-                    {/* Step Wizard View - Classic Layout */}
-                    <div
-                      className={cn(
-                        "flex items-center space-x-3 rounded-xl border-2 p-4 transition-all duration-200",
-                        createOrderLayoutType === "wizard"
-                          ? "border-gray-400 bg-gray-50 shadow-sm"
-                          : "border-gray-200 hover:bg-accent",
-                      )}>
-                      <RadioGroupItem value='wizard' id='create-order-wizard' />
-                      <div className='flex-1'>
-                        <Label
-                          htmlFor='create-order-wizard'
-                          className='cursor-pointer'>
-                          <div className='flex items-center gap-2'>
-                            <Layers className='h-4 w-4 text-gray-600' />
-                            <span className='font-medium'>
-                              Step-by-Step Wizard
-                            </span>
-                          </div>
-                          <p className='text-xs text-muted-foreground mt-2'>
-                            Classic multi-step wizard for guided order creation
-                          </p>
-                          <ul className='text-[11px] text-muted-foreground mt-2 space-y-1 ml-1'>
-                            <li className='flex items-center gap-1.5'>
-                              <span className='text-blue-600'>•</span>
-                              <span>Products → Customer → Review</span>
-                            </li>
-                            <li className='flex items-center gap-1.5'>
-                              <span className='text-blue-600'>•</span>
-                              <span>Familiar guided workflow</span>
-                            </li>
-                            <li className='flex items-center gap-1.5'>
-                              <span className='text-blue-600'>•</span>
-                              <span>Best for complex orders</span>
-                            </li>
-                          </ul>
-                        </Label>
-                      </div>
-                    </div>
-                  </RadioGroup>
-
-                  {/* Info message */}
-                  <div className='bg-green-50 border border-green-200 rounded-lg p-3 mt-3'>
-                    <p className='text-xs text-green-800 flex items-start gap-2'>
-                      <span className='text-base'>💡</span>
-                      <span>
-                        Your preference is saved and will apply when you create
-                        new orders. Switch anytime!
-                      </span>
-                    </p>
+                    )}
                   </div>
-                </CardContent>
-              </Card>
-            </section>
+                  <span
+                    className={cn(
+                      "text-[11px] font-medium transition-colors",
+                      isSelected
+                        ? "text-[#141413]"
+                        : "text-[#57554D] group-hover:text-[#141413]",
+                    )}>
+                    {option.label}
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+          <p className='text-[11px] text-[#8A877D] mt-2.5 ml-0.5'>
+            Accent colour for buttons and dashboard charts. The sidebar always
+            shows the weather background with no colour overlay.
+          </p>
+        </section>
+      )}
 
-            {/* Bottom padding for scroll */}
-            <div className='h-4' />
+      {/* Divider */}
+      {layoutType === "modern" && (
+        <div className='border-t border-dashed border-border/70' />
+      )}
+
+      {/* ── Sidebar Weather Background (modern only) ── */}
+      {layoutType === "modern" && (
+        <section>
+          <SectionLabel icon={CloudSun} label='Sidebar Weather Background' />
+          <RadioGroup
+            value={sidebarWeatherStyle}
+            onValueChange={(v) =>
+              setSidebarWeatherStyle(v as "image" | "animated")
+            }
+            className='grid grid-cols-2 gap-4'>
+            {/* Image theme */}
+            <RadioOptionCard
+              value='image'
+              currentValue={sidebarWeatherStyle}
+              id='weather-image'>
+              <div className='flex items-center gap-2 mb-1'>
+                <ImageIcon className='h-3.5 w-3.5 text-[#B85A3D] shrink-0' />
+                <span className='font-medium text-sm text-[#141413]'>
+                  Image Theme
+                </span>
+              </div>
+              <p className='text-[11px] text-[#8A877D] leading-relaxed'>
+                Weather and time-of-day background photos in the sidebar and
+                header
+              </p>
+            </RadioOptionCard>
+
+            {/* Animated scene — default */}
+            <RadioOptionCard
+              value='animated'
+              currentValue={sidebarWeatherStyle}
+              id='weather-animated'>
+              <div className='flex items-center gap-2 mb-1'>
+                <CloudSun className='h-3.5 w-3.5 text-[#57554D] shrink-0' />
+                <span className='font-semibold text-sm text-[#141413]'>
+                  Animated Scene
+                </span>
+                <span className='ml-auto px-2 py-0.5 text-[9px] font-semibold uppercase tracking-wider bg-[#B85A3D] text-white rounded-full'>
+                  Default
+                </span>
+              </div>
+              <p className='text-[11px] text-[#8A877D] leading-relaxed'>
+                Live CSS weather animation · Sky, sun/moon, clouds, rain and
+                lightning in the sidebar and header
+              </p>
+            </RadioOptionCard>
+          </RadioGroup>
+        </section>
+      )}
+
+      {/* Divider */}
+      {layoutType === "modern" && (
+        <div className='border-t border-dashed border-border/70' />
+      )}
+
+      {/* ── Order Management View ── */}
+      <section>
+        <SectionLabel icon={Package} label='Order Management View' />
+        <RadioGroup
+          value={orderView}
+          onValueChange={(v) => setOrderView(v as "v1" | "v2")}
+          className='grid grid-cols-2 gap-4'>
+          {/* V2 — Modern */}
+          <RadioOptionCard value='v2' currentValue={orderView} id='order-v2'>
+            <div className='flex items-center gap-2 mb-1'>
+              <Sparkles className='h-3.5 w-3.5 text-[#B85A3D] shrink-0' />
+              <span className='font-semibold text-sm text-[#141413]'>
+                Modern View
+              </span>
+              <span className='ml-auto px-2 py-0.5 text-[9px] font-semibold uppercase tracking-wider bg-[#B85A3D] text-white rounded-full'>
+                Recommended
+              </span>
+            </div>
+            <p className='text-[11px] text-[#8A877D] leading-relaxed'>
+              Virtual scrolling · Keyboard shortcuts · Smooth animations ·
+              Enhanced bulk actions
+            </p>
+          </RadioOptionCard>
+
+          {/* V1 — Classic */}
+          <RadioOptionCard value='v1' currentValue={orderView} id='order-v1'>
+            <div className='flex items-center gap-2 mb-1'>
+              <ArrowLeft className='h-3.5 w-3.5 text-[#57554D] shrink-0' />
+              <span className='font-medium text-sm text-[#141413]'>
+                Classic View
+              </span>
+            </div>
+            <p className='text-[11px] text-[#8A877D] leading-relaxed'>
+              Familiar layout · All V1 features available
+            </p>
+          </RadioOptionCard>
+        </RadioGroup>
+      </section>
+
+      {/* Divider */}
+      <div className='border-t border-dashed border-border/70' />
+
+      {/* ── Create Order Layout ── */}
+      <section>
+        <SectionLabel icon={ShoppingCart} label='Create Order Layout' />
+        <RadioGroup
+          value={createOrderLayoutType}
+          onValueChange={(v) =>
+            setCreateOrderLayoutType(v as "wizard" | "product-first")
+          }
+          className='grid grid-cols-2 gap-4'>
+          {/* Product-First */}
+          <RadioOptionCard
+            value='product-first'
+            currentValue={createOrderLayoutType}
+            id='create-product-first'>
+            <div className='flex items-center gap-2 mb-1'>
+              <Sparkles className='h-3.5 w-3.5 text-[#B85A3D] shrink-0' />
+              <span className='font-semibold text-sm text-[#141413]'>
+                Product-First
+              </span>
+              <span className='ml-auto px-2 py-0.5 text-[9px] font-semibold uppercase tracking-wider bg-[#B85A3D] text-white rounded-full'>
+                New
+              </span>
+            </div>
+            <p className='text-[11px] text-[#8A877D] leading-relaxed'>
+              Side-by-side view · Grid products · No step navigation ·
+              Mobile-friendly cart
+            </p>
+          </RadioOptionCard>
+
+          {/* Wizard */}
+          <RadioOptionCard
+            value='wizard'
+            currentValue={createOrderLayoutType}
+            id='create-wizard'>
+            <div className='flex items-center gap-2 mb-1'>
+              <Layers className='h-3.5 w-3.5 text-[#57554D] shrink-0' />
+              <span className='font-medium text-sm text-[#141413]'>
+                Step-by-Step Wizard
+              </span>
+            </div>
+            <p className='text-[11px] text-[#8A877D] leading-relaxed'>
+              Products → Customer → Review · Guided workflow · Best for complex
+              orders
+            </p>
+          </RadioOptionCard>
+        </RadioGroup>
+      </section>
+
+      {/* Divider */}
+      <div className='border-t border-dashed border-border/70' />
+
+      {/* ── Oneko Cat (easter egg) ── */}
+      <section>
+        <SectionLabel icon={Cat} label='Oneko Cat' />
+        <RadioGroup
+          value={onekoEnabled ? "on" : "off"}
+          onValueChange={(v) => setOnekoEnabled(v === "on")}
+          className='grid grid-cols-2 gap-4'>
+          {/* Enabled */}
+          <RadioOptionCard
+            value='on'
+            currentValue={onekoEnabled ? "on" : "off"}
+            id='oneko-on'>
+            <div className='flex items-center gap-2 mb-1'>
+              <Cat className='h-3.5 w-3.5 text-[#B85A3D] shrink-0' />
+              <span className='font-semibold text-sm text-[#141413]'>
+                Enabled
+              </span>
+            </div>
+            <p className='text-[11px] text-[#8A877D] leading-relaxed'>
+              A little cat chases your cursor around the screen · sleeps and
+              scratches walls when you stop moving
+            </p>
+          </RadioOptionCard>
+
+          {/* Disabled */}
+          <RadioOptionCard
+            value='off'
+            currentValue={onekoEnabled ? "on" : "off"}
+            id='oneko-off'>
+            <div className='flex items-center gap-2 mb-1'>
+              <Monitor className='h-3.5 w-3.5 text-[#57554D] shrink-0' />
+              <span className='font-medium text-sm text-[#141413]'>
+                Disabled
+              </span>
+            </div>
+            <p className='text-[11px] text-[#8A877D] leading-relaxed'>
+              Keep the cat off the screen
+            </p>
+          </RadioOptionCard>
+        </RadioGroup>
+
+        {onekoEnabled && (
+          <>
+            {/* ── Which critter ── */}
+            <div className='mt-5'>
+              <span className='text-[12px] font-medium text-[#57554D] mb-2 block'>
+                Pick your critter
+              </span>
+              <div className='grid grid-cols-5 sm:grid-cols-10 gap-2'>
+                {ONEKO_CRITTERS.map((option) => {
+                  const isSelected = onekoCat === option.value;
+                  return (
+                    <button
+                      key={option.value}
+                      onClick={() => setOnekoCat(option.value)}
+                      className={cn(
+                        "group relative flex flex-col items-center gap-1.5 p-2.5 rounded-lg transition-colors",
+                        isSelected
+                          ? "border-[#D97757] ring-1 ring-[#D97757] bg-[#D97757]/[0.04]"
+                          : "border-[#E8E4DC] hover:border-[#D8D3C8] bg-transparent",
+                      )}>
+                      {/* Pixel critter preview (idle sitting frame) */}
+                      <span
+                        aria-hidden='true'
+                        className='block h-7 w-7'
+                        style={{
+                          backgroundImage: `url(${option.sprite})`,
+                          backgroundSize: "224px 112px",
+                          backgroundPosition: "-84px -84px",
+                          imageRendering: "pixelated",
+                          filter: option.filter ?? "none",
+                        }}
+                      />
+                      <span
+                        className={cn(
+                          "text-[10px] font-medium transition-colors",
+                          isSelected
+                            ? "text-[#141413]"
+                            : "text-[#57554D] group-hover:text-[#141413]",
+                        )}>
+                        {option.label}
+                      </span>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* ── Speed ── */}
+            <div className='mt-5'>
+              <span className='text-[12px] font-medium text-[#57554D] mb-2 block'>
+                Speed
+              </span>
+              <RadioGroup
+                value={onekoSpeed}
+                onValueChange={setOnekoSpeed}
+                className='grid grid-cols-3 gap-4'>
+                {ONEKO_SPEEDS.map((option) => (
+                  <RadioOptionCard
+                    key={option.value}
+                    value={option.value}
+                    currentValue={onekoSpeed}
+                    id={`oneko-speed-${option.value}`}>
+                    <div className='flex items-center gap-2 mb-1'>
+                      <Gauge className='h-3.5 w-3.5 text-[#B85A3D] shrink-0' />
+                      <span className='font-semibold text-sm text-[#141413]'>
+                        {option.label}
+                      </span>
+                    </div>
+                    <p className='text-[11px] text-[#8A877D] leading-relaxed'>
+                      {option.description}
+                    </p>
+                  </RadioOptionCard>
+                ))}
+              </RadioGroup>
+            </div>
+
+            {/* ── Bring a friend ── */}
+            <div className='mt-5'>
+              <span className='text-[12px] font-medium text-[#57554D] mb-2 block'>
+                Company
+              </span>
+              <RadioGroup
+                value={onekoFriend ? "on" : "off"}
+                onValueChange={(v) => setOnekoFriend(v === "on")}
+                className='grid grid-cols-2 gap-4'>
+                <RadioOptionCard
+                  value='on'
+                  currentValue={onekoFriend ? "on" : "off"}
+                  id='oneko-friend-on'>
+                  <div className='flex items-center gap-2 mb-1'>
+                    <Heart className='h-3.5 w-3.5 text-[#B85A3D] shrink-0' />
+                    <span className='font-semibold text-sm text-[#141413]'>
+                      Bring a friend
+                    </span>
+                  </div>
+                  <p className='text-[11px] text-[#8A877D] leading-relaxed'>
+                    A second critter joins the chase from the other side of the
+                    screen
+                  </p>
+                </RadioOptionCard>
+
+                <RadioOptionCard
+                  value='off'
+                  currentValue={onekoFriend ? "on" : "off"}
+                  id='oneko-friend-off'>
+                  <div className='flex items-center gap-2 mb-1'>
+                    <Monitor className='h-3.5 w-3.5 text-[#57554D] shrink-0' />
+                    <span className='font-medium text-sm text-[#141413]'>
+                      Solo
+                    </span>
+                  </div>
+                  <p className='text-[11px] text-[#8A877D] leading-relaxed'>
+                    Just your critter chasing alone
+                  </p>
+                </RadioOptionCard>
+              </RadioGroup>
+            </div>
+          </>
+        )}
+      </section>
+    </div>
+  );
+}
+
+// ─── Main Component ───────────────────────────────────────────────────────────
+
+interface SettingsPanelProps {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+}
+
+export function SettingsPanel({ open, onOpenChange }: SettingsPanelProps) {
+  const isMobile = useIsMobile();
+
+  // On Mobile: Render bottom drawer
+  if (isMobile) {
+    return (
+      <Drawer open={open} onOpenChange={onOpenChange}>
+        <DrawerContent className='max-h-[85vh] p-0 flex flex-col rounded-t-2xl bg-[#FAF9F6] text-[#141413]'>
+          {/* Drawer Drag handle */}
+          <div className='mx-auto mt-2 h-1.5 w-12 rounded-full bg-[#D8D3C8]' />
+
+          <DrawerHeader className='px-5 pt-3 pb-3 border-b border-[#E8E4DC] text-left'>
+            <div className='flex items-center gap-2.5'>
+              <div className='p-2 rounded-lg border border-[#D97757]/20 bg-[#D97757]/10 text-[#D97757]'>
+                <Settings className='h-4 w-4' />
+              </div>
+              <div>
+                <DrawerTitle className='text-base font-semibold tracking-tight text-[#141413]'>
+                  Preferences
+                </DrawerTitle>
+                <DrawerDescription className='text-xs text-[#8A877D]'>
+                  Customize your dashboard experience
+                </DrawerDescription>
+              </div>
+            </div>
+          </DrawerHeader>
+
+          {/* Scrollable content body */}
+          <div className='flex-1 overflow-y-auto px-5 py-4'>
+            <SettingsContentBody />
+          </div>
+
+          <DrawerFooter className='px-5 py-3 border-t border-[#E8E4DC] bg-[#FAF9F6] flex flex-row items-center justify-between gap-2'>
+            <div className='flex items-center gap-1.5'>
+              <Monitor className='h-3.5 w-3.5 text-[#8A877D]' />
+              <span className='text-xs text-[#8A877D]'>
+                Changes saved automatically
+              </span>
+            </div>
+            <DrawerClose asChild>
+              <Button
+                size='sm'
+                className='h-8 px-4 text-xs rounded-md bg-[#B85A3D] hover:bg-[#A34E34] text-white'>
+                Done
+              </Button>
+            </DrawerClose>
+          </DrawerFooter>
+        </DrawerContent>
+      </Drawer>
+    );
+  }
+
+  // On Desktop: Render standard centered dialog modal
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className='max-w-2xl p-0 gap-0 overflow-hidden rounded-xl bg-[#FAF9F6] text-[#141413] border border-[#E8E4DC] shadow-lg'>
+        {/* ── Header ── */}
+        <DialogHeader className='px-6 pt-6 pb-5 border-b border-[#E8E4DC] bg-[#FAF9F6]'>
+          <div className='flex items-center gap-3'>
+            <div className='p-2.5 rounded-lg border border-[#D97757]/20 bg-[#D97757]/10 text-[#D97757]'>
+              <Settings className='h-5 w-5' />
+            </div>
+            <div>
+              <DialogTitle className='text-lg font-semibold tracking-tight text-[#141413]'>
+                Preferences
+              </DialogTitle>
+              <DialogDescription className='text-xs text-[#8A877D] mt-0.5'>
+                Customize your dashboard experience
+              </DialogDescription>
+            </div>
+          </div>
+        </DialogHeader>
+
+        {/* ── Scrollable Body ── */}
+        <ScrollArea className='max-h-[70vh]'>
+          <div className='px-6 py-5'>
+            <SettingsContentBody />
           </div>
         </ScrollArea>
 
-        {/* Fixed Footer */}
-        <div className='px-6 py-4 border-t bg-gray-50/80 backdrop-blur-sm'>
-          <p className='text-xs text-center text-muted-foreground'>
-            Changes are saved automatically
-            <SheetClose className='ml-2'>
-              <Badge variant={"destructive"}> Close </Badge>
-            </SheetClose>
-          </p>
+        {/* ── Footer ── */}
+        <div className='px-6 py-4 border-t border-[#E8E4DC] bg-[#FAF9F6] flex items-center justify-between gap-3'>
+          <div className='flex items-center gap-1.5'>
+            <Monitor className='h-3.5 w-3.5 text-[#8A877D]' />
+            <span className='text-xs text-[#8A877D]'>
+              Changes are saved automatically
+            </span>
+          </div>
+          <Button
+            size='sm'
+            className={cn(
+              "h-8 text-xs rounded-md bg-[#B85A3D] hover:bg-[#A34E34] text-white",
+            )}
+            onClick={() => onOpenChange(false)}>
+            Done
+          </Button>
         </div>
-      </SheetContent>
-    </Sheet>
+      </DialogContent>
+    </Dialog>
   );
 }

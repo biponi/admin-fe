@@ -118,7 +118,7 @@ const SelectProductForCampaign: React.FC<Props> = ({
         </div>
 
         {/* Product list */}
-        <div className='flex-1 overflow-y-auto max-h-[420px] divide-y divide-gray-100'>
+        <div className='flex-1 overflow-y-auto overscroll-contain max-h-[60vh] md:max-h-[420px] divide-y divide-gray-100'>
           {availableProducts.length === 0 ? (
             <div className='flex flex-col items-center justify-center h-48 gap-2 text-gray-400'>
               <PackageX className='w-8 h-8 opacity-40' />
@@ -237,7 +237,7 @@ const SelectProductForCampaign: React.FC<Props> = ({
         </div>
 
         {/* Selected list */}
-        <div className='flex-1 overflow-y-auto max-h-[420px] divide-y divide-gray-100 bg-white'>
+        <div className='flex-1 overflow-y-auto overscroll-contain max-h-[60vh] md:max-h-[420px] divide-y divide-gray-100 bg-white'>
           {selectedProducts.length === 0 ? (
             <div className='flex flex-col items-center justify-center h-48 gap-2'>
               <div className='w-12 h-12 rounded-full bg-gray-50 border-2 border-dashed border-gray-200 flex items-center justify-center'>
@@ -281,7 +281,7 @@ const SelectProductForCampaign: React.FC<Props> = ({
                   </span>
                   <button
                     onClick={() => handleRemove(product.id)}
-                    className='opacity-0 group-hover:opacity-100 flex items-center gap-1 text-[11px]
+                    className='opacity-100 md:opacity-0 md:group-hover:opacity-100 flex items-center gap-1 text-[11px]
                                font-medium text-red-400 hover:text-red-600 transition-all'>
                     <Trash2 className='w-3 h-3' />
                     Remove

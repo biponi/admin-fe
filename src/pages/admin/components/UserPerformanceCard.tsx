@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useMemo } from "react";
+import React, { useEffect, useState } from "react";
 import { useAdminAudit } from "../../../hooks/useAdminAudit";
 import {
   UserPerformanceSummary,
@@ -12,23 +12,12 @@ import {
   SelectValue,
 } from "../../../components/ui/select";
 import { Badge } from "../../../components/ui/badge";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "../../../components/ui/tooltip";
-import {
-  Package,
-  ShoppingCart,
-  User,
-  TrendingUp,
-  Activity,
-  Loader2,
-} from "lucide-react";
+import { Package, ShoppingCart, User, TrendingUp, Activity, Loader2 } from "lucide-react";
 import dayjs from "dayjs";
 import relativeTime from "dayjs/plugin/relativeTime";
 import { UserPerformanceSheet } from "./UserPerformanceSheet";
+import { ActivityPillGrid } from "./ActivityPillGrid";
+import { claude } from "../../../lib/claude";
 
 dayjs.extend(relativeTime);
 
@@ -36,160 +25,6 @@ interface UserPerformanceCardProps {
   startDate: string;
   endDate: string;
 }
-
-const MiniHeatmap: React.FC<{
-  activityTrend: {
-    date: string;
-    orderActions: number;
-    productAdjustments: number;
-  }[];
-}> = ({ activityTrend }) => {
-  const heatmapData = useMemo(() => {
-    const data: Record<string, number> = {};
-    activityTrend.forEach((t) => {
-      data[t.date] = t.orderActions + t.productAdjustments;
-    });
-    return data;
-  }, [activityTrend]);
-
-  const totalDays = 90;
-  const today = dayjs();
-  const start = today.subtract(totalDays - 1, "day");
-
-  const weeks: { date: dayjs.Dayjs; count: number; dayOfWeek: number }[][] = [];
-  let currentWeek: { date: dayjs.Dayjs; count: number; dayOfWeek: number }[] =
-    [];
-
-  for (let i = 0; i < totalDays; i++) {
-    const date = start.add(i, "day");
-    const dateStr = date.format("YYYY-MM-DD");
-    const count = heatmapData[dateStr] || 0;
-    const dayOfWeek = date.day();
-
-    if (i > 0 && dayOfWeek === 0) {
-      weeks.push(currentWeek);
-      currentWeek = [];
-    }
-    currentWeek.push({ date, count, dayOfWeek });
-  }
-  if (currentWeek.length > 0) {
-    weeks.push(currentWeek);
-  }
-
-  const getColor = (count: number) => {
-    if (count === 0) return "bg-slate-100";
-    if (count <= 2) return "bg-emerald-200";
-    if (count <= 5) return "bg-emerald-400";
-    if (count <= 10) return "bg-emerald-600";
-    return "bg-emerald-800";
-  };
-
-  // Calculate month labels (show ~2-3 labels evenly spaced)
-  const monthLabels: { label: string; weekIndex: number }[] = [];
-  const labelInterval = Math.max(1, Math.floor(weeks.length / 3));
-
-  weeks.forEach((week, weekIndex) => {
-    if (
-      weekIndex === 0 ||
-      weekIndex === weeks.length - 1 ||
-      weekIndex % labelInterval === 0
-    ) {
-      const firstDay = week[0];
-      if (firstDay) {
-        const monthLabel = firstDay.date.format("MMM");
-        const lastLabel = monthLabels[monthLabels.length - 1];
-        if (!lastLabel || lastLabel.label !== monthLabel) {
-          monthLabels.push({ label: monthLabel, weekIndex });
-        }
-      }
-    }
-  });
-
-  const dayLabels = ["Mon", "", "Wed", "", "Fri", "", ""];
-
-  return (
-    <div className='space-y-3'>
-      <p className='text-xs font-medium text-slate-600'>
-        Activity (Last 90 days)
-      </p>
-
-      {/* Month labels row */}
-      <div className='flex gap-0.5 ml-6 md:ml-8'>
-        {weeks.map((week, weekIndex) => {
-          const monthLabel = monthLabels.find((m) => m.weekIndex === weekIndex);
-          return (
-            <div
-              key={weekIndex}
-              className='flex-1 text-[9px] md:text-[10px] text-slate-500 font-medium'>
-              {monthLabel?.label || ""}
-            </div>
-          );
-        })}
-      </div>
-
-      {/* Heatmap grid with day labels */}
-      <div className='flex gap-0.5'>
-        {/* Day-of-week labels */}
-        <div className='flex flex-col gap-0.5 md:gap-1 mr-0.5 md:mr-1'>
-          {dayLabels.map((label, index) => (
-            <div
-              key={index}
-              className='flex items-center justify-end text-[9px] md:text-[10px] text-slate-500 font-medium pr-0.5 md:pr-1 h-3 md:h-5'>
-              {label}
-            </div>
-          ))}
-        </div>
-
-        {/* Heatmap cells */}
-        <TooltipProvider>
-          <div className='flex gap-0.5 flex-1'>
-            {weeks.map((week, wi) => (
-              <div key={wi} className='flex flex-col gap-0.5 md:gap-3 flex-1'>
-                {week.map((day, di) => (
-                  <Tooltip key={di}>
-                    <TooltipTrigger asChild>
-                      <div
-                        className={`w-full h-3 md:h-5  rounded-full ${getColor(day.count)} hover:ring-1 hover:ring-slate-400 transition-all cursor-default`}
-                      />
-                    </TooltipTrigger>
-                    <TooltipContent side='top'>
-                      <div className='text-xs'>
-                        <p className='font-semibold'>
-                          {day.date.format("MMM DD, YYYY")}
-                        </p>
-                        <p className='text-slate-300'>{day.count} activities</p>
-                        {day.count > 0 && (
-                          <p className='text-[10px] text-slate-400 mt-1'>
-                            {day.count === 1
-                              ? "1 action"
-                              : `${day.count} actions`}
-                          </p>
-                        )}
-                      </div>
-                    </TooltipContent>
-                  </Tooltip>
-                ))}
-              </div>
-            ))}
-          </div>
-        </TooltipProvider>
-      </div>
-
-      {/* Legend */}
-      <div className='flex items-center gap-2 text-[10px] text-slate-500'>
-        <span>Less</span>
-        <div className='flex gap-0.5'>
-          <div className='w-3 h-3 rounded-sm bg-slate-100' />
-          <div className='w-3 h-3 rounded-sm bg-emerald-200' />
-          <div className='w-3 h-3 rounded-sm bg-emerald-400' />
-          <div className='w-3 h-3 rounded-sm bg-emerald-600' />
-          <div className='w-3 h-3 rounded-sm bg-emerald-800' />
-        </div>
-        <span>More</span>
-      </div>
-    </div>
-  );
-};
 
 export const UserPerformanceCard: React.FC<UserPerformanceCardProps> = ({
   startDate,
@@ -267,17 +102,14 @@ export const UserPerformanceCard: React.FC<UserPerformanceCardProps> = ({
 
   if (isLoading && users.length === 0) {
     return (
-      <div className='bg-white rounded-xl border border-slate-100 shadow-sm p-8'>
+      <div className={claude.card + " p-8"}>
         <div className='flex flex-col items-center gap-4'>
-          <div className='relative'>
-            <div className='w-16 h-16 border-4 border-slate-200 rounded-full'></div>
-            <div className='absolute top-0 left-0 w-16 h-16 border-4 border-indigo-600 rounded-full border-t-transparent animate-spin'></div>
-          </div>
+          <div className={claude.spinner + " h-10 w-10"} />
           <div className='text-center'>
-            <h3 className='text-lg font-semibold text-slate-900'>
+            <h3 className='text-lg font-semibold text-[#141413]'>
               Loading User Performance
             </h3>
-            <p className='text-sm text-slate-500 mt-1'>
+            <p className='text-[13px] text-[#8A877D] mt-1'>
               Please wait while we gather the data...
             </p>
           </div>
@@ -296,19 +128,24 @@ export const UserPerformanceCard: React.FC<UserPerformanceCardProps> = ({
 
   if (users.length === 0) {
     return (
-      <div className='bg-white rounded-xl border border-slate-100 shadow-sm overflow-hidden'>
-        <div className='p-5 border-b border-slate-100'>
-          <h3 className='text-lg font-semibold text-slate-900'>
-            User Performance Overview
-          </h3>
-          <p className='text-sm text-slate-500 mt-1'>
-            Select a user to view their performance metrics
-          </p>
+      <div className={claude.card + " overflow-hidden"}>
+        <div className={`flex items-center gap-2.5 px-4 py-3 ${claude.cardHeader}`}>
+          <span className='flex h-6 w-6 shrink-0 items-center justify-center rounded-md border border-[#D97757]/20 bg-[#D97757]/10 text-[#D97757]'>
+            <User className='h-3.5 w-3.5' />
+          </span>
+          <div>
+            <h3 className='text-[13px] font-semibold text-[#141413] leading-tight'>
+              User Performance Overview
+            </h3>
+            <p className='text-[11px] text-[#8A877D] mt-0.5'>
+              Select a user to view their performance metrics
+            </p>
+          </div>
         </div>
         <div className='p-5'>
-          <div className='bg-slate-50 border border-slate-200 rounded-lg p-4 text-center'>
-            <User className='w-12 h-12 mx-auto mb-3 text-slate-300' />
-            <p className='text-sm text-slate-600'>
+          <div className={claude.panel + " p-4 text-center"}>
+            <User className='w-12 h-12 mx-auto mb-3 text-[#D8D3C8]' />
+            <p className='text-[13px] text-[#57554D]'>
               No users found in the selected date range
             </p>
           </div>
@@ -319,38 +156,43 @@ export const UserPerformanceCard: React.FC<UserPerformanceCardProps> = ({
 
   return (
     <>
-      <div className='bg-white rounded-xl border border-slate-100 shadow-sm overflow-hidden'>
-        <div className='p-5 border-b border-slate-100'>
-          <h3 className='text-lg font-semibold text-slate-900'>
-            User Performance Overview
-          </h3>
-          <p className='text-sm text-slate-500 mt-1'>
-            Select a user to view their performance metrics
-          </p>
+      <div className={claude.card + " overflow-hidden"}>
+        <div className={`flex items-center gap-2.5 px-4 py-3 ${claude.cardHeader}`}>
+          <span className='flex h-6 w-6 shrink-0 items-center justify-center rounded-md border border-[#D97757]/20 bg-[#D97757]/10 text-[#D97757]'>
+            <User className='h-3.5 w-3.5' />
+          </span>
+          <div>
+            <h3 className='text-[13px] font-semibold text-[#141413] leading-tight'>
+              User Performance Overview
+            </h3>
+            <p className='text-[11px] text-[#8A877D] mt-0.5'>
+              Select a user to view their performance metrics
+            </p>
+          </div>
         </div>
         <div className='p-5 space-y-6'>
           {/* User Selection Dropdown */}
           <div className='flex items-center gap-4'>
-            <label className='text-sm font-medium text-slate-700 min-w-fit'>
-              Select User:
+            <label className={claude.microLabel + " min-w-fit"}>
+              Select User
             </label>
             <Select value={selectedUserId} onValueChange={handleUserChange}>
-              <SelectTrigger className='w-full max-w-md'>
+              <SelectTrigger className='w-full max-w-md rounded-md'>
                 <SelectValue placeholder='Select a user' />
               </SelectTrigger>
               <SelectContent>
                 {users.map((user) => (
                   <SelectItem key={user.userId} value={user.userId}>
                     <div className='flex items-center gap-2'>
-                      <span className='font-medium text-slate-900'>
+                      <span className='font-medium text-foreground'>
                         {user.userName}
                       </span>
-                      <span className='text-xs text-slate-500'>
+                      <span className='text-[11px] text-[#8A877D]'>
                         ({user.userEmail})
                       </span>
                       <Badge
                         variant='outline'
-                        className='ml-2 bg-slate-50 border-slate-200'>
+                        className='ml-2 rounded-md bg-[#FAF9F6] border-[#E8E4DC] text-[#57554D]'>
                         {user.userType}
                       </Badge>
                     </div>
@@ -366,51 +208,51 @@ export const UserPerformanceCard: React.FC<UserPerformanceCardProps> = ({
               {/* Stats Grid */}
               <div className='grid grid-cols-2 sm:grid-cols-4 gap-3'>
                 {/* Total Actions */}
-                <div className='bg-white rounded-xl border border-slate-100 p-4 shadow-sm'>
+                <div className={claude.card + " p-4"}>
                   <div className='flex items-center justify-between mb-2'>
-                    <p className='text-xs text-slate-500'>Total Actions</p>
-                    <div className='flex items-center justify-center w-8 h-8 rounded-lg bg-indigo-50'>
-                      <Activity className='h-4 w-4 text-indigo-600' />
+                    <p className={claude.microLabel}>Total Actions</p>
+                    <div className={claude.iconTile}>
+                      <Activity className='h-4 w-4' />
                     </div>
                   </div>
-                  <p className='text-lg font-semibold text-slate-900'>
+                  <p className='text-lg font-semibold text-[#141413] tabular-nums'>
                     {(
                       selectedUser.orderOperations.total +
                       selectedUser.productAdjustments.total
                     ).toLocaleString()}
                   </p>
-                  <p className='text-xs text-slate-500 mt-1'>
+                  <p className='text-xs text-[#57554D] mt-1'>
                     Combined activities
                   </p>
                 </div>
 
                 {/* Order Operations */}
-                <div className='bg-white rounded-xl border border-slate-100 p-4 shadow-sm'>
+                <div className={claude.card + " p-4"}>
                   <div className='flex items-center justify-between mb-2'>
-                    <p className='text-xs text-slate-500'>Order Operations</p>
-                    <div className='flex items-center justify-center w-8 h-8 rounded-lg bg-indigo-50'>
-                      <ShoppingCart className='h-4 w-4 text-indigo-600' />
+                    <p className={claude.microLabel}>Order Operations</p>
+                    <div className={claude.iconTile}>
+                      <ShoppingCart className='h-4 w-4' />
                     </div>
                   </div>
-                  <p className='text-lg font-semibold text-slate-900'>
+                  <p className='text-lg font-semibold text-[#141413] tabular-nums'>
                     {selectedUser.orderOperations.total.toLocaleString()}
                   </p>
-                  <div className='text-xs text-slate-500 mt-1 space-y-0.5'>
+                  <div className='text-[11px] text-[#8A877D] mt-1 space-y-0.5'>
                     <div className='flex justify-between'>
                       <span>Creates:</span>
-                      <span className='font-medium text-emerald-600'>
+                      <span className='font-medium text-[#B85A3D]'>
                         {selectedUser.orderOperations.creates}
                       </span>
                     </div>
                     <div className='flex justify-between'>
                       <span>Status:</span>
-                      <span className='font-medium text-slate-700'>
+                      <span className='font-medium text-[#57554D]'>
                         {selectedUser.orderOperations.statusUpdates}
                       </span>
                     </div>
                     <div className='flex justify-between'>
                       <span>Payments:</span>
-                      <span className='font-medium text-slate-700'>
+                      <span className='font-medium text-[#57554D]'>
                         {selectedUser.orderOperations.paymentUpdates}
                       </span>
                     </div>
@@ -418,17 +260,17 @@ export const UserPerformanceCard: React.FC<UserPerformanceCardProps> = ({
                 </div>
 
                 {/* Product Adjustments */}
-                <div className='bg-white rounded-xl border border-slate-100 p-4 shadow-sm'>
+                <div className={claude.card + " p-4"}>
                   <div className='flex items-center justify-between mb-2'>
-                    <p className='text-xs text-slate-500'>Stock Adjustments</p>
-                    <div className='flex items-center justify-center w-8 h-8 rounded-lg bg-indigo-50'>
-                      <Package className='h-4 w-4 text-indigo-600' />
+                    <p className={claude.microLabel}>Stock Adjustments</p>
+                    <div className={claude.iconTile}>
+                      <Package className='h-4 w-4' />
                     </div>
                   </div>
-                  <p className='text-lg font-semibold text-slate-900'>
+                  <p className='text-lg font-semibold text-[#141413] tabular-nums'>
                     {selectedUser.productAdjustments.total.toLocaleString()}
                   </p>
-                  <div className='text-xs text-slate-500 mt-1 space-y-0.5'>
+                  <div className='text-[11px] text-[#8A877D] mt-1 space-y-0.5'>
                     <div className='flex justify-between'>
                       <span>Added:</span>
                       <span className='font-medium text-emerald-600'>
@@ -443,7 +285,7 @@ export const UserPerformanceCard: React.FC<UserPerformanceCardProps> = ({
                     </div>
                     <div className='flex justify-between'>
                       <span>Products:</span>
-                      <span className='font-medium text-slate-700'>
+                      <span className='font-medium text-[#57554D]'>
                         {selectedUser.productAdjustments.uniqueProducts}
                       </span>
                     </div>
@@ -451,17 +293,17 @@ export const UserPerformanceCard: React.FC<UserPerformanceCardProps> = ({
                 </div>
 
                 {/* Last Activity */}
-                <div className='bg-white rounded-xl border border-slate-100 p-4 shadow-sm'>
+                <div className={claude.card + " p-4"}>
                   <div className='flex items-center justify-between mb-2'>
-                    <p className='text-xs text-slate-500'>Last Activity</p>
-                    <div className='flex items-center justify-center w-8 h-8 rounded-lg bg-indigo-50'>
-                      <TrendingUp className='h-4 w-4 text-indigo-600' />
+                    <p className={claude.microLabel}>Last Activity</p>
+                    <div className={claude.iconTile}>
+                      <TrendingUp className='h-4 w-4' />
                     </div>
                   </div>
-                  <p className='text-base font-semibold text-slate-900'>
+                  <p className='text-base font-semibold text-[#141413]'>
                     {dayjs(selectedUser.lastActivity).fromNow()}
                   </p>
-                  <p className='text-xs text-slate-500 mt-1'>
+                  <p className='text-[11px] text-[#8A877D] mt-1 tabular-nums'>
                     {dayjs(selectedUser.lastActivity).format(
                       "MMM DD, YYYY HH:mm",
                     )}
@@ -469,19 +311,25 @@ export const UserPerformanceCard: React.FC<UserPerformanceCardProps> = ({
                 </div>
               </div>
 
-              {/* Mini Heatmap */}
+              {/* 90 Day Activity Pills */}
               {userDetail && userDetail.activityTrend.length > 0 && (
-                <div className='bg-white rounded-xl border border-slate-100 p-4 shadow-sm'>
-                  <MiniHeatmap activityTrend={userDetail.activityTrend} />
+                <div className={claude.card + " p-4"}>
+                  <ActivityPillGrid
+                    title={`Activity — Last 90 Days${selectedUser ? ` · ${selectedUser.userName}` : ""}`}
+                    days={userDetail.activityTrend.map((t) => ({
+                      date: t.date,
+                      count: t.orderActions + t.productAdjustments,
+                    }))}
+                  />
                 </div>
               )}
 
               {/* Loading indicator for detail fetch */}
               {detailLoading && !userDetail && (
-                <div className='bg-white rounded-xl border border-slate-100 p-4 shadow-sm'>
+                <div className={claude.card + " p-4"}>
                   <div className='flex items-center gap-3'>
-                    <Loader2 className='h-4 w-4 text-indigo-600 animate-spin' />
-                    <p className='text-sm text-slate-500'>
+                    <Loader2 className='h-4 w-4 text-[#D97757] animate-spin' />
+                    <p className='text-[13px] text-[#8A877D]'>
                       Loading activity data...
                     </p>
                   </div>
@@ -489,29 +337,29 @@ export const UserPerformanceCard: React.FC<UserPerformanceCardProps> = ({
               )}
 
               {/* User Info and Actions */}
-              <div className='flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 p-4 bg-slate-50 rounded-lg border border-slate-100'>
+              <div className='flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 p-4 bg-[#FAF9F6] rounded-lg border border-[#E8E4DC]'>
                 <div className='flex items-center gap-3'>
-                  <div className='flex items-center justify-center w-10 h-10 rounded-full bg-indigo-50'>
-                    <User className='h-5 w-5 text-indigo-600' />
+                  <div className={claude.iconTile + " h-10 w-10"}>
+                    <User className='h-5 w-5' />
                   </div>
                   <div>
-                    <p className='font-semibold text-slate-900'>
+                    <p className='text-[13px] font-semibold text-[#141413]'>
                       {selectedUser.userName}
                     </p>
-                    <p className='text-sm text-slate-500'>
+                    <p className='text-[11px] text-[#8A877D]'>
                       {selectedUser.userEmail}
                     </p>
                   </div>
                   <Badge
                     variant='secondary'
-                    className='bg-white border border-slate-200'>
+                    className='rounded-md bg-[#FAF9F6] border border-[#E8E4DC] text-[#57554D]'>
                     {selectedUser.userType}
                   </Badge>
                 </div>
                 <button
                   onClick={handleViewDetails}
                   disabled={detailLoading}
-                  className='inline-flex items-center justify-center gap-1.5 px-4 py-2 text-sm font-medium text-white bg-indigo-600 rounded-lg hover:bg-indigo-700 active:bg-indigo-800 transition-all duration-150 shadow-sm shadow-indigo-200 disabled:opacity-50 disabled:cursor-not-allowed'>
+                  className='inline-flex items-center justify-center gap-1.5 px-4 py-2 text-[13px] font-medium text-white bg-[#B85A3D] rounded-md hover:bg-[#A34E34] transition-colors duration-150 disabled:opacity-50 disabled:cursor-not-allowed'>
                   {detailLoading ? (
                     <>
                       <Loader2 className='h-4 w-4 animate-spin' />

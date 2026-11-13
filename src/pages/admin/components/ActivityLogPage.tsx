@@ -1,9 +1,6 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { useActivityLog, useUserTimeline } from "../../../hooks/useActivityLog";
-import {
-  ActivityLogEntry,
-  exportActivityCsv,
-} from "../../../api/activityLog";
+import { ActivityLogEntry, exportActivityCsv } from "../../../api/activityLog";
 import {
   Table,
   TableHeader,
@@ -13,7 +10,12 @@ import {
   TableCell,
 } from "../../../components/ui/table";
 import { Badge } from "../../../components/ui/badge";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "../../../components/ui/tabs";
+import {
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
+} from "../../../components/ui/tabs";
 import {
   Sheet,
   SheetContent,
@@ -46,6 +48,18 @@ import {
   ResponsiveContainer,
   Cell,
 } from "recharts";
+import { useIsMobile } from "../../../hooks/use-mobile";
+import {
+  MobileEmptyState,
+  MobileListCard,
+  MobilePage,
+  MobilePagination,
+  MobileSkeletonList,
+  MobileStaggeredList,
+  MobileStatRow,
+  MobileStatTile,
+} from "../../../components/mobile";
+import { PageHeader } from "../../../components/PageHeader";
 
 const ACTION_OPTIONS = [
   "USER_LOGIN",
@@ -76,7 +90,8 @@ const actionBadgeClass = (action: string): string => {
     return "bg-emerald-50 text-emerald-700 border-emerald-200";
   if (action.includes("MODIFICATION") || action.includes("UPDATE"))
     return "bg-blue-50 text-blue-700 border-blue-200";
-  if (action === "USER_LOGIN") return "bg-indigo-50 text-indigo-700 border-indigo-200";
+  if (action === "USER_LOGIN")
+    return "bg-indigo-50 text-indigo-700 border-indigo-200";
   if (action.includes("VIEW") || action.includes("SEARCH"))
     return "bg-violet-50 text-violet-700 border-violet-200";
   if (action.includes("CHANGE") || action.includes("BULK"))
@@ -127,14 +142,19 @@ export const ActivityLogPage: React.FC = () => {
     refetch,
   } = useActivityLog();
 
-  const { timeline, isLoading: timelineLoading, fetchTimeline, clearTimeline } =
-    useUserTimeline();
+  const {
+    timeline,
+    isLoading: timelineLoading,
+    fetchTimeline,
+    clearTimeline,
+  } = useUserTimeline();
 
   const [searchInput, setSearchInput] = useState("");
   const debouncedSearch = useDebounce(searchInput, 500);
   const [detailEntry, setDetailEntry] = useState<ActivityLogEntry | null>(null);
   const [timelineOpen, setTimelineOpen] = useState(false);
   const [exporting, setExporting] = useState(false);
+  const isMobile = useIsMobile();
 
   useEffect(() => {
     updateFilter("search", debouncedSearch);
@@ -146,7 +166,7 @@ export const ActivityLogPage: React.FC = () => {
       setTimelineOpen(true);
       fetchTimeline(userId);
     },
-    [fetchTimeline]
+    [fetchTimeline],
   );
 
   const handleExport = async () => {
@@ -183,12 +203,12 @@ export const ActivityLogPage: React.FC = () => {
 
   if (error && logs.length === 0 && !isLoading) {
     return (
-      <div className="container space-y-6">
-        <div className="bg-rose-50 border border-rose-200 rounded-xl p-4">
-          <p className="text-sm text-rose-700">Error: {error}</p>
+      <div className='container space-y-6'>
+        <div className='bg-rose-50 border border-rose-200 rounded-xl p-4'>
+          <p className='text-sm text-rose-700'>Error: {error}</p>
           <button
             onClick={refetch}
-            className="mt-3 px-3 py-1.5 text-sm font-medium rounded-lg bg-white border border-rose-200 text-rose-700 hover:bg-rose-100">
+            className='mt-3 px-3 py-1.5 text-sm font-medium rounded-lg bg-white border border-rose-200 text-rose-700 hover:bg-rose-100'>
             Retry
           </button>
         </div>
@@ -196,24 +216,385 @@ export const ActivityLogPage: React.FC = () => {
     );
   }
 
-  return (
-    <div className="container space-y-6">
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <div className="flex items-center gap-3">
-          <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-indigo-600 shadow-sm shadow-indigo-200">
-            <History className="h-5 w-5 text-white" />
-          </div>
-          <div>
-            <h2 className="text-xl font-semibold text-slate-900 leading-tight">
-              Activity Log
-            </h2>
-            <p className="text-sm text-slate-500 mt-0.5">
-              Every recorded staff action — who did what, when and from where
-            </p>
-          </div>
+  // ── Mobile: stat row + filter card + card list feed ──
+  if (isMobile) {
+    return (
+      <MobilePage
+        title='Activity Log'
+        icon={<History className='h-5 w-5 text-primary' />}
+        subtitle='Every recorded staff action'
+        back>
+        <div className='space-y-3 px-4 pt-3 pb-6'>
+          <MobileStatRow>
+            <MobileStatTile
+              label='Total Actions'
+              value={stats?.totals.totalActions?.toLocaleString() ?? "—"}
+              icon={<Activity className='h-4 w-4' />}
+            />
+            <MobileStatTile
+              label='Active Users'
+              value={stats?.totals.activeUsers?.toLocaleString() ?? "—"}
+              icon={<Users className='h-4 w-4' />}
+              tone='bg-emerald-100 text-emerald-700'
+            />
+            <MobileStatTile
+              label='Mutations'
+              value={stats?.totals.mutations?.toLocaleString() ?? "—"}
+              icon={<PencilLine className='h-4 w-4' />}
+              tone='bg-amber-100 text-amber-700'
+            />
+            <MobileStatTile
+              label='Failed'
+              value={stats?.totals.failures?.toLocaleString() ?? "—"}
+              icon={<ShieldAlert className='h-4 w-4' />}
+              tone='bg-rose-100 text-rose-700'
+            />
+          </MobileStatRow>
+
+          <Tabs defaultValue='feed'>
+            <TabsList className='mobile:flex mobile:w-full mobile:overflow-x-auto'>
+              <TabsTrigger value='feed' className='flex-1'>
+                Activity Feed
+              </TabsTrigger>
+              <TabsTrigger value='overview' className='flex-1'>
+                Overview
+              </TabsTrigger>
+            </TabsList>
+
+            {/* FEED */}
+            <TabsContent value='feed' className='space-y-3'>
+              {/* Filters + actions */}
+              <div className='space-y-2 rounded-2xl border bg-card p-3'>
+                <div className='relative'>
+                  <Search className='absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400' />
+                  <input
+                    type='text'
+                    placeholder='Search endpoint...'
+                    value={searchInput}
+                    onChange={(e) => setSearchInput(e.target.value)}
+                    className='w-full rounded-full border border-slate-200 bg-white py-2.5 pl-9 pr-3 text-[13px] text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-500'
+                  />
+                </div>
+                <div className='grid grid-cols-2 gap-2'>
+                  <select
+                    value={filters.action || ""}
+                    onChange={(e) => updateFilter("action", e.target.value)}
+                    className='rounded-lg border border-slate-200 bg-white px-2 py-2 text-[12px] text-slate-700'>
+                    <option value=''>All Actions</option>
+                    {ACTION_OPTIONS.map((action) => (
+                      <option key={action} value={action}>
+                        {action.replace(/_/g, " ")}
+                      </option>
+                    ))}
+                  </select>
+                  <select
+                    value={filters.method || ""}
+                    onChange={(e) => updateFilter("method", e.target.value)}
+                    className='rounded-lg border border-slate-200 bg-white px-2 py-2 text-[12px] text-slate-700'>
+                    <option value=''>All Methods</option>
+                    <option value='GET'>GET</option>
+                    <option value='POST'>POST</option>
+                    <option value='PUT'>PUT</option>
+                    <option value='PATCH'>PATCH</option>
+                    <option value='DELETE'>DELETE</option>
+                  </select>
+                  <select
+                    value={filters.success || ""}
+                    onChange={(e) => updateFilter("success", e.target.value)}
+                    className='rounded-lg border border-slate-200 bg-white px-2 py-2 text-[12px] text-slate-700'>
+                    <option value=''>All Statuses</option>
+                    <option value='true'>Success only</option>
+                    <option value='false'>Failures only</option>
+                  </select>
+                  <input
+                    type='text'
+                    placeholder='IP address'
+                    value={filters.ip || ""}
+                    onChange={(e) => updateFilter("ip", e.target.value)}
+                    className='rounded-lg border border-slate-200 bg-white px-2 py-2 text-[12px] text-slate-700'
+                  />
+                </div>
+                <div className='flex items-center gap-2'>
+                  <input
+                    type='datetime-local'
+                    value={
+                      filters.startDate
+                        ? dayjs(filters.startDate).format("YYYY-MM-DDTHH:mm")
+                        : ""
+                    }
+                    onChange={(e) =>
+                      setDateRange(
+                        e.target.value
+                          ? new Date(e.target.value).toISOString()
+                          : undefined,
+                        filters.endDate,
+                      )
+                    }
+                    className='min-w-0 flex-1 rounded-md border border-slate-200 bg-white px-2 py-1.5 text-[12px] text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-500'
+                  />
+                  <input
+                    type='datetime-local'
+                    value={
+                      filters.endDate
+                        ? dayjs(filters.endDate).format("YYYY-MM-DDTHH:mm")
+                        : ""
+                    }
+                    onChange={(e) =>
+                      setDateRange(
+                        filters.startDate,
+                        e.target.value
+                          ? dayjs(e.target.value).endOf("day").toISOString()
+                          : undefined,
+                      )
+                    }
+                    className='min-w-0 flex-1 rounded-md border border-slate-200 bg-white px-2 py-1.5 text-[12px] text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-500'
+                  />
+                </div>
+                <div className='flex items-center gap-2'>
+                  <button
+                    onClick={handleReset}
+                    className='flex flex-1 items-center justify-center gap-1.5 rounded-full border border-slate-200 bg-white px-3 py-2 text-[13px] font-medium text-slate-600'>
+                    <RotateCcw className='h-3.5 w-3.5' />
+                    Reset
+                  </button>
+                  <button
+                    onClick={refetch}
+                    className='grid h-10 w-10 place-items-center rounded-full border border-slate-200 bg-white text-slate-600'>
+                    <RotateCcw className='h-4 w-4' />
+                  </button>
+                  <button
+                    onClick={handleExport}
+                    disabled={exporting}
+                    className='flex flex-1 items-center justify-center gap-1.5 rounded-full bg-indigo-600 px-3 py-2 text-[13px] font-medium text-white disabled:opacity-50'>
+                    <Download className='h-3.5 w-3.5' />
+                    {exporting ? "Exporting..." : "Export CSV"}
+                  </button>
+                </div>
+              </div>
+
+              {/* Feed list */}
+              {isLoading ? (
+                <MobileSkeletonList count={6} />
+              ) : logs.length === 0 ? (
+                <MobileEmptyState
+                  icon={<History className='h-7 w-7' />}
+                  title='No activity'
+                  description='Nothing recorded for the current filters'
+                />
+              ) : (
+                <MobileStaggeredList key={currentPage}>
+                  {logs.map((entry) => (
+                    <MobileListCard
+                      key={entry._id}
+                      onClick={() => setDetailEntry(entry)}
+                      title={entry.action.replace(/_/g, " ")}
+                      subtitle={
+                        <span className='block truncate'>
+                          {entry.method} {entry.endpoint}
+                        </span>
+                      }
+                      trailing={
+                        <span className='text-right'>
+                          <span className='block text-[12px] font-semibold text-foreground'>
+                            {dayjs(entry.timestamp).format("MMM D")}
+                          </span>
+                          <span className='block text-[10px] text-slate-400'>
+                            {dayjs(entry.timestamp).format("h:mm:ss A")}
+                          </span>
+                        </span>
+                      }
+                      badge={
+                        <Badge
+                          variant='outline'
+                          className={
+                            entry.statusCode < 400
+                              ? "bg-emerald-50 text-emerald-700 border-emerald-200"
+                              : "bg-rose-50 text-rose-700 border-rose-200"
+                          }>
+                          {entry.statusCode}
+                        </Badge>
+                      }
+                    >
+                      <div className='mt-1.5 flex items-center gap-2 text-[11px] text-muted-foreground'>
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleOpenTimeline(entry.userId);
+                          }}
+                          className='font-medium text-indigo-600'>
+                          {entry.userName}
+                        </button>
+                        <span>{entry.duration}ms</span>
+                        <span className='font-mono'>
+                          {entry.metadata?.ipAddress || "—"}
+                        </span>
+                      </div>
+                    </MobileListCard>
+                  ))}
+                </MobileStaggeredList>
+              )}
+
+              {pagination && (
+                <MobilePagination
+                  page={pagination.currentPage}
+                  totalPages={pagination.totalPages}
+                  onChange={setCurrentPage}
+                />
+              )}
+            </TabsContent>
+
+            {/* OVERVIEW — charts reused as-is */}
+            <TabsContent value='overview' className='space-y-3'>
+              {stats ? (
+                <>
+                  <div className='rounded-2xl border bg-card p-3'>
+                    <h3 className='mb-3 text-sm font-semibold text-slate-900'>
+                      Actions per Day
+                    </h3>
+                    <div className='h-56'>
+                      <ResponsiveContainer width='100%' height='100%'>
+                        <BarChart data={stats.byDay} barCategoryGap='20%'>
+                          <XAxis
+                            dataKey='date'
+                            tick={{ fontSize: 10 }}
+                            tickFormatter={(v) => dayjs(v).format("MM/DD")}
+                          />
+                          <YAxis tick={{ fontSize: 10 }} allowDecimals={false} width={28} />
+                          <Tooltip />
+                          <Bar dataKey='count' fill='#6366f1' radius={[3, 3, 0, 0]} />
+                          <Bar dataKey='failures' fill='#f43f5e' radius={[3, 3, 0, 0]} />
+                        </BarChart>
+                      </ResponsiveContainer>
+                    </div>
+                    <div className='mt-2 flex items-center gap-4'>
+                      <span className='flex items-center gap-1.5 text-xs text-slate-500'>
+                        <span className='h-2.5 w-2.5 rounded-sm bg-indigo-500' /> Actions
+                      </span>
+                      <span className='flex items-center gap-1.5 text-xs text-slate-500'>
+                        <span className='h-2.5 w-2.5 rounded-sm bg-rose-500' /> Failures
+                      </span>
+                    </div>
+                  </div>
+
+                  <div className='rounded-2xl border bg-card p-3'>
+                    <h3 className='mb-3 text-sm font-semibold text-slate-900'>
+                      Actions by Type
+                    </h3>
+                    <div className='h-56'>
+                      <ResponsiveContainer width='100%' height='100%'>
+                        <BarChart data={stats.byAction} barCategoryGap='25%'>
+                          <XAxis
+                            dataKey='action'
+                            tick={{ fontSize: 9 }}
+                            interval={0}
+                            angle={-35}
+                            textAnchor='end'
+                            height={70}
+                            tickFormatter={(v: string) =>
+                              v.length > 14 ? v.slice(0, 13) + "…" : v
+                            }
+                          />
+                          <YAxis tick={{ fontSize: 10 }} allowDecimals={false} width={28} />
+                          <Tooltip />
+                          <Bar dataKey='count' radius={[3, 3, 0, 0]}>
+                            {stats.byAction.map((_, index) => (
+                              <Cell
+                                key={index}
+                                fill={
+                                  index % 3 === 0
+                                    ? "#6366f1"
+                                    : index % 3 === 1
+                                      ? "#10b981"
+                                      : "#f59e0b"
+                                }
+                              />
+                            ))}
+                          </Bar>
+                        </BarChart>
+                      </ResponsiveContainer>
+                    </div>
+                  </div>
+
+                  <div className='rounded-2xl border bg-card p-3'>
+                    <h3 className='mb-3 text-sm font-semibold text-slate-900'>
+                      Most Active Users
+                    </h3>
+                    {stats.topUsers.length === 0 ? (
+                      <p className='py-4 text-sm text-slate-500'>No activity in range</p>
+                    ) : (
+                      <div className='space-y-2'>
+                        {stats.topUsers.map((user, index) => {
+                          const max = stats.topUsers[0]?.count || 1;
+                          return (
+                            <button
+                              key={`${user.userId}-${index}`}
+                              onClick={() => handleOpenTimeline(user.userId)}
+                              className='group flex w-full items-center gap-3 rounded-xl p-1.5 text-left'>
+                              <div className='flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-indigo-50 text-xs font-semibold text-indigo-600'>
+                                {index + 1}
+                              </div>
+                              <div className='min-w-0 flex-1'>
+                                <div className='mb-1 flex items-center justify-between'>
+                                  <p className='truncate text-sm font-medium text-slate-900 group-hover:text-indigo-600'>
+                                    {user.userName}
+                                  </p>
+                                  <div className='ml-2 flex shrink-0 items-center gap-2 text-[11px] text-slate-500'>
+                                    <span>
+                                      {user.count.toLocaleString()} actions
+                                    </span>
+                                    {user.failures > 0 && (
+                                      <span className='text-rose-600'>
+                                        {user.failures} failed
+                                      </span>
+                                    )}
+                                  </div>
+                                </div>
+                                <div className='h-1.5 overflow-hidden rounded-full bg-slate-100'>
+                                  <div
+                                    className='h-full rounded-full bg-indigo-500'
+                                    style={{
+                                      width: `${Math.max(4, (user.count / max) * 100)}%`,
+                                    }}
+                                  />
+                                </div>
+                              </div>
+                            </button>
+                          );
+                        })}
+                      </div>
+                    )}
+                  </div>
+                </>
+              ) : (
+                <div className='py-12 text-center text-sm text-slate-500'>
+                  {stats === null ? "Loading overview..." : "No stats available"}
+                </div>
+              )}
+            </TabsContent>
+          </Tabs>
         </div>
-        <div className="flex flex-wrap items-center gap-2">
+
+        {/* Detail + timeline sheets are reused below (full-width drawers on mobile) */}
+      </MobilePage>
+    );
+  }
+
+  return (
+    <div className='container space-y-6 pt-2'>
+      {/* Header */}
+      <PageHeader
+        icon={<History className='h-5 w-5 text-white' />}
+        title='Activity Log'
+        subtitle='Every recorded staff action — who did what, when and from where'
+        count={
+          stats?.totals.totalActions != null ? (
+            <span className='rounded-md px-2.5 py-1 text-base font-semibold text-slate-500 tabular-nums'>
+              {stats.totals.totalActions.toLocaleString()} total
+            </span>
+          ) : undefined
+        }
+        actions={
+          <div className='flex flex-wrap items-center gap-2'>
           <input
             type='datetime-local'
             value={
@@ -226,7 +607,7 @@ export const ActivityLogPage: React.FC = () => {
                 e.target.value
                   ? new Date(e.target.value).toISOString()
                   : undefined,
-                filters.endDate
+                filters.endDate,
               )
             }
             className='px-3 py-2 text-sm border border-slate-200 rounded-lg bg-white text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-500'
@@ -244,7 +625,7 @@ export const ActivityLogPage: React.FC = () => {
                 filters.startDate,
                 e.target.value
                   ? dayjs(e.target.value).endOf("day").toISOString()
-                  : undefined
+                  : undefined,
               )
             }
             className='px-3 py-2 text-sm border border-slate-200 rounded-lg bg-white text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-500'
@@ -262,8 +643,9 @@ export const ActivityLogPage: React.FC = () => {
             <Download className='h-3.5 w-3.5' />
             {exporting ? "Exporting..." : "Export CSV"}
           </button>
-        </div>
-      </div>
+          </div>
+        }
+      />
 
       {/* Stat Cards */}
       <div className='grid grid-cols-2 sm:grid-cols-4 gap-3'>
@@ -456,13 +838,17 @@ export const ActivityLogPage: React.FC = () => {
                           </button>
                         </TableCell>
                         <TableCell>
-                          <Badge variant='outline' className={actionBadgeClass(entry.action)}>
+                          <Badge
+                            variant='outline'
+                            className={actionBadgeClass(entry.action)}>
                             {entry.action.replace(/_/g, " ")}
                           </Badge>
                         </TableCell>
                         <TableCell>
                           <div className='flex items-center gap-1.5'>
-                            <Badge variant='outline' className={methodBadgeClass(entry.method)}>
+                            <Badge
+                              variant='outline'
+                              className={methodBadgeClass(entry.method)}>
                               {entry.method}
                             </Badge>
                             <span
@@ -514,7 +900,7 @@ export const ActivityLogPage: React.FC = () => {
                   <span className='font-medium text-slate-900'>
                     {Math.min(
                       pagination.currentPage * pagination.limit,
-                      pagination.totalCount
+                      pagination.totalCount,
                     )}
                   </span>{" "}
                   of{" "}
@@ -576,17 +962,27 @@ export const ActivityLogPage: React.FC = () => {
                         />
                         <YAxis tick={{ fontSize: 11 }} allowDecimals={false} />
                         <Tooltip />
-                        <Bar dataKey='count' fill='#6366f1' radius={[3, 3, 0, 0]} />
-                        <Bar dataKey='failures' fill='#f43f5e' radius={[3, 3, 0, 0]} />
+                        <Bar
+                          dataKey='count'
+                          fill='#6366f1'
+                          radius={[3, 3, 0, 0]}
+                        />
+                        <Bar
+                          dataKey='failures'
+                          fill='#f43f5e'
+                          radius={[3, 3, 0, 0]}
+                        />
                       </BarChart>
                     </ResponsiveContainer>
                   </div>
                   <div className='flex items-center gap-4 mt-2'>
                     <span className='flex items-center gap-1.5 text-xs text-slate-500'>
-                      <span className='w-2.5 h-2.5 rounded-sm bg-indigo-500' /> Actions
+                      <span className='w-2.5 h-2.5 rounded-sm bg-indigo-500' />{" "}
+                      Actions
                     </span>
                     <span className='flex items-center gap-1.5 text-xs text-slate-500'>
-                      <span className='w-2.5 h-2.5 rounded-sm bg-rose-500' /> Failures
+                      <span className='w-2.5 h-2.5 rounded-sm bg-rose-500' />{" "}
+                      Failures
                     </span>
                   </div>
                 </div>
@@ -637,7 +1033,9 @@ export const ActivityLogPage: React.FC = () => {
                   Most Active Users
                 </h3>
                 {stats.topUsers.length === 0 ? (
-                  <p className='text-sm text-slate-500 py-4'>No activity in range</p>
+                  <p className='text-sm text-slate-500 py-4'>
+                    No activity in range
+                  </p>
                 ) : (
                   <div className='space-y-2'>
                     {stats.topUsers.map((user, index) => {
@@ -656,14 +1054,18 @@ export const ActivityLogPage: React.FC = () => {
                                 {user.userName}
                               </p>
                               <div className='flex items-center gap-3 text-xs text-slate-500 shrink-0 ml-2'>
-                                <span>{user.count.toLocaleString()} actions</span>
+                                <span>
+                                  {user.count.toLocaleString()} actions
+                                </span>
                                 {user.failures > 0 && (
                                   <span className='text-rose-600'>
                                     {user.failures} failed
                                   </span>
                                 )}
                                 <span>
-                                  {dayjs(user.lastActivity).format("MMM D, h:mm A")}
+                                  {dayjs(user.lastActivity).format(
+                                    "MMM D, h:mm A",
+                                  )}
                                 </span>
                               </div>
                             </div>
@@ -692,16 +1094,22 @@ export const ActivityLogPage: React.FC = () => {
       </Tabs>
 
       {/* ================= DETAIL SHEET ================= */}
-      <Sheet open={!!detailEntry} onOpenChange={(open) => !open && setDetailEntry(null)}>
+      <Sheet
+        open={!!detailEntry}
+        onOpenChange={(open) => !open && setDetailEntry(null)}>
         <SheetContent className='w-full sm:max-w-2xl overflow-y-auto'>
           {detailEntry && (
             <>
               <SheetHeader>
                 <SheetTitle className='flex items-center gap-2'>
-                  <Badge variant='outline' className={actionBadgeClass(detailEntry.action)}>
+                  <Badge
+                    variant='outline'
+                    className={actionBadgeClass(detailEntry.action)}>
                     {detailEntry.action.replace(/_/g, " ")}
                   </Badge>
-                  <Badge variant='outline' className={methodBadgeClass(detailEntry.method)}>
+                  <Badge
+                    variant='outline'
+                    className={methodBadgeClass(detailEntry.method)}>
                     {detailEntry.method}
                   </Badge>
                   <Badge
@@ -763,7 +1171,7 @@ export const ActivityLogPage: React.FC = () => {
                       <p className='text-slate-500 text-xs'>Timestamp</p>
                       <p className='text-slate-700'>
                         {dayjs(detailEntry.timestamp).format(
-                          "MMM D, YYYY h:mm:ss A"
+                          "MMM D, YYYY h:mm:ss A",
                         )}
                       </p>
                     </div>
@@ -782,7 +1190,9 @@ export const ActivityLogPage: React.FC = () => {
                       <p className='text-slate-500 text-xs'>Resource</p>
                       <p className='text-slate-700 text-xs'>
                         {detailEntry.resourceType || "—"}
-                        {detailEntry.resourceId ? ` · ${detailEntry.resourceId}` : ""}
+                        {detailEntry.resourceId
+                          ? ` · ${detailEntry.resourceId}`
+                          : ""}
                       </p>
                     </div>
                     <div className='col-span-2'>
@@ -819,25 +1229,34 @@ export const ActivityLogPage: React.FC = () => {
                 )}
 
                 {/* Request body (mutations only, redacted at write time) */}
-                {detailEntry.metadata?.additionalInfo?.requestBody !== undefined && (
+                {detailEntry.metadata?.additionalInfo?.requestBody !==
+                  undefined && (
                   <div className='rounded-xl border border-slate-100 p-4'>
                     <div className='flex items-center justify-between mb-3'>
                       <h4 className='text-xs font-semibold uppercase text-slate-400'>
                         Request Body
                       </h4>
                       <div className='flex flex-wrap gap-1'>
-                        {detailEntry.changeDetails?.changedFields?.map((field) => (
-                          <Badge key={field} variant='outline' className='text-xs'>
-                            {field}
-                          </Badge>
-                        ))}
+                        {detailEntry.changeDetails?.changedFields?.map(
+                          (field) => (
+                            <Badge
+                              key={field}
+                              variant='outline'
+                              className='text-xs'>
+                              {field}
+                            </Badge>
+                          ),
+                        )}
                       </div>
                     </div>
                     <p className='text-xs text-slate-400 mb-2'>
-                      Sensitive fields (passwords, tokens, OTPs) are redacted automatically.
+                      Sensitive fields (passwords, tokens, OTPs) are redacted
+                      automatically.
                     </p>
                     <pre className='text-xs bg-slate-900 text-slate-100 rounded-lg p-3 overflow-x-auto max-h-80'>
-                      {prettyJson(detailEntry.metadata?.additionalInfo?.requestBody)}
+                      {prettyJson(
+                        detailEntry.metadata?.additionalInfo?.requestBody,
+                      )}
                     </pre>
                   </div>
                 )}
@@ -886,7 +1305,9 @@ export const ActivityLogPage: React.FC = () => {
                 <div className='rounded-xl border border-slate-100 p-3'>
                   <p className='text-lg font-semibold text-slate-700 leading-none text-xs pt-1 font-mono'>
                     {timeline.summary.lastActivity
-                      ? dayjs(timeline.summary.lastActivity).format("MMM D, h:mm A")
+                      ? dayjs(timeline.summary.lastActivity).format(
+                          "MMM D, h:mm A",
+                        )
                       : "—"}
                   </p>
                   <p className='text-xs text-slate-500 mt-1'>Last Activity</p>
@@ -950,7 +1371,9 @@ export const ActivityLogPage: React.FC = () => {
                       </div>
                       <span
                         className={`text-xs font-medium shrink-0 ${
-                          entry.statusCode < 400 ? "text-emerald-600" : "text-rose-600"
+                          entry.statusCode < 400
+                            ? "text-emerald-600"
+                            : "text-rose-600"
                         }`}>
                         {entry.statusCode}
                       </span>

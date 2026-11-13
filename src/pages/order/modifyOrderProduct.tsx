@@ -30,7 +30,7 @@ import {
   Plus,
   Minus,
   ShoppingCart,
-  Edit3,
+  FileEdit,
   AlertTriangle,
   CheckCircle2,
   ArrowLeft,
@@ -74,10 +74,16 @@ import {
 import { Alert, AlertDescription } from "../../components/ui/alert";
 import { ScrollArea } from "../../components/ui/scroll-area";
 import { Skeleton } from "../../components/ui/skeleton";
+import {
+  MobilePage,
+  rippleProps,
+} from "../../components/mobile";
+import { useIsMobile } from "../../hooks/use-mobile";
 
 const ModifyOrder = () => {
   const navigate = useNavigate();
   const { orderId } = useParams();
+  const isMobile = useIsMobile();
 
   const [products, setProducts] = useState<ProductSearchResponse[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
@@ -951,6 +957,126 @@ const ModifyOrder = () => {
     const total = subtotal + orderData.deliveryCarge;
     const remaining = total - orderData.paid;
 
+    /* ────────────────────────────────────────────────────────────────────
+       Mobile (Material): stacked form + sticky submit bar. The desktop
+       layout below is untouched.
+       ──────────────────────────────────────────────────────────────────── */
+    if (isMobile) {
+      return (
+        <MobilePage
+          title={`Modify Order #${orderId}`}
+          icon={<FileEdit className='h-5 w-5 text-primary' />}
+          subtitle='Adjust products and pricing before validating'
+          back
+          onBack={() => navigate("/order")}
+          actions={
+            <button
+              onClick={() => navigate(`/order/${orderId}/history`)}
+              aria-label='View modification history'
+              className='m3-ripple grid h-10 w-10 place-items-center rounded-full active:bg-muted'
+              {...rippleProps()}>
+              <Clock className='h-5 w-5' />
+            </button>
+          }
+          stickyActions={
+            <Button
+              onClick={handleValidateModification}
+              disabled={
+                selectedProducts.length < 1 || loading || validating
+              }
+              className='w-full h-11 rounded-full bg-indigo-600 hover:bg-indigo-700 text-white font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed'>
+              {validating ? (
+                <>
+                  <Loader2 className='w-4 h-4 mr-2 animate-spin' />
+                  Validating...
+                </>
+              ) : (
+                <>
+                  <CheckCircle2 className='w-4 h-4 mr-2' />
+                  Preview Changes
+                </>
+              )}
+            </Button>
+          }>
+          <div className='px-3 pt-3 pb-4 space-y-4'>
+            {/* Product search drawer (bottom sheet on mobile) */}
+            {renderProductDrawer()}
+
+            {/* Products header */}
+            <div className='flex items-center justify-between gap-3'>
+              <div className='min-w-0'>
+                <h2 className='text-base font-semibold text-slate-900'>
+                  Order Products
+                </h2>
+                <p className='text-xs text-slate-500 mt-0.5'>
+                  {selectedProducts.length} product
+                  {selectedProducts.length !== 1 ? "s" : ""} in this order
+                </p>
+              </div>
+              <Button
+                variant='outline'
+                onClick={() => setOpenDrawer(true)}
+                className='h-9 px-3.5 text-sm border-slate-200 text-slate-700 rounded-full shrink-0'>
+                <Plus className='w-4 h-4 mr-1' />
+                Add
+              </Button>
+            </div>
+
+            {/* Stacked product cards */}
+            {renderMobileProductView()}
+
+            {/* Order summary */}
+            <div className='rounded-2xl border border-slate-200 bg-white overflow-hidden'>
+              <div className='px-4 py-3 border-b border-slate-100 flex items-center gap-2 text-sm font-semibold text-slate-900'>
+                <ShoppingCart className='w-4 h-4 text-indigo-600' />
+                Order Summary
+              </div>
+              <div className='px-4 py-3.5 space-y-2.5'>
+                <div className='flex justify-between items-center text-sm'>
+                  <span className='text-slate-500'>Subtotal</span>
+                  <span className='font-semibold text-slate-900'>
+                    ৳{subtotal.toFixed(2)}
+                  </span>
+                </div>
+                <div className='flex justify-between items-center text-sm'>
+                  <span className='text-slate-500'>Delivery Charge</span>
+                  <span className='font-semibold text-slate-900'>
+                    ৳{orderData.deliveryCarge}
+                  </span>
+                </div>
+                <div className='h-px bg-slate-100' />
+                <div className='flex justify-between items-center text-sm'>
+                  <span className='text-slate-500'>Total</span>
+                  <span className='font-semibold text-slate-900'>
+                    ৳{total.toFixed(2)}
+                  </span>
+                </div>
+                <div className='flex justify-between items-center text-sm'>
+                  <span className='text-slate-500'>Paid Amount</span>
+                  <span className='font-semibold text-emerald-600'>
+                    ৳{orderData.paid}
+                  </span>
+                </div>
+                <div className='h-px bg-slate-100' />
+                <div className='flex justify-between items-center text-sm'>
+                  <span className='text-slate-500'>Remaining amount</span>
+                  <span className='font-semibold text-emerald-600'>
+                    ৳{remaining.toFixed(2)}
+                  </span>
+                </div>
+                <div className='flex items-start gap-2 rounded-xl bg-amber-50 border border-amber-200 px-3.5 py-2.5'>
+                  <AlertTriangle className='h-4 w-4 text-amber-600 shrink-0 mt-0.5' />
+                  <p className='text-xs text-amber-800'>
+                    Final pricing will be calculated after order modification.
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </MobilePage>
+      );
+    }
+
     return (
       <div className='min-h-screen bg-slate-50'>
         {/* Top bar */}
@@ -967,15 +1093,15 @@ const ModifyOrder = () => {
               </Button>
               <div className='h-6 w-px bg-slate-200 shrink-0' />
               <div className='flex items-center gap-2.5 min-w-0'>
-                <div className='w-8 h-8 bg-indigo-600 rounded-lg flex items-center justify-center shrink-0'>
-                  <Edit3 className='w-4 h-4 text-white' />
+                <div className='h-9 w-9 bg-primary text-primary-foreground rounded-lg shadow-sm flex items-center justify-center shrink-0'>
+                  <FileEdit className='w-4 h-4' />
                 </div>
                 <div className='min-w-0'>
                   <h1 className='text-sm font-semibold text-slate-900 truncate'>
-                    Modify Order
+                    Modify Order #{orderId}
                   </h1>
                   <p className='text-[11px] text-slate-500 truncate'>
-                    Order #{orderId}
+                    Adjust products and pricing before validating
                   </p>
                 </div>
               </div>
@@ -1003,7 +1129,7 @@ const ModifyOrder = () => {
               <div className='bg-white rounded-2xl border border-slate-200 overflow-hidden'>
                 {/* Products Header */}
                 <div className='p-5 border-b border-slate-100'>
-                  <div className='flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3'>
+                  <div className='flex flex-col md:flex-row md:items-center md:justify-between gap-3'>
                     <div>
                       <h2 className='text-base font-semibold text-slate-900'>
                         Order Products

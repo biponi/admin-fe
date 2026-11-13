@@ -53,9 +53,9 @@ const AgentView: React.FC = () => {
           {/* ── Header ── */}
           <div style={styles.headerRow}>
             <div style={styles.headerLeft}>
-              {/* <div className='hidden md:block' style={styles.headerIconWrap}>
+              <div className='hidden md:block' style={styles.headerIconWrap}>
                 <Activity size={20} color='#6366f1' />
-              </div> */}
+              </div>
               <div>
                 <h1 style={styles.headerTitle}>
                   Welcome back,{" "}

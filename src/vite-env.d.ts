@@ -17,6 +17,10 @@ interface ImportMetaEnv {
   // Notification Features
   readonly VITE_ADD_NOTIFICATION: string
 
+  // Default product sort field for listing pages
+  // (priority | lastPurchased | createdAt | name | price | quantity)
+  readonly VITE_DEFAULT_PRODUCT_SORT?: string
+
   // Brand Configuration
   readonly VITE_BRAND_NAME: string
   readonly VITE_BRAND_SHORT_NAME: string

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   Card,
   CardContent,
@@ -20,6 +20,11 @@ import { Separator } from "../../components/ui/separator";
 import { useLocations } from "../../hooks/useLocations";
 import { calculateDeliveryCharge } from "../../utils/deliveryCharge";
 import { getCharge } from "../../api/location";
+import {
+  evaluatePrepaymentRules,
+  type PrepaymentEvaluation,
+} from "../../api/prepaymentRule";
+import type { IOrderProduct } from "./interface.d";
 import { Textarea } from "../../components/ui/textarea";
 import { Button } from "../../components/ui/button";
 import { Badge } from "../../components/ui/badge";
@@ -50,6 +55,7 @@ import {
   Clock,
 } from "lucide-react";
 import { ITransection } from "./interface";
+import { useCreateOrderLayoutStore } from "./createOrderLayoutStore";
 const defaultPersonalInformation = {
   name: "",
   email: "",
@@ -57,8 +63,8 @@ const defaultPersonalInformation = {
 };
 
 const defaultShippingAddress = {
-  division: {},
-  district: {},
+  division: {} as { id?: string; name?: string },
+  district: {} as { id?: string; name?: string },
   address: "",
 };
 interface Props {
@@ -69,12 +75,14 @@ interface Props {
   ) => void;
   initialTransaction?: ITransection | null;
   orderTotal: number;
+  orderProducts?: IOrderProduct[];
 }
 const CustomerInformation: React.FC<Props> = ({
   handleCustomerDataChange,
   handleBack,
   initialTransaction,
   orderTotal,
+  orderProducts = [],
 }) => {
   const [personalInfomation, setPersonalInformation] = useState(
     defaultPersonalInformation,
@@ -123,6 +131,12 @@ const CustomerInformation: React.FC<Props> = ({
     initialTransaction?.paid?.toString() || "0",
   );
 
+  // Prepayment rules suggestion (advisory): evaluated when the address is
+  // set. The paid field is NOT prefilled — the admin decides; a warning and a
+  // submit-time confirmation modal handle skipped advances.
+  const [prepaymentSuggestion, setPrepaymentSuggestion] =
+    useState<PrepaymentEvaluation | null>(null);
+
   // Calculate delivery charge based on location — server-configured charge
   // first (admin-managed locations), hardcoded tables as fallback
   const calculateDeliveryChargeForLocation = (
@@ -160,6 +174,47 @@ const CustomerInformation: React.FC<Props> = ({
       })();
     }
   };
+
+  // Evaluate prepayment rules when address + products are known; surface a
+  // warning only — the paid field stays untouched. The suggestion is also
+  // mirrored into the layout store so the preview step can confirm skipped
+  // advances at submit time.
+  useEffect(() => {
+    const district = shippingAddress?.district?.name;
+    const division = shippingAddress?.division?.name;
+    if (!district || !division || orderProducts.length === 0) {
+      setPrepaymentSuggestion(null);
+      useCreateOrderLayoutStore.getState().setPrepaymentSuggestion(null);
+      return;
+    }
+
+    let cancelled = false;
+    (async () => {
+      const result = await evaluatePrepaymentRules({
+        shipping: { district, division },
+        orderItems: orderProducts.map((p) => ({
+          productId: p.productId || p.id,
+          quantity: p.quantity,
+          unitPrice: p.unitPrice,
+        })),
+        deliveryCharge: null,
+        // needed when a rule matches on fraud risk levels
+        customerPhone: personalInfomation.phoneNumber,
+      });
+      if (cancelled) return;
+      const suggestion = result.success ? result.data ?? null : null;
+      setPrepaymentSuggestion(suggestion);
+      useCreateOrderLayoutStore.getState().setPrepaymentSuggestion(suggestion);
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [
+    shippingAddress.district,
+    shippingAddress.division,
+    personalInfomation.phoneNumber,
+    orderProducts,
+  ]);
 
   // Mobile transaction editing functions
   const handleDiscountEdit = () => setIsEditingDiscount(true);
@@ -872,6 +927,20 @@ const CustomerInformation: React.FC<Props> = ({
                   </div>
                   Paid Amount
                 </Label>
+                {prepaymentSuggestion?.required &&
+                  prepaymentSuggestion.appliedRule && (
+                    <p className='text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded-md px-2 py-1'>
+                      Prepayment rule “{prepaymentSuggestion.appliedRule.name}” requires an
+                      advance of ৳{prepaymentSuggestion.amount}
+                      {(transaction.paid ?? 0) < prepaymentSuggestion.amount && (
+                        <>
+                          {" "}
+                          — creating the order without it will ask for
+                          confirmation.
+                        </>
+                      )}
+                    </p>
+                  )}
                 <div className='relative'>
                   <DollarSign className='absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-slate-400' />
                   <Input

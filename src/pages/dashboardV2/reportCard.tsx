@@ -1,192 +1,152 @@
-import React from "react";
+import { TrendingDown, TrendingUp, Activity, ChevronDown } from "lucide-react";
+import { BRAND_CONFIG } from "../../config/brand";
 import {
-  Card,
-  CardHeader,
-  CardContent,
-  CardTitle,
-  CardDescription,
-} from "../../components/ui/card";
-import { TrendingDown, TrendingUp, Activity } from "lucide-react";
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "../../components/ui/dropdown-menu";
+import {
+  accentBadgeClass,
+  iconCircleClass,
+  labelClass,
+  pillClass,
+  valueClass,
+} from "./dashboardTheme";
 
-// Function to calculate growth percentage
-const calculateGrowthPercentage = (
+/** Percentage delta between the previous and current period. */
+export const calculateGrowthPercentage = (
   previousValue: number,
   currentValue: number
 ) => {
   if (previousValue === 0) {
-    if (currentValue > 0) {
-      return 100;
-    } else {
-      return 0;
-    }
-  } else {
-    const growth = ((currentValue - previousValue) / previousValue) * 100;
-    return growth;
+    return currentValue > 0 ? 100 : 0;
   }
+  return ((currentValue - previousValue) / previousValue) * 100;
 };
 
-type ColorVariant = "blue" | "purple" | "green" | "orange" | "pink" | "cyan";
+export type DashboardPeriod = "today" | "lastWeek" | "lastMonth" | "last6Months";
 
-// Props for the DynamicCard component
-interface DynamicCardProps {
+const PERIOD_LABELS: Record<DashboardPeriod, string> = {
+  today: "Today",
+  lastWeek: "This week",
+  lastMonth: "Last month",
+  last6Months: "6 months",
+};
+
+interface PillStatCardProps {
   title: string;
-  subtitle: string;
-  previousValue: number;
+  subtitle?: string;
+  previousValue?: number;
   currentValue: number;
   icon?: any;
-  colorVariant?: ColorVariant;
+  /** Currency/units prefix (defaults to the brand currency for money cards). */
   prefix?: string;
   suffix?: string;
+  /** Compact tile (smaller value + icon) for secondary metrics. */
+  compact?: boolean;
+  /** When true, hides the misleading growth badge (no previous data). */
+  hideGrowth?: boolean;
+  /** Selected period label for the dropdown pill. */
+  period?: DashboardPeriod;
+  onPeriodChange?: (period: DashboardPeriod) => void;
 }
 
-const colorStyles: Record<
-  ColorVariant,
-  {
-    cardBg: string;
-    iconBg: string;
-    iconColor: string;
-    accentGlow: string;
-    orbGradient: string;
-    textColor: string;
-    subtitleColor: string;
-  }
-> = {
-  blue: {
-    cardBg: "bg-gradient-to-br from-[#654321] to-[#2d3436]",
-    iconBg: "bg-orange-100",
-    iconColor: "text-orange-950",
-    accentGlow: "shadow-blue-400/50",
-    orbGradient: "from-blue-400/30 via-blue-300/15 to-transparent",
-    textColor: "text-white",
-    subtitleColor: "text-amber-100",
-  },
-  purple: {
-    cardBg: "bg-gradient-to-br from-[#4D301B] to-[#654321]",
-    iconBg: "bg-purple-50",
-    iconColor: "text-purple-500",
-    accentGlow: "shadow-purple-400/50",
-    orbGradient: "from-purple-400/30 via-purple-300/15 to-transparent",
-    textColor: "text-white",
-    subtitleColor: "text-amber-100",
-  },
-  green: {
-    cardBg: "bg-gradient-to-br from-[#4D301B] to-[#654321]",
-    iconBg: "bg-green-50",
-    iconColor: "text-green-500",
-    accentGlow: "shadow-green-400/50",
-    orbGradient: "from-green-400/30 via-green-300/15 to-transparent",
-    textColor: "text-white",
-    subtitleColor: "text-amber-100",
-  },
-  orange: {
-    cardBg: "bg-gradient-to-br from-[#4D301B] to-[#654321]",
-    iconBg: "bg-orange-50",
-    iconColor: "text-orange-500",
-    accentGlow: "shadow-orange-400/50",
-    orbGradient: "from-orange-400/30 via-orange-300/15 to-transparent",
-    textColor: "text-white",
-    subtitleColor: "text-amber-100",
-  },
-  pink: {
-    cardBg: "bg-gradient-to-br from-[#4D301B] to-[#654321]",
-    iconBg: "bg-pink-50",
-    iconColor: "text-pink-500",
-    accentGlow: "shadow-pink-400/50",
-    orbGradient: "from-pink-400/30 via-pink-300/15 to-transparent",
-    textColor: "text-white",
-    subtitleColor: "text-amber-100",
-  },
-  cyan: {
-    cardBg: "bg-gradient-to-br from-[#4D301B] to-[#654321]",
-    iconBg: "bg-cyan-50",
-    iconColor: "text-cyan-500",
-    accentGlow: "shadow-cyan-400/50",
-    orbGradient: "from-cyan-400/30 via-cyan-300/15 to-transparent",
-    textColor: "text-white",
-    subtitleColor: "text-amber-100",
-  },
-};
-
-const DynamicCard: React.FC<DynamicCardProps> = ({
+/**
+ * Stat tile in the reference design language: light-gray tile, gray label,
+ * big bold value, white circular icon button, functional period pill and a
+ * growth badge (reference: src/assets/fgfg.webp).
+ */
+const PillStatCard: React.FC<PillStatCardProps> = ({
   title,
   subtitle,
   previousValue,
   currentValue,
   icon: Icon = Activity,
-  colorVariant = "blue",
-  prefix = "",
+  prefix = BRAND_CONFIG.currency + " ",
   suffix = "",
+  compact = false,
+  hideGrowth = false,
+  period,
+  onPeriodChange,
 }) => {
-  const growthPercentage = calculateGrowthPercentage(
-    previousValue,
-    currentValue
-  );
-  const styles = colorStyles[colorVariant];
+  const hasPrevious =
+    typeof previousValue === "number" && previousValue !== undefined;
+  const growthPercentage = hasPrevious
+    ? calculateGrowthPercentage(previousValue!, currentValue)
+    : 0;
 
   return (
-    <Card
-      className={`group relative overflow-hidden border-0 ${styles.cardBg} hover:shadow-2xl transition-all duration-500 hover:-translate-y-1 hover:scale-[1.02]`}>
-      {/* Animated gradient orb */}
-      <div
-        className={`absolute -top-20 -right-20 w-40 h-40 bg-gradient-to-br ${styles.orbGradient} rounded-full blur-3xl opacity-0 group-hover:opacity-100 transition-all duration-700`}></div>
-
-      {/* Glass morphism overlay */}
-      <div className='absolute inset-0 bg-gradient-to-br from-white/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500'></div>
-
-      <CardHeader className='pb-2 relative z-10'>
-        <div className='flex items-start justify-between'>
-          <div className='flex-1 space-y-1'>
-            <CardDescription
-              className={`text-xs font-medium ${styles.subtitleColor}`}>
-              {subtitle}
-            </CardDescription>
-            <CardTitle className={`text-sm font-semibold ${styles.textColor}`}>
-              {title}
-            </CardTitle>
-          </div>
-          <div
-            className={`${styles.iconBg} ${styles.iconColor} p-2.5 rounded-xl  group-hover:scale-110 group-hover:rotate-6 transition-transform duration-300`}>
-            <Icon className='h-5 w-5' strokeWidth={2.5} />
-          </div>
-        </div>
-      </CardHeader>
-
-      <CardContent className='relative z-10 space-y-3'>
-        <div
-          className={`text-3xl font-bold ${styles.textColor} tracking-tight`}>
-          {prefix}
-          {currentValue.toLocaleString()}
-          {suffix}
-        </div>
-
-        <div className='flex items-center justify-between'>
-          <div className={`text-xs ${styles.subtitleColor}`}>
-            vs {prefix}
-            {previousValue.toLocaleString()}
+    <div className='bg-[#EFEDEB] rounded-3xl p-4 sm:p-5 flex flex-col gap-3 justify-between hover:bg-[#EAE7E4] transition-colors duration-200'>
+      <div className='flex items-start justify-between gap-3'>
+        <div className='min-w-0'>
+          <p className={labelClass}>{title}</p>
+          <p
+            className={`${valueClass} ${
+              compact ? "text-xl sm:text-2xl" : "text-2xl sm:text-3xl"
+            } mt-1 truncate`}>
+            {prefix}
+            {currentValue.toLocaleString()}
             {suffix}
-          </div>
-
-          <div
-            className={`inline-flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1 rounded-lg backdrop-blur-sm ${
-              growthPercentage > 0
-                ? "bg-white/20 text-white"
-                : growthPercentage < 0
-                ? "bg-white/20 text-white"
-                : "bg-white/20 text-white"
-            }`}>
-            {growthPercentage > 0 ? (
-              <TrendingUp className='h-3.5 w-3.5' strokeWidth={2.5} />
-            ) : growthPercentage < 0 ? (
-              <TrendingDown className='h-3.5 w-3.5' strokeWidth={2.5} />
-            ) : (
-              <span>—</span>
-            )}
-            <span>{Math.abs(growthPercentage).toFixed(1)}%</span>
-          </div>
+          </p>
+          {subtitle && !compact && (
+            <p className='text-[11px] text-[#9A9A98] mt-1 truncate'>
+              {subtitle}
+            </p>
+          )}
         </div>
-      </CardContent>
-    </Card>
+        <div
+          className={`${iconCircleClass} ${
+            compact ? "h-9 w-9" : ""
+          } shrink-0 text-[#E1573F]`}>
+          <Icon className={compact ? "h-4 w-4" : "h-5 w-5"} strokeWidth={1.5} />
+        </div>
+      </div>
+
+      <div className='flex items-center justify-between gap-2 flex-wrap'>
+        {period && onPeriodChange ? (
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <button
+                className={`${pillClass} inline-flex items-center gap-1 px-3 h-7 text-xs font-medium text-[#1A1A1A] hover:bg-[#F7D9D2]/50 transition-colors`}>
+                {PERIOD_LABELS[period]}
+                <ChevronDown className='h-3 w-3' />
+              </button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align='start'>
+              {(Object.keys(PERIOD_LABELS) as DashboardPeriod[]).map((p) => (
+                <DropdownMenuItem
+                  key={p}
+                  onClick={() => onPeriodChange(p)}
+                  className={
+                    p === period ? "bg-[#F7D9D2]/60 focus:bg-[#F7D9D2]" : ""
+                  }>
+                  {PERIOD_LABELS[p]}
+                </DropdownMenuItem>
+              ))}
+            </DropdownMenuContent>
+          </DropdownMenu>
+        ) : (
+          <span
+            className={`${pillClass} inline-flex items-center px-3 h-7 text-xs font-medium text-[#9A9A98]`}>
+            This period
+          </span>
+        )}
+
+        {hasPrevious && !hideGrowth && (
+          <span
+            className={`${accentBadgeClass} inline-flex items-center gap-1 px-2.5 h-7 text-xs font-semibold`}>
+            {growthPercentage > 0 ? (
+              <TrendingUp className='h-3 w-3' strokeWidth={2} />
+            ) : growthPercentage < 0 ? (
+              <TrendingDown className='h-3 w-3' strokeWidth={2} />
+            ) : null}
+            {Math.abs(growthPercentage).toFixed(1)}%
+          </span>
+        )}
+      </div>
+    </div>
   );
 };
 
-export default DynamicCard;
+export default PillStatCard;

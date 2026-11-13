@@ -56,7 +56,21 @@ import {
   RefreshCw,
   Barcode,
   Search,
+  Check,
 } from "lucide-react";
+import { useIsMobile } from "@/hooks/use-mobile";
+import {
+  MobilePage,
+  MobileListCard,
+  MobileStaggeredList,
+  MobileFilterSheet,
+  MobileFilterTrigger,
+  MobileActionSheet,
+  MobileEmptyState,
+  MobileSkeletonList,
+  MobilePagination,
+  rippleProps,
+} from "@/components/mobile";
 import type { PackageStatus, Package as PackageType } from "./interface";
 import type { IOrderProduct } from "../order/interface.d";
 import { toast } from "sonner";
@@ -67,6 +81,7 @@ import { AnimatePresence } from "framer-motion";
 import { generatePackingSlipPdfByOrderIdentifier } from "../../utils/reactPdfPackingSlip";
 import { downloadPackagingSlip } from "../../api/package";
 import { cn } from "../../lib/utils";
+import { PageHeader } from "../../components/PageHeader";
 
 const statusTabs: { value: PackageStatus; label: string; color: string }[] = [
   { value: "requested", label: "Requested", color: "bg-amber-500" },
@@ -96,6 +111,7 @@ const STATUS_BADGE_COLORS: Record<string, string> = {
 
 export function PackageManagementPage() {
   const navigate = useNavigate();
+  const isMobile = useIsMobile();
   const {
     packages,
     loading,
@@ -124,6 +140,11 @@ export function PackageManagementPage() {
     null,
   );
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+
+  // Mobile-only UI state
+  const [rowActionPkg, setRowActionPkg] = useState<PackageType | null>(null);
+  const [filterOpen, setFilterOpen] = useState(false);
+  const [statusDraft, setStatusDraft] = useState<PackageStatus>("requested");
 
   // Bulk action progress state
   const [bulkProgress, setBulkProgress] = useState<{
@@ -303,6 +324,15 @@ export function PackageManagementPage() {
   };
 
   if (loading && !initialLoaded) {
+    if (isMobile) {
+      return (
+        <MobilePage title="Packages">
+          <div className="p-3">
+            <MobileSkeletonList count={6} />
+          </div>
+        </MobilePage>
+      );
+    }
     return (
       <div className="flex flex-col items-center justify-center py-20 px-4">
         <div className="relative">
@@ -323,47 +353,298 @@ export function PackageManagementPage() {
 
   const selectedCount = selection.selectedIds.size;
 
+  if (isMobile) {
+    return (
+      <MobilePage
+        title="Packages"
+        icon={<Package className="h-5 w-5 text-primary" />}
+        subtitle={`${totalPackages} total`}
+        actions={
+          <>
+            <button
+              aria-label="Scan Barcode"
+              onClick={() => navigate("/packages/scan")}
+              className="m3-ripple grid h-10 w-10 shrink-0 place-items-center rounded-full bg-primary text-primary-foreground shadow-sm active:scale-95 transition-transform"
+              {...rippleProps()}>
+              <Barcode className="h-5 w-5" />
+            </button>
+            <button
+              aria-label="Refresh"
+              onClick={handleRefresh}
+              disabled={refreshing}
+              className="m3-ripple grid h-10 w-10 shrink-0 place-items-center rounded-full bg-primary/10 text-primary active:scale-95 transition-transform disabled:opacity-50"
+              {...rippleProps()}>
+              <RefreshCw
+                className={cn("h-4.5 w-4.5", refreshing && "animate-spin")}
+              />
+            </button>
+          </>
+        }>
+        <div className="space-y-3 p-3">
+          {/* Toolbar: search + status filter */}
+          <div className="flex items-center gap-2">
+            <div className="min-w-0 flex-1">
+              <PackageSearchBar
+                value={searchQuery}
+                onChange={setSearchQuery}
+                onClear={clearSearch}
+              />
+            </div>
+            <MobileFilterTrigger
+              onClick={() => {
+                setStatusDraft(activeTab);
+                setFilterOpen(true);
+              }}
+              activeCount={activeTab !== "requested" ? 1 : 0}
+            />
+          </div>
+
+          {loading ? (
+            <MobileSkeletonList count={5} />
+          ) : packages.length === 0 ? (
+            <MobileEmptyState
+              icon={<Box className="h-7 w-7" />}
+              title="No packages found"
+              description={
+                searchQuery
+                  ? "Try adjusting your search criteria"
+                  : `No packages in ${
+                      statusTabs
+                        .find((t) => t.value === activeTab)
+                        ?.label.toLowerCase() ?? ""
+                    } status`
+              }
+            />
+          ) : (
+            <MobileStaggeredList key={`${activeTab}-${currentPage}`}>
+              {packages.map((pkg) => (
+                <MobileListCard
+                  key={pkg._id}
+                  className={
+                    selection.selectedIds.has(pkg._id)
+                      ? "border-primary/40 bg-primary/5"
+                      : undefined
+                  }
+                  leading={
+                    <span onClick={(e) => e.stopPropagation()}>
+                      <Checkbox
+                        checked={selection.selectedIds.has(pkg._id)}
+                        onCheckedChange={() => handleSelectPackage(pkg._id)}
+                        aria-label={`Select package ${pkg.packageCode}`}
+                      />
+                    </span>
+                  }
+                  title={
+                    <span className="flex items-center gap-2">
+                      #{pkg.orderNumber}
+                      <span className="font-mono text-xs font-normal text-muted-foreground">
+                        {pkg.packageCode}
+                      </span>
+                    </span>
+                  }
+                  subtitle={
+                    <span>
+                      {pkg.order?.customer.name || "N/A"}
+                      {pkg.order?.customer.phoneNumber
+                        ? ` · ${pkg.order.customer.phoneNumber}`
+                        : ""}
+                      {pkg.order?.shipping.district && (
+                        <> — {pkg.order.shipping.district}</>
+                      )}
+                    </span>
+                  }
+                  badge={<PackageStatusBadge status={pkg.status} />}
+                  trailing={
+                    <span className="text-sm font-semibold text-emerald-600">
+                      {pkg.order?.remaining ?? 0}
+                      <span className="ml-0.5 text-xs font-normal text-muted-foreground">
+                        BDT
+                      </span>
+                    </span>
+                  }
+                  onClick={() => setRowActionPkg(pkg)}
+                />
+              ))}
+            </MobileStaggeredList>
+          )}
+
+          <MobilePagination
+            page={currentPage}
+            totalPages={totalPages}
+            onChange={setCurrentPage}
+          />
+        </div>
+
+        {/* Bulk Action Bar */}
+        <AnimatePresence>
+          {selectedCount > 0 && (
+            <PackageBulkActionsBar
+              selectedCount={selectedCount}
+              totalCount={totalPackages}
+              isAllSelected={selection.isAllSelected}
+              onClearSelection={handleClearSelection}
+              onSelectAll={handleSelectAll}
+              onMarkPacked={handleBulkMarkPacked}
+              onRequestShipping={handleBulkRequestShipping}
+              onPrintSlips={handlePrintSlips}
+              onViewSelected={handleViewSelected}
+              progress={bulkProgress}
+            />
+          )}
+        </AnimatePresence>
+
+        {/* Row action sheet */}
+        <MobileActionSheet
+          open={!!rowActionPkg}
+          onOpenChange={(open) => !open && setRowActionPkg(null)}
+          title={rowActionPkg ? `Order #${rowActionPkg.orderNumber}` : undefined}
+          description={rowActionPkg?.packageCode}
+          actions={[
+            {
+              icon: <FileText className="h-4.5 w-4.5" />,
+              label: "View Details",
+              onClick: () => rowActionPkg && handleViewDetails(rowActionPkg),
+            },
+            {
+              icon: <PackageIcon className="h-4.5 w-4.5" />,
+              label: "Products",
+              onClick: () => rowActionPkg && handleViewProducts(rowActionPkg),
+            },
+            {
+              icon: <Eye className="h-4.5 w-4.5" />,
+              label: "Package Info",
+              onClick: () => rowActionPkg && setSelectedPackage(rowActionPkg),
+            },
+            {
+              icon: <Printer className="h-4.5 w-4.5" />,
+              label: "Print Packing Slip",
+              onClick: () =>
+                rowActionPkg && handlePrintSlip(rowActionPkg.orderNumber),
+            },
+          ]}
+        />
+
+        {/* Status filter sheet */}
+        <MobileFilterSheet
+          open={filterOpen}
+          onOpenChange={setFilterOpen}
+          title="Filter by Status"
+          onApply={() => setActiveTab(statusDraft)}
+          onReset={() => {
+            setStatusDraft("requested");
+            setActiveTab("requested");
+          }}>
+          <div className="flex flex-col gap-1">
+            {statusTabs.map((tab) => (
+              <button
+                key={tab.value}
+                onClick={() => setStatusDraft(tab.value)}
+                className={cn(
+                  "m3-ripple flex items-center gap-3 rounded-2xl px-4 py-3 text-left text-[15px] font-medium",
+                  statusDraft === tab.value
+                    ? "bg-primary/10 text-primary"
+                    : "text-foreground",
+                )}>
+                <span className={cn("h-2.5 w-2.5 rounded-full", tab.color)} />
+                {tab.label}
+                {statusDraft === tab.value && (
+                  <Check className="ml-auto h-4 w-4" />
+                )}
+              </button>
+            ))}
+          </div>
+        </MobileFilterSheet>
+
+        {/* Product Details Sheet */}
+        <ProductDetailsSheet
+          package={selectedPackage}
+          open={!!selectedPackage}
+          onOpenChange={(open) => !open && setSelectedPackage(null)}
+        />
+
+        {/* Order Products Sheet */}
+        <OrderProductsSheet
+          package={productsPackage}
+          open={showProductsSheet}
+          onOpenChange={setShowProductsSheet}
+          products={orderProducts}
+          loading={loadingProducts}
+        />
+
+        {/* Selected Packages Sheet */}
+        <SelectedPackagesSheet
+          packages={getSelectedPackages()}
+          open={selectedOrdersViewerOpen}
+          onOpenChange={setSelectedOrdersViewerOpen}
+        />
+
+        {/* Delete Confirmation Dialog */}
+        <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+          <AlertDialogContent className="max-w-[92vw]">
+            <AlertDialogHeader>
+              <AlertDialogTitle>Delete Selected Packages</AlertDialogTitle>
+              <AlertDialogDescription>
+                Are you sure you want to delete {selectedCount} package(s)? This
+                action cannot be undone.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter className="flex-row gap-2">
+              <AlertDialogCancel className="mt-0 flex-1">
+                Cancel
+              </AlertDialogCancel>
+              <AlertDialogAction
+                onClick={() => {
+                  toast.success("Delete functionality not implemented yet");
+                  setShowDeleteDialog(false);
+                  clearSelection();
+                }}
+                className="flex-1 bg-rose-600 hover:bg-rose-700">
+                Delete
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+      </MobilePage>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-slate-50/60">
       <div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
         {/* Page Header */}
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-          <div className="flex items-center gap-3">
-            <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-indigo-600 shadow-sm shadow-indigo-200">
-              <Package className="h-5 w-5 text-white" />
+        <PageHeader
+          icon={<Package className="h-5 w-5 text-white" />}
+          title="Packages"
+          subtitle="Manage and track all packages across different statuses"
+          count={
+            <span className="rounded-md px-2.5 py-1 text-base font-semibold text-slate-500 tabular-nums">
+              {totalPackages} total
+            </span>
+          }
+          actions={
+            <div className="flex items-center gap-2">
+              <Button
+                variant="outline"
+                onClick={handleRefresh}
+                disabled={refreshing}
+                className="h-9 text-slate-600 border-slate-200 hover:bg-slate-50">
+                <RefreshCw
+                  className={cn(
+                    "h-3.5 w-3.5 mr-1.5",
+                    refreshing && "animate-spin",
+                  )}
+                />
+                Refresh
+              </Button>
+              <Button
+                onClick={() => navigate("/packages/scan")}
+                className="h-9 gap-1.5">
+                <Barcode className="h-3.5 w-3.5" />
+                Scan Barcode
+              </Button>
             </div>
-            <div>
-              <h1 className="text-xl font-semibold text-slate-900 leading-tight">
-                Package Management
-              </h1>
-              <p className="text-sm text-slate-500 mt-0.5">
-                Manage and track all packages across different statuses
-              </p>
-            </div>
-          </div>
-
-          <div className="flex items-center gap-2">
-            <Button
-              variant="outline"
-              onClick={handleRefresh}
-              disabled={refreshing}
-              className="h-9 text-slate-600 border-slate-200 hover:bg-slate-50">
-              <RefreshCw
-                className={cn(
-                  "h-3.5 w-3.5 mr-1.5",
-                  refreshing && "animate-spin",
-                )}
-              />
-              Refresh
-            </Button>
-            <Button
-              onClick={() => navigate("/packages/scan")}
-              className="h-9 bg-indigo-600 hover:bg-indigo-700 text-white shadow-sm shadow-indigo-200 gap-1.5">
-              <Barcode className="h-3.5 w-3.5" />
-              Scan Barcode
-            </Button>
-          </div>
-        </div>
+          }
+        />
 
         {/* Bulk Action Bar */}
         <AnimatePresence>

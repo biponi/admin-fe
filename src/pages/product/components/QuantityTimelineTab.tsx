@@ -259,7 +259,7 @@ const QuantityTimelineTab = ({ productId }: QuantityTimelineTabProps) => {
         </Drawer>
       ) : (
         <Sheet open={showDetails} onOpenChange={handleDetailsOpenChange}>
-          <SheetContent className='w-full sm:max-w-xl'>
+          <SheetContent className='w-full md:max-w-xl'>
             <SheetHeader>
               <SheetTitle>
                 <EventDetailHeader event={detailEvent || selectedEvent} />

@@ -26,15 +26,13 @@ import {
   Copy,
   CheckCircle2,
   Mail,
-  ShieldAlert,
-  ShieldCheck,
-  Shield,
   RotateCcw,
   FileText,
   Clock,
   Box,
   ChevronRight,
   Hash,
+  Ban,
 } from "lucide-react";
 import { Badge } from "../../../components/ui/badge";
 import { Separator } from "../../../components/ui/separator";
@@ -47,6 +45,8 @@ import {
   getPaymentStatus,
 } from "../lib/utils";
 import { StatusBadge, PaymentStatusBadge } from "./StatusBadge";
+import RiskBadge from "../../../components/fraud/RiskBadge";
+import BlockedBadge from "../../../components/fraud/BlockedBadge";
 import DeliveryTimelineBadge from "./DeliveryTimelineBadge";
 import { cn } from "../lib/utils";
 import type { IOrder } from "../types";
@@ -57,6 +57,7 @@ import {
 import { generateReactPdfPackingSlip } from "../../../utils/reactPdfPackingSlip";
 import { toast } from "sonner";
 import { BRAND_CONFIG } from "../../../config/brand";
+import useRoleCheck from "../../auth/hooks/useRoleCheck";
 
 interface OrderDetailsSheetProps {
   order: IOrder | null;
@@ -146,27 +147,6 @@ const ToolbarButton = ({
   </button>
 );
 
-const RISK_CONFIG = {
-  green: {
-    icon: ShieldCheck,
-    label: "Low risk",
-    className: "bg-emerald-50 text-emerald-700 border border-emerald-200",
-    iconClass: "text-emerald-500",
-  },
-  yellow: {
-    icon: Shield,
-    label: "Medium risk",
-    className: "bg-amber-50 text-amber-700 border border-amber-200",
-    iconClass: "text-amber-500",
-  },
-  red: {
-    icon: ShieldAlert,
-    label: "High risk",
-    className: "bg-red-50 text-red-700 border border-red-200",
-    iconClass: "text-red-500",
-  },
-};
-
 export const OrderDetailsSheet: React.FC<OrderDetailsSheetProps> = ({
   order,
   open,
@@ -174,12 +154,15 @@ export const OrderDetailsSheet: React.FC<OrderDetailsSheetProps> = ({
   onEdit,
 }) => {
   const [copied, setCopied] = useState(false);
+  const { canModifyOrder } = useRoleCheck();
 
   if (!order) return null;
 
   const paymentStatus = getPaymentStatus(order);
   const hasHighRisk =
-    order.customerRiskLevel === "red" || order.requiresManualReview;
+    order.customerRiskLevel === "red" ||
+    order.requiresManualReview ||
+    order.fraudDetection?.blocked;
 
   const isCancelledOrFailed = [
     "cancel",
@@ -192,9 +175,6 @@ export const OrderDetailsSheet: React.FC<OrderDetailsSheetProps> = ({
   const subtotal = order.products.reduce((sum, p) => sum + p.totalPrice, 0);
   const total = order.totalPrice + order.deliveryCharge - (order.discount || 0);
 
-  const riskConfig =
-    order.fraudDetection &&
-    RISK_CONFIG[order.fraudDetection.riskLevel as keyof typeof RISK_CONFIG];
 
   /* ---------- Handlers ---------- */
 
@@ -346,23 +326,28 @@ export const OrderDetailsSheet: React.FC<OrderDetailsSheetProps> = ({
               />
             )}
             <PaymentStatusBadge status={paymentStatus} size='sm' animated />
-            {riskConfig && (
-              <span
-                className={cn(
-                  "inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-medium",
-                  riskConfig.className,
-                )}>
-                <riskConfig.icon
-                  className={cn("h-3 w-3", riskConfig.iconClass)}
-                />
-                {riskConfig.label}
-              </span>
+            {order.fraudDetection && (
+              <RiskBadge level={order.fraudDetection.riskLevel} compact />
             )}
+            {order.fraudDetection?.blocked ? <BlockedBadge /> : null}
           </div>
         </SheetHeader>
 
-        {/* ── High-risk alert ── */}
-        {hasHighRisk && (
+        {/* ── Blocked / high-risk alert ── */}
+        {order.fraudDetection?.blocked ? (
+          <div className='mx-4 mt-3 flex items-start gap-3 rounded-lg border border-rose-600 bg-rose-600 px-4 py-3 text-white'>
+            <Ban className='h-4 w-4 shrink-0 mt-0.5' />
+            <div>
+              <p className='text-xs font-semibold'>
+                Customer blocked from ordering
+              </p>
+              <p className='text-[11px] opacity-90 mt-0.5'>
+                This customer is in the fraud group — new orders will be
+                rejected. Open the fraud panel for details.
+              </p>
+            </div>
+          </div>
+        ) : hasHighRisk ? (
           <div className='mx-4 mt-3 flex items-start gap-3 rounded-lg border border-red-200 bg-red-50 px-4 py-3'>
             <AlertTriangle className='h-4 w-4 text-red-500 shrink-0 mt-0.5' />
             <div>
@@ -374,7 +359,7 @@ export const OrderDetailsSheet: React.FC<OrderDetailsSheetProps> = ({
               </p>
             </div>
           </div>
-        )}
+        ) : null}
 
         {/* ── Scrollable body ── */}
         <ScrollArea className='flex-1 min-h-0'>
@@ -683,7 +668,7 @@ export const OrderDetailsSheet: React.FC<OrderDetailsSheetProps> = ({
               </>
             )}
 
-            {onEdit && (
+            {onEdit && canModifyOrder("order", "edit", order) && (
               <Button
                 size='sm'
                 className='hidden flex-1 min-w-[100px] text-xs bg-blue-600 hover:bg-blue-700 text-white gap-1.5'

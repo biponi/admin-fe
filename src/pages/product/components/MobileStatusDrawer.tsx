@@ -1,4 +1,3 @@
-import { useState } from "react"
 import {
   Drawer,
   DrawerContent,
@@ -9,7 +8,8 @@ import {
   DrawerClose,
 } from "@/components/ui/drawer"
 import { Button } from "@/components/ui/button"
-import { ListFilter, X } from "lucide-react"
+import { Check, X } from "lucide-react"
+import { cn } from "@/lib/utils"
 
 interface TabOption {
   value: string
@@ -43,57 +43,72 @@ export function MobileStatusDrawer({
 
   return (
     <Drawer open={open} onOpenChange={onOpenChange}>
-      <DrawerContent className="rounded-t-2xl max-h-[70vh]">
-        <DrawerHeader className="pb-2 flex flex-row items-center justify-between">
-          <div className="flex items-center gap-2">
-            <ListFilter className={`h-5 w-5 ${isInactiveView ? "text-orange-500" : "text-indigo-600"}`} />
-            <div>
-              <DrawerTitle className="text-base font-semibold">Filter by Status</DrawerTitle>
-              <DrawerDescription className="text-xs">Select a status to filter products</DrawerDescription>
-            </div>
+      <DrawerContent className="max-h-[80vh]">
+        <DrawerHeader className="flex flex-row items-start justify-between border-b border-slate-200/80 pb-4">
+          <div>
+            <span className="text-[10px] font-semibold uppercase tracking-wider text-slate-400">
+              Filter
+            </span>
+            <DrawerTitle className="text-base font-semibold text-[#141413]">
+              Status
+            </DrawerTitle>
+            <DrawerDescription className="mt-0.5 text-xs text-slate-400">
+              Show products matching one status
+            </DrawerDescription>
           </div>
           <DrawerClose asChild>
-            <Button variant="ghost" size="sm" className="h-8 w-8 p-0 rounded-full">
+            <Button
+              variant="ghost"
+              size="sm"
+              className="h-8 w-8 shrink-0 rounded-md border border-slate-200 bg-white p-0 text-slate-400 hover:text-[#141413]"
+            >
               <X className="h-4 w-4" />
             </Button>
           </DrawerClose>
         </DrawerHeader>
 
-        <div className="px-4 pb-4 overflow-y-auto max-h-[55vh]">
-          <div className="space-y-1">
+        <div className="overflow-y-auto bg-white px-3 py-3" style={{ maxHeight: "52vh" }}>
+          <div className="space-y-1.5">
             {options.map((option) => {
               const isSelected = selectedTab === option.value
               return (
                 <button
                   key={option.value}
                   onClick={() => handleSelect(option.value)}
-                  className={`w-full flex items-center justify-between px-4 py-3 rounded-xl text-sm font-medium transition-colors ${
+                  className={cn(
+                    "flex w-full items-center justify-between rounded-lg border px-3.5 py-3 text-[13px] font-medium transition-colors",
                     isSelected
                       ? isInactiveView
-                        ? "bg-orange-50 text-orange-700 border border-orange-200"
-                        : "bg-indigo-50 text-indigo-700 border border-indigo-200"
-                      : "text-zinc-600 hover:bg-zinc-50 border border-transparent"
-                  }`}
+                        ? "border-orange-300 bg-white text-orange-600"
+                        : "border-[#141413] bg-white text-[#141413]"
+                      : "border-slate-200 bg-white text-slate-600 active:bg-slate-50",
+                  )}
                 >
-                  <div className="flex items-center gap-3">
-                    <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${
+                  <span className="flex items-center gap-3">
+                    <span
+                      className={cn(
+                        "flex h-5 w-5 shrink-0 items-center justify-center rounded-full border transition-colors",
+                        isSelected
+                          ? isInactiveView
+                            ? "border-orange-500 bg-orange-500 text-white"
+                            : "border-[#141413] bg-[#141413] text-white"
+                          : "border-slate-300",
+                      )}
+                    >
+                      {isSelected && <Check className="h-3 w-3" strokeWidth={3} />}
+                    </span>
+                    {option.label}
+                  </span>
+                  <span
+                    className={cn(
+                      "rounded-md border px-1.5 py-px text-[11px] font-semibold",
                       isSelected
                         ? isInactiveView
-                          ? "border-orange-500 bg-orange-500"
-                          : "border-indigo-500 bg-indigo-500"
-                        : "border-zinc-300"
-                    }`}>
-                      {isSelected && <div className="w-2 h-2 rounded-full bg-white" />}
-                    </div>
-                    <span>{option.label}</span>
-                  </div>
-                  <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${
-                    isSelected
-                      ? isInactiveView
-                        ? "bg-orange-100 text-orange-700"
-                        : "bg-indigo-100 text-indigo-700"
-                      : option.badgeClass
-                  }`}>
+                          ? "border-orange-200 bg-orange-50 text-orange-600"
+                          : "border-slate-200 bg-white text-[#141413]"
+                        : option.badgeClass,
+                    )}
+                  >
                     {counts[option.value]}
                   </span>
                 </button>
@@ -102,9 +117,11 @@ export function MobileStatusDrawer({
           </div>
         </div>
 
-        <DrawerFooter className="pt-0 pb-6">
+        <DrawerFooter className="border-t border-slate-200/80 bg-white pt-3 pb-[max(1.25rem,env(safe-area-inset-bottom))]">
           <DrawerClose asChild>
-            <Button variant="outline" className="w-full">Close</Button>
+            <Button className="h-11 w-full rounded-xl bg-[#141413] text-[13px] font-semibold text-white hover:bg-[#2a2a2a]">
+              Done
+            </Button>
           </DrawerClose>
         </DrawerFooter>
       </DrawerContent>
