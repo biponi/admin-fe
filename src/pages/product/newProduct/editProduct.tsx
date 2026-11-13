@@ -105,6 +105,7 @@ const EditProduct: React.FC<Props> = ({
   const [slugManuallyEdited, setSlugManuallyEdited] = useState(false);
   const fileRef = useRef(null);
   const fileRef2 = useRef(null);
+  const sizeGuideFileRef = useRef(null);
   const dialogBtn = useRef(null);
   const updateDialogBtn = useRef(null);
 
@@ -1384,6 +1385,88 @@ const EditProduct: React.FC<Props> = ({
                       <Upload className='h-3.5 w-3.5' />
                       Change
                     </button>
+                  </div>
+
+                  {/* Size guide / extra info chart (optional single image) */}
+                  <Input
+                    id='picture-size-guide'
+                    type='file'
+                    className='hidden'
+                    ref={sizeGuideFileRef}
+                    name='sizeGuideImage'
+                    accept='.png, .jpg, .jpeg'
+                    onChange={(e) => {
+                      //@ts-ignore
+                      const file = e.target.files[0];
+                      if (!file) return;
+                      updateFormData({
+                        ...formData,
+                        sizeGuideImage: file,
+                        // a fresh upload cancels a pending removal
+                        removeSizeGuideImage: false,
+                      } as IProductUpdateData);
+                    }}
+                  />
+                  <div className='space-y-1'>
+                    <h3 className='text-sm font-medium text-slate-900'>
+                      Size Guide / Extra Info Chart{" "}
+                      <span className='text-xs font-normal text-slate-400'>
+                        (optional)
+                      </span>
+                    </h3>
+                    <p className='text-xs text-slate-500'>
+                      e.g. a measurement chart shown to customers on the product
+                      page
+                    </p>
+                  </div>
+                  <div className='relative'>
+                    <img
+                      alt='Product_size_guide'
+                      className='aspect-[4/3] w-full rounded-xl object-contain border border-slate-200 bg-slate-50'
+                      src={
+                        !!formData?.sizeGuideImage
+                          ? typeof formData?.sizeGuideImage === "string"
+                            ? formData?.sizeGuideImage
+                            : URL.createObjectURL(formData?.sizeGuideImage)
+                          : PlaceHolderImage
+                      }
+                    />
+                    {!formData?.sizeGuideImage && (
+                      <div className='absolute inset-0 flex flex-col items-center justify-center text-slate-400'>
+                        <Upload className='h-8 w-8 mb-2' />
+                        <p className='text-sm text-center px-2'>
+                          No size guide image
+                        </p>
+                      </div>
+                    )}
+                    <button
+                      onClick={() => {
+                        if (!!sizeGuideFileRef) {
+                          //@ts-ignore
+                          sizeGuideFileRef.current.click();
+                        }
+                      }}
+                      className='absolute bottom-2 right-2 inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-slate-600 bg-white/90 backdrop-blur-sm border border-slate-200 rounded-lg hover:bg-white shadow-sm'>
+                      <Upload className='h-3.5 w-3.5' />
+                      {!!formData?.sizeGuideImage ? "Change" : "Upload"}
+                    </button>
+                    {!!formData?.sizeGuideImage && (
+                      <button
+                        onClick={() => {
+                          if (sizeGuideFileRef.current) {
+                            //@ts-ignore
+                            sizeGuideFileRef.current.value = "";
+                          }
+                          updateFormData({
+                            ...formData,
+                            sizeGuideImage: null,
+                            removeSizeGuideImage: true,
+                          } as IProductUpdateData);
+                        }}
+                        className='absolute top-2 right-2 p-1.5 bg-red-500 hover:bg-red-600 text-white rounded-full transition-all duration-200 shadow-lg hover:scale-110 z-10'>
+                        <X className='w-4 h-4' />
+                      </button>
+                    )}
                   </div>
 
                   <div className='space-y-2'>

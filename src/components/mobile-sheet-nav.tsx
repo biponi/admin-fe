@@ -111,7 +111,7 @@ export function MobileSheetNav({
           className={cn(
             "w-full p-0 gap-0 border-r-0 shadow-2xl transition-colors duration-200",
             activeBgColor,
-            "text-sidebar-foreground",
+            "text-white",
           )}>
           {/* Weather-themed background. Two selectable styles (settings
               panel): the default crossfading image theme, or the animated CSS
@@ -162,10 +162,10 @@ export function MobileSheetNav({
                   />
                 </div>
                 <div>
-                  <SheetTitle className='text-base font-semibold text-sidebar-foreground tracking-tight'>
+                  <SheetTitle className='text-base font-semibold text-white tracking-tight'>
                     {BRAND_CONFIG.shortName}
                   </SheetTitle>
-                  <p className='text-[11px] text-sidebar-foreground/55 uppercase tracking-widest font-medium mt-0.5'>
+                  <p className='text-[11px] text-white/55 uppercase tracking-widest font-medium mt-0.5'>
                     Management
                   </p>
                 </div>
@@ -179,15 +179,15 @@ export function MobileSheetNav({
                   {user?.avatar ? (
                     <AvatarImage src={user.avatar} alt={user.name} />
                   ) : null}
-                  <AvatarFallback className='bg-sidebar-foreground/30 text-sidebar-foreground text-sm font-semibold backdrop-blur-sm'>
+                  <AvatarFallback className='bg-sidebar-foreground/30 text-white text-sm font-semibold backdrop-blur-sm'>
                     {getInitialsWord(user?.name || "U")}
                   </AvatarFallback>
                 </Avatar>
                 <div className='flex-1 min-w-0'>
-                  <p className='text-sm font-semibold text-sidebar-foreground truncate'>
+                  <p className='text-sm font-semibold text-white   truncate'>
                     {user?.name || "User"}
                   </p>
-                  <p className='text-[11px] text-sidebar-foreground/55 truncate mt-0.5'>
+                  <p className='text-[11px] text-white/55 truncate mt-0.5'>
                     {user?.email || ""}
                   </p>
                 </div>
@@ -196,7 +196,7 @@ export function MobileSheetNav({
                   onClick={() => {
                     setSettingsOpen(true);
                   }}
-                  className='flex items-center justify-center size-8 rounded-xl bg-sidebar-foreground/10 hover:bg-sidebar-foreground/20 text-sidebar-foreground/60 hover:text-sidebar-foreground transition-all duration-150'>
+                  className='flex items-center justify-center size-8 rounded-xl bg-sidebar-foreground/10 hover:bg-sidebar-foreground/20 text-white/60 hover:text-white transition-all duration-150'>
                   <Settings className='size-3.5' />
                 </button>
               </div>
@@ -204,7 +204,7 @@ export function MobileSheetNav({
 
             {/* ── Nav Label ── */}
             <div className='px-5 pt-4 pb-1'>
-              <span className='text-[9px] font-semibold tracking-[0.18em] uppercase text-sidebar-foreground/40'>
+              <span className='text-[9px] font-semibold tracking-[0.18em] uppercase text-white/40'>
                 Navigation
               </span>
             </div>
@@ -228,11 +228,11 @@ export function MobileSheetNav({
                           "relative",
                           isActive
                             ? [
-                                "bg-sidebar-foreground/20 text-sidebar-foreground",
+                                "bg-sidebar-foreground/20 text-white",
                                 "ring-1 ring-sidebar-foreground/25",
                                 "shadow-[inset_0_1px_0_rgba(255,255,255,0.2)]",
                               ]
-                            : "text-sidebar-foreground/65 hover:bg-sidebar-foreground/10 hover:text-sidebar-foreground",
+                            : "text-white/65 hover:bg-sidebar-foreground/10 hover:text-white",
                         )}>
                         {/* Active left bar */}
                         {isActive && (
@@ -244,8 +244,8 @@ export function MobileSheetNav({
                           className={cn(
                             "flex items-center justify-center size-8 rounded-xl shrink-0 transition-all duration-150",
                             isActive
-                              ? "bg-sidebar-foreground/20 text-sidebar-foreground"
-                              : "bg-sidebar-foreground/10 text-sidebar-foreground/50 group-hover:text-sidebar-foreground",
+                              ? "bg-sidebar-foreground/20 text-white"
+                              : "bg-sidebar-foreground/10 text-white/50 group-hover:text-white",
                           )}>
                           {/* item.icon is already a React element from navItems */}
                           <span className='[&_svg]:size-4'>{item.icon}</span>
@@ -258,9 +258,8 @@ export function MobileSheetNav({
                         {hasChildren ? (
                           <ChevronDown
                             className={cn(
-                              "size-3.5 text-sidebar-foreground/40 transition-transform duration-200 shrink-0",
-                              isExpanded &&
-                                "rotate-180 text-sidebar-foreground/70",
+                              "size-3.5 text-white/40 transition-transform duration-200 shrink-0",
+                              isExpanded && "rotate-180 text-white/70",
                             )}
                           />
                         ) : isActive ? (
@@ -282,10 +281,10 @@ export function MobileSheetNav({
                                   "w-full flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-medium",
                                   "transition-all duration-150 active:scale-[0.98] group",
                                   isChildActive
-                                    ? "bg-sidebar-foreground/15 text-sidebar-foreground"
-                                    : "text-sidebar-foreground/50 hover:bg-sidebar-foreground/10 hover:text-sidebar-foreground",
+                                    ? "bg-sidebar-foreground/15 text-white"
+                                    : "text-white/50 hover:bg-sidebar-foreground/10 hover:text-white",
                                 )}>
-                                <ChevronRight className='size-3 shrink-0 transition-transform group-hover:translate-x-0.5 text-sidebar-foreground/30' />
+                                <ChevronRight className='size-3 shrink-0 transition-transform group-hover:translate-x-0.5 text-white/30' />
                                 <span className='flex-1 text-left'>
                                   {child.title}
                                 </span>
@@ -307,11 +306,11 @@ export function MobileSheetNav({
           {/* ── Footer ── */}
           <div className='absolute bottom-0 inset-x-0 px-4 py-4 border-t bg-black/10 backdrop-blur-sm border-sidebar-foreground/10'>
             <div className='flex items-center justify-between'>
-              <p className='text-[10px] text-sidebar-foreground/35 font-medium'>
+              <p className='text-[10px] text-white/35 font-medium'>
                 © {new Date().getFullYear()} {BRAND_CONFIG.companyName}
               </p>
               <button
-                className='flex items-center gap-1.5 text-[11px] text-sidebar-foreground/40 hover:text-sidebar-foreground/70 transition-colors duration-150'
+                className='flex items-center gap-1.5 text-[11px] text-white/40 hover:text-white/70 transition-colors duration-150'
                 onClick={() => {
                   /* hook up logout */
                 }}>

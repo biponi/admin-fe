@@ -20,9 +20,9 @@ export default defineConfig({
         "pwa-maskable-512x512.png",
       ],
       manifest: {
-        name: "Prior Admin",
-        short_name: "Prior Admin",
-        description: "Prior Admin Panel",
+        name: "PROMX",
+        short_name: "PROMX",
+        description: "PROMX Panel",
         theme_color: "#ffffff",
         background_color: "#ffffff",
         display: "standalone",

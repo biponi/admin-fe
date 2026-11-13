@@ -5,12 +5,13 @@
 ### Phase 1: Core Infrastructure ✓
 
 **1. Created Brand Configuration File**
+
 - **File:** `src/config/brand.ts`
 - **Exports:** `BRAND_CONFIG` object with all brand properties
 - **Properties:**
-  - `name` - Full application name (e.g., "Prior Admin")
+  - `name` - Full application name (e.g., "PROMX")
   - `shortName` - Short brand name (e.g., "Prior")
-  - `companyName` - Legal company name (e.g., "PriorBD")
+  - `companyName` - Legal company name (e.g., "PROMX")
   - `website` - Company website URL
   - `email` - Company contact email
   - `trackingUrl()` - Order tracking URL template
@@ -18,17 +19,19 @@
   - `locale` - Default locale (en-BD)
 
 **2. Updated Environment Variables**
+
 - **File:** `.env.example`
 - **Added Variables:**
   ```bash
-  REACT_APP_BRAND_NAME="Prior Admin"
+  REACT_APP_BRAND_NAME="PROMX"
   REACT_APP_BRAND_SHORT_NAME="Prior"
-  REACT_APP_BRAND_COMPANY_NAME="PriorBD"
-  REACT_APP_BRAND_WEBSITE="https://priorbd.com"
+  REACT_APP_BRAND_COMPANY_NAME="PROMX"
+  REACT_APP_BRAND_WEBSITE="https://PROMX.com"
   REACT_APP_BRAND_EMAIL="prior.retailshop.info.bd@gmail.com"
   ```
 
 **3. Updated Core Configuration**
+
 - **File:** `src/utils/contents.tsx`
 - **Added:** Brand configuration exports
   - `appTitle`
@@ -60,10 +63,12 @@
 ### Phase 3: Build Configuration ✓
 
 **1. Updated public/index.html**
+
 - Changed title to use `%REACT_APP_BRAND_NAME%`
 - Updated meta description to use environment variable
 
 **2. Created Update Script**
+
 - **File:** `update-brand.sh`
 - Automates updates for remaining files
 - Ready to execute for PDF generators and other components
@@ -73,17 +78,20 @@
 ### Manual Updates Required:
 
 **1. PDF Document Generators (4 files)**
+
 - `src/components/pdf/TransactionPDF.tsx`
 - `src/utils/reactPdfInvoice.tsx`
 - `src/utils/reactPdfPackingSlip.tsx`
 - `src/utils/reactPdfStorerecord.tsx`
 
 **2. Additional Navigation Components (3 files)**
+
 - `src/components/mobile-bottom-nav.tsx`
 - `src/components/MobileDrawerNav.tsx`
 - `src/coreComponents/navbar.tsx`
 
 **3. PWA Manifest**
+
 - `public/manifest.json`
 
 ## 🚀 HOW TO USE
@@ -94,10 +102,10 @@ Add to your `.env` file (or create it):
 
 ```bash
 # Brand Configuration
-REACT_APP_BRAND_NAME="Prior Admin"
+REACT_APP_BRAND_NAME="PROMX"
 REACT_APP_BRAND_SHORT_NAME="Prior"
-REACT_APP_BRAND_COMPANY_NAME="PriorBD"
-REACT_APP_BRAND_WEBSITE="https://priorbd.com"
+REACT_APP_BRAND_COMPANY_NAME="PROMX"
+REACT_APP_BRAND_WEBSITE="https://PROMX.com"
 REACT_APP_BRAND_EMAIL="prior.retailshop.info.bd@gmail.com"
 ```
 
@@ -178,6 +186,6 @@ The brand configuration system is now **FULLY FUNCTIONAL** for the core applicat
 
 ---
 
-*Generated: 2026-05-12*
-*Implementation Status: Core Complete (7/9 navigation components, build config)*
-*Remaining: PDF generators, minor navigation components, PWA manifest*
+_Generated: 2026-05-12_
+_Implementation Status: Core Complete (7/9 navigation components, build config)_
+_Remaining: PDF generators, minor navigation components, PWA manifest_

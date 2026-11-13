@@ -11,10 +11,54 @@ The current release (**4.0.0**) ships everything from **3.4.9** onward in one de
 | 3.4.9 | `beb5d73` | 2026-10-20 | Invoice grand-total fix |
 | 3.5.1 | `aa44f1b` | 2026-10-20 | Activity Log (audit trail) |
 | 3.6.1 | `cddc335` | 2026-11-06 | Delivery locations service, Location Settings, Quantity Timeline |
-| 4.0.0 | *(working tree)* | 2026-11-13 | Fraud, prepayment, pending orders, bKash logs, mobile UI, permissions, product meta, notifications, rebrand |
+| 4.0.0 | `0daf8e0` | 2026-11-13 | Fraud, prepayment, pending orders, bKash logs, mobile UI, permissions, product meta, notifications, rebrand |
+| 4.0.2 | *(working tree)* | 2026-11-14 | PROMX rebrand, product size-guide image, mobile UI polish |
 
 Release/migration details: [`docs/RELEASE_PLAN.md`](docs/RELEASE_PLAN.md) · Management summary:
 [`docs/MANAGEMENT_RELEASE_NOTES.md`](docs/MANAGEMENT_RELEASE_NOTES.md)
+
+---
+
+## [4.0.2] — 2026-11-14
+
+Version bump 4.0.1 → 4.0.2 (`package.json`).
+
+### Added
+
+#### Product size-guide image
+- Products now support an optional **Size Guide / Extra Info Chart** image (e.g. a measurement chart shown on the product page), uploaded alongside the thumbnail:
+  - New fields on the product contracts (`src/pages/product/interface.d.ts`): `sizeGuideImage` on `IProduct`, optional `sizeGuideImage: File | null` on `IProductCreateData`, and `sizeGuideImage: string | File | null` plus `removeSizeGuideImage?: boolean` on `IProductUpdateData`.
+  - Add Product (`addProduct.tsx`): dedicated upload section with preview, remove button, and "Upload Size Guide" picker.
+  - Edit Product (`editProduct.tsx`): same upload section for existing products, with change/remove support — a fresh upload cancels a pending removal, and the remove button sets `removeSizeGuideImage: true`.
+  - Submit payload (`editProductIndex.tsx`): only a newly picked `File` or an explicit remove flag is appended to the form data; the unchanged URL string is dropped so the backend is never sent stale body strings for this field.
+
+### Changed
+
+#### Rebrand: Prior → PROMX
+- Brand defaults switched from "Prior Admin" / "Prior" / "PriorBD" / `priorbd.com` to **PROMX** / `https://PROMX.com` everywhere:
+  - `src/config/brand.ts` (`BRAND_CONFIG` fallbacks and helper functions) and `.env.example`.
+  - `index.html` and `public/index.html`: page title, meta description, `apple-mobile-web-app-title`.
+  - `vite.config.ts`: PWA manifest `name` / `short_name` / `description`.
+  - `src/config/api.ts`: chat and socket base URLs moved to `https://yuki.PROMX.com`.
+  - `src/utils/invoiceGenerator.ts` and `src/utils/reactPdfInvoice-backup.tsx`: footer/company website in generated PDFs.
+  - `update-brand.sh`: echoed env guidance updated.
+- Contact email, address, and phone remain unchanged.
+
+#### Mobile UI polish
+- `src/components/mobile-sheet-nav.tsx`: sheet nav text switched from weather-dependent `text-sidebar-foreground` tokens to fixed `text-white` (and alpha variants) for consistent contrast on themed backdrops.
+- Order mobile card (`MobileOrderCard.tsx`): rounded card corners (`rounded-xl`) with `drop-shadow-md` instead of hard shadow; bulk-select checkbox rounded to `rounded-xl`; permission array reformatted.
+- Order mobile header (`MobileOrderHeader.tsx`): header card slimmed down (reduced vertical padding, 10×10 icon/create buttons instead of 12×12) for a more compact layout.
+
+#### Code quality / formatting
+- `CreateEmailCampaign.tsx`: large indentation/structure cleanup (JSX re-indented into the page layout), placeholder text updated from PriorBD to PROMX; no functional changes.
+- `invoiceGenerator.ts` / `reactPdfInvoice-backup.tsx`: Prettier formatting pass (trailing commas, wrapped signatures); import tidy-up.
+- `public/index.html`: normalized doctype and reformatted `<meta>`/`<link>` tags to match `index.html`.
+
+### Removed
+- Deleted unused asset `src/assets/fgfg.webp`.
+
+### Docs
+- Updated implementation guides and docs to reflect the PROMX rebrand, size-guide feature, and current release state: `FRONTEND_API_GUIDE.md`, `NEW_FEATURES_RELEASE.md`, `PASSWORD_CHANGE_FLOW.md`, `README_FRONTEND.md`, `ADMIN_COUPON_API.md`, `BRAND-CONFIGURATION-GUIDE.md`, `RELEASE_NOTES.md`, `dashboard-improvements.md`, `order-v2/README.md`.
 
 ---
 

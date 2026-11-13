@@ -1,4 +1,5 @@
 # 📚 Frontend Developer Documentation
+
 ## Prior eCommerce Platform - Complete Integration Guide
 
 Welcome! This guide will help you integrate with the Prior backend APIs for OTP verification and reporting systems.
@@ -11,16 +12,17 @@ Welcome! This guide will help you integrate with the Prior backend APIs for OTP 
 
 We've created **4 comprehensive documentation files** for you:
 
-| File | Purpose | Best For |
-|------|---------|----------|
-| **[FRONTEND_API_GUIDE.md](FRONTEND_API_GUIDE.md)** | Complete API documentation with detailed request/response examples | Full reference when implementing APIs |
-| **[API_QUICK_REFERENCE.md](API_QUICK_REFERENCE.md)** | Quick cheat sheet with code snippets | Quick lookups during development |
-| **[INTEGRATION_EXAMPLES.md](INTEGRATION_EXAMPLES.md)** | Complete, ready-to-use code examples (Vanilla JS & React) | Copy-paste implementation |
-| **Individual README files** | Detailed docs for each system | Deep dive into specific features |
+| File                                                   | Purpose                                                            | Best For                              |
+| ------------------------------------------------------ | ------------------------------------------------------------------ | ------------------------------------- |
+| **[FRONTEND_API_GUIDE.md](FRONTEND_API_GUIDE.md)**     | Complete API documentation with detailed request/response examples | Full reference when implementing APIs |
+| **[API_QUICK_REFERENCE.md](API_QUICK_REFERENCE.md)**   | Quick cheat sheet with code snippets                               | Quick lookups during development      |
+| **[INTEGRATION_EXAMPLES.md](INTEGRATION_EXAMPLES.md)** | Complete, ready-to-use code examples (Vanilla JS & React)          | Copy-paste implementation             |
+| **Individual README files**                            | Detailed docs for each system                                      | Deep dive into specific features      |
 
 ### 2. API Systems Available
 
 #### 🔐 OTP Email Verification System
+
 - Send OTP codes via email
 - Verify 6-digit codes
 - Resend functionality
@@ -31,6 +33,7 @@ We've created **4 comprehensive documentation files** for you:
 **Detailed Docs:** [routes/v1/OTP/README.md](routes/v1/OTP/README.md)
 
 #### 📊 Reports & Analytics System
+
 - Sales overview & trends
 - Customer insights
 - Product performance
@@ -73,6 +76,7 @@ We've created **4 comprehensive documentation files** for you:
 4. Test: Follow test scenarios in documentation
 
 **Files you'll need:**
+
 - Complete registration form (HTML or React)
 - OTP service class
 - Email validation utils
@@ -88,6 +92,7 @@ We've created **4 comprehensive documentation files** for you:
 4. Customize: Adjust date ranges and filters
 
 **Files you'll need:**
+
 - Dashboard layout component
 - Reports service class
 - Chart components (sales trend, status breakdown, etc.)
@@ -150,7 +155,7 @@ Create a `.env` file in your frontend project:
 REACT_APP_API_BASE=http://localhost:3000/api/v1
 
 # For Production
-# REACT_APP_API_BASE=https://api.priorbd.com/api/v1
+# REACT_APP_API_BASE=https://api.PROMX.com/api/v1
 ```
 
 ### Required Dependencies
@@ -172,25 +177,30 @@ npm install axios recharts
 We've created production-ready service classes for you:
 
 **OTPService.js** - Complete OTP management
+
 ```javascript
-import OTPService from './services/otpService';
+import OTPService from "./services/otpService";
 
 // Send OTP
-await OTPService.sendOTP('user@example.com', 'registration');
+await OTPService.sendOTP("user@example.com", "registration");
 
 // Verify OTP
-await OTPService.verifyOTP('user@example.com', '123456', 'registration');
+await OTPService.verifyOTP("user@example.com", "123456", "registration");
 ```
 
 **ReportsService.js** - All reporting endpoints
+
 ```javascript
-import ReportsService from './services/reportsService';
+import ReportsService from "./services/reportsService";
 
 // Get sales overview
-const overview = await ReportsService.getSalesOverview('2025-01-01', '2025-01-31');
+const overview = await ReportsService.getSalesOverview(
+  "2025-01-01",
+  "2025-01-31",
+);
 
 // Export CSV
-await ReportsService.exportCSV('2025-01-01', '2025-01-31');
+await ReportsService.exportCSV("2025-01-01", "2025-01-31");
 ```
 
 **Full code available in:** [INTEGRATION_EXAMPLES.md](INTEGRATION_EXAMPLES.md)
@@ -208,12 +218,14 @@ await ReportsService.exportCSV('2025-01-01', '2025-01-31');
 ### Rate Limits
 
 **OTP System:**
+
 - Send OTP: 3 requests per 5 minutes per email
 - Resend OTP: 2 requests per 5 minutes per email
 - Verify OTP: 5 attempts per code
 - Minimum resend interval: 1 minute
 
 **Reports System:**
+
 - No strict rate limits
 - Recommended: Cache reports for 5-10 minutes
 
@@ -222,6 +234,7 @@ await ReportsService.exportCSV('2025-01-01', '2025-01-31');
 All dates must be in **ISO 8601 format**: `YYYY-MM-DD`
 
 Examples:
+
 - ✅ `2025-01-31`
 - ✅ `2025-01-01`
 - ❌ `31/01/2025`
@@ -255,6 +268,7 @@ Examples:
 
 **Problem:** OTP email not received
 **Solutions:**
+
 - Check spam/junk folder
 - Verify email address is correct
 - Wait 1-2 minutes (email may be delayed)
@@ -262,12 +276,14 @@ Examples:
 
 **Problem:** "Invalid OTP" error
 **Solutions:**
+
 - Ensure 6-digit code is correct
 - Check if OTP has expired (10 min limit)
 - Request new OTP if expired
 
 **Problem:** "Rate limited" error
 **Solutions:**
+
 - Wait for the specified retry period
 - Check `retryAfter` field in response
 - Show countdown to user
@@ -276,18 +292,21 @@ Examples:
 
 **Problem:** "Unauthorized" error
 **Solutions:**
+
 - Verify admin token is included in headers
 - Check token hasn't expired
 - Re-authenticate if needed
 
 **Problem:** Empty data in reports
 **Solutions:**
+
 - Verify date range has orders
 - Check if filters are too restrictive
 - Ensure database has data for period
 
 **Problem:** CSV download not working
 **Solutions:**
+
 - Use `responseType: 'blob'` in axios
 - Check browser pop-up blocker
 - Verify file download permissions
@@ -403,6 +422,7 @@ Download CSV file
 ## 📊 API Response Examples
 
 ### OTP Send Success
+
 ```json
 {
   "success": true,
@@ -416,6 +436,7 @@ Download CSV file
 ```
 
 ### Sales Overview Success
+
 ```json
 {
   "success": true,
@@ -423,17 +444,18 @@ Download CSV file
     "period": { "startDate": "2025-01-01", "endDate": "2025-01-31" },
     "summary": {
       "totalOrders": 450,
-      "totalRevenue": 1250000.00,
+      "totalRevenue": 1250000.0,
       "averageOrderValue": 2777.78
     },
     "statusBreakdown": [
-      { "status": "completed", "count": 280, "revenue": 780000.00 }
+      { "status": "completed", "count": 280, "revenue": 780000.0 }
     ]
   }
 }
 ```
 
 ### Error Response
+
 ```json
 {
   "success": false,
@@ -447,18 +469,21 @@ Download CSV file
 ## 🎓 Learning Path
 
 ### Beginner (Day 1)
+
 1. Read this README completely
 2. Review [API_QUICK_REFERENCE.md](API_QUICK_REFERENCE.md)
 3. Copy basic OTP form from [INTEGRATION_EXAMPLES.md](INTEGRATION_EXAMPLES.md)
 4. Test sending and verifying OTP
 
 ### Intermediate (Day 2-3)
+
 1. Read [FRONTEND_API_GUIDE.md](FRONTEND_API_GUIDE.md) - OTP section
 2. Implement complete registration flow
 3. Add error handling and loading states
 4. Test edge cases (rate limiting, expiry, etc.)
 
 ### Advanced (Week 1)
+
 1. Read [FRONTEND_API_GUIDE.md](FRONTEND_API_GUIDE.md) - Reports section
 2. Implement admin dashboard
 3. Add all report endpoints
@@ -471,6 +496,7 @@ Download CSV file
 ## 📝 Changelog
 
 ### Version 1.0.0 (2025-01-31)
+
 - Initial release
 - OTP Email Verification System
 - Comprehensive Reporting & Analytics System

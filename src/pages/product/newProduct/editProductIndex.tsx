@@ -138,10 +138,19 @@ const UpdateProduct = () => {
       // Meta (admin-defined key-value data) needs the same treatment. Always
       // send it: the form state mirrors the loaded product, so an empty array
       // means the admin cleared all meta (omitting would preserve it).
-      const { tags, meta, ...rest } = productData as any;
+      const { tags, meta, sizeGuideImage, removeSizeGuideImage, ...rest } =
+        productData as any;
       const formData = buildFormDataFromObject(rest);
       if (tags && tags.length > 0)
         formData.append("tags", JSON.stringify(tags));
+      // Size guide image: only a newly picked File or an explicit remove flag
+      // changes it. The unchanged URL string is dropped — the backend never
+      // trusts body strings for this field, so sending it would be noise.
+      if (sizeGuideImage instanceof File) {
+        formData.append("sizeGuideImage", sizeGuideImage);
+      } else if (removeSizeGuideImage) {
+        formData.append("removeSizeGuideImage", "true");
+      }
       // Drop half-filled rows (blank key) — the backend ignores them anyway,
       // but sending them keeps the payload honest about what the admin meant.
       formData.append(

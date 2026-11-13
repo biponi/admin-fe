@@ -24,7 +24,7 @@ This guide provides everything a frontend engineer needs to integrate with the P
 
 ```
 Development: http://localhost:3000
-Production: https://api.priorbd.com
+Production: https://api.PROMX.com
 ```
 
 ### Common Headers

@@ -6,7 +6,10 @@ import { saveAs } from "file-saver";
 import axiosInstance from "../api/axios";
 import config from "./config";
 import { BRAND_CONFIG } from "../config/brand";
-import { generateReactPdfInvoice, generateReactPdfInvoiceBlob } from "./reactPdfInvoice";
+import {
+  generateReactPdfInvoice,
+  generateReactPdfInvoiceBlob,
+} from "./reactPdfInvoice";
 import {
   generateReactPdfPackingSlip,
   generateReactPdfPackingSlipBlob,
@@ -31,7 +34,7 @@ export const generatePurchageOrder = (order: IOrder) => {
     customerInfo: {
       name: `${order?.customer?.name}`,
       address: `${order?.shipping?.address},${removeBanglaAndBrackets(
-        order?.shipping?.district
+        order?.shipping?.district,
       )},${removeBanglaAndBrackets(order?.shipping?.division)}`,
       mobile: order?.customer?.phoneNumber,
     },
@@ -39,7 +42,7 @@ export const generatePurchageOrder = (order: IOrder) => {
     shippingInfo: {
       name: `${order?.customer?.name}`,
       address: `${order?.shipping?.address},${removeBanglaAndBrackets(
-        order?.shipping?.district
+        order?.shipping?.district,
       )},${removeBanglaAndBrackets(order?.shipping?.division)}`,
       mobile: order?.customer?.phoneNumber,
     },
@@ -75,7 +78,7 @@ export const generatePurchageOrder = (order: IOrder) => {
   doc.text(
     wrappedAddress(`Address: ${purchaseOrder.companyInfo.address}`),
     15,
-    50
+    50,
   );
   doc.text(`Mobile Number: ${purchaseOrder.customerInfo.mobile}`, 15, 55);
 
@@ -89,7 +92,7 @@ export const generatePurchageOrder = (order: IOrder) => {
   doc.text(
     wrappedAddress(`Address: ${purchaseOrder.shippingInfo.address}`),
     15,
-    75
+    75,
   );
   doc.text(`Mobile: ${purchaseOrder.shippingInfo.mobile}`, 15, 80);
 
@@ -103,7 +106,7 @@ export const generatePurchageOrder = (order: IOrder) => {
   doc.text(
     wrappedAddress(`Address: ${purchaseOrder.companyInfo.address}`),
     120,
-    50
+    50,
   );
 
   // Order Details
@@ -148,7 +151,7 @@ export const generatePurchageOrder = (order: IOrder) => {
 
   // Footer Text
   const copyrightText =
-    "© +8801700534317 prior.retailshop.info.bd@gmail.com http://www.priorbd.com Shop 134, Genetic Plaza, Dhanmondi-27, Dhaka";
+    "© +8801700534317 prior.retailshop.info.bd@gmail.com http://www.PROMX.com Shop 134, Genetic Plaza, Dhanmondi-27, Dhaka";
   const totalPages = doc.internal.pages?.length - 1;
   for (let i = 1; i <= totalPages; i++) {
     doc.setPage(i);
@@ -173,13 +176,18 @@ const generateInvoiceBlob = (order: IOrder) => {
 
   // For jsPDF Bengali support, we need to ensure proper font handling
   // Let's try a different approach using a more compatible method
-  const renderBengaliText = (text: string, x: number, y: number, options?: any) => {
+  const renderBengaliText = (
+    text: string,
+    x: number,
+    y: number,
+    options?: any,
+  ) => {
     if (detectBengaliText(text)) {
       // For Bengali text, we'll need to use a different rendering approach
       // Split mixed text into Bengali and English parts
       const parts = text.split(/(\s+)/); // Split by whitespace but keep separators
       let currentX = x;
-      
+
       parts.forEach((part) => {
         if (part.trim()) {
           if (detectBengaliText(part)) {
@@ -290,7 +298,7 @@ const generateInvoiceBlob = (order: IOrder) => {
     .toString()
     .slice(
       purchaseOrder.trackingId.toString()?.length - 4,
-      purchaseOrder.trackingId.toString().length
+      purchaseOrder.trackingId.toString().length,
     )}`;
   doc.text(invoiceNumber, 210 - 15, 30, { align: "right" });
 
@@ -300,7 +308,7 @@ const generateInvoiceBlob = (order: IOrder) => {
       year: "numeric",
       month: "long",
       day: "numeric",
-    }
+    },
   );
   doc.text(`Date: ${orderDate}`, 210 - 15, 37, { align: "right" });
 
@@ -319,18 +327,18 @@ const generateInvoiceBlob = (order: IOrder) => {
 
   doc.setTextColor(...colors.text);
   doc.setFontSize(10);
-  
+
   // Use renderBengaliText for customer name and mobile
   setBoldFont(purchaseOrder.customerInfo.name);
   renderBengaliText(purchaseOrder.customerInfo.name, 17, 70);
-  
+
   setBoldFont(purchaseOrder.customerInfo.mobile);
   renderBengaliText(purchaseOrder.customerInfo.mobile, 17, 76);
 
   let yPosition = 82;
   const cbaddressLines = doc.splitTextToSize(
     purchaseOrder.customerInfo.address,
-    80
+    80,
   );
   cbaddressLines.forEach((line: string) => {
     setFont(line);
@@ -385,7 +393,7 @@ const generateInvoiceBlob = (order: IOrder) => {
   let y2Position = 82;
   const csaddressLines = doc.splitTextToSize(
     purchaseOrder.shippingInfo.address,
-    80
+    80,
   );
   csaddressLines.forEach((line: string) => {
     doc.text(line, 112, y2Position);
@@ -542,7 +550,7 @@ const generateInvoiceBlob = (order: IOrder) => {
     doc.text("Email: prior.retailshop.info.bd@gmail.com", 15, footerY + 15);
 
     // Website and social
-    doc.text("www.priorbd.com", 150, footerY + 5);
+    doc.text("www.PROMX.com", 150, footerY + 5);
 
     // Thank you message
     doc.setFont("helvetica", "italic");
@@ -583,7 +591,7 @@ const getOrdersById = async (ids: number[]) => {
         params: {
           ids: ids.join(","),
         },
-      }
+      },
     );
 
     if (response?.status < 300) {
@@ -596,7 +604,7 @@ const getOrdersById = async (ids: number[]) => {
 };
 
 export const generateMultipleInvoicesAndDownloadZip = async (
-  orderIds: number[]
+  orderIds: number[],
 ) => {
   const zip = new JSZip();
   const orders = (await getOrdersById(orderIds)) ?? [];
@@ -611,7 +619,7 @@ export const generateMultipleInvoicesAndDownloadZip = async (
 
 // New function for multiple modern invoices with Bengali support
 export const generateMultipleModernInvoicesAndDownloadZip = async (
-  orderIds: number[]
+  orderIds: number[],
 ) => {
   const zip = new JSZip();
   const orders = (await getOrdersById(orderIds)) ?? [];
@@ -632,7 +640,7 @@ export const generateMultipleModernInvoicesAndDownloadZip = async (
  * Returns PDF URLs with order numbers for unified preview
  */
 export const generateInvoicePreviewData = async (
-  orderIds: number[]
+  orderIds: number[],
 ): Promise<{ url: string; orderNumber: number; blob: Blob }[]> => {
   try {
     const orders = (await getOrdersById(orderIds)) ?? [];
@@ -667,7 +675,7 @@ export const generateInvoicePreviewData = async (
  * @deprecated Use generateInvoicePreviewData with InvoicePreviewModal instead
  */
 export const printMultipleInvoicesWithPreview = async (
-  orderIds: number[]
+  orderIds: number[],
 ): Promise<void> => {
   try {
     const orders = (await getOrdersById(orderIds)) ?? [];
@@ -707,7 +715,7 @@ export const printMultipleInvoicesWithPreview = async (
 
     // Clean up URLs after some time (10 seconds)
     setTimeout(() => {
-      pdfUrls.forEach(url => URL.revokeObjectURL(url));
+      pdfUrls.forEach((url) => URL.revokeObjectURL(url));
     }, 10000);
 
     return Promise.resolve();
@@ -732,7 +740,7 @@ export const generatePackingSlip = async (order: IOrder) => {
  * Generate multiple packing slips and download as ZIP
  */
 export const generateMultiplePackingSlipsAndDownloadZip = async (
-  orderIds: number[]
+  orderIds: number[],
 ) => {
   const zip = new JSZip();
   const orders = (await getOrdersById(orderIds)) ?? [];
@@ -754,7 +762,7 @@ export const generateMultiplePackingSlipsAndDownloadZip = async (
  * Returns PDF URLs with order numbers for unified preview
  */
 export const generatePackingSlipPreviewData = async (
-  orderIds: number[]
+  orderIds: number[],
 ): Promise<{ url: string; orderNumber: number; blob: Blob }[]> => {
   try {
     const orders = (await getOrdersById(orderIds)) ?? [];
@@ -789,7 +797,7 @@ export const generatePackingSlipPreviewData = async (
  * @deprecated Use generatePackingSlipPreviewData with a preview modal instead
  */
 export const printMultiplePackingSlipsWithPreview = async (
-  orderIds: number[]
+  orderIds: number[],
 ): Promise<void> => {
   try {
     const orders = (await getOrdersById(orderIds)) ?? [];

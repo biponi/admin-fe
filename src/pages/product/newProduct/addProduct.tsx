@@ -75,6 +75,7 @@ const defaultValue = {
   discountType: "%",
   description: "",
   thumbnail: null,
+  sizeGuideImage: null,
   variation: [],
   sku: "",
   categoryId: "",
@@ -130,6 +131,7 @@ const AddProduct: React.FC<Props> = ({ createProduct, categories }) => {
 
   const fileRef = useRef(null);
   const fileRef2 = useRef(null);
+  const sizeGuideFileRef = useRef(null);
   const dialogBtn = useRef(null);
 
   // Calculate total quantity from all variations
@@ -1512,6 +1514,79 @@ const AddProduct: React.FC<Props> = ({ createProduct, categories }) => {
                       className='w-full inline-flex items-center justify-center gap-2 px-4 py-2.5 text-sm font-medium text-slate-600 bg-white border border-slate-200 rounded-lg hover:bg-slate-50 hover:border-slate-300 transition-all duration-150 shadow-sm'>
                       <Upload className='h-4 w-4' />
                       Upload Thumbnail
+                    </button>
+
+                    {/* Size guide / extra info chart (optional single image) */}
+                    <Input
+                      id='picture-size-guide'
+                      type='file'
+                      className='hidden'
+                      ref={sizeGuideFileRef}
+                      name='sizeGuideImage'
+                      accept='.png, .jpg, .jpeg'
+                      onChange={(e) => {
+                        //@ts-ignore
+                        const file = e.target.files[0];
+                        if (!file) return;
+                        updateFormData({
+                          ...formData,
+                          sizeGuideImage: file,
+                        });
+                      }}
+                    />
+                    <div className='space-y-1 pt-2'>
+                      <h3 className='text-sm font-medium text-slate-900'>
+                        Size Guide / Extra Info Chart{" "}
+                        <span className='text-xs font-normal text-slate-400'>
+                          (optional)
+                        </span>
+                      </h3>
+                      <p className='text-xs text-slate-500'>
+                        e.g. a measurement chart shown to customers on the
+                        product page
+                      </p>
+                    </div>
+                    <div className='relative'>
+                      <img
+                        alt='Product_size_guide'
+                        className='aspect-[4/3] w-full rounded-xl object-contain border border-slate-200 bg-slate-50'
+                        src={
+                          !!formData?.sizeGuideImage
+                            ? URL.createObjectURL(formData.sizeGuideImage)
+                            : PlaceHolderImage
+                        }
+                      />
+                      {!formData?.sizeGuideImage && (
+                        <div className='absolute inset-0 flex flex-col items-center justify-center text-slate-400'>
+                          <Upload className='h-8 w-8 mb-2' />
+                          <p className='text-sm text-center px-2'>
+                            Click "Upload" to add a size guide image
+                          </p>
+                        </div>
+                      )}
+                      {!!formData?.sizeGuideImage && (
+                        <button
+                          onClick={() =>
+                            updateFormData({
+                              ...formData,
+                              sizeGuideImage: null,
+                            })
+                          }
+                          className='absolute top-2 right-2 p-1.5 bg-red-500 hover:bg-red-600 text-white rounded-full transition-all duration-200 shadow-lg hover:scale-110 z-10'>
+                          <X className='w-4 h-4' />
+                        </button>
+                      )}
+                    </div>
+                    <button
+                      onClick={() => {
+                        if (!!sizeGuideFileRef) {
+                          //@ts-ignore
+                          sizeGuideFileRef.current.click();
+                        }
+                      }}
+                      className='w-full inline-flex items-center justify-center gap-2 px-4 py-2.5 text-sm font-medium text-slate-600 bg-white border border-slate-200 rounded-lg hover:bg-slate-50 hover:border-slate-300 transition-all duration-150 shadow-sm'>
+                      <Upload className='h-4 w-4' />
+                      Upload Size Guide
                     </button>
 
                     <div className='space-y-2'>

@@ -358,7 +358,7 @@ const InvoiceDocument: React.FC<InvoiceDocumentProps> = ({ order }) => {
       year: "numeric",
       month: "long",
       day: "numeric",
-    }
+    },
   );
   const invoiceNumber = `INV-${order.orderNumber}`;
   const subtotal = order.totalPrice;
@@ -382,7 +382,7 @@ const InvoiceDocument: React.FC<InvoiceDocumentProps> = ({ order }) => {
               <Text style={styles.companyDetail}>Shop 134, Genetic Plaza</Text>
               <Text style={styles.companyDetail}>Dhanmondi-27, Dhaka</Text>
               <Text style={styles.companyDetail}>+880 1700-534317</Text>
-              <Text style={styles.companyDetail}>www.priorbd.com</Text>
+              <Text style={styles.companyDetail}>www.PROMX.com</Text>
             </View>
           </View>
           <View style={styles.invoiceSection}>
@@ -653,7 +653,7 @@ export const generateReactPdfInvoice = async (order: IOrder) => {
 };
 
 export const generateReactPdfInvoiceBlob = async (
-  order: IOrder
+  order: IOrder,
 ): Promise<Blob> => {
   return await pdf(<InvoiceDocument order={order} />).toBlob();
 };

@@ -1,13 +1,16 @@
 # Admin Coupon Management API Documentation
 
 ## Base URL
+
 ```
 Development: http://localhost:5000/api/v1/coupons
 Production: https://your-domain.com/api/v1/coupons
 ```
 
 ## Authentication
+
 All endpoints require JWT authentication. Include the token in the Authorization header:
+
 ```
 headers: {
   "Authorization": "Bearer YOUR_JWT_TOKEN"
@@ -25,6 +28,7 @@ headers: {
 **Description:** Creates a new global/public coupon that any customer can use.
 
 **Request Body:**
+
 ```typescript
 interface CreateGlobalCouponRequest {
   code: string;                    // Unique coupon code (3-20 chars, uppercase letters & numbers only)
@@ -67,6 +71,7 @@ interface CreateGlobalCouponRequest {
 ```
 
 **Response (201 Created):**
+
 ```typescript
 interface CreateGlobalCouponResponse {
   success: true;
@@ -76,14 +81,14 @@ interface CreateGlobalCouponResponse {
     code: string;
     name: string;
     description: string;
-    discountType: 'fixed' | 'percentage';
+    discountType: "fixed" | "percentage";
     discountValue: number;
     maxUsesPerCustomer: number;
     totalUsageLimit: number;
     usedCount: number;
     validFrom: Date;
     validUntil: Date;
-    status: 'active' | 'expired' | 'disabled' | 'scheduled';
+    status: "active" | "expired" | "disabled" | "scheduled";
     minOrderAmount: number;
     maxDiscountAmount: number;
     firstOrderOnly: boolean;
@@ -94,16 +99,17 @@ interface CreateGlobalCouponResponse {
     createdBy: string;
     createdAt: Date;
     updatedAt: Date;
-  }
+  };
 }
 ```
 
 **Error Response (400):**
+
 ```typescript
 interface ErrorResponse {
   success: false;
   message: "Validation error";
-  error: string;  // Specific validation error message
+  error: string; // Specific validation error message
 }
 ```
 
@@ -114,6 +120,7 @@ interface ErrorResponse {
 **Endpoint:** `GET /api/v1/coupons/global`
 
 **Query Parameters:**
+
 ```typescript
 interface GetGlobalCouponsQuery {
   status?: 'active' | 'expired' | 'disabled' | 'scheduled';
@@ -127,6 +134,7 @@ GET /api/v1/coupons/global?status=active&discountType=fixed
 ```
 
 **Response (200 OK):**
+
 ```typescript
 interface GetGlobalCouponsResponse {
   success: true;
@@ -135,7 +143,7 @@ interface GetGlobalCouponsResponse {
     _id: string;
     code: string;
     name: string;
-    discountType: 'fixed' | 'percentage';
+    discountType: "fixed" | "percentage";
     discountValue: number;
     maxUsesPerCustomer: number;
     totalUsageLimit: number;
@@ -159,9 +167,11 @@ interface GetGlobalCouponsResponse {
 **Endpoint:** `GET /api/v1/coupons/global/:code`
 
 **URL Parameter:**
+
 - `code` - Coupon code (case-insensitive, will be converted to uppercase)
 
 **Response (200 OK):**
+
 ```typescript
 interface GetGlobalCouponResponse {
   success: true;
@@ -170,7 +180,7 @@ interface GetGlobalCouponResponse {
     code: string;
     name: string;
     description: string;
-    discountType: 'fixed' | 'percentage';
+    discountType: "fixed" | "percentage";
     discountValue: number;
     maxUsesPerCustomer: number;
     totalUsageLimit: number;
@@ -193,6 +203,7 @@ interface GetGlobalCouponResponse {
 ```
 
 **Error Response (404):**
+
 ```typescript
 interface ErrorResponse {
   success: false;
@@ -207,9 +218,11 @@ interface ErrorResponse {
 **Endpoint:** `PATCH /api/v1/coupons/global/:code`
 
 **URL Parameter:**
+
 - `code` - Coupon code to update
 
 **Request Body (all fields optional):**
+
 ```typescript
 interface UpdateGlobalCouponRequest {
   name?: string;
@@ -239,6 +252,7 @@ interface UpdateGlobalCouponRequest {
 ```
 
 **Response (200 OK):**
+
 ```typescript
 interface UpdateGlobalCouponResponse {
   success: true;
@@ -258,9 +272,11 @@ interface UpdateGlobalCouponResponse {
 **Description:** Immediately disables a global coupon (cannot be used until re-enabled).
 
 **URL Parameter:**
+
 - `code` - Coupon code to disable
 
 **Response (200 OK):**
+
 ```typescript
 interface DisableCouponResponse {
   success: true;
@@ -268,7 +284,7 @@ interface DisableCouponResponse {
   data: {
     _id: string;
     code: string;
-    status: 'disabled';
+    status: "disabled";
   };
 }
 ```
@@ -282,9 +298,11 @@ interface DisableCouponResponse {
 **Description:** Permanently deletes a global coupon.
 
 **URL Parameter:**
+
 - `code` - Coupon code to delete
 
 **Response (200 OK):**
+
 ```typescript
 interface DeleteCouponResponse {
   success: true;
@@ -301,18 +319,19 @@ interface DeleteCouponResponse {
 **Description:** Returns usage statistics for all global coupons.
 
 **Response (200 OK):**
+
 ```typescript
 interface GlobalCouponStatsResponse {
   success: true;
   data: {
-    totalCoupons: number;      // Total global coupons created
-    activeCoupons: number;      // Currently active
-    expiredCoupons: number;     // Expired but not deleted
-    disabledCoupons: number;    // Manually disabled
+    totalCoupons: number; // Total global coupons created
+    activeCoupons: number; // Currently active
+    expiredCoupons: number; // Expired but not deleted
+    disabledCoupons: number; // Manually disabled
     mostUsed: Array<{
       code: string;
       usageCount: number;
-      totalDiscount: number;    // Total discount given in BDT
+      totalDiscount: number; // Total discount given in BDT
     }>;
   };
 }
@@ -329,6 +348,7 @@ interface GlobalCouponStatsResponse {
 **Description:** Assigns a coupon to one or more customers. Supports single or bulk assignment.
 
 **Request Body:**
+
 ```typescript
 interface AssignCouponToCustomerRequest {
   phoneNumbers: string[];              // Array of 11-digit BD phone numbers (max 1000)
@@ -382,6 +402,7 @@ interface AssignCouponToCustomerRequest {
 ```
 
 **Response (201 Created):**
+
 ```typescript
 interface AssignCouponResponse {
   success: true;
@@ -391,7 +412,7 @@ interface AssignCouponResponse {
     success: boolean;
     couponId?: string;
     code?: string;
-    error?: string;  // Present if success: false
+    error?: string; // Present if success: false
   }>;
 }
 ```
@@ -405,6 +426,7 @@ interface AssignCouponResponse {
 **Description:** Assigns coupons to all customers matching specific criteria (segmentation).
 
 **Request Body:**
+
 ```typescript
 interface BulkAssignCouponsRequest {
   // Option 1: Provide phone numbers directly
@@ -497,6 +519,7 @@ interface BulkAssignCouponsRequest {
 ```
 
 **Response (201 Created):**
+
 ```typescript
 interface BulkAssignResponse {
   success: true;
@@ -523,9 +546,11 @@ interface BulkAssignResponse {
 **Endpoint:** `GET /api/v1/coupons/customer/:phone`
 
 **URL Parameter:**
+
 - `phone` - Customer's 11-digit phone number
 
 **Query Parameters:**
+
 ```typescript
 // No query parameters - returns all active coupons
 GET /api/v1/coupons/customer/01712345678
@@ -534,6 +559,7 @@ GET /api/v1/coupons/customer/01712345678
 ```
 
 **Response (200 OK):**
+
 ```typescript
 interface GetCustomerCouponsResponse {
   success: true;
@@ -542,14 +568,14 @@ interface GetCustomerCouponsResponse {
     _id: string;
     customerId: string;
     code: string;
-    discountType: 'fixed' | 'percentage';
+    discountType: "fixed" | "percentage";
     discountValue: number;
     maxUses: number;
     usedCount: number;
-    remainingUses: number;      // Virtual: maxUses - usedCount
+    remainingUses: number; // Virtual: maxUses - usedCount
     validFrom: Date;
     validUntil: Date;
-    status: 'active' | 'expired' | 'disabled' | 'fully_used';
+    status: "active" | "expired" | "disabled" | "fully_used";
     minOrderAmount: number;
     maxDiscountAmount: number;
     applicableProducts?: string[];
@@ -574,16 +600,18 @@ interface GetCustomerCouponsResponse {
 **Description:** Returns all coupon usage history for a specific customer.
 
 **URL Parameter:**
+
 - `phone` - Customer's 11-digit phone number
 
 **Response (200 OK):**
+
 ```typescript
 interface CustomerUsageHistoryResponse {
   success: true;
   count: number;
   data: Array<{
     _id: string;
-    couponType: 'global' | 'customer';
+    couponType: "global" | "customer";
     couponId: string;
     couponCode: string;
     customerId: string;
@@ -605,9 +633,11 @@ interface CustomerUsageHistoryResponse {
 **Endpoint:** `GET /api/v1/coupons/customer/details/:id`
 
 **URL Parameter:**
+
 - `id` - Customer coupon ID (MongoDB ObjectId)
 
 **Response (200 OK):**
+
 ```typescript
 interface GetCustomerCouponResponse {
   success: true;
@@ -615,7 +645,7 @@ interface GetCustomerCouponResponse {
     _id: string;
     customerId: string;
     code: string;
-    discountType: 'fixed' | 'percentage';
+    discountType: "fixed" | "percentage";
     discountValue: number;
     maxUses: number;
     usedCount: number;
@@ -642,9 +672,11 @@ interface GetCustomerCouponResponse {
 **Endpoint:** `PATCH /api/v1/coupons/customer/:id`
 
 **URL Parameter:**
+
 - `id` - Customer coupon ID
 
 **Request Body (all fields optional):**
+
 ```typescript
 interface UpdateCustomerCouponRequest {
   maxUses?: number;          // 1-5
@@ -665,6 +697,7 @@ interface UpdateCustomerCouponRequest {
 ```
 
 **Response (200 OK):**
+
 ```typescript
 interface UpdateCustomerCouponResponse {
   success: true;
@@ -682,9 +715,11 @@ interface UpdateCustomerCouponResponse {
 **Endpoint:** `POST /api/v1/coupons/customer/:id/disable`
 
 **URL Parameter:**
+
 - `id` - Customer coupon ID
 
 **Response (200 OK):**
+
 ```typescript
 interface DisableCustomerCouponResponse {
   success: true;
@@ -692,7 +727,7 @@ interface DisableCustomerCouponResponse {
   data: {
     _id: string;
     code: string;
-    status: 'disabled';
+    status: "disabled";
   };
 }
 ```
@@ -704,9 +739,11 @@ interface DisableCustomerCouponResponse {
 **Endpoint:** `DELETE /api/v1/coupons/customer/:id`
 
 **URL Parameter:**
+
 - `id` - Customer coupon ID
 
 **Response (200 OK):**
+
 ```typescript
 interface DeleteCustomerCouponResponse {
   success: true;
@@ -725,6 +762,7 @@ interface DeleteCustomerCouponResponse {
 **Description:** Returns summary of all customer segments for targeting.
 
 **Response (200 OK):**
+
 ```typescript
 interface SegmentSummaryResponse {
   success: true;
@@ -787,6 +825,7 @@ interface SegmentSummaryResponse {
 **Endpoint:** `GET /api/v1/coupons/analytics/usage`
 
 **Query Parameters:**
+
 ```typescript
 interface GetUsageHistoryQuery {
   couponType: 'global' | 'customer';
@@ -798,13 +837,14 @@ GET /api/v1/coupons/analytics/usage?couponType=global&couponId=507f1f77bcf86cd79
 ```
 
 **Response (200 OK):**
+
 ```typescript
 interface UsageHistoryResponse {
   success: true;
   count: number;
   data: Array<{
     _id: string;
-    couponType: 'global' | 'customer';
+    couponType: "global" | "customer";
     couponId: string;
     couponCode: string;
     customerId: string;
@@ -823,15 +863,15 @@ interface UsageHistoryResponse {
 
 ## Error Codes
 
-| Status Code | Description |
-|------------|-------------|
-| 200 | Success |
-| 201 | Created successfully |
-| 400 | Bad Request - Validation error |
-| 401 | Unauthorized - Missing or invalid token |
-| 403 | Forbidden - Insufficient permissions |
-| 404 | Resource not found |
-| 500 | Internal server error |
+| Status Code | Description                             |
+| ----------- | --------------------------------------- |
+| 200         | Success                                 |
+| 201         | Created successfully                    |
+| 400         | Bad Request - Validation error          |
+| 401         | Unauthorized - Missing or invalid token |
+| 403         | Forbidden - Insufficient permissions    |
+| 404         | Resource not found                      |
+| 500         | Internal server error                   |
 
 ---
 
@@ -841,8 +881,9 @@ interface UsageHistoryResponse {
 interface ErrorResponse {
   success: false;
   message: string;
-  error?: string;  // Detailed error message (optional)
-  errors?: Array<{  // Validation errors (optional)
+  error?: string; // Detailed error message (optional)
+  errors?: Array<{
+    // Validation errors (optional)
     field: string;
     message: string;
   }>;
@@ -854,10 +895,12 @@ interface ErrorResponse {
 ## Rate Limiting
 
 All admin endpoints are rate-limited:
+
 - **Default:** 100 requests per 15 minutes per IP
 - **Bulk Operations:** 10 requests per hour per user
 
 Headers included in rate-limited responses:
+
 ```
 X-RateLimit-Limit: 100
 X-RateLimit-Remaining: 95
@@ -869,6 +912,7 @@ X-RateLimit-Reset: 1640971520000
 ## Testing with cURL
 
 ### Create Global Coupon
+
 ```bash
 curl -X POST https://your-domain.com/api/v1/coupons/global \
   -H "Authorization: Bearer YOUR_JWT_TOKEN" \
@@ -886,6 +930,7 @@ curl -X POST https://your-domain.com/api/v1/coupons/global \
 ```
 
 ### Assign Coupon to Customer
+
 ```bash
 curl -X POST https://your-domain.com/api/v1/coupons/customer/assign \
   -H "Authorization: Bearer YOUR_JWT_TOKEN" \
@@ -901,6 +946,7 @@ curl -X POST https://your-domain.com/api/v1/coupons/customer/assign \
 ```
 
 ### Bulk Assign to Segment
+
 ```bash
 curl -X POST https://your-domain.com/api/v1/coupons/customer/bulk-assign \
   -H "Authorization: Bearer YOUR_JWT_TOKEN" \
@@ -954,6 +1000,7 @@ curl -X POST https://your-domain.com/api/v1/coupons/customer/bulk-assign \
 ## Support & Contact
 
 For API support or questions:
-- **Email:** tech@priorbd.com
-- **Documentation:** https://docs.priorbd.com/api
+
+- **Email:** tech@PROMX.com
+- **Documentation:** https://docs.PROMX.com/api
 - **Issue Tracker:** https://github.com/your-org/issues

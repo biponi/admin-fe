@@ -72,9 +72,9 @@ const MobileOrderHeader: React.FC<MobileOrderHeaderProps> = ({
     <div className='bg-gradient-to-br from-gray-50 to-white'>
       {/* Header Section - Quick Actions Style */}
       <div className='pb-1'>
-        <div className='bg-white rounded-lg border border-gray-100 p-4 shadow-sm'>
+        <div className='bg-white rounded-lg border border-gray-100 px-4 py-2 shadow-sm'>
           <div className='flex items-center gap-3'>
-            <div className='h-12 w-12 bg-gradient-to-br from-blue-500 to-purple-600 rounded-lg flex items-center justify-center shadow-lg'>
+            <div className='h-10 w-10 bg-gradient-to-br from-blue-500 to-purple-600 rounded-lg flex items-center justify-center shadow-lg'>
               <ShoppingBag className='h-6 w-6 text-white' />
             </div>
             <div className='flex-1'>
@@ -88,8 +88,8 @@ const MobileOrderHeader: React.FC<MobileOrderHeaderProps> = ({
               <Button
                 onClick={() => navigate("/order/create")}
                 size='lg'
-                className='h-12 w-12 bg-gradient-to-br from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white rounded-lg shadow-lg hover:shadow-xl transition-all duration-200 active:scale-95 p-0'>
-                <CirclePlus className='h-8 w-8' />
+                className='h-10 w-10 bg-gradient-to-br from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white rounded-lg shadow-lg hover:shadow-xl transition-all duration-200 active:scale-95 p-0'>
+                <CirclePlus className='h-6 w-6' />
               </Button>
             )}
           </div>

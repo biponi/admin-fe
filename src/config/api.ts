@@ -1,7 +1,7 @@
 export const API_BASE_URL =
   import.meta.env.VITE_API_BASE_URL || "http://localhost:3001";
-export const CHAT_API_BASE_URL = "https://yuki.priorbd.com";
-export const SOCKET_URL = "https://yuki.priorbd.com";
+export const CHAT_API_BASE_URL = "https://yuki.PROMX.com";
+export const SOCKET_URL = "https://yuki.PROMX.com";
 
 export const API_ENDPOINTS = {
   // Tickets

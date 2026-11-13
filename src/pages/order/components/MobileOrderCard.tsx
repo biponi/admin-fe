@@ -195,7 +195,7 @@ const MobileOrderCard: React.FC<Props> = ({
     <>
       <div
         className={cn(
-          "bg-white rounded-none border-x-0 border-t-0 border-b border-gray-200 shadow-lg hover:shadow-sm transition-all duration-300 overflow-hidden active:scale-[0.98]",
+          "bg-white rounded-xl border-x-0 border-t-0 border-b border-gray-200 drop-shadow-md hover:shadow-sm transition-all duration-300 overflow-hidden active:scale-[0.98]",
           isBulkAdded && "ring-2 ring-primary ring-offset-0",
         )}>
         {/* Header */}
@@ -215,7 +215,7 @@ const MobileOrderCard: React.FC<Props> = ({
                     type='checkbox'
                     checked={isBulkAdded}
                     onChange={() => handleBulkCheck(!isBulkAdded)}
-                    className='w-5 h-5 text-primary border-2 border-gray-300 rounded-md focus:ring-2 focus:ring-primary/20 transition-colors'
+                    className='w-5 h-5 text-primary border-2 border-gray-300 rounded-xl focus:ring-2 focus:ring-primary/20 transition-colors'
                   />
                   {isBulkAdded && (
                     <div className='absolute inset-0 bg-primary/20 rounded-md animate-pulse pointer-events-none' />
@@ -242,7 +242,13 @@ const MobileOrderCard: React.FC<Props> = ({
               {statusConfig.label}
             </Badge>
 
-            {hasSomePermissionsForPage("order", ["edit", "delete", "cancel", "modify", "update_status"]) && (
+            {hasSomePermissionsForPage("order", [
+              "edit",
+              "delete",
+              "cancel",
+              "modify",
+              "update_status",
+            ]) && (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button

@@ -296,7 +296,7 @@ Same as main project.
 
 ---
 
-**Built with ❤️ by the Prior Admin team**
+**Built with ❤️ by the PROMX team**
 
 Last Updated: 2025-11-22
 Version: 2.0.0-alpha

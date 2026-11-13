@@ -71,7 +71,7 @@
 ┌─────────────────────────────────────────────────────────────────┐
 │                     USER'S EMAIL INBOX                           │
 │                                                                  │
-│  From: Prior eCommerce <noreply@priorbd.com>                    │
+│  From: Prior eCommerce <noreply@PROMX.com>                    │
 │  Subject: Password Change Verification Code                     │
 │                                                                  │
 │  Your verification code is: 123456                              │
@@ -231,22 +231,25 @@ Password Changed:
 ## 🎯 Key Implementation Details
 
 ### OTP Dialog Props:
+
 ```tsx
 <OTPVerificationDialog
-  open={showOTPDialog}              // State: dialog visibility
-  onOpenChange={setShowOTPDialog}   // State setter
-  email={profile.email}             // User's email
-  purpose="password_change"         // Tracking purpose
-  title="Verify Password Change"   // Dialog title
-  description="..."                 // Dialog description
-  onVerificationSuccess={           // Success callback
+  open={showOTPDialog} // State: dialog visibility
+  onOpenChange={setShowOTPDialog} // State setter
+  email={profile.email} // User's email
+  purpose='password_change' // Tracking purpose
+  title='Verify Password Change' // Dialog title
+  description='...' // Dialog description
+  onVerificationSuccess={
+    // Success callback
     performPasswordChange
   }
-  autoSendOnMount={true}           // Auto-send OTP
+  autoSendOnMount={true} // Auto-send OTP
 />
 ```
 
 ### Validation Logic:
+
 ```tsx
 // Check passwords match
 if (formData.newPassword !== formData.confirmPassword) {
@@ -265,6 +268,7 @@ setShowOTPDialog(true);
 ```
 
 ### Password Change Function:
+
 ```tsx
 const performPasswordChange = async () => {
   const response = await changeUserPassword({

@@ -21,6 +21,7 @@ export interface IProduct {
   hasDiscount: boolean;
   description: string;
   thumbnail: string;
+  sizeGuideImage: string; // Optional size guide / extra info chart image URL
   productCode: string;
   totalPrice: number;
   categoryName?: string; // @deprecated - Use categoryNames for multi-category support
@@ -84,6 +85,7 @@ export interface IProductCreateData {
   discountType: string;
   description: string;
   thumbnail: File | null;
+  sizeGuideImage?: File | null; // Optional size guide / extra info chart image
   variation: IVariation[]; // Assuming variation can be an array of any type
   sku: string;
   categoryId: string; // Primary category ID (must match categoryIds[0])
@@ -123,6 +125,8 @@ export interface IProductUpdateData {
   images: File[] | [];
 
   removeImageIndexes?: string[];
+  sizeGuideImage?: string | File | null; // Optional size guide / extra info chart image (string = existing URL)
+  removeSizeGuideImage?: boolean; // Clear the existing size guide image on save
   removeAbleVarations?: string[];
   variantImages?: File[]; // New variant image files to upload
   variantImageMappings?: IVariantImageMapping[]; // Maps variantIds to image indices

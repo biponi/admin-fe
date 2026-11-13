@@ -11,7 +11,7 @@ light-gray tiles `#EFEDEB`, white pills, orange-red accent `#E1573F`, thin-line 
 ## 1. Period-correct growth percentages
 
 **Missing:** `/api/v1/dashboard/analysis` only returns `previousMonthMetrics`. When the admin picks
-"Today" or "This week", the growth badge still compares against the previous *month* — misleading.
+"Today" or "This week", the growth badge still compares against the previous _month_ — misleading.
 
 **Suggested endpoint:**
 
@@ -76,7 +76,7 @@ not composed into the order dashboard.
 // GET /api/v1/analytics/visitors?startDate&endDate
 {
   "summary": { "activeUsers": 0, "sessions": 0, "conversionRate": 0 },
-  "timeseries": [{ "date": "2026-11-01", "sessions": 0, "transactions": 0 }]
+  "timeseries": [{ "date": "2026-11-01", "sessions": 0, "transactions": 0 }],
 }
 ```
 
@@ -99,7 +99,7 @@ changed, user login, product updated).
   "items": [{
     "id": "...", "type": "order" | "user" | "product" | "payment",
     "message": "Order #1042 marked completed",
-    "actor": "admin@priorbd.com", "createdAt": "2026-11-13T09:24:00Z",
+    "actor": "admin@PROMX.com", "createdAt": "2026-11-13T09:24:00Z",
     "link": "/orders/1042"
   }]
 }
@@ -138,7 +138,11 @@ bottom-right.
 **Suggested endpoint:** reuse the courier dashboard response; expose per-courier success rate:
 
 ```jsonc
-{ "couriers": [{ "name": "Steadfast", "successRate": 92.4, "delivered": 0, "failed": 0 }] }
+{
+  "couriers": [
+    { "name": "Steadfast", "successRate": 92.4, "delivered": 0, "failed": 0 },
+  ],
+}
 ```
 
 **UI prompt:** A second donut gauge card beside the completion-rate gauge — gray `#D9D7D4` track,
@@ -151,10 +155,10 @@ accent arc, center shows average success %, with one white pill chip per courier
 Intentionally skipped in this renovation (no meaningful data source yet). Prompts for if/when they
 get APIs:
 
-| Widget | Needs | UI prompt |
-|---|---|---|
-| Dot-matrix day tracker ("13 Days") | Derivable from `dailyComparison` — **quick win, no backend needed** | Tile: clock icon, bold "N active days", grid of small circles — accent-filled for days with orders, `#D9D7D4` for days without |
-| Mood review (5 faces) | `GET /api/v1/reviews/summary` (post-delivery ratings) | Tile: gray label "Customer satisfaction", bold question, 5 white circular face buttons; selected face = accent ring; average score as accent pill |
-| Wallet / balance card | `GET /api/v1/finance/balance` | Tile mimicking the reference "VISA" card: brand mark, masked account, black + white pill action buttons, monthly fee row |
-| Voice input | Speech recognition on the AI-insight tile | Large white circular mic button right of the greeting; press-to-talk, transcribes into the insight input |
-| Calendar date circle | — | Big outlined circle showing today's date beside the header, acts as a shortcut opening the date-range picker |
+| Widget                             | Needs                                                               | UI prompt                                                                                                                                         |
+| ---------------------------------- | ------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Dot-matrix day tracker ("13 Days") | Derivable from `dailyComparison` — **quick win, no backend needed** | Tile: clock icon, bold "N active days", grid of small circles — accent-filled for days with orders, `#D9D7D4` for days without                    |
+| Mood review (5 faces)              | `GET /api/v1/reviews/summary` (post-delivery ratings)               | Tile: gray label "Customer satisfaction", bold question, 5 white circular face buttons; selected face = accent ring; average score as accent pill |
+| Wallet / balance card              | `GET /api/v1/finance/balance`                                       | Tile mimicking the reference "VISA" card: brand mark, masked account, black + white pill action buttons, monthly fee row                          |
+| Voice input                        | Speech recognition on the AI-insight tile                           | Large white circular mic button right of the greeting; press-to-talk, transcribes into the insight input                                          |
+| Calendar date circle               | —                                                                   | Big outlined circle showing today's date beside the header, acts as a shortcut opening the date-range picker                                      |
