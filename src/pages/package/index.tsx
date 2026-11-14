@@ -8,7 +8,8 @@ import {
   CardTitle,
 } from "../../components/ui/card";
 import { Button } from "../../components/ui/button";
-import { Loader2, Package, Clock, CheckCircle, Barcode } from "lucide-react";
+import { Package, Clock, CheckCircle, Barcode } from "lucide-react";
+import { PageLoader } from "@/components/loaders";
 import { useIsMobile } from "@/hooks/use-mobile";
 import {
   MobilePage,
@@ -40,11 +41,7 @@ export function PackageDashboardPage() {
         </MobilePage>
       );
     }
-    return (
-      <div className='flex items-center justify-center h-64'>
-        <Loader2 className='h-8 w-8 animate-spin' />
-      </div>
-    );
+    return <PageLoader domain='analytics' text='Loading Dashboard' />;
   }
 
   if (!dashboardStats) {

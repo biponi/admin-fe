@@ -25,6 +25,7 @@ import {
   Calculator
 } from "lucide-react";
 import { toast } from "react-hot-toast";
+import { ButtonLoadingText } from "@/components/loaders";
 
 // Define types
 interface Variation {
@@ -430,10 +431,7 @@ const AdjustReturnProduct: React.FC<AdjustReturnProductProps> = ({
                 className="bg-gradient-to-r from-orange-500 to-red-600 hover:from-orange-600 hover:to-red-700 text-white px-8"
               >
                 {isSubmitting ? (
-                  <>
-                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2" />
-                    Processing...
-                  </>
+                  <ButtonLoadingText text='Processing…' />
                 ) : (
                   <>
                     <CheckCircle2 className="w-4 h-4 mr-2" />

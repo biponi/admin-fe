@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { createPortal } from "react-dom";
-import { Search, User, Phone, Loader2, ChevronDown } from "lucide-react";
+import { Search, User, Phone, ChevronDown } from "lucide-react";
+import { InlineLoader } from "@/components/loaders";
 import { customerSearchAPI } from "../../../api/customerSearch";
 import type { CustomerListItem } from "../../../api/customerSearch";
 
@@ -197,12 +198,11 @@ export function CustomerSearchDropdown({
             {/* Customer List */}
             <div className='overflow-y-auto max-h-60'>
               {loading ? (
-                <div className='flex items-center justify-center py-8'>
-                  <Loader2 className='h-6 w-6 animate-spin text-blue-600' />
-                  <span className='ml-2 text-sm text-gray-500'>
-                    Loading customers...
-                  </span>
-                </div>
+                <InlineLoader
+                  domain='users'
+                  text='Loading Customers'
+                  className='py-8'
+                />
               ) : customers.length === 0 ? (
                 <div className='flex flex-col items-center justify-center py-8 text-center px-4'>
                   <User className='h-10 w-10 text-gray-300 mb-2' />

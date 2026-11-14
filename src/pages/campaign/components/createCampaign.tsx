@@ -33,6 +33,7 @@ import { MobilePage, MobileStickyActions } from "@/components/mobile";
 import { PageHeader } from "@/components/PageHeader";
 import { Zap } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { ButtonLoadingText } from "@/components/loaders";
 
 // ─── Section wrapper ──────────────────────────────────────────────────────────
 const Section: React.FC<{
@@ -592,10 +593,7 @@ const CreateCampaignForm: React.FC = () => {
                       : "bg-gray-100 text-gray-400 cursor-not-allowed",
                   )}>
                   {loading ? (
-                    <>
-                      <span className='w-3.5 h-3.5 rounded-full border-2 border-white border-t-transparent animate-spin' />
-                      Creating…
-                    </>
+                    <ButtonLoadingText text='Creating…' />
                   ) : (
                     <>
                       <CheckCircle2 className='w-4 h-4' />
@@ -672,10 +670,7 @@ const CreateCampaignForm: React.FC = () => {
                 : "bg-gray-100 text-gray-400 cursor-not-allowed",
             )}>
             {loading ? (
-              <>
-                <span className='w-4 h-4 rounded-full border-2 border-white border-t-transparent animate-spin' />
-                Creating…
-              </>
+              <ButtonLoadingText text='Creating…' />
             ) : (
               <>
                 <CheckCircle2 className='w-4 h-4' />
@@ -697,10 +692,7 @@ const CreateCampaignForm: React.FC = () => {
                 : "bg-gray-100 text-gray-400 cursor-not-allowed",
             )}>
             {loading ? (
-              <>
-                <span className='w-4 h-4 rounded-full border-2 border-white border-t-transparent animate-spin' />
-                Creating…
-              </>
+              <ButtonLoadingText text='Creating…' />
             ) : (
               <>
                 <CheckCircle2 className='w-4 h-4' />

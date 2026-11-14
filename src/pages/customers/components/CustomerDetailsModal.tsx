@@ -33,7 +33,6 @@ import {
   Tag,
   TrendingUp,
   X,
-  Loader2,
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { useCustomerAnalytics } from '../hooks/useCustomerAnalytics';
@@ -41,6 +40,7 @@ import { showOrderModal } from '../../../utils/orderModal';
 import { claude } from '../../../lib/claude';
 import { useIsMobile } from '../../../hooks/use-mobile';
 import { MobileDetailSheet, MobileSkeletonList } from '../../../components/mobile';
+import { PageLoader } from '../../../components/loaders';
 
 interface CustomerDetailsModalProps {
   open: boolean;
@@ -121,7 +121,7 @@ const CustomerDetailsModal = ({
       <Dialog open={open} onOpenChange={handleClose}>
         <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto bg-[#FAF9F6] border-[#E8E4DC]">
           <div className="flex items-center justify-center h-64">
-            <Loader2 className="h-8 w-8 animate-spin text-[#D97757]" />
+            <PageLoader domain='users' text='Loading Customer' className='h-64 py-0' />
           </div>
         </DialogContent>
       </Dialog>

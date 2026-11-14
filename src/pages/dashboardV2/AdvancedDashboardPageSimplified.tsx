@@ -21,6 +21,7 @@ import {
   TableBody,
 } from "../../components/ui/table";
 import { Button } from "../../components/ui/button";
+import { PageLoader } from "@/components/loaders";
 import {
   Loader2,
   TrendingUp,
@@ -585,13 +586,7 @@ const AdvancedDashboardPageSimplified: React.FC = () => {
             </Button>
           </div>
         ) : loading ? (
-          <div className="text-center py-12">
-            <div className="inline-flex items-center justify-center w-16 h-16 bg-primary/10 rounded-full mb-4">
-              <Loader2 className="h-8 w-8 text-primary animate-spin" />
-            </div>
-            <h3 className="text-xl font-semibold text-foreground mb-2">Loading Analytics</h3>
-            <p className="text-muted-foreground">Fetching your latest data...</p>
-          </div>
+          <PageLoader domain='analytics' text='Loading Analytics' />
         ) : analyticsData ? (
           <>
             {/* KPI Cards */}

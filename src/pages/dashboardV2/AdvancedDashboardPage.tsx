@@ -33,6 +33,7 @@ import {
 } from "../../components/ui/table";
 import { Button } from "../../components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "../../components/ui/sheet";
+import { PageLoader } from "@/components/loaders";
 import {
   Loader2,
   TrendingUp,
@@ -1469,17 +1470,7 @@ const AdvancedDashboardPage: React.FC = () => {
           </div>
         ) : loading ? (
           <div className='space-y-8'>
-            <div className='text-center py-8 sm:py-12'>
-              <div className='inline-flex items-center justify-center w-12 h-12 sm:w-16 sm:h-16 bg-primary/10 rounded-full mb-4'>
-                <Loader2 className='h-6 w-6 sm:h-8 sm:w-8 text-primary animate-spin' />
-              </div>
-              <h3 className='text-lg sm:text-xl font-semibold text-foreground mb-2'>
-                Loading Advanced Analytics
-              </h3>
-              <p className='text-sm sm:text-base text-muted-foreground px-4'>
-                Analyzing your business data and generating insights...
-              </p>
-            </div>
+            <PageLoader domain='analytics' text='Loading Analytics' />
             {/* Skeleton Loading */}
             <div>
               <div className='h-4 sm:h-6 bg-muted rounded w-32 sm:w-48 mb-3 sm:mb-6 animate-pulse' />

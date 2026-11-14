@@ -14,6 +14,7 @@ import { BarChart, Bar, XAxis, Tooltip, ResponsiveContainer, Cell } from "rechar
 import { Users, ShoppingCart, Package } from "lucide-react";
 import dayjs from "dayjs";
 import { claude } from "../../../lib/claude";
+import { InlineLoader } from "@/components/loaders";
 
 interface AuditContributorsGraphProps {
   startDate: string;
@@ -202,10 +203,7 @@ export const AuditContributorsGraph: React.FC<AuditContributorsGraphProps> = ({
   if (isLoading && contributors.length === 0) {
     return (
       <div className={claude.card + " p-8"}>
-        <div className="flex flex-col items-center gap-4">
-          <div className={claude.spinner} />
-          <p className="text-[13px] text-[#8A877D]">Loading contributors...</p>
-        </div>
+        <InlineLoader domain='users' text='Loading Contributors' />
       </div>
     );
   }
@@ -227,10 +225,12 @@ export const AuditContributorsGraph: React.FC<AuditContributorsGraphProps> = ({
           </p>
         </div>
         {loadingDetails && (
-          <div className='ml-auto flex items-center gap-2 text-[11px] text-[#8A877D]'>
-            <div className='w-3.5 h-3.5 border-2 border-[#D97757] border-t-transparent rounded-full animate-spin' />
-            Loading...
-          </div>
+          <InlineLoader
+            domain='users'
+            text='Loading…'
+            className='ml-auto w-auto py-0'
+            textClassName='text-[11px] text-[#8A877D]'
+          />
         )}
       </div>
 

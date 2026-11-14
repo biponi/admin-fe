@@ -18,6 +18,7 @@ import {
   Megaphone,
 } from "lucide-react";
 import { PageHeader } from "@/components/PageHeader";
+import { ButtonLoadingText } from "@/components/loaders";
 
 const CreateSMSCampaign = () => {
   const navigate = useNavigate();
@@ -490,10 +491,7 @@ const CreateSMSCampaign = () => {
                 disabled={loading}
                 className='mobile:hidden w-full h-11 flex items-center justify-center gap-2 text-sm font-semibold text-white bg-indigo-600 rounded-xl hover:bg-indigo-700 active:bg-indigo-800 disabled:opacity-60 disabled:cursor-not-allowed transition-all shadow-sm shadow-indigo-200'>
                 {loading ? (
-                  <span className='flex items-center gap-2'>
-                    <span className='w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin' />
-                    Creating…
-                  </span>
+                  <ButtonLoadingText text='Creating…' />
                 ) : (
                   <>
                     <Send className='h-4 w-4' />
@@ -511,10 +509,7 @@ const CreateSMSCampaign = () => {
               disabled={loading}
               className='m3-ripple w-full h-12 flex items-center justify-center gap-2 text-sm font-semibold text-white bg-indigo-600 rounded-full active:bg-indigo-800 disabled:opacity-60 disabled:cursor-not-allowed transition-all shadow-sm shadow-indigo-200'>
               {loading ? (
-                <span className='flex items-center gap-2'>
-                  <span className='w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin' />
-                  Creating…
-                </span>
+                <ButtonLoadingText text='Creating…' />
               ) : (
                 <>
                   <Send className='h-4 w-4' />

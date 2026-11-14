@@ -26,7 +26,6 @@ import {
   Phone,
   Lock,
   Users,
-  Loader2,
   Shield,
   UserCheck,
   Crown,
@@ -35,6 +34,11 @@ import {
   Mail,
 } from "lucide-react";
 import { IUser } from "./interface";
+import {
+  InlineLoader,
+  ButtonLoadingText,
+} from "../../components/loaders";
+import { Dots } from "../../components/loading-ui/dots";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -467,10 +471,7 @@ export function UserComponent() {
                 disabled={isCreating}
                 className='h-11 w-full bg-indigo-600 hover:bg-indigo-700 text-white shadow-sm shadow-indigo-200'>
                 {isCreating ? (
-                  <>
-                    <Loader2 className='mr-2 h-4 w-4 animate-spin' />
-                    Creating...
-                  </>
+                  <ButtonLoadingText text='Creating…' />
                 ) : (
                   <>
                     <Plus className='mr-2 h-4 w-4' />
@@ -524,10 +525,7 @@ export function UserComponent() {
               disabled={isCreating}
               className='h-10 bg-primary text-primary-foreground hover:bg-primary/90 rounded-md'>
               {isCreating ? (
-                <>
-                  <Loader2 className='mr-2 h-4 w-4 animate-spin' />
-                  Creating...
-                </>
+                <ButtonLoadingText text='Creating…' />
               ) : (
                 <>
                   <Plus className='mr-2 h-4 w-4' />
@@ -630,10 +628,7 @@ export function UserComponent() {
                 disabled={loadingUserId !== null}
                 className='h-11 w-full'>
                 {loadingUserId !== null ? (
-                  <>
-                    <Loader2 className='mr-2 h-4 w-4 animate-spin' />
-                    Saving...
-                  </>
+                  <ButtonLoadingText text='Saving…' />
                 ) : (
                   <>
                     <Edit className='mr-2 h-4 w-4' />
@@ -808,20 +803,7 @@ export function UserComponent() {
                 value={activeTab}
                 className='p-4 sm:p-6 mt-0 focus-visible:outline-none'>
                 {isLoading ? (
-                  <div className='flex flex-col items-center justify-center py-20 px-4'>
-                    <div className='relative'>
-                      <div className='absolute inset-0 bg-primary/20 rounded-full animate-ping' />
-                      <div className='relative h-16 w-16 rounded-full bg-primary flex items-center justify-center shadow-sm'>
-                        <Loader2 className='h-8 w-8 text-primary-foreground animate-spin' />
-                      </div>
-                    </div>
-                    <p className='mt-6 text-lg font-semibold text-foreground'>
-                      Loading users...
-                    </p>
-                    <p className='text-[13px] text-slate-400 mt-1'>
-                      Please wait while we fetch the data
-                    </p>
-                  </div>
+                  <InlineLoader domain='users' text='Loading Users' />
                 ) : filteredUsers.length === 0 ? (
                   <div className='py-20 px-4 text-center bg-white'>
                     <div className='mx-auto h-20 w-20 rounded-xl bg-muted ring-1 ring-border flex items-center justify-center mb-6'>
@@ -863,7 +845,7 @@ export function UserComponent() {
                           )}>
                           {isCardLoading && (
                             <div className='absolute inset-0 bg-white/80 backdrop-blur-sm z-10 flex items-center justify-center'>
-                              <Loader2 className='h-6 w-6 animate-spin text-primary' />
+                              <Dots className='h-6 w-6 text-primary' />
                             </div>
                           )}
 
@@ -1290,7 +1272,7 @@ export function UserComponent() {
                 </Select>
                 {isDetailLoading && (
                   <p className='mt-2 flex items-center gap-1.5 px-1 text-[12px] text-muted-foreground'>
-                    <Loader2 className='h-3 w-3 animate-spin' /> Updating…
+                    <ButtonLoadingText text='Updating…' />
                   </p>
                 )}
               </div>

@@ -15,6 +15,7 @@ import { useNotifications } from "../../notification/useNotifications";
 import { getTopicStyle, PRIORITY_STYLES } from "../../notification/notificationTopics";
 import { formatDistanceToNow } from "date-fns";
 import { Button } from "../../components/ui/button";
+import { InlineLoader } from "../../components/loaders";
 import { Tabs, TabsList, TabsTrigger } from "../../components/ui/tabs";
 import CreateNotificationModal from "./CreateNotificationModal";
 import NotificationDetailModal, {
@@ -403,12 +404,11 @@ const NotificationPage: React.FC = () => {
 
               {/* Loading more */}
               {loading && notifications.length > 0 && (
-                <div className="px-4 py-3 flex items-center gap-2 border-t border-slate-100">
-                  <span className="h-3 w-3 rounded-full border-2 border-slate-200 border-t-slate-400 animate-spin" />
-                  <span className="text-[11px] text-slate-400">
-                    Loading more...
-                  </span>
-                </div>
+                <InlineLoader
+                  domain='chat'
+                  text='Loading Notifications'
+                  className='py-3 border-t border-slate-100 text-[11px] text-slate-400'
+                />
               )}
 
               {/* End of list */}

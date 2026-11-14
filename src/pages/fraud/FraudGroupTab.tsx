@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
-import { Ban, Loader2, Plus, Search, UserX } from "lucide-react";
+import { Ban, Plus, Search, UserX } from "lucide-react";
+import { ButtonLoadingText } from "@/components/loaders";
 import { Button } from "../../components/ui/button";
 import { Input } from "../../components/ui/input";
 import { Skeleton } from "../../components/ui/skeleton";
@@ -209,9 +210,10 @@ const FraudGroupTab = () => {
                         className='h-7 px-2.5 text-[11px] rounded-md gap-1.5 border-emerald-300 text-emerald-700 hover:bg-emerald-50 dark:border-emerald-700 dark:text-emerald-300 dark:hover:bg-emerald-950/40'
                       >
                         {removingPhone === item.phoneNumber ? (
-                          <Loader2 className='w-3 h-3 animate-spin' />
-                        ) : null}
-                        Unblock
+                          <ButtonLoadingText text='Unblocking…' />
+                        ) : (
+                          'Unblock'
+                        )}
                       </Button>
                     ) : null}
                   </div>

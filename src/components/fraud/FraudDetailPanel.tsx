@@ -5,7 +5,6 @@ import {
   BarChart3,
   Clock,
   Flag,
-  Loader2,
   RefreshCw,
   ShieldQuestion,
   ShoppingBag,
@@ -37,6 +36,7 @@ import BlockedBadge from "./BlockedBadge";
 import RiskScoreBar from "./RiskScoreBar";
 import AddToFraudGroupDialog from "./AddToFraudGroupDialog";
 import RiskOverrideDialog from "./RiskOverrideDialog";
+import { ButtonLoadingText } from "@/components/loaders";
 
 interface FraudDetailPanelProps {
   phoneNumber: string;
@@ -185,11 +185,13 @@ const FraudDetailPanel = ({
               disabled={analyzing}
               className='mt-3 h-8 rounded-md gap-1.5 bg-[#141413] hover:bg-[#2a2a2a] text-white'>
               {analyzing ? (
-                <Loader2 className='w-3.5 h-3.5 animate-spin' />
+                <ButtonLoadingText text='Analyzing…' />
               ) : (
-                <RefreshCw className='w-3.5 h-3.5' />
+                <>
+                  <RefreshCw className='w-3.5 h-3.5' />
+                  Analyze now
+                </>
               )}
-              Analyze now
             </Button>
           ) : null}
         </div>
@@ -371,11 +373,13 @@ const FraudDetailPanel = ({
               disabled={analyzing}
               className='h-7 px-2.5 text-[11px] rounded-md gap-1.5 border-slate-300 text-slate-600 hover:bg-slate-50 dark:border-slate-600 dark:text-slate-300'>
               {analyzing ? (
-                <Loader2 className='w-3 h-3 animate-spin' />
+                <ButtonLoadingText text='Re-analyzing…' />
               ) : (
-                <RefreshCw className='w-3 h-3' />
+                <>
+                  <RefreshCw className='w-3 h-3' />
+                  Re-analyze
+                </>
               )}
-              Re-analyze
             </Button>
           ) : null}
           {canManage ? (
@@ -397,9 +401,10 @@ const FraudDetailPanel = ({
                 disabled={unblocking}
                 className='h-7 px-2.5 text-[11px] rounded-md gap-1.5 border-emerald-300 text-emerald-700 hover:bg-emerald-50 dark:border-emerald-700 dark:text-emerald-300 dark:hover:bg-emerald-950/40'>
                 {unblocking ? (
-                  <Loader2 className='w-3 h-3 animate-spin' />
-                ) : null}
-                Remove from fraud group
+                  <ButtonLoadingText text='Removing…' />
+                ) : (
+                  'Remove from fraud group'
+                )}
               </Button>
             ) : (
               <Button

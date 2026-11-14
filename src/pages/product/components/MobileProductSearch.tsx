@@ -3,7 +3,8 @@
 // adds two things the generic keyboard search lacked: live result count while
 // typing and persisted recent searches (tap a chip to re-run it).
 import { useEffect, useRef, useState } from "react";
-import { Check, History, Loader2, Search, X, XCircle } from "lucide-react";
+import { Check, History, Search, X, XCircle } from "lucide-react";
+import { Dots } from "@/components/loading-ui/dots";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
@@ -159,7 +160,7 @@ export function MobileProductSearch({
           <div className="mt-2 flex items-center justify-center gap-1.5">
             {isSearching ? (
               <>
-                <Loader2 className="h-3 w-3 animate-spin text-slate-400" />
+                <Dots className='h-4 w-6 text-slate-400' />
                 <span className="text-[11px] font-medium text-slate-400">
                   Searching…
                 </span>

@@ -55,6 +55,7 @@ export const pagePermissions: Record<string, string[]> = {
   Fraud: ["view", "manage", "block"],
   BkashTransaction: ["view"],
   PendingOrder: ["view"],
+  Assistant: ["view", "manage"],
 };
 
 // Pages/actions that support the per-role "own only" restriction: a role

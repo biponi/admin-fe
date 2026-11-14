@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useOrderAudit } from "../../../hooks/useOrderAudit";
 import { AuditLogEntry } from "../../../api/orderAudit";
+import { InlineLoader } from "@/components/loaders";
 
 interface OrderAuditTimelineProps {
   orderId: string;
@@ -64,7 +65,9 @@ export const OrderAuditTimeline: React.FC<OrderAuditTimelineProps> = ({
   };
 
   if (isLoading) {
-    return <div className="audit-timeline-loading">Loading audit trail...</div>;
+    return (
+      <InlineLoader domain='orders' text='Loading Audit Trail' />
+    );
   }
 
   if (error) {

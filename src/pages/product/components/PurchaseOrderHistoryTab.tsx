@@ -42,6 +42,7 @@ import {
   Inbox,
 } from "lucide-react";
 import { useProductAnalytics } from "../hooks/useProductAnalytics";
+import { InlineLoader } from "@/components/loaders";
 import { format } from "date-fns";
 
 interface PurchaseOrderHistoryTabProps {
@@ -91,12 +92,7 @@ const PurchaseOrderHistoryTab = ({
   };
 
   if (loading && !purchaseHistory) {
-    return (
-      <div className='flex flex-col items-center justify-center h-64 gap-3'>
-        <div className='w-8 h-8 border-2 border-indigo-600 border-t-transparent rounded-full animate-spin' />
-        <p className='text-sm text-slate-500'>Loading purchase orders…</p>
-      </div>
-    );
+    return <InlineLoader domain='products' text='Loading Purchase Orders' />;
   }
 
   return (

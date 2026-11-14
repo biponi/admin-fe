@@ -10,6 +10,7 @@ import {
 } from "lucide-react";
 import { Button } from "../../../components/ui/button";
 import { cn } from "../../../utils/functions";
+import { OrbitRing } from "@/components/loading-ui/orbit-ring";
 
 interface MobileEmptyStateProps {
   type: "no-orders" | "no-search-results" | "loading" | "error";
@@ -123,11 +124,14 @@ const MobileEmptyState: React.FC<MobileEmptyStateProps> = ({
         {/* Main Icon */}
         <div className={cn(
           "relative h-24 w-24 rounded-full flex items-center justify-center",
-          config.bgColor,
-          config.loading && "animate-bounce"
+          config.bgColor
         )}>
-          <Icon className={cn("h-12 w-12", config.iconColor)} />
-          
+          {config.loading ? (
+            <OrbitRing className="h-12 w-12 text-primary" />
+          ) : (
+            <Icon className={cn("h-12 w-12", config.iconColor)} />
+          )}
+
           {/* Sparkle Effects */}
           {type === "no-orders" && (
             <>
@@ -136,13 +140,6 @@ const MobileEmptyState: React.FC<MobileEmptyStateProps> = ({
             </>
           )}
         </div>
-
-        {/* Loading Spinner */}
-        {config.loading && (
-          <div className="absolute inset-0 flex items-center justify-center">
-            <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-primary opacity-20"></div>
-          </div>
-        )}
       </div>
 
       {/* Content */}

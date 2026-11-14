@@ -37,6 +37,7 @@ import { MobilePage, MobileStickyActions } from "@/components/mobile";
 import { PageHeader } from "@/components/PageHeader";
 import { Zap } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { PageLoader, ButtonLoadingText } from "@/components/loaders";
 
 // ─── Section wrapper ──────────────────────────────────────────────────────────
 const Section: React.FC<{
@@ -283,7 +284,7 @@ const UpdateCampaignForm: React.FC = () => {
     return (
       <MainView title='Update Campaign'>
         <div className='w-full p-28 flex justify-center items-center'>
-          <Badge>Please Wait...</Badge>
+          <PageLoader domain='chat' text='Loading Campaign' />
         </div>
       </MainView>
     );
@@ -724,10 +725,7 @@ const UpdateCampaignForm: React.FC = () => {
                             : "bg-gray-100 text-gray-400 cursor-not-allowed"
                         )}>
                         {loading ? (
-                          <>
-                            <span className='w-3.5 h-3.5 rounded-full border-2 border-white border-t-transparent animate-spin' />
-                            Updating…
-                          </>
+                          <ButtonLoadingText text='Updating…' />
                         ) : (
                           <>
                             <CheckCircle2 className='w-4 h-4' />
@@ -804,10 +802,7 @@ const UpdateCampaignForm: React.FC = () => {
                       : "bg-gray-100 text-gray-400 cursor-not-allowed"
                   )}>
                   {loading ? (
-                    <>
-                      <span className='w-4 h-4 rounded-full border-2 border-white border-t-transparent animate-spin' />
-                      Updating…
-                    </>
+                    <ButtonLoadingText text='Updating…' />
                   ) : (
                     <>
                       <CheckCircle2 className='w-4 h-4' />
@@ -829,10 +824,7 @@ const UpdateCampaignForm: React.FC = () => {
                       : "bg-gray-100 text-gray-400 cursor-not-allowed"
                   )}>
                   {loading ? (
-                    <>
-                      <span className='w-4 h-4 rounded-full border-2 border-white border-t-transparent animate-spin' />
-                      Updating…
-                    </>
+                    <ButtonLoadingText text='Updating…' />
                   ) : (
                     <>
                       <CheckCircle2 className='w-4 h-4' />

@@ -43,6 +43,7 @@ import { toast } from "sonner";
 import axiosInstance from "../../api/axios";
 import { useNavigate } from "react-router-dom";
 import { PageHeader } from "../../components/PageHeader";
+import { ButtonLoadingText } from "../../components/loaders";
 
 interface JobStatus {
   isRunning: boolean;
@@ -628,10 +629,7 @@ const JobsManagement = () => {
                   size='lg'
                   className='w-full rounded-xl bg-white text-indigo-700 hover:bg-indigo-50 md:w-auto'>
                   {loading.allJobs ? (
-                    <>
-                      <RefreshCw className='mr-2 h-4 w-4 animate-spin' />
-                      Running...
-                    </>
+                    <ButtonLoadingText text='Running…' />
                   ) : (
                     <>
                       <PlayCircle className='mr-2 h-4 w-4' />
@@ -670,10 +668,7 @@ const JobsManagement = () => {
                   disabled={loading.salesStats}
                   className='h-9 flex-1 rounded-lg bg-indigo-600 text-white hover:bg-indigo-700'>
                   {loading.salesStats ? (
-                    <>
-                      <RefreshCw className='mr-2 h-4 w-4 animate-spin' />
-                      Updating...
-                    </>
+                    <ButtonLoadingText text='Updating…' />
                   ) : (
                     <>
                       <RefreshCw className='mr-2 h-4 w-4' />
@@ -687,7 +682,7 @@ const JobsManagement = () => {
                   variant='outline'
                   className='h-9 rounded-lg border-slate-200'>
                   {loading.initStats ? (
-                    <RefreshCw className='h-4 w-4 animate-spin' />
+                    <ButtonLoadingText text='Initializing…' />
                   ) : (
                     "Initialize"
                   )}
@@ -740,10 +735,7 @@ const JobsManagement = () => {
                 disabled={loading.fraudDetection || jobStatus?.isRunning}
                 className='h-9 w-full rounded-lg bg-red-600 text-white hover:bg-red-700'>
                 {loading.fraudDetection ? (
-                  <>
-                    <RefreshCw className='mr-2 h-4 w-4 animate-spin' />
-                    Analyzing...
-                  </>
+                  <ButtonLoadingText text='Analyzing…' />
                 ) : (
                   <>
                     <Shield className='mr-2 h-4 w-4' />
@@ -825,10 +817,7 @@ const JobsManagement = () => {
                 disabled={loading.deliverySync}
                 className='h-9 w-full rounded-lg bg-emerald-600 text-white hover:bg-emerald-700'>
                 {loading.deliverySync ? (
-                  <>
-                    <RefreshCw className='mr-2 h-4 w-4 animate-spin' />
-                    Queuing...
-                  </>
+                  <ButtonLoadingText text='Queuing…' />
                 ) : (
                   <>
                     <Truck className='mr-2 h-4 w-4' />
@@ -949,10 +938,7 @@ const JobsManagement = () => {
                   }
                   className='h-9 flex-1 rounded-lg bg-indigo-600 text-white hover:bg-indigo-700'>
                   {loading.cacheWarmup ? (
-                    <>
-                      <RefreshCw className='mr-2 h-4 w-4 animate-spin' />
-                      Warming Up...
-                    </>
+                    <ButtonLoadingText text='Warming Up…' />
                   ) : (
                     <>
                       <Flame className='mr-2 h-4 w-4' />
@@ -970,7 +956,7 @@ const JobsManagement = () => {
                   variant='destructive'
                   className='h-9 rounded-lg'>
                   {loading.flushCache ? (
-                    <RefreshCw className='h-4 w-4 animate-spin' />
+                    <ButtonLoadingText text='Flushing…' />
                   ) : (
                     <>
                       <Trash2 className='mr-2 h-4 w-4' />

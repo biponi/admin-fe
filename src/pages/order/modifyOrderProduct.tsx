@@ -34,7 +34,6 @@ import {
   AlertTriangle,
   CheckCircle2,
   ArrowLeft,
-  Loader2,
   Clock,
 } from "lucide-react";
 import { toast } from "react-hot-toast";
@@ -74,6 +73,8 @@ import {
 import { Alert, AlertDescription } from "../../components/ui/alert";
 import { ScrollArea } from "../../components/ui/scroll-area";
 import { Skeleton } from "../../components/ui/skeleton";
+import { InlineLoader, ButtonLoadingText } from "@/components/loaders";
+import { ConveyorLoop } from "@/components/loading-ui/conveyor-loop";
 import {
   MobilePage,
   rippleProps,
@@ -511,17 +512,11 @@ const ModifyOrder = () => {
 
             <ScrollArea className='h-[calc(100vh-300px)]'>
               {searching ? (
-                <div className='flex flex-col justify-center items-center py-12 space-y-3'>
-                  <Loader2 className='w-6 h-6 animate-spin text-indigo-600' />
-                  <div className='text-center space-y-1'>
-                    <p className='text-sm font-medium text-slate-900'>
-                      Searching Products
-                    </p>
-                    <p className='text-xs text-slate-500'>
-                      Please wait while we find matching products...
-                    </p>
-                  </div>
-                </div>
+                <InlineLoader
+                  domain='products'
+                  text='Searching Products'
+                  className='py-12'
+                />
               ) : (
                 <div className='space-y-3'>
                   {!!products && products.length > 0 ? (
@@ -593,17 +588,11 @@ const ModifyOrder = () => {
 
             <ScrollArea className='h-[50vh]'>
               {searching ? (
-                <div className='flex flex-col justify-center items-center py-8 space-y-2.5'>
-                  <Loader2 className='w-5 h-5 animate-spin text-indigo-600' />
-                  <div className='text-center space-y-0.5'>
-                    <p className='text-sm font-medium text-slate-900'>
-                      Searching...
-                    </p>
-                    <p className='text-xs text-slate-500'>
-                      Finding products for you
-                    </p>
-                  </div>
-                </div>
+                <InlineLoader
+                  domain='products'
+                  text='Searching Products'
+                  className='py-8'
+                />
               ) : (
                 <div className='space-y-2.5'>
                   {!!products && products.length > 0 ? (
@@ -986,10 +975,7 @@ const ModifyOrder = () => {
               }
               className='w-full h-11 rounded-full bg-indigo-600 hover:bg-indigo-700 text-white font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed'>
               {validating ? (
-                <>
-                  <Loader2 className='w-4 h-4 mr-2 animate-spin' />
-                  Validating...
-                </>
+                <ButtonLoadingText text='Validating…' />
               ) : (
                 <>
                   <CheckCircle2 className='w-4 h-4 mr-2' />
@@ -998,7 +984,7 @@ const ModifyOrder = () => {
               )}
             </Button>
           }>
-          <div className='px-3 pt-3 pb-4 space-y-4'>
+            <div className='px-3 pt-3 pb-4 space-y-4'>
             {/* Product search drawer (bottom sheet on mobile) */}
             {renderProductDrawer()}
 
@@ -1227,10 +1213,7 @@ const ModifyOrder = () => {
                       }
                       className='w-full bg-indigo-600 hover:bg-indigo-700 text-white font-medium h-10 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed'>
                       {validating ? (
-                        <>
-                          <Loader2 className='w-4 h-4 mr-2 animate-spin' />
-                          Validating...
-                        </>
+                        <ButtonLoadingText text='Validating…' />
                       ) : (
                         <>
                           <CheckCircle2 className='w-4 h-4 mr-2' />
@@ -1254,7 +1237,7 @@ const ModifyOrder = () => {
         <div className='w-full max-w-md mx-4 rounded-2xl border border-slate-200 bg-white'>
           <div className='flex flex-col items-center justify-center py-12 text-center px-6'>
             <div className='w-14 h-14 bg-indigo-50 rounded-full flex items-center justify-center mb-5'>
-              <Loader2 className='w-6 h-6 text-indigo-600 animate-spin' />
+              <ConveyorLoop className='w-6 h-6 text-indigo-600' />
             </div>
             <h3 className='text-base font-semibold text-slate-900 mb-1.5'>
               Updating Order
@@ -1434,10 +1417,7 @@ const ModifyOrder = () => {
               disabled={hasErrors || loading}
               className='bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg'>
               {loading ? (
-                <>
-                  <Loader2 className='w-4 h-4 mr-2 animate-spin' />
-                  Updating...
-                </>
+                <ButtonLoadingText text='Updating…' />
               ) : (
                 <>
                   <CheckCircle2 className='w-4 h-4 mr-2' />

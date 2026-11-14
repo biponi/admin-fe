@@ -19,6 +19,7 @@ import EditRolePage from "../../pages/role/editView";
 import CreateRolePage from "../../pages/role/create";
 import ViewRolePage from "../../pages/role/viewRolePage";
 import ChatPage from "../../pages/chat";
+import AssistantPage from "../../pages/assistant";
 import { JobsManagement } from "../../pages/settings";
 import LocationSettings from "../../pages/settings/LocationSettings";
 import PrepaymentSettings from "../../pages/settings/PrepaymentSettings";
@@ -299,6 +300,16 @@ export const ProtectedRoutes = () => {
           <ProtectedRoute page='Chat' requiredAction='view'>
             <MainViewComponent title='Support'>
               <ChatPage />
+            </MainViewComponent>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path='/assistant'
+        element={
+          <ProtectedRoute page='assistant' requiredAction='view'>
+            <MainViewComponent title='AI Assistant'>
+              <AssistantPage />
             </MainViewComponent>
           </ProtectedRoute>
         }

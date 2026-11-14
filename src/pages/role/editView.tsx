@@ -5,7 +5,6 @@ import {
   ShieldCheck,
   KeyRound,
   Save,
-  Loader2,
   ArrowLeft,
 } from "lucide-react";
 import { useRole } from "./hooks/useRoleHook";
@@ -32,6 +31,10 @@ import { Alert, AlertDescription } from "../../components/ui/alert";
 import { Checkbox } from "../../components/ui/checkbox";
 import { pagePermissions, OWN_ONLY_ELIGIBLE } from "../../utils/permissions";
 import { PageHeader } from "../../components/PageHeader";
+import {
+  PageLoader,
+  ButtonLoadingText,
+} from "../../components/loaders";
 
 const EditRolePage: React.FC = () => {
   const navigate = useNavigate();
@@ -209,20 +212,7 @@ const EditRolePage: React.FC = () => {
     return (
       <div>
         <div className='max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6'>
-          <div className='flex flex-col items-center justify-center py-20'>
-            <div className='relative'>
-              <div className='absolute inset-0 bg-primary/20 rounded-full animate-ping' />
-              <div className='relative h-16 w-16 rounded-full bg-primary flex items-center justify-center shadow-sm'>
-                <Loader2 className='h-8 w-8 text-primary-foreground animate-spin' />
-              </div>
-            </div>
-            <p className='mt-6 text-lg font-semibold text-foreground'>
-              Loading role...
-            </p>
-            <p className='text-[13px] text-slate-400 mt-1'>
-              Please wait while we fetch the data
-            </p>
-          </div>
+          <PageLoader domain='settings' text='Loading Role' />
         </div>
       </div>
     );
@@ -499,10 +489,7 @@ const EditRolePage: React.FC = () => {
               disabled={isSubmitting || !formData.name?.trim()}
               className='bg-primary text-primary-foreground hover:bg-primary/90 rounded-md mobile:flex-[2] mobile:h-10'>
               {isSubmitting ? (
-                <>
-                  <Loader2 className='h-4 w-4 mr-2 animate-spin' />
-                  Updating...
-                </>
+                <ButtonLoadingText text='Updating…' />
               ) : (
                 <>
                   <Save className='h-4 w-4 mr-2' />

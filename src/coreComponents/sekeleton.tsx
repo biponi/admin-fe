@@ -1,4 +1,3 @@
-import { Disc3 } from "lucide-react";
 import {
   Card,
   CardContent,
@@ -7,6 +6,7 @@ import {
   CardTitle,
 } from "../components/ui/card";
 import { Skeleton } from "../components/ui/skeleton";
+import { Wave } from "../components/loading-ui/wave";
 
 export function SkeletonCard({
   title = "Loading",
@@ -18,7 +18,8 @@ export function SkeletonCard({
         <CardHeader>
           <CardTitle>
             <div className='flex items-center'>
-              {title} <Disc3 className='w-5 h-5 ml-2 animate-spin' />
+              {title}
+              <Wave className='w-8 h-4 ml-2 text-muted-foreground' />
             </div>
           </CardTitle>
           <CardDescription>{description}</CardDescription>

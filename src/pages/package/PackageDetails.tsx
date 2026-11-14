@@ -24,7 +24,6 @@ import {
 import { Badge } from "../../components/ui/badge";
 import { ScrollArea } from "../../components/ui/scroll-area";
 import {
-  Loader2,
   ArrowLeft,
   Download,
   Ship,
@@ -39,6 +38,7 @@ import {
   FileText,
   Truck,
 } from "lucide-react";
+import { PageLoader, InlineLoader, ButtonLoadingText } from "@/components/loaders";
 import { toast } from "sonner";
 import type { PackageCourier } from "./interface";
 import type { IOrderProduct } from "../order/interface.d";
@@ -173,20 +173,11 @@ export function PackageDetailsPage() {
     }
     return (
       <div className="min-h-screen bg-slate-50/60">
-        <div className="flex flex-col items-center justify-center py-20 px-4">
-          <div className="relative">
-            <div className="absolute inset-0 bg-indigo-500/20 rounded-full animate-ping" />
-            <div className="relative h-16 w-16 rounded-full bg-indigo-600 flex items-center justify-center shadow-lg">
-              <Loader2 className="h-8 w-8 text-white animate-spin" />
-            </div>
-          </div>
-          <p className="mt-6 text-lg font-semibold text-slate-900">
-            Loading package details...
-          </p>
-          <p className="text-sm text-slate-500 mt-1">
-            Please wait while we fetch the data
-          </p>
-        </div>
+        <PageLoader
+          domain='delivery'
+          text='Loading Package'
+          className='min-h-screen py-20'
+        />
       </div>
     );
   }
@@ -275,10 +266,11 @@ export function PackageDetailsPage() {
                 className="h-10 flex-1 rounded-full bg-emerald-600 hover:bg-emerald-700"
                 onClick={handleMarkAsPacked}
                 disabled={submitting}>
-                {submitting && (
-                  <Loader2 className="h-4 w-4 animate-spin" />
+                {submitting ? (
+                  <ButtonLoadingText text='Processing…' />
+                ) : (
+                  "Mark Packed"
                 )}
-                Mark Packed
               </Button>
             )}
             {canRequestShipping && (
@@ -522,14 +514,7 @@ export function PackageDetailsPage() {
 
             <div className="mt-6">
               {loadingProducts ? (
-                <div className="flex items-center justify-center py-12">
-                  <div className="flex flex-col items-center gap-3 text-center">
-                    <Loader2 className="h-8 w-8 animate-spin text-indigo-600" />
-                    <p className="text-sm font-medium text-slate-700">
-                      Loading products...
-                    </p>
-                  </div>
-                </div>
+                <InlineLoader domain='products' text='Loading Products' />
               ) : orderProducts.length === 0 ? (
                 <div className="px-4 py-16 text-center">
                   <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-slate-100">
@@ -714,10 +699,11 @@ export function PackageDetailsPage() {
                 onClick={handleMarkAsPacked}
                 disabled={submitting}
                 className="h-9 bg-emerald-600 hover:bg-emerald-700 text-white shadow-sm shadow-emerald-200 gap-1.5">
-                {submitting && (
-                  <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                {submitting ? (
+                  <ButtonLoadingText text='Processing…' />
+                ) : (
+                  "Mark as Packed"
                 )}
-                Mark as Packed
               </Button>
             )}
             {canRequestShipping && (
@@ -754,11 +740,14 @@ export function PackageDetailsPage() {
                 onClick={handleCancel}
                 disabled={submitting}
                 className="h-9 gap-1.5">
-                {submitting && (
-                  <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                {submitting ? (
+                  <ButtonLoadingText text='Processing…' />
+                ) : (
+                  <>
+                    <X className="h-3.5 w-3.5" />
+                    Cancel
+                  </>
                 )}
-                <X className="h-3.5 w-3.5" />
-                Cancel
               </Button>
             )}
           </div>
@@ -1009,14 +998,7 @@ export function PackageDetailsPage() {
 
           <div className="mt-6">
             {loadingProducts ? (
-              <div className="flex items-center justify-center py-12">
-                <div className="flex flex-col items-center gap-3 text-center">
-                  <Loader2 className="h-8 w-8 animate-spin text-indigo-600" />
-                  <p className="text-sm font-medium text-slate-700">
-                    Loading products...
-                  </p>
-                </div>
-              </div>
+              <InlineLoader domain='products' text='Loading Products' />
             ) : orderProducts.length === 0 ? (
               <div className="py-16 px-4 text-center">
                 <div className="mx-auto h-16 w-16 rounded-2xl bg-slate-100 flex items-center justify-center mb-4">

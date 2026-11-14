@@ -9,7 +9,6 @@ import {
   Phone,
   Key,
   Upload,
-  Loader2,
   CheckCircle2,
   ChevronDown,
   Camera,
@@ -17,6 +16,7 @@ import {
 import { toast } from "sonner";
 import { updateUserInfo, changeUserPassword } from "../../../api/user";
 import { OTPVerificationDialog } from "../../../components/OTPVerificationDialog";
+import { Dots } from "../../../components/loading-ui/dots";
 
 interface UserInformationPanelProps {
   profile: {
@@ -204,7 +204,7 @@ export const UserInformationPanel: React.FC<UserInformationPanelProps> = ({
                       onClick={() => handleSave("avatar")}
                       disabled={isLoading}>
                       {isLoading ? (
-                        <Loader2 size={14} className='animate-spin' />
+                        <Dots className='h-3.5 w-3.5 text-current' />
                       ) : (
                         <Save size={14} />
                       )}
@@ -255,7 +255,11 @@ export const UserInformationPanel: React.FC<UserInformationPanelProps> = ({
                         accent
                         onClick={() => handleSave("name")}
                         disabled={isLoading}>
-                        {isLoading ? <Loader2 size={14} /> : <Save size={14} />}
+                        {isLoading ? (
+                          <Dots className='h-3.5 w-3.5 text-current' />
+                        ) : (
+                          <Save size={14} />
+                        )}
                       </IconBtn>
                       <IconBtn
                         onClick={() =>
@@ -377,7 +381,11 @@ export const UserInformationPanel: React.FC<UserInformationPanelProps> = ({
                       style={{ flex: 1, justifyContent: "center" }}
                       onClick={() => handleSave("password")}
                       disabled={isLoading}>
-                      {isLoading ? <Loader2 size={14} /> : <Key size={14} />}
+                      {isLoading ? (
+                        <Dots className='h-3.5 w-3.5 text-current' />
+                      ) : (
+                        <Key size={14} />
+                      )}
                       Update password
                     </GlassButton>
                     <GlassButton

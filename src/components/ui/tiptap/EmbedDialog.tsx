@@ -15,7 +15,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Slider } from "@/components/ui/slider";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Loader2, CheckCircle2, AlertCircle } from "lucide-react";
+import { CheckCircle2, AlertCircle } from "lucide-react";
+import { InlineLoader } from "@/components/loaders";
 import {
   Facebook,
   Instagram,
@@ -204,8 +205,8 @@ export const EmbedDialog: React.FC<EmbedDialogProps> = ({
 
           {/* Preview */}
           {isPreviewLoading && isValid && platform !== "video" && (
-            <div className='flex items-center justify-center p-8 bg-gray-50 dark:bg-gray-800 rounded-lg border'>
-              <Loader2 className='h-6 w-6 animate-spin text-gray-400' />
+            <div className='bg-gray-50 dark:bg-gray-800 rounded-lg border'>
+              <InlineLoader domain='generic' text='Loading Preview' />
             </div>
           )}
 

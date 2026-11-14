@@ -1,4 +1,4 @@
-import { Bell, BellRing, Code, Menu, Settings, Wallet } from "lucide-react";
+import { Bell, BellRing, Code, Menu, Settings, Sparkles, Wallet } from "lucide-react";
 import { Button } from "./ui/button";
 import { BRAND_CONFIG } from "../config/brand";
 import { BrandLogoSm as BrandLogo } from "../assets/brand";
@@ -18,6 +18,7 @@ import { rippleProps } from "./mobile/use-ripple";
 import { useNotifications } from "../notification/useNotifications";
 import { Badge } from "./ui/badge";
 import { SettingsPanel } from "./settings-panel";
+import AssistantSheet from "./assistant/AssistantSheet";
 import { TopBarWeatherOverlay } from "./weather/TopBarWeatherOverlay";
 
 interface MobileTopbarProps {
@@ -30,6 +31,8 @@ export function MobileTopbar({ onMenuClick }: MobileTopbarProps) {
   const { signOut } = useLoginAuth();
   const { unreadCount } = useNotifications();
   const [settingsOpen, setSettingsOpen] = useState(false);
+  const [assistantOpen, setAssistantOpen] = useState(false);
+  const { hasRequiredPermission } = useRoleCheck();
 
   return (
     <header className='sticky top-0 z-30 flex h-16 items-center gap-3 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 px-4 md:hidden'>
@@ -57,8 +60,21 @@ export function MobileTopbar({ onMenuClick }: MobileTopbarProps) {
         <span className='font-semibold text-lg truncate'>{BRAND_CONFIG.shortName}</span>
       </div>
 
-      {/* Right Actions: Notification Bell + User Avatar */}
+      {/* Right Actions: AI Assistant + Notification Bell + User Avatar */}
       <div className='flex items-center gap-2 shrink-0'>
+        {/* AI Assistant quick panel */}
+        {hasRequiredPermission("assistant", "view") && (
+          <Button
+            variant='ghost'
+            size='icon'
+            onClick={() => setAssistantOpen(true)}
+            className='m3-ripple relative h-10 w-10 rounded-full hover:bg-muted text-foreground'
+            aria-label='AI Assistant'
+            {...rippleProps()}>
+            <Sparkles className='h-5 w-5 text-muted-foreground' />
+          </Button>
+        )}
+
         {/* Bell Icon Button -> takes to /notifications on click */}
         <Button
           variant='ghost'
@@ -83,7 +99,7 @@ export function MobileTopbar({ onMenuClick }: MobileTopbarProps) {
         </Button>
 
         {/* User Avatar with Dropdown */}
-        <DropdownMenu>
+        <DropdownMenu modal={false}>
           <DropdownMenuTrigger asChild>
             <Avatar className='h-10 w-10 border border-border cursor-pointer'>
               {user?.avatar ? (
@@ -101,7 +117,9 @@ export function MobileTopbar({ onMenuClick }: MobileTopbarProps) {
 
             <DropdownMenuItem
               className='cursor-pointer'
-              onClick={() => setSettingsOpen(true)}>
+              onClick={() => {
+                setTimeout(() => setSettingsOpen(true), 50);
+              }}>
               <Settings className='mr-2 h-4 w-4' />
               Settings
             </DropdownMenuItem>
@@ -144,6 +162,9 @@ export function MobileTopbar({ onMenuClick }: MobileTopbarProps) {
 
       {/* Settings Modal Dialog */}
       <SettingsPanel open={settingsOpen} onOpenChange={setSettingsOpen} />
+
+      {/* AI Assistant quick panel */}
+      <AssistantSheet open={assistantOpen} onOpenChange={setAssistantOpen} />
     </header>
   );
 }

@@ -9,7 +9,6 @@ import {
   Shield,
   Crown,
   UserCheck,
-  Loader2,
   Calendar,
   MoreVertical,
   ShieldCheck,
@@ -58,6 +57,7 @@ import {
   rippleProps,
 } from "../../components/mobile";
 import { PageHeader } from "../../components/PageHeader";
+import { InlineLoader } from "../../components/loaders";
 
 const RolesListPage: React.FC = () => {
   const navigate = useNavigate();
@@ -357,20 +357,7 @@ const RolesListPage: React.FC = () => {
               value={activeTab}
               className='p-4 sm:p-6 mt-0 focus-visible:outline-none'>
               {loading ? (
-                <div className='flex flex-col items-center justify-center py-20 px-4'>
-                  <div className='relative'>
-                    <div className='absolute inset-0 bg-primary/20 rounded-full animate-ping' />
-                    <div className='relative h-16 w-16 rounded-full bg-primary flex items-center justify-center shadow-sm'>
-                      <Loader2 className='h-8 w-8 text-primary-foreground animate-spin' />
-                    </div>
-                  </div>
-                  <p className='mt-6 text-lg font-semibold text-foreground'>
-                    Loading roles...
-                  </p>
-                  <p className='text-[13px] text-slate-400 mt-1'>
-                    Please wait while we fetch the data
-                  </p>
-                </div>
+                <InlineLoader domain='settings' text='Loading Roles' />
               ) : error ? (
                 <div className='bg-rose-50 border border-rose-200 rounded-xl p-4 mb-4'>
                   <div className='flex items-center justify-between gap-4'>

@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
-import { Loader2, UserCog } from "lucide-react";
+import { UserCog } from "lucide-react";
+import { ButtonLoadingText } from "@/components/loaders";
 import {
   Dialog,
   DialogContent,
@@ -171,9 +172,10 @@ const RiskOverrideDialog = ({
               className="h-8 text-rose-600 hover:text-rose-700 hover:bg-rose-50 rounded-md gap-1.5 dark:hover:bg-rose-950/40"
             >
               {removing ? (
-                <Loader2 className="w-3.5 h-3.5 animate-spin" />
-              ) : null}
-              Remove override
+                <ButtonLoadingText text='Removing…' />
+              ) : (
+                'Remove override'
+              )}
             </Button>
           ) : (
             <span />
@@ -194,9 +196,10 @@ const RiskOverrideDialog = ({
               className="h-8 rounded-md gap-1.5 bg-[#141413] hover:bg-[#2a2a2a] text-white"
             >
               {submitting ? (
-                <Loader2 className="w-3.5 h-3.5 animate-spin" />
-              ) : null}
-              Save
+                <ButtonLoadingText text='Saving…' />
+              ) : (
+                'Save'
+              )}
             </Button>
           </div>
         </div>

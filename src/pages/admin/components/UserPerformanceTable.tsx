@@ -6,6 +6,7 @@ import {
   PerformanceMetric,
 } from "../../../api/adminAudit";
 import { useNavigate } from "react-router-dom";
+import { InlineLoader } from "@/components/loaders";
 
 interface UserPerformanceTableProps {
   limit?: number;
@@ -108,12 +109,7 @@ export const UserPerformanceTable: React.FC<UserPerformanceTableProps> = ({
   };
 
   if (isLoading) {
-    return (
-      <div className="performance-loading">
-        <div className="spinner"></div>
-        <p>Loading user performance data...</p>
-      </div>
-    );
+    return <InlineLoader domain='users' text='Loading Performance' />;
   }
 
   if (error) {

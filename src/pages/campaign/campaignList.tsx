@@ -59,6 +59,7 @@ import { PageHeader } from "../../components/PageHeader";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-hot-toast";
 import useRoleCheck from "../auth/hooks/useRoleCheck";
+import { PageLoader } from "../../components/loaders";
 import { useIsMobile } from "../../hooks/use-mobile";
 import MobileCampaignCard from "./components/MobileCampaignCard";
 import MobileCampaignHeader from "./components/MobileCampaignHeader";
@@ -388,12 +389,7 @@ const CampaignList = () => {
     <MainView title='Campaign'>
       <div className='w-full mb-2 md:my-2'>
         {loading && (
-          <div className='flex justify-center items-center py-12'>
-            <div className='text-center'>
-              <RefreshCw className='h-8 w-8 text-purple-600 animate-spin mx-auto mb-3' />
-              <p className='text-sm text-slate-600'>Loading campaigns...</p>
-            </div>
-          </div>
+          <PageLoader domain='chat' text='Loading Campaigns' />
         )}
 
         {!loading && isMobile ? (

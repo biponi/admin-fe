@@ -5,7 +5,6 @@ import {
   ChevronDown,
   Clock,
   Phone,
-  Loader2,
   AlertCircle,
 } from "lucide-react";
 import { Badge } from "./ui/badge";
@@ -15,6 +14,7 @@ import { Avatar, AvatarFallback } from "./ui/avatar";
 import { formatDistanceToNow } from "date-fns";
 import { hasPagePermission } from "../utils/helperFunction";
 import { useSelector } from "react-redux";
+import { InlineLoader } from "./loaders";
 
 // Types
 interface LocalMessage {
@@ -220,11 +220,8 @@ export function ChatSidebar({
       {/* Clean Ticket List */}
       <div className='flex-1 overflow-y-auto max-h-[70vh] rounded-bl-md bg-white'>
         {isLoading ? (
-          <div className='flex items-center justify-center h-32 text-gray-400'>
-            <div className='text-center'>
-              <Loader2 className='w-8 h-8 mx-auto mb-2 animate-spin' />
-              <p className='text-sm'>Loading conversations...</p>
-            </div>
+          <div className='flex items-center justify-center h-32'>
+            <InlineLoader domain='chat' text='Loading Conversations' />
           </div>
         ) : error ? (
           <div className='flex items-center justify-center h-32 text-gray-400'>

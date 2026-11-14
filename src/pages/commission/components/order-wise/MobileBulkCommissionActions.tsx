@@ -13,7 +13,6 @@ import { Separator } from "../../../../components/ui/separator";
 import {
   CheckCircle2,
   XCircle,
-  Loader2,
   Trash2,
   Download,
   Check,
@@ -23,6 +22,7 @@ import {
   ChevronUp,
 } from "lucide-react";
 import { cn } from "../../../../lib/utils";
+import { InlineLoader } from "../../../../components/loaders";
 
 interface MobileBulkCommissionActionsProps {
   selectedCount: number;
@@ -65,8 +65,13 @@ export const MobileBulkCommissionActions: React.FC<
         {processing && (
           <div className="px-4 pt-3">
             <div className="flex items-center gap-2 mb-2">
-              <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
-              <span className="text-sm font-medium">Processing...</span>
+              <InlineLoader
+                domain='analytics'
+                text='Processing…'
+                className='py-0 flex-none w-auto'
+                graphicClassName='h-4 w-4 text-muted-foreground'
+                textClassName='text-sm font-medium'
+              />
               <Badge variant="secondary">{progress}%</Badge>
               {errors > 0 && (
                 <Badge variant="destructive">

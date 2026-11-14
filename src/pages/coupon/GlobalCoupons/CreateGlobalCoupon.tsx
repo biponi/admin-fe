@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { Input } from "../../../components/ui/input";
 import { MobilePage } from "../../../components/mobile";
 import { PageHeader } from "../../../components/PageHeader";
+import { ButtonLoadingText } from "../../../components/loaders";
 import {
   ArrowLeft,
   Calendar,
@@ -274,10 +275,7 @@ export default function CreateGlobalCoupon() {
             disabled={loading}
             className='m3-ripple h-10 flex-[2] flex items-center justify-center gap-2 text-sm font-semibold text-white bg-indigo-600 rounded-full active:bg-indigo-800 disabled:opacity-60 disabled:cursor-not-allowed transition-all shadow-sm shadow-indigo-200'>
             {loading ? (
-              <>
-                <span className='w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin' />
-                Creating…
-              </>
+              <ButtonLoadingText text='Creating…' />
             ) : (
               <>
                 <Zap className='h-4 w-4' />
@@ -548,10 +546,7 @@ export default function CreateGlobalCoupon() {
               disabled={loading}
               className='h-10 px-6 flex items-center gap-2 text-sm font-semibold text-white bg-indigo-600 rounded-xl hover:bg-indigo-700 active:bg-indigo-800 disabled:opacity-60 disabled:cursor-not-allowed transition-all shadow-sm shadow-indigo-200'>
               {loading ? (
-                <>
-                  <span className='w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin' />
-                  Creating…
-                </>
+                <ButtonLoadingText text='Creating…' />
               ) : (
                 <>
                   <Zap className='h-4 w-4' />

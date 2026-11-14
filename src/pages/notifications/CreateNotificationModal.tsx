@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { X, Send, Loader2 } from "lucide-react";
+import { X, Send } from "lucide-react";
 import axios from "axios";
 import { Button } from "../../components/ui/button";
 import { Input } from "../../components/ui/input";
@@ -20,6 +20,7 @@ import {
   DialogTitle,
 } from "../../components/ui/dialog";
 import { useToast } from "../../components/ui/use-toast";
+import { ButtonLoadingText } from "../../components/loaders";
 
 interface CreateNotificationModalProps {
   isOpen: boolean;
@@ -275,10 +276,7 @@ const CreateNotificationModal: React.FC<CreateNotificationModalProps> = ({
               type='submit'
               disabled={loading}>
               {loading ? (
-                <>
-                  <Loader2 className='mr-2 h-4 w-4 animate-spin' />
-                  Sending...
-                </>
+                <ButtonLoadingText text='Sending…' />
               ) : (
                 <>
                   <Send className='mr-2 h-4 w-4' />

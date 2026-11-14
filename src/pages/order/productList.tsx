@@ -22,13 +22,14 @@ import {
   ArrowRight,
   CheckCircle2,
   RotateCcw,
-  Loader2,
   ShoppingBag,
 } from "lucide-react";
 import { ITransection } from "./interface";
 import SelectDemo from "./components/SelectDemo";
 import { Variation } from "./data/types";
 import { toast } from "react-hot-toast";
+import { InlineLoader } from "@/components/loaders";
+import { Dots } from "@/components/loading-ui/dots";
 // import { Alert, AlertDescription } from "../../components/ui/alert";
 
 const defaultTransaction = {
@@ -204,14 +205,11 @@ const OrderProductList: React.FC<Props> = ({
   const renderProductCards = () => {
     if (isSearching) {
       return (
-        <div className='flex items-center justify-center py-12'>
-          <div className='flex items-center gap-3'>
-            <Loader2 className='w-6 h-6 animate-spin text-blue-600' />
-            <span className='text-lg font-medium text-gray-600'>
-              Searching products...
-            </span>
-          </div>
-        </div>
+        <InlineLoader
+          domain='products'
+          text='Searching Products'
+          className='py-12'
+        />
       );
     }
 
@@ -600,7 +598,7 @@ const OrderProductList: React.FC<Props> = ({
                 className='pl-10 h-10 text-sm border-gray-300 focus:border-violet-500 focus:ring-violet-500'
               />
               {isSearching && (
-                <Loader2 className='absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 animate-spin text-violet-600' />
+                <Dots className='absolute right-3 top-1/2 transform -translate-y-1/2 h-4 w-6 text-muted-foreground' />
               )}
             </div>
 

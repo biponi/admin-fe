@@ -32,6 +32,7 @@ import {
   MobileSkeletonList,
 } from "../../../components/mobile";
 import { PageHeader } from "../../../components/PageHeader";
+import { PageLoader } from "../../../components/loaders";
 import {
   Plus,
   Search,
@@ -217,7 +218,7 @@ export default function GlobalCouponsPage() {
                 <MobileSkeletonList count={6} />
               </div>
               <div className="hidden md:flex min-h-[50vh] items-center justify-center">
-                <div className="text-slate-500">Loading...</div>
+                <PageLoader domain='settings' text='Loading Coupons' />
               </div>
             </div>
           </div>

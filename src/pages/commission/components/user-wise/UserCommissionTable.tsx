@@ -23,6 +23,7 @@ import {
 } from "../../../../components/ui/dropdown-menu";
 import { UserCommissionSummary } from "../../../../api/commission";
 import { StatusBreakdownBadge } from "../shared/StatusBreakdownBadge";
+import { InlineLoader } from "../../../../components/loaders";
 import {
   formatDate,
   formatCurrency,
@@ -395,11 +396,7 @@ export const UserCommissionTable: React.FC<UserCommissionTableProps> = ({
   );
 
   if (loading) {
-    return (
-      <div className='flex justify-center items-center py-12'>
-        <div className='animate-spin rounded-full h-8 w-8 border-b-2 border-primary'></div>
-      </div>
-    );
+    return <InlineLoader domain='analytics' text='Loading Commissions' />;
   }
 
   if (commissions.length === 0) {

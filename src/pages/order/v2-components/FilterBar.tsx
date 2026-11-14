@@ -14,6 +14,7 @@ import {
 } from "../createOrderLayoutStore";
 import type { OrderSortField, OrderSortOrder } from "../createOrderLayoutStore";
 import type { ICategory } from "../../product/interface";
+import { Dots } from "@/components/loading-ui/dots";
 
 interface FilterBarProps {
   searchQuery: string;
@@ -269,25 +270,7 @@ export const FilterBar = memo(
           {/* Loading indicator — spinner near filter, far from input */}
           {isLoading && (
             <div className='shrink-0 flex items-center justify-center h-10 w-10'>
-              <svg
-                className='animate-spin h-4 w-4 text-primary'
-                xmlns='http://www.w3.org/2000/svg'
-                fill='none'
-                viewBox='0 0 24 24'>
-                <circle
-                  className='opacity-25'
-                  cx='12'
-                  cy='12'
-                  r='10'
-                  stroke='currentColor'
-                  strokeWidth='4'
-                />
-                <path
-                  className='opacity-75'
-                  fill='currentColor'
-                  d='M4 12a8 8 0 018-8V0C5.373 0 22 6.477 22 12h-4z'
-                />
-              </svg>
+              <Dots className='h-4 w-6 text-primary' />
             </div>
           )}
 

@@ -38,7 +38,6 @@ import {
   Trash2,
   Package,
   ShoppingCart,
-  Loader2,
   AlertTriangle,
   CheckCircle2,
   X,
@@ -46,6 +45,7 @@ import {
   ArrowLeft,
   Sparkles,
 } from "lucide-react";
+import { InlineLoader, ButtonLoadingText } from "@/components/loaders";
 import { PageHeader } from "../../components/PageHeader";
 import { toast } from "react-hot-toast";
 import MainView from "../../coreComponents/mainView";
@@ -426,12 +426,7 @@ const ProductSearchDialog: React.FC<SearchDialogProps> = ({
       <ScrollArea className='flex-1'>
         <div className={cn("space-y-2", isMobile ? "p-4" : "p-4")}>
           {searching ? (
-            <div className='flex flex-col items-center justify-center py-20 gap-3'>
-              <div className='h-12 w-12 rounded-2xl bg-indigo-50 dark:bg-indigo-950 flex items-center justify-center'>
-                <Loader2 className='h-6 w-6 animate-spin text-indigo-500' />
-              </div>
-              <p className='text-sm text-slate-500'>Searching products…</p>
-            </div>
+            <InlineLoader domain='products' text='Searching Products' />
           ) : products.length > 0 ? (
             <>
               <div className='flex items-center justify-between pb-2'>
@@ -939,10 +934,7 @@ const CreatePurchaseOrder: React.FC = () => {
                       : "bg-indigo-600 text-white shadow-xl shadow-indigo-200 dark:shadow-indigo-900 hover:bg-indigo-700",
                   )}>
                   {loading ? (
-                    <>
-                      <Loader2 className='h-5 w-5 animate-spin' />
-                      Creating order…
-                    </>
+                    <ButtonLoadingText text='Creating…' />
                   ) : (
                     <>
                       <FileText className='h-5 w-5' />
@@ -1013,9 +1005,7 @@ const CreatePurchaseOrder: React.FC = () => {
                   disabled={loading || !selectedProducts.length}
                   className='gap-1.5 bg-indigo-600 hover:bg-indigo-700 text-white'>
                   {loading ? (
-                    <>
-                      <Loader2 className='h-3.5 w-3.5 animate-spin' /> Creating…
-                    </>
+                    <ButtonLoadingText text='Creating…' />
                   ) : (
                     <>
                       <FileText className='h-3.5 w-3.5' /> Create order

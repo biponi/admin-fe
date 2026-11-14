@@ -13,7 +13,6 @@ import {
   Minus,
   Plus,
   Calculator,
-  Loader2,
   XOctagon,
   ShoppingBag,
   FileText,
@@ -44,6 +43,7 @@ import { useToast } from "../../../components/ui/use-toast";
 import { returnProducts } from "../../../api/order";
 import type { IOrder } from "../types";
 import { formatCurrency } from "../lib/utils";
+import { ButtonLoadingText } from "@/components/loaders";
 
 interface ReturnOrderSheetProps {
   order: IOrder | null;
@@ -715,10 +715,7 @@ export const ReturnOrderSheet: React.FC<ReturnOrderSheetProps> = ({
             }
             className='bg-gray-900 hover:bg-gray-800 text-white shadow-sm'>
             {isSubmitting ? (
-              <>
-                <Loader2 className='mr-2 h-4 w-4 animate-spin' />
-                Processing…
-              </>
+              <ButtonLoadingText text='Processing…' />
             ) : (
               <>
                 <CheckCircle2 className='mr-2 h-4 w-4' />

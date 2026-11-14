@@ -2,7 +2,6 @@ import React, { useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import {
   Trash,
-  Loader2,
   Package,
   Edit,
   Plus,
@@ -70,6 +69,7 @@ import {
   MobilePagination,
 } from "../../components/mobile";
 import { PageHeader } from "../../components/PageHeader";
+import { ButtonLoadingText, Dots } from "@/components/loaders";
 
 // ─── Skeleton ─────────────────────────────────────────────────────────────────
 const RowSkeleton: React.FC = () => (
@@ -365,7 +365,7 @@ const SingleReserveStore: React.FC = () => {
                             disabled={deletingRecordId === record?._id}
                             className='w-7 h-7 inline-flex items-center justify-center rounded-lg border border-gray-200 text-gray-400 hover:border-rose-200 hover:text-rose-500 hover:bg-rose-50 transition-all disabled:opacity-40'>
                             {deletingRecordId === record?._id ? (
-                              <Loader2 className='w-3.5 h-3.5 animate-spin' />
+                              <Dots className='w-3.5 h-3.5 text-current' />
                             ) : (
                               <Trash className='w-3.5 h-3.5' />
                             )}

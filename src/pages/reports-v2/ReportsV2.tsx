@@ -15,8 +15,8 @@ import {
   Ticket,
   CalendarIcon,
   RefreshCw,
-  Loader2,
 } from "lucide-react";
+import { PageLoader } from "@/components/loaders";
 import { Button } from "../../components/ui/button";
 import { Calendar } from "../../components/ui/calendar";
 import {
@@ -508,19 +508,7 @@ const ReportsV2: React.FC = () => {
             {/* Tab Content */}
             <div className='p-3 sm:p-4 md:p-6'>
               {isLoading ? (
-                <div className='flex items-center justify-center py-12 sm:py-20'>
-                  <div className='flex flex-col items-center gap-4'>
-                    <Loader2 className='h-6 w-6 sm:h-8 sm:w-8 text-indigo-600 animate-spin' />
-                    <div className='text-center'>
-                      <h3 className='text-base sm:text-lg font-semibold text-slate-900'>
-                        Loading Reports
-                      </h3>
-                      <p className='text-xs sm:text-sm text-slate-500 mt-1'>
-                        Gathering your business data...
-                      </p>
-                    </div>
-                  </div>
-                </div>
+                <PageLoader domain='analytics' text='Loading Reports' />
               ) : (
                 renderTabContent()
               )}

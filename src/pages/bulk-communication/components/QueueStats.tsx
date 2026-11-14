@@ -18,6 +18,7 @@ import {
   TableRow,
 } from "../../../components/ui/table";
 import { useBulkCommunication } from "../hooks/useBulkCommunication";
+import { InlineLoader, ButtonLoadingText } from "../../../components/loaders";
 import { BulkMessageType, FailedJob } from "../interface";
 
 interface QueueStatsProps {
@@ -125,10 +126,11 @@ const QueueStats = ({ type }: QueueStatsProps) => {
 
   if (!queueStats) {
     return (
-      <div className='flex flex-col items-center justify-center h-64 gap-3'>
-        <div className='w-8 h-8 border-2 border-indigo-600 border-t-transparent rounded-full animate-spin' />
-        <p className='text-sm text-slate-500'>Loading queue statistics…</p>
-      </div>
+      <InlineLoader
+        domain='analytics'
+        text='Loading Queue Stats'
+        className='h-64'
+      />
     );
   }
 
@@ -261,9 +263,7 @@ const QueueStats = ({ type }: QueueStatsProps) => {
         </div>
 
         {failedJobs === null ? (
-          <div className='flex items-center justify-center h-24'>
-            <div className='w-6 h-6 border-2 border-indigo-600 border-t-transparent rounded-full animate-spin' />
-          </div>
+          <InlineLoader domain='system' text='Loading Failed Jobs' className='h-24 py-0' />
         ) : failedJobs.length === 0 ? (
           <div className='flex flex-col items-center justify-center h-24 gap-1.5'>
             <CheckCircle2 className='h-5 w-5 text-emerald-500' />
@@ -324,10 +324,14 @@ const QueueStats = ({ type }: QueueStatsProps) => {
                           onClick={() => handleRetry(job)}
                           disabled={isRetrying}
                           className='inline-flex items-center gap-1 px-2.5 py-1 text-xs font-medium text-indigo-600 bg-white border border-indigo-200 rounded-lg hover:bg-indigo-50 disabled:opacity-50 transition-colors'>
-                          <RotateCcw
-                            className={`h-3 w-3 ${isRetrying ? "animate-spin" : ""}`}
-                          />
-                          {isRetrying ? "Retrying…" : "Retry"}
+                          {isRetrying ? (
+                            <ButtonLoadingText text='Retrying…' />
+                          ) : (
+                            <>
+                              <RotateCcw className='h-3 w-3' />
+                              Retry
+                            </>
+                          )}
                         </button>
                       </TableCell>
                     </TableRow>

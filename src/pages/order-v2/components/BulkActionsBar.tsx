@@ -11,13 +11,13 @@ import {
   Download,
   Truck,
   X,
-  Loader2,
   Eye,
   Printer,
   ChevronDown,
   Package,
 } from 'lucide-react';
 import { cn } from '../lib/utils';
+import { Dots } from '@/components/loading-ui/dots';
 import { slideInFromBottom, fabVariants } from '../lib/animations';
 import { Button } from '../../../components/ui/button';
 import { Progress } from '../../../components/ui/progress';
@@ -167,7 +167,7 @@ export const BulkActionsBar: React.FC<BulkActionsBarProps> = ({
             {/* Progress Info */}
             {progress?.inProgress && (
               <div className="flex items-center gap-4 px-2">
-                <Loader2 className="h-4 w-4 animate-spin text-blue-600" />
+                <Dots className="h-4 w-6 text-primary" />
                 <div className="flex-1">
                   <p className="text-sm font-medium text-gray-700">
                     Processing {progress.completed + progress.failed} of {progress.total}...

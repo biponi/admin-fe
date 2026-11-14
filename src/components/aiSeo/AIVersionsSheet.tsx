@@ -29,12 +29,12 @@ import {
   ChevronLeft,
   ChevronRight,
   X,
-  Loader2,
   Ban,
   Square,
   RefreshCw,
   SquareCheck,
 } from "lucide-react";
+import { Dots } from "@/components/loading-ui/dots";
 import {
   streamSeo,
   AIGenerationVersion,
@@ -324,7 +324,7 @@ export default function AIVersionsSheet({
               {/* Status message */}
               {status === "connecting" && (
                 <div className='flex items-center gap-2 text-sm text-slate-500'>
-                  <Loader2 className='w-4 h-4 animate-spin text-amber-500' />
+                  <Dots className='h-4 w-6 text-amber-500' />
                   <span>Connecting...</span>
                 </div>
               )}

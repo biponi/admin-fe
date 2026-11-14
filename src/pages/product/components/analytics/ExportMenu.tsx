@@ -12,6 +12,7 @@ import {
 } from "../../../../components/ui/dropdown-menu";
 import { claude } from "../../../../lib/claude";
 import { cn } from "../../../../lib/utils";
+import { ButtonLoadingText } from "@/components/loaders";
 
 export interface ExportOption {
   name: string;
@@ -42,11 +43,13 @@ export const ExportMenu = ({
             "inline-flex items-center gap-2 px-3.5 py-2 disabled:opacity-50",
           )}>
           {isDownloading ? (
-            <span className='h-3.5 w-3.5 animate-spin rounded-full border-2 border-[#D8D3C8] border-t-[#D97757]' />
+            <ButtonLoadingText text='Exporting…' />
           ) : (
-            <Download className='h-3.5 w-3.5' />
+            <>
+              <Download className='h-3.5 w-3.5' />
+              Export report
+            </>
           )}
-          Export report
         </button>
       </DropdownMenuTrigger>
       <DropdownMenuContent

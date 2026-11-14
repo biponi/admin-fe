@@ -6,13 +6,13 @@ import {
   Plus,
   MapPin,
   Building2,
-  Loader2,
   Package,
   Warehouse,
   Search,
   XCircle,
   Store as StoreIcon,
 } from "lucide-react";
+import { ButtonLoadingText } from "@/components/loaders";
 import {
   Dialog,
   DialogContent,
@@ -388,10 +388,7 @@ const ReserveStoresList: React.FC = () => {
                          transition-all duration-150 shadow-sm shadow-indigo-200
                          disabled:opacity-50 disabled:cursor-not-allowed'>
                   {isCreating ? (
-                    <>
-                      <Loader2 className='w-3.5 h-3.5 animate-spin' />
-                      Creating…
-                    </>
+                    <ButtonLoadingText text='Creating…' />
                   ) : (
                     <>
                       <Plus className='w-3.5 h-3.5' />
@@ -488,10 +485,7 @@ const StoreCard: React.FC<StoreCardProps> = ({
                              text-xs font-medium text-slate-600 hover:text-red-600 transition-all duration-150
                              disabled:opacity-50 disabled:cursor-not-allowed'>
                   {isDeleting ? (
-                    <>
-                      <Loader2 className='w-3.5 h-3.5 animate-spin' />
-                      Deleting…
-                    </>
+                    <ButtonLoadingText text='Deleting…' />
                   ) : (
                     <>
                       <Trash2 className='w-3.5 h-3.5' />

@@ -22,6 +22,7 @@ import useRoleCheck from "../auth/hooks/useRoleCheck";
 import MainView from "@/coreComponents/mainView";
 import { PageHeader } from "../../components/PageHeader";
 import { MobilePage, rippleProps } from "@/components/mobile";
+import { PageLoader } from "@/components/loaders";
 
 const OperationRequestsPage = () => {
   const user = useSelector((state: any) => state?.user);
@@ -258,12 +259,7 @@ const OperationRequestsPage = () => {
           {/* Requests list */}
           {loading && requests.length === 0 ? (
             <div className='bg-white rounded-xl border border-slate-100 shadow-sm'>
-              <div className='flex flex-col items-center justify-center py-20 gap-3'>
-                <div className='w-8 h-8 rounded-full border-2 border-indigo-200 border-t-indigo-500 animate-spin' />
-                <p className='text-sm font-medium text-slate-600'>
-                  Loading requests…
-                </p>
-              </div>
+              <PageLoader domain='system' text='Loading Requests' />
             </div>
           ) : requests.length === 0 ? (
             <div className='bg-white rounded-xl border border-slate-100 shadow-sm'>

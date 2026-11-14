@@ -32,6 +32,7 @@ import {
   MobileStatTile,
 } from "../../../components/mobile";
 import { PageHeader } from "../../../components/PageHeader";
+import { PageLoader } from "@/components/loaders";
 
 export const StockAdjustmentsPage: React.FC = () => {
   const { toast } = useToast();
@@ -120,24 +121,7 @@ export const StockAdjustmentsPage: React.FC = () => {
     }
     return (
       <div className='container space-y-6'>
-        <div className='flex items-center justify-center py-12'>
-          <div className='flex flex-col items-center gap-4'>
-            <div className='relative'>
-              <div className='absolute inset-0 bg-primary/20 rounded-full animate-ping' />
-              <div className='relative h-16 w-16 rounded-full bg-primary flex items-center justify-center shadow-sm'>
-                <Package className='h-6 w-6 text-primary-foreground' />
-              </div>
-            </div>
-            <div className='text-center'>
-              <h3 className='text-lg font-semibold text-foreground'>
-                Loading Stock Adjustments
-              </h3>
-              <p className='text-[13px] text-slate-400 mt-1'>
-                Please wait while we gather the data...
-              </p>
-            </div>
-          </div>
-        </div>
+        <PageLoader domain='products' text='Loading Stock Adjustments' />
       </div>
     );
   }

@@ -1,4 +1,5 @@
-import { Search, X, Package, Loader2, Plus, CheckCircle2, ChevronLeft, ChevronRight } from "lucide-react";
+import { Search, X, Package, Plus, CheckCircle2, ChevronLeft, ChevronRight } from "lucide-react";
+import { InlineLoader } from "@/components/loaders";
 import { Button } from "../../../components/ui/button";
 import { ScrollArea } from "../../../components/ui/scroll-area";
 import { Sheet, SheetContent, SheetDescription, SheetFooter, SheetHeader, SheetTitle } from "../../../components/ui/sheet";
@@ -193,12 +194,7 @@ export function ProductSelectionSheet({
         <ScrollArea className="flex-1">
           <div className={cn("space-y-2", isMobile ? "p-4" : "p-4")}>
             {searching ? (
-              <div className="flex flex-col items-center justify-center py-20 gap-3">
-                <div className="h-12 w-12 rounded-2xl bg-indigo-50 dark:bg-indigo-950 flex items-center justify-center">
-                  <Loader2 className="h-6 w-6 animate-spin text-indigo-500" />
-                </div>
-                <p className="text-sm text-slate-500">Searching products…</p>
-              </div>
+              <InlineLoader domain='products' text='Searching Products' />
             ) : products.length > 0 ? (
               <>
                 <div className="flex items-center justify-between pb-2">

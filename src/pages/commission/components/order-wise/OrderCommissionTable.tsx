@@ -26,6 +26,7 @@ import {
   formatCurrency,
 } from "../../../../utils/inventoryReportUtils";
 import { showOrderModal } from "../../../../utils/orderModal";
+import { InlineLoader } from "../../../../components/loaders";
 import {
   Eye,
   Package,
@@ -420,14 +421,7 @@ export const OrderCommissionTable: React.FC<OrderCommissionTableProps> = ({
 
   if (loading) {
     return (
-      <div className='flex items-center justify-center py-12'>
-        <div className='text-center'>
-          <div className='animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-2' />
-          <p className='text-sm text-muted-foreground'>
-            Loading commissions...
-          </p>
-        </div>
-      </div>
+      <InlineLoader domain='analytics' text='Loading Commissions' />
     );
   }
 

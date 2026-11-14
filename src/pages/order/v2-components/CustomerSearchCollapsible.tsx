@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from "react";
-import { Search, User, Phone, Loader2 } from "lucide-react";
+import { Search, User, Phone } from "lucide-react";
+import { InlineLoader } from "@/components/loaders";
 import { customerSearchAPI } from "../../../api/customerSearch";
 import type { CustomerListItem } from "../../../api/customerSearch";
 import { Button } from "../../../components/ui/button";
@@ -104,12 +105,11 @@ export function CustomerSearchCollapsible({
           />
           <CommandList>
             {loading ? (
-              <div className='flex items-center justify-center py-8 animate-fade-in'>
-                <Loader2 className='h-6 w-6 animate-spin text-primary' />
-                <span className='ml-2 text-sm text-muted-foreground'>
-                  Loading customers...
-                </span>
-              </div>
+              <InlineLoader
+                domain='users'
+                text='Loading Customers'
+                className='py-8 animate-fade-in'
+              />
             ) : customers.length === 0 ? (
               <CommandEmpty>
                 <div className='flex flex-col items-center justify-center py-8 text-center px-4'>

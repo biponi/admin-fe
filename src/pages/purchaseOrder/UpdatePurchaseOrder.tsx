@@ -37,7 +37,6 @@ import {
   Minus,
   Trash2,
   Package,
-  Loader2,
   AlertTriangle,
   CheckCircle2,
   Save,
@@ -48,6 +47,7 @@ import {
   TrendingDown,
   RefreshCw,
 } from "lucide-react";
+import { ButtonLoadingText } from "@/components/loaders";
 import { toast } from "react-hot-toast";
 import MainView from "../../coreComponents/mainView";
 import { MobilePage, MobileStickyActions } from "../../components/mobile";
@@ -1434,11 +1434,13 @@ const UpdatePurchaseOrder: React.FC = () => {
                 disabled={updating || !hasChanges || hasValidationErrors}
                 className='bg-indigo-600 hover:bg-indigo-700 text-white shadow-sm shadow-indigo-200 gap-2'>
                 {updating ? (
-                  <Loader2 className='h-4 w-4 animate-spin' />
+                  <ButtonLoadingText text='Updating…' />
                 ) : (
-                  <Save className='h-4 w-4' />
+                  <>
+                    <Save className='h-4 w-4' />
+                    Update Purchase Order
+                  </>
                 )}
-                {updating ? "Updating..." : "Update Purchase Order"}
               </Button>
             </AlertDialogTrigger>
             <AlertDialogContent>
@@ -1472,10 +1474,7 @@ const UpdatePurchaseOrder: React.FC = () => {
                 </AlertDialogCancel>
                 <AlertDialogAction onClick={handleUpdate} disabled={updating}>
                   {updating ? (
-                    <>
-                      <Loader2 className='h-4 w-4 animate-spin mr-2' />
-                      Updating...
-                    </>
+                    <ButtonLoadingText text='Updating…' />
                   ) : (
                     <>
                       <CheckCircle2 className='h-4 w-4 mr-2' />
@@ -1509,11 +1508,13 @@ const UpdatePurchaseOrder: React.FC = () => {
               disabled={updating || !hasChanges || hasValidationErrors}
               className='flex-[2] rounded-full h-11 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold gap-2 m3-ripple'>
               {updating ? (
-                <Loader2 className='h-4 w-4 animate-spin' />
+                <ButtonLoadingText text='Updating…' />
               ) : (
-                <Save className='h-4 w-4' />
+                <>
+                  <Save className='h-4 w-4' />
+                  Update Purchase Order
+                </>
               )}
-              {updating ? "Updating..." : "Update Purchase Order"}
             </Button>
           </div>
         </MobileStickyActions>

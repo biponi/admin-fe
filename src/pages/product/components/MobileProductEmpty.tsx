@@ -9,6 +9,7 @@ import {
   ShoppingBag,
   TrendingUp
 } from "lucide-react";
+import { Wave } from "@/components/loading-ui/wave";
 import { Button } from "../../../components/ui/button";
 import { cn } from "../../../utils/functions";
 
@@ -141,7 +142,7 @@ const MobileProductEmpty: React.FC<MobileProductEmptyProps> = ({
         {/* Loading Spinner */}
         {config.loading && (
           <div className="absolute inset-0 flex items-center justify-center">
-            <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-primary opacity-20"></div>
+            <Wave className='h-8 w-8 text-muted-foreground' />
           </div>
         )}
       </div>

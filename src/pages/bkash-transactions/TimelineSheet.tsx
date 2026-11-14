@@ -7,11 +7,11 @@ import {
   SheetTitle,
 } from "../../components/ui/sheet";
 import { cn } from "../../lib/utils";
-import { claude } from "../../lib/claude";
 import { formatFraudDate } from "../../components/fraud/fraudTheme";
 import { getBkashTransactionTimeline } from "../../api/bkashTransaction";
 import type { BkashTransactionLog } from "../../api/bkashTransaction";
 import { EventBadge } from "./TransactionTable";
+import { InlineLoader } from "@/components/loaders";
 
 const timelineDot = (eventType: string) =>
   eventType.includes("failed")
@@ -60,9 +60,7 @@ const TimelineSheet = ({ open, onOpenChange, paymentId }: TimelineSheetProps) =>
 
         <div className='px-4 pb-6'>
           {loading ? (
-            <div className='flex items-center justify-center py-10'>
-              <span className={cn(claude.spinner, "h-5 w-5")} />
-            </div>
+            <InlineLoader domain='analytics' text='Loading Timeline' />
           ) : events.length === 0 ? (
             <div className='py-10 text-center text-[12px] text-[#8A877D]'>
               No events logged for this paymentID.

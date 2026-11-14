@@ -27,8 +27,8 @@ import {
   Wallet,
   Save,
   X,
-  Loader2,
 } from "lucide-react";
+import { ButtonLoadingText } from "@/components/loaders";
 import { getLocationByFormattedString } from "../../utils/functions";
 import { useLocations } from "../../hooks/useLocations";
 import { calculateDeliveryCharge } from "../../utils/deliveryCharge";
@@ -573,9 +573,7 @@ export function EditOrderSheet({
             disabled={isSubmitting}
             className='flex-1'>
             {isSubmitting ? (
-              <>
-                <Loader2 className='h-4 w-4 mr-2 animate-spin' /> Saving...
-              </>
+              <ButtonLoadingText text='Saving…' />
             ) : (
               <>
                 <Save className='h-4 w-4 mr-2' /> Save Changes

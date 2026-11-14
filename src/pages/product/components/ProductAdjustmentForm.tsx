@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { useProductAdjustment } from "../../../hooks/useProductAdjustment";
 import { AdjustmentType } from "../../../api/productAdjustment";
 import useRoleCheck from "../../auth/hooks/useRoleCheck";
+import { ButtonLoadingText } from "@/components/loaders";
 
 interface ProductAdjustmentFormProps {
   productId: string;
@@ -185,7 +186,7 @@ export const ProductAdjustmentForm: React.FC<ProductAdjustmentFormProps> = ({
 
         <div className='form-actions'>
           <button type='submit' disabled={isLoading}>
-            {isLoading ? "Adjusting..." : "Adjust Stock"}
+            {isLoading ? <ButtonLoadingText text='Adjusting…' /> : 'Adjust Stock'}
           </button>
           {onCancel && (
             <button type='button' onClick={onCancel} disabled={isLoading}>

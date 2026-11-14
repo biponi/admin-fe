@@ -29,6 +29,7 @@ import {
   CheckCircle2,
   X,
 } from "lucide-react";
+import { InlineLoader } from "@/components/loaders";
 import { useProductAnalytics } from "../hooks/useProductAnalytics";
 import { useToast } from "../../../components/ui/use-toast";
 import BulkCommunicationModal from "../../bulk-communication/components/BulkCommunicationModal";
@@ -109,12 +110,7 @@ const CustomerHistoryTab = ({
   );
 
   if (loading && !orderHistory) {
-    return (
-      <div className='flex flex-col items-center justify-center h-64 gap-3'>
-        <div className='w-8 h-8 border-2 border-indigo-600 border-t-transparent rounded-full animate-spin' />
-        <p className='text-sm text-slate-500'>Loading customers…</p>
-      </div>
-    );
+    return <InlineLoader domain='products' text='Loading Customer History' />;
   }
 
   return (

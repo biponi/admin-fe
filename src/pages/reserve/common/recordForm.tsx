@@ -9,13 +9,13 @@ import { Button } from "../../../components/ui/button";
 import {
   CircleX,
   Trash,
-  Loader2,
   Search,
   Package,
   Plus,
   Minus,
   Bird,
 } from "lucide-react";
+import { InlineLoader, ButtonLoadingText } from "@/components/loaders";
 import { Badge } from "../../../components/ui/badge";
 import { Table } from "../../../components/ui/table";
 import { Card } from "../../../components/ui/card";
@@ -531,17 +531,7 @@ const RecordForm = ({
           </h3>
           {renderProductSearch()}
 
-          {loading && (
-            <div className='flex flex-col justify-center items-center py-16'>
-              <Loader2 className='w-10 h-10 text-purple-600 animate-spin mb-3' />
-              <p className='text-sm font-medium text-foreground'>
-                Searching products...
-              </p>
-              <p className='text-xs text-muted-foreground mt-1'>
-                Please wait a moment
-              </p>
-            </div>
-          )}
+          {loading && <InlineLoader domain='products' text='Searching Products' />}
 
           {!loading && (
             <div className='max-h-[50vh] overflow-y-auto pr-2'>
@@ -608,10 +598,7 @@ const RecordForm = ({
           disabled={isSubmitting || selectedProducts?.length === 0}
           className='bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 shadow-lg'>
           {isSubmitting ? (
-            <>
-              <Loader2 className='mr-2 h-4 w-4 animate-spin' />
-              {mode === "add" ? "Adding..." : "Updating..."}
-            </>
+            <ButtonLoadingText text={mode === "add" ? "Adding…" : "Updating…"} />
           ) : (
             <>
               <Package className='mr-2 h-4 w-4' />

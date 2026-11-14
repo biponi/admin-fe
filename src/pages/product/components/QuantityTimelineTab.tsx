@@ -1,4 +1,5 @@
 import { useEffect, useState, ReactNode } from "react";
+import { createPortal } from "react-dom";
 import { useIsMobile } from "../../../hooks/use-mobile";
 import { Button } from "../../../components/ui/button";
 import {
@@ -30,6 +31,7 @@ import {
   Minimize2,
 } from "lucide-react";
 import { useStockTimeline } from "../hooks/useStockTimeline";
+import { InlineLoader } from "@/components/loaders";
 import { TimelineEvent, TimelineVariation } from "../../../api/stockTimeline";
 import { format } from "date-fns";
 import QuantityTimelineRail from "./QuantityTimelineRail";
@@ -95,14 +97,7 @@ const QuantityTimelineTab = ({ productId }: QuantityTimelineTabProps) => {
   const activeView: TimelineView = isMobile ? "rail" : view;
 
   if (loading && !timelineData) {
-    return (
-      <div className='flex items-center justify-center h-64'>
-        <div className='text-center'>
-          <div className='animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600 mx-auto mb-4'></div>
-          <p className='text-sm text-slate-500'>Loading quantity timeline...</p>
-        </div>
-      </div>
-    );
+    return <InlineLoader domain='products' text='Loading Quantity Timeline' />;
   }
 
   const viewOptions: { value: TimelineView; label: string; icon: ReactNode }[] =
@@ -111,16 +106,16 @@ const QuantityTimelineTab = ({ productId }: QuantityTimelineTabProps) => {
       { value: "rail", label: "List", icon: <List /> },
     ];
 
-  return (
+  const content = (
     <div className='space-y-5 w-full min-w-0 flex-1'>
       <div
         className={`bg-white flex flex-col ${
           fullscreen
-            ? "fixed inset-0 z-40 rounded-none border-0 shadow-2xl"
+            ? "fixed inset-0 z-[9999] rounded-none border-0 shadow-2xl"
             : "rounded-xl border border-slate-200 shadow-sm container"
         }`}>
         {/* Title bar + view switcher + fullscreen */}
-        <div className='flex flex-wrap items-center justify-between gap-3 border-b border-slate-100 px-5 py-4 shrink-0'>
+        <div className='flex flex-wrap items-center z-50 justify-between gap-3 border-b border-slate-100 px-5 py-4 shrink-0'>
           <div className='flex items-center gap-2'>
             <History className='h-4 w-4 text-indigo-600' />
             <h3 className='text-sm font-semibold text-slate-900'>
@@ -280,6 +275,12 @@ const QuantityTimelineTab = ({ productId }: QuantityTimelineTabProps) => {
       )}
     </div>
   );
+
+  // Fullscreen must render outside the layout's z-indexed scroll container,
+  // otherwise the sticky topbar paints on top of the fixed overlay.
+  return fullscreen
+    ? createPortal(content, document.body)
+    : content;
 };
 
 interface EventDetailHeaderProps {
@@ -331,14 +332,7 @@ const EventDetailContent = ({
   loading,
 }: EventDetailContentProps) => {
   if (loading) {
-    return (
-      <div className='flex items-center justify-center h-40'>
-        <div className='text-center'>
-          <div className='animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600 mx-auto mb-4'></div>
-          <p className='text-sm text-slate-500'>Loading event details...</p>
-        </div>
-      </div>
-    );
+    return <InlineLoader domain='products' text='Loading Event Details' />;
   }
 
   const data = event || selected;

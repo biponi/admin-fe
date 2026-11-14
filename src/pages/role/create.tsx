@@ -5,7 +5,6 @@ import {
   ShieldCheck,
   KeyRound,
   Save,
-  Loader2,
   ArrowLeft,
 } from "lucide-react";
 import { useRoles } from "./hooks/useRoleHook";
@@ -33,6 +32,7 @@ import { Checkbox } from "../../components/ui/checkbox";
 import { pagePermissions, OWN_ONLY_ELIGIBLE } from "../../utils/permissions";
 import useRoleCheck from "../auth/hooks/useRoleCheck";
 import { PageHeader } from "../../components/PageHeader";
+import { ButtonLoadingText } from "../../components/loaders";
 
 const CreateRolePage: React.FC = () => {
   const navigate = useNavigate();
@@ -416,10 +416,7 @@ const CreateRolePage: React.FC = () => {
                 disabled={loading || !formData.name.trim()}
                 className='bg-primary text-primary-foreground hover:bg-primary/90 rounded-md mobile:flex-[2] mobile:h-10'>
                 {loading ? (
-                  <>
-                    <Loader2 className='h-4 w-4 mr-2 animate-spin' />
-                    Creating...
-                  </>
+                  <ButtonLoadingText text='Creating…' />
                 ) : (
                   <>
                     <Save className='h-4 w-4 mr-2' />

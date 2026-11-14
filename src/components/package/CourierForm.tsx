@@ -18,6 +18,7 @@ import {
 } from "../ui/select";
 import { Input } from "../ui/input";
 import { Button } from "../ui/button";
+import { ButtonLoadingText } from "@/components/loaders";
 import type { PackageCourier } from "../../pages/package/interface";
 import { COURIER_LIST } from "../../config/courierProviders";
 
@@ -132,7 +133,7 @@ export function CourierForm({
         />
 
         <Button type="submit" className="w-full" disabled={isLoading}>
-          {isLoading ? "Submitting..." : "Submit"}
+          {isLoading ? <ButtonLoadingText text='Submitting…' /> : "Submit"}
         </Button>
       </form>
     </Form>

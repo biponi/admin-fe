@@ -5,7 +5,6 @@ import {
   Ban,
   Clock,
   Download,
-  Loader2,
   RefreshCw,
   Search,
   Shield,
@@ -22,6 +21,7 @@ import {
   TabsTrigger,
 } from "../../components/ui/tabs";
 import { cn } from "../../lib/utils";
+import { Dots } from "../../components/loading-ui/dots";
 import useRoleCheck from "../auth/hooks/useRoleCheck";
 import {
   exportFraudReport,
@@ -54,6 +54,7 @@ import {
   rippleProps,
 } from "../../components/mobile";
 import { PageHeader } from "../../components/PageHeader";
+import { ButtonLoadingText } from "@/components/loaders";
 
 const PAGE_SIZE = 20;
 
@@ -229,7 +230,7 @@ const FraudManagementPage = () => {
               className='m3-ripple grid h-10 w-10 shrink-0 place-items-center rounded-full bg-primary/10 text-primary active:scale-95 transition-transform disabled:opacity-50'
               {...rippleProps()}>
               {exporting ? (
-                <Loader2 className='h-4.5 w-4.5 animate-spin' />
+                <Dots className='h-4.5 w-4.5 text-current' />
               ) : (
                 <Download className='h-4.5 w-4.5' />
               )}
@@ -341,7 +342,7 @@ const FraudManagementPage = () => {
                   className='h-10 pl-8 text-[13px] rounded-full border-slate-300 dark:border-slate-600 bg-[#FAF9F6] dark:bg-slate-800'
                 />
                 {searching ? (
-                  <Loader2 className='absolute right-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-400 animate-spin' />
+                  <Dots className='absolute right-2.5 top-1/2 -translate-y-1/2 h-3.5 w-6 text-slate-400' />
                 ) : null}
               </div>
 
@@ -445,11 +446,13 @@ const FraudManagementPage = () => {
               disabled={exporting}
               className='h-8 rounded-md gap-1.5 border-slate-300 text-slate-600 hover:bg-slate-50 dark:border-slate-600 dark:text-slate-300'>
               {exporting ? (
-                <Loader2 className='w-3.5 h-3.5 animate-spin' />
+                <ButtonLoadingText text='Exporting…' />
               ) : (
-                <Download className='w-3.5 h-3.5' />
+                <>
+                  <Download className='w-3.5 h-3.5' />
+                  Export CSV
+                </>
               )}
-              Export CSV
             </Button>
             <Button
               variant='outline'
@@ -569,7 +572,7 @@ const FraudManagementPage = () => {
                 className='h-8 pl-8 text-[12px] border-slate-300 dark:border-slate-600 bg-[#FAF9F6] dark:bg-slate-800'
               />
               {searching ? (
-                <Loader2 className='absolute right-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-400 animate-spin' />
+                <Dots className='absolute right-2.5 top-1/2 -translate-y-1/2 h-3.5 w-6 text-slate-400' />
               ) : null}
             </div>
             {!searchResults ? (

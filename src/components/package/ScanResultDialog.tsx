@@ -12,7 +12,8 @@ import {
 import { Button } from "../ui/button";
 import { Badge } from "../ui/badge";
 import { Card, CardContent } from "../ui/card";
-import { Loader2, Package as PackageIcon, User, Phone, MapPin, CheckCircle, XCircle } from "lucide-react";
+import { Package as PackageIcon, User, Phone, MapPin, CheckCircle, XCircle } from "lucide-react";
+import { ButtonLoadingText } from "@/components/loaders";
 import { markPackageAsPacked } from "../../api/package";
 import { toast } from "sonner";
 import type { Package } from "../../pages/package/interface";
@@ -263,8 +264,11 @@ export function ScanResultDialog({
               disabled={loading}
               className="flex-1 bg-green-600 hover:bg-green-700"
             >
-              {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-              Mark as Packed
+              {loading ? (
+                <ButtonLoadingText text='Processing…' />
+              ) : (
+                "Mark as Packed"
+              )}
             </Button>
           )}
         </DialogFooter>

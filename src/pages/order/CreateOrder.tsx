@@ -13,7 +13,6 @@ import {
   ShoppingCart,
   User,
   ArrowLeft,
-  Loader2,
   Clock,
   Send,
 } from "lucide-react";
@@ -23,6 +22,8 @@ import MobileCreateLoading from "./components/MobileCreateLoading";
 import MobileOrderProductSearch from "./components/MobileOrderProductSearch";
 import { toast } from "react-hot-toast";
 import { ScrollArea } from "../../components/ui/scroll-area";
+import { ConveyorLoop } from "@/components/loading-ui/conveyor-loop";
+import { Dots } from "@/components/loading-ui/dots";
 
 type StepStatus = "complete" | "in-progress" | "pending";
 
@@ -319,7 +320,7 @@ const CreateOrder = () => {
               <CardContent className='p-8 text-center'>
                 <div className='mb-6'>
                   <div className='w-20 h-20 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center mx-auto mb-4 shadow-lg'>
-                    <Loader2 className='w-10 h-10 text-white animate-spin' />
+                    <ConveyorLoop className='h-10 w-10 text-white' />
                   </div>
                   <div className='w-16 h-16 bg-gradient-to-r from-green-400 to-blue-500 rounded-full flex items-center justify-center mx-auto -mt-10 ml-12 shadow-lg animate-pulse'>
                     <Send className='w-8 h-8 text-white' />
@@ -342,7 +343,7 @@ const CreateOrder = () => {
                     </span>
                   </div>
                   <div className='flex items-center gap-3 p-3 bg-blue-50 rounded-lg border border-blue-200'>
-                    <Loader2 className='w-4 h-4 text-blue-600 animate-spin' />
+                    <Dots className='h-4 w-6 text-blue-600' />
                     <span className='text-sm text-blue-800'>
                       Processing order details
                     </span>

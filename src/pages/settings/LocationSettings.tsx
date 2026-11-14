@@ -33,7 +33,6 @@ import {
   ChevronRight,
   GripVertical,
   Layers,
-  Loader2,
   Map as MapIcon,
   MapPin,
   Plus,
@@ -70,6 +69,8 @@ import {
   MobileStaggeredList,
 } from "../../components/mobile";
 import { PageHeader } from "../../components/PageHeader";
+import { PageLoader, InlineLoader, ButtonLoadingText } from "../../components/loaders";
+import { Dots } from "../../components/loading-ui/dots";
 
 /**
  * Location Settings — admin-configurable delivery charge groups,
@@ -229,7 +230,9 @@ function ZoneColumn({
                 }}
                 disabled={chargeSaving}
               />
-              {chargeSaving && <Loader2 className='h-3 w-3 animate-spin text-muted-foreground' />}
+              {chargeSaving && (
+                <Dots className='h-3 w-5 text-muted-foreground' />
+              )}
             </div>
             <span className='text-[10px] font-medium text-muted-foreground'>
               per delivery
@@ -459,12 +462,11 @@ export default function LocationSettings() {
 
   if (loading) {
     return (
-      <div className='flex h-64 items-center justify-center'>
-        <div className='flex flex-col items-center gap-3'>
-          <Loader2 className='h-7 w-7 animate-spin text-primary' />
-          <p className='text-sm text-muted-foreground'>Loading location config…</p>
-        </div>
-      </div>
+      <PageLoader
+        domain='settings'
+        text='Loading Location Config'
+        className='h-64'
+      />
     );
   }
 
@@ -645,7 +647,7 @@ export default function LocationSettings() {
                 </Select>
                 <Button size='sm' className='h-8 gap-1 text-xs' onClick={handleAddArea} disabled={addAreaSaving}>
                   {addAreaSaving ? (
-                    <Loader2 className='h-3.5 w-3.5 animate-spin' />
+                    <ButtonLoadingText text='Adding…' />
                   ) : (
                     <Plus className='h-3.5 w-3.5' />
                   )}
@@ -899,7 +901,7 @@ function AreasTable({ zones, onChanged }: { zones: DeliveryZone[]; onChanged: ()
                     }}
                   />
                   {savingId === d._id && (
-                    <Loader2 className='h-3.5 w-3.5 animate-spin text-muted-foreground' />
+                    <Dots className='h-3 w-5 text-muted-foreground' />
                   )}
                 </div>
               </MobileListCard>
@@ -956,9 +958,7 @@ function AreasTable({ zones, onChanged }: { zones: DeliveryZone[]; onChanged: ()
 
       <CardContent className='p-0'>
         {loading ? (
-          <div className='flex justify-center py-10'>
-            <Loader2 className='h-5 w-5 animate-spin text-muted-foreground' />
-          </div>
+          <InlineLoader domain='settings' text='Loading Areas' />
         ) : (
           <div className='overflow-x-auto'>
             <table className='w-full text-[13px]'>
@@ -1049,7 +1049,7 @@ function AreasTable({ zones, onChanged }: { zones: DeliveryZone[]; onChanged: ()
                         </span>
                       )}
                       {savingId === d._id && (
-                        <Loader2 className='ml-2 inline h-3.5 w-3.5 animate-spin text-muted-foreground' />
+                        <Dots className='ml-2 inline h-3 w-5 text-muted-foreground' />
                       )}
                     </td>
                   </tr>
@@ -1233,9 +1233,7 @@ function DistrictsTab({
       {/* District cards — two-column grid */}
       {loading ? (
         <Card className='shadow-sm'>
-          <div className='flex justify-center py-10'>
-            <Loader2 className='h-5 w-5 animate-spin text-muted-foreground' />
-          </div>
+          <InlineLoader domain='settings' text='Loading Districts' />
         </Card>
       ) : (
         <div className='grid grid-cols-1 items-start gap-2.5 lg:grid-cols-2'>
@@ -1267,9 +1265,11 @@ function DistrictsTab({
                 {isOpen && (
                   <div className='border-t border-border/50 bg-muted/10'>
                     {loadingAreas === division.division && !areas ? (
-                      <div className='flex justify-center py-5'>
-                        <Loader2 className='h-4 w-4 animate-spin text-muted-foreground' />
-                      </div>
+                      <InlineLoader
+                        domain='settings'
+                        text='Loading Areas'
+                        className='py-5'
+                      />
                     ) : !areas || areas.length === 0 ? (
                       <p className='px-4 py-3 text-xs text-muted-foreground'>
                         No areas yet — add the first one below.
@@ -1314,7 +1314,7 @@ function DistrictsTab({
                               </SelectContent>
                             </Select>
                             {movingId === area._id && (
-                              <Loader2 className='mt-1 h-3 w-3 animate-spin text-muted-foreground' />
+                              <Dots className='mt-1 h-3 w-5 text-muted-foreground' />
                             )}
                           </div>
                         ))}
@@ -1370,7 +1370,7 @@ function DistrictsTab({
                                   </SelectContent>
                                 </Select>
                                 {movingId === area._id && (
-                                  <Loader2 className='ml-1.5 inline h-3 w-3 animate-spin text-muted-foreground' />
+                                  <Dots className='ml-1.5 inline h-3 w-5 text-muted-foreground' />
                                 )}
                               </td>
                             </tr>
@@ -1413,7 +1413,7 @@ function DistrictsTab({
                         disabled={areaSaving}
                       >
                         {areaSaving ? (
-                          <Loader2 className='h-3 w-3 animate-spin' />
+                          <ButtonLoadingText text='Adding…' />
                         ) : (
                           <Plus className='h-3 w-3' />
                         )}
@@ -1525,7 +1525,7 @@ function CourierMappingsTab() {
                   disabled={syncing !== null}
                 >
                   {syncing === provider ? (
-                    <Loader2 className='h-3.5 w-3.5 animate-spin' />
+                    <ButtonLoadingText text='Syncing…' />
                   ) : (
                     <RefreshCw className='h-3.5 w-3.5' />
                   )}
@@ -1578,9 +1578,11 @@ function CourierMappingsTab() {
                   </div>
                 </>
               ) : (
-                <div className='flex justify-center py-6'>
-                  <Loader2 className='h-5 w-5 animate-spin text-muted-foreground' />
-                </div>
+                <InlineLoader
+                  domain='settings'
+                  text='Checking Sync Status'
+                  className='py-6'
+                />
               )}
             </CardContent>
           </Card>

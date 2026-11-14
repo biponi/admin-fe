@@ -3,6 +3,7 @@
  * stat row, category chart, health grid, inventory reports section).
  */
 import { BarChartHorizontalBig } from "lucide-react";
+import { PageLoader } from "@/components/loaders";
 import { claude } from "../../../../lib/claude";
 import { cn } from "../../../../lib/utils";
 import type { StockSummaryResponse } from "../../../interface";
@@ -22,11 +23,8 @@ interface DesktopProductAnalyticsProps {
 }
 
 const DesktopSkeleton = () => (
-  <div className={cn(claude.card, "py-16")}>
-    <div className='flex flex-col items-center justify-center gap-4'>
-      <div className={claude.spinner} />
-      <p className='text-sm text-[#8A877D]'>Loading analytics…</p>
-    </div>
+  <div className={cn(claude.card, 'py-16')}>
+    <PageLoader domain='analytics' text='Loading Analytics' />
   </div>
 );
 

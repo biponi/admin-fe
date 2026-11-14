@@ -2,8 +2,9 @@ import { useState } from "react";
 import { Button } from "../ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
 import { getPackageBarcode } from "../../api/package";
-import { Loader2, Download, RefreshCcw } from "lucide-react";
+import { Download, RefreshCcw } from "lucide-react";
 import { toast } from "sonner";
+import { ButtonLoadingText } from "@/components/loaders";
 
 interface BarcodeDisplayProps {
   orderNumber: number;
@@ -58,8 +59,7 @@ export function BarcodeDisplay({
             onClick={generateBarcode}
             disabled={loading}
             className='w-full'>
-            {loading && <Loader2 className='mr-2 h-4 w-4 animate-spin' />}
-            Generate Barcode
+            {loading ? <ButtonLoadingText text='Processing…' /> : "Generate Barcode"}
           </Button>
         ) : (
           <div className='space-y-4'>

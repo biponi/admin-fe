@@ -1,5 +1,6 @@
 // Updated SingleItem component for hierarchical categories (flat view)
 import { MoreHorizontal, Edit, Trash2, CornerDownRight } from "lucide-react";
+import { ButtonLoadingText } from "@/components/loaders";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -229,7 +230,11 @@ const SingleItem: React.FC<Props> = ({
                       onClick={() => handleDelete(forceDelete)}
                       disabled={deleteLoading}
                       className='bg-red-600 hover:bg-red-700'>
-                      {deleteLoading ? "Deleting..." : "Delete"}
+                      {deleteLoading ? (
+                        <ButtonLoadingText text='Deleting…' />
+                      ) : (
+                        'Delete'
+                      )}
                     </AlertDialogAction>
                   </AlertDialogFooter>
                 </AlertDialogContent>

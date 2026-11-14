@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
-import { Ban, Loader2 } from "lucide-react";
+import { Ban } from "lucide-react";
+import { ButtonLoadingText } from "@/components/loaders";
 import {
   Dialog,
   DialogContent,
@@ -198,11 +199,13 @@ const AddToFraudGroupDialog = ({
             className="h-8 rounded-md gap-1.5 bg-rose-600 hover:bg-rose-700 text-white"
           >
             {submitting ? (
-              <Loader2 className="w-3.5 h-3.5 animate-spin" />
+              <ButtonLoadingText text='Blocking…' />
             ) : (
-              <Ban className="w-3.5 h-3.5" />
+              <>
+                <Ban className="w-3.5 h-3.5" />
+                Block customer
+              </>
             )}
-            Block customer
           </Button>
         </div>
       </DialogContent>

@@ -35,6 +35,7 @@ import { useIsMobile } from "../../hooks/use-mobile";
 import { PageHeader } from "../../components/PageHeader";
 import { claude } from "@/lib/claude";
 import { statusColors } from "@/lib/claudeChart";
+import { PageLoader } from "@/components/loaders";
 
 const CustomerAnalytics = () => {
   const { loading, customers, pagination, fetchCustomers } =
@@ -206,11 +207,7 @@ const CustomerAnalytics = () => {
             claude.card +
             " flex flex-col items-center gap-3 text-center px-12 py-10"
           }>
-          <div className={claude.spinner} />
-          <p className='text-sm font-medium text-[#141413]'>
-            Loading customers…
-          </p>
-          <p className='text-xs text-[#8A877D]'>This won't take long</p>
+          <PageLoader domain='users' text='Loading Customers' />
         </div>
       </div>
     );

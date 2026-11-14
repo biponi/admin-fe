@@ -40,6 +40,7 @@ import {
   Package,
 } from "lucide-react";
 import { cn } from "../../lib/utils";
+import { ButtonLoadingText } from "@/components/loaders";
 import {
   getLocationByFormattedString,
   getLocationByName,
@@ -743,10 +744,7 @@ const EditCustomerInformation: React.FC<Props> = ({
           disabled={isSubmitting}
           className='flex-[2] h-9 text-sm bg-blue-600 hover:bg-blue-700 text-white'>
           {isSubmitting ? (
-            <>
-              <div className='h-3.5 w-3.5 rounded-full border border-white border-t-transparent animate-spin mr-1.5' />
-              Saving...
-            </>
+            <ButtonLoadingText text='Saving…' />
           ) : (
             <>
               <Save className='h-3.5 w-3.5 mr-1.5' />

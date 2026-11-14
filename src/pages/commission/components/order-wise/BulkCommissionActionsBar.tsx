@@ -4,7 +4,6 @@ import { Progress } from "../../../../components/ui/progress";
 import {
   CheckCircle2,
   XCircle,
-  Loader2,
   Trash2,
   Download,
   Check,
@@ -14,6 +13,7 @@ import {
   Pause,
 } from "lucide-react";
 import { cn } from "../../../../lib/utils";
+import { InlineLoader } from "../../../../components/loaders";
 
 interface BulkCommissionActionsBarProps {
   selectedCount: number;
@@ -71,10 +71,13 @@ export const BulkCommissionActionsBar: React.FC<
         {processing && (
           <div className="flex-1 min-w-[150px]">
             <div className="flex items-center gap-2 mb-1">
-              <Loader2 className="h-3 w-3 animate-spin text-muted-foreground" />
-              <span className="text-xs text-muted-foreground">
-                Processing... {progress}%
-              </span>
+              <InlineLoader
+                domain='analytics'
+                text={`Processing… ${progress}%`}
+                className='py-0'
+                graphicClassName='h-3 w-3 text-muted-foreground'
+                textClassName='text-xs text-muted-foreground'
+              />
             </div>
             <Progress value={progress} className="h-1" />
           </div>

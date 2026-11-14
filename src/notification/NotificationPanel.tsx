@@ -13,6 +13,7 @@ import { getTopicStyle, PRIORITY_STYLES } from "./notificationTopics";
 import { formatDistanceToNow } from "date-fns";
 import { Button } from "../components/ui/button";
 import { cn } from "../lib/utils";
+import { InlineLoader } from "../components/loaders";
 
 interface NotificationPanelProps {
   isOpen: boolean;
@@ -265,12 +266,11 @@ const NotificationPanel: React.FC<NotificationPanelProps> = ({
         })}
 
         {loading && (
-          <div className="px-4 py-3 flex items-center gap-2">
-            <span className="h-3 w-3 rounded-full border-2 border-slate-200 border-t-slate-400 animate-spin" />
-            <span className="text-[11px] text-slate-400">
-              Loading more...
-            </span>
-          </div>
+          <InlineLoader
+            domain='chat'
+            text='Loading Notifications'
+            className='px-4 py-3 text-[11px] text-slate-400'
+          />
         )}
       </div>
 

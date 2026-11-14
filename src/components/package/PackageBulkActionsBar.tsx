@@ -1,7 +1,8 @@
-import { CheckCircle, XCircle, Ship, Package, X, Eye, Printer, ChevronDown, Loader2 } from "lucide-react";
+import { CheckCircle, XCircle, Ship, Package, X, Eye, Printer, ChevronDown } from "lucide-react";
 import { Button } from "../ui/button";
 import { Badge } from "../ui/badge";
 import { Progress } from "../ui/progress";
+import { Dots } from "@/components/loading-ui/dots";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -108,7 +109,7 @@ export function PackageBulkActionsBar({
         {/* Progress Info */}
         {progress?.inProgress && (
           <div className="flex items-center gap-4 px-2">
-            <Loader2 className="h-4 w-4 animate-spin text-blue-600" />
+            <Dots className="h-4 w-6 text-blue-600" />
             <div className="flex-1">
               <p className="text-sm font-medium text-gray-700">
                 Processing {progress.completed + progress.failed} of {progress.total}...

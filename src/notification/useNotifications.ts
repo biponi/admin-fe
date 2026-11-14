@@ -60,51 +60,62 @@ class NotificationStore {
     this.listeners.forEach((listener) => listener());
   }
 
-  // State updaters
+  // State updaters — must replace `this.state` with a NEW object (not mutate
+  // it), otherwise useSyncExternalStore sees the same snapshot reference and
+  // never re-renders subscribers.
   setLoading(loading: boolean) {
-    this.state.loading = loading;
+    this.state = { ...this.state, loading };
     this.emitChange();
   }
 
   setNotifications(notifications: Notification[], append: boolean = false) {
-    this.state.notifications = append
-      ? [...this.state.notifications, ...notifications]
-      : notifications;
+    this.state = {
+      ...this.state,
+      notifications: append
+        ? [...this.state.notifications, ...notifications]
+        : notifications,
+    };
     this.emitChange();
   }
 
   setUnreadCount(count: number) {
-    this.state.unreadCount = count;
+    this.state = { ...this.state, unreadCount: count };
     this.emitChange();
   }
 
   setPagination(page: number, hasMore: boolean) {
-    this.state.page = page;
-    this.state.hasMore = hasMore;
+    this.state = { ...this.state, page, hasMore };
     this.emitChange();
   }
 
   setFcmToken(token: string) {
-    this.state.fcmToken = token;
+    this.state = { ...this.state, fcmToken: token };
     localStorage.setItem("fcmToken", token);
     this.emitChange();
   }
 
   markAsRead(notificationId: string) {
-    this.state.notifications = this.state.notifications.map((n) =>
+    const notifications = this.state.notifications.map((n) =>
       n._id === notificationId ? { ...n, read: true } : n
     );
-    const unread = this.state.notifications.filter((n) => !n.read).length;
-    this.state.unreadCount = Math.min(this.state.unreadCount, unread);
+    const unread = notifications.filter((n) => !n.read).length;
+    this.state = {
+      ...this.state,
+      notifications,
+      unreadCount: Math.min(this.state.unreadCount, unread),
+    };
     this.emitChange();
   }
 
   markAllAsRead() {
-    this.state.notifications = this.state.notifications.map((n) => ({
-      ...n,
-      read: true,
-    }));
-    this.state.unreadCount = 0;
+    this.state = {
+      ...this.state,
+      notifications: this.state.notifications.map((n) => ({
+        ...n,
+        read: true,
+      })),
+      unreadCount: 0,
+    };
     this.emitChange();
   }
 
@@ -112,27 +123,38 @@ class NotificationStore {
     const deleted = this.state.notifications.find(
       (n) => n._id === notificationId
     );
-    this.state.notifications = this.state.notifications.filter(
+    const notifications = this.state.notifications.filter(
       (n) => n._id !== notificationId
     );
-    if (deleted && !deleted.read) {
-      this.state.unreadCount = Math.max(0, this.state.unreadCount - 1);
-    }
+    this.state = {
+      ...this.state,
+      notifications,
+      unreadCount:
+        deleted && !deleted.read
+          ? Math.max(0, this.state.unreadCount - 1)
+          : this.state.unreadCount,
+    };
     this.emitChange();
   }
 
   addNewNotification(notification: Notification) {
-    this.state.notifications = [notification, ...this.state.notifications];
-    this.state.unreadCount += 1;
+    this.state = {
+      ...this.state,
+      notifications: [notification, ...this.state.notifications],
+      unreadCount: this.state.unreadCount + 1,
+    };
     this.emitChange();
   }
 
   reset() {
-    this.state.notifications = [];
-    this.state.unreadCount = 0;
-    this.state.loading = false;
-    this.state.page = 1;
-    this.state.hasMore = true;
+    this.state = {
+      notifications: [],
+      unreadCount: 0,
+      loading: false,
+      page: 1,
+      hasMore: true,
+      fcmToken: this.state.fcmToken,
+    };
     this.emitChange();
   }
 }

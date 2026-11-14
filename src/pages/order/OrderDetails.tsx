@@ -48,7 +48,7 @@ import BlockedBadge from "../../components/fraud/BlockedBadge";
 import { IOrder } from "./interface";
 import { useToast } from "../../components/ui/use-toast";
 import { format } from "date-fns";
-import DefaultLoading from "../../coreComponents/defaultLoading";
+import { PageLoader } from "@/components/loaders";
 import { Alert, AlertDescription } from "../../components/ui/alert";
 import {
   MobilePage,
@@ -173,7 +173,7 @@ const OrderDetails = () => {
         </div>
       );
     }
-    return <DefaultLoading title='Loading Order Details...' />;
+    return <PageLoader domain='orders' text='Loading Order Details' />;
   }
 
   if (!order) {

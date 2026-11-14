@@ -8,6 +8,7 @@ import {
   DialogTitle,
 } from "../../../components/ui/dialog";
 import { Button } from "../../../components/ui/button";
+import { ButtonLoadingText } from "@/components/loaders";
 import { Checkbox } from "../../../components/ui/checkbox";
 import { Label } from "../../../components/ui/label";
 import { Textarea } from "../../../components/ui/textarea";
@@ -389,7 +390,7 @@ export const CustomerVerificationDialog: React.FC<
             disabled={!allChecked || loading}
             className='bg-emerald-600 hover:bg-emerald-700'>
             {loading
-              ? "Confirming..."
+              ? <ButtonLoadingText text='Confirming…' />
               : allChecked
                 ? "Confirm Order"
                 : `Confirm Order (${completedCount}/${totalCount})`}

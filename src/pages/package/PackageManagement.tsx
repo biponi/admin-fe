@@ -42,7 +42,6 @@ import {
   AlertDialogTitle,
 } from "../../components/ui/alert-dialog";
 import {
-  Loader2,
   Package,
   Package as PackageIcon,
   User,
@@ -58,6 +57,7 @@ import {
   Search,
   Check,
 } from "lucide-react";
+import { PageLoader, InlineLoader } from "@/components/loaders";
 import { useIsMobile } from "@/hooks/use-mobile";
 import {
   MobilePage,
@@ -334,20 +334,11 @@ export function PackageManagementPage() {
       );
     }
     return (
-      <div className="flex flex-col items-center justify-center py-20 px-4">
-        <div className="relative">
-          <div className="absolute inset-0 bg-indigo-500/20 rounded-full animate-ping" />
-          <div className="relative h-16 w-16 rounded-full bg-indigo-600 flex items-center justify-center shadow-lg">
-            <Loader2 className="h-8 w-8 text-white animate-spin" />
-          </div>
-        </div>
-        <p className="mt-6 text-lg font-semibold text-slate-900">
-          Loading packages...
-        </p>
-        <p className="text-sm text-slate-500 mt-1">
-          Please wait while we fetch the data
-        </p>
-      </div>
+      <PageLoader
+        domain='delivery'
+        text='Loading Packages'
+        className='min-h-screen py-20'
+      />
     );
   }
 
@@ -706,12 +697,11 @@ export function PackageManagementPage() {
                 {/* Tab-level loading overlay for tab switches */}
                 {loading && initialLoaded && (
                   <div className="absolute inset-0 z-10 flex items-center justify-center bg-white/70 backdrop-blur-[1px]">
-                    <div className="flex flex-col items-center gap-3">
-                      <Loader2 className="h-6 w-6 animate-spin text-indigo-600" />
-                      <p className="text-sm font-medium text-slate-600">
-                        Loading {tab.label.toLowerCase()}...
-                      </p>
-                    </div>
+                    <InlineLoader
+                      domain='delivery'
+                      text={`Loading ${tab.label}`}
+                      className='py-0'
+                    />
                   </div>
                 )}
                 {packages.length === 0 && !loading ? (
@@ -1269,14 +1259,7 @@ function OrderProductsSheet({
 
         <div className="mt-6">
           {loading ? (
-            <div className="flex items-center justify-center py-12">
-              <div className="flex flex-col items-center gap-3 text-center">
-                <Loader2 className="h-8 w-8 animate-spin text-indigo-600" />
-                <p className="text-sm font-medium text-slate-700">
-                  Loading products...
-                </p>
-              </div>
-            </div>
+            <InlineLoader domain='products' text='Loading Products' />
           ) : products.length === 0 ? (
             <div className="py-16 px-4 text-center">
               <div className="mx-auto h-16 w-16 rounded-2xl bg-slate-100 flex items-center justify-center mb-4">

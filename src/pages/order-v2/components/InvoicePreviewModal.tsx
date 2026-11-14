@@ -13,11 +13,11 @@ import {
   ChevronLeft,
   ChevronRight,
   X,
-  Loader2,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "../lib/utils";
 import { PDFDocument } from "pdf-lib";
+import { InlineLoader } from "@/components/loaders";
 
 interface InvoicePreviewModalProps {
   open: boolean;
@@ -216,10 +216,7 @@ export const InvoicePreviewModal: React.FC<InvoicePreviewModalProps> = ({
               className='h-full'>
               {isLoading && (
                 <div className='absolute inset-0 flex items-center justify-center bg-white/90 z-10'>
-                  <div className='flex flex-col items-center gap-2'>
-                    <Loader2 className='h-6 w-6 animate-spin text-blue-600' />
-                    <p className='text-xs text-gray-600'>Loading...</p>
-                  </div>
+                  <InlineLoader domain='orders' text='Loading Preview' />
                 </div>
               )}
               <iframe

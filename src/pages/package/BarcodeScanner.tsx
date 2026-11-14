@@ -5,7 +5,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "../../components/ui/ca
 import { Input } from "../../components/ui/input";
 import { Button } from "../../components/ui/button";
 import { toast } from "sonner";
-import { Barcode, Loader2 } from "lucide-react";
+import { Barcode } from "lucide-react";
+import { ButtonLoadingText } from "@/components/loaders";
 import { CameraScanner } from "../../components/package/CameraScanner";
 import { ScanResultDialog } from "../../components/package/ScanResultDialog";
 import { ScanHistory } from "../../components/package/ScanHistory";
@@ -216,8 +217,7 @@ export function BarcodeScannerPage() {
                 onClick={handleManualScan}
                 disabled={loading || !barcodeInput.trim()}
                 className="h-11 rounded-2xl px-5">
-                {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                Scan
+                {loading ? <ButtonLoadingText text='Scanning…' /> : "Scan"}
               </Button>
             </div>
           )}
@@ -314,8 +314,7 @@ export function BarcodeScannerPage() {
                 onClick={handleManualScan}
                 disabled={loading || !barcodeInput.trim()}
               >
-                {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                Scan
+                {loading ? <ButtonLoadingText text='Scanning…' /> : "Scan"}
               </Button>
             </div>
           )}

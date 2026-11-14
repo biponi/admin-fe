@@ -5,6 +5,7 @@ import useLoginAuth from "../auth/hooks/useLoginAuth";
 import useRoleCheck from "../auth/hooks/useRoleCheck";
 import { ChevronRight, Activity, LayoutGrid } from "lucide-react";
 import MainView from "@/coreComponents/mainView";
+import { PageLoader } from "@/components/loaders";
 
 interface PageCard {
   title: string;
@@ -33,10 +34,7 @@ const AgentView: React.FC = () => {
   if (!user) {
     return (
       <MainView title='Dashboard'>
-        <div style={styles.loadingWrap}>
-          <div style={styles.spinner} />
-          <p style={styles.loadingText}>Loading user data...</p>
-        </div>
+        <PageLoader domain='analytics' text='Loading Dashboard' />
       </MainView>
     );
   }
@@ -474,29 +472,6 @@ const styles: Record<string, React.CSSProperties> = {
   arrowWrapVisible: {
     opacity: 1,
     transform: "translateX(0)",
-  },
-
-  /* Loading */
-  loadingWrap: {
-    display: "flex",
-    flexDirection: "column",
-    alignItems: "center",
-    justifyContent: "center",
-    minHeight: "60vh",
-    gap: 16,
-  },
-  spinner: {
-    width: 40,
-    height: 40,
-    borderRadius: "50%",
-    border: "3px solid rgba(99,102,241,0.15)",
-    borderTopColor: "#6366f1",
-    animation: "spin 0.8s linear infinite",
-  },
-  loadingText: {
-    fontSize: 14,
-    color: "#9ca3af",
-    margin: 0,
   },
 };
 

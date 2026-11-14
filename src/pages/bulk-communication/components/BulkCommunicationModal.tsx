@@ -7,12 +7,13 @@ import {
   DialogTitle,
 } from '../../../components/ui/dialog';
 import { Button } from '../../../components/ui/button';
+import { ButtonLoadingText } from '../../../components/loaders';
 import { Input } from '../../../components/ui/input';
 import { Textarea } from '../../../components/ui/textarea';
 import { Label } from '../../../components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../../../components/ui/tabs';
 import { Badge } from '../../../components/ui/badge';
-import { MessageSquare, Mail, Send, Loader2 } from 'lucide-react';
+import { MessageSquare, Mail, Send } from 'lucide-react';
 import { useToast } from '../../../components/ui/use-toast';
 
 interface BulkCommunicationModalProps {
@@ -377,10 +378,7 @@ const BulkCommunicationModal = ({
                 </Button>
                 <Button onClick={handleSendSMS} disabled={loading}>
                   {loading ? (
-                    <>
-                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                      Creating...
-                    </>
+                    <ButtonLoadingText text='Creating…' />
                   ) : (
                     <>
                       <Send className="h-4 w-4 mr-2" />
@@ -472,10 +470,7 @@ const BulkCommunicationModal = ({
                 </Button>
                 <Button onClick={handleSendEmail} disabled={loading}>
                   {loading ? (
-                    <>
-                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                      Creating...
-                    </>
+                    <ButtonLoadingText text='Creating…' />
                   ) : (
                     <>
                       <Send className="h-4 w-4 mr-2" />

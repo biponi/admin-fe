@@ -16,7 +16,8 @@ import {
 import MainView from "../../coreComponents/mainView";
 import { useCommission } from "../../hooks/useCommission";
 import { UserCommissionTable } from "./commission-components/UserCommissionTable";
-import { Loader2, DollarSign, Clock, TrendingUp, BarChart3, Wallet } from "lucide-react";
+import { DollarSign, Clock, TrendingUp, BarChart3, Wallet } from "lucide-react";
+import { PageLoader } from "../../components/loaders";
 import { formatCurrency } from "../../utils/inventoryReportUtils";
 
 export const UserCommissionPage = () => {
@@ -54,7 +55,7 @@ export const UserCommissionPage = () => {
   if (isLoading) {
     return (
       <div className='flex justify-center items-center min-h-screen'>
-        <Loader2 className='h-8 w-8 animate-spin text-muted-foreground' />
+        <PageLoader domain='analytics' text='Loading Commissions' />
       </div>
     );
   }

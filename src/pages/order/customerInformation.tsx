@@ -56,6 +56,7 @@ import {
 } from "lucide-react";
 import { ITransection } from "./interface";
 import { useCreateOrderLayoutStore } from "./createOrderLayoutStore";
+import { ButtonLoadingText } from "@/components/loaders";
 const defaultPersonalInformation = {
   name: "",
   email: "",
@@ -1323,10 +1324,7 @@ const CustomerInformation: React.FC<Props> = ({
               disabled={isValidating}
               className='flex items-center gap-1.5 bg-blue-600 hover:bg-blue-700 text-white flex-1 sm:flex-none sm:ml-auto h-9 text-sm'>
               {isValidating ? (
-                <>
-                  <div className='w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin' />
-                  Validating...
-                </>
+                <ButtonLoadingText text='Validating…' />
               ) : (
                 <>
                   <ArrowRight className='w-4 h-4' />

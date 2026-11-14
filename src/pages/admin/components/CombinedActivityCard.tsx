@@ -4,6 +4,7 @@ import { getActivityStats } from "../../../api/activityLog";
 import { ActivityPillGrid, ActivityPillDay } from "./ActivityPillGrid";
 import { Activity } from "lucide-react";
 import { claude } from "../../../lib/claude";
+import { InlineLoader } from "@/components/loaders";
 
 /**
  * Dashboard-level 90-day activity grid — combined activity across all
@@ -69,10 +70,7 @@ export const CombinedActivityCard: React.FC = () => {
       </div>
       <div className='p-5'>
         {isLoading ? (
-          <div className='flex items-center gap-3 py-6'>
-            <div className={claude.spinner} />
-            <p className={claude.secondary}>Loading activity...</p>
-          </div>
+          <InlineLoader domain='system' text='Loading Activity' />
         ) : error ? (
           <div className='rounded-md border border-rose-200 bg-rose-50 px-3 py-2'>
             <p className='text-[13px] text-rose-700'>Error: {error}</p>

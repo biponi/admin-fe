@@ -23,6 +23,7 @@ import {
   Tag,
   Percent,
 } from "lucide-react";
+import { InlineLoader } from "@/components/loaders";
 import { Button } from "../../components/ui/button";
 import {
   Table,
@@ -225,10 +226,7 @@ const StatCard: React.FC<{
 
 const TableLoadingOverlay: React.FC = () => (
   <div className='absolute inset-0 bg-white/70 backdrop-blur-[1px] z-20 flex items-start pt-12 justify-center'>
-    <div className='flex flex-col items-center gap-3'>
-      <div className='w-5 h-5 rounded-full border-2 border-indigo-600 border-t-transparent animate-spin' />
-      <span className='text-xs text-zinc-500 font-medium'>Loading…</span>
-    </div>
+    <InlineLoader domain='products' text='Loading Products' className='py-0' />
   </div>
 );
 

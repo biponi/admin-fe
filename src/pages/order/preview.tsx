@@ -34,6 +34,7 @@ import {
 import { Alert, AlertDescription } from "../../components/ui/alert";
 import { toast } from "react-hot-toast";
 import { useCreateOrderLayoutStore } from "./createOrderLayoutStore";
+import { ButtonLoadingText } from "@/components/loaders";
 import PrepaymentWarningModal from "./components/PrepaymentWarningModal";
 import {
   Tabs,
@@ -505,10 +506,7 @@ const OrderPreview: React.FC<Props> = ({
                     onClick={handleCreateOrderClick}
                     className='flex-1 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white shadow-md h-9 text-sm'>
                     {isCreating ? (
-                      <>
-                        <div className='w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin mr-1.5' />
-                        Creating...
-                      </>
+                      <ButtonLoadingText text='Creating…' />
                     ) : (
                       <>
                         <Send className='w-4 h-4 mr-1.5' />

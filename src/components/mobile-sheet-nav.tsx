@@ -194,7 +194,10 @@ export function MobileSheetNav({
                 {/* Settings shortcut */}
                 <button
                   onClick={() => {
-                    setSettingsOpen(true);
+                    setOpen(false);
+                    setTimeout(() => {
+                      setSettingsOpen(true);
+                    }, 150);
                   }}
                   className='flex items-center justify-center size-8 rounded-xl bg-sidebar-foreground/10 hover:bg-sidebar-foreground/20 text-white/60 hover:text-white transition-all duration-150'>
                   <Settings className='size-3.5' />

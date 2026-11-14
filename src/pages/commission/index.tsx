@@ -41,7 +41,6 @@ import {
 } from "../../api/commission";
 import {
   Download,
-  Loader2,
   BarChart3,
   FileText,
   Users,
@@ -84,6 +83,7 @@ import { UpdateCommissionDialog } from "./components/shared/UpdateCommissionDial
 import { CommissionSummaryCards } from "./components/shared/CommissionSummaryCards";
 import { CommissionSummaryBadges } from "./components/shared/CommissionSummaryBadges";
 import { cn } from "../order-v2/lib/utils";
+import { InlineLoader, ButtonLoadingText } from "../../components/loaders";
 
 // ─── Inline styles ──────────────────────────────────────────────────────────
 const css = `
@@ -478,10 +478,6 @@ const css = `
     .cm-view-toggle { max-width: 420px; }
     .cm-content { padding: 0 0 40px; }
   }
-
-  /* ── Spin animation ── */
-  @keyframes spin { to { transform: rotate(360deg); } }
-  .cm-spin { animation: spin .8s linear infinite; }
 
   /* ── Fade-up animation ── */
   @keyframes fadeUp {
@@ -1059,12 +1055,11 @@ export const CommissionManagementPage = () => {
                     className='cm-btn cm-btn-primary'
                     disabled={isExporting}>
                     {isExporting ? (
-                      <>
-                        <Loader2 size={14} className='cm-spin' />{" "}
-                        {exportProgress > 0
-                          ? `${exportProgress}%`
-                          : "Exporting…"}
-                      </>
+                      <ButtonLoadingText
+                        text={
+                          exportProgress > 0 ? `${exportProgress}%` : "Exporting…"
+                        }
+                      />
                     ) : (
                       <>
                         <Download size={14} /> Export <ChevronDown size={12} />
@@ -1177,12 +1172,13 @@ export const CommissionManagementPage = () => {
                       disabled={isExporting}
                       style={{ flex: 1, justifyContent: "center" }}>
                       {isExporting ? (
-                        <>
-                          <Loader2 size={14} className='cm-spin' />{" "}
-                          {exportProgress > 0
-                            ? `${exportProgress}%`
-                            : "Exporting"}
-                        </>
+                        <ButtonLoadingText
+                          text={
+                            exportProgress > 0
+                              ? `${exportProgress}%`
+                              : "Exporting…"
+                          }
+                        />
                       ) : (
                         <>
                           <Download size={14} />
@@ -1276,9 +1272,10 @@ export const CommissionManagementPage = () => {
                     </div>
                     <div className='cm-section-body'>
                       {isLoading ? (
-                        <div className='cm-loader'>
-                          <Loader2 size={24} className='cm-spin' />
-                        </div>
+                        <InlineLoader
+                          domain='analytics'
+                          text='Loading Commissions'
+                        />
                       ) : (
                         <ProductCommissionTable
                           commissions={commissions}
@@ -1480,9 +1477,10 @@ export const CommissionManagementPage = () => {
                   </div>
                   <div className='cm-section-body'>
                     {isLoading ? (
-                      <div className='cm-loader'>
-                        <Loader2 size={24} className='cm-spin' />
-                      </div>
+                      <InlineLoader
+                        domain='analytics'
+                        text='Loading Commissions'
+                      />
                     ) : (
                       <UserCommissionTable
                         commissions={userCommissions}

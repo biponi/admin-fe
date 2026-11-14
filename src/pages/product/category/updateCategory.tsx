@@ -1,6 +1,7 @@
 // Updated UpdateCategory Component
 import { ReactElement, useEffect, useState } from "react";
 import { ICategory, IChangeEvent, ICreateCategory } from "../interface";
+import { ButtonLoadingText } from "@/components/loaders";
 import {
   Sheet,
   SheetContent,
@@ -501,12 +502,14 @@ const UpdateCategory: React.FC<Props> = ({
               disabled={!!!existingCategory?.name || loading}
               onClick={() => handleSubmit()}
               className='h-11 bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white rounded-lg shadow-sm shadow-blue-200 transition-all duration-150'>
-              <Save className='h-4 w-4' />
-              {loading
-                ? "Processing..."
-                : isNewCategory
-                  ? "Create category"
-                  : "Save changes"}
+              {loading ? (
+                <ButtonLoadingText text='Processing…' />
+              ) : (
+                <>
+                  <Save className='h-4 w-4' />
+                  {isNewCategory ? 'Create category' : 'Save changes'}
+                </>
+              )}
             </Button>
             <DrawerClose className='w-full'>
               <Button className='w-full h-11 bg-white border border-slate-200 text-slate-700 hover:bg-slate-50 hover:border-slate-300 rounded-lg shadow-sm transition-all duration-150'>
@@ -541,12 +544,14 @@ const UpdateCategory: React.FC<Props> = ({
             disabled={!!!existingCategory?.name || loading}
             onClick={() => handleSubmit()}
             className='h-10 bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white rounded-lg shadow-sm shadow-blue-200 transition-all duration-150 ml-auto'>
-            <Save className='h-4 w-4' />
-            {loading
-              ? "Processing..."
-              : isNewCategory
-                ? "Create category"
-                : "Save changes"}
+            {loading ? (
+              <ButtonLoadingText text='Processing…' />
+            ) : (
+              <>
+                <Save className='h-4 w-4' />
+                {isNewCategory ? 'Create category' : 'Save changes'}
+              </>
+            )}
           </Button>
         </div>
       </SheetContent>

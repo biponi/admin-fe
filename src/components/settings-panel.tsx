@@ -256,7 +256,7 @@ function SettingsContentBody() {
             onValueChange={(v) =>
               setSidebarWeatherStyle(v as "image" | "animated")
             }
-            className='grid grid-cols-2 gap-4'>
+            className='grid grid-cols-1 md:grid-cols-2 gap-4'>
             {/* Image theme */}
             <RadioOptionCard
               value='image'
@@ -308,7 +308,7 @@ function SettingsContentBody() {
         <RadioGroup
           value={orderView}
           onValueChange={(v) => setOrderView(v as "v1" | "v2")}
-          className='grid grid-cols-2 gap-4'>
+          className='grid grid-cols-1 md:grid-cols-2 gap-4'>
           {/* V2 — Modern */}
           <RadioOptionCard value='v2' currentValue={orderView} id='order-v2'>
             <div className='flex items-center gap-2 mb-1'>
@@ -352,7 +352,7 @@ function SettingsContentBody() {
           onValueChange={(v) =>
             setCreateOrderLayoutType(v as "wizard" | "product-first")
           }
-          className='grid grid-cols-2 gap-4'>
+          className='grid grid-cols-1 md:grid-cols-2 gap-4'>
           {/* Product-First */}
           <RadioOptionCard
             value='product-first'
@@ -401,7 +401,7 @@ function SettingsContentBody() {
         <RadioGroup
           value={onekoEnabled ? "on" : "off"}
           onValueChange={(v) => setOnekoEnabled(v === "on")}
-          className='grid grid-cols-2 gap-4'>
+          className='grid grid-cols-1 md:grid-cols-2 gap-4'>
           {/* Enabled */}
           <RadioOptionCard
             value='on'
@@ -569,6 +569,41 @@ interface SettingsPanelProps {
 
 export function SettingsPanel({ open, onOpenChange }: SettingsPanelProps) {
   const isMobile = useIsMobile();
+
+  // Safety cleanup: Ensure document.body pointer-events and scroll lock are restored when closing
+  useEffect(() => {
+    if (!open) {
+      const cleanup = () => {
+        if (
+          typeof document !== "undefined" &&
+          document.body.style.pointerEvents === "none"
+        ) {
+          document.body.style.pointerEvents = "";
+        }
+      };
+      // Clean up immediately and across the exit animation duration (Vaul uses 500ms exit transition)
+      cleanup();
+      const t1 = setTimeout(cleanup, 100);
+      const t2 = setTimeout(cleanup, 300);
+      const t3 = setTimeout(cleanup, 550);
+      return () => {
+        clearTimeout(t1);
+        clearTimeout(t2);
+        clearTimeout(t3);
+      };
+    }
+  }, [open]);
+
+  useEffect(() => {
+    return () => {
+      if (
+        typeof document !== "undefined" &&
+        document.body.style.pointerEvents === "none"
+      ) {
+        document.body.style.pointerEvents = "";
+      }
+    };
+  }, []);
 
   // On Mobile: Render bottom drawer
   if (isMobile) {

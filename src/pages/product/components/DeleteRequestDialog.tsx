@@ -22,8 +22,8 @@ import {
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
-import { Loader2 } from "lucide-react";
 import { createProductDeleteRequest } from "@/api/operationRequest";
+import { ButtonLoadingText } from "@/components/loaders";
 import { toast } from "sonner";
 import { useIsMobile } from "@/components/hooks/use-mobile";
 
@@ -130,10 +130,7 @@ const DeleteRequestDialog: React.FC<Props> = ({
                 className="bg-red-600 hover:bg-red-700"
               >
                 {isSubmitting ? (
-                  <>
-                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                    Creating Request...
-                  </>
+                  <ButtonLoadingText text='Creating…' />
                 ) : (
                   "Request Deletion"
                 )}
@@ -193,10 +190,7 @@ const DeleteRequestDialog: React.FC<Props> = ({
                 className="w-full bg-red-600 hover:bg-red-700"
               >
                 {isSubmitting ? (
-                  <>
-                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                    Creating Request...
-                  </>
+                  <ButtonLoadingText text='Creating…' />
                 ) : (
                   "Request Deletion"
                 )}

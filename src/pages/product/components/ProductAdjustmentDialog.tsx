@@ -30,12 +30,12 @@ import {
   PackagePlus,
   PackageMinus,
   Package,
-  Loader2,
   AlertTriangle,
   ImageOff,
   FileText,
   Hash,
 } from "lucide-react";
+import { ButtonLoadingText } from "@/components/loaders";
 import { IVariation } from "../interface";
 import useRoleCheck from "../../auth/hooks/useRoleCheck";
 
@@ -598,8 +598,11 @@ export const ProductAdjustmentDialog: React.FC<ProductAdjustmentSheetProps> = ({
               Cancel
             </Button>
             <Button type='submit' disabled={isLoading}>
-              {isLoading && <Loader2 className='mr-2 h-4 w-4 animate-spin' />}
-              {isLoading ? "Adjusting..." : "Adjust Stock"}
+              {isLoading ? (
+                <ButtonLoadingText text='Adjusting…' />
+              ) : (
+                'Adjust Stock'
+              )}
             </Button>
           </SheetFooter>
         </form>

@@ -50,8 +50,9 @@ import {
 } from "../../components/ui/alert-dialog";
 import { toast } from "sonner";
 import { PageHeader } from "../../components/PageHeader";
+import { InlineLoader, ButtonLoadingText } from "../../components/loaders";
+import { Dots } from "../../components/loading-ui/dots";
 import {
-  Loader2,
   MoreVertical,
   Plus,
   FlaskConical,
@@ -503,7 +504,7 @@ const PrepaymentSettings = () => {
               All Rules
             </h2>
             {loading ? (
-              <Loader2 className='h-3.5 w-3.5 animate-spin text-slate-400' />
+              <Dots className='h-3 w-5 text-slate-400' />
             ) : (
               <Badge
                 variant='outline'
@@ -516,8 +517,8 @@ const PrepaymentSettings = () => {
 
         {loading ? (
           <>
-            <div className='hidden justify-center py-12 md:flex'>
-              <Loader2 className='h-5 w-5 animate-spin text-indigo-500' />
+            <div className='hidden md:block'>
+              <InlineLoader domain='settings' text='Loading Rules' />
             </div>
             <div className='mobile:block hidden px-3 py-3'>
               <MobileSkeletonList count={4} />
@@ -983,7 +984,7 @@ const PrepaymentSettings = () => {
                 disabled={testing || !testArea || !testItems.trim()}
                 className='h-8 gap-1.5 text-[11px] bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white disabled:opacity-50'>
                 {testing ? (
-                  <Loader2 className='h-3 w-3 animate-spin' />
+                  <ButtonLoadingText text='Testing…' />
                 ) : (
                   <FlaskConical className='h-3 w-3' />
                 )}
@@ -1212,8 +1213,11 @@ const PrepaymentSettings = () => {
               onClick={handleSave}
               disabled={saving}
               className='bg-gradient-to-r from-indigo-500 to-violet-600 text-white hover:from-indigo-600 hover:to-violet-700'>
-              {saving ? <Loader2 className='h-4 w-4 animate-spin mr-2' /> : null}
-              {editingRule ? "Save changes" : "Create rule"}
+              {saving ? (
+                <ButtonLoadingText text={editingRule ? "Saving…" : "Creating…"} />
+              ) : (
+                editingRule ? "Save changes" : "Create rule"
+              )}
             </Button>
           </DialogFooter>
         </DialogContent>

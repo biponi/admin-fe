@@ -11,7 +11,6 @@ import {
   subMonths,
 } from "date-fns";
 import {
-  Loader,
   PieChart,
   BarChart3,
   ShoppingCart,
@@ -23,6 +22,7 @@ import {
   Truck,
   TicketPercent,
 } from "lucide-react";
+import { ButtonLoadingText } from "@/components/loaders";
 import { DateRange } from "react-day-picker";
 import toast from "react-hot-toast";
 import { Button } from "../../components/ui/button";
@@ -427,12 +427,14 @@ const DashboardPage: React.FC = () => {
                 onClick={() => generateReport()}
                 disabled={loadingCSV}>
                 {loadingCSV ? (
-                  <Loader className='animate-spin mr-2 h-4 w-4 sm:h-5 sm:w-5' />
+                  <ButtonLoadingText text='Generating…' />
                 ) : (
-                  <PieChart className='mr-2 h-4 w-4 sm:h-5 sm:w-5' />
+                  <>
+                    <PieChart className='mr-2 h-4 w-4 sm:h-5 sm:w-5' />
+                    <span className='hidden md:inline'>Generate Report</span>
+                    <span className='md:hidden'>Report</span>
+                  </>
                 )}
-                <span className='hidden md:inline'>Generate Report</span>
-                <span className='md:hidden'>Report</span>
               </Button>
             </>
           }

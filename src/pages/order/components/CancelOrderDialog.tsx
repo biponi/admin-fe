@@ -8,6 +8,7 @@ import {
   DialogTitle,
 } from "../../../components/ui/dialog";
 import { Button } from "../../../components/ui/button";
+import { ButtonLoadingText } from "@/components/loaders";
 import { Label } from "../../../components/ui/label";
 import { Textarea } from "../../../components/ui/textarea";
 import {
@@ -187,7 +188,7 @@ export const CancelOrderDialog: React.FC<CancelOrderDialogProps> = ({
             onClick={handleCancel}
             disabled={!isFormValid || loading}
           >
-            {loading ? "Cancelling..." : "Cancel Order"}
+            {loading ? <ButtonLoadingText text='Cancelling…' /> : "Cancel Order"}
           </Button>
         </DialogFooter>
       </DialogContent>

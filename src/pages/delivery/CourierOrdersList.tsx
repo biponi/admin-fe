@@ -14,8 +14,8 @@ import {
   ChevronLeft,
   ChevronRight,
   Package,
-  Loader2,
 } from "lucide-react";
+import { InlineLoader } from "@/components/loaders";
 import { useCourierOrders } from "./hooks/useCourierOrders";
 import { useCourierActions } from "./hooks/useCourierActions";
 import CourierOrderCard from "./components/CourierOrderCard";
@@ -386,12 +386,7 @@ export const CourierOrdersList: React.FC = () => {
                 </p>
 
                 {isLoadingStatus ? (
-                  <div className='flex items-center justify-center py-8'>
-                    <Loader2 className='w-8 h-8 animate-spin text-indigo-600' />
-                    <span className='ml-3 text-slate-600'>
-                      Fetching latest status...
-                    </span>
-                  </div>
+                  <InlineLoader domain='delivery' text='Loading Timeline' />
                 ) : timeline.length > 0 ? (
                   <DeliveryTimeline
                     timeline={timeline}

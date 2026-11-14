@@ -21,6 +21,7 @@ import {
 import dayjs from "dayjs";
 import relativeTime from "dayjs/plugin/relativeTime";
 import { ActivityPillGrid } from "./ActivityPillGrid";
+import { TextShimmer } from "@/components/loading-ui/text-shimmer";
 
 dayjs.extend(relativeTime);
 
@@ -414,7 +415,9 @@ export const UserPerformanceSheet: React.FC<UserPerformanceSheetProps> = ({
                 {dayjs(endDate).format("MMM DD, YYYY")}
               </span>
             ) : (
-              <span>Loading performance data...</span>
+              <TextShimmer as='span' duration={2} className='text-sm text-muted-foreground'>
+                Loading Performance…
+              </TextShimmer>
             )}
           </SheetDescription>
         </SheetHeader>

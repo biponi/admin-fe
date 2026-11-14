@@ -12,7 +12,8 @@ import {
   SelectValue,
 } from "../../../components/ui/select";
 import { Badge } from "../../../components/ui/badge";
-import { Package, ShoppingCart, User, TrendingUp, Activity, Loader2 } from "lucide-react";
+import { Package, ShoppingCart, User, TrendingUp, Activity } from "lucide-react";
+import { InlineLoader, ButtonLoadingText } from "@/components/loaders";
 import dayjs from "dayjs";
 import relativeTime from "dayjs/plugin/relativeTime";
 import { UserPerformanceSheet } from "./UserPerformanceSheet";
@@ -103,17 +104,7 @@ export const UserPerformanceCard: React.FC<UserPerformanceCardProps> = ({
   if (isLoading && users.length === 0) {
     return (
       <div className={claude.card + " p-8"}>
-        <div className='flex flex-col items-center gap-4'>
-          <div className={claude.spinner + " h-10 w-10"} />
-          <div className='text-center'>
-            <h3 className='text-lg font-semibold text-[#141413]'>
-              Loading User Performance
-            </h3>
-            <p className='text-[13px] text-[#8A877D] mt-1'>
-              Please wait while we gather the data...
-            </p>
-          </div>
-        </div>
+        <InlineLoader domain='users' text='Loading Performance' />
       </div>
     );
   }
@@ -327,12 +318,7 @@ export const UserPerformanceCard: React.FC<UserPerformanceCardProps> = ({
               {/* Loading indicator for detail fetch */}
               {detailLoading && !userDetail && (
                 <div className={claude.card + " p-4"}>
-                  <div className='flex items-center gap-3'>
-                    <Loader2 className='h-4 w-4 text-[#D97757] animate-spin' />
-                    <p className='text-[13px] text-[#8A877D]'>
-                      Loading activity data...
-                    </p>
-                  </div>
+                  <InlineLoader domain='users' text='Loading Activity' />
                 </div>
               )}
 
@@ -361,10 +347,7 @@ export const UserPerformanceCard: React.FC<UserPerformanceCardProps> = ({
                   disabled={detailLoading}
                   className='inline-flex items-center justify-center gap-1.5 px-4 py-2 text-[13px] font-medium text-white bg-[#B85A3D] rounded-md hover:bg-[#A34E34] transition-colors duration-150 disabled:opacity-50 disabled:cursor-not-allowed'>
                   {detailLoading ? (
-                    <>
-                      <Loader2 className='h-4 w-4 animate-spin' />
-                      Loading...
-                    </>
+                    <ButtonLoadingText text='Loading…' />
                   ) : (
                     "View Detailed Report"
                   )}

@@ -25,6 +25,7 @@ import { TableCell, TableRow } from "@/components/ui/table";
 import PlaceHolderImage from "@/assets/placeholder.svg";
 import type { ICategory } from "../../interface";
 import useRoleCheck from "@/pages/auth/hooks/useRoleCheck";
+import { ButtonLoadingText } from "@/components/loaders";
 
 interface CategoryTreeRowProps {
   category: ICategory;
@@ -289,7 +290,11 @@ const CategoryTreeRow: React.FC<CategoryTreeRowProps> = ({
                       onClick={() => handleDelete(forceDelete)}
                       disabled={deleteLoading}
                       className='bg-red-600 hover:bg-red-700'>
-                      {deleteLoading ? "Deleting..." : "Delete"}
+                      {deleteLoading ? (
+                        <ButtonLoadingText text='Deleting…' />
+                      ) : (
+                        'Delete'
+                      )}
                     </AlertDialogAction>
                   </AlertDialogFooter>
                 </AlertDialogContent>

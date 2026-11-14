@@ -20,7 +20,6 @@ import {
   ArrowDownRight,
   ArrowUpRight,
   ChevronDown,
-  Loader2,
   AlertCircle,
   History,
   Plus,
@@ -39,6 +38,7 @@ import {
   MobileSkeletonList,
 } from "../../components/mobile";
 import { useIsMobile } from "../../hooks/use-mobile";
+import { PageLoader } from "@/components/loaders";
 
 interface ProductLike {
   productId?: string;
@@ -710,10 +710,7 @@ const ModificationHistory = () => {
     }
     return (
       <div className='min-h-screen bg-slate-50 flex items-center justify-center'>
-        <div className='text-center'>
-          <Loader2 className='w-6 h-6 animate-spin text-indigo-600 mx-auto mb-3' />
-          <p className='text-sm text-slate-500'>Loading history…</p>
-        </div>
+        <PageLoader domain='orders' text='Loading Modifications' />
       </div>
     );
   }

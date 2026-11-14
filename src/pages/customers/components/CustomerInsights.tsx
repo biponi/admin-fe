@@ -11,13 +11,13 @@ import {
   BarChartHorizontalBig,
   Crown,
   Landmark,
-  Loader2,
   Wallet,
 } from "lucide-react";
 import { SafeBar as Bar, claudeChartTheme, claudeSequentialRamp } from "@/lib/claudeChart";
 import { claude } from "@/lib/claude";
 import { cn } from "@/lib/utils";
 import { useCustomerAnalytics } from "../hooks/useCustomerAnalytics";
+import { InlineLoader } from "@/components/loaders";
 
 /** Spending-tier buckets for the current page of customers. */
 const SPEND_TIERS = [
@@ -189,9 +189,8 @@ export const CustomerInsights = ({
             <Bar data={topChartData} options={topChartOptions} />
           </div>
         ) : (
-          <div className='h-40 flex flex-col items-center justify-center gap-2 text-[#8A877D]'>
-            <Loader2 className='h-5 w-5 animate-spin' />
-            <span className='text-xs'>Loading customer stats…</span>
+          <div className='h-40 flex items-center justify-center text-[#8A877D]'>
+            <InlineLoader domain='users' text='Loading Insights' className='py-0' />
           </div>
         )}
       </div>

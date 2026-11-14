@@ -45,6 +45,7 @@ import {
   XCircle,
   X,
 } from "lucide-react";
+import { InlineLoader } from "@/components/loaders";
 import { useProductAnalytics } from "../hooks/useProductAnalytics";
 import { format } from "date-fns";
 
@@ -164,14 +165,7 @@ const AdjustmentHistoryTab = ({ productId }: AdjustmentHistoryTabProps) => {
   };
 
   if (loading && !adjustmentHistory) {
-    return (
-      <div className='flex items-center justify-center h-64'>
-        <div className='text-center'>
-          <div className='animate-spin rounded-full h-8 w-8 border-b-2 border-slate-900 mx-auto mb-4'></div>
-          <p className='text-sm text-slate-500'>Loading adjustment history...</p>
-        </div>
-      </div>
-    );
+    return <InlineLoader domain='products' text='Loading Adjustment History' />;
   }
 
   return (

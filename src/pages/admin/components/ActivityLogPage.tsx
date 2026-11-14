@@ -49,6 +49,7 @@ import {
   Cell,
 } from "recharts";
 import { useIsMobile } from "../../../hooks/use-mobile";
+import { InlineLoader, ButtonLoadingText } from "@/components/loaders";
 import {
   MobileEmptyState,
   MobileListCard,
@@ -367,7 +368,11 @@ export const ActivityLogPage: React.FC = () => {
                     disabled={exporting}
                     className='flex flex-1 items-center justify-center gap-1.5 rounded-full bg-indigo-600 px-3 py-2 text-[13px] font-medium text-white disabled:opacity-50'>
                     <Download className='h-3.5 w-3.5' />
-                    {exporting ? "Exporting..." : "Export CSV"}
+                    {exporting ? (
+                      <ButtonLoadingText text='Exporting…' />
+                    ) : (
+                      "Export CSV"
+                    )}
                   </button>
                 </div>
               </div>
@@ -567,7 +572,11 @@ export const ActivityLogPage: React.FC = () => {
                 </>
               ) : (
                 <div className='py-12 text-center text-sm text-slate-500'>
-                  {stats === null ? "Loading overview..." : "No stats available"}
+                  {stats === null ? (
+                    <InlineLoader domain='system' text='Loading Overview' />
+                  ) : (
+                    "No stats available"
+                  )}
                 </div>
               )}
             </TabsContent>
@@ -641,7 +650,7 @@ export const ActivityLogPage: React.FC = () => {
             disabled={exporting}
             className='px-3 py-2 text-sm font-medium rounded-lg bg-indigo-600 text-white hover:bg-indigo-700 flex items-center gap-1.5 disabled:opacity-50'>
             <Download className='h-3.5 w-3.5' />
-            {exporting ? "Exporting..." : "Export CSV"}
+            {exporting ? <ButtonLoadingText text='Exporting…' /> : "Export CSV"}
           </button>
           </div>
         }
@@ -1087,7 +1096,11 @@ export const ActivityLogPage: React.FC = () => {
             </>
           ) : (
             <div className='text-center py-12 text-sm text-slate-500'>
-              {stats === null ? "Loading overview..." : "No stats available"}
+              {stats === null ? (
+                <InlineLoader domain='system' text='Loading Overview' />
+              ) : (
+                "No stats available"
+              )}
             </div>
           )}
         </TabsContent>
@@ -1287,9 +1300,7 @@ export const ActivityLogPage: React.FC = () => {
           </SheetHeader>
 
           {timelineLoading && !timeline && (
-            <div className='flex justify-center py-10'>
-              <div className='w-8 h-8 border-4 border-indigo-600 rounded-full border-t-transparent animate-spin' />
-            </div>
+            <InlineLoader domain='system' text='Loading Activity' />
           )}
 
           {timeline && (

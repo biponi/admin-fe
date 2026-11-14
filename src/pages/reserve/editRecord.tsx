@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { ArrowLeft, Edit, Loader2, Store as StoreIcon } from "lucide-react";
+import { ArrowLeft, Edit, Store as StoreIcon } from "lucide-react";
 import { Button } from "../../components/ui/button";
 import MainView from "../../coreComponents/mainView";
 import toast from "react-hot-toast";
@@ -12,6 +12,7 @@ import { IRecord } from "./interface";
 import { useIsMobile } from "../../hooks/use-mobile";
 import { MobilePage, MobileSkeletonList } from "../../components/mobile";
 import { PageHeader } from "../../components/PageHeader";
+import { PageLoader } from "@/components/loaders";
 
 const EditRecord: React.FC = () => {
   const { storeId, recordId } = useParams<{
@@ -183,13 +184,7 @@ const EditRecord: React.FC = () => {
         {/* Loading state */}
         {isLoadingRecord ? (
           <div className='bg-white rounded-2xl border border-gray-100 shadow-sm'>
-            <div className='flex flex-col items-center justify-center py-20 gap-3'>
-              <Loader2 className='w-8 h-8 text-violet-500 animate-spin' />
-              <p className='text-sm font-medium text-gray-700'>
-                Loading record…
-              </p>
-              <p className='text-xs text-gray-400'>Please wait a moment</p>
-            </div>
+            <PageLoader domain='delivery' text='Loading Record' />
           </div>
         ) : (
           /* Form card */

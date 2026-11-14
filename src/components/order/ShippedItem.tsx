@@ -14,7 +14,6 @@ import {
   Package,
   Phone,
   ExternalLink,
-  Loader2,
   Circle,
   Copy,
   Check,
@@ -37,6 +36,7 @@ import {
 } from "@/config/courierProviders";
 import config from "@/utils/config";
 import axiosInstance from "@/api/axios";
+import { InlineLoader } from "@/components/loaders";
 import DeliveryStageTracker from "./DeliveryStageCard";
 
 interface IDeliveryTimeline {
@@ -529,10 +529,11 @@ export const DeliveryTimelineBadge: React.FC<{
         {/* Content */}
         <div className='overflow-y-auto max-h-[calc(100vh-190px)] px-6 py-5'>
           {loading ? (
-            <div className='flex flex-col items-center justify-center py-16 gap-3'>
-              <Loader2 className='w-8 h-8 animate-spin text-slate-400' />
-              <p className='text-sm text-slate-500'>Loading delivery info...</p>
-            </div>
+            <InlineLoader
+              domain='delivery'
+              text='Loading Delivery Info'
+              className='py-16'
+            />
           ) : (
             <>
               {/* Horizontal step tracker with a traveling truck, Pathao-style */}

@@ -14,12 +14,14 @@ interface NotificationBellProps {
   asChild?: boolean; // Render just the icon without button wrapper
 }
 
-const BUTTON_SIZES: Record<NonNullable<NotificationBellProps["size"]>, string> =
-  {
-    sm: "h-8 w-8",
-    md: "h-9 w-9",
-    lg: "h-10 w-10",
-  };
+const BUTTON_SIZES: Record<
+  NonNullable<NotificationBellProps["size"]>,
+  string
+> = {
+  sm: "h-8 w-8",
+  md: "h-9 w-9",
+  lg: "h-10 w-10",
+};
 
 const NotificationBell: React.FC<NotificationBellProps> = ({
   className = "",
@@ -90,7 +92,7 @@ const NotificationBell: React.FC<NotificationBellProps> = ({
           onClick={togglePanel}
           variant={variant}
           className={cn(
-            "relative bg-transparent hover:bg-white/20 hover:text-white",
+            "relative bg-transparent  hover:text-gray-500 hover:bg-white/20",
             BUTTON_SIZES[size],
           )}
           aria-label='Notifications'>

@@ -27,6 +27,7 @@ import {
   ShieldAlert,
   CreditCard,
   Hourglass,
+  Sparkles,
 } from "lucide-react";
 
 export const navItems = [
@@ -345,4 +346,12 @@ export const navItems = [
   //   id: "chat",
   //   roles: ["admin", "manager", "moderator"],
   // },
+  {
+    icon: <Sparkles className='w-5 h-5' />,
+    title: "AI Assistant",
+    link: "/assistant",
+    active: true,
+    id: "assistant",
+    roles: ["admin", "manager", "moderator"],
+  },
 ];

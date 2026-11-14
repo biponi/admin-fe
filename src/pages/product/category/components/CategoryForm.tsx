@@ -4,7 +4,6 @@ import { ICategory, IChangeEvent } from "../../interface";
 import {
   ArrowLeft,
   Save,
-  Loader2,
   Tag,
   Percent,
   Settings2,
@@ -28,6 +27,7 @@ import {
   SelectValue,
 } from "../../../../components/ui/select";
 import { Badge } from "../../../../components/ui/badge";
+import { ButtonLoadingText } from "@/components/loaders";
 import { Textarea } from "../../../../components/ui/textarea";
 import TiptapEditor from "../../../../components/ui/tiptap";
 import PlaceHolderImage from "../../../../assets/placeholder.svg";
@@ -869,10 +869,9 @@ const CategoryForm: React.FC<CategoryFormProps> = ({
               onClick={handleSubmit}
               className='bg-[#141413] hover:bg-[#2a2a2a] active:bg-black w-full md:w-auto text-white rounded-md'>
               {loading ? (
-                <>
-                  <Loader2 className='h-4 w-4 mr-2 animate-spin' />
-                  {mode === "create" ? "Creating..." : "Saving..."}
-                </>
+                <ButtonLoadingText
+                  text={mode === 'create' ? 'Creating…' : 'Saving…'}
+                />
               ) : (
                 <>
                   <Save className='h-4 w-4 mr-2' />

@@ -9,6 +9,7 @@ import {
   Truck,
 } from "lucide-react";
 import { cn } from "../../../utils/functions";
+import { ConveyorLoop } from "@/components/loading-ui/conveyor-loop";
 
 interface MobileCreateLoadingProps {
   className?: string;
@@ -59,7 +60,7 @@ const MobileCreateLoading: React.FC<MobileCreateLoadingProps> = ({
           <div className='relative mb-6'>
             {/* Main Loading Icon */}
             <div className='w-20 h-20 bg-gradient-to-r from-primary to-primary/80 rounded-full flex items-center justify-center mx-auto shadow-xl'>
-              <Loader2 className='w-10 h-10 text-white animate-spin' />
+              <ConveyorLoop className='w-10 h-10 text-white' />
             </div>
 
             {/* Floating Send Icon */}

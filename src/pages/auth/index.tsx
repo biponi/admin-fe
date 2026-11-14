@@ -3,10 +3,10 @@ import { Button } from "../../components/ui/button";
 import { Input } from "../../components/ui/input";
 import { Label } from "../../components/ui/label";
 import useLoginAuth from "./hooks/useLoginAuth";
-import { ReloadIcon } from "@radix-ui/react-icons";
 import { BrandLogo } from "../../assets/brand";
 import { BRAND_CONFIG } from "../../config/brand";
 import { Eye, EyeOff } from "lucide-react";
+import { ButtonLoadingText } from "@/components/loaders";
 import topBarBg from "../../assets/top-bar-bg-3.jpg";
 
 const SignIn = () => {
@@ -139,10 +139,7 @@ const SignIn = () => {
               className='w-full'
               disabled={loading || !username || !password}>
               {loading ? (
-                <span className='flex items-center gap-2'>
-                  <ReloadIcon className='h-4 w-4 animate-spin' />
-                  Signing in...
-                </span>
+                <ButtonLoadingText text='Signing in…' />
               ) : (
                 "Login"
               )}

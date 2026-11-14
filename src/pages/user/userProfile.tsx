@@ -21,6 +21,7 @@ import dayjs from "dayjs";
 import { useNavigate } from "react-router-dom";
 import { useAdminAudit } from "../../hooks/useAdminAudit";
 import { UserPerformanceDetailResponse } from "../../api/adminAudit";
+import { InlineLoader } from "../../components/loaders";
 
 const ProfilePage = () => {
   const navigate = useNavigate();
@@ -266,7 +267,7 @@ const ProfilePage = () => {
               />
             ) : (
               <Card className='p-8 text-center'>
-                <p className='text-gray-500'>Loading performance data...</p>
+                <InlineLoader domain='analytics' text='Loading Performance' />
               </Card>
             )}
           </TabsContent>
@@ -284,7 +285,7 @@ const ProfilePage = () => {
                   />
                 ) : (
                   <Card className='p-8 text-center'>
-                    <p className='text-gray-500'>Loading activity data...</p>
+                    <InlineLoader domain='analytics' text='Loading Activity' />
                   </Card>
                 )}
               </div>

@@ -7,12 +7,12 @@
 import React, { useEffect, useState, useCallback } from "react";
 import {
   RefreshCw,
-  Loader2,
   Search,
   ChevronLeft,
   ChevronRight,
   ShoppingBag,
 } from "lucide-react";
+import { InlineLoader } from "@/components/loaders";
 import { showOrderModal } from "../../../utils/orderModal";
 import {
   getReturnOrders,
@@ -193,10 +193,11 @@ const ReturnOrdersView: React.FC<ReturnOrdersViewProps> = ({
 
         {/* List */}
         {returnOrderFetching ? (
-          <div className='flex flex-col items-center justify-center py-12'>
-            <Loader2 className='w-8 h-8 text-orange-600 animate-spin mb-4' />
-            <p className='text-gray-600 text-sm'>Loading return orders...</p>
-          </div>
+          <InlineLoader
+            domain='orders'
+            text='Loading Return Orders'
+            className='py-12'
+          />
         ) : (
           <>
             <ReturnOrderList

@@ -704,3 +704,9 @@ body[data-rain-banner="true"] div:has(> [data-sidebar="sidebar"]) {
   --m3-elevation-3:
     0 4px 8px 3px rgba(0, 0, 0, 0.15), 0 1px 3px rgba(0, 0, 0, 0.3);
 }
+
+/* Safety fallback: prevent stuck pointer-events: none on body when modals/drawers close */
+body:not([data-scroll-locked]) {
+  pointer-events: auto !important;
+}
+

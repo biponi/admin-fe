@@ -51,6 +51,7 @@ import {
   Inbox,
 } from "lucide-react";
 import { useStoreReserveHistory } from "../hooks/useStoreReserveHistory";
+import { InlineLoader } from "@/components/loaders";
 import { format } from "date-fns";
 import { StoreReserveHistoryItem } from "../interface.store-history";
 
@@ -141,12 +142,7 @@ const StoreReserveHistoryTab = ({ productId }: StoreReserveHistoryTabProps) => {
   };
 
   if (loading && !historyData) {
-    return (
-      <div className='flex flex-col items-center justify-center h-64 gap-3'>
-        <div className='w-8 h-8 border-2 border-indigo-600 border-t-transparent rounded-full animate-spin' />
-        <p className='text-sm text-slate-500'>Loading store reserve history…</p>
-      </div>
-    );
+    return <InlineLoader domain='products' text='Loading Store Reserves' />;
   }
 
   return (
@@ -841,9 +837,7 @@ const StoreReserveHistoryTab = ({ productId }: StoreReserveHistoryTabProps) => {
               )}
 
               {recordLoading && (
-                <div className='flex items-center justify-center py-8'>
-                  <div className='animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600'></div>
-                </div>
+                <InlineLoader domain='products' text='Loading Records' />
               )}
             </ScrollArea>
           </SheetContent>
@@ -1067,9 +1061,7 @@ const StoreReserveHistoryTab = ({ productId }: StoreReserveHistoryTabProps) => {
               )}
 
               {recordLoading && (
-                <div className='flex items-center justify-center py-8'>
-                  <div className='animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600'></div>
-                </div>
+                <InlineLoader domain='products' text='Loading Records' />
               )}
             </ScrollArea>
           </DrawerContent>

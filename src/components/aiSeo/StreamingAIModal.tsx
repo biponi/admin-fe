@@ -17,8 +17,8 @@ import {
   AccordionTrigger,
   AccordionContent,
 } from "../../components/ui/accordion";
+import { Dots } from "@/components/loading-ui/dots";
 import {
-  Loader2,
   CheckCircle2,
   XCircle,
   Square,
@@ -349,7 +349,7 @@ export default function StreamingAIModal({
           <div className="flex items-center gap-3">
             {isBusy && (
               <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-[#141413]">
-                <Loader2 className="h-4 w-4 text-white animate-spin" />
+                <Dots className='h-4 w-6 text-white' />
               </div>
             )}
             {status === "done" && (

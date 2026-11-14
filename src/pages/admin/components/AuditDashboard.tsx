@@ -24,6 +24,7 @@ import { UserPerformanceCard } from "./UserPerformanceCard";
 import { AuditContributorsGraph } from "./AuditContributorsGraph";
 import { CombinedActivityCard } from "./CombinedActivityCard";
 import { claude } from "../../../lib/claude";
+import { PageLoader } from "@/components/loaders";
 import { useIsMobile } from "@/hooks/use-mobile";
 import {
   MobilePage,
@@ -80,19 +81,7 @@ export const AuditDashboard: React.FC = () => {
     }
     return (
       <div className='space-y-6'>
-        <div className='flex items-center justify-center py-12'>
-          <div className='flex flex-col items-center gap-4'>
-            <div className={claude.spinner + " h-10 w-10"} />
-            <div className='text-center'>
-              <h3 className='text-lg font-semibold text-[#141413]'>
-                Loading Dashboard
-              </h3>
-              <p className='text-[13px] text-[#8A877D] mt-1'>
-                Please wait while we gather the data...
-              </p>
-            </div>
-          </div>
-        </div>
+        <PageLoader domain='system' text='Loading Dashboard' />
       </div>
     );
   }

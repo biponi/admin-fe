@@ -15,6 +15,7 @@ import {
   TooltipTrigger,
 } from "./ui/tooltip";
 import { useWeatherContext } from "../contexts/WeatherContext";
+import { TextShimmer } from "./loading-ui/text-shimmer";
 import {
   SCENE_EMOJI,
   getWeatherDescription,
@@ -178,9 +179,11 @@ export function HeaderDateTimeWeather() {
                 {weatherEmoji} {conditionText}
               </p>
               <p className='text-[11px] opacity-80'>
-                {temperature !== null
-                  ? `${temperature}°C (Air 2m)`
-                  : "Loading temperature..."}
+                {temperature !== null ? (
+                  `${temperature}°C (Air 2m)`
+                ) : (
+                  <TextShimmer duration={2}>Loading temperature…</TextShimmer>
+                )}
               </p>
               <p className='text-[10px] opacity-60 border-t border-primary-foreground/20 pt-1 mt-1'>
                 Source: WeatherAPI.com (WMO Weather)
@@ -245,9 +248,13 @@ export function HeaderDateTimeWeather() {
             <TooltipContent side='bottom'>
               <p className='font-semibold'>Precipitation Probability</p>
               <p className='text-[11px] opacity-80'>
-                {rainProbability !== null
-                  ? `${rainProbability}% chance of rain`
-                  : "Loading rain possibility..."}
+                {rainProbability !== null ? (
+                  `${rainProbability}% chance of rain`
+                ) : (
+                  <TextShimmer duration={2}>
+                    Loading rain possibility…
+                  </TextShimmer>
+                )}
               </p>
               <p className='text-[10px] opacity-60 border-t border-primary-foreground/20 pt-1 mt-1'>
                 Source: WeatherAPI.com
@@ -270,9 +277,11 @@ export function HeaderDateTimeWeather() {
             <TooltipContent side='bottom'>
               <p className='font-semibold'>Wind Speed</p>
               <p className='text-[11px] opacity-80'>
-                {windSpeed !== null
-                  ? `${windSpeed} km/h (Surface 10m)`
-                  : "Loading wind speed..."}
+                {windSpeed !== null ? (
+                  `${windSpeed} km/h (Surface 10m)`
+                ) : (
+                  <TextShimmer duration={2}>Loading wind speed…</TextShimmer>
+                )}
               </p>
               <p className='text-[10px] opacity-60 border-t border-primary-foreground/20 pt-1 mt-1'>
                 Source: WeatherAPI.com

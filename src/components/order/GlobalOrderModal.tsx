@@ -21,7 +21,7 @@ import { OrderProducts } from './OrderProducts';
 import { OrderPayment } from './OrderPayment';
 import { OrderTimeline } from './OrderTimeline';
 import { OrderAudit } from './OrderAudit';
-import DefaultLoading from '../../coreComponents/defaultLoading';
+import { PageLoader } from '@/components/loaders';
 import { ScrollArea } from '../ui/scroll-area';
 
 export const GlobalOrderModal = () => {
@@ -79,7 +79,7 @@ export const GlobalOrderModal = () => {
     <>
       {loading ? (
         <div className="flex items-center justify-center py-20">
-          <DefaultLoading />
+          <PageLoader domain='orders' text='Loading Order Details' />
         </div>
       ) : order ? (
         <Tabs defaultValue="overview" className="mt-4">

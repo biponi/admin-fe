@@ -24,7 +24,8 @@ import {
   OTP_EXPIRY_TIME,
   RESEND_COOLDOWN,
 } from "../hooks/useOTPVerification";
-import { Loader2, Clock, RefreshCw, MessageCircleCode } from "lucide-react";
+import { Clock, RefreshCw, MessageCircleCode } from "lucide-react";
+import { ButtonLoadingText } from "@/components/loaders";
 import { Alert, AlertDescription } from "./ui/alert";
 import { useIsMobile } from "./hooks/use-mobile";
 
@@ -255,10 +256,7 @@ export const OTPVerificationDialog: React.FC<OTPVerificationDialogProps> = ({
                   disabled={isSending}
                   className='w-full'>
                   {isSending ? (
-                    <>
-                      <Loader2 className='mr-2 h-4 w-4 animate-spin' />
-                      Sending OTP...
-                    </>
+                    <ButtonLoadingText text='Sending…' />
                   ) : (
                     <>
                       <MessageCircleCode className='mr-2 h-4 w-4' />
@@ -299,10 +297,7 @@ export const OTPVerificationDialog: React.FC<OTPVerificationDialogProps> = ({
                       disabled={!canResend || isResending}
                       className='w-full'>
                       {isResending ? (
-                        <>
-                          <Loader2 className='mr-2 h-4 w-4 animate-spin' />
-                          Resending...
-                        </>
+                        <ButtonLoadingText text='Resending…' />
                       ) : (
                         <>
                           <RefreshCw className='mr-2 h-4 w-4' />
@@ -320,10 +315,7 @@ export const OTPVerificationDialog: React.FC<OTPVerificationDialogProps> = ({
                     }
                     className='w-full'>
                     {isVerifying ? (
-                      <>
-                        <Loader2 className='mr-2 h-4 w-4 animate-spin' />
-                        Verifying...
-                      </>
+                      <ButtonLoadingText text='Verifying…' />
                     ) : isVerified ? (
                       "Verified ✓"
                     ) : (
@@ -375,10 +367,7 @@ export const OTPVerificationDialog: React.FC<OTPVerificationDialogProps> = ({
                     disabled={isSending}
                     className='w-full'>
                     {isSending ? (
-                      <>
-                        <Loader2 className='mr-2 h-4 w-4 animate-spin' />
-                        Sending OTP...
-                      </>
+                      <ButtonLoadingText text='Sending…' />
                     ) : (
                       <>
                         <MessageCircleCode className='mr-2 h-4 w-4' />
@@ -419,10 +408,7 @@ export const OTPVerificationDialog: React.FC<OTPVerificationDialogProps> = ({
                         disabled={!canResend || isResending}
                         className='w-full'>
                         {isResending ? (
-                          <>
-                            <Loader2 className='mr-2 h-4 w-4 animate-spin' />
-                            Resending...
-                          </>
+                          <ButtonLoadingText text='Resending…' />
                         ) : (
                           <>
                             <RefreshCw className='mr-2 h-4 w-4' />
@@ -440,10 +426,7 @@ export const OTPVerificationDialog: React.FC<OTPVerificationDialogProps> = ({
                       }
                       className='w-full'>
                       {isVerifying ? (
-                        <>
-                          <Loader2 className='mr-2 h-4 w-4 animate-spin' />
-                          Verifying...
-                        </>
+                        <ButtonLoadingText text='Verifying…' />
                       ) : isVerified ? (
                         "Verified ✓"
                       ) : (

@@ -29,7 +29,6 @@ import {
   Mail,
   CreditCard,
   Grid3X3,
-  Loader2,
   AlertCircle,
   CheckCircle,
   XCircle,
@@ -106,6 +105,8 @@ import {
 } from "../../components/ui/select";
 import { ScrollArea } from "../../components/ui/scroll-area";
 import { Skeleton } from "../../components/ui/skeleton";
+import { InlineLoader } from "@/components/loaders";
+import { ConveyorLoop } from "@/components/loading-ui/conveyor-loop";
 import { Alert, AlertDescription } from "../../components/ui/alert";
 import {
   DropdownMenu,
@@ -2122,7 +2123,7 @@ const OrderList = () => {
             <Card className='w-full max-w-md mx-4'>
               <CardContent className='flex flex-col items-center justify-center py-16 text-center'>
                 <div className='w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mb-6'>
-                  <Loader2 className='w-8 h-8 text-blue-600 animate-spin' />
+                  <ConveyorLoop className='w-8 h-8 text-blue-600' />
                 </div>
                 <h3 className='text-xl font-semibold text-gray-900 mb-2'>
                   Loading Orders
@@ -2222,10 +2223,11 @@ const OrderList = () => {
           {/* Return Orders List */}
           <div className='px-4 md:px-0'>
             {returnOrderFetching ? (
-              <div className='flex flex-col items-center justify-center py-12'>
-                <Loader2 className='w-8 h-8 text-orange-600 animate-spin mb-4' />
-                <p className='text-gray-600'>Loading return orders...</p>
-              </div>
+              <InlineLoader
+                domain='orders'
+                text='Loading Return Orders'
+                className='py-12'
+              />
             ) : (
               <>
                 <ReturnOrderList

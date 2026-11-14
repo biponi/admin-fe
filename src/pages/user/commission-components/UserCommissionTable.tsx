@@ -34,7 +34,6 @@ import { Commission } from "../../../api/commission";
 import { DateRangePicker } from "../../../coreComponents/DateRangePicker";
 import { DateRange } from "react-day-picker";
 import {
-  Loader2,
   Package,
   Calendar,
   CheckCircle2,
@@ -42,6 +41,7 @@ import {
   ChevronRight,
   X,
 } from "lucide-react";
+import { InlineLoader } from "../../../components/loaders";
 import { startOfDay, endOfDay } from "date-fns";
 
 interface UserCommissionTableProps {
@@ -174,9 +174,7 @@ export const UserCommissionTable: React.FC<UserCommissionTableProps> = ({
         <Separator className="mb-4" />
 
         {isLoading ? (
-          <div className='flex justify-center items-center py-8'>
-            <Loader2 className='h-8 w-8 animate-spin text-muted-foreground' />
-          </div>
+          <InlineLoader domain='analytics' text='Loading Commissions' />
         ) : commissions.length === 0 ? (
           <div className='text-center py-8 text-muted-foreground'>
             No commissions found

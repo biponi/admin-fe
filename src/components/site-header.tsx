@@ -18,9 +18,10 @@ import { hasPagePermission } from "../utils/helperFunction";
 import { useSelector } from "react-redux";
 import NotificationBell from "../notification/NotificationBell";
 import { useState } from "react";
-import { Settings } from "lucide-react";
+import { Settings, Sparkles } from "lucide-react";
 import { Button } from "./ui/button";
 import { SettingsPanel } from "./settings-panel";
+import AssistantSheet from "./assistant/AssistantSheet";
 import { HeaderDateTimeWeather } from "./HeaderDateTimeWeather";
 import { Oneko, getOnekoCritter } from "./oneko";
 import { useSettings } from "../contexts/SettingsContext";
@@ -33,6 +34,7 @@ interface SiteHeaderProps {
 export function SiteHeader({ title }: SiteHeaderProps) {
   const { pageTitle } = usePageTitle();
   const [settingsOpen, setSettingsOpen] = useState(false);
+  const [assistantOpen, setAssistantOpen] = useState(false);
   const { onekoEnabled, setOnekoEnabled, onekoCat, onekoSpeed, onekoFriend } =
     useSettings();
 
@@ -134,7 +136,7 @@ export function SiteHeader({ title }: SiteHeaderProps) {
           <HeaderDateTimeWeather />
 
           <div className='relative group/settings'>
-            <div className='absolute inset-0 bg-primary/20 rounded-xl blur-md opacity-0 group-hover/settings:opacity-100 transition-opacity' />
+            <div className='absolute inset-0 bg-primary/20 rounded-xl blur-md opacity-0  ' />
             {/* Settings trigger */}
             <ButtonGroup className=' shadow rounded-2xl border border-gray-200'>
               {/* Oneko cat toggle — spawns the cursor-chasing cat */}
@@ -171,6 +173,22 @@ export function SiteHeader({ title }: SiteHeaderProps) {
                 <span className='sr-only'>Open settings</span>
               </Button>
               <ButtonGroupSeparator className='bg-gray-100' />
+              {/* AI Assistant quick panel */}
+              {hasPagePermission(
+                "assistant",
+                "view",
+                userState?.permissions,
+              ) && (
+                <Button
+                  variant='secondary'
+                  size='icon'
+                  onClick={() => setAssistantOpen(true)}
+                  className='relative h-9 w-9 rounded-2xl text-gray-900/80 bg-transparent hover:text-gray-500 hover:bg-white/20'>
+                  <Sparkles className='h-[18px] w-[18px] ' />
+                  <span className='sr-only'>Open AI Assistant</span>
+                </Button>
+              )}
+              <ButtonGroupSeparator className='bg-gray-100' />
               {/* Notification bell (renders its own button + portaled panel) */}
               {hasPagePermission(
                 "notifications",
@@ -180,7 +198,7 @@ export function SiteHeader({ title }: SiteHeaderProps) {
                 <NotificationBell
                   size='md'
                   variant='ghost'
-                  className='rounded-2xl text-gray-900/80'
+                  className='rounded-2xl text-gray-900/80 hover:text-gray-500 hover:bg-white/20'
                 />
               )}
             </ButtonGroup>
@@ -190,6 +208,9 @@ export function SiteHeader({ title }: SiteHeaderProps) {
 
       {/* Settings Modal */}
       <SettingsPanel open={settingsOpen} onOpenChange={setSettingsOpen} />
+
+      {/* AI Assistant quick panel */}
+      <AssistantSheet open={assistantOpen} onOpenChange={setAssistantOpen} />
 
       {/* The critter(s) themselves (fixed-position, appended to body when active) */}
       <Oneko

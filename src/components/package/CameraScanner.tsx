@@ -1,9 +1,10 @@
 import { useState, useEffect, useRef } from "react";
 import { useSelector } from "react-redux";
 import { hasPagePermission } from "../../utils/helperFunction";
-import { Barcode, Camera, CameraOff, Zap, X } from "lucide-react";
+import { Barcode, CameraOff, Zap, X } from "lucide-react";
 import { Button } from "../ui/button";
 import { Badge } from "../ui/badge";
+import { InlineLoader } from "@/components/loaders";
 
 interface CameraScannerProps {
   onScan: (barcode: string) => void;
@@ -450,10 +451,13 @@ export function CameraScanner({ onScan, onError }: CameraScannerProps) {
           {/* Loading indicator */}
           {!isVideoReady && (
             <div className='absolute inset-0 flex items-center justify-center bg-black bg-opacity-50'>
-              <div className='text-white text-center'>
-                <Camera className='h-12 w-12 mx-auto mb-2 animate-pulse' />
-                <p>Loading camera...</p>
-              </div>
+              <InlineLoader
+                domain='delivery'
+                text='Loading Camera'
+                className='py-0'
+                graphicClassName='h-8 w-8 text-white'
+                textClassName='text-white'
+              />
             </div>
           )}
 

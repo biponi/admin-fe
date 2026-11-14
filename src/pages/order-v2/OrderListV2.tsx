@@ -17,7 +17,6 @@ import { useNavigate } from "react-router-dom";
 import {
   Plus,
   RefreshCw,
-  Loader2,
   Package,
   XCircle,
   Shield,
@@ -29,6 +28,8 @@ import {
 } from "lucide-react";
 import { useOrderStore } from "./store/orderStore";
 import { useUIStore } from "./store/uiStore";
+import { PageLoader } from "@/components/loaders";
+import { Dots } from "@/components/loading-ui/dots";
 import { OrderTable } from "./components/OrderTable";
 import { MobileOrderList } from "./components/MobileOrderList";
 import { SearchBar } from "./components/SearchBar";
@@ -931,13 +932,7 @@ export const OrderListV2: React.FC = () => {
         <div className='flex-1 overflow-auto px-4 sm:px-6 lg:px-8 py-5'>
           {isLoading ? (
             <div className='flex items-center justify-center h-72'>
-              <div className='flex flex-col items-center gap-3 text-center bg-white rounded-2xl border border-gray-100 shadow-sm px-12 py-10'>
-                <Loader2 className='h-8 w-8 animate-spin text-blue-600' />
-                <p className='text-sm font-medium text-gray-700'>
-                  Loading orders…
-                </p>
-                <p className='text-xs text-gray-400'>This won't take long</p>
-              </div>
+              <PageLoader domain='orders' text='Loading Orders' />
             </div>
           ) : (
             <motion.div
@@ -1328,7 +1323,7 @@ export const OrderListV2: React.FC = () => {
                   "bg-blue-600 hover:bg-blue-700",
               )}>
               {isGeneratingInvoices && pendingBulkActionType === "invoice" && (
-                <Loader2 className='h-4 w-4 mr-2 animate-spin' />
+                <Dots className='h-4 w-6 mr-2' />
               )}
               {pendingBulkActionType === "complete" && "Mark as completed"}
               {pendingBulkActionType === "cancel" && "Cancel orders"}

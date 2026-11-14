@@ -9,6 +9,7 @@ import {
   TableRow,
 } from "../../../components/ui/table";
 import { Input } from "../../../components/ui/input";
+import { PageLoader } from "../../../components/loaders";
 import {
   Select,
   SelectContent,
@@ -207,10 +208,7 @@ const CampaignList = ({ type }: CampaignListProps) => {
       {/* Table Card (desktop) */}
       <div className='hidden md:block rounded-xl border border-slate-100 bg-white shadow-sm overflow-hidden'>
         {loading && !campaigns ? (
-          <div className='flex flex-col items-center justify-center h-64 gap-3'>
-            <div className='w-8 h-8 border-2 border-indigo-600 border-t-transparent rounded-full animate-spin' />
-            <p className='text-sm text-slate-500'>Loading campaigns…</p>
-          </div>
+          <PageLoader domain='chat' text='Loading Campaigns' className='h-64' />
         ) : (
           <>
             <div className='overflow-x-auto'>

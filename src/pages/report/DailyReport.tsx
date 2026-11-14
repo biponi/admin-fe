@@ -32,7 +32,6 @@ import {
 } from "../../utils/dailyReportPdfExport";
 import {
   CalendarIcon,
-  Loader2,
   BarChart3,
   TrendingUp,
   TrendingDown,
@@ -43,6 +42,7 @@ import {
   CheckCircle2,
   AlertCircle,
 } from "lucide-react";
+import { PageLoader } from "@/components/loaders";
 import { format, startOfDay, endOfDay } from "date-fns";
 import { cn } from "../../lib/utils";
 import { PageHeader } from "../../components/PageHeader";
@@ -1122,14 +1122,8 @@ const DailyReport = () => {
 
             {/* ── Loading state ─────────────────────────────── */}
             {isLoadingReports && (
-              <div className='flex flex-col items-center justify-center py-20 bg-white rounded-xl border border-slate-100 shadow-[0_1px_3px_rgba(0,0,0,0.04)]'>
-                <Loader2
-                  className='h-7 w-7 animate-spin text-indigo-500'
-                  strokeWidth={1.5}
-                />
-                <p className='mt-3 text-[13px] font-medium text-slate-500'>
-                  Loading daily reports…
-                </p>
+              <div className='bg-white rounded-xl border border-slate-100 shadow-[0_1px_3px_rgba(0,0,0,0.04)]'>
+                <PageLoader domain='analytics' text='Loading Report' />
               </div>
             )}
 

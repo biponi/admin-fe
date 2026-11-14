@@ -13,7 +13,6 @@ import {
   Paperclip,
   Check,
   CheckCheck,
-  Loader2,
   Menu,
   ArrowLeft,
   Users,
@@ -28,6 +27,8 @@ import { ChatErrorBoundary } from "../../components/ChatErrorBoundary";
 
 import { Sheet, SheetContent, SheetHeader } from "../../components/ui/sheet";
 import { PageHeader } from "../../components/PageHeader";
+import { PageLoader, InlineLoader } from "../../components/loaders";
+import { Dots } from "../../components/loading-ui/dots";
 
 // Local interface for component props
 interface LocalMessage {
@@ -143,10 +144,11 @@ const MobileEmptyState: React.FC<{
         </Button>
 
         {ticketsLoading && (
-          <div className='mt-4 flex items-center gap-2 text-gray-500'>
-            <Loader2 className='w-4 h-4 animate-spin' />
-            <span className='text-sm'>Loading tickets...</span>
-          </div>
+          <InlineLoader
+            domain='chat'
+            text='Loading Tickets'
+            className='mt-4 py-0 text-gray-500'
+          />
         )}
       </div>
 
@@ -630,7 +632,7 @@ const ChatInterface: React.FC<{
               size='sm'
               className='w-8 h-8 sm:w-8 sm:h-8 p-0 rounded-full transition-all bg-blue-500 hover:bg-blue-600 text-white shadow-sm disabled:opacity-50 flex-shrink-0 touch-manipulation'>
               {isSending ? (
-                <Loader2 className='w-4 h-4 animate-spin' />
+                <Dots className='h-3 w-6 text-white' />
               ) : (
                 <Send className='w-4 h-4' />
               )}
@@ -910,9 +912,11 @@ const ChatPage: React.FC = () => {
           {/* Main chat interface - Full width on mobile, flex-1 on desktop */}
           <div className='flex-1 flex flex-col'>
             {ticketLoading ? (
-              <div className='flex items-center justify-center h-full'>
-                <Loader2 className='w-8 h-8 animate-spin text-blue-500' />
-              </div>
+              <PageLoader
+                domain='chat'
+                text='Loading Conversation'
+                className='h-full'
+              />
             ) : (
               <ChatInterface
                 ticket={currentTicket}

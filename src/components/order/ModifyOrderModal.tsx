@@ -9,7 +9,6 @@ import {
   Trash2,
   Search,
   SearchX,
-  Loader2,
   CheckCircle2,
   AlertTriangle,
   XCircle,
@@ -27,6 +26,8 @@ import type {
 import { validateModification, modifyOrder } from "../../api/order";
 import type { ValidationResponse } from "../../api/order";
 import { cn } from "../../lib/utils";
+import { InlineLoader, ButtonLoadingText } from "@/components/loaders";
+import { Dots } from "@/components/loading-ui/dots";
 
 interface ModifyOrderModalProps {
   orderId: string | number;
@@ -495,7 +496,7 @@ export function ModifyOrderModal({
                            disabled:opacity-50 disabled:cursor-not-allowed disabled:bg-gray-100'
               />
               {searching && (
-                <Loader2 className='absolute right-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 animate-spin text-gray-400' />
+                <Dots className='absolute right-3 top-1/2 -translate-y-1/2 h-4 w-6 text-muted-foreground' />
               )}
               {!searching && searchQuery && (
                 <button
@@ -517,10 +518,11 @@ export function ModifyOrderModal({
             <div className='px-4 pb-2 shrink-0'>
               <div className='max-h-[30vh] overflow-y-auto rounded-xl border border-gray-100 bg-gray-50/50'>
                 {searching && (
-                  <div className='py-8 flex flex-col items-center justify-center gap-2 text-gray-400'>
-                    <Loader2 className='w-5 h-5 animate-spin' />
-                    <p className='text-xs font-medium'>Searching…</p>
-                  </div>
+                  <InlineLoader
+                    domain='products'
+                    text='Searching Products'
+                    className='py-8'
+                  />
                 )}
 
                 {!searching && searchResults.length === 0 && (
@@ -737,10 +739,7 @@ export function ModifyOrderModal({
                            shadow-sm shadow-indigo-100
                            focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-1'>
                 {validating ? (
-                  <>
-                    <Loader2 className='w-3.5 h-3.5 animate-spin' />
-                    Validating…
-                  </>
+                  <ButtonLoadingText text='Validating…' />
                 ) : (
                   <>
                     Preview changes
@@ -917,10 +916,7 @@ export function ModifyOrderModal({
                   : "bg-gray-300 cursor-not-allowed",
               )}>
               {loading ? (
-                <>
-                  <Loader2 className='w-3.5 h-3.5 animate-spin' />
-                  Saving…
-                </>
+                <ButtonLoadingText text='Saving…' />
               ) : (
                 <>
                   <CheckCircle2 className='w-3.5 h-3.5' />
