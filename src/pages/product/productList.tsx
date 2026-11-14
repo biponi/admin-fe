@@ -517,6 +517,7 @@ const ProductList: React.FC<Props> = ({ handleEditProduct }) => {
 
   const navigate = useNavigate();
   const { hasRequiredPermission } = useRoleCheck();
+  const hasSummaryPermission = hasRequiredPermission("product", "summary");
   const [inputValue, setInputValue] = useState<string>("");
   const { categories, fetchCategories } = useCategory();
   const debounceHandler = useDebounce(inputValue, 500);
@@ -565,7 +566,7 @@ const ProductList: React.FC<Props> = ({ handleEditProduct }) => {
 
   useEffect(() => {
     fetchCategories();
-    getProductSummaryDetails();
+    if (hasSummaryPermission) getProductSummaryDetails();
   }, []);
   useEffect(() => {
     setSearchQuery(inputValue);
@@ -1193,11 +1194,11 @@ const ProductList: React.FC<Props> = ({ handleEditProduct }) => {
       ═══════════════════════════════════════════════════════════════════════ */}
       <div
         className={cn(
-          "hidden md:block space-y-3",
+          "hidden md:block space-y-3 mt-2",
           viewType === "tree" ? "mx-6" : "container",
         )}>
         {/* Page header */}
-        <div className='flex items-center justify-between'>
+        <div className='flex items-center justify-between '>
           <div className='flex items-center gap-2.5'>
             <div
               className={`w-8 h-8 rounded-lg flex items-center justify-center ${isInactiveView ? "bg-orange-500" : "bg-indigo-600"}`}>
@@ -1215,7 +1216,7 @@ const ProductList: React.FC<Props> = ({ handleEditProduct }) => {
             </div>
           </div>
           <div className='flex items-center gap-2'>
-            {renderCategoryBreakdown()}
+            {hasSummaryPermission && renderCategoryBreakdown()}
             {hasRequiredPermission("product", "create") && (
               <Button
                 size='sm'
@@ -1228,11 +1229,13 @@ const ProductList: React.FC<Props> = ({ handleEditProduct }) => {
         </div>
 
         {/* Stats row */}
-        <div className='grid grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-3'>
-          {statCards.map((card, i) => (
-            <StatCard key={i} {...card} />
-          ))}
-        </div>
+        {hasSummaryPermission && (
+          <div className='grid grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-3'>
+            {statCards.map((card, i) => (
+              <StatCard key={i} {...card} />
+            ))}
+          </div>
+        )}
 
         {/* Main panel */}
         <div className='rounded-xl border border-zinc-200 bg-white overflow-hidden shadow-sm'>

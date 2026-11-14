@@ -1,12 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import {
-  Shield,
-  ShieldCheck,
-  KeyRound,
-  Save,
-  ArrowLeft,
-} from "lucide-react";
+import { Shield, ShieldCheck, KeyRound, Save, ArrowLeft } from "lucide-react";
 import { useRole } from "./hooks/useRoleHook";
 import { UpdateRoleInput } from "./interface";
 import { Button } from "../../components/ui/button";
@@ -31,10 +25,7 @@ import { Alert, AlertDescription } from "../../components/ui/alert";
 import { Checkbox } from "../../components/ui/checkbox";
 import { pagePermissions, OWN_ONLY_ELIGIBLE } from "../../utils/permissions";
 import { PageHeader } from "../../components/PageHeader";
-import {
-  PageLoader,
-  ButtonLoadingText,
-} from "../../components/loaders";
+import { PageLoader, ButtonLoadingText } from "../../components/loaders";
 
 const EditRolePage: React.FC = () => {
   const navigate = useNavigate();
@@ -71,7 +62,7 @@ const EditRolePage: React.FC = () => {
 
   const handleInputChange = (
     field: keyof UpdateRoleInput,
-    value: string | boolean
+    value: string | boolean,
   ) => {
     setFormData((prev) => ({
       ...prev,
@@ -103,7 +94,7 @@ const EditRolePage: React.FC = () => {
   // Convert permissions object back to array format, preserving existing
   // ownOnly entries and pruning any that are no longer among the actions
   const setPermissionsFromObject = (
-    permissionsObj: Record<string, string[]>
+    permissionsObj: Record<string, string[]>,
   ) => {
     const previousOwnOnly = getOwnOnlyObject();
     const permissionsArray = Object.entries(permissionsObj).map(
@@ -111,9 +102,9 @@ const EditRolePage: React.FC = () => {
         page,
         actions,
         ownOnly: (previousOwnOnly[page] || []).filter((a) =>
-          actions.includes(a)
+          actions.includes(a),
         ),
-      })
+      }),
     );
     setFormData((prev) => ({
       ...prev,
@@ -124,7 +115,7 @@ const EditRolePage: React.FC = () => {
   const handlePermissionChange = (
     pageName: string,
     permission: string,
-    checked: boolean
+    checked: boolean,
   ) => {
     const currentPermissions = getPermissionsObject();
     const updatedPermissions = {
@@ -152,7 +143,7 @@ const EditRolePage: React.FC = () => {
   const handleOwnOnlyChange = (
     pageName: string,
     permission: string,
-    checked: boolean
+    checked: boolean,
   ) => {
     const currentOwnOnly = getOwnOnlyObject();
     const updatedOwnOnly = {
@@ -168,7 +159,7 @@ const EditRolePage: React.FC = () => {
         page,
         actions,
         ownOnly: updatedOwnOnly[page] || [],
-      })
+      }),
     );
     setFormData((prev) => ({
       ...prev,
@@ -281,7 +272,9 @@ const EditRolePage: React.FC = () => {
 
         {error && (
           <Alert variant='destructive' className='border-rose-200 bg-rose-50'>
-            <AlertDescription className='text-rose-600'>{error}</AlertDescription>
+            <AlertDescription className='text-rose-600'>
+              {error}
+            </AlertDescription>
           </Alert>
         )}
 
@@ -302,7 +295,9 @@ const EditRolePage: React.FC = () => {
             <CardContent className='space-y-4'>
               <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
                 <div className='space-y-2'>
-                  <Label htmlFor='name' className='text-[10px] font-semibold uppercase tracking-wider text-slate-400'>
+                  <Label
+                    htmlFor='name'
+                    className='text-[10px] font-semibold uppercase tracking-wider text-slate-400'>
                     Role Name <span className='text-rose-500'>*</span>
                   </Label>
                   <Input
@@ -316,7 +311,9 @@ const EditRolePage: React.FC = () => {
                 </div>
 
                 <div className='space-y-2'>
-                  <Label htmlFor='active' className='text-[10px] font-semibold uppercase tracking-wider text-slate-400'>
+                  <Label
+                    htmlFor='active'
+                    className='text-[10px] font-semibold uppercase tracking-wider text-slate-400'>
                     Status
                   </Label>
                   <div className='flex items-center space-x-2 h-10'>
@@ -327,7 +324,9 @@ const EditRolePage: React.FC = () => {
                         handleInputChange("active", checked)
                       }
                     />
-                    <Label htmlFor='active' className='text-[13px] text-slate-600 cursor-pointer'>
+                    <Label
+                      htmlFor='active'
+                      className='text-[13px] text-slate-600 cursor-pointer'>
                       {formData.active ? "Active" : "Inactive"}
                     </Label>
                   </div>
@@ -335,7 +334,9 @@ const EditRolePage: React.FC = () => {
               </div>
 
               <div className='space-y-2'>
-                <Label htmlFor='description' className='text-[10px] font-semibold uppercase tracking-wider text-slate-400'>
+                <Label
+                  htmlFor='description'
+                  className='text-[10px] font-semibold uppercase tracking-wider text-slate-400'>
                   Description
                 </Label>
                 <Textarea
@@ -365,14 +366,15 @@ const EditRolePage: React.FC = () => {
                 Manage what actions this role can perform on different pages
               </CardDescription>
             </CardHeader>
-            <CardContent>
+            <CardContent className='pt-4'>
               <Accordion
                 type='multiple'
                 defaultValue={Object.keys(pagePermissions)}
                 className='space-y-2'>
                 {Object.entries(pagePermissions).map(
                   ([pageName, permissions]) => {
-                    const selectedCount = (currentPermissions[pageName] || []).length;
+                    const selectedCount = (currentPermissions[pageName] || [])
+                      .length;
                     const totalCount = permissions.length;
 
                     return (
@@ -428,7 +430,7 @@ const EditRolePage: React.FC = () => {
                                         handlePermissionChange(
                                           pageName,
                                           permission,
-                                          checked as boolean
+                                          checked as boolean,
                                         )
                                       }
                                     />
@@ -437,7 +439,10 @@ const EditRolePage: React.FC = () => {
                                       className='text-[13px] text-slate-600 capitalize cursor-pointer'>
                                       {permission.replace("_", " ")}
                                     </Label>
-                                    {isOwnOnlyEligible(pageName, permission) && (
+                                    {isOwnOnlyEligible(
+                                      pageName,
+                                      permission,
+                                    ) && (
                                       <span
                                         className={
                                           isActionChecked
@@ -453,7 +458,7 @@ const EditRolePage: React.FC = () => {
                                             handleOwnOnlyChange(
                                               pageName,
                                               permission,
-                                              checked
+                                              checked,
                                             )
                                           }
                                           className='scale-75'
@@ -469,7 +474,7 @@ const EditRolePage: React.FC = () => {
                         </AccordionContent>
                       </AccordionItem>
                     );
-                  }
+                  },
                 )}
               </Accordion>
             </CardContent>

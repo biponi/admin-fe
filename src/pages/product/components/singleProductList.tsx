@@ -341,6 +341,7 @@ const SingleItem: React.FC<Props> = ({
   variationDisplayMode = "list",
 }) => {
   const { hasRequiredPermission, hasSomePermissionsForPage } = useRoleCheck();
+  const showSold = hasRequiredPermission("product", "summary");
   const dialogBtn = useRef<HTMLButtonElement>(null);
   const [adjustDialogOpen, setAdjustDialogOpen] = useState(false);
   const [historyDialogOpen, setHistoryDialogOpen] = useState(false);
@@ -465,7 +466,11 @@ const SingleItem: React.FC<Props> = ({
         </TableCell>
 
         {/* Sold / Returned */}
-        {hasRequiredPermission("product", "analytics") ? (
+        {!showSold ? (
+          <TableCell className='pt-3'>
+            <span className='text-[12px] font-medium text-zinc-400'>--</span>
+          </TableCell>
+        ) : hasRequiredPermission("product", "analytics") ? (
           <TableCell className='pt-3'>
             <SoldReturnedStat
               totalSold={totalSold}

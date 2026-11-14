@@ -91,6 +91,8 @@ export default defineConfig({
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "./src"),
+      // assistant-ui registry files import via bare "src/..." paths
+      src: path.resolve(__dirname, "./src"),
     },
   },
 

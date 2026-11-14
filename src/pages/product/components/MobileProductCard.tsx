@@ -598,6 +598,7 @@ const MobileProductCard: React.FC<MobileProductCardProps> = ({
   onViewVariations,
 }) => {
   const { hasRequiredPermission, hasSomePermissionsForPage } = useRoleCheck();
+  const showSold = hasRequiredPermission("product", "summary");
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [metaSheetOpen, setMetaSheetOpen] = useState(false);
   const [imgFailed, setImgFailed] = useState(false);
@@ -790,7 +791,7 @@ const MobileProductCard: React.FC<MobileProductCardProps> = ({
             </div>
             <div className='flex flex-col items-center gap-0.5'>
               <dd className='text-[13px] font-semibold leading-none text-[#141413]'>
-                {totalSold}
+                {showSold ? totalSold : "--"}
               </dd>
               <dt className='text-[9px] font-semibold uppercase tracking-wider text-slate-400'>
                 Sold

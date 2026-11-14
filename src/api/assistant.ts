@@ -1,6 +1,7 @@
 import axios from "./axios";
 import { handleApiError, refreshApiToken } from ".";
 import { parseSseFrames } from "./aiSeo";
+import type { AssistantPartEvent, StoredPart } from "../components/assistant/artifacts/types";
 
 // Backend contract: biponi-express routes/v1/Assistant + service/assistant
 const BASE = "/api/v1/assistant";
@@ -63,6 +64,8 @@ export interface StoredMessage {
   toolCalls?: { name: string }[];
   name?: string;
   createdAt?: string;
+  /** Rich artifact parts (docs / sheets / charts) — optional for old sessions */
+  parts?: StoredPart[];
 }
 
 export interface ToolSummary {
@@ -77,6 +80,8 @@ export interface AssistantStreamCallbacks {
   onDelta?: (chunk: string) => void;
   onToolStart?: (event: ToolStartEvent) => void;
   onToolEnd?: (event: ToolEndEvent) => void;
+  /** Structured artifact parts (docs / sheets / charts) interleaved with delta */
+  onPart?: (event: AssistantPartEvent) => void;
   onDone?: (answer: AssistantAnswer) => void;
   onError?: (error: string) => void;
 }
@@ -167,6 +172,8 @@ export async function askAssistant(
           callbacks.onToolStart?.(evt.data as ToolStartEvent);
         } else if (evt.event === "tool_end") {
           callbacks.onToolEnd?.(evt.data as ToolEndEvent);
+        } else if (evt.event === "part") {
+          callbacks.onPart?.(evt.data as AssistantPartEvent);
         } else if (evt.event === "done") {
           finalAnswer = evt.data as AssistantAnswer;
           callbacks.onDone?.(finalAnswer);

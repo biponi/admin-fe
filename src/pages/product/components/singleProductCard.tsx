@@ -347,6 +347,7 @@ const SingleProductCardItem: React.FC<Props> = ({
   onViewVariations,
 }) => {
   const { hasSomePermissionsForPage, hasRequiredPermission } = useRoleCheck();
+  const showSold = hasRequiredPermission("product", "summary");
   const dialogBtn = useRef<HTMLButtonElement>(null);
   const [imgError, setImgError] = useState(false);
   const [drawerOpen, setDrawerOpen] = useState(false);
@@ -472,7 +473,7 @@ const SingleProductCardItem: React.FC<Props> = ({
               },
               {
                 icon: <ShoppingCart className='w-3.5 h-3.5' />,
-                value: totalSold,
+                value: showSold ? totalSold : "--",
                 label: "Sold",
                 color: "text-emerald-600 dark:text-emerald-400",
                 bg: "bg-emerald-50 dark:bg-emerald-900/20",

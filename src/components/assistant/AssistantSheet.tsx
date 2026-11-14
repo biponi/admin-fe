@@ -1,6 +1,6 @@
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "../ui/sheet";
 import { Sparkles } from "lucide-react";
-import AssistantChat from "../../pages/assistant/AssistantChat";
+import AssistantThread from "./AssistantThread";
 
 interface AssistantSheetProps {
   open: boolean;
@@ -29,12 +29,12 @@ const AssistantSheet = ({ open, onOpenChange }: AssistantSheetProps) => {
             <div className='flex items-center justify-center w-7 h-7 rounded-lg bg-gradient-to-br from-violet-500 to-indigo-600 shadow-sm'>
               <Sparkles className='w-3.5 h-3.5 text-white' />
             </div>
-            <SheetTitle className='text-sm font-semibold'>AI Assistant</SheetTitle>
+            <SheetTitle className='text-sm font-semibold'>PROMX AI</SheetTitle>
           </div>
         </SheetHeader>
-        {/* Chat fills the remaining height; content unmounts on close so each
+        {/* Thread fills the remaining height; content unmounts on close so each
             open starts fresh (sessions persist server-side) */}
-        {open && <AssistantChat embedded />}
+        {open && <AssistantThread embedded />}
       </SheetContent>
     </Sheet>
   );

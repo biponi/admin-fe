@@ -1,3 +1,8 @@
+/* assistant-ui theme overrides (markdown, shiki, artifact card)
+   @use must come before any other rules, so this loads first; the rules
+   themselves are plain CSS and don't depend on anything defined here. */
+@use "./styles/assistant-ui.scss";
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -710,3 +715,58 @@ body:not([data-scroll-locked]) {
   pointer-events: auto !important;
 }
 
+/* ── assistant-ui (Tailwind 3 compat layer) ────────────────────────────────
+   The assistant-ui registry targets Tailwind 4; these utilities backfill the
+   few it relies on that Tailwind 3 does not ship (see
+   src/components/assistant-ui/elements/). */
+
+@keyframes collapsible-down {
+  from {
+    height: 0;
+  }
+  to {
+    height: var(--radix-collapsible-content-height, auto);
+  }
+}
+
+@keyframes collapsible-up {
+  from {
+    height: var(--radix-collapsible-content-height, auto);
+  }
+  to {
+    height: 0;
+  }
+}
+
+.animate-collapsible-down {
+  animation: collapsible-down 0.2s ease-out;
+}
+
+.animate-collapsible-up {
+  animation: collapsible-up 0.2s ease-out;
+}
+
+/* Shimmer placeholder sweep (registry uses it for streaming/loading labels) */
+@keyframes aui-shimmer {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
+}
+
+.shimmer {
+  background: linear-gradient(
+    90deg,
+    hsl(var(--muted-foreground) / 0.6) 40%,
+    hsl(var(--foreground)) 50%,
+    hsl(var(--muted-foreground) / 0.6) 60%
+  );
+  background-size: 200% 100%;
+  color: transparent;
+  -webkit-background-clip: text;
+  background-clip: text;
+  animation: aui-shimmer 2s linear infinite;
+  border-radius: 2px;
+}

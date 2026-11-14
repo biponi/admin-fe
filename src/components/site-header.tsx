@@ -86,10 +86,10 @@ export function SiteHeader({ title }: SiteHeaderProps) {
       {/* ── Desktop header bar ── */}
       <header
         data-light-text='true'
-        className={`hidden md:flex sticky  top-0 z-40 h-16 shrink-0 items-center gap-2 border-b shadow-sm
-                         border-white/20 bg-white overflow-hidden
+        className={`hidden md:flex sticky  top-0 z-40 h-16 shrink-0 items-center gap-2 border-b shadow
+                         border-gray-100 bg-white overflow-hidden
                          transition-[width,height] ease-linear
-                         group-has-[[data-collapsible=icon]]/sidebar-wrapper:h-12 md:mb-2 `}>
+                         group-has-[[data-collapsible=icon]]/sidebar-wrapper:h-12 `}>
         {/* Static night-landscape backdrop — replaces the animated weather
             scene on desktop; no animation by design. */}
         {/* <div
@@ -185,7 +185,7 @@ export function SiteHeader({ title }: SiteHeaderProps) {
                   onClick={() => setAssistantOpen(true)}
                   className='relative h-9 w-9 rounded-2xl text-gray-900/80 bg-transparent hover:text-gray-500 hover:bg-white/20'>
                   <Sparkles className='h-[18px] w-[18px] ' />
-                  <span className='sr-only'>Open AI Assistant</span>
+                  <span className='sr-only'>Open PROMX AI</span>
                 </Button>
               )}
               <ButtonGroupSeparator className='bg-gray-100' />

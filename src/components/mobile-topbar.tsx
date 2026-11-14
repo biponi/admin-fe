@@ -69,7 +69,7 @@ export function MobileTopbar({ onMenuClick }: MobileTopbarProps) {
             size='icon'
             onClick={() => setAssistantOpen(true)}
             className='m3-ripple relative h-10 w-10 rounded-full hover:bg-muted text-foreground'
-            aria-label='AI Assistant'
+            aria-label='PROMX AI'
             {...rippleProps()}>
             <Sparkles className='h-5 w-5 text-muted-foreground' />
           </Button>

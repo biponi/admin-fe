@@ -154,7 +154,7 @@ const BlogForm = () => {
 
   const updateField = <K extends keyof IBlogFormData>(
     field: K,
-    value: IBlogFormData[K]
+    value: IBlogFormData[K],
   ) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
   };
@@ -186,7 +186,7 @@ const BlogForm = () => {
   const removeTag = (tag: string) => {
     updateField(
       "tags",
-      formData.tags.filter((t) => t !== tag)
+      formData.tags.filter((t) => t !== tag),
     );
   };
 
@@ -201,7 +201,7 @@ const BlogForm = () => {
   const removeFaq = (index: number) => {
     updateField(
       "faqs",
-      formData.faqs.filter((_, i) => i !== index)
+      formData.faqs.filter((_, i) => i !== index),
     );
   };
 
@@ -219,14 +219,17 @@ const BlogForm = () => {
   const removeStep = (index: number) => {
     updateField(
       "howToSteps",
-      formData.howToSteps.filter((_, i) => i !== index)
+      formData.howToSteps.filter((_, i) => i !== index),
     );
   };
 
   // Key takeaway management
   const addTakeaway = () => {
     if (takeawayInput.trim()) {
-      updateField("keyTakeaways", [...formData.keyTakeaways, takeawayInput.trim()]);
+      updateField("keyTakeaways", [
+        ...formData.keyTakeaways,
+        takeawayInput.trim(),
+      ]);
       setTakeawayInput("");
     }
   };
@@ -234,7 +237,7 @@ const BlogForm = () => {
   const removeTakeaway = (index: number) => {
     updateField(
       "keyTakeaways",
-      formData.keyTakeaways.filter((_, i) => i !== index)
+      formData.keyTakeaways.filter((_, i) => i !== index),
     );
   };
 
@@ -280,7 +283,7 @@ const BlogForm = () => {
     }
     if (keywordSuggestions.suggestedKeywords.length > 0) {
       const newKeywords = keywordSuggestions.suggestedKeywords.filter(
-        (k) => !formData.seoKeywords.includes(k)
+        (k) => !formData.seoKeywords.includes(k),
       );
       updateField("seoKeywords", [...formData.seoKeywords, ...newKeywords]);
     }
@@ -333,10 +336,7 @@ const BlogForm = () => {
       submitData.append("howToSteps", JSON.stringify(formData.howToSteps));
     }
     if (formData.keyTakeaways.length > 0) {
-      submitData.append(
-        "keyTakeaways",
-        JSON.stringify(formData.keyTakeaways)
-      );
+      submitData.append("keyTakeaways", JSON.stringify(formData.keyTakeaways));
     }
 
     if (featuredImageFile) {
@@ -352,7 +352,9 @@ const BlogForm = () => {
 
     if (response?.success) {
       toast({
-        title: isEdit ? "Post updated successfully" : "Post created successfully",
+        title: isEdit
+          ? "Post updated successfully"
+          : "Post created successfully",
       });
       navigate("/blog");
     } else {
@@ -367,17 +369,17 @@ const BlogForm = () => {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-64">
+      <div className='flex items-center justify-center h-64'>
         <PageLoader domain='settings' text='Loading Post' />
       </div>
     );
   }
 
   return (
-    <div className="space-y-6 mobile:pb-[calc(5rem+env(safe-area-inset-bottom))]">
+    <div className='space-y-6 p-2 md:container mobile:pb-[calc(5rem+env(safe-area-inset-bottom))]'>
       {/* Header */}
       <PageHeader
-        icon={<FileText className="h-5 w-5 text-white" />}
+        icon={<FileText className='h-5 w-5 text-white' />}
         title={isEdit ? "Edit Post" : "Create Post"}
         subtitle={
           isEdit
@@ -385,70 +387,68 @@ const BlogForm = () => {
             : "Write a new blog post with SEO optimization"
         }
         actions={
-          <div className="flex items-center gap-2">
+          <div className='flex items-center gap-2'>
             <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => navigate("/blog")}
-            >
-              <ArrowLeft className="h-4 w-4" />
+              variant='ghost'
+              size='icon'
+              onClick={() => navigate("/blog")}>
+              <ArrowLeft className='h-4 w-4' />
             </Button>
             <Button
-              variant="outline"
+              variant='outline'
               onClick={() => handleSubmit("draft")}
-              disabled={saving}
-            >
+              disabled={saving}>
               Save as Draft
             </Button>
             <Button onClick={() => handleSubmit("published")} disabled={saving}>
-              <Send className="h-4 w-4 mr-2" />
+              <Send className='h-4 w-4 mr-2' />
               Publish
             </Button>
           </div>
         }
       />
 
-      <Tabs defaultValue="content" className="space-y-4">
-        <TabsList className="mobile:flex mobile:w-full mobile:overflow-x-auto">
-          <TabsTrigger value="content" className="gap-2">
-            <FileText className="h-4 w-4" />
+      <Tabs defaultValue='content' className='space-y-4'>
+        <TabsList className='mobile:flex mobile:w-full mobile:overflow-x-auto'>
+          <TabsTrigger value='content' className='gap-2'>
+            <FileText className='h-4 w-4' />
             Content
           </TabsTrigger>
-          <TabsTrigger value="seo" className="gap-2">
-            <Globe className="h-4 w-4" />
+          <TabsTrigger value='seo' className='gap-2'>
+            <Globe className='h-4 w-4' />
             SEO
           </TabsTrigger>
-          <TabsTrigger value="ai-seo" className="gap-2">
-            <Sparkles className="h-4 w-4" />
+          <TabsTrigger value='ai-seo' className='gap-2'>
+            <Sparkles className='h-4 w-4' />
             AI / GEO
           </TabsTrigger>
         </TabsList>
 
         {/* ── Content Tab ─────────────────────────────────────────────── */}
-        <TabsContent value="content" className="space-y-4">
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+        <TabsContent value='content' className='space-y-4'>
+          <div className='grid grid-cols-1 lg:grid-cols-3 gap-4'>
             {/* Main Content */}
-            <div className="lg:col-span-2 space-y-4">
+            <div className='lg:col-span-2 space-y-4'>
               <Card>
                 <CardHeader>
                   <CardTitle>Post Content</CardTitle>
                 </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="title">Title *</Label>
+                <CardContent className='space-y-4'>
+                  <div className='space-y-2'>
+                    <Label htmlFor='title'>Title *</Label>
                     <Input
-                      id="title"
-                      placeholder="Enter post title..."
+                      id='title'
+                      placeholder='Enter post title...'
                       value={formData.title}
                       onChange={(e) => updateField("title", e.target.value)}
                     />
                   </div>
-                  <div className="space-y-2">
+                  <div className='space-y-2'>
                     <Label>Content *</Label>
                     <TiptapEditor
                       content={formData.content}
                       onChange={(content) => updateField("content", content)}
-                      placeholder="Write your blog post content..."
+                      placeholder='Write your blog post content...'
                     />
                   </div>
                 </CardContent>
@@ -456,45 +456,43 @@ const BlogForm = () => {
             </div>
 
             {/* Sidebar */}
-            <div className="space-y-4">
+            <div className='space-y-4'>
               {/* Featured Image */}
               <Card>
                 <CardHeader>
-                  <CardTitle className="text-sm">Featured Image</CardTitle>
+                  <CardTitle className='text-sm'>Featured Image</CardTitle>
                 </CardHeader>
                 <CardContent>
                   {featuredImagePreview ? (
-                    <div className="relative">
+                    <div className='relative'>
                       <img
                         src={featuredImagePreview}
-                        alt="Featured"
-                        className="w-full h-40 object-cover rounded"
+                        alt='Featured'
+                        className='w-full h-40 object-cover rounded'
                       />
                       <Button
-                        variant="destructive"
-                        size="icon"
-                        className="absolute top-2 right-2 h-6 w-6"
-                        onClick={removeImage}
-                      >
-                        <X className="h-3 w-3" />
+                        variant='destructive'
+                        size='icon'
+                        className='absolute top-2 right-2 h-6 w-6'
+                        onClick={removeImage}>
+                        <X className='h-3 w-3' />
                       </Button>
                     </div>
                   ) : (
                     <div
-                      className="w-full h-40 border-2 border-dashed rounded flex flex-col items-center justify-center cursor-pointer hover:bg-muted/50 transition-colors"
-                      onClick={() => featuredImageRef.current?.click()}
-                    >
-                      <Upload className="h-8 w-8 text-muted-foreground mb-2" />
-                      <p className="text-sm text-muted-foreground">
+                      className='w-full h-40 border-2 border-dashed rounded flex flex-col items-center justify-center cursor-pointer hover:bg-muted/50 transition-colors'
+                      onClick={() => featuredImageRef.current?.click()}>
+                      <Upload className='h-8 w-8 text-muted-foreground mb-2' />
+                      <p className='text-sm text-muted-foreground'>
                         Click to upload
                       </p>
                     </div>
                   )}
                   <input
                     ref={featuredImageRef}
-                    type="file"
-                    accept="image/*"
-                    className="hidden"
+                    type='file'
+                    accept='image/*'
+                    className='hidden'
                     onChange={handleImageChange}
                   />
                 </CardContent>
@@ -503,15 +501,14 @@ const BlogForm = () => {
               {/* Category */}
               <Card>
                 <CardHeader>
-                  <CardTitle className="text-sm">Category *</CardTitle>
+                  <CardTitle className='text-sm'>Category *</CardTitle>
                 </CardHeader>
                 <CardContent>
                   <Select
                     value={formData.categoryId}
-                    onValueChange={(v) => updateField("categoryId", v)}
-                  >
+                    onValueChange={(v) => updateField("categoryId", v)}>
                     <SelectTrigger>
-                      <SelectValue placeholder="Select category" />
+                      <SelectValue placeholder='Select category' />
                     </SelectTrigger>
                     <SelectContent>
                       {categories.map((cat) => (
@@ -527,26 +524,28 @@ const BlogForm = () => {
               {/* Tags */}
               <Card>
                 <CardHeader>
-                  <CardTitle className="text-sm">Tags</CardTitle>
+                  <CardTitle className='text-sm'>Tags</CardTitle>
                 </CardHeader>
-                <CardContent className="space-y-2">
-                  <div className="flex gap-2">
+                <CardContent className='space-y-2'>
+                  <div className='flex gap-2'>
                     <Input
-                      placeholder="Add tag..."
+                      placeholder='Add tag...'
                       value={tagInput}
                       onChange={(e) => setTagInput(e.target.value)}
-                      onKeyDown={(e) => e.key === "Enter" && (e.preventDefault(), addTag())}
+                      onKeyDown={(e) =>
+                        e.key === "Enter" && (e.preventDefault(), addTag())
+                      }
                     />
-                    <Button variant="outline" size="icon" onClick={addTag}>
-                      <Plus className="h-4 w-4" />
+                    <Button variant='outline' size='icon' onClick={addTag}>
+                      <Plus className='h-4 w-4' />
                     </Button>
                   </div>
-                  <div className="flex flex-wrap gap-1">
+                  <div className='flex flex-wrap gap-1'>
                     {formData.tags.map((tag) => (
-                      <Badge key={tag} variant="secondary" className="gap-1">
+                      <Badge key={tag} variant='secondary' className='gap-1'>
                         {tag}
                         <button onClick={() => removeTag(tag)}>
-                          <X className="h-3 w-3" />
+                          <X className='h-3 w-3' />
                         </button>
                       </Badge>
                     ))}
@@ -557,14 +556,14 @@ const BlogForm = () => {
               {/* Excerpt */}
               <Card>
                 <CardHeader>
-                  <CardTitle className="text-sm">Excerpt</CardTitle>
+                  <CardTitle className='text-sm'>Excerpt</CardTitle>
                   <CardDescription>
                     Short summary (auto-generated if empty)
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
                   <Textarea
-                    placeholder="Brief summary of the post..."
+                    placeholder='Brief summary of the post...'
                     value={formData.excerpt}
                     onChange={(e) => updateField("excerpt", e.target.value)}
                     rows={3}
@@ -576,10 +575,10 @@ const BlogForm = () => {
         </TabsContent>
 
         {/* ── SEO Tab ─────────────────────────────────────────────────── */}
-        <TabsContent value="seo" className="space-y-4">
+        <TabsContent value='seo' className='space-y-4'>
           <Card>
             <CardHeader>
-              <div className="flex items-center justify-between">
+              <div className='flex items-center justify-between'>
                 <div>
                   <CardTitle>Search Engine Optimization</CardTitle>
                   <CardDescription>
@@ -587,35 +586,34 @@ const BlogForm = () => {
                   </CardDescription>
                 </div>
                 <Button
-                  variant="outline"
+                  variant='outline'
                   onClick={handleKeywordSuggestion}
-                  disabled={keywordLoading}
-                >
-                  <Sparkles className="h-4 w-4 mr-2" />
+                  disabled={keywordLoading}>
+                  <Sparkles className='h-4 w-4 mr-2' />
                   {keywordLoading ? "Suggesting..." : "Suggest Keywords"}
                 </Button>
               </div>
             </CardHeader>
-            <CardContent className="space-y-4">
+            <CardContent className='space-y-4'>
               {/* SEO Title */}
-              <div className="space-y-2">
+              <div className='space-y-2'>
                 <Label>SEO Title</Label>
                 <Input
-                  placeholder="SEO title for search engines..."
+                  placeholder='SEO title for search engines...'
                   value={formData.seoTitle}
                   onChange={(e) => updateField("seoTitle", e.target.value)}
                   maxLength={70}
                 />
-                <p className="text-xs text-muted-foreground">
+                <p className='text-xs text-muted-foreground'>
                   {formData.seoTitle.length}/70 characters
                 </p>
               </div>
 
               {/* SEO Description */}
-              <div className="space-y-2">
+              <div className='space-y-2'>
                 <Label>Meta Description</Label>
                 <Textarea
-                  placeholder="Search engine description..."
+                  placeholder='Search engine description...'
                   value={formData.seoDescription}
                   onChange={(e) =>
                     updateField("seoDescription", e.target.value)
@@ -623,39 +621,36 @@ const BlogForm = () => {
                   maxLength={160}
                   rows={3}
                 />
-                <p className="text-xs text-muted-foreground">
+                <p className='text-xs text-muted-foreground'>
                   {formData.seoDescription.length}/160 characters
                 </p>
               </div>
 
               {/* Focus Keyword */}
-              <div className="space-y-2">
+              <div className='space-y-2'>
                 <Label>Focus Keyword</Label>
                 <Input
-                  placeholder="Primary keyword for this post..."
+                  placeholder='Primary keyword for this post...'
                   value={formData.focusKeyword}
-                  onChange={(e) =>
-                    updateField("focusKeyword", e.target.value)
-                  }
+                  onChange={(e) => updateField("focusKeyword", e.target.value)}
                 />
               </div>
 
               {/* SEO Keywords */}
-              <div className="space-y-2">
+              <div className='space-y-2'>
                 <Label>SEO Keywords</Label>
-                <div className="flex flex-wrap gap-1 mb-2">
+                <div className='flex flex-wrap gap-1 mb-2'>
                   {formData.seoKeywords.map((kw) => (
-                    <Badge key={kw} variant="secondary" className="gap-1">
+                    <Badge key={kw} variant='secondary' className='gap-1'>
                       {kw}
                       <button
                         onClick={() =>
                           updateField(
                             "seoKeywords",
-                            formData.seoKeywords.filter((k) => k !== kw)
+                            formData.seoKeywords.filter((k) => k !== kw),
                           )
-                        }
-                      >
-                        <X className="h-3 w-3" />
+                        }>
+                        <X className='h-3 w-3' />
                       </button>
                     </Badge>
                   ))}
@@ -664,15 +659,15 @@ const BlogForm = () => {
 
               {/* Keyword Suggestions */}
               {keywordSuggestions && (
-                <Card className="bg-muted/50">
-                  <CardHeader className="pb-2">
-                    <CardTitle className="text-sm flex items-center gap-2">
-                      <Sparkles className="h-4 w-4" />
+                <Card className='bg-muted/50'>
+                  <CardHeader className='pb-2'>
+                    <CardTitle className='text-sm flex items-center gap-2'>
+                      <Sparkles className='h-4 w-4' />
                       Suggested Keywords
                     </CardTitle>
                   </CardHeader>
-                  <CardContent className="space-y-3">
-                    <div className="flex flex-wrap gap-1">
+                  <CardContent className='space-y-3'>
+                    <div className='flex flex-wrap gap-1'>
                       {keywordSuggestions.suggestedKeywords.map((kw) => (
                         <Badge
                           key={kw}
@@ -681,7 +676,7 @@ const BlogForm = () => {
                               ? "default"
                               : "outline"
                           }
-                          className="cursor-pointer"
+                          className='cursor-pointer'
                           onClick={() => {
                             if (!formData.seoKeywords.includes(kw)) {
                               updateField("seoKeywords", [
@@ -689,18 +684,16 @@ const BlogForm = () => {
                                 kw,
                               ]);
                             }
-                          }}
-                        >
+                          }}>
                           {kw}
                         </Badge>
                       ))}
                     </div>
                     <Button
-                      size="sm"
-                      variant="link"
-                      className="p-0 h-auto"
-                      onClick={applySuggestions}
-                    >
+                      size='sm'
+                      variant='link'
+                      className='p-0 h-auto'
+                      onClick={applySuggestions}>
                       Apply all suggestions to SEO fields
                     </Button>
                   </CardContent>
@@ -708,26 +701,23 @@ const BlogForm = () => {
               )}
 
               {/* Meta Robots */}
-              <div className="space-y-2">
+              <div className='space-y-2'>
                 <Label>Meta Robots</Label>
                 <Select
                   value={formData.metaRobots}
-                  onValueChange={(v) => updateField("metaRobots", v)}
-                >
+                  onValueChange={(v) => updateField("metaRobots", v)}>
                   <SelectTrigger>
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="index, follow">
-                      Index, Follow
-                    </SelectItem>
-                    <SelectItem value="noindex, follow">
+                    <SelectItem value='index, follow'>Index, Follow</SelectItem>
+                    <SelectItem value='noindex, follow'>
                       No Index, Follow
                     </SelectItem>
-                    <SelectItem value="index, nofollow">
+                    <SelectItem value='index, nofollow'>
                       Index, No Follow
                     </SelectItem>
-                    <SelectItem value="noindex, nofollow">
+                    <SelectItem value='noindex, nofollow'>
                       No Index, No Follow
                     </SelectItem>
                   </SelectContent>
@@ -735,35 +725,33 @@ const BlogForm = () => {
               </div>
 
               {/* Canonical URL */}
-              <div className="space-y-2">
+              <div className='space-y-2'>
                 <Label>Canonical URL</Label>
                 <Input
-                  placeholder="https://example.com/blog/custom-slug (optional)"
+                  placeholder='https://example.com/blog/custom-slug (optional)'
                   value={formData.canonicalUrl}
-                  onChange={(e) =>
-                    updateField("canonicalUrl", e.target.value)
-                  }
+                  onChange={(e) => updateField("canonicalUrl", e.target.value)}
                 />
               </div>
 
               {/* SEO Preview */}
-              <Card className="bg-muted/30">
-                <CardHeader className="pb-2">
-                  <CardTitle className="text-sm">Search Preview</CardTitle>
+              <Card className='bg-muted/30'>
+                <CardHeader className='pb-2'>
+                  <CardTitle className='text-sm'>Search Preview</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="space-y-1">
-                    <p className="text-blue-600 text-lg font-medium truncate">
+                  <div className='space-y-1'>
+                    <p className='text-blue-600 text-lg font-medium truncate'>
                       {formData.seoTitle || formData.title || "Page Title"}
                     </p>
-                    <p className="text-green-700 text-sm truncate">
+                    <p className='text-green-700 text-sm truncate'>
                       {formData.canonicalUrl ||
                         `https://yourdomain.com/blog/${formData.title
                           .toLowerCase()
                           .replace(/\s+/g, "-")
                           .replace(/[^a-z0-9-]/g, "")}`}
                     </p>
-                    <p className="text-gray-600 text-sm line-clamp-2">
+                    <p className='text-gray-600 text-sm line-clamp-2'>
                       {formData.seoDescription ||
                         formData.excerpt ||
                         "Post description will appear here..."}
@@ -776,7 +764,7 @@ const BlogForm = () => {
         </TabsContent>
 
         {/* ── AI / GEO Tab ────────────────────────────────────────────── */}
-        <TabsContent value="ai-seo" className="space-y-4">
+        <TabsContent value='ai-seo' className='space-y-4'>
           <Card>
             <CardHeader>
               <CardTitle>AI & Generative Engine Optimization</CardTitle>
@@ -785,46 +773,45 @@ const BlogForm = () => {
                 ChatGPT, Claude) understand and cite your content
               </CardDescription>
             </CardHeader>
-            <CardContent className="space-y-6">
+            <CardContent className='space-y-6'>
               {/* Key Takeaways */}
-              <div className="space-y-3">
-                <div className="flex items-center gap-2">
-                  <Lightbulb className="h-4 w-4" />
-                  <Label className="text-base font-semibold">
+              <div className='space-y-3'>
+                <div className='flex items-center gap-2'>
+                  <Lightbulb className='h-4 w-4' />
+                  <Label className='text-base font-semibold'>
                     Key Takeaways
                   </Label>
                 </div>
-                <p className="text-xs text-muted-foreground">
+                <p className='text-xs text-muted-foreground'>
                   Summarize the main points — AI systems use these for quick
                   answers
                 </p>
-                <div className="flex gap-2">
+                <div className='flex gap-2'>
                   <Input
-                    placeholder="Add a key takeaway..."
+                    placeholder='Add a key takeaway...'
                     value={takeawayInput}
                     onChange={(e) => setTakeawayInput(e.target.value)}
                     onKeyDown={(e) =>
                       e.key === "Enter" && (e.preventDefault(), addTakeaway())
                     }
                   />
-                  <Button variant="outline" size="icon" onClick={addTakeaway}>
-                    <Plus className="h-4 w-4" />
+                  <Button variant='outline' size='icon' onClick={addTakeaway}>
+                    <Plus className='h-4 w-4' />
                   </Button>
                 </div>
-                <div className="space-y-2">
+                <div className='space-y-2'>
                   {formData.keyTakeaways.map((item, index) => (
-                    <div key={index} className="flex items-center gap-2">
-                      <Badge variant="outline" className="shrink-0">
+                    <div key={index} className='flex items-center gap-2'>
+                      <Badge variant='outline' className='shrink-0'>
                         {index + 1}
                       </Badge>
-                      <span className="text-sm flex-1">{item}</span>
+                      <span className='text-sm flex-1'>{item}</span>
                       <Button
-                        variant="ghost"
-                        size="icon"
-                        className="h-6 w-6"
-                        onClick={() => removeTakeaway(index)}
-                      >
-                        <X className="h-3 w-3" />
+                        variant='ghost'
+                        size='icon'
+                        className='h-6 w-6'
+                        onClick={() => removeTakeaway(index)}>
+                        <X className='h-3 w-3' />
                       </Button>
                     </div>
                   ))}
@@ -832,57 +819,55 @@ const BlogForm = () => {
               </div>
 
               {/* FAQs */}
-              <div className="space-y-3">
-                <div className="flex items-center gap-2">
-                  <HelpCircle className="h-4 w-4" />
-                  <Label className="text-base font-semibold">
+              <div className='space-y-3'>
+                <div className='flex items-center gap-2'>
+                  <HelpCircle className='h-4 w-4' />
+                  <Label className='text-base font-semibold'>
                     Frequently Asked Questions
                   </Label>
                 </div>
-                <p className="text-xs text-muted-foreground">
+                <p className='text-xs text-muted-foreground'>
                   Generates FAQPage schema — highest value for Answer Engine
                   Optimization
                 </p>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                <div className='grid grid-cols-1 md:grid-cols-2 gap-2'>
                   <Input
-                    placeholder="Question..."
+                    placeholder='Question...'
                     value={faqInput.question}
                     onChange={(e) =>
                       setFaqInput({ ...faqInput, question: e.target.value })
                     }
                   />
                   <Input
-                    placeholder="Answer..."
+                    placeholder='Answer...'
                     value={faqInput.answer}
                     onChange={(e) =>
                       setFaqInput({ ...faqInput, answer: e.target.value })
                     }
                   />
                 </div>
-                <Button variant="outline" size="sm" onClick={addFaq}>
-                  <Plus className="h-3 w-3 mr-1" />
+                <Button variant='outline' size='sm' onClick={addFaq}>
+                  <Plus className='h-3 w-3 mr-1' />
                   Add FAQ
                 </Button>
-                <div className="space-y-2">
+                <div className='space-y-2'>
                   {formData.faqs.map((faq, index) => (
                     <div
                       key={index}
-                      className="flex items-start gap-2 p-2 border rounded"
-                    >
-                      <HelpCircle className="h-4 w-4 mt-0.5 shrink-0 text-muted-foreground" />
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium">{faq.question}</p>
-                        <p className="text-xs text-muted-foreground truncate">
+                      className='flex items-start gap-2 p-2 border rounded'>
+                      <HelpCircle className='h-4 w-4 mt-0.5 shrink-0 text-muted-foreground' />
+                      <div className='flex-1 min-w-0'>
+                        <p className='text-sm font-medium'>{faq.question}</p>
+                        <p className='text-xs text-muted-foreground truncate'>
                           {faq.answer}
                         </p>
                       </div>
                       <Button
-                        variant="ghost"
-                        size="icon"
-                        className="h-6 w-6 shrink-0"
-                        onClick={() => removeFaq(index)}
-                      >
-                        <Trash2 className="h-3 w-3" />
+                        variant='ghost'
+                        size='icon'
+                        className='h-6 w-6 shrink-0'
+                        onClick={() => removeFaq(index)}>
+                        <Trash2 className='h-3 w-3' />
                       </Button>
                     </div>
                   ))}
@@ -890,58 +875,56 @@ const BlogForm = () => {
               </div>
 
               {/* HowTo Steps */}
-              <div className="space-y-3">
-                <div className="flex items-center gap-2">
-                  <ListOrdered className="h-4 w-4" />
-                  <Label className="text-base font-semibold">
+              <div className='space-y-3'>
+                <div className='flex items-center gap-2'>
+                  <ListOrdered className='h-4 w-4' />
+                  <Label className='text-base font-semibold'>
                     How-To Steps
                   </Label>
                 </div>
-                <p className="text-xs text-muted-foreground">
+                <p className='text-xs text-muted-foreground'>
                   Generates HowTo schema — great for tutorials and guides
                 </p>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                <div className='grid grid-cols-1 md:grid-cols-2 gap-2'>
                   <Input
-                    placeholder="Step name..."
+                    placeholder='Step name...'
                     value={stepInput.name}
                     onChange={(e) =>
                       setStepInput({ ...stepInput, name: e.target.value })
                     }
                   />
                   <Input
-                    placeholder="Step description..."
+                    placeholder='Step description...'
                     value={stepInput.text}
                     onChange={(e) =>
                       setStepInput({ ...stepInput, text: e.target.value })
                     }
                   />
                 </div>
-                <Button variant="outline" size="sm" onClick={addStep}>
-                  <Plus className="h-3 w-3 mr-1" />
+                <Button variant='outline' size='sm' onClick={addStep}>
+                  <Plus className='h-3 w-3 mr-1' />
                   Add Step
                 </Button>
-                <div className="space-y-2">
+                <div className='space-y-2'>
                   {formData.howToSteps.map((step, index) => (
                     <div
                       key={index}
-                      className="flex items-start gap-2 p-2 border rounded"
-                    >
-                      <Badge variant="outline" className="shrink-0 mt-0.5">
+                      className='flex items-start gap-2 p-2 border rounded'>
+                      <Badge variant='outline' className='shrink-0 mt-0.5'>
                         {index + 1}
                       </Badge>
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium">{step.name}</p>
-                        <p className="text-xs text-muted-foreground truncate">
+                      <div className='flex-1 min-w-0'>
+                        <p className='text-sm font-medium'>{step.name}</p>
+                        <p className='text-xs text-muted-foreground truncate'>
                           {step.text}
                         </p>
                       </div>
                       <Button
-                        variant="ghost"
-                        size="icon"
-                        className="h-6 w-6 shrink-0"
-                        onClick={() => removeStep(index)}
-                      >
-                        <Trash2 className="h-3 w-3" />
+                        variant='ghost'
+                        size='icon'
+                        className='h-6 w-6 shrink-0'
+                        onClick={() => removeStep(index)}>
+                        <Trash2 className='h-3 w-3' />
                       </Button>
                     </div>
                   ))}
@@ -954,21 +937,19 @@ const BlogForm = () => {
 
       {/* Mobile sticky save bar */}
       <MobileStickyActions>
-        <div className="flex items-center gap-2">
+        <div className='flex items-center gap-2'>
           <Button
-            variant="outline"
-            className="flex-1 h-10 rounded-full"
+            variant='outline'
+            className='flex-1 h-10 rounded-full'
             onClick={() => handleSubmit("draft")}
-            disabled={saving}
-          >
+            disabled={saving}>
             Save as Draft
           </Button>
           <Button
-            className="flex-[2] h-10 rounded-full"
+            className='flex-[2] h-10 rounded-full'
             onClick={() => handleSubmit("published")}
-            disabled={saving}
-          >
-            <Send className="h-4 w-4 mr-2" />
+            disabled={saving}>
+            <Send className='h-4 w-4 mr-2' />
             Publish
           </Button>
         </div>

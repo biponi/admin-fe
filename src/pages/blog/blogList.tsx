@@ -62,7 +62,13 @@ const formatDate = (dateString: string | null) => {
   });
 };
 
-const statusConfig: Record<string, { label: string; variant: "default" | "secondary" | "destructive" | "outline" }> = {
+const statusConfig: Record<
+  string,
+  {
+    label: string;
+    variant: "default" | "secondary" | "destructive" | "outline";
+  }
+> = {
   draft: { label: "Draft", variant: "secondary" },
   published: { label: "Published", variant: "default" },
   archived: { label: "Archived", variant: "outline" },
@@ -109,22 +115,24 @@ const BlogList = () => {
   const canDelete = hasRequiredPermission("Blog", "delete");
 
   return (
-    <div className="space-y-4">
+    <div className='space-y-4 p-2 md:container '>
       {/* Header */}
       <PageHeader
-        icon={<FileText className="h-5 w-5 text-white" />}
-        title="Blog Posts"
-        subtitle="Manage your blog content and SEO settings"
+        icon={<FileText className='h-5 w-5 text-white' />}
+        title='Blog Posts'
+        subtitle='Manage your blog content and SEO settings'
         count={
-          <span className="text-base font-semibold text-muted-foreground tabular-nums">
+          <span className='text-base font-semibold text-muted-foreground tabular-nums'>
             {pagination.total} total
           </span>
         }
         actions={
           <>
             {canCreate && (
-              <Button onClick={() => navigate("/blog/create")} className="gap-2">
-                <PlusCircle className="h-4 w-4" />
+              <Button
+                onClick={() => navigate("/blog/create")}
+                className='gap-2'>
+                <PlusCircle className='h-4 w-4' />
                 New Post
               </Button>
             )}
@@ -133,33 +141,33 @@ const BlogList = () => {
       />
 
       {/* Filters */}
-      <div className="flex flex-col sm:flex-row gap-3">
-        <div className="relative flex-1">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+      <div className='flex rounded-lg flex-col sm:flex-row gap-3'>
+        <div className='relative flex-1 bg-white rounded-lg border border-gray-200'>
+          <Search className='absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground' />
           <Input
-            placeholder="Search posts..."
+            placeholder='Search posts...'
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="pl-9"
+            className='pl-9'
           />
         </div>
         <Select value={statusFilter} onValueChange={setStatusFilter}>
-          <SelectTrigger className="w-[150px]">
-            <SelectValue placeholder="Status" />
+          <SelectTrigger className='w-[150px] bg-white'>
+            <SelectValue placeholder='Status' />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="all">All Status</SelectItem>
-            <SelectItem value="draft">Draft</SelectItem>
-            <SelectItem value="published">Published</SelectItem>
-            <SelectItem value="archived">Archived</SelectItem>
+            <SelectItem value='all'>All Status</SelectItem>
+            <SelectItem value='draft'>Draft</SelectItem>
+            <SelectItem value='published'>Published</SelectItem>
+            <SelectItem value='archived'>Archived</SelectItem>
           </SelectContent>
         </Select>
         <Select value={categoryFilter} onValueChange={setCategoryFilter}>
-          <SelectTrigger className="w-[180px]">
-            <SelectValue placeholder="Category" />
+          <SelectTrigger className='w-[180px] bg-white'>
+            <SelectValue placeholder='Category' />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="all">All Categories</SelectItem>
+            <SelectItem value='all'>All Categories</SelectItem>
             {categories.map((cat) => (
               <SelectItem key={cat.id} value={cat.id}>
                 {cat.name}
@@ -167,22 +175,22 @@ const BlogList = () => {
             ))}
           </SelectContent>
         </Select>
-        <Button variant="outline" size="icon" onClick={refreshList}>
-          <RefreshCw className="h-4 w-4" />
+        <Button variant='outline' size='icon' onClick={refreshList}>
+          <RefreshCw className='h-4 w-4' />
         </Button>
       </div>
 
       {/* Table */}
-      <div className="border rounded-lg">
+      <div className='border rounded-lg bg-white'>
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead className="w-[300px]">Title</TableHead>
+              <TableHead className='w-[300px]'>Title</TableHead>
               <TableHead>Category</TableHead>
               <TableHead>Status</TableHead>
-              <TableHead className="text-center">Views</TableHead>
+              <TableHead className='text-center'>Views</TableHead>
               <TableHead>Published</TableHead>
-              <TableHead className="text-right">Actions</TableHead>
+              <TableHead className='text-right'>Actions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -191,22 +199,21 @@ const BlogList = () => {
                 <TableRow key={i}>
                   {Array.from({ length: 6 }).map((_, j) => (
                     <TableHead key={j}>
-                      <div className="h-4 bg-muted animate-pulse rounded" />
+                      <div className='h-4 bg-muted animate-pulse rounded' />
                     </TableHead>
                   ))}
                 </TableRow>
               ))
             ) : posts.length === 0 ? (
               <TableRow>
-                <TableHead colSpan={6} className="h-32 text-center">
-                  <div className="flex flex-col items-center gap-2 text-muted-foreground">
-                    <FileText className="h-8 w-8" />
+                <TableHead colSpan={6} className='h-32 text-center'>
+                  <div className='flex flex-col items-center gap-2 text-muted-foreground'>
+                    <FileText className='h-8 w-8' />
                     <p>No blog posts found</p>
                     {canCreate && (
                       <Button
-                        variant="link"
-                        onClick={() => navigate("/blog/create")}
-                      >
+                        variant='link'
+                        onClick={() => navigate("/blog/create")}>
                         Create your first post
                       </Button>
                     )}
@@ -216,30 +223,30 @@ const BlogList = () => {
             ) : (
               posts.map((post) => {
                 const category = categories.find(
-                  (c) => c.id === post.categoryId
+                  (c) => c.id === post.categoryId,
                 );
                 const status = statusConfig[post.status] || statusConfig.draft;
                 return (
                   <TableRow key={post._id}>
                     <TableHead>
-                      <div className="flex items-center gap-3">
+                      <div className='flex items-center gap-3'>
                         {post.featuredImage ? (
                           <img
                             src={post.featuredImage}
-                            alt=""
-                            className="h-10 w-10 rounded object-cover"
+                            alt=''
+                            className='h-10 w-10 rounded object-cover'
                           />
                         ) : (
-                          <div className="h-10 w-10 rounded bg-muted flex items-center justify-center">
-                            <FileText className="h-5 w-5 text-muted-foreground" />
+                          <div className='h-10 w-10 rounded bg-muted flex items-center justify-center'>
+                            <FileText className='h-5 w-5 text-muted-foreground' />
                           </div>
                         )}
-                        <div className="min-w-0">
-                          <p className="font-medium truncate max-w-[250px]">
+                        <div className='min-w-0'>
+                          <p className='font-medium truncate max-w-[250px]'>
                             {post.title}
                           </p>
-                          <p className="text-xs text-muted-foreground flex items-center gap-1">
-                            <User className="h-3 w-3" />
+                          <p className='text-xs text-muted-foreground flex items-center gap-1'>
+                            <User className='h-3 w-3' />
                             {post.authorName}
                           </p>
                         </div>
@@ -247,55 +254,54 @@ const BlogList = () => {
                     </TableHead>
                     <TableHead>
                       {category ? (
-                        <Badge variant="secondary">{category.name}</Badge>
+                        <Badge variant='secondary'>{category.name}</Badge>
                       ) : (
-                        <span className="text-muted-foreground text-sm">-</span>
+                        <span className='text-muted-foreground text-sm'>-</span>
                       )}
                     </TableHead>
                     <TableHead>
                       <Badge variant={status.variant}>{status.label}</Badge>
                     </TableHead>
-                    <TableHead className="text-center">
-                      <span className="flex items-center justify-center gap-1 text-sm">
-                        <Eye className="h-3 w-3" />
+                    <TableHead className='text-center'>
+                      <span className='flex items-center justify-center gap-1 text-sm'>
+                        <Eye className='h-3 w-3' />
                         {post.views || 0}
                       </span>
                     </TableHead>
                     <TableHead>
-                      <span className="flex items-center gap-1 text-sm text-muted-foreground">
-                        <Calendar className="h-3 w-3" />
+                      <span className='flex items-center gap-1 text-sm text-muted-foreground'>
+                        <Calendar className='h-3 w-3' />
                         {formatDate(post.publishedAt)}
                       </span>
                     </TableHead>
-                    <TableHead className="text-right">
+                    <TableHead className='text-right'>
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
-                          <Button variant="ghost" size="icon">
-                            <MoreHorizontal className="h-4 w-4" />
+                          <Button variant='ghost' size='icon'>
+                            <MoreHorizontal className='h-4 w-4' />
                           </Button>
                         </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
+                        <DropdownMenuContent align='end'>
                           {canEdit && (
                             <DropdownMenuItem
-                              onClick={() => navigate(`/blog/edit/${post._id}`)}
-                            >
-                              <Pencil className="h-4 w-4 mr-2" />
+                              onClick={() =>
+                                navigate(`/blog/edit/${post._id}`)
+                              }>
+                              <Pencil className='h-4 w-4 mr-2' />
                               Edit
                             </DropdownMenuItem>
                           )}
                           {canEdit && post.status !== "published" && (
                             <DropdownMenuItem
-                              onClick={() => handlePublish(post._id)}
-                            >
-                              <Send className="h-4 w-4 mr-2" />
+                              onClick={() => handlePublish(post._id)}>
+                              <Send className='h-4 w-4 mr-2' />
                               Publish
                             </DropdownMenuItem>
                           )}
                           {canEdit && post.status !== "archived" && (
                             <DropdownMenuItem
-                              onClick={() => handleArchive(post._id)}
-                            >
-                              <Archive className="h-4 w-4 mr-2" />
+                              onClick={() => handleArchive(post._id)}>
+                              <Archive className='h-4 w-4 mr-2' />
                               Archive
                             </DropdownMenuItem>
                           )}
@@ -303,13 +309,12 @@ const BlogList = () => {
                             <>
                               <DropdownMenuSeparator />
                               <DropdownMenuItem
-                                className="text-destructive"
+                                className='text-destructive'
                                 onClick={() => {
                                   setPostToDelete(post);
                                   setDeleteDialogOpen(true);
-                                }}
-                              >
-                                <Trash2 className="h-4 w-4 mr-2" />
+                                }}>
+                                <Trash2 className='h-4 w-4 mr-2' />
                                 Delete
                               </DropdownMenuItem>
                             </>
@@ -327,44 +332,41 @@ const BlogList = () => {
 
       {/* Pagination */}
       {pagination.pages > 1 && (
-        <div className="flex items-center justify-between">
-          <p className="text-sm text-muted-foreground">
+        <div className='flex items-center justify-between'>
+          <p className='text-sm text-muted-foreground'>
             Showing {(currentPageNum - 1) * limit + 1} to{" "}
             {Math.min(currentPageNum * limit, pagination.total)} of{" "}
             {pagination.total} posts
           </p>
-          <div className="flex items-center gap-2">
+          <div className='flex items-center gap-2'>
             <Select
               value={String(limit)}
-              onValueChange={(v) => setLimit(Number(v))}
-            >
-              <SelectTrigger className="w-[80px]">
+              onValueChange={(v) => setLimit(Number(v))}>
+              <SelectTrigger className='w-[80px]'>
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="10">10</SelectItem>
-                <SelectItem value="20">20</SelectItem>
-                <SelectItem value="50">50</SelectItem>
+                <SelectItem value='10'>10</SelectItem>
+                <SelectItem value='20'>20</SelectItem>
+                <SelectItem value='50'>50</SelectItem>
               </SelectContent>
             </Select>
             <Button
-              variant="outline"
-              size="icon"
+              variant='outline'
+              size='icon'
               disabled={currentPageNum <= 1}
-              onClick={() => setCurrentPage(currentPageNum - 1)}
-            >
-              <ChevronLeft className="h-4 w-4" />
+              onClick={() => setCurrentPage(currentPageNum - 1)}>
+              <ChevronLeft className='h-4 w-4' />
             </Button>
-            <span className="text-sm font-medium">
+            <span className='text-sm font-medium'>
               Page {currentPageNum} of {pagination.pages}
             </span>
             <Button
-              variant="outline"
-              size="icon"
+              variant='outline'
+              size='icon'
               disabled={currentPageNum >= pagination.pages}
-              onClick={() => setCurrentPage(currentPageNum + 1)}
-            >
-              <ChevronRight className="h-4 w-4" />
+              onClick={() => setCurrentPage(currentPageNum + 1)}>
+              <ChevronRight className='h-4 w-4' />
             </Button>
           </div>
         </div>
@@ -382,15 +384,14 @@ const BlogList = () => {
           </DialogHeader>
           <DialogFooter>
             <Button
-              variant="outline"
+              variant='outline'
               onClick={() => {
                 setDeleteDialogOpen(false);
                 setPostToDelete(null);
-              }}
-            >
+              }}>
               Cancel
             </Button>
-            <Button variant="destructive" onClick={confirmDelete}>
+            <Button variant='destructive' onClick={confirmDelete}>
               Delete
             </Button>
           </DialogFooter>

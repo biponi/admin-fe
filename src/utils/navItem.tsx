@@ -348,7 +348,7 @@ export const navItems = [
   // },
   {
     icon: <Sparkles className='w-5 h-5' />,
-    title: "AI Assistant",
+    title: "PROMX AI",
     link: "/assistant",
     active: true,
     id: "assistant",

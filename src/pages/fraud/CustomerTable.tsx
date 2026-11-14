@@ -18,6 +18,7 @@ import {
 } from "../../components/fraud/fraudTheme";
 import RiskBadge from "../../components/fraud/RiskBadge";
 import BlockedBadge from "../../components/fraud/BlockedBadge";
+import { Wave } from "@/components/loaders";
 
 interface CustomerTableProps {
   customers: FraudCustomer[];
@@ -35,10 +36,8 @@ const CustomerTable = ({
 }: CustomerTableProps) => {
   if (loading) {
     return (
-      <div className='space-y-2 px-3 py-3'>
-        {[...Array(5)].map((_, i) => (
-          <Skeleton key={i} className='h-11 w-full rounded-md' />
-        ))}
+      <div className='w-full h-32 flex items-center justify-center'>
+        <Wave className='h-10 w-16 text-primary' />
       </div>
     );
   }
@@ -95,7 +94,9 @@ const CustomerTable = ({
           const topFlag = customer.fraudFlags?.[0];
 
           return (
-            <TableRow key={customer.phoneNumber} className='border-slate-100 dark:border-slate-700'>
+            <TableRow
+              key={customer.phoneNumber}
+              className='border-slate-100 dark:border-slate-700'>
               <TableCell className='px-3 py-2.5'>
                 <div className='text-[12px] font-medium text-slate-900 dark:text-slate-100 truncate max-w-[160px]'>
                   {customer.customerName || "Unknown"}
@@ -153,8 +154,7 @@ const CustomerTable = ({
                   variant='outline'
                   size='sm'
                   onClick={() => onView(customer)}
-                  className='h-7 px-2.5 text-[11px] rounded-md gap-1.5 border-slate-300 text-slate-600 hover:bg-slate-50 dark:border-slate-600 dark:text-slate-300'
-                >
+                  className='h-7 px-2.5 text-[11px] rounded-md gap-1.5 border-slate-300 text-slate-600 hover:bg-slate-50 dark:border-slate-600 dark:text-slate-300'>
                   {customer.riskLevel === "red" ? (
                     <ShieldAlert className='w-3 h-3' />
                   ) : customer.riskLevel === "yellow" ? (
@@ -193,8 +193,7 @@ export const TablePagination = ({
         size='sm'
         disabled={page <= 0}
         onClick={() => onChange(page - 1)}
-        className='h-7 px-2.5 text-[11px] rounded-md border-slate-300 text-slate-600 dark:border-slate-600 dark:text-slate-300'
-      >
+        className='h-7 px-2.5 text-[11px] rounded-md border-slate-300 text-slate-600 dark:border-slate-600 dark:text-slate-300'>
         Previous
       </Button>
       <Button
@@ -202,8 +201,7 @@ export const TablePagination = ({
         size='sm'
         disabled={page >= totalPages - 1}
         onClick={() => onChange(page + 1)}
-        className='h-7 px-2.5 text-[11px] rounded-md border-slate-300 text-slate-600 dark:border-slate-600 dark:text-slate-300'
-      >
+        className='h-7 px-2.5 text-[11px] rounded-md border-slate-300 text-slate-600 dark:border-slate-600 dark:text-slate-300'>
         Next
       </Button>
     </div>

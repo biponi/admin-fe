@@ -1,0 +1,22 @@
+/* ── assistant-ui theme overrides ────────────────────────────────────────────
+   The registry components (src/components/assistant-ui/elements/) carry their
+   own Tailwind utility classes; this file only adds what utilities can't do:
+   markdown typography tuning, shiki dark-mode switching, and scroll tuning. */
+
+// Shiki dual-theme: light colors are inline, dark values ride on --shiki-dark
+.dark .aui-shiki span,
+.dark .aui-shiki pre span {
+  color: var(--shiki-dark) !important;
+}
+
+// Thread message tables get horizontal breathing room on narrow sheets
+.aui-md table {
+  display: block;
+  max-width: 100%;
+  overflow-x: auto;
+}
+
+// Keep the artifact card inside the assistant message gutter
+.aui-artifact-card {
+  margin-inline: 0;
+}
