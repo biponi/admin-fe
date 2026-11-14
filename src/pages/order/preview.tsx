@@ -30,10 +30,12 @@ import {
   Receipt,
   AlertCircle,
   Send,
+  Ban,
 } from "lucide-react";
 import { Alert, AlertDescription } from "../../components/ui/alert";
 import { toast } from "react-hot-toast";
 import { useCreateOrderLayoutStore } from "./createOrderLayoutStore";
+import { expiryLabel } from "../../components/fraud/fraudTheme";
 import { ButtonLoadingText } from "@/components/loaders";
 import PrepaymentWarningModal from "./components/PrepaymentWarningModal";
 import {
@@ -68,6 +70,10 @@ const OrderPreview: React.FC<Props> = ({
   const prepaymentSuggestion = useCreateOrderLayoutStore(
     (state) => state.prepaymentSuggestion,
   );
+  // Order-creation gate: customer is in the fraud group (expiry-aware)
+  const activeManualFraud = useCreateOrderLayoutStore(
+    (state) => state.activeManualFraud,
+  );
   const [skipAdvanceOpen, setSkipAdvanceOpen] = useState(false);
   const requiredAdvance = prepaymentSuggestion?.required
     ? prepaymentSuggestion.amount
@@ -78,8 +84,9 @@ const OrderPreview: React.FC<Props> = ({
   const handleCreateOrderWithLoading = () => {
     setIsCreating(true);
     try {
+      // Success/failure is toasted by the submit handler itself — it can
+      // still bail (e.g. blocked customer), so don't celebrate early.
       handleCreateOrder();
-      toast.success("Order created successfully! 🎉");
     } catch (error) {
       toast.error("Failed to create order");
     } finally {
@@ -88,6 +95,12 @@ const OrderPreview: React.FC<Props> = ({
   };
 
   const handleCreateOrderClick = () => {
+    if (activeManualFraud) {
+      toast.error(
+        "Customer is blocked from ordering — remove the block on the fraud page first.",
+      );
+      return;
+    }
     if (advanceMissing) {
       setSkipAdvanceOpen(true);
       return;
@@ -501,7 +514,10 @@ const OrderPreview: React.FC<Props> = ({
                   </Button>
                   <Button
                     disabled={
-                      !orderProducts || orderProducts.length < 1 || isCreating
+                      !orderProducts ||
+                      orderProducts.length < 1 ||
+                      isCreating ||
+                      !!activeManualFraud
                     }
                     onClick={handleCreateOrderClick}
                     className='flex-1 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white shadow-md h-9 text-sm'>
@@ -521,6 +537,20 @@ const OrderPreview: React.FC<Props> = ({
                     <AlertCircle className='h-3.5 w-3.5 text-red-600' />
                     <AlertDescription className='text-red-800 text-xs'>
                       Please add at least one product to create an order.
+                    </AlertDescription>
+                  </Alert>
+                )}
+
+                {activeManualFraud && (
+                  <Alert className='mt-2 border-rose-200 bg-rose-50 py-1.5 px-2.5'>
+                    <Ban className='h-3.5 w-3.5 text-rose-600' />
+                    <AlertDescription className='text-rose-800 text-xs'>
+                      Customer is blocked from ordering (
+                      {expiryLabel(activeManualFraud.expiresAt)}
+                      {activeManualFraud.reason
+                        ? ` — ${activeManualFraud.reason}`
+                        : ""}
+                      ). Remove the block on the fraud page to create orders.
                     </AlertDescription>
                   </Alert>
                 )}

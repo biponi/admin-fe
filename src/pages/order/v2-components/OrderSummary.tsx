@@ -1,10 +1,12 @@
 import { useState } from "react";
-import { DollarSign, Wallet, Receipt } from "lucide-react";
+import { toast } from "react-hot-toast";
+import { DollarSign, Wallet, Receipt, Ban } from "lucide-react";
 import { Input } from "../../../components/ui/input";
 import { Label } from "../../../components/ui/label";
 import { Button } from "../../../components/ui/button";
 import type { ITransection } from "../../order/interface.d";
 import { useCreateOrderLayoutStore } from "../createOrderLayoutStore";
+import { expiryLabel } from "../../../components/fraud/fraudTheme";
 import PrepaymentWarningModal from "../components/PrepaymentWarningModal";
 
 interface OrderAdjustmentsProps {
@@ -152,6 +154,10 @@ export function CheckoutBar({
   const prepaymentSuggestion = useCreateOrderLayoutStore(
     (state) => state.prepaymentSuggestion,
   );
+  // Order-creation gate: customer is in the fraud group (expiry-aware)
+  const activeManualFraud = useCreateOrderLayoutStore(
+    (state) => state.activeManualFraud,
+  );
 
   const [skipAdvanceOpen, setSkipAdvanceOpen] = useState(false);
   const requiredAdvance = prepaymentSuggestion?.required
@@ -161,6 +167,12 @@ export function CheckoutBar({
     requiredAdvance > 0 && (transaction.paid ?? 0) < requiredAdvance;
 
   const handleSubmitClick = () => {
+    if (activeManualFraud) {
+      toast.error(
+        "Customer is blocked from ordering — remove the block on the fraud page first.",
+      );
+      return;
+    }
     if (advanceMissing) {
       setSkipAdvanceOpen(true);
       return;
@@ -175,6 +187,16 @@ export function CheckoutBar({
 
   return (
     <div className='space-y-3'>
+      {/* Blocked-customer gate (written by CreateOrderV2's block check) */}
+      {activeManualFraud && (
+        <p className='text-[11px] leading-snug text-rose-700 bg-rose-50/60 border border-rose-200 rounded-md px-2.5 py-1.5'>
+          Customer is blocked from ordering (
+          {expiryLabel(activeManualFraud.expiresAt)}
+          {activeManualFraud.reason ? ` — ${activeManualFraud.reason}` : ""}
+          ). Remove the block on the fraud page to create orders.
+        </p>
+      )}
+
       {/* Prepayment notice (also shown in OrderAdjustments context) */}
       {prepaymentSuggestion?.required && prepaymentSuggestion.appliedRule && (
         <p className='text-[11px] leading-snug text-amber-700 bg-amber-50/60 border border-amber-200 rounded-md px-2.5 py-1.5'>
@@ -234,7 +256,7 @@ export function CheckoutBar({
       {/* Submit */}
       <Button
         onClick={handleSubmitClick}
-        disabled={isSubmitting || cartItemCount === 0}
+        disabled={isSubmitting || cartItemCount === 0 || !!activeManualFraud}
         className='w-full h-11 rounded-lg bg-primary hover:bg-primary/90 text-primary-foreground font-medium shadow-sm disabled:opacity-50 disabled:cursor-not-allowed'>
         {isSubmitting ? (
           <>Creating Order…</>

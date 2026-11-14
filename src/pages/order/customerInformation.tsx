@@ -53,9 +53,12 @@ import {
   DollarSign,
   Receipt,
   Clock,
+  Ban,
 } from "lucide-react";
 import { ITransection } from "./interface";
 import { useCreateOrderLayoutStore } from "./createOrderLayoutStore";
+import { useCustomerBlockCheck } from "./hooks/useCustomerBlockCheck";
+import { expiryLabel } from "../../components/fraud/fraudTheme";
 import { ButtonLoadingText } from "@/components/loaders";
 const defaultPersonalInformation = {
   name: "",
@@ -137,6 +140,14 @@ const CustomerInformation: React.FC<Props> = ({
   // submit-time confirmation modal handle skipped advances.
   const [prepaymentSuggestion, setPrepaymentSuggestion] =
     useState<PrepaymentEvaluation | null>(null);
+
+  // Fraud-group gate: fetches the customer's risk profile whenever a valid
+  // phone number is entered and mirrors the active block into the layout
+  // store, where the review step and the submit handler read it.
+  useCustomerBlockCheck(personalInfomation.phoneNumber);
+  const activeManualFraud = useCreateOrderLayoutStore(
+    (state) => state.activeManualFraud,
+  );
 
   // Calculate delivery charge based on location — server-configured charge
   // first (admin-managed locations), hardcoded tables as fallback
@@ -582,6 +593,19 @@ const CustomerInformation: React.FC<Props> = ({
                 <AlertCircle className='w-3.5 h-3.5 text-red-500' />
                 <AlertDescription className='text-red-700 text-xs'>
                   {errors.phoneNumber}
+                </AlertDescription>
+              </Alert>
+            )}
+            {activeManualFraud && (
+              <Alert className='border-rose-200 bg-rose-50 py-1.5 px-2.5'>
+                <Ban className='w-3.5 h-3.5 text-rose-600' />
+                <AlertDescription className='text-rose-800 text-xs'>
+                  Customer is blocked from ordering (
+                  {expiryLabel(activeManualFraud.expiresAt)})
+                  {activeManualFraud.reason
+                    ? ` — ${activeManualFraud.reason}`
+                    : ""}
+                  . Remove the block from the fraud page to create orders.
                 </AlertDescription>
               </Alert>
             )}

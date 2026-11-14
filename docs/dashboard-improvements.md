@@ -34,6 +34,11 @@ light-gray tiles `#EFEDEB`, white pills, orange-red accent `#E1573F`, thin-line 
 (`bg-[#F7D9D2] text-[#E1573F]`, `▲ 9.3%` / `▼ 4.0%`, `TrendingUp/TrendingDown` at 2px stroke).
 With server-computed values, remove the client-side `calculateGrowthPercentage` fallback entirely.
 
+**Note:** Interim client-side workaround in place — the page fires a second parallel
+`/dashboard/analysis` call for the equivalent previous window (today vs yesterday, this week vs
+last week, etc.) and renders its values as the cards' "vs" line. A server-computed `growth` block
+is still preferred: one round-trip instead of two.
+
 ---
 
 ## 2. Consolidated summary endpoint

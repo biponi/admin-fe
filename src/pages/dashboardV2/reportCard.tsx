@@ -81,14 +81,23 @@ const PillStatCard: React.FC<PillStatCardProps> = ({
       <div className='flex items-start justify-between gap-3'>
         <div className='min-w-0'>
           <p className={labelClass}>{title}</p>
-          <p
-            className={`${valueClass} ${
-              compact ? "text-xl sm:text-2xl" : "text-2xl sm:text-3xl"
-            } mt-1 truncate`}>
-            {prefix}
-            {currentValue.toLocaleString()}
-            {suffix}
-          </p>
+          <div className='flex items-baseline gap-2 mt-1 min-w-0'>
+            <span
+              className={`${valueClass} ${
+                compact ? "text-xl sm:text-2xl" : "text-2xl sm:text-3xl"
+              } truncate`}>
+              {prefix}
+              {currentValue.toLocaleString()}
+              {suffix}
+            </span>
+            {hasPrevious && (
+              <span className='text-xs text-[#9A9A98] shrink-0'>
+                vs {prefix}
+                {previousValue!.toLocaleString()}
+                {suffix}
+              </span>
+            )}
+          </div>
           {subtitle && !compact && (
             <p className='text-[11px] text-[#9A9A98] mt-1 truncate'>
               {subtitle}

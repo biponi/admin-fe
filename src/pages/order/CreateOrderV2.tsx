@@ -2,6 +2,8 @@ import { useEffect, useCallback, useMemo, memo } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-hot-toast";
 import { useCreateOrderLayoutStore } from "./createOrderLayoutStore";
+import { useCustomerBlockCheck } from "./hooks/useCustomerBlockCheck";
+import { refreshCustomerBlock } from "../../utils/fraudBlock";
 import { FilterBar } from "./v2-components/FilterBar";
 import { ProductGrid } from "./v2-components/ProductGrid";
 import { ProductPagination } from "./v2-components/ProductPagination";
@@ -92,6 +94,11 @@ const CreateOrderV2 = () => {
   } = useCreateOrderLayoutStore();
 
   const { categories, fetchCategories } = useCategory();
+
+  // Fraud-group gate: mirrors the active block into the store whenever the
+  // entered phone number resolves to a blocked customer. Mounted here (not in
+  // CartPanel) because CartPanel renders twice on mobile via CartDrawer.
+  useCustomerBlockCheck(customerInfo.phoneNumber);
 
   // Fetch categories once
   useEffect(() => {
@@ -203,6 +210,17 @@ const CreateOrderV2 = () => {
     clearValidationErrors();
     if (!validateOrder()) {
       toast.error("Please fill in all required fields");
+      return;
+    }
+
+    // Fresh block check at submit time — the store state can be stale if the
+    // customer was blocked after the phone number was entered.
+    const activeFraud = await refreshCustomerBlock(customerInfo.phoneNumber);
+    useCreateOrderLayoutStore.getState().setActiveManualFraud(activeFraud);
+    if (activeFraud) {
+      toast.error(
+        "Customer is blocked from ordering — remove the block on the fraud page first.",
+      );
       return;
     }
 

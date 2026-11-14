@@ -21,6 +21,8 @@ import MobileStepper from "./components/MobileStepper";
 import MobileCreateLoading from "./components/MobileCreateLoading";
 import MobileOrderProductSearch from "./components/MobileOrderProductSearch";
 import { toast } from "react-hot-toast";
+import { refreshCustomerBlock } from "../../utils/fraudBlock";
+import { useCreateOrderLayoutStore } from "./createOrderLayoutStore";
 import { ScrollArea } from "../../components/ui/scroll-area";
 import { ConveyorLoop } from "@/components/loading-ui/conveyor-loop";
 import { Dots } from "@/components/loading-ui/dots";
@@ -110,6 +112,20 @@ const CreateOrder = () => {
   const handleSubmitCreateOrder = async () => {
     setIsCreating(true);
     try {
+      // Fresh block check at submit time — the store state can be stale if
+      // the customer was blocked after the phone was entered.
+      const activeFraud = await refreshCustomerBlock(
+        //@ts-ignore
+        customerInformation?.customer?.phoneNumber,
+      );
+      useCreateOrderLayoutStore.getState().setActiveManualFraud(activeFraud);
+      if (activeFraud) {
+        toast.error(
+          "Customer is blocked from ordering — remove the block on the fraud page first.",
+        );
+        return;
+      }
+
       const products = orderProducts.map((op: IOrderProduct) => {
         let { variation, ...newOp } = op;
         if (!!op.selectedVariant) {

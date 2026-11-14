@@ -8,6 +8,7 @@ import {
   endOfMonth,
   startOfDay,
   endOfDay,
+  subDays,
   subMonths,
 } from "date-fns";
 import {
@@ -121,6 +122,7 @@ const DashboardPage: React.FC = () => {
   );
 
   const [analysisData, setAnalysisData] = useState<ReportResponse | null>(null);
+  const [previousData, setPreviousData] = useState<ReportResponse | null>(null);
   const [loading, setLoading] = useState(false);
   const [loadingCSV, setLoadingCSV] = useState(false);
 
@@ -158,22 +160,43 @@ const DashboardPage: React.FC = () => {
   };
 
   const fetchData = async () => {
+    const start = dateRange?.start || new Date();
+    const end = dateRange?.end || new Date();
+
+    // Equivalent previous window (e.g. today vs yesterday, this week vs last
+    // week) so stat cards compare period-correct values.
+    const durationDays = Math.max(
+      1,
+      Math.round((end.getTime() - start.getTime()) / 86400000)
+    );
+    const prevEnd = endOfDay(subDays(startOfDay(start), 1));
+    const prevStart = startOfDay(subDays(prevEnd, durationDays));
+
+    const fetchRange = (startDate: Date, endDate: Date) =>
+      axiosInstance.get(config.dashboard.getDashboardAnalysis(), {
+        params: { startDate: formatISO(startDate), endDate: formatISO(endDate) },
+      });
+
     try {
       setLoading(true);
-      const { data } = await axiosInstance.get(
-        config.dashboard.getDashboardAnalysis(),
-        {
-          params: {
-            startDate: formatISO(dateRange?.start || new Date()),
-            endDate: formatISO(dateRange?.end || new Date()),
-          },
-        },
-      );
-      setAnalysisData(data);
-    } catch (error) {
-      console.error("Error fetching data:", error);
+      const [currentResult, previousResult] = await Promise.allSettled([
+        fetchRange(start, end),
+        fetchRange(prevStart, prevEnd),
+      ]);
+      if (currentResult.status === "fulfilled") {
+        setAnalysisData(currentResult.value.data);
+      } else {
+        console.error("Error fetching data:", currentResult.reason);
+      }
+      if (previousResult.status === "fulfilled") {
+        setPreviousData(previousResult.value.data);
+      } else {
+        console.error("Error fetching previous period data:", previousResult.reason);
+        setPreviousData(null);
+      }
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   };
 
   const generateReport = async () => {
@@ -209,7 +232,11 @@ const DashboardPage: React.FC = () => {
   }, [selectedTab]);
 
   const current = analysisData?.orderMetrics?.currentMetrics;
-  const previous = analysisData?.orderMetrics?.previousMonthMetrics;
+  // Prefer the period-correct previous window; fall back to the API's
+  // previousMonthMetrics while the previous fetch is in flight or fails.
+  const previous =
+    previousData?.orderMetrics?.currentMetrics ??
+    analysisData?.orderMetrics?.previousMonthMetrics;
 
   const completedCount = useMemo(
     () =>
@@ -297,24 +324,28 @@ const DashboardPage: React.FC = () => {
             icon={BanknoteArrowDown}
             title='Total Purchase'
             currentValue={analysisData?.reports?.purchases ?? 0}
+            previousValue={previousData?.reports?.purchases}
           />
           <PillStatCard
             compact
             icon={BanknoteX}
             title='Total Return'
             currentValue={analysisData?.reports?.returns ?? 0}
+            previousValue={previousData?.reports?.returns}
           />
           <PillStatCard
             compact
             icon={Truck}
             title='Total Delivery Charge'
             currentValue={current?.totalDeliveryCharge ?? 0}
+            previousValue={previous?.totalDeliveryCharge}
           />
           <PillStatCard
             compact
             icon={TicketPercent}
             title='Total Discount'
             currentValue={current?.totalDiscount ?? 0}
+            previousValue={previous?.totalDiscount}
           />
         </div>
 

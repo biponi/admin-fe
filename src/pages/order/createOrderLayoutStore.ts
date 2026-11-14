@@ -10,6 +10,7 @@ import type {
   ICustomer,
   IShipping,
   ITransection,
+  ManualFraud,
 } from "../order/interface.d";
 import type { IProduct, IVariation, IImageGroup } from "../product/interface.d";
 import { isValidBangladeshiMobileNumber } from "../../utils/helperFunction";
@@ -116,8 +117,11 @@ interface CreateOrderLayoutState {
   isDirty: boolean;
   // Advisory prepayment-rules suggestion (required advance + winning rule)
   prepaymentSuggestion: PrepaymentEvaluation | null;
+  // Active manual-fraud entry on the entered customer (order-creation gate)
+  activeManualFraud: ManualFraud | null;
 
   setPrepaymentSuggestion: (suggestion: PrepaymentEvaluation | null) => void;
+  setActiveManualFraud: (fraud: ManualFraud | null) => void;
 
   setProducts: (products: IProduct[]) => void;
   setProductsResponse: (payload: {
@@ -200,6 +204,7 @@ const initialState = {
   lastSaved: null,
   isDirty: false,
   prepaymentSuggestion: null,
+  activeManualFraud: null,
 };
 
 export const useCreateOrderLayoutStore = create<CreateOrderLayoutState>()(
@@ -212,6 +217,10 @@ export const useCreateOrderLayoutStore = create<CreateOrderLayoutState>()(
 
         setPrepaymentSuggestion: (suggestion) => {
           set({ prepaymentSuggestion: suggestion });
+        },
+
+        setActiveManualFraud: (fraud) => {
+          set({ activeManualFraud: fraud });
         },
 
         setProducts: (products) => {
