@@ -433,7 +433,8 @@ body[data-rain-banner="true"] div:has(> [data-sidebar="sidebar"]) {
   opacity: var(--ws-sky-opacity);
 }
 
-/* Stars — night only, dimmed in rain, hidden in storms */
+/* Stars — night only, dimmed in rain, hidden in storms; drizzle keeps more
+   of them visible, heavy rain blanks them out like a storm does */
 .weather-scene .ws-stars {
   position: absolute;
   inset: 0;
@@ -445,6 +446,12 @@ body[data-rain-banner="true"] div:has(> [data-sidebar="sidebar"]) {
 }
 .weather-scene[data-tod="night"][data-weather="rain"] .ws-stars {
   opacity: 0.3;
+}
+.weather-scene[data-tod="night"][data-rain="drizzle"] .ws-stars {
+  opacity: 0.5;
+}
+.weather-scene[data-tod="night"][data-rain="heavy"] .ws-stars {
+  opacity: 0;
 }
 .weather-scene[data-tod="night"][data-weather="storm"] .ws-stars {
   opacity: 0;
@@ -540,6 +547,93 @@ body[data-rain-banner="true"] div:has(> [data-sidebar="sidebar"]) {
 .weather-scene[data-tod="night"]:not([data-weather="clear"]) .ws-cloud {
   filter: grayscale(1) brightness(0.4);
 }
+/* Storm clouds go near-black; the nested <i> wind wrappers need inline-block
+   for their transforms to apply */
+.weather-scene[data-weather="storm"] .ws-cloud {
+  filter: grayscale(1) brightness(0.5);
+}
+.weather-scene .ws-cloud i {
+  display: inline-block;
+}
+
+/* Wind strength — one set of CSS vars per level feeds the rain slant and the
+   cloud bob keyframes, so wind is data-driven rather than hardcoded */
+.weather-scene[data-wind="0"] {
+  --ws-slant: 1deg;
+  --ws-bob-y: 1px;
+  --ws-bob-x: 2px;
+}
+.weather-scene[data-wind="1"] {
+  --ws-slant: 5deg;
+  --ws-bob-y: 3px;
+  --ws-bob-x: 5px;
+}
+.weather-scene[data-wind="2"] {
+  --ws-slant: 10deg;
+  --ws-bob-y: 6px;
+  --ws-bob-x: 9px;
+}
+.weather-scene[data-wind="3"] {
+  --ws-slant: 15deg;
+  --ws-bob-y: 10px;
+  --ws-bob-x: 14px;
+}
+
+/* Wind gust streaks — thin horizontal lines sweeping across the sky; more
+   visible the stronger the wind, hidden entirely when calm */
+.weather-scene .ws-gusts {
+  position: absolute;
+  inset: 0;
+}
+.weather-scene[data-wind="0"] .ws-gusts {
+  display: none;
+}
+.weather-scene .ws-gusts i {
+  position: absolute;
+  height: 1px;
+  border-radius: 9999px;
+  /* Alpha via a var because the gust keyframe animates opacity, which would
+     override any per-level element opacity */
+  --ws-gust-alpha: 0.6;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, var(--ws-gust-alpha)),
+    transparent
+  );
+}
+.weather-scene[data-wind="1"] .ws-gusts i {
+  --ws-gust-alpha: 0.25;
+}
+.weather-scene[data-wind="2"] .ws-gusts i {
+  --ws-gust-alpha: 0.45;
+}
+.weather-scene[data-wind="3"] .ws-gusts i {
+  --ws-gust-alpha: 0.7;
+}
+
+/* Drizzle mist — two soft bands hanging low over the scene */
+.weather-scene .ws-mist {
+  position: absolute;
+  inset: 0;
+  display: none;
+}
+.weather-scene[data-rain="drizzle"] .ws-mist {
+  display: block;
+}
+.weather-scene .ws-mist i {
+  position: absolute;
+  left: -20%;
+  width: 140%;
+  height: 16%;
+  filter: blur(6px);
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(220, 230, 245, 0.1),
+    transparent
+  );
+}
 
 /* Weather tint, rain streaks, storm slant and lightning */
 .weather-scene .ws-tint {
@@ -555,6 +649,13 @@ body[data-rain-banner="true"] div:has(> [data-sidebar="sidebar"]) {
 .weather-scene[data-weather="storm"] .ws-tint {
   opacity: 0.4;
 }
+/* Intensity variants — drizzle barely tints, heavy rain nears storm levels */
+.weather-scene[data-weather="rain"][data-rain="drizzle"] .ws-tint {
+  opacity: 0.18;
+}
+.weather-scene[data-weather="rain"][data-rain="heavy"] .ws-tint {
+  opacity: 0.32;
+}
 .theme-dark .weather-scene[data-weather="rain"] .ws-tint,
 .dark .weather-scene[data-weather="rain"] .ws-tint {
   opacity: 0.32;
@@ -563,10 +664,22 @@ body[data-rain-banner="true"] div:has(> [data-sidebar="sidebar"]) {
 .dark .weather-scene[data-weather="storm"] .ws-tint {
   opacity: 0.48;
 }
+.theme-dark .weather-scene[data-weather="rain"][data-rain="drizzle"] .ws-tint,
+.dark .weather-scene[data-weather="rain"][data-rain="drizzle"] .ws-tint {
+  opacity: 0.24;
+}
+.theme-dark .weather-scene[data-weather="rain"][data-rain="heavy"] .ws-tint,
+.dark .weather-scene[data-weather="rain"][data-rain="heavy"] .ws-tint {
+  opacity: 0.42;
+}
 
+/* Rain slant comes from the wind level; the layer bleeds extra horizontally
+   so a rotated rain sheet never exposes its edges. Storm adds a bit more
+   slant on top of whatever the wind already applies. */
 .weather-scene .ws-rain {
   position: absolute;
-  inset: -15%;
+  inset: -15% -35%;
+  transform: rotate(var(--ws-slant, 0deg));
   transition: transform 0.6s ease;
 }
 .weather-scene .ws-rain i {
@@ -579,8 +692,40 @@ body[data-rain-banner="true"] div:has(> [data-sidebar="sidebar"]) {
     rgba(200, 225, 255, 0.9)
   );
 }
+/* Drizzle streaks are fainter — done via the gradient because the fall
+   keyframe animates opacity and would override any element opacity */
+.weather-scene[data-rain="drizzle"] .ws-rain i {
+  background: linear-gradient(
+    to bottom,
+    rgba(200, 225, 255, 0),
+    rgba(200, 225, 255, 0.45)
+  );
+}
 .weather-scene[data-weather="storm"] .ws-rain {
-  transform: rotate(12deg) scale(1.15);
+  transform: rotate(calc(var(--ws-slant, 12deg) + 3deg)) scale(1.15);
+}
+
+/* Splash ripples — small rings where heavy drops hit the ground */
+.weather-scene .ws-splash {
+  position: absolute;
+  inset: 0;
+  display: none;
+}
+.weather-scene[data-weather="storm"] .ws-splash,
+.weather-scene[data-rain="heavy"] .ws-splash {
+  display: block;
+}
+.weather-scene .ws-splash i {
+  position: absolute;
+  bottom: 3%;
+  width: 14px;
+  height: 4px;
+  border-radius: 9999px;
+  background: radial-gradient(
+    50% 100% at 50% 50%,
+    rgba(200, 225, 255, 0.5),
+    transparent 70%
+  );
 }
 
 .weather-scene .ws-flash,
@@ -595,6 +740,11 @@ body[data-rain-banner="true"] div:has(> [data-sidebar="sidebar"]) {
 .weather-scene .ws-flash {
   inset: 0;
   background: #fff;
+}
+/* Second lightning layer — bluer tint and staggered delay so the two strike
+   groups never read as a clone of each other */
+.weather-scene .ws-flash-alt {
+  background: #dce6ff;
 }
 .weather-scene .ws-bolt {
   left: 58%;

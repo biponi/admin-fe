@@ -19,17 +19,23 @@ import { WeatherScene } from "./weather/weather-scene";
 import { SidebarWeatherInfo } from "./weather/sidebar-weather-info";
 import { useSettings } from "../contexts/SettingsContext";
 import { useWeatherContext } from "../contexts/WeatherContext";
-import { mapSceneWeather } from "../lib/weather-scene";
+import {
+  mapRainIntensity,
+  mapSceneWeather,
+  mapWindLevel,
+} from "../lib/weather-scene";
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const { user } = useLoginAuth();
   const { hasRequiredPermission } = useRoleCheck();
   const pathName = useLocation().pathname;
   const { sidebarWeatherStyle } = useSettings();
-  const { period, condition } = useWeatherContext();
+  const { period, condition, weatherCode, windSpeed } = useWeatherContext();
 
   const animated = sidebarWeatherStyle === "animated";
   const sceneWeather = mapSceneWeather(condition);
+  const rainIntensity = mapRainIntensity(weatherCode, condition);
+  const windLevel = mapWindLevel(windSpeed, sceneWeather);
 
   const filteredNavItems = navItems
     .filter((nav) => nav.active && hasRequiredPermission(nav.id, "view"))
@@ -47,7 +53,12 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
           panel): the default crossfading image theme, or the animated CSS
           scene. Both render nothing until weather data loads. */}
       {animated && sceneWeather ? (
-        <WeatherScene timeOfDay={period} weather={sceneWeather} />
+        <WeatherScene
+          timeOfDay={period}
+          weather={sceneWeather}
+          rainIntensity={rainIntensity}
+          windLevel={windLevel}
+        />
       ) : (
         !animated && <SidebarWeatherBackdrop />
       )}

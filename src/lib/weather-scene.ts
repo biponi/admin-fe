@@ -6,10 +6,16 @@
 // This module translates those into the four scene states the CSS reacts to:
 // SceneWeather (clear/cloudy/rain/storm) × SceneTimeOfDay.
 
-import type { WeatherCondition, WeatherPeriod } from "../config/weather-theme";
+import { getWeatherCondition, type WeatherCondition, type WeatherPeriod } from "../config/weather-theme";
 
 /** The four scene states the animated weather scene can render. */
 export type SceneWeather = "clear" | "cloudy" | "rain" | "storm";
+
+/** Rain intensity variant — orthogonal to SceneWeather, styled via data-rain. */
+export type RainIntensity = "drizzle" | "rain" | "heavy";
+
+/** Bucketed wind strength — calm / light / moderate / strong, styled via data-wind. */
+export type WindLevel = 0 | 1 | 2 | 3;
 
 /** Time of day for the scene — same buckets the topbar/theme already use. */
 export type SceneTimeOfDay = WeatherPeriod;
@@ -34,6 +40,52 @@ export function mapSceneWeather(
       // cloud, snow, fog → cloudy
       return "cloudy";
   }
+}
+
+/**
+ * WMO code + effective condition → rain intensity variant. Only consults the
+ * code when it agrees with the effective condition (the dev theme override can
+ * force "rain" while the real code says clear — fall back to the medium look
+ * rather than rendering drizzle under a forced rain theme).
+ */
+export function mapRainIntensity(
+  weatherCode: number | null,
+  condition: WeatherCondition | null
+): RainIntensity {
+  if (condition === "storm") return "heavy";
+  if (condition === "rain") {
+    const codeMatches = getWeatherCondition(weatherCode) === condition;
+    if (codeMatches && weatherCode !== null) {
+      // 51/53/55 + freezing 56/57 → drizzle; 65/66/82 → heavy downpour
+      if (weatherCode >= 51 && weatherCode <= 57) return "drizzle";
+      if (weatherCode === 65 || weatherCode === 66 || weatherCode === 82)
+        return "heavy";
+    }
+    return "rain";
+  }
+  return "rain"; // unused — callers only pass it for rain/storm scenes
+}
+
+/**
+ * Real wind speed (km/h) → bucketed wind level, with per-condition defaults
+ * when the API reports no wind. Storms default to strong so the scene still
+ * slants and gusts when wind data is missing.
+ */
+export function mapWindLevel(
+  windSpeed: number | null,
+  weather: SceneWeather | null
+): WindLevel {
+  const fallback: Record<SceneWeather, WindLevel> = {
+    clear: 1,
+    cloudy: 1,
+    rain: 2,
+    storm: 3,
+  };
+  if (windSpeed === null || weather === null) return fallback[weather ?? "clear"];
+  if (windSpeed < 6) return 0; // calm
+  if (windSpeed < 20) return 1; // light breeze
+  if (windSpeed < 39) return 2; // moderate
+  return 3; // strong / gale
 }
 
 /**

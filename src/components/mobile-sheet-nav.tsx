@@ -20,7 +20,11 @@ import { getInitialsWord } from "../utils/functions";
 import useLoginAuth from "../pages/auth/hooks/useLoginAuth";
 import { useSettings } from "../contexts/SettingsContext";
 import { useWeatherContext } from "../contexts/WeatherContext";
-import { mapSceneWeather } from "../lib/weather-scene";
+import {
+  mapRainIntensity,
+  mapSceneWeather,
+  mapWindLevel,
+} from "../lib/weather-scene";
 import { SidebarWeatherBackdrop } from "./weather/SidebarWeatherBackdrop";
 import { WeatherScene } from "./weather/weather-scene";
 import { WEATHER_THEMES } from "../config/weather-theme";
@@ -46,11 +50,14 @@ export function MobileSheetNav({
   const pathName = useLocation().pathname;
   const { user } = useLoginAuth();
   const { sidebarWeatherStyle } = useSettings();
-  const { period, condition, themeKey } = useWeatherContext();
+  const { period, condition, weatherCode, windSpeed, themeKey } =
+    useWeatherContext();
   const [settingsOpen, setSettingsOpen] = useState(false);
 
   const animatedWeather = sidebarWeatherStyle === "animated";
   const sceneWeather = mapSceneWeather(condition);
+  const rainIntensity = mapRainIntensity(weatherCode, condition);
+  const windLevel = mapWindLevel(windSpeed, sceneWeather);
 
   // The sheet's ink follows the same token mechanism as the desktop sidebar:
   // text-* utilities resolve --sidebar-foreground, which index.scss pins from
@@ -124,6 +131,8 @@ export function MobileSheetNav({
             <WeatherScene
               timeOfDay={period}
               weather={sceneWeather}
+              rainIntensity={rainIntensity}
+              windLevel={windLevel}
               className='weather-scene-dark'
             />
           ) : (

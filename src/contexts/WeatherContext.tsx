@@ -58,6 +58,22 @@ const readThemeOverride = (): WeatherThemeKey | null => {
   }
 };
 
+// Dev helpers: force the raw WMO code / wind speed so scene variants the
+// real weather never reports (drizzle, heavy rain, gale) can be previewed.
+// The code override also drives `condition`, so one key reaches everything.
+// localStorage.setItem("dev_weather_code_override", "53")
+// localStorage.setItem("dev_weather_wind_override", "45")
+const readDevNumber = (key: string): number | null => {
+  try {
+    const raw = localStorage.getItem(key);
+    if (raw === null || raw.trim() === "") return null;
+    const n = Number(raw);
+    return Number.isFinite(n) ? n : null;
+  } catch {
+    return null;
+  }
+};
+
 interface WeatherContextType {
   temperature: number | null;
   weatherCode: number | null;
@@ -102,6 +118,12 @@ export function WeatherProvider({ children }: { children: ReactNode }) {
   const [hour, setHour] = useState(() => new Date().getHours());
   const [themeOverride, setThemeOverride] =
     useState<WeatherThemeKey | null>(readThemeOverride);
+  const [devCodeOverride, setDevCodeOverride] = useState<number | null>(() =>
+    readDevNumber("dev_weather_code_override")
+  );
+  const [devWindOverride, setDevWindOverride] = useState<number | null>(() =>
+    readDevNumber("dev_weather_wind_override")
+  );
 
   // Rain-warning edge trigger — only a false -> true transition counts
   const prevRainWarningRef = useRef(false);
@@ -124,6 +146,12 @@ export function WeatherProvider({ children }: { children: ReactNode }) {
     const onStorage = (e: StorageEvent) => {
       if (e.key === "dev_weather_theme_override") {
         setThemeOverride(readThemeOverride());
+      }
+      if (e.key === "dev_weather_code_override") {
+        setDevCodeOverride(readDevNumber("dev_weather_code_override"));
+      }
+      if (e.key === "dev_weather_wind_override") {
+        setDevWindOverride(readDevNumber("dev_weather_wind_override"));
       }
     };
     window.addEventListener("storage", onStorage);
@@ -212,8 +240,13 @@ export function WeatherProvider({ children }: { children: ReactNode }) {
     };
   }, []);
 
-  const condition = useMemo(() => getWeatherCondition(weatherCode), [
-    weatherCode,
+  // Dev code override replaces the reported WMO code end-to-end (condition,
+  // scene variants, icons); the wind override replaces the reported km/h.
+  const effectiveCode = devCodeOverride ?? weatherCode;
+  const effectiveWind = devWindOverride ?? windSpeed;
+
+  const condition = useMemo(() => getWeatherCondition(effectiveCode), [
+    effectiveCode,
   ]);
   const period = useMemo(() => getWeatherPeriod(hour), [hour]);
 
@@ -243,9 +276,9 @@ export function WeatherProvider({ children }: { children: ReactNode }) {
     <WeatherContext.Provider
       value={{
         temperature,
-        weatherCode,
+        weatherCode: effectiveCode,
         isDay,
-        windSpeed,
+        windSpeed: effectiveWind,
         rainProbability,
         nextHourRainProbability,
         rainWarningEvent,

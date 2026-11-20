@@ -3,18 +3,86 @@ import { cn } from "../../lib/utils";
 import {
   SCENE_ORB_EMOJI,
   mulberry32,
+  type RainIntensity,
   type SceneTimeOfDay,
   type SceneWeather,
+  type WindLevel,
 } from "../../lib/weather-scene";
 
-// Minimal-intensity particle counts (spec: rain 14, storm 24, stars 10)
+// Minimal-intensity particle counts (spec: stars 10; rain counts per preset)
 const STAR_COUNT = 10;
-const RAIN_COUNT = 14;
-const STORM_RAIN_COUNT = 24;
+
+/**
+ * Rain look per intensity variant. Counts/sizes are deliberately small — the
+ * scene lives in a ~260px sidebar, and every drop is an animated node. One
+ * fixed seed per variant keeps drop positions stable across re-renders.
+ */
+const RAIN_PRESETS: Record<
+  RainIntensity,
+  {
+    count: number;
+    seed: number;
+    hMin: number;
+    hMax: number;
+    width: string;
+    dMin: number;
+    dMax: number;
+    delaySpread: number;
+  }
+> = {
+  drizzle: {
+    count: 26,
+    seed: 11,
+    hMin: 4,
+    hMax: 8,
+    width: "1px",
+    dMin: 1.6,
+    dMax: 2.4,
+    delaySpread: 3,
+  },
+  rain: {
+    count: 16,
+    seed: 42,
+    hMin: 8,
+    hMax: 20,
+    width: "1.5px",
+    dMin: 0.9,
+    dMax: 1.4,
+    delaySpread: 1.5,
+  },
+  heavy: {
+    count: 34,
+    seed: 91,
+    hMin: 18,
+    hMax: 34,
+    width: "2px",
+    dMin: 0.45,
+    dMax: 0.75,
+    delaySpread: 0.8,
+  },
+};
+
+// Storm drops keep their own preset (thicker/faster than plain heavy rain)
+const STORM_PRESET = {
+  count: 40,
+  seed: 77,
+  hMin: 20,
+  hMax: 40,
+  width: "2px",
+  dMin: 0.4,
+  dMax: 0.6,
+  delaySpread: 0.6,
+} as const;
+
+const SPLASH_COUNT = { heavy: 8, storm: 10 } as const;
 
 interface WeatherSceneProps {
   timeOfDay: SceneTimeOfDay;
   weather: SceneWeather;
+  /** Rain intensity variant (drizzle/rain/heavy); storm renders its own look */
+  rainIntensity?: RainIntensity;
+  /** Bucketed wind level 0-3 — drives slant, cloud bob and gust streaks */
+  windLevel?: WindLevel;
   className?: string;
 }
 
@@ -29,18 +97,40 @@ interface Star {
 interface Drop {
   left: string;
   height: string;
+  width: string;
+  duration: string;
+  delay: string;
+}
+
+interface Splash {
+  left: string;
+  duration: string;
+  delay: string;
+}
+
+interface Gust {
+  top: string;
+  width: string;
   duration: string;
   delay: string;
 }
 
 /**
  * Ambient animated weather backdrop for the sidebar: layered skies cross-faded
- * by opacity, a sun/moon orb, drifting clouds, stars, rain streaks and storm
- * lightning — all CSS animation (transform/opacity only), driven by the
- * data-tod / data-weather attributes styled in index.scss. Presentational
- * only: callers pass the derived timeOfDay/weather and handle missing data.
+ * by opacity, a sun/moon orb, drifting clouds, stars, wind gusts, mist, rain
+ * streaks (drizzle/rain/heavy variants), ground splashes and storm lightning —
+ * all CSS animation (transform/opacity only), driven by the data-tod /
+ * data-weather / data-rain / data-wind attributes styled in index.scss.
+ * Presentational only: callers pass the derived timeOfDay/weather plus the
+ * rain-intensity and wind level and handle missing data.
  */
-export function WeatherScene({ timeOfDay, weather, className }: WeatherSceneProps) {
+export function WeatherScene({
+  timeOfDay,
+  weather,
+  rainIntensity = "rain",
+  windLevel = 1,
+  className,
+}: WeatherSceneProps) {
   // Deterministic star layout — a fixed seed keeps positions stable across
   // renders so temperature/time changes never make the sky jump.
   const stars = useMemo<Star[]>(() => {
@@ -54,31 +144,80 @@ export function WeatherScene({ timeOfDay, weather, className }: WeatherSceneProp
     }));
   }, []);
 
-  // Rain layout keyed on weather kind only — drops keep their positions while
-  // temperature or time-of-day changes; rebuilt when rain/storm switches.
+  // Rain layout keyed on weather kind + intensity — drops keep their positions
+  // while temperature or time-of-day changes; rebuilt on variant switches.
   const drops = useMemo<Drop[]>(() => {
     if (weather !== "rain" && weather !== "storm") return [];
     const storm = weather === "storm";
-    const rand = mulberry32(storm ? 77 : 42);
-    return Array.from({ length: storm ? STORM_RAIN_COUNT : RAIN_COUNT }, () => ({
+    const preset = storm ? STORM_PRESET : RAIN_PRESETS[rainIntensity];
+    const rand = mulberry32(preset.seed);
+    return Array.from({ length: preset.count }, () => ({
       left: `${(rand() * 100).toFixed(1)}%`,
-      height: `${Math.round(8 + rand() * (storm ? 16 : 12))}px`,
-      duration: `${(storm ? 0.5 + rand() * 0.3 : 0.9 + rand() * 0.5).toFixed(2)}s`,
-      delay: `-${(rand() * 1.5).toFixed(2)}s`,
+      height: `${Math.round(
+        preset.hMin + rand() * (preset.hMax - preset.hMin)
+      )}px`,
+      width: preset.width,
+      duration: `${(
+        preset.dMin + rand() * (preset.dMax - preset.dMin)
+      ).toFixed(2)}s`,
+      delay: `-${(rand() * preset.delaySpread).toFixed(2)}s`,
     }));
-  }, [weather]);
+  }, [weather, rainIntensity]);
 
-  // Two drifting clouds, a third joins when the weather is not clear
+  // Ground splash rings — heavy rain and storm only
+  const splashes = useMemo<Splash[]>(() => {
+    if (weather !== "storm" && rainIntensity !== "heavy") return [];
+    const count =
+      weather === "storm" ? SPLASH_COUNT.storm : SPLASH_COUNT.heavy;
+    const rand = mulberry32(5);
+    return Array.from({ length: count }, () => ({
+      left: `${(rand() * 100).toFixed(1)}%`,
+      duration: `${(0.8 + rand() * 0.5).toFixed(2)}s`,
+      delay: `-${(rand() * 1.2).toFixed(2)}s`,
+    }));
+  }, [weather, rainIntensity]);
+
+  // Wind gust streaks — count and visibility scale with the wind level
+  const gusts = useMemo<Gust[]>(() => {
+    if (windLevel < 1) return [];
+    const rand = mulberry32(23);
+    return Array.from({ length: 2 + windLevel }, () => ({
+      top: `${(15 + rand() * 55).toFixed(1)}%`,
+      width: `${(12 + rand() * 10).toFixed(1)}%`,
+      duration: `${(3.5 + rand() * 2.5).toFixed(2)}s`,
+      delay: `-${(rand() * 4).toFixed(2)}s`,
+    }));
+  }, [windLevel]);
+
+  // Two drifting clouds, a third joins when the weather is not clear; drift
+  // speeds up with the wind so a storm visibly hurries them along. The sway
+  // and bob periods differ per cloud so the wind motion never syncs up into
+  // a visible shared rhythm.
   const clouds = useMemo(() => {
     const third = weather !== "clear";
+    const speedUp = 1 + windLevel * 0.22;
     return [
-      { top: "9%", size: "3rem", duration: "46s", delay: "-9s" },
-      { top: "28%", size: "2.4rem", duration: "58s", delay: "-31s" },
+      { top: "9%", size: "3rem", duration: 46, delay: "-9s", sway: 9, bob: 5.5 },
+      { top: "28%", size: "2.4rem", duration: 58, delay: "-31s", sway: 11, bob: 6.5 },
       ...(third
-        ? [{ top: "18%", size: "3.4rem", duration: "52s", delay: "-20s" }]
+        ? [
+            {
+              top: "18%",
+              size: "3.4rem",
+              duration: 52,
+              delay: "-20s",
+              sway: 10,
+              bob: 6,
+            },
+          ]
         : []),
-    ];
-  }, [weather]);
+    ].map((cloud) => ({
+      ...cloud,
+      duration: `${Math.round(cloud.duration / speedUp)}s`,
+      sway: `${cloud.sway}s`,
+      bob: `${cloud.bob}s`,
+    }));
+  }, [weather, windLevel]);
 
   // The scene always ends dark: every sky is darkened per the readability
   // spec and a vertical black scrim sits on top of the whole composite, so
@@ -89,6 +228,8 @@ export function WeatherScene({ timeOfDay, weather, className }: WeatherSceneProp
       aria-hidden='true'
       data-tod={timeOfDay}
       data-weather={weather}
+      data-rain={rainIntensity}
+      data-wind={windLevel}
       data-light-text='true'
       className={cn("weather-scene", className)}>
       {/* One sky per time of day, cross-faded by opacity */}
@@ -132,9 +273,44 @@ export function WeatherScene({ timeOfDay, weather, className }: WeatherSceneProp
             animationDuration: cloud.duration,
             animationDelay: cloud.delay,
           }}>
-          ☁️
+          {/* Two nested motions so the wind wander composes with the outer
+              drift instead of fighting it for the same transform */}
+          <i
+            className='ws-cloud-sway animate-weather-scene-sway'
+            style={{ animationDuration: cloud.sway }}>
+            <i
+              className='ws-cloud-bob animate-weather-scene-bob'
+              style={{ animationDuration: cloud.bob }}>
+              ☁️
+            </i>
+          </i>
         </span>
       ))}
+
+      {/* Wind gust streaks sweeping across the sky */}
+      <div className='ws-gusts'>
+        {gusts.map((gust, i) => (
+          <i
+            key={i}
+            className='animate-weather-scene-gust'
+            style={{
+              top: gust.top,
+              width: gust.width,
+              animationDuration: gust.duration,
+              animationDelay: gust.delay,
+            }}
+          />
+        ))}
+      </div>
+
+      {/* Low mist bands — drizzle only */}
+      <div className='ws-mist'>
+        <i className='animate-weather-scene-mist' style={{ top: "28%", animationDuration: "18s" }} />
+        <i
+          className='animate-weather-scene-mist'
+          style={{ top: "52%", animationDuration: "26s", animationDirection: "reverse" }}
+        />
+      </div>
 
       {/* Dims the sky in rain, darker in storm */}
       <div className='ws-tint' />
@@ -147,6 +323,7 @@ export function WeatherScene({ timeOfDay, weather, className }: WeatherSceneProp
             style={{
               left: drop.left,
               height: drop.height,
+              width: drop.width,
               animationDuration: drop.duration,
               animationDelay: drop.delay,
             }}
@@ -154,9 +331,28 @@ export function WeatherScene({ timeOfDay, weather, className }: WeatherSceneProp
         ))}
       </div>
 
-      {/* Storm: one soft flash roughly every 8s + ⚡ */}
-      <div className='ws-flash animate-weather-scene-flash' />
-      <span className='ws-bolt animate-weather-scene-flash'>⚡</span>
+      {/* Splash ripples where heavy drops hit the ground */}
+      <div className='ws-splash'>
+        {splashes.map((splash, i) => (
+          <i
+            key={i}
+            className='animate-weather-scene-splash'
+            style={{
+              left: splash.left,
+              animationDuration: splash.duration,
+              animationDelay: splash.delay,
+            }}
+          />
+        ))}
+      </div>
+
+      {/* Storm: two staggered double-strike flashes + flickering ⚡ */}
+      <div className='ws-flash animate-weather-scene-flash-double' />
+      <div
+        className='ws-flash ws-flash-alt animate-weather-scene-flash-double'
+        style={{ animationDelay: "-4s" }}
+      />
+      <span className='ws-bolt animate-weather-scene-bolt'>⚡</span>
 
       {/* Vertical readability scrim — topmost layer of the scene, so nav
           text always composites over a darkened sky (WCAG AA) */}

@@ -136,6 +136,55 @@ module.exports = {
   			'weather-scene-orb-float': {
   				'0%,100%': { transform: 'translateY(0)' },
   				'50%': { transform: 'translateY(-6px)' }
+  			},
+  			// Wind effects — amplitudes come from the --ws-bob-* vars index.scss
+  			// sets per data-wind level, so one keyframe serves every strength.
+  			// Clouds get two nested motions (horizontal sway + vertical bob) at
+  			// different periods, so the drift reads as organic wandering instead
+  			// of a single back-and-forth shuttle.
+  			'weather-scene-sway': {
+  				'0%,100%': { transform: 'translateX(0)' },
+  				'30%': { transform: 'translateX(var(--ws-bob-x, 5px))' },
+  				'65%': {
+  					transform: 'translateX(calc(var(--ws-bob-x, 5px) * -0.55))'
+  				}
+  			},
+  			'weather-scene-bob': {
+  				'0%,100%': { transform: 'translateY(0)' },
+  				'35%': { transform: 'translateY(calc(var(--ws-bob-y, 3px) * -0.8))' },
+  				'70%': {
+  					transform: 'translateY(calc(var(--ws-bob-y, 3px) * 0.45))'
+  				}
+  			},
+  			'weather-scene-gust': {
+  				'0%': { transform: 'translateX(-40cqw)', opacity: '0' },
+  				'15%,80%': { opacity: '1' },
+  				'100%': { transform: 'translateX(140cqw)', opacity: '0' }
+  			},
+  			'weather-scene-mist': {
+  				'0%,100%': { transform: 'translateX(-8cqw)' },
+  				'50%': { transform: 'translateX(8cqw)' }
+  			},
+  			'weather-scene-splash': {
+  				'0%': { transform: 'scale(0.2)', opacity: '0.55' },
+  				'100%': { transform: 'scale(1)', opacity: '0' }
+  			},
+  			// Thunder — two strikes per 8s cycle, second one weaker; the
+  			// bolt flickers right after the first peak
+  			'weather-scene-flash-double': {
+  				'0%,84%,100%': { opacity: '0' },
+  				'86%': { opacity: '0.4' },
+  				'88%': { opacity: '0.1' },
+  				'90%': { opacity: '0.32' },
+  				'93%': { opacity: '0' },
+  				'95%': { opacity: '0.22' },
+  				'97%': { opacity: '0' }
+  			},
+  			'weather-scene-bolt': {
+  				'0%,85%,93%,100%': { opacity: '0' },
+  				'86%': { opacity: '1' },
+  				'88%': { opacity: '0.3' },
+  				'90%': { opacity: '1' }
   			}
   		},
   		animation: {
@@ -151,6 +200,13 @@ module.exports = {
   			'weather-scene-twinkle': 'weather-scene-twinkle 3s ease-in-out infinite',
   			'weather-scene-flash': 'weather-scene-flash 8s linear infinite',
   			'weather-scene-orb-float': 'weather-scene-orb-float 5s ease-in-out infinite',
+  			'weather-scene-sway': 'weather-scene-sway 9s ease-in-out infinite',
+  			'weather-scene-bob': 'weather-scene-bob 5.5s ease-in-out infinite',
+  			'weather-scene-gust': 'weather-scene-gust 4s linear infinite',
+  			'weather-scene-mist': 'weather-scene-mist 20s ease-in-out infinite',
+  			'weather-scene-splash': 'weather-scene-splash 0.9s ease-out infinite',
+  			'weather-scene-flash-double': 'weather-scene-flash-double 8s linear infinite',
+  			'weather-scene-bolt': 'weather-scene-bolt 8s linear infinite',
   			'spin-slow': 'spin 12s linear infinite'
   		}
   	}
