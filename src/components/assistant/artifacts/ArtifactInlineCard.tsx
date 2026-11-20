@@ -1,24 +1,43 @@
 import { memo } from "react";
-import { BarChart3Icon, FileTextIcon, TableIcon, Loader2Icon, Maximize2Icon } from "lucide-react";
+import { BarChart3Icon, FileTextIcon, TableIcon, Loader2Icon, Maximize2Icon, FileDownIcon } from "lucide-react";
 import type { DataMessagePartProps } from "@assistant-ui/react";
-import type { ArtifactDescriptor, DocArtifactPayload, SheetArtifactPayload } from "./types";
+import type { ArtifactDescriptor, DocArtifactPayload, FileArtifactPayload, SheetArtifactPayload } from "./types";
 import { useArtifactViewer } from "./useArtifactViewer";
+import { useFileDownload } from "./useFileDownload";
 
 const KIND_ICON = {
   chart: BarChart3Icon,
   sheet: TableIcon,
   doc: FileTextIcon,
+  file: FileDownIcon,
 } as const;
 
 const KIND_LABEL = {
   chart: "Chart",
   sheet: "Sheet",
   doc: "Document",
+  file: "Report file",
 } as const;
+
+const formatBytes = (bytes?: number): string => {
+  if (!bytes && bytes !== 0) return "";
+  if (bytes < 1024) return `${bytes} B`;
+  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(0)} KB`;
+  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+};
 
 /** One-line summary under the title (row count / series / first heading). */
 const summarize = (artifact: ArtifactDescriptor): string => {
   const { kind, payload } = artifact;
+  if (kind === "file") {
+    const file = payload as FileArtifactPayload;
+    const parts = [
+      (file.format || "file").toUpperCase(),
+      file.rows != null ? `${file.rows.toLocaleString()} rows` : null,
+      formatBytes(file.bytes),
+    ].filter(Boolean);
+    return parts.join(" · ");
+  }
   if (kind === "sheet") {
     const sheet = payload as SheetArtifactPayload;
     const rows = sheet.totalRows ?? sheet.rows.length;
@@ -37,6 +56,40 @@ const summarize = (artifact: ArtifactDescriptor): string => {
   return words > 0 ? `${words.toLocaleString()} words` : "Empty document";
 };
 
+/** Report-file card: click downloads through the authed API, not the dialog. */
+const FileCard = ({ artifact }: { artifact: ArtifactDescriptor }) => {
+  const { download, busy } = useFileDownload();
+  const file = artifact.payload as FileArtifactPayload;
+  const Icon = KIND_ICON.file;
+
+  return (
+    <button
+      type='button'
+      onClick={() => download(file)}
+      disabled={artifact.streaming || busy || !file.downloadPath}
+      className='aui-artifact-card group mt-2 flex w-full max-w-sm items-center gap-3 rounded-lg border bg-card px-3.5 py-3
+        text-start transition-colors hover:bg-accent/60 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring
+        disabled:cursor-progress disabled:opacity-80'
+      aria-label={`Download report: ${artifact.title}`}
+    >
+      <span className='flex h-9 w-9 shrink-0 items-center justify-center rounded-md bg-primary/10 text-primary'>
+        {artifact.streaming || busy ? (
+          <Loader2Icon className='h-4 w-4 animate-spin' />
+        ) : (
+          <Icon className='h-4 w-4' />
+        )}
+      </span>
+      <span className='min-w-0 flex-1'>
+        <span className='block truncate text-sm font-medium'>{artifact.title}</span>
+        <span className='block truncate text-xs text-muted-foreground'>
+          {KIND_LABEL.file} · {summarize(artifact)}
+        </span>
+      </span>
+      <FileDownIcon className='h-4 w-4 shrink-0 text-muted-foreground transition-opacity group-hover:text-primary' />
+    </button>
+  );
+};
+
 /**
  * In-message artifact card — the inline, clickable representation of a chart,
  * sheet or doc produced by the assistant. Opens the full ArtifactDialog.
@@ -48,6 +101,7 @@ export const ArtifactInlineCard = memo(
   // MessagePartState intersects `data: any`, so narrow explicitly
   const artifact = (data ?? null) as ArtifactDescriptor | null;
   if (!artifact) return null;
+  if (artifact.kind === "file") return <FileCard artifact={artifact} />;
   const Icon = KIND_ICON[artifact.kind] ?? FileTextIcon;
 
   return (

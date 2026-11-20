@@ -159,7 +159,7 @@ const AssistantPage = () => {
             <span className='flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-violet-500 to-indigo-600 shadow-sm'>
               <Sparkles className='h-3.5 w-3.5 text-white' />
             </span>
-            PROMX AI
+            MITSHU AI
           </h1>
           <p className='truncate text-xs text-muted-foreground mt-1'>
             Customer lookups · order status · analytics · internal docs

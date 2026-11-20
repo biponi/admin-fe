@@ -230,22 +230,7 @@ export const OrderDetailsSheet: React.FC<OrderDetailsSheetProps> = ({
   /* ---------- Render ---------- */
 
   return (
-    <Sheet
-      open={open}
-      onOpenChange={(val) => {
-        if (!val) {
-          // Force remove any stuck overlay after close animation
-          setTimeout(() => {
-            document.body.style.pointerEvents = "";
-            document.body.style.overflow = "";
-            // Remove any lingering radix overlay portals
-            document
-              .querySelectorAll("[data-radix-popper-content-wrapper]")
-              .forEach((el) => el.remove());
-          }, 300);
-        }
-        onOpenChange(val);
-      }}>
+    <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent
         className={cn(
           "flex flex-col gap-0 p-0",

@@ -91,6 +91,21 @@ const storedPartToDescriptor = (part: import("./artifacts/types").StoredPart): A
       payload: { columns: part.columns, rows: part.rows, totalRows: part.totalRows },
     };
   }
+  if (part.kind === "file") {
+    return {
+      id: part.id,
+      kind: "file",
+      title: part.title,
+      payload: {
+        downloadPath: part.downloadPath,
+        fileName: part.fileName,
+        format: part.format,
+        rows: part.rows,
+        bytes: part.bytes,
+        expiresAt: part.expiresAt,
+      },
+    };
+  }
   return { id: part.id, kind: "chart", title: part.title, payload: part.chart };
 };
 
@@ -201,11 +216,17 @@ export const useAssistantRuntime = ({
         const last = messagesRef.current[messagesRef.current.length - 1];
         if (!last || last.role !== "assistant") return;
         const artifactId = `a-${event.partId}`;
+        // Placeholder payloads — replaced by the done event's payload
+        const placeholder = event.type === "doc"
+          ? { markdown: "" }
+          : event.type === "file"
+            ? { downloadPath: "", fileName: event.title ?? "", format: "csv" as const }
+            : { columns: [], rows: [] };
         const descriptor: ArtifactDescriptor = {
           id: artifactId,
           kind: event.type ?? "doc",
           title: event.title ?? "Artifact",
-          payload: event.type === "doc" ? { markdown: "" } : { columns: [], rows: [] },
+          payload: placeholder,
           streaming: true,
         };
         partIndexRef.current.set(event.partId, { messageId: last.id, artifactId });
@@ -286,6 +307,14 @@ export const useAssistantRuntime = ({
           onMeta: (meta) => {
             sessionIdRef.current = meta.sessionId;
             onSessionIdChange?.(meta.sessionId);
+          },
+          // Backstop: the done event also carries the sessionId — keep the
+          // session sticky even if the meta event is missed.
+          onDone: (answer) => {
+            if (answer?.sessionId && answer.sessionId !== sessionIdRef.current) {
+              sessionIdRef.current = answer.sessionId;
+              onSessionIdChange?.(answer.sessionId);
+            }
           },
           onDelta: appendDelta,
           onToolStart: handleToolStart,

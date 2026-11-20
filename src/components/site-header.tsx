@@ -185,7 +185,7 @@ export function SiteHeader({ title }: SiteHeaderProps) {
                   onClick={() => setAssistantOpen(true)}
                   className='relative h-9 w-9 rounded-2xl text-gray-900/80 bg-transparent hover:text-gray-500 hover:bg-white/20'>
                   <Sparkles className='h-[18px] w-[18px] ' />
-                  <span className='sr-only'>Open PROMX AI</span>
+                  <span className='sr-only'>Open MITSHU AI</span>
                 </Button>
               )}
               <ButtonGroupSeparator className='bg-gray-100' />

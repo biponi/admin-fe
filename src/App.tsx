@@ -11,8 +11,13 @@ import { AuthGuard } from "./main/components/auth/AuthGuard";
 import { AppRoutes } from "./main/routes/AppRoutes";
 import { LoadingScreen } from "./main/components/auth/LoadingScreen";
 import { GlobalOrderModal } from "./components/order/GlobalOrderModal";
+import { useOverlaySafetyNet } from "./lib/overlay-safety-net";
 
 const App = () => {
+  // Unfreezes the page if a modal/drawer scroll-lock leaks (body stuck at
+  // pointer-events: none with no overlay open) — see the hook for details.
+  useOverlaySafetyNet();
+
   return (
     <IOSErrorBoundary>
       <SettingsProvider>

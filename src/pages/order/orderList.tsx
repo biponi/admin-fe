@@ -37,6 +37,7 @@ import {
   Filter,
   PackageCheck,
   PencilLine,
+  X,
 } from "lucide-react";
 import { Button } from "../../components/ui/button";
 import { PageHeader } from "../../components/PageHeader";
@@ -1299,21 +1300,7 @@ const OrderList = () => {
 
     // ── Render ────────────────────────────────────────────────
     return (
-      <Sheet
-        open={showDetails}
-        onOpenChange={(value: boolean) => {
-          setShowDetails(value);
-          if (!value) {
-            // Force remove stuck Radix overlay/portal after close animation
-            setTimeout(() => {
-              document.body.style.pointerEvents = "";
-              document.body.style.overflow = "";
-              document
-                .querySelectorAll("[data-radix-popper-content-wrapper]")
-                .forEach((el) => el.remove());
-            }, 350);
-          }
-        }}>
+      <Sheet open={showDetails} onOpenChange={setShowDetails}>
         <SheetContent
           className={cn(
             "flex flex-col gap-0 p-0",
@@ -2050,30 +2037,45 @@ const OrderList = () => {
         <Drawer
           open={isReturnProduct && !!selectedOrder}
           onOpenChange={(open) => setIsReturnProduct(open)}>
-          <DrawerContent>
-            <DrawerHeader>
-              <DrawerTitle>Return Product</DrawerTitle>
-              <DrawerDescription>
-                Process product returns and manage returned items
-              </DrawerDescription>
+          <DrawerContent className='flex max-h-[88vh] flex-col overflow-hidden rounded-t-2xl border-t border-gray-100 shadow-[0_-8px_30px_rgba(0,0,0,0.12)] [&>div:first-child]:hidden'>
+            {/* Header — mirrors the order-v2 ReturnOrderSheet header */}
+            <DrawerHeader className='shrink-0 space-y-0 border-b border-gray-100 px-6 pb-5 pt-6 text-left'>
+              <DrawerTitle className='flex items-center gap-3 text-gray-900'>
+                <div className='flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-gray-900 shadow-sm'>
+                  <RotateCcw className='h-[18px] w-[18px] text-white' />
+                </div>
+                <div className='flex min-w-0 flex-col'>
+                  <span className='text-base font-semibold leading-tight'>
+                    Process return
+                  </span>
+                  <DrawerDescription className='mt-0.5 text-xs text-gray-500'>
+                    Order #{selectedOrder?.orderNumber}
+                  </DrawerDescription>
+                </div>
+              </DrawerTitle>
             </DrawerHeader>
-            <ScrollArea className='h-[60vh] px-4'>
-              <div className='w-auto pb-4'>
-                <AdjustReturnProduct
-                  // @ts-ignore
-                  order={selectedOrder}
-                  handleClose={() => {
-                    refresh();
-                    setIsReturnProduct(false);
-                  }}
-                />
-              </div>
-            </ScrollArea>
-            <DrawerFooter>
-              <DrawerClose asChild>
-                <Button variant='outline'>Close</Button>
-              </DrawerClose>
-            </DrawerFooter>
+
+            {/* Body — content manages its own scroll + sticky footer */}
+            <AdjustReturnProduct
+              // @ts-ignore
+              order={selectedOrder}
+              handleClose={() => {
+                refresh();
+                setIsReturnProduct(false);
+              }}
+            />
+
+            {/* Ghost close affordance for the drawer */}
+            <DrawerClose asChild>
+              <Button
+                type='button'
+                variant='ghost'
+                size='icon'
+                className='absolute right-3 top-3 h-8 w-8 rounded-full text-gray-400 hover:bg-gray-100 hover:text-gray-600'>
+                <X className='h-4 w-4' />
+                <span className='sr-only'>Close</span>
+              </Button>
+            </DrawerClose>
           </DrawerContent>
         </Drawer>
       );
@@ -2083,23 +2085,33 @@ const OrderList = () => {
       <Sheet
         open={isReturnProduct && !!selectedOrder}
         onOpenChange={(open) => setIsReturnProduct(open)}>
-        <SheetContent className='overflow-y-auto w-full sm:max-w-2xl'>
-          <SheetHeader>
-            <SheetTitle>Return Product</SheetTitle>
-            <SheetDescription>
-              Process product returns and manage returned items
-            </SheetDescription>
+        <SheetContent className='flex w-full flex-col gap-0 overflow-hidden p-0 sm:max-w-2xl'>
+          {/* Header — identical to order-v2's ReturnOrderSheet */}
+          <SheetHeader className='space-y-0 border-b border-gray-100 px-6 pb-5 pt-6'>
+            <SheetTitle className='flex items-center gap-3 text-gray-900'>
+              <div className='flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-gray-900 shadow-sm'>
+                <RotateCcw className='h-[18px] w-[18px] text-white' />
+              </div>
+              <div className='flex min-w-0 flex-col'>
+                <span className='text-base font-semibold leading-tight'>
+                  Process return
+                </span>
+                <SheetDescription className='mt-0.5 text-xs text-gray-500'>
+                  Order #{selectedOrder?.orderNumber}
+                </SheetDescription>
+              </div>
+            </SheetTitle>
           </SheetHeader>
-          <div className='w-auto mt-4'>
-            <AdjustReturnProduct
-              // @ts-ignore
-              order={selectedOrder}
-              handleClose={() => {
-                refresh();
-                setIsReturnProduct(false);
-              }}
-            />
-          </div>
+
+          {/* Body — content manages its own scroll + sticky footer */}
+          <AdjustReturnProduct
+            // @ts-ignore
+            order={selectedOrder}
+            handleClose={() => {
+              refresh();
+              setIsReturnProduct(false);
+            }}
+          />
         </SheetContent>
       </Sheet>
     );

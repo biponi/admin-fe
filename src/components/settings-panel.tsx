@@ -570,41 +570,6 @@ interface SettingsPanelProps {
 export function SettingsPanel({ open, onOpenChange }: SettingsPanelProps) {
   const isMobile = useIsMobile();
 
-  // Safety cleanup: Ensure document.body pointer-events and scroll lock are restored when closing
-  useEffect(() => {
-    if (!open) {
-      const cleanup = () => {
-        if (
-          typeof document !== "undefined" &&
-          document.body.style.pointerEvents === "none"
-        ) {
-          document.body.style.pointerEvents = "";
-        }
-      };
-      // Clean up immediately and across the exit animation duration (Vaul uses 500ms exit transition)
-      cleanup();
-      const t1 = setTimeout(cleanup, 100);
-      const t2 = setTimeout(cleanup, 300);
-      const t3 = setTimeout(cleanup, 550);
-      return () => {
-        clearTimeout(t1);
-        clearTimeout(t2);
-        clearTimeout(t3);
-      };
-    }
-  }, [open]);
-
-  useEffect(() => {
-    return () => {
-      if (
-        typeof document !== "undefined" &&
-        document.body.style.pointerEvents === "none"
-      ) {
-        document.body.style.pointerEvents = "";
-      }
-    };
-  }, []);
-
   // On Mobile: Render bottom drawer
   if (isMobile) {
     return (

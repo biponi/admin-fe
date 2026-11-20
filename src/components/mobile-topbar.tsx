@@ -69,7 +69,7 @@ export function MobileTopbar({ onMenuClick }: MobileTopbarProps) {
             size='icon'
             onClick={() => setAssistantOpen(true)}
             className='m3-ripple relative h-10 w-10 rounded-full hover:bg-muted text-foreground'
-            aria-label='PROMX AI'
+            aria-label='MITSHU AI'
             {...rippleProps()}>
             <Sparkles className='h-5 w-5 text-muted-foreground' />
           </Button>
@@ -117,9 +117,7 @@ export function MobileTopbar({ onMenuClick }: MobileTopbarProps) {
 
             <DropdownMenuItem
               className='cursor-pointer'
-              onClick={() => {
-                setTimeout(() => setSettingsOpen(true), 50);
-              }}>
+              onClick={() => setSettingsOpen(true)}>
               <Settings className='mr-2 h-4 w-4' />
               Settings
             </DropdownMenuItem>

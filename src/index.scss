@@ -710,11 +710,6 @@ body[data-rain-banner="true"] div:has(> [data-sidebar="sidebar"]) {
     0 4px 8px 3px rgba(0, 0, 0, 0.15), 0 1px 3px rgba(0, 0, 0, 0.3);
 }
 
-/* Safety fallback: prevent stuck pointer-events: none on body when modals/drawers close */
-body:not([data-scroll-locked]) {
-  pointer-events: auto !important;
-}
-
 /* ── assistant-ui (Tailwind 3 compat layer) ────────────────────────────────
    The assistant-ui registry targets Tailwind 4; these utilities backfill the
    few it relies on that Tailwind 3 does not ship (see

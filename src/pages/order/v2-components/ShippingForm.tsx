@@ -4,20 +4,6 @@ import { Label } from "../../../components/ui/label";
 import { Textarea } from "../../../components/ui/textarea";
 import { Alert, AlertDescription } from "../../../components/ui/alert";
 import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "../../../components/ui/popover";
-import {
-  Command,
-  CommandEmpty,
-  CommandGroup,
-  CommandInput,
-  CommandItem,
-  CommandList,
-} from "../../../components/ui/command";
-import { Button } from "../../../components/ui/button";
-import {
   Card,
   CardHeader,
   CardTitle,
@@ -27,6 +13,7 @@ import { calculateDeliveryCharge } from "../../../utils/deliveryCharge";
 import { useLocations } from "../../../hooks/useLocations";
 import { getCharge } from "../../../api/location";
 import type { IShipping } from "../../order/interface.d";
+import { InlineCombobox } from "./InlineCombobox";
 
 interface ShippingFormProps {
   shipping: Partial<IShipping>;
@@ -41,10 +28,6 @@ export function ShippingForm({
   onDeliveryChargeChange,
   validationErrors,
 }: ShippingFormProps) {
-  const [districtSearch, setDistrictSearch] = useState("");
-  const [divisionOpen, setDivisionOpen] = useState(false);
-  const [districtPopoverOpen, setDistrictPopoverOpen] = useState(false);
-
   // Dynamic locations + charges from the server config (falls back to the
   // hardcoded constants until loaded)
   const {
@@ -53,13 +36,6 @@ export function ShippingForm({
     districts: districtOptions,
     getChargeByName,
   } = useLocations();
-
-  // Reset district search when popover opens
-  useEffect(() => {
-    if (districtPopoverOpen) {
-      setDistrictSearch("");
-    }
-  }, [districtPopoverOpen]);
 
   // Store callbacks in refs so effects/handlers never need them as deps.
   // This prevents "new function reference on every render" from causing
@@ -128,7 +104,6 @@ export function ShippingForm({
   // which makes the store think something changed and triggers another render → loop.
   const handleDivisionChange = useCallback((value: string) => {
     onChangeRef.current({ division: value, district: undefined });
-    setDistrictSearch("");
   }, []);
 
   const handleDistrictChange = useCallback((value: string) => {
@@ -142,14 +117,12 @@ export function ShippingForm({
     [],
   );
 
-  const filteredDistricts = useMemo(() => {
-    const base = districtOptions.filter(
-      (d) => d.division_id === selectedDivision?.id,
-    );
-    if (!districtSearch) return base;
-    const q = districtSearch.toLowerCase();
-    return base.filter((d) => d.name.toLowerCase().includes(q));
-  }, [districtOptions, selectedDivision, districtSearch]);
+  // Districts scoped to the selected division (the inline combobox filters
+  // within this list as the user types)
+  const filteredDistricts = useMemo(
+    () => districtOptions.filter((d) => d.division_id === selectedDivision?.id),
+    [districtOptions, selectedDivision],
+  );
 
   return (
     <Card className='rounded-xl border-border shadow-none overflow-hidden'>
@@ -170,37 +143,17 @@ export function ShippingForm({
               <MapPin className='w-3.5 h-3.5 text-muted-foreground/70' />
               District *
             </Label>
-            <Popover open={divisionOpen} onOpenChange={setDivisionOpen}>
-              <PopoverTrigger asChild>
-                <Button
-                  id='division'
-                  variant='outline'
-                  className='w-full justify-start h-9 border-border hover:bg-muted/50 transition-all font-normal text-foreground'>
-                  {shipping.division || "Select division"}
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent className='w-[300px] p-0' align='start'>
-                <Command>
-                  <CommandInput placeholder='Search divisions...' />
-                  <CommandList>
-                    <CommandEmpty>No divisions found.</CommandEmpty>
-                    <CommandGroup>
-                      {divisionOptions.map((division) => (
-                        <CommandItem
-                          key={division.id}
-                          value={division.name}
-                          onSelect={(value) => {
-                            handleDivisionChange(value);
-                            setDivisionOpen(false);
-                          }}>
-                          {division.name}
-                        </CommandItem>
-                      ))}
-                    </CommandGroup>
-                  </CommandList>
-                </Command>
-              </PopoverContent>
-            </Popover>
+            {/* Inline combobox (no portal): portaled popovers inside the vaul
+                drawer can't hold focus/open the mobile keyboard — see
+                InlineCombobox.tsx for the rationale. Values are division NAMES
+                (that's what this form stores in shipping.division). */}
+            <InlineCombobox
+              value={shipping.division || ""}
+              onValueChange={(name) => handleDivisionChange(name)}
+              options={divisionOptions.map((d) => ({ id: d.name, label: d.name }))}
+              placeholder='Select division'
+              searchPlaceholder='Search divisions...'
+            />
             {/* Division error */}
             {validationErrors?.division && (
               <Alert className='mt-2 border-red-200 bg-red-50 py-2'>
@@ -220,41 +173,21 @@ export function ShippingForm({
               <Home className='w-3.5 h-3.5 text-muted-foreground/70' />
               Area *
             </Label>
-            <Popover open={districtPopoverOpen} onOpenChange={setDistrictPopoverOpen}>
-              <PopoverTrigger asChild>
-                <Button
-                  id='district'
-                  variant='outline'
-                  className='w-full justify-start h-9 border-border hover:bg-muted/50 transition-all font-normal text-foreground'>
-                  {shipping.district ||
-                    (selectedDivision
-                      ? "Select district"
-                      : "Select division first")}
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent className='w-[300px] p-0' align='start'>
-                <Command>
-                  <CommandInput placeholder='Search districts...' />
-                  <CommandList>
-                    <CommandEmpty>No districts found.</CommandEmpty>
-                    <CommandGroup>
-                      {filteredDistricts.map((district) => (
-                        <CommandItem
-                          key={district.id}
-                          value={district.name}
-                          className='font-semibold text-black'
-                          onSelect={(value) => {
-                            handleDistrictChange(value);
-                            setDistrictPopoverOpen(false);
-                          }}>
-                          {district.name}
-                        </CommandItem>
-                      ))}
-                    </CommandGroup>
-                  </CommandList>
-                </Command>
-              </PopoverContent>
-            </Popover>
+            {/* Inline combobox — see the division field above. The district
+                list is already scoped to the selected division upstream. */}
+            <InlineCombobox
+              value={shipping.district || ""}
+              onValueChange={(name) => handleDistrictChange(name)}
+              options={filteredDistricts.map((d) => ({
+                id: d.name,
+                label: d.name,
+              }))}
+              placeholder={
+                selectedDivision ? "Select district" : "Select division first"
+              }
+              searchPlaceholder='Search districts...'
+              disabled={!selectedDivision}
+            />
             {/* District error */}
             {validationErrors?.district && (
               <Alert className='mt-2 border-red-200 bg-red-50 py-2'>

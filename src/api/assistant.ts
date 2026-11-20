@@ -192,6 +192,27 @@ export async function askAssistant(
   return finalAnswer;
 }
 
+// ── Report file download ───────────────────────────────────────────────────
+
+/**
+ * Download a generated report through the shared axios instance — its baseURL
+ * is VITE_API_BASE_URL and its interceptors attach x-access-token + retry on
+ * 403. NEVER a plain <a href>: downloadPath is relative and the route needs
+ * the auth header.
+ * @returns the file blob and its filename (content-disposition, falling back
+ * to the report metadata the caller already has).
+ */
+export async function downloadAssistantReport(
+  downloadPath: string,
+  fallbackFileName: string
+): Promise<{ blob: Blob; fileName: string }> {
+  const response = await axios.get<Blob>(downloadPath, { responseType: "blob" });
+  const disposition = (response.headers?.["content-disposition"] as string) || "";
+  const match = disposition.match(/filename\*?=(?:UTF-8''|")?([^";]+)"?/i);
+  const fileName = match ? decodeURIComponent(match[1]) : fallbackFileName;
+  return { blob: new Blob([response.data]), fileName };
+}
+
 // ── Sessions / tools (axios REST) ──────────────────────────────────────────
 
 export async function listSessions(

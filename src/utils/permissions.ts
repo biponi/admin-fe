@@ -10,6 +10,7 @@ export const pagePermissions: Record<string, string[]> = {
     "bulk_action",
     "documents",
     "cancel",
+    "return",
     "update_status",
   ],
   OrderConfirmation: ["view", "confirm", "cancel"],

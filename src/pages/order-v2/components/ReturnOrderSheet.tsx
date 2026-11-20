@@ -3,7 +3,7 @@
  * Modern sheet component for processing order returns
  */
 
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   RotateCcw,
@@ -131,25 +131,6 @@ export const ReturnOrderSheet: React.FC<ReturnOrderSheetProps> = ({
   const [returnReason, setReturnReason] = useState("");
   const [returnReasonDetails, setReturnReasonDetails] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
-
-  // Workaround: Radix UI Sheet/Dialog leaves orphaned portal overlays in the DOM
-  // after close. Clean them up after the close animation completes (400ms).
-  useEffect(() => {
-    if (!open) {
-      const timer = setTimeout(() => {
-        document.querySelectorAll('[data-radix-portal]').forEach((portal) => {
-          if (!portal.querySelector('[data-state="open"]')) {
-            portal.remove();
-          }
-        });
-        document.body.style.pointerEvents = "";
-        document.querySelectorAll("[aria-hidden='true']").forEach((el) => {
-          el.removeAttribute("aria-hidden");
-        });
-      }, 400);
-      return () => clearTimeout(timer);
-    }
-  }, [open]);
 
   const getVariationData = (product: any) => {
     const v = product.variation || product.variant;

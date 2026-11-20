@@ -231,7 +231,7 @@ const CreateEmailCampaign = () => {
                     </Label>
                     <Input
                       id='subject'
-                      placeholder='e.g. Your Monthly Update from PROMX'
+                      placeholder='e.g. Your Monthly Update from MITSHU'
                       value={subject}
                       onChange={(e) => setSubject(e.target.value)}
                       required

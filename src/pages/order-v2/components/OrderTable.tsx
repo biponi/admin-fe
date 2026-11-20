@@ -388,7 +388,7 @@ export const OrderTable: React.FC<OrderTableProps> = ({
                           </DropdownMenuItem>
                         )}
                         {order.status === "shipped" &&
-                          canModifyOrder("order", "modify", order) && (
+                          canModifyOrder("order", "return", order) && (
                             <DropdownMenuItem
                               onClick={() => onReturnOrder?.(order)}>
                               <RefreshCcw className='mr-2 h-4 w-4' />

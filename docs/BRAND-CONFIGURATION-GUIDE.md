@@ -9,9 +9,9 @@
 - **File:** `src/config/brand.ts`
 - **Exports:** `BRAND_CONFIG` object with all brand properties
 - **Properties:**
-  - `name` - Full application name (e.g., "PROMX")
+  - `name` - Full application name (e.g., "MITSHU")
   - `shortName` - Short brand name (e.g., "Prior")
-  - `companyName` - Legal company name (e.g., "PROMX")
+  - `companyName` - Legal company name (e.g., "MITSHU")
   - `website` - Company website URL
   - `email` - Company contact email
   - `trackingUrl()` - Order tracking URL template
@@ -23,9 +23,9 @@
 - **File:** `.env.example`
 - **Added Variables:**
   ```bash
-  REACT_APP_BRAND_NAME="PROMX"
+  REACT_APP_BRAND_NAME="MITSHU"
   REACT_APP_BRAND_SHORT_NAME="Prior"
-  REACT_APP_BRAND_COMPANY_NAME="PROMX"
+  REACT_APP_BRAND_COMPANY_NAME="MITSHU"
   REACT_APP_BRAND_WEBSITE="https://PROMX.com"
   REACT_APP_BRAND_EMAIL="prior.retailshop.info.bd@gmail.com"
   ```
@@ -102,9 +102,9 @@ Add to your `.env` file (or create it):
 
 ```bash
 # Brand Configuration
-REACT_APP_BRAND_NAME="PROMX"
+REACT_APP_BRAND_NAME="MITSHU"
 REACT_APP_BRAND_SHORT_NAME="Prior"
-REACT_APP_BRAND_COMPANY_NAME="PROMX"
+REACT_APP_BRAND_COMPANY_NAME="MITSHU"
 REACT_APP_BRAND_WEBSITE="https://PROMX.com"
 REACT_APP_BRAND_EMAIL="prior.retailshop.info.bd@gmail.com"
 ```

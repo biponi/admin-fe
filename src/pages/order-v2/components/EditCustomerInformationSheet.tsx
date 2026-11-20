@@ -1,4 +1,3 @@
-import { useEffect } from "react";
 import {
   Sheet,
   SheetContent,
@@ -32,24 +31,6 @@ const EditOrderPanelContent = ({
   refreshOrders?: () => void;
 }) => {
   const isMobolie = useIsMobile();
-
-  useEffect(() => {
-    if (!isEditDialogOpen) {
-      const timer = setTimeout(() => {
-        document.body.style.pointerEvents = "";
-        document.body.style.overflow = "";
-        document.querySelectorAll("[data-radix-portal] > div").forEach((el) => {
-          if (
-            el.getAttribute("data-state") === "closed" ||
-            el.querySelector("[data-state='closed']")
-          ) {
-            el.remove();
-          }
-        });
-      }, 400);
-      return () => clearTimeout(timer);
-    }
-  }, [isEditDialogOpen]);
 
   if (!selectedOrder) return null;
 

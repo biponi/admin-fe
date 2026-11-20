@@ -279,7 +279,7 @@ const MobileOrderCard: React.FC<Props> = ({
                       </DropdownMenuItem>
                     )}
 
-                  {canModifyOrder("order", "modify", order) &&
+                  {canModifyOrder("order", "return", order) &&
                     status === "shipped" && (
                       <DropdownMenuItem onClick={handleReturnProducts}>
                         <RefreshCw className='h-4 w-4 mr-2' />

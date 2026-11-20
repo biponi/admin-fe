@@ -129,11 +129,14 @@ const VariantDrawer: React.FC<VariantDrawerProps> = ({
     return () => window.removeEventListener("keydown", h);
   }, [open, onClose, lightboxImages.length]);
 
-  // Prevent body scroll when drawer is open
+  // Prevent body scroll when drawer is open (save/restore so we never
+  // clobber a scroll lock held by an enclosing Radix modal)
   useEffect(() => {
-    document.body.style.overflow = open ? "hidden" : "";
+    if (!open) return;
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
     return () => {
-      document.body.style.overflow = "";
+      document.body.style.overflow = prev;
     };
   }, [open]);
 

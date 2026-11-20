@@ -31,12 +31,23 @@ export interface DocArtifactPayload {
   markdown: string;
 }
 
-export type ArtifactPayload = ChartArtifactPayload | SheetArtifactPayload | DocArtifactPayload;
+/** Generated report file — renders as an authenticated download button. */
+export interface FileArtifactPayload {
+  /** API path (relative — resolved against VITE_API_BASE_URL by the api layer) */
+  downloadPath: string;
+  fileName: string;
+  format: "csv" | "pdf";
+  rows?: number;
+  bytes?: number;
+  expiresAt?: string;
+}
+
+export type ArtifactPayload = ChartArtifactPayload | SheetArtifactPayload | DocArtifactPayload | FileArtifactPayload;
 
 /** The artifact identity shared by live parts and persisted parts. */
 export interface ArtifactDescriptor {
   id: string;
-  kind: "chart" | "sheet" | "doc";
+  kind: "chart" | "sheet" | "doc" | "file";
   title: string;
   payload: ArtifactPayload;
   /** Doc artifacts stream markdown; incomplete until status "done" */
@@ -46,7 +57,7 @@ export interface ArtifactDescriptor {
 /** Live SSE part event payload (event: part). */
 export interface AssistantPartEvent {
   partId: string;
-  type?: "chart" | "sheet" | "doc";
+  type?: "chart" | "sheet" | "doc" | "file";
   title?: string;
   status: "start" | "delta" | "done";
   chunk?: string;
@@ -57,7 +68,8 @@ export interface AssistantPartEvent {
 export type StoredPart =
   | { kind: "doc"; id: string; title: string; markdown: string }
   | { kind: "sheet"; id: string; title: string; columns: SheetColumn[]; rows: Record<string, unknown>[]; totalRows?: number }
-  | { kind: "chart"; id: string; title: string; chart: ChartArtifactPayload };
+  | { kind: "chart"; id: string; title: string; chart: ChartArtifactPayload }
+  | { kind: "file"; id: string; title: string; downloadPath: string; fileName: string; format: "csv" | "pdf"; rows?: number; bytes?: number; expiresAt?: string };
 
 // ── Render helpers ─────────────────────────────────────────────────────────
 

@@ -6,9 +6,9 @@
  * a single source of truth across the application.
  *
  * Environment Variables:
- * - VITE_BRAND_NAME: Full application name (e.g., "PROMX")
- * - VITE_BRAND_SHORT_NAME: Short brand name (e.g., "PROMX")
- * - VITE_BRAND_COMPANY_NAME: Legal company name (e.g., "PROMX")
+ * - VITE_BRAND_NAME: Full application name (e.g., "MITSHU")
+ * - VITE_BRAND_SHORT_NAME: Short brand name (e.g., "MITSHU")
+ * - VITE_BRAND_COMPANY_NAME: Legal company name (e.g., "MITSHU")
  * - VITE_BRAND_WEBSITE: Company website URL
  * - VITE_BRAND_EMAIL: Company contact email
  * - VITE_BRAND_ADDRESS: Physical address (e.g., "Shop 134, Genetic Plaza, Dhanmondi-27, Dhaka")
@@ -21,13 +21,13 @@
 
 export const BRAND_CONFIG = {
   /** Full application name displayed in titles, headers, and documents */
-  name: import.meta.env.VITE_BRAND_NAME || "PROMX",
+  name: import.meta.env.VITE_BRAND_NAME || "MITSHU",
 
   /** Short brand name for compact displays (mobile, badges, etc.) */
-  shortName: import.meta.env.VITE_BRAND_SHORT_NAME || "PROMX",
+  shortName: import.meta.env.VITE_BRAND_SHORT_NAME || "MITSHU",
 
   /** Legal company name for invoices, documents, and copyright notices */
-  companyName: import.meta.env.VITE_BRAND_COMPANY_NAME || "PROMX",
+  companyName: import.meta.env.VITE_BRAND_COMPANY_NAME || "MITSHU",
 
   /** Company website URL used in documents and links */
   website: import.meta.env.VITE_BRAND_WEBSITE || "https://PROMX.com",
@@ -81,7 +81,7 @@ export type BrandConfig = typeof BRAND_CONFIG;
  * @returns Brand name or fallback
  */
 export const getBrandName = (fallback?: string): string => {
-  return BRAND_CONFIG.name || fallback || "PROMX";
+  return BRAND_CONFIG.name || fallback || "MITSHU";
 };
 
 /**
@@ -90,5 +90,5 @@ export const getBrandName = (fallback?: string): string => {
  * @returns Short brand name or fallback
  */
 export const getShortBrandName = (fallback?: string): string => {
-  return BRAND_CONFIG.shortName || fallback || "PROMX";
+  return BRAND_CONFIG.shortName || fallback || "MITSHU";
 };

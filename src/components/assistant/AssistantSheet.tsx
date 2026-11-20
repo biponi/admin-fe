@@ -29,7 +29,7 @@ const AssistantSheet = ({ open, onOpenChange }: AssistantSheetProps) => {
             <div className='flex items-center justify-center w-7 h-7 rounded-lg bg-gradient-to-br from-violet-500 to-indigo-600 shadow-sm'>
               <Sparkles className='w-3.5 h-3.5 text-white' />
             </div>
-            <SheetTitle className='text-sm font-semibold'>PROMX AI</SheetTitle>
+            <SheetTitle className='text-sm font-semibold'>MITSHU AI</SheetTitle>
           </div>
         </SheetHeader>
         {/* Thread fills the remaining height; content unmounts on close so each

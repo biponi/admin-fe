@@ -308,7 +308,7 @@ export const ProtectedRoutes = () => {
         path='/assistant'
         element={
           <ProtectedRoute page='assistant' requiredAction='view'>
-            <MainViewComponent title='PROMX AI'>
+            <MainViewComponent title='MITSHU AI'>
               <AssistantPage />
             </MainViewComponent>
           </ProtectedRoute>
