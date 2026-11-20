@@ -57,6 +57,7 @@ export const pagePermissions: Record<string, string[]> = {
   BkashTransaction: ["view"],
   PendingOrder: ["view"],
   Assistant: ["view", "manage"],
+  "ARC-ORDER": ["view", "create", "edit", "delete"],
 };
 
 // Pages/actions that support the per-role "own only" restriction: a role

@@ -11,6 +11,8 @@ import {
 } from "@react-pdf/renderer";
 import { IOrder } from "../pages/order/interface";
 import { BRAND_CONFIG } from "../config/brand";
+import { getProductById } from "../api/product";
+import { getVariationImageUrl } from "./functions";
 
 // IMPORTANT: Download NotoSansBengali-Regular.ttf from Google Fonts
 // and place it in public/fonts/NotoSansBengali-Regular.ttf
@@ -732,18 +734,54 @@ const InvoiceDocument: React.FC<InvoiceDocumentProps> = ({
   );
 };
 
+// Resolve the image for the selected variant of a fetched product:
+// variant's own images first, then its image group, else null
+const resolveVariantImage = (
+  productData: any,
+  variantId?: string,
+): string | null => {
+  if (!variantId) return null;
+  const variant = productData?.variation?.find((v: any) => v.id === variantId);
+  return getVariationImageUrl(variant, productData?.imageGroups);
+};
+
 // Helper function to preload images from order
 const preloadOrderImages = async (order: IOrder) => {
   const logoUrl = BRAND_CONFIG.invoiceLogoUrl;
 
   const logoBase64 = await fetchImageAsBase64(logoUrl);
 
+  // Fetch products for line items with a selected variant so the invoice can
+  // show the variant's image instead of the product's main thumbnail
+  const variantProductIds = [
+    ...new Set(
+      order.products
+        .filter((p) => p.productId && (p.variantId || p.variation?.id))
+        .map((p) => p.productId),
+    ),
+  ];
+  const productCache = new Map<string, any>();
+  await Promise.all(
+    variantProductIds.map(async (productId) => {
+      try {
+        const res = await getProductById(productId);
+        if (res.success && res.data) productCache.set(productId, res.data);
+      } catch {
+        // fall back to the stored thumbnail below
+      }
+    }),
+  );
+
   const productImagesMap: Record<string, string> = {};
   const imagePromises = order.products
-    .filter((p) => p.thumbnail)
     .map(async (product) => {
-      if (product.thumbnail) {
-        const base64 = await fetchImageAsBase64(product.thumbnail);
+      const variantId = product.variantId || product.variation?.id;
+      const variantImage = variantId
+        ? resolveVariantImage(productCache.get(product.productId), variantId)
+        : null;
+      const imageUrl = variantImage || product.thumbnail;
+      if (imageUrl) {
+        const base64 = await fetchImageAsBase64(imageUrl);
         productImagesMap[product.id] = base64;
       }
     });
