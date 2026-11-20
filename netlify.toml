@@ -1,5 +1,7 @@
 [build]
-  command = "yarn build"
+  # Heal stale nested Radix copies left in the cached node_modules (yarn v1 does
+  # not reconcile nested dirs after a resolutions bump), then reinstall and build.
+  command = "rm -rf node_modules/@radix-ui/*/node_modules && yarn install --frozen-lockfile && yarn build"
   publish = "build"
 
 [build.environment]
